@@ -1,117 +1,34 @@
 @model Proyecto_Final.Models.Admin.ProductFormViewModel
-@{
-    ViewData["Title"] = "Crear producto";
-    var categorias = ViewBag.Categorias as List<string> ?? new List<string>();
-}
+@{ ViewData["Title"] = "Crear producto"; var categorias = ViewBag.Categorias as List<string> ?? new List<string>(); }
 
-@section Styles {
-    <link href="~/css/custom-theme.css" rel="stylesheet" />
-}
-
-<div class="container-fluid pt-4">
-    <div class="row px-xl-5">
-        <div class="col-12">
-            <div class="admin-page-header d-flex justify-content-between align-items-center">
-                <div>
-                    <h2 class="mb-1">Crear producto</h2>
-                    <p class="text-muted mb-0">Completa los datos para agregar un nuevo producto al catálogo.</p>
-                </div>
-                <a asp-controller="Inventory" asp-action="Index" class="btn btn-outline-secondary">← Volver</a>
-            </div>
-        </div>
-    </div>
-
-    <div class="row px-xl-5 pb-5">
-        <div class="col-lg-8">
-            <div class="admin-card">
-                <form asp-controller="Inventory" asp-action="Create" method="post" enctype="multipart/form-data">
-                    @Html.AntiForgeryToken()
-                    <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3"></div>
-
-                    <div class="form-group">
-                        <label class="font-weight-bold">Nombre del producto <span class="text-danger">*</span></label>
-                        <input asp-for="Nombre" class="form-control" placeholder="Ej: Ron Centenario 7 años" />
-                        <span asp-validation-for="Nombre" class="text-danger small"></span>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="font-weight-bold">Categoría <span class="text-danger">*</span></label>
-                        @if (categorias.Any())
-                        {
-                            <select asp-for="Categoria" class="form-control">
-                                <option value="">Seleccione una categoría</option>
-                                @foreach (var cat in categorias)
-                                {
-                                    <option value="@cat">@cat</option>
-                                }
-                            </select>
-                        }
-                        else
-                        {
-                            <input asp-for="Categoria" class="form-control" placeholder="Categoría" />
-                        }
-                        <span asp-validation-for="Categoria" class="text-danger small"></span>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="font-weight-bold">Descripción</label>
-                        <textarea asp-for="Descripcion" class="form-control" rows="3"
-                                  placeholder="Descripción breve del producto"></textarea>
-                        <span asp-validation-for="Descripcion" class="text-danger small"></span>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group col-md-6">
-                            <label class="font-weight-bold">Precio (₡) <span class="text-danger">*</span></label>
-                            <input asp-for="Precio" class="form-control" placeholder="0.00" />
-                            <span asp-validation-for="Precio" class="text-danger small"></span>
-                        </div>
-                        <div class="form-group col-md-6">
-                            <label class="font-weight-bold">Stock inicial <span class="text-danger">*</span></label>
-                            <input asp-for="Stock" class="form-control" placeholder="0" />
-                            <span asp-validation-for="Stock" class="text-danger small"></span>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="font-weight-bold">Imagen del producto</label>
-                        <input asp-for="ImagenArchivo" type="file"
-                               accept=".jpg,.jpeg,.png,.webp"
-                               class="form-control-file" />
-                        <small class="text-muted">Formatos permitidos: JPG, PNG, WEBP.</small>
-                    </div>
-
-                    <div class="form-check mb-2">
-                        <input asp-for="Activo" class="form-check-input" />
-                        <label asp-for="Activo" class="form-check-label">Producto activo</label>
-                    </div>
-                    <div class="form-check mb-4">
-                        <input asp-for="EsDestacado" class="form-check-input" />
-                        <label asp-for="EsDestacado" class="form-check-label">Mostrar como producto destacado</label>
-                    </div>
-
-                    <div class="d-flex" style="gap:10px;">
-                        <button type="submit" class="btn btn-primary">Guardar producto</button>
-                        <a asp-controller="Inventory" asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <div class="col-lg-4 mt-4 mt-lg-0">
-            <div class="admin-card">
-                <h5 class="mb-3">ℹ️ Información</h5>
-                <ul class="contact-list">
-                    <li>El <strong>código SKU</strong> se asigna automáticamente al guardar.</li>
-                    <li>Los campos marcados con <span class="text-danger">*</span> son obligatorios.</li>
-                    <li>El sistema bloqueará nombres duplicados en el catálogo.</li>
-                    <li>Si el stock inicial es mayor a 0, se registra una entrada automática en el historial.</li>
-                </ul>
-            </div>
-        </div>
-    </div>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Crear producto</h2>
+    <a asp-controller="Inventory" asp-action="Index" class="btn btn-secondary">Volver</a>
 </div>
 
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+<form asp-controller="Inventory" asp-action="Create" method="post" enctype="multipart/form-data">
+@Html.AntiForgeryToken()
+<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+<input asp-for="Nombre" class="form-control mb-3" placeholder="Nombre del producto" />
+
+@if (categorias.Any()) {
+    <select asp-for="Categoria" class="form-control mb-3">
+        <option value="">Seleccione una categoría</option>
+        @foreach (var categoria in categorias){<option value="@categoria">@categoria</option>}
+    </select>
+} else {
+    <input asp-for="Categoria" class="form-control mb-3" placeholder="Categoría" />
 }
+
+<textarea asp-for="Descripcion" class="form-control mb-3" rows="4" placeholder="Descripción del producto"></textarea>
+<input asp-for="ImagenArchivo" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" id="ImagenArchivo" class="form-control mb-3" />
+<input asp-for="Precio" class="form-control mb-3" placeholder="Precio" />
+<input asp-for="Stock" class="form-control mb-3" placeholder="Cantidad" />
+<div class="form-check mb-2"><input asp-for="Activo" class="form-check-input" /><label asp-for="Activo" class="form-check-label">Producto activo</label></div>
+<div class="form-check mb-3"><input asp-for="EsDestacado" class="form-check-input" /><label asp-for="EsDestacado" class="form-check-label">Mostrar en productos destacados</label></div>
+<div class="d-flex" style="gap:10px;">
+    <button type="submit" class="btn btn-primary">Guardar producto</button>
+    <a asp-controller="Inventory" asp-action="Index" class="btn btn-secondary">Volver</a>
+</div>
+</form>
