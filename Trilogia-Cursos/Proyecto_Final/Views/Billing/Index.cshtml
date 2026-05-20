@@ -1,0 +1,176 @@
+@model Proyecto_Final.Models.Admin.SalesReportViewModel
+@{
+    ViewData["Title"] = "Facturación";
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header">
+                <h2 class="mb-2">Facturación y ventas</h2>
+                <p>Consulta el resumen financiero, facturas generadas, productos más vendidos y comportamiento mensual.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-3">
+        <div class="col-lg-3 col-md-6 col-sm-12 pb-3 d-flex">
+            <div class="admin-card w-100 text-center">
+                <div class="mb-3">
+                    <i class="fa fa-coins fa-2x text-primary"></i>
+                </div>
+                <h6 class="text-muted mb-2">Ventas totales</h6>
+                <h3 class="mb-0">₡@Model.VentasTotales.ToString("N2")</h3>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 col-sm-12 pb-3 d-flex">
+            <div class="admin-card w-100 text-center">
+                <div class="mb-3">
+                    <i class="fa fa-calendar-alt fa-2x text-primary"></i>
+                </div>
+                <h6 class="text-muted mb-2">Ventas mes actual</h6>
+                <h3 class="mb-0">₡@Model.VentasMesActual.ToString("N2")</h3>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 col-sm-12 pb-3 d-flex">
+            <div class="admin-card w-100 text-center">
+                <div class="mb-3">
+                    <i class="fa fa-file-invoice fa-2x text-primary"></i>
+                </div>
+                <h6 class="text-muted mb-2">Total facturas</h6>
+                <h3 class="mb-0">@Model.TotalFacturas</h3>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 col-sm-12 pb-3 d-flex">
+            <div class="admin-card w-100 text-center">
+                <div class="mb-3">
+                    <i class="fa fa-check-double fa-2x text-primary"></i>
+                </div>
+                <h6 class="text-muted mb-2">Pedidos entregados</h6>
+                <h3 class="mb-0">@Model.PedidosEntregados</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-3">
+        <div class="col-lg-8 pb-3">
+            <div class="admin-table-wrapper h-100">
+                <div class="p-4 border-bottom">
+                    <h5 class="mb-0">Facturas generadas</h5>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>ID factura</th>
+                                <th># Pedido</th>
+                                <th>Número factura</th>
+                                <th>Cliente</th>
+                                <th>Fecha</th>
+                                <th>Subtotal</th>
+                                <th>Impuesto</th>
+                                <th>Total</th>
+                                <th>Estado</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Facturas == null || !Model.Facturas.Any())
+                            {
+                                <tr>
+                                    <td colspan="10" class="text-center text-muted py-4">
+                                        No hay facturas registradas.
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var item in Model.Facturas)
+                                {
+                                    var claseEstado = item.Estado == "Generada" ? "success" : "dark";
+
+                                    <tr>
+                                        <td>@item.FacturaId</td>
+                                        <td>#@item.PedidoId</td>
+                                        <td class="font-weight-bold">@item.NumeroFactura</td>
+                                        <td>@item.Cliente</td>
+                                        <td>@item.FechaFactura.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td>₡@item.Subtotal.ToString("N2")</td>
+                                        <td>₡@item.Impuesto.ToString("N2")</td>
+                                        <td>₡@item.Total.ToString("N2")</td>
+                                        <td>
+                                            <span class="admin-badge-soft @claseEstado">@item.Estado</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <a asp-controller="Billing"
+                                               asp-action="Detail"
+                                               asp-route-id="@item.FacturaId"
+                                               class="btn btn-sm btn-outline-primary">
+                                                <i class="fa fa-eye mr-1"></i>Ver
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 pb-3">
+            <div class="admin-card mb-3">
+                <h5 class="mb-3">Productos más vendidos</h5>
+
+                @if (Model.ProductosMasVendidos == null || !Model.ProductosMasVendidos.Any())
+                {
+                    <p class="text-muted mb-0">No hay datos disponibles.</p>
+                }
+                else
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var item in Model.ProductosMasVendidos)
+                        {
+                            <div class="list-group-item px-0 d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="font-weight-bold">@item.Producto</div>
+                                    <small class="text-muted">Cantidad vendida: @item.CantidadVendida</small>
+                                </div>
+                                <span class="admin-badge-soft success">₡@item.MontoVendido.ToString("N2")</span>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <div class="admin-card">
+                <h5 class="mb-3">Ventas por mes</h5>
+
+                @if (Model.VentasPorMes == null || !Model.VentasPorMes.Any())
+                {
+                    <p class="text-muted mb-0">No hay datos mensuales disponibles.</p>
+                }
+                else
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var item in Model.VentasPorMes)
+                        {
+                            <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                                <span class="font-weight-bold">@item.Periodo</span>
+                                <span class="admin-badge-soft dark">₡@item.Total.ToString("N2")</span>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

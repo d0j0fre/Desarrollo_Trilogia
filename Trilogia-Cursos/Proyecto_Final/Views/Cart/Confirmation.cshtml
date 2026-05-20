@@ -1,0 +1,35 @@
+@model Proyecto_Final.Models.Store.OrderConfirmationViewModel
+@{
+    ViewData["Title"] = "Pedido creado";
+}
+<div class="container py-5">
+    <div class="alert alert-success">
+        <h3 class="mb-3">¡Pedido creado correctamente!</h3>
+        <p class="mb-1"><strong>Número de pedido:</strong> #@Model.PedidoId</p>
+        <p class="mb-1"><strong>Tipo de entrega:</strong> @Model.TipoEntrega</p>
+        @if (!string.IsNullOrWhiteSpace(Model.DireccionEntrega))
+        {
+            <p class="mb-1"><strong>Dirección:</strong> @Model.DireccionEntrega</p>
+        }
+        <p class="mb-0"><strong>Total:</strong> ₡@Model.Total.ToString("N2")</p>
+    </div>
+
+    <div class="card bg-dark text-light border-secondary">
+        <div class="card-body">
+            <h4 class="card-title">Productos</h4>
+            <ul class="list-group list-group-flush">
+                @foreach (var item in Model.Items)
+                {
+                    <li class="list-group-item bg-dark text-light d-flex justify-content-between">
+                        <span>@item.Nombre x @item.Cantidad</span>
+                        <span>₡@item.Subtotal.ToString("N2")</span>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a asp-controller="Home" asp-action="Shop" class="btn btn-primary">Seguir comprando</a>
+    </div>
+</div>

@@ -1,0 +1,71 @@
+﻿@model Proyecto_Final.Models.Store.StoreProductViewModel
+@{
+    ViewData["Title"] = Model.Nombre;
+    var imagen = string.IsNullOrWhiteSpace(Model.ImagenUrl)
+        ? Url.Content("~/img/whisky-premium.webp")
+        : Url.Content(Model.ImagenUrl);
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid py-5">
+    <div class="row px-xl-5">
+        <div class="col-lg-6 pb-4">
+            <div class="bg-light p-4 h-100 d-flex align-items-center justify-content-center rounded">
+                <img src="@imagen" alt="@Model.Nombre" class="img-fluid" style="max-height: 420px; object-fit: contain;" />
+            </div>
+        </div>
+
+        <div class="col-lg-6 pb-4">
+            <div class="admin-card h-100">
+                <span class="badge badge-primary mb-3">@Model.Categoria</span>
+                <h2 class="mb-3">@Model.Nombre</h2>
+                <h3 class="text-primary mb-3">â‚¡@Model.Precio.ToString("N2")</h3>
+
+                <p class="mb-4">
+                    @(string.IsNullOrWhiteSpace(Model.Descripcion)
+                        ? "Producto disponible dentro del catÃ¡logo activo de la tienda."
+                        : Model.Descripcion)
+                </p>
+
+                <p class="mb-4">
+                    <strong>Estado:</strong>
+                    @if (Model.Stock > 0)
+                    {
+                        <span>Disponible (stock: @Model.Stock)</span>
+                    }
+                    else
+                    {
+                        <span>Agotado</span>
+                    }
+                </p>
+
+                <div class="d-flex flex-wrap">
+                    @if (Model.Stock > 0)
+                    {
+                        <form asp-controller="Cart" asp-action="Add" method="post" class="mr-2 mb-2">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="productoId" value="@Model.ProductoId" />
+                            <input type="hidden" name="cantidad" value="1" />
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="fa fa-shopping-cart mr-2"></i>Agregar al carrito
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn btn-secondary px-4 mr-2 mb-2" disabled>Producto agotado</button>
+                    }
+
+                    <a asp-controller="Home" asp-action="Shop" asp-route-categoria="@Model.Categoria" class="btn btn-secondary mb-2">
+                        Volver a categorÃ­a
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+

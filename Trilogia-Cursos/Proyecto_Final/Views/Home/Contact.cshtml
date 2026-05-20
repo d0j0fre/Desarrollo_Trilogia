@@ -1,0 +1,118 @@
+﻿@model Proyecto_Final.Models.Store.ContactViewModel
+@{
+    ViewData["Title"] = "Contacto";
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid contact-hero mb-4">
+    <div class="row px-xl-5 py-4">
+        <div class="col-12">
+            <div class="store-banner">
+                <div>
+                    <span class="store-eyebrow">Atención al cliente</span>
+                    <h1 class="store-title">Contacto</h1>
+                    <p class="store-copy">
+                        Página funcional para consultas, datos del negocio y un formulario consistente con el estilo general.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid pb-5">
+    <div class="row px-xl-5">
+        <div class="col-lg-4 mb-4 d-flex align-items-stretch">
+            <div class="info-card w-100">
+                <div class="info-card__icon"><i class="fa fa-map-marker-alt"></i></div>
+                <h4>Ubicación</h4>
+                <p>San José, Costa Rica</p>
+                <p>Distribuidora y licorera con atención en tienda y gestión de pedidos.</p>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-4 d-flex align-items-stretch">
+            <div class="info-card w-100">
+                <div class="info-card__icon"><i class="fa fa-phone-alt"></i></div>
+                <h4>Teléfono</h4>
+                <p>+506 2222-2222</p>
+                <p>Lunes a sábado de 8:00 a. m. a 8:00 p. m.</p>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-4 d-flex align-items-stretch">
+            <div class="info-card w-100">
+                <div class="info-card__icon"><i class="fa fa-envelope"></i></div>
+                <h4>Correo</h4>
+                <p>info@labodega.com</p>
+                <p>Consultas de pedidos, productos, disponibilidad y facturación.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5">
+        <div class="col-lg-8 mb-4">
+            <div class="contact-card">
+                <h3 class="contact-card__title">Envíanos un mensaje</h3>
+
+                @if (TempData["ContactSuccess"] is string success && !string.IsNullOrWhiteSpace(success))
+                {
+                    <div class="alert alert-success">@success</div>
+                }
+
+                <form asp-controller="Home" asp-action="Contact" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label asp-for="Nombre"></label>
+                            <input asp-for="Nombre" class="form-control" />
+                            <span asp-validation-for="Nombre" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group col-md-6">
+                            <label asp-for="Correo"></label>
+                            <input asp-for="Correo" class="form-control" />
+                            <span asp-validation-for="Correo" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Asunto"></label>
+                        <input asp-for="Asunto" class="form-control" />
+                        <span asp-validation-for="Asunto" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Mensaje"></label>
+                        <textarea asp-for="Mensaje" class="form-control" rows="6"></textarea>
+                        <span asp-validation-for="Mensaje" class="text-danger"></span>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary px-4">Enviar mensaje</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-4">
+            <div class="contact-card h-100">
+                <h3 class="contact-card__title">Información rápida</h3>
+                <ul class="contact-list">
+                    <li><strong>Pedidos:</strong> seguimiento y disponibilidad.</li>
+                    <li><strong>Inventario:</strong> consulta de productos activos.</li>
+                    <li><strong>Facturación:</strong> soporte administrativo.</li>
+                    <li><strong>Entrega:</strong> coordinación según cobertura.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

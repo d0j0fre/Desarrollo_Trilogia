@@ -1,0 +1,70 @@
+﻿@model Proyecto_Final.Models.Store.CartViewModel
+@{
+    ViewData["Title"] = "Carrito";
+}
+<div class="container py-4">
+    <h2 class="mb-4">Tu carrito</h2>
+
+    @if (Model.Items.Count == 0)
+    {
+        <div class="alert alert-info">Tu carrito estÃ¡ vacÃ­o.</div>
+        <a asp-controller="Home" asp-action="Shop" class="btn btn-primary">Ir a la tienda</a>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-dark table-hover">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Precio</th>
+                        <th style="width:180px;">Cantidad</th>
+                        <th>Subtotal</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td>
+                            <strong>@item.Nombre</strong><br />
+                            <small class="text-muted">@item.Categoria Â· Stock disponible: @item.StockDisponible</small>
+                        </td>
+                        <td>â‚¡@item.Precio.ToString("N2")</td>
+                        <td>
+                            <form asp-action="Update" method="post" class="form-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="productoId" value="@item.ProductoId" />
+                                <input type="number" name="cantidad" value="@item.Cantidad" min="0" max="@item.StockDisponible" class="form-control form-control-sm mr-2" />
+                                <button class="btn btn-primary btn-sm" type="submit">Actualizar</button>
+                            </form>
+                        </td>
+                        <td>â‚¡@item.Subtotal.ToString("N2")</td>
+                        <td>
+                            <form asp-action="Remove" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="productoId" value="@item.ProductoId" />
+                                <button class="btn btn-danger btn-sm" type="submit">Quitar</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-4">
+            <div>
+                <strong>Total de artÃ­culos:</strong> @Model.TotalItems<br />
+                <strong>Subtotal:</strong> â‚¡@Model.Subtotal.ToString("N2")
+            </div>
+            <div>
+                <a asp-controller="Home" asp-action="Shop" class="btn btn-secondary mr-2">Seguir comprando</a>
+                <a asp-action="Checkout" class="btn btn-primary">Finalizar compra</a>
+            </div>
+        </div>
+    }
+</div>
+
+

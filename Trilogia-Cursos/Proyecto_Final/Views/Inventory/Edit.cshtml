@@ -1,0 +1,28 @@
+﻿@model Proyecto_Final.Models.Admin.ProductFormViewModel
+@{ ViewData["Title"] = "Editar producto"; var categorias = ViewBag.Categorias as List<string> ?? new List<string>(); }
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Editar producto</h2>
+    <a asp-controller="Inventory" asp-action="Index" class="btn btn-secondary">Volver</a>
+</div>
+
+<form asp-controller="Inventory" asp-action="Edit" method="post" enctype="multipart/form-data">
+@Html.AntiForgeryToken()
+<input asp-for="ProductoId" type="hidden" />
+<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+<input asp-for="Nombre" class="form-control mb-3" placeholder="Nombre del producto" />
+@if (categorias.Any()) { <select asp-for="Categoria" class="form-control mb-3">@foreach (var categoria in categorias){<option value="@categoria">@categoria</option>}</select> } else { <input asp-for="Categoria" class="form-control mb-3" placeholder="CategorÃ­a" /> }
+<textarea asp-for="Descripcion" class="form-control mb-3" rows="4"></textarea>
+@if (!string.IsNullOrWhiteSpace(Model.ImagenUrl)) { <img src="@Url.Content(Model.ImagenUrl)" alt="@Model.Nombre" style="width:120px;height:120px;object-fit:cover;display:block;margin-bottom:1rem;" /> }
+<input asp-for="ImagenArchivo" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" id="ImagenArchivo" class="form-control mb-3" />
+<input asp-for="ImagenUrl" class="form-control mb-3" placeholder="~/img/producto.webp o URL externa" />
+<input asp-for="Precio" class="form-control mb-3" placeholder="0.00" />
+<input asp-for="Stock" class="form-control mb-3" placeholder="0" />
+<div class="form-check mb-2"><input asp-for="Activo" class="form-check-input" /><label asp-for="Activo" class="form-check-label"></label></div>
+<div class="form-check mb-3"><input asp-for="EsDestacado" class="form-check-input" /><label asp-for="EsDestacado" class="form-check-label">Mostrar en productos destacados</label></div>
+<div class="d-flex" style="gap:10px;">
+    <button type="submit" class="btn btn-primary">Guardar cambios</button>
+    <a asp-controller="Inventory" asp-action="Index" class="btn btn-secondary">Volver</a>
+</div>
+</form>
+

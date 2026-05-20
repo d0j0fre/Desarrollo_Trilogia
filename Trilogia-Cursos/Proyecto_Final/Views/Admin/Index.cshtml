@@ -1,0 +1,261 @@
+@model Proyecto_Final.Models.Admin.DashboardSummaryViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header">
+                <h2 class="mb-2">Panel de administrador</h2>
+                <p>Resumen general del sistema, productos, pedidos y facturación.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-3">
+        <div class="col-lg-3 col-md-6 col-sm-12 pb-3 d-flex">
+            <div class="admin-card w-100 text-center">
+                <div class="mb-3">
+                    <i class="fa fa-boxes fa-2x text-primary"></i>
+                </div>
+                <h6 class="text-muted mb-2">Total productos</h6>
+                <h3 class="mb-0">@Model.TotalProductos</h3>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 col-sm-12 pb-3 d-flex">
+            <div class="admin-card w-100 text-center">
+                <div class="mb-3">
+                    <i class="fa fa-check-circle fa-2x text-primary"></i>
+                </div>
+                <h6 class="text-muted mb-2">Productos activos</h6>
+                <h3 class="mb-0">@Model.ProductosActivos</h3>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 col-sm-12 pb-3 d-flex">
+            <div class="admin-card w-100 text-center">
+                <div class="mb-3">
+                    <i class="fa fa-exclamation-triangle fa-2x text-primary"></i>
+                </div>
+                <h6 class="text-muted mb-2">Stock bajo</h6>
+                <h3 class="mb-0">@Model.StockBajo</h3>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 col-sm-12 pb-3 d-flex">
+            <div class="admin-card w-100 text-center">
+                <div class="mb-3">
+                    <i class="fa fa-times-circle fa-2x text-primary"></i>
+                </div>
+                <h6 class="text-muted mb-2">Productos agotados</h6>
+                <h3 class="mb-0">@Model.ProductosAgotados</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-3">
+        <div class="col-lg-3 col-md-6 col-sm-12 pb-3 d-flex">
+            <div class="admin-card w-100 text-center">
+                <div class="mb-3">
+                    <i class="fa fa-clipboard-list fa-2x text-primary"></i>
+                </div>
+                <h6 class="text-muted mb-2">Total pedidos</h6>
+                <h3 class="mb-0">@Model.TotalPedidos</h3>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 col-sm-12 pb-3 d-flex">
+            <div class="admin-card w-100 text-center">
+                <div class="mb-3">
+                    <i class="fa fa-hourglass-half fa-2x text-primary"></i>
+                </div>
+                <h6 class="text-muted mb-2">Pendientes</h6>
+                <h3 class="mb-0">@Model.PedidosPendientes</h3>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 col-sm-12 pb-3 d-flex">
+            <div class="admin-card w-100 text-center">
+                <div class="mb-3">
+                    <i class="fa fa-cogs fa-2x text-primary"></i>
+                </div>
+                <h6 class="text-muted mb-2">En proceso</h6>
+                <h3 class="mb-0">@Model.PedidosEnProceso</h3>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 col-sm-12 pb-3 d-flex">
+            <div class="admin-card w-100 text-center">
+                <div class="mb-3">
+                    <i class="fa fa-check-double fa-2x text-primary"></i>
+                </div>
+                <h6 class="text-muted mb-2">Entregados</h6>
+                <h3 class="mb-0">@Model.PedidosEntregados</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-3">
+        <div class="col-lg-6 pb-3 d-flex">
+            <div class="admin-card w-100 text-center">
+                <div class="mb-3">
+                    <i class="fa fa-coins fa-2x text-primary"></i>
+                </div>
+                <h6 class="text-muted mb-2">Ventas totales</h6>
+                <h3 class="mb-0">₡@Model.VentasTotales.ToString("N2")</h3>
+            </div>
+        </div>
+
+        <div class="col-lg-6 pb-3 d-flex">
+            <div class="admin-card w-100 text-center">
+                <div class="mb-3">
+                    <i class="fa fa-file-invoice-dollar fa-2x text-primary"></i>
+                </div>
+                <h6 class="text-muted mb-2">Ventas del mes actual</h6>
+                <h3 class="mb-0">₡@Model.VentasMesActual.ToString("N2")</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-3">
+        <div class="col-lg-6 pb-3">
+            <div class="admin-table-wrapper h-100">
+                <div class="p-4 border-bottom">
+                    <h5 class="mb-0">Productos críticos</h5>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Producto</th>
+                                <th>Categoría</th>
+                                <th>Stock</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.ProductosCriticos == null || !Model.ProductosCriticos.Any())
+                            {
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-4">
+                                        No hay productos críticos registrados.
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var item in Model.ProductosCriticos)
+                                {
+                                    var clase = item.Stock <= 0 ? "danger" : "warning";
+
+                                    <tr>
+                                        <td>@item.Nombre</td>
+                                        <td>@item.Categoria</td>
+                                        <td>@item.Stock</td>
+                                        <td>
+                                            <span class="admin-badge-soft @clase">@item.EstadoStock</span>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 pb-3">
+            <div class="admin-table-wrapper h-100">
+                <div class="p-4 border-bottom">
+                    <h5 class="mb-0">Pedidos recientes</h5>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th># Pedido</th>
+                                <th>Cliente</th>
+                                <th>Fecha</th>
+                                <th>Estado</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.PedidosRecientes == null || !Model.PedidosRecientes.Any())
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-4">
+                                        No hay pedidos recientes.
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var item in Model.PedidosRecientes)
+                                {
+                                    var claseEstado = item.Estado == "Pendiente"
+                                    ? "warning"
+                                    : item.Estado == "Entregado"
+                                    ? "success"
+                                    : "dark";
+
+                                    <tr>
+                                        <td>#@item.PedidoId</td>
+                                        <td>@item.Cliente</td>
+                                        <td>@item.FechaPedido.ToString("dd/MM/yyyy")</td>
+                                        <td>
+                                            <span class="admin-badge-soft @claseEstado">@item.Estado</span>
+                                        </td>
+                                        <td>₡@item.Total.ToString("N2")</td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-12">
+            <div class="admin-card">
+                <h5 class="mb-4">Accesos rápidos</h5>
+
+                <div class="row">
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <a asp-controller="Inventory" asp-action="Index" class="btn btn-primary btn-block py-3">
+                            <i class="fa fa-boxes mr-2"></i>Inventario
+                        </a>
+                    </div>
+
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <a asp-controller="Inventory" asp-action="Movements" class="btn btn-primary btn-block py-3">
+                            <i class="fa fa-exchange-alt mr-2"></i>Movimientos
+                        </a>
+                    </div>
+
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <a asp-controller="OrdersAdmin" asp-action="Index" class="btn btn-primary btn-block py-3">
+                            <i class="fa fa-clipboard-list mr-2"></i>Pedidos
+                        </a>
+                    </div>
+
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <a asp-controller="Billing" asp-action="Index" class="btn btn-primary btn-block py-3">
+                            <i class="fa fa-file-invoice-dollar mr-2"></i>Facturación
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

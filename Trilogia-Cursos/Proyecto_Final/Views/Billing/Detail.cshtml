@@ -1,0 +1,159 @@
+@model Proyecto_Final.Models.Admin.InvoiceDetailViewModel
+@{
+    ViewData["Title"] = "Detalle de factura";
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header">
+                <h2 class="mb-2">Detalle de factura</h2>
+                <p>Consulta la información general de la factura y el desglose de productos facturados.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-3">
+        <div class="col-lg-8 pb-3">
+            <div class="admin-card h-100">
+                <h5 class="mb-4">Información general</h5>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="font-weight-bold d-block">ID factura</label>
+                        <span>@Model.FacturaId</span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="font-weight-bold d-block">Pedido asociado</label>
+                        <span>#@Model.PedidoId</span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="font-weight-bold d-block">Número de factura</label>
+                        <span class="font-weight-bold">@Model.NumeroFactura</span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="font-weight-bold d-block">Estado</label>
+                        @{
+                            var claseEstado = Model.Estado == "Generada" ? "success" : "dark";
+                        }
+                        <span class="admin-badge-soft @claseEstado">@Model.Estado</span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="font-weight-bold d-block">Cliente</label>
+                        <span>@Model.Cliente</span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="font-weight-bold d-block">Correo</label>
+                        <span>@Model.Correo</span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="font-weight-bold d-block">Fecha factura</label>
+                        <span>@Model.FechaFactura.ToString("dd/MM/yyyy HH:mm")</span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="font-weight-bold d-block">Subtotal</label>
+                        <span>₡@Model.Subtotal.ToString("N2")</span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="font-weight-bold d-block">Impuesto</label>
+                        <span>₡@Model.Impuesto.ToString("N2")</span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="font-weight-bold d-block">Total</label>
+                        <span class="font-weight-bold">₡@Model.Total.ToString("N2")</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 pb-3">
+            <div class="admin-card h-100">
+                <h5 class="mb-4">Acciones</h5>
+
+                <a asp-controller="Billing" asp-action="Index" class="btn btn-outline-secondary btn-block mb-2">
+                    <i class="fa fa-arrow-left mr-2"></i>Volver a facturación
+                </a>
+
+                <button type="button" class="btn btn-primary btn-block mb-2" onclick="window.print();">
+                    <i class="fa fa-print mr-2"></i>Imprimir factura
+                </button>
+
+                <p class="text-muted mb-0 mt-3">
+                    Esta vista permite consultar el detalle generado por el sistema para fines administrativos y de control.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-12">
+            <div class="admin-table-wrapper">
+                <div class="p-4 border-bottom">
+                    <h5 class="mb-0">Detalle de líneas facturadas</h5>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Producto</th>
+                                <th>Cantidad</th>
+                                <th>Precio unitario</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Detalles == null || !Model.Detalles.Any())
+                            {
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-4">
+                                        No hay líneas registradas en esta factura.
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var item in Model.Detalles)
+                                {
+                                    <tr>
+                                        <td class="font-weight-bold">@item.Producto</td>
+                                        <td>@item.Cantidad</td>
+                                        <td>₡@item.PrecioUnitario.ToString("N2")</td>
+                                        <td>₡@item.Subtotal.ToString("N2")</td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th colspan="3" class="text-right">Subtotal</th>
+                                <th>₡@Model.Subtotal.ToString("N2")</th>
+                            </tr>
+                            <tr>
+                                <th colspan="3" class="text-right">Impuesto</th>
+                                <th>₡@Model.Impuesto.ToString("N2")</th>
+                            </tr>
+                            <tr>
+                                <th colspan="3" class="text-right">Total</th>
+                                <th>₡@Model.Total.ToString("N2")</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,135 @@
+@model IEnumerable<Proyecto_Final.Models.Admin.OrderAdminListItemViewModel>
+@{
+    ViewData["Title"] = "Pedidos";
+    var estadoActual = ViewBag.Estado as string;
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header">
+                <h2 class="mb-2">Gestión de pedidos</h2>
+                <p>Consulta, filtra y administra el estado de los pedidos registrados en el sistema.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-filter-bar">
+                <form asp-controller="OrdersAdmin" asp-action="Index" method="get" class="row align-items-end">
+                    <div class="col-md-4 mb-3 mb-md-0">
+                        <label class="font-weight-bold">Filtrar por estado</label>
+                        <select name="estado" class="form-control">
+                            <option value="">Todos</option>
+                            <option value="Pendiente" selected="@(estadoActual == "Pendiente")">Pendiente</option>
+                            <option value="Aprobado" selected="@(estadoActual == "Aprobado")">Aprobado</option>
+                            <option value="EnProceso" selected="@(estadoActual == "EnProceso")">En proceso</option>
+                            <option value="Entregado" selected="@(estadoActual == "Entregado")">Entregado</option>
+                            <option value="Cancelado" selected="@(estadoActual == "Cancelado")">Cancelado</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-8">
+                        <div class="d-flex flex-wrap">
+                            <button type="submit" class="btn btn-primary mr-2 mb-2">
+                                <i class="fa fa-search mr-2"></i>Filtrar
+                            </button>
+
+                            <a asp-controller="OrdersAdmin" asp-action="Index" class="btn btn-outline-secondary mb-2">
+                                <i class="fa fa-eraser mr-2"></i>Limpiar filtro
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-12">
+            <div class="admin-table-wrapper">
+                <div class="p-4 border-bottom d-flex justify-content-between align-items-center flex-wrap">
+                    <h5 class="mb-2 mb-md-0">Listado de pedidos</h5>
+                    <span class="text-muted">Total registros: @(Model?.Count() ?? 0)</span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th># Pedido</th>
+                                <th>Cliente</th>
+                                <th>Correo</th>
+                                <th>Fecha</th>
+                                <th>Estado</th>
+                                <th>Entrega</th>
+                                <th>Dirección</th>
+                                <th>Total líneas</th>
+                                <th>Total</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model == null || !Model.Any())
+                            {
+                                <tr>
+                                    <td colspan="10" class="text-center text-muted py-4">
+                                        No se encontraron pedidos registrados.
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var item in Model)
+                                {
+                                    var claseEstado = item.Estado == "Pendiente"
+                                    ? "warning"
+                                    : item.Estado == "Entregado"
+                                    ? "success"
+                                    : item.Estado == "Cancelado"
+                                    ? "danger"
+                                    : "dark";
+
+                                    <tr>
+                                        <td class="font-weight-bold">#@item.PedidoId</td>
+                                        <td>@item.Cliente</td>
+                                        <td>@item.Correo</td>
+                                        <td>@item.FechaPedido.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td>
+                                            <span class="admin-badge-soft @claseEstado">@item.Estado</span>
+                                        </td>
+                                        <td>
+                                            @(string.IsNullOrWhiteSpace(item.TipoEntrega)
+                                                                                ? "No definido"
+                                                                                : item.TipoEntrega)
+                                                                                               </td>
+                                                                                               <td>
+                                            @(string.IsNullOrWhiteSpace(item.DireccionEntrega)
+                                                                                ? "No registrada"
+                                                                                : item.DireccionEntrega)
+                                </td>
+                                <td>@item.TotalLineas</td>
+                                <td>₡@item.Total.ToString("N2")</td>
+                                <td class="text-center">
+                                    <a asp-controller="OrdersAdmin"
+                                       asp-action="Detail"
+                                       asp-route-id="@item.PedidoId"
+                                       class="btn btn-sm btn-outline-primary mb-1">
+                                        <i class="fa fa-eye mr-1"></i>Ver
+                                    </a>
+                                </td>
+                            </tr>
+                                                        }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

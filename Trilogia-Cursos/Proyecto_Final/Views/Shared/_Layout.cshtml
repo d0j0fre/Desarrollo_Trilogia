@@ -1,0 +1,157 @@
+@using Microsoft.AspNetCore.Http
+@using Proyecto_Final.Services
+@inject AdminDbService AdminDbService
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <title>Licorera La Bodega</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta content="licorera, licores, whisky, vinos, cervezas, ron, vodka" name="keywords">
+    <meta content="Licorera La Bodega - Compra licores en línea" name="description">
+
+    <link href="@Url.Content("~/img/favicon.ico")" rel="icon">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="~/lib/animate/animate.min.css" rel="stylesheet">
+    <link href="~/lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet">
+    <link href="~/css/style.css" rel="stylesheet">
+    <link href="~/css/custom-theme.css" rel="stylesheet">
+
+    @RenderSection("Styles", required: false)
+</head>
+
+<body>
+    @{
+        var userName = Context.Session.GetString("UserFullName");
+        var userRole = Context.Session.GetString("UserRole");
+        var isLoggedIn = !string.IsNullOrWhiteSpace(Context.Session.GetString("UserEmail"));
+        var categoriasLayout = await AdminDbService.GetStoreCategoriesAsync();
+    }
+    <div class="container-fluid topbar">
+        <div class="row align-items-center py-2 px-xl-5">
+            <div class="col-lg-6 d-none d-lg-block">
+                <div class="d-inline-flex align-items-center">
+                    <small class="text-light"><i class="fa fa-map-marker-alt mr-2 text-primary"></i>San José, Costa Rica</small>
+                    <small class="px-2 text-light">|</small>
+                    <small class="text-light"><i class="fa fa-envelope mr-2 text-primary"></i>info@labodega.com</small>
+                </div>
+            </div>
+
+            <div class="col-lg-6 text-center text-lg-right">
+                @if (isLoggedIn)
+                {
+                    <div class="user-panel float-lg-right">
+                        <div class="text-left mr-1">
+                            <p class="user-panel__name"><i class="fa fa-user mr-1 text-primary"></i>@userName</p>
+                            <p class="user-panel__role">@userRole</p>
+                        </div>
+
+                        <form asp-controller="Account" asp-action="Logout" method="post" class="m-0">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-primary logout-btn"><i class="fa fa-sign-out-alt mr-1"></i>Logout</button>
+                        </form>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid bg-dark mb-30">
+        <div class="row px-xl-5">
+            <div class="col-lg-3 d-none d-lg-block">
+                <a class="btn d-flex align-items-center justify-content-between bg-primary w-100 header-categories-button" data-toggle="collapse" href="#navbar-vertical">
+                    <h6 class="text-dark m-0"><i class="fa fa-bars mr-2"></i>Categorías</h6>
+                    <i class="fa fa-angle-down text-dark"></i>
+                </a>
+
+                <nav class="collapse position-absolute navbar navbar-vertical navbar-light align-items-start p-0 bg-light header-categories-panel" id="navbar-vertical">
+                    <div class="navbar-nav w-100">
+                        @foreach (var categoria in categoriasLayout)
+                        {
+                            <a asp-controller="Home" asp-action="Shop" asp-route-categoria="@categoria" class="nav-item nav-link">@categoria</a>
+                        }
+                    </div>
+                </nav>
+            </div>
+
+            <div class="col-lg-9">
+                <nav class="navbar navbar-expand-lg bg-dark navbar-dark py-3 py-lg-0 px-0">
+                    <a asp-controller="Home" asp-action="Index" class="text-decoration-none d-block d-lg-none">
+                        <span class="h1 text-uppercase text-dark bg-light px-2">La</span>
+                        <span class="h1 text-uppercase text-light bg-primary px-2 ml-n1">Bodega</span>
+                    </a>
+
+                    <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbarCollapse">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+
+                    <div class="collapse navbar-collapse justify-content-between" id="navbarCollapse">
+                        <div class="navbar-nav mr-auto py-0">
+                            <a asp-controller="Home" asp-action="Index" class="nav-item nav-link">Inicio</a>
+                            <a asp-controller="Home" asp-action="Shop" class="nav-item nav-link">Tienda</a>
+                            <a asp-controller="Cart" asp-action="Index" class="nav-item nav-link"><i class="fa fa-shopping-cart mr-1"></i>Carrito</a>
+                            <a asp-controller="Home" asp-action="Contact" class="nav-item nav-link">Contacto</a>
+
+                            @if (isLoggedIn && string.Equals(userRole, "Administrador", StringComparison.OrdinalIgnoreCase))
+                            {
+                                <a asp-controller="Admin" asp-action="Index" class="nav-item nav-link"><i class="fa fa-chart-line mr-1"></i>Dashboard</a>
+                                <a asp-controller="Inventory" asp-action="Index" class="nav-item nav-link"><i class="fa fa-boxes mr-1"></i>Inventario</a>
+                                <a asp-controller="Inventory" asp-action="Movements" class="nav-item nav-link"><i class="fa fa-exchange-alt mr-1"></i>Movimientos</a>
+                                <a asp-controller="OrdersAdmin" asp-action="Index" class="nav-item nav-link"><i class="fa fa-clipboard-list mr-1"></i>Pedidos</a>
+                                <a asp-controller="Billing" asp-action="Index" class="nav-item nav-link"><i class="fa fa-file-invoice-dollar mr-1"></i>Facturación</a>
+                            }
+
+                            @if (!isLoggedIn)
+                            {
+                                <a asp-controller="Account" asp-action="Login" class="nav-item nav-link text-primary font-weight-bold"><i class="fa fa-user mr-1"></i>Iniciar Sesión</a>
+                                <a asp-controller="Account" asp-action="Register" class="nav-item nav-link"><i class="fa fa-user-plus mr-1"></i>Registro</a>
+                            }
+                        </div>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <main role="main">
+        @if (TempData["LoginSuccess"] is string loginSuccess && !string.IsNullOrWhiteSpace(loginSuccess))
+        {
+            <div class="container mt-3"><div class="alert alert-success">@loginSuccess</div></div>
+        }
+        @if (TempData["SuccessMessage"] is string successMessage && !string.IsNullOrWhiteSpace(successMessage))
+        {
+            <div class="container mt-3"><div class="alert alert-success">@successMessage</div></div>
+        }
+        @if (TempData["ErrorMessage"] is string errorMessage && !string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="container mt-3"><div class="alert alert-danger">@errorMessage</div></div>
+        }
+
+        @RenderBody()
+    </main>
+
+    <div class="container-fluid bg-dark text-secondary mt-5 pt-5">
+        <div class="row border-top mx-xl-5 py-4 footer-border-top">
+            <div class="col-md-6 px-xl-0">
+                <p class="mb-md-0 text-center text-md-left text-secondary">&copy; <a class="text-primary" href="#">Licorera La Bodega</a>. Todos los derechos reservados.</p>
+            </div>
+            <div class="col-md-6 px-xl-0 text-center text-md-right">
+                <img class="img-fluid" src="@Url.Content("~/img/payments.png")" alt="Payments">
+            </div>
+        </div>
+    </div>
+
+    <a href="#" class="btn btn-primary back-to-top"><i class="fa fa-angle-double-up"></i></a>
+
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/easing/easing.min.js"></script>
+    <script src="~/lib/owlcarousel/owl.carousel.min.js"></script>
+    <script src="~/js/main.js"></script>
+
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

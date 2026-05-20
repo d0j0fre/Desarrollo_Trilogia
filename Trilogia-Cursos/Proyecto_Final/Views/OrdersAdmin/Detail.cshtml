@@ -1,0 +1,183 @@
+@model Proyecto_Final.Models.Admin.OrderDetailViewModel
+@{
+    ViewData["Title"] = "Detalle del pedido";
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header">
+                <h2 class="mb-2">Detalle del pedido #@Model.PedidoId</h2>
+                <p>Consulta la información general del pedido, productos asociados y actualiza su estado.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-3">
+        <div class="col-lg-8 pb-3">
+            <div class="admin-card h-100">
+                <h5 class="mb-4">Información general</h5>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="font-weight-bold d-block">Cliente</label>
+                        <span>@Model.Cliente</span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="font-weight-bold d-block">Correo</label>
+                        <span>@Model.Correo</span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="font-weight-bold d-block">Fecha del pedido</label>
+                        <span>@Model.FechaPedido.ToString("dd/MM/yyyy HH:mm")</span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="font-weight-bold d-block">Estado actual</label>
+                        @{
+                            var claseEstado = Model.Estado == "Pendiente"
+                            ? "warning"
+                            : Model.Estado == "Entregado"
+                            ? "success"
+                            : Model.Estado == "Cancelado"
+                            ? "danger"
+                            : "dark";
+                        }
+                        <span class="admin-badge-soft @claseEstado">@Model.Estado</span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="font-weight-bold d-block">Tipo de entrega</label>
+                        <span>
+                            @(string.IsNullOrWhiteSpace(Model.TipoEntrega)
+                                                        ? "No definido"
+                                                        : Model.TipoEntrega)
+                        </span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="font-weight-bold d-block">Total</label>
+                        <span class="font-weight-bold">₡@Model.Total.ToString("N2")</span>
+                    </div>
+
+                    <div class="col-md-12 mb-3">
+                        <label class="font-weight-bold d-block">Dirección de entrega</label>
+                        <span>
+                            @(string.IsNullOrWhiteSpace(Model.DireccionEntrega)
+                                                        ? "No registrada"
+                                                        : Model.DireccionEntrega)
+                        </span>
+                    </div>
+
+                    <div class="col-md-12 mb-0">
+                        <label class="font-weight-bold d-block">Observaciones</label>
+                        <span>
+                            @(string.IsNullOrWhiteSpace(Model.Observaciones)
+                                                        ? "Sin observaciones."
+                                                        : Model.Observaciones)
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 pb-3">
+            <div class="admin-card h-100">
+                <h5 class="mb-4">Actualizar estado</h5>
+
+                <form asp-controller="OrdersAdmin" asp-action="UpdateStatus" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="pedidoId" value="@Model.PedidoId" />
+
+                    <div class="form-group">
+                        <label class="font-weight-bold">Nuevo estado</label>
+                        <select name="nuevoEstado" class="form-control">
+                            <option value="Pendiente" selected="@(Model.Estado == "Pendiente")">Pendiente</option>
+                            <option value="Aprobado" selected="@(Model.Estado == "Aprobado")">Aprobado</option>
+                            <option value="EnProceso" selected="@(Model.Estado == "EnProceso")">En proceso</option>
+                            <option value="Entregado" selected="@(Model.Estado == "Entregado")">Entregado</option>
+                            <option value="Cancelado" selected="@(Model.Estado == "Cancelado")">Cancelado</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block mb-2">
+                        <i class="fa fa-save mr-2"></i>Guardar estado
+                    </button>
+
+                    <a asp-controller="OrdersAdmin" asp-action="Index" class="btn btn-outline-secondary btn-block">
+                        <i class="fa fa-arrow-left mr-2"></i>Volver a pedidos
+                    </a>
+                </form>
+
+                <hr />
+
+                <p class="text-muted mb-0">
+                    Cuando el pedido pasa a entregado, el sistema puede generar la factura y registrar movimientos de inventario según corresponda.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-12">
+            <div class="admin-table-wrapper">
+                <div class="p-4 border-bottom">
+                    <h5 class="mb-0">Detalle de productos</h5>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>ID detalle</th>
+                                <th>Producto</th>
+                                <th>Cantidad</th>
+                                <th>Precio unitario</th>
+                                <th>Subtotal</th>
+                                <th>Stock actual</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Detalles == null || !Model.Detalles.Any())
+                            {
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-4">
+                                        No hay líneas registradas para este pedido.
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var item in Model.Detalles)
+                                {
+                                    var claseStock = item.StockActual <= 0
+                                    ? "danger"
+                                    : item.StockActual <= 5
+                                    ? "warning"
+                                    : "success";
+
+                                    <tr>
+                                        <td>@item.PedidoDetalleId</td>
+                                        <td class="font-weight-bold">@item.Producto</td>
+                                        <td>@item.Cantidad</td>
+                                        <td>₡@item.PrecioUnitario.ToString("N2")</td>
+                                        <td>₡@item.Subtotal.ToString("N2")</td>
+                                        <td>
+                                            <span class="admin-badge-soft @claseStock">@item.StockActual</span>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

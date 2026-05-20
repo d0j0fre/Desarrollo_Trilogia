@@ -1,0 +1,82 @@
+@model Proyecto_Final.Models.LoginViewModel
+
+@{
+    ViewData["Title"] = "Iniciar Sesión";
+}
+
+<div class="container-fluid">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <nav class="breadcrumb bg-light mb-30">
+                <a class="breadcrumb-item text-primary" asp-controller="Home" asp-action="Index">Inicio</a>
+                <span class="breadcrumb-item active text-body">Iniciar Sesión</span>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <h2 class="section-title position-relative text-uppercase mx-xl-5 mb-4">
+        <span class="text-secondary pr-3">Acceso de Clientes</span>
+    </h2>
+
+    <div class="row px-xl-5">
+        <div class="col-lg-6 offset-lg-3 mb-5">
+            <div class="contact-form bg-light p-30">
+                <h4 class="text-secondary mb-4 text-center">Bienvenido a La Bodega</h4>
+
+                @if (TempData["RegisterSuccess"] is string msg && !string.IsNullOrWhiteSpace(msg))
+                {
+                    <div class="alert alert-success" role="alert">@msg</div>
+                }
+
+                <form asp-controller="Account" asp-action="Login" method="post" novalidate="novalidate">
+                    <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="control-group mb-3">
+                        <label asp-for="Email" class="text-body"></label>
+                        <input asp-for="Email" class="form-control" placeholder="ejemplo@correo.com" />
+                        <span asp-validation-for="Email" class="text-danger help-block"></span>
+                    </div>
+
+                    <div class="control-group mb-3">
+                        <label asp-for="Password" class="text-body"></label>
+                        <input asp-for="Password" class="form-control" placeholder="Tu contraseña" />
+                        <span asp-validation-for="Password" class="text-danger help-block"></span>
+                    </div>
+
+                    <div class="control-group mb-3">
+                        <a asp-controller="Account" asp-action="ForgotPassword" class="text-primary small font-weight-bold">¿Olvidaste tu contraseña?</a>
+                    </div>
+
+                    <div class="control-group mb-4">
+                        <div class="custom-control custom-checkbox">
+                            <input asp-for="RememberMe" type="checkbox" class="custom-control-input" id="customCheck1">
+                            <label class="custom-control-label text-secondary" for="customCheck1">Recordarme en este equipo</label>
+                        </div>
+                    </div>
+
+                    <div class="text-center">
+                        <button class="btn btn-primary btn-block px-4 py-2" type="submit">INGRESAR</button>
+                    </div>
+
+                    <div class="mt-3 text-center">
+                        <span class="text-body small">¿No tenés cuenta?</span>
+                        <a class="text-primary small font-weight-bold" asp-controller="Account" asp-action="Register">Registrate</a>
+                    </div>
+                </form>
+
+                <div class="mt-3 text-center">
+                    <p class="text-muted mb-0 small">
+                        Demo: <span class="font-weight-bold">admin@distribuidorajj.com</span> / <span class="font-weight-bold">1234</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}

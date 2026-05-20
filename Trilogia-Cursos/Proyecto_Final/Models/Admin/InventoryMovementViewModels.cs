@@ -1,0 +1,39 @@
+using System.ComponentModel.DataAnnotations;
+
+namespace Proyecto_Final.Models.Admin
+{
+    public class InventoryMovementViewModel
+    {
+        public int MovimientoId { get; set; }
+        public int ProductoId { get; set; }
+        public string Producto { get; set; } = string.Empty;
+        public string TipoMovimiento { get; set; } = string.Empty;
+        public int Cantidad { get; set; }
+        public int StockAnterior { get; set; }
+        public int StockNuevo { get; set; }
+        public string? Motivo { get; set; }
+        public string Usuario { get; set; } = string.Empty;
+        public DateTime FechaMovimiento { get; set; }
+    }
+
+    public class InventoryMovementFormViewModel
+    {
+        [Display(Name = "Producto")]
+        [Range(1, int.MaxValue, ErrorMessage = "Debes seleccionar un producto.")]
+        public int ProductoId { get; set; }
+
+        [Display(Name = "Tipo de movimiento")]
+        [Required(ErrorMessage = "El tipo de movimiento es obligatorio.")]
+        public string TipoMovimiento { get; set; } = "Entrada";
+
+        [Display(Name = "Cantidad")]
+        [Range(1, int.MaxValue, ErrorMessage = "La cantidad debe ser mayor que cero.")]
+        public int Cantidad { get; set; } = 1;
+
+        [Display(Name = "Motivo")]
+        [StringLength(300, ErrorMessage = "El motivo no puede superar los 300 caracteres.")]
+        public string? Motivo { get; set; } = string.Empty;
+
+        public List<ProductAdminViewModel> ProductosDisponibles { get; set; } = new();
+    }
+}

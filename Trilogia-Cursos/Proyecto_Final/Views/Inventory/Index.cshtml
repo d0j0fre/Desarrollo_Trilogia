@@ -1,0 +1,57 @@
+﻿@model IEnumerable<Proyecto_Final.Models.Admin.ProductAdminViewModel>
+@{ ViewData["Title"] = "Inventario"; var filtro = ViewBag.Filtro as string; }
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Inventario</h2>
+    <a asp-controller="Inventory" asp-action="Create" class="btn btn-primary">+ Nuevo producto</a>
+</div>
+
+<table class="table table-hover mb-0">
+<thead><tr><th>ID</th><th>Imagen</th><th>Nombre</th><th>CategorÃ­a</th><th>Destacado</th><th>Precio</th><th>Stock</th><th>Estado</th><th>Acciones</th></tr></thead>
+<tbody>
+@foreach (var item in Model) {
+ var imagen = string.IsNullOrWhiteSpace(item.ImagenUrl) ? Url.Content("~/img/whisky-premium.webp") : Url.Content(item.ImagenUrl);
+ <tr>
+ <td>@item.ProductoId</td>
+ <td><img src="@imagen" style="width:64px;height:64px;object-fit:cover;" /></td>
+ <td>@item.Nombre</td>
+ <td>@item.Categoria</td>
+ <td>
+   <form asp-controller="Inventory" asp-action="ToggleFeatured" method="post" class="mb-0">
+      @Html.AntiForgeryToken()
+      <input type="hidden" name="productoId" value="@item.ProductoId" />
+      <input type="hidden" name="filtro" value="@filtro" />
+      <button type="submit" class="btn btn-sm @(item.EsDestacado ? "btn-success" : "btn-secondary")">@(item.EsDestacado ? "SÃ­" : "No")</button>
+   </form>
+ </td>
+ <td>â‚¡@item.Precio.ToString("N2")</td>
+ <td>@item.Stock</td>
+ <td>
+    @if (item.Activo)
+    {
+        <span class="badge badge-success">Activo</span>
+    }
+    else
+    {
+        <span class="badge badge-secondary">Inactivo</span>
+    }
+ </td>
+ <td>
+    <div class="d-flex flex-column" style="gap:6px;">
+        <a asp-controller="Inventory" asp-action="Edit" asp-route-id="@item.ProductoId" class="btn btn-sm btn-primary">Editar</a>
+        @if (item.Activo)
+        {
+            <form asp-controller="Inventory" asp-action="Delete" method="post" class="mb-0" onsubmit="return confirm('Â¿Desactivar este producto?');">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="productoId" value="@item.ProductoId" />
+                <input type="hidden" name="filtro" value="@filtro" />
+                <button type="submit" class="btn btn-sm btn-danger">Eliminar</button>
+            </form>
+        }
+    </div>
+ </td>
+ </tr>
+}
+</tbody></table>
+
+
