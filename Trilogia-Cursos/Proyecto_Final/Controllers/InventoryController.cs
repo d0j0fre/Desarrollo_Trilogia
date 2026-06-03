@@ -100,5 +100,67 @@ namespace Proyecto_Final.Controllers
             await archivo.CopyToAsync(stream);
             return $"~/uploads/productos/{fileName}";
         }
+
+        [HttpGet]
+        public async Task<IActionResult> Movements()
+        {
+            var movimientos = await _adminDbService.GetInventoryMovementsAsync();
+            return View(movimientos);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> RegisterMovement()
+        {
+            var productos = await _adminDbService.GetActiveProductsForSelectAsync();
+            ViewBag.Productos = productos.Select(p => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+            {
+                Value = p.ProductoId.ToString(),
+                Text = $"{p.Nombre} (Stock actual: {p.Stock})"
+            }).ToList();
+            return View(new InventoryMovementFormViewModel());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RegisterMovement(InventoryMovementFormViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                var productos = await _adminDbService.GetActiveProductsForSelectAsync();
+                ViewBag.Productos = productos.Select(p => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+                {
+                    Value = p.ProductoId.ToString(),
+                    Text = $"{p.Nombre} (Stock actual: {p.Stock})"
+                }).ToList();
+                return View(model);
+            }
+
+            try
+            {
+                var usuarioId = HttpContext.Session.GetInt32("UserId") ?? 0;
+                var usuarioNombre = HttpContext.Session.GetString("UserFullName") ?? "Administrador";
+                await _adminDbService.RegisterInventoryMovementAsync(model, usuarioId, usuarioNombre);
+                TempData["SuccessMessage"] = "Movimiento registrado correctamente.";
+                return RedirectToAction(nameof(Movements));
+            }
+            catch (InvalidOperationException ex)
+            {
+                // Escenario 2: stock insuficiente para la salida
+                ModelState.AddModelError(string.Empty, ex.Message);
+            }
+            catch (Exception)
+            {
+                // Escenario 3: fallo de BD u otro error inesperado
+                ModelState.AddModelError(string.Empty, "Ocurrió un error al registrar el movimiento. Intente nuevamente.");
+            }
+
+            var productosRetry = await _adminDbService.GetActiveProductsForSelectAsync();
+            ViewBag.Productos = productosRetry.Select(p => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+            {
+                Value = p.ProductoId.ToString(),
+                Text = $"{p.Nombre} (Stock actual: {p.Stock})"
+            }).ToList();
+            return View(model);
+        }
     }
 }
