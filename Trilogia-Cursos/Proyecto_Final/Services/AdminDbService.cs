@@ -1,4 +1,5 @@
 ﻿using Microsoft.Data.SqlClient;
+using Proyecto_Final.Models;
 using Proyecto_Final.Models.Admin;
 using Proyecto_Final.Models.Store;
 using System.Data;
@@ -668,6 +669,123 @@ namespace Proyecto_Final.Services
             command.Parameters.AddWithValue("@NuevoStock", nuevoStock);
             await command.ExecuteNonQueryAsync();
         }
+
+        // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+        // CU-043: Registro de Auditoría
+        public async Task RegistrarAuditoriaAsync(int usuarioId, string accion, string modulo, string detalles)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand(@"
+        INSERT INTO dbo.HistorialAuditoria (UsuarioId, Accion, Modulo, Detalles) 
+        VALUES (@UsuarioId, @Accion, @Modulo, @Detalles)", connection);
+
+            command.Parameters.AddWithValue("@UsuarioId", usuarioId);
+            command.Parameters.AddWithValue("@Accion", accion);
+            command.Parameters.AddWithValue("@Modulo", modulo);
+            command.Parameters.AddWithValue("@Detalles", string.IsNullOrEmpty(detalles) ? DBNull.Value : detalles);
+
+            await connection.OpenAsync();
+            await command.ExecuteNonQueryAsync();
+        }
+
+        // CU-042: Verificación de Permisos
+        public async Task<bool> TienePermisoAsync(int perfilId, string nombreModulo)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand(@"
+        SELECT COUNT(1) FROM dbo.PermisosPerfil pp
+        INNER JOIN dbo.Modulos m ON pp.ModuloId = m.ModuloId
+        WHERE pp.PerfilId = @PerfilId AND m.NombreModulo = @NombreModulo", connection);
+
+            command.Parameters.AddWithValue("@PerfilId", perfilId);
+            command.Parameters.AddWithValue("@NombreModulo", nombreModulo);
+
+            await connection.OpenAsync();
+            int count = (int)await command.ExecuteScalarAsync();
+            return count > 0;
+        }
+
+        // CU-041: Eliminación de Rol/Perfil con validación de integridad
+        public async Task EliminarPerfilAsync(int perfilId)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
+
+            // 1. Validar si el perfil tiene usuarios (Criterio de Aceptación 3)
+            using var checkCmd = new SqlCommand("SELECT COUNT(1) FROM dbo.Usuarios WHERE PerfilId = @PerfilId", connection);
+            checkCmd.Parameters.AddWithValue("@PerfilId", perfilId);
+            int usersCount = (int)await checkCmd.ExecuteScalarAsync();
+
+            if (usersCount > 0)
+            {
+                throw new InvalidOperationException("No se puede eliminar el perfil porque tiene usuarios activos asignados.");
+            }
+
+            // 2. Eliminar permisos asociados primero (Integridad referencial)
+            using var deletePermisosCmd = new SqlCommand("DELETE FROM dbo.PermisosPerfil WHERE PerfilId = @PerfilId", connection);
+            deletePermisosCmd.Parameters.AddWithValue("@PerfilId", perfilId);
+            await deletePermisosCmd.ExecuteNonQueryAsync();
+
+            // 3. Eliminar el perfil
+            using var deletePerfilCmd = new SqlCommand("DELETE FROM dbo.Perfiles WHERE PerfilId = @PerfilId", connection);
+            deletePerfilCmd.Parameters.AddWithValue("@PerfilId", perfilId);
+            await deletePerfilCmd.ExecuteNonQueryAsync();
+        }
+
+
+        // Extraer todos los perfiles (Para HU-041)
+        public async Task<List<Perfil>> ObtenerPerfilesAsync()
+        {
+            var perfiles = new List<Perfil>();
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("SELECT PerfilId, Nombre, Descripcion, Activo FROM dbo.Perfiles", connection);
+
+            await connection.OpenAsync();
+            using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                perfiles.Add(new Perfil
+                {
+                    PerfilId = reader.GetInt32(0),
+                    Nombre = reader.GetString(1),
+                    Descripcion = reader.IsDBNull(2) ? null : reader.GetString(2),
+                    Activo = reader.GetBoolean(3)
+                });
+            }
+            return perfiles;
+        }
+
+        // Extraer historial para trazabilidad (Para HU-043)
+        public async Task<List<HistorialAuditoria>> ObtenerAuditoriaAsync()
+        {
+            var auditoria = new List<HistorialAuditoria>();
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand(@"
+        SELECT top 100 a.AuditoriaId, u.Correo, a.Accion, a.Modulo, a.Detalles, a.FechaHora 
+        FROM dbo.HistorialAuditoria a
+        INNER JOIN dbo.Usuarios u ON a.UsuarioId = u.UsuarioId
+        ORDER BY a.FechaHora DESC", connection);
+
+            await connection.OpenAsync();
+            using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                auditoria.Add(new HistorialAuditoria
+                {
+                    AuditoriaId = reader.GetInt32(0),
+                    // Nota: Puedes agregar un campo 'UsuarioCorreo' temporal en tu modelo para la vista
+                    Modulo = reader.GetString(3),
+                    Accion = reader.GetString(2),
+                    Detalles = reader.IsDBNull(4) ? "" : reader.GetString(4),
+                    FechaHora = reader.GetDateTime(5)
+                });
+            }
+            return auditoria;
+        }
+
     }
 }
 

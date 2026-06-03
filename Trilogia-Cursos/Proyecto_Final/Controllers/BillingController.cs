@@ -4,7 +4,7 @@ using Proyecto_Final.Services;
 
 namespace Proyecto_Final.Controllers
 {
-    [AdminAuthorize]
+    [AdminAuthorize("Facturacion")]
     public class BillingController : Controller
     {
         private readonly AdminDbService _adminDbService;

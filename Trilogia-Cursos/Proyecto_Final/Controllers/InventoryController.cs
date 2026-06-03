@@ -5,7 +5,7 @@ using Proyecto_Final.Services;
 
 namespace Proyecto_Final.Controllers
 {
-    [AdminAuthorize]
+    [AdminAuthorize("Inventario")]
     public class InventoryController : Controller
     {
         private readonly AdminDbService _adminDbService;

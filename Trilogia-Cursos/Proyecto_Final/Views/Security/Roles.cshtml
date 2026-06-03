@@ -1,0 +1,81 @@
+﻿@model IEnumerable<Proyecto_Final.Models.Perfil>
+
+@{
+    ViewData["Title"] = "Gestión de Roles";
+    Layout = "~/Views/Shared/_Layout.cshtml"; // Asegura que cargue el menú de navegación superior
+}
+
+<div class="container mt-5 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2" style="border-bottom: 1px dotted #ccc;">
+        <h2 style="font-weight: bold; color: #333;">ADMINISTRACIÓN DE ROLES</h2>
+
+        <button type="button" class="btn" style="background-color: #D4AF37; color: white; font-weight: bold; padding: 10px 20px;">
+            + Nuevo Rol
+        </button>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead style="background-color: #f8f9fa; color: #333;">
+                        <tr>
+                            <th class="py-3 px-4">ID</th>
+                            <th class="py-3">Nombre del Perfil</th>
+                            <th class="py-3">Descripción</th>
+                            <th class="py-3 text-center">Estado</th>
+                            <th class="py-3 text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td class="px-4 text-muted">#@item.PerfilId</td>
+                                    <td><strong style="color: #333;">@item.Nombre</strong></td>
+                                    <td class="text-muted">@(string.IsNullOrEmpty(item.Descripcion) ? "Sin descripción" : item.Descripcion)</td>
+                                    <td class="text-center">
+                                        @if (item.Activo)
+                                        {
+                                            <span class="badge bg-success px-3 py-2 rounded-pill">Activo</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger px-3 py-2 rounded-pill">Inactivo</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <a href="#" class="btn btn-sm btn-outline-secondary me-1">
+                                            Editar
+                                        </a>
+
+                                        <a asp-controller="Security" asp-action="Permisos" asp-route-perfilId="@item.PerfilId"
+                                           class="btn btn-sm text-white" style="background-color: #D4AF37;">
+                                            Permisos
+                                        </a>
+
+                                        <form asp-controller="Security" asp-action="EliminarPerfil" asp-route-id="@item.PerfilId" method="post" class="d-inline" onsubmit="return confirm('¿Estás seguro de que deseas eliminar este rol? Esta acción no se puede deshacer.');">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger ms-1">
+                                                Eliminar
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-muted">
+                                    No hay roles registrados en el sistema.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
