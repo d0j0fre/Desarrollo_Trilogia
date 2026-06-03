@@ -25,8 +25,11 @@
                 <form asp-controller="Inventory" asp-action="RegisterMovement" method="post">
                     @Html.AntiForgeryToken()
 
+
                     <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3"
                          style="display:@(ViewContext.ViewData.ModelState.IsValid ? "none" : "block")"></div>
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
 
                     <div class="form-row">
                         <div class="form-group col-md-12">

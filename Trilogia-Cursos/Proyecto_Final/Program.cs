@@ -1,4 +1,5 @@
 using Proyecto_Final.Services;
+using Proyecto_FinalAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +18,8 @@ builder.Services.AddSession(options =>
 // Servicios propios
 builder.Services.AddScoped<AdminDbService>();
 builder.Services.AddScoped<StoreDbService>();
+builder.Services.AddScoped<AccountDbService>();
+builder.Services.AddScoped<EmailService>();
 
 // HttpClient para consumir la API de autenticación
 builder.Services.AddHttpClient<AccountApiService>(client =>

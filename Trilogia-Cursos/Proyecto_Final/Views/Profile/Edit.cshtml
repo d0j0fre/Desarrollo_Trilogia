@@ -1,0 +1,73 @@
+﻿@model Proyecto_Final.Models.AppUser
+
+@{
+    ViewData["Title"] = "Mi Perfil";
+}
+
+<main class="shadow p-2 mt-0">
+    <div class="container py-4 d-flex flex-column align-items-center">
+        <h1 class="fw-bold color-azul">Mi Perfil</h1>
+        <p class="lead titulo-terciario">Actualiza tu información personal</p>
+    </div>
+
+    <div class="card-card p-4 shadow-lg mb-5 mx-auto">
+
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success">
+                @TempData["SuccessMessage"]
+            </div>
+        }
+
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger">
+                @TempData["ErrorMessage"]
+            </div>
+        }
+
+        <div class="text-center mb-2">
+            <img src="~/img/Logo2.png" alt="logo" class="logo-card" />
+        </div>
+
+        <form asp-action="Edit" asp-controller="Profile" method="post">
+
+            @Html.AntiForgeryToken()
+
+            <div class="mb-3">
+                <label class="form-label titulo-secundario">
+                    Nombre completo
+                </label>
+
+                <input
+                    type="text"
+                    name="fullName"
+                    class="form-control"
+                    value="@ViewBag.NombreCompleto"
+                    required />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label titulo-secundario">
+                    Correo
+                </label>
+
+                <input
+                    type="email"
+                    name="email"
+                    class="form-control"
+                    value="@ViewBag.Correo"
+                    required />
+            </div>
+
+            <button type="submit" class="btn btn-success w-100">
+                Guardar cambios
+            </button>
+
+        </form>
+    </div>
+</main>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
