@@ -101,7 +101,6 @@ namespace Proyecto_Final.Controllers
             return $"~/uploads/productos/{fileName}";
         }
 
-
         [HttpGet]
         public async Task<IActionResult> Movements()
         {
