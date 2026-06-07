@@ -6,10 +6,12 @@ namespace Proyecto_Final.Controllers
     public class AccountController : Controller
     {
         private readonly AccountApiService _accountApiService;
+        private readonly AdminDbService _adminDbService; // Inyectado para permisos y auditoría
 
-        public AccountController(AccountApiService accountApiService)
+        public AccountController(AccountApiService accountApiService, AdminDbService adminDbService)
         {
             _accountApiService = accountApiService;
+            _adminDbService = adminDbService;
         }
 
         [HttpGet]
@@ -46,10 +48,22 @@ namespace Proyecto_Final.Controllers
                     return View(model);
                 }
 
-                HttpContext.Session.SetInt32("UserId", response.UserId ?? 0);
+                int userId = response.UserId ?? 0;
+                HttpContext.Session.SetInt32("UserId", userId);
                 HttpContext.Session.SetString("UserEmail", response.Email ?? string.Empty);
                 HttpContext.Session.SetString("UserFullName", response.FullName ?? string.Empty);
                 HttpContext.Session.SetString("UserRole", response.Role ?? string.Empty);
+
+                // --- INTEGRACIÓN HU-42 y HU-43 ---
+                if (userId > 0)
+                {
+                    // 1. Obtener y guardar los módulos a los que tiene acceso
+                    var permisos = await _adminDbService.ObtenerNombresModulosPorUsuarioIdAsync(userId);
+                    HttpContext.Session.SetString("PermisosUsuario", string.Join(",", permisos));
+
+                    // 2. Registrar en auditoría el ingreso
+                    await _adminDbService.RegistrarAuditoriaAsync(userId, "LOGIN_EXITOSO", "Seguridad", $"Inicio de sesión correcto de: {response.Email}");
+                }
 
                 TempData["LoginSuccess"] = $"Bienvenido, {response.FullName}.";
                 return RedirectToAction("Index", "Home");
@@ -189,11 +203,24 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Logout()
+        public async Task<IActionResult> Logout()
         {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId.HasValue && userId.Value > 0)
+            {
+                await _adminDbService.RegistrarAuditoriaAsync(userId.Value, "LOGOUT", "Seguridad", "El usuario cerró sesión manualmente.");
+            }
+
             HttpContext.Session.Clear();
             TempData["SuccessMessage"] = "Sesión cerrada correctamente.";
             return RedirectToAction("Index", "Home");
+        }
+
+        // Endpoint para cuando el Filtro AdminAuthorize bloquea el acceso
+        [HttpGet]
+        public IActionResult AccesoDenegado()
+        {
+            return View();
         }
     }
 }

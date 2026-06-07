@@ -2,16 +2,16 @@
 
 @{
     ViewData["Title"] = "Gestión de Roles";
-    Layout = "~/Views/Shared/_Layout.cshtml"; // Asegura que cargue el menú de navegación superior
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 <div class="container mt-5 mb-5">
     <div class="d-flex justify-content-between align-items-center mb-4 pb-2" style="border-bottom: 1px dotted #ccc;">
         <h2 style="font-weight: bold; color: #333;">ADMINISTRACIÓN DE ROLES</h2>
 
-        <button type="button" class="btn" style="background-color: #D4AF37; color: white; font-weight: bold; padding: 10px 20px;">
+        <a asp-controller="Security" asp-action="CrearRol" class="btn shadow-sm" style="background-color: #D4AF37; color: #212529; font-weight: bold; padding: 10px 20px;">
             + Nuevo Rol
-        </button>
+        </a>
     </div>
 
     <div class="card shadow-sm border-0">
@@ -39,20 +39,19 @@
                                     <td class="text-center">
                                         @if (item.Activo)
                                         {
-                                            <span class="badge bg-success px-3 py-2 rounded-pill">Activo</span>
+                                            <span class="badge px-3 py-2 rounded-pill" style="background-color: #198754; color: white;">Activo</span>
                                         }
                                         else
                                         {
-                                            <span class="badge bg-danger px-3 py-2 rounded-pill">Inactivo</span>
+                                            <span class="badge px-3 py-2 rounded-pill" style="background-color: #dc3545; color: white;">Inactivo</span>
                                         }
                                     </td>
                                     <td class="text-center">
-                                        <a href="#" class="btn btn-sm btn-outline-secondary me-1">
+                                        <a asp-controller="Security" asp-action="EditarRol" asp-route-id="@item.PerfilId" class="btn btn-sm btn-dark me-1">
                                             Editar
                                         </a>
 
-                                        <a asp-controller="Security" asp-action="Permisos" asp-route-perfilId="@item.PerfilId"
-                                           class="btn btn-sm text-white" style="background-color: #D4AF37;">
+                                        <a asp-controller="Security" asp-action="Permisos" asp-route-perfilId="@item.PerfilId" class="btn btn-sm shadow-sm" style="background-color: #D4AF37; color: #212529; font-weight: bold;">
                                             Permisos
                                         </a>
 

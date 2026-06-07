@@ -13,7 +13,7 @@ namespace Proyecto_Final.Services
         public AdminDbService(IConfiguration configuration)
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection")
-                ?? throw new InvalidOperationException("No se encontrÃ‡Ã¼ la cadena de conexiÃ‡Ã¼n DefaultConnection.");
+                ?? throw new InvalidOperationException("No se encontró la cadena de conexión DefaultConnection.");
         }
 
         public async Task<DashboardSummaryViewModel> GetDashboardSummaryAsync()
@@ -244,7 +244,7 @@ namespace Proyecto_Final.Services
                 {
                     var cantidad = Math.Abs(model.Stock - previousStock);
                     var tipo = model.Stock > previousStock ? "AjusteEntrada" : "AjusteSalida";
-                    await CreateMovementInternalAsync(connection, (SqlTransaction)transaction, model.ProductoId, tipo, cantidad, previousStock, model.Stock, "Ajuste realizado desde ediciÃ‡Ã¼n de producto.", usuarioId, usuarioNombre);
+                    await CreateMovementInternalAsync(connection, (SqlTransaction)transaction, model.ProductoId, tipo, cantidad, previousStock, model.Stock, "Ajuste realizado desde edición de producto.", usuarioId, usuarioNombre);
                 }
 
                 await transaction.CommitAsync();
@@ -317,7 +317,7 @@ namespace Proyecto_Final.Services
                     selectCommand.CommandType = CommandType.StoredProcedure;
                     selectCommand.Parameters.AddWithValue("@ProductoId", model.ProductoId);
                     await using var reader = await selectCommand.ExecuteReaderAsync();
-                    if (!await reader.ReadAsync()) throw new InvalidOperationException("El producto seleccionado no existe o estÃ‡Â­ inactivo.");
+                    if (!await reader.ReadAsync()) throw new InvalidOperationException("El producto seleccionado no existe o está inactivo.");
                     productoNombre = reader.IsDBNull(0) ? "Producto" : reader.GetString(0);
                     stockAnterior = reader.IsDBNull(1) ? 0 : reader.GetInt32(1);
                 }
@@ -327,7 +327,7 @@ namespace Proyecto_Final.Services
                     "Entrada" => stockAnterior + model.Cantidad,
                     "Salida" => stockAnterior - model.Cantidad,
                     "Ajuste" => model.Cantidad,
-                    _ => throw new InvalidOperationException("Tipo de movimiento no vÃ‡Â­lido.")
+                    _ => throw new InvalidOperationException("Tipo de movimiento no válido.")
                 };
 
                 if (nuevoStock < 0) throw new InvalidOperationException("El movimiento deja el stock en negativo.");
@@ -735,7 +735,6 @@ namespace Proyecto_Final.Services
             await deletePerfilCmd.ExecuteNonQueryAsync();
         }
 
-
         // Extraer todos los perfiles (Para HU-041)
         public async Task<List<Perfil>> ObtenerPerfilesAsync()
         {
@@ -776,7 +775,6 @@ namespace Proyecto_Final.Services
                 auditoria.Add(new HistorialAuditoria
                 {
                     AuditoriaId = reader.GetInt32(0),
-                    // Nota: Puedes agregar un campo 'UsuarioCorreo' temporal en tu modelo para la vista
                     Modulo = reader.GetString(3),
                     Accion = reader.GetString(2),
                     Detalles = reader.IsDBNull(4) ? "" : reader.GetString(4),
@@ -786,9 +784,135 @@ namespace Proyecto_Final.Services
             return auditoria;
         }
 
+        public async Task CrearPerfilAsync(Perfil perfil)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand(@"
+        INSERT INTO dbo.Perfiles (Nombre, Descripcion, Activo, FechaCreacion) 
+        VALUES (@Nombre, @Descripcion, 1, GETDATE())", connection);
+
+            command.Parameters.AddWithValue("@Nombre", perfil.Nombre);
+            command.Parameters.AddWithValue("@Descripcion", string.IsNullOrEmpty(perfil.Descripcion) ? DBNull.Value : perfil.Descripcion);
+
+            await connection.OpenAsync();
+            await command.ExecuteNonQueryAsync();
+        }
+
+        // --- MÉTODOS AÑADIDOS PARA EDITAR ROL ---
+        public async Task<Perfil> ObtenerPerfilPorIdAsync(int perfilId)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("SELECT PerfilId, Nombre, Descripcion, Activo FROM dbo.Perfiles WHERE PerfilId = @Id", connection);
+            command.Parameters.AddWithValue("@Id", perfilId);
+
+            await connection.OpenAsync();
+            using var reader = await command.ExecuteReaderAsync();
+            if (await reader.ReadAsync())
+            {
+                return new Perfil
+                {
+                    PerfilId = reader.GetInt32(0),
+                    Nombre = reader.GetString(1),
+                    Descripcion = reader.IsDBNull(2) ? null : reader.GetString(2),
+                    Activo = reader.GetBoolean(3)
+                };
+            }
+            return null;
+        }
+
+        public async Task ActualizarPerfilAsync(Perfil perfil)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("UPDATE dbo.Perfiles SET Nombre = @Nombre, Descripcion = @Descripcion WHERE PerfilId = @Id", connection);
+            command.Parameters.AddWithValue("@Nombre", perfil.Nombre);
+            command.Parameters.AddWithValue("@Descripcion", string.IsNullOrEmpty(perfil.Descripcion) ? DBNull.Value : perfil.Descripcion);
+            command.Parameters.AddWithValue("@Id", perfil.PerfilId);
+
+            await connection.OpenAsync();
+            await command.ExecuteNonQueryAsync();
+        }
+
+        // --- MÉTODOS AÑADIDOS PARA GESTIÓN DE PERMISOS (HU-042) ---
+        public async Task<List<Modulo>> ObtenerTodosLosModulosAsync()
+        {
+            var modulos = new List<Modulo>();
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("SELECT ModuloId, NombreModulo FROM dbo.Modulos", connection);
+            await connection.OpenAsync();
+            using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+                modulos.Add(new Modulo { ModuloId = reader.GetInt32(0), NombreModulo = reader.GetString(1) });
+            return modulos;
+        }
+
+        public async Task<List<int>> ObtenerModulosPorPerfilAsync(int perfilId)
+        {
+            var asignados = new List<int>();
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("SELECT ModuloId FROM dbo.PermisosPerfil WHERE PerfilId = @Id", connection);
+            command.Parameters.AddWithValue("@Id", perfilId);
+            await connection.OpenAsync();
+            using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+                asignados.Add(reader.GetInt32(0));
+            return asignados;
+        }
+
+        public async Task ActualizarPermisosAsync(int perfilId, List<int> modulosSeleccionados)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
+            using var transaction = connection.BeginTransaction();
+
+            try
+            {
+                // 1. Limpiar permisos actuales
+                using var deleteCmd = new SqlCommand("DELETE FROM dbo.PermisosPerfil WHERE PerfilId = @Id", connection, transaction);
+                deleteCmd.Parameters.AddWithValue("@Id", perfilId);
+                await deleteCmd.ExecuteNonQueryAsync();
+
+                // 2. Insertar los nuevos
+                if (modulosSeleccionados != null && modulosSeleccionados.Any())
+                {
+                    foreach (var moduloId in modulosSeleccionados)
+                    {
+                        using var insertCmd = new SqlCommand("INSERT INTO dbo.PermisosPerfil (PerfilId, ModuloId) VALUES (@PId, @MId)", connection, transaction);
+                        insertCmd.Parameters.AddWithValue("@PId", perfilId);
+                        insertCmd.Parameters.AddWithValue("@MId", moduloId);
+                        await insertCmd.ExecuteNonQueryAsync();
+                    }
+                }
+                transaction.Commit();
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
+        }
+
+        public async Task<List<string>> ObtenerNombresModulosPorUsuarioIdAsync(int usuarioId)
+        {
+            var modulos = new List<string>();
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand(@"
+        SELECT m.NombreModulo 
+        FROM dbo.PermisosPerfil pp 
+        INNER JOIN dbo.Modulos m ON pp.ModuloId = m.ModuloId 
+        INNER JOIN dbo.Usuarios u ON pp.PerfilId = u.PerfilId
+        WHERE u.UsuarioId = @UserId", connection);
+
+            command.Parameters.AddWithValue("@UserId", usuarioId);
+            await connection.OpenAsync();
+            using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                modulos.Add(reader.GetString(0));
+            }
+            return modulos;
+        }
     }
 }
-
 
 
 

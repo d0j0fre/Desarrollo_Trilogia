@@ -29,6 +29,9 @@
         var userRole = Context.Session.GetString("UserRole");
         var isLoggedIn = !string.IsNullOrWhiteSpace(Context.Session.GetString("UserEmail"));
         var categoriasLayout = await AdminDbService.GetStoreCategoriesAsync();
+
+        // Obtenemos los permisos del usuario activo
+        var permisos = Context.Session.GetString("PermisosUsuario") ?? "";
     }
     <div class="container-fluid topbar">
         <div class="row align-items-center py-2 px-xl-5">
@@ -95,13 +98,29 @@
                             <a asp-controller="Cart" asp-action="Index" class="nav-item nav-link"><i class="fa fa-shopping-cart mr-1"></i>Carrito</a>
                             <a asp-controller="Home" asp-action="Contact" class="nav-item nav-link">Contacto</a>
 
-                            @if (isLoggedIn && string.Equals(userRole, "Administrador", StringComparison.OrdinalIgnoreCase))
+                            @if (isLoggedIn)
                             {
-                                <a asp-controller="Admin" asp-action="Index" class="nav-item nav-link"><i class="fa fa-chart-line mr-1"></i>Dashboard</a>
-                                <a asp-controller="Inventory" asp-action="Index" class="nav-item nav-link"><i class="fa fa-boxes mr-1"></i>Inventario</a>
-                                <a asp-controller="Inventory" asp-action="Movements" class="nav-item nav-link"><i class="fa fa-exchange-alt mr-1"></i>Movimientos</a>
-                                <a asp-controller="OrdersAdmin" asp-action="Index" class="nav-item nav-link"><i class="fa fa-clipboard-list mr-1"></i>Pedidos</a>
-                                <a asp-controller="Billing" asp-action="Index" class="nav-item nav-link"><i class="fa fa-file-invoice-dollar mr-1"></i>Facturación</a>
+                                @if (permisos.Contains("Admin"))
+                                {
+                                    <a asp-controller="Admin" asp-action="Index" class="nav-item nav-link"><i class="fa fa-chart-line mr-1"></i>Dashboard</a>
+                                }
+                                @if (permisos.Contains("Inventario"))
+                                {
+                                    <a asp-controller="Inventory" asp-action="Index" class="nav-item nav-link"><i class="fa fa-boxes mr-1"></i>Inventario</a>
+                                    <a asp-controller="Inventory" asp-action="Movements" class="nav-item nav-link"><i class="fa fa-exchange-alt mr-1"></i>Movimientos</a>
+                                }
+                                @if (permisos.Contains("Pedidos"))
+                                {
+                                    <a asp-controller="OrdersAdmin" asp-action="Index" class="nav-item nav-link"><i class="fa fa-clipboard-list mr-1"></i>Pedidos</a>
+                                }
+                                @if (permisos.Contains("Facturacion"))
+                                {
+                                    <a asp-controller="Billing" asp-action="Index" class="nav-item nav-link"><i class="fa fa-file-invoice-dollar mr-1"></i>Facturación</a>
+                                }
+                                @if (permisos.Contains("Seguridad"))
+                                {
+                                    <a asp-controller="Security" asp-action="Roles" class="nav-item nav-link text-warning font-weight-bold"><i class="fa fa-shield-alt mr-1"></i>Seguridad</a>
+                                }
                             }
 
                             @if (!isLoggedIn)
