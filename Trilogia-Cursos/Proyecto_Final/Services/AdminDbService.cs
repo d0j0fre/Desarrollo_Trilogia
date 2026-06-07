@@ -891,6 +891,101 @@ namespace Proyecto_Final.Services
             }
             return productos;
         }
+
+        public async Task<int> CreateConsultationAsync(string nombre, string correo, string asunto, string mensaje)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_CreateConsultation", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.AddWithValue("@Nombre", nombre.Trim());
+            command.Parameters.AddWithValue("@Correo", correo.Trim());
+            command.Parameters.AddWithValue("@Asunto", asunto.Trim());
+            command.Parameters.AddWithValue("@Mensaje", mensaje.Trim());
+
+            await connection.OpenAsync();
+            return Convert.ToInt32(await command.ExecuteScalarAsync());
+        }
+
+        public async Task<List<ConsultationViewModel>> GetConsultationsAsync(string? estado, string? buscar)
+        {
+            var consultas = new List<ConsultationViewModel>();
+
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_GetConsultations", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add("@Estado", SqlDbType.NVarChar, 30).Value = string.IsNullOrWhiteSpace(estado) ? DBNull.Value : estado.Trim();
+            command.Parameters.Add("@Buscar", SqlDbType.NVarChar, 200).Value = string.IsNullOrWhiteSpace(buscar) ? DBNull.Value : buscar.Trim();
+
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                consultas.Add(new ConsultationViewModel
+                {
+                    ConsultaId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                    Nombre = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+                    Correo = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                    Asunto = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
+                    Mensaje = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
+                    Estado = reader.IsDBNull(5) ? "Pendiente" : reader.GetString(5),
+                    RespuestaInterna = reader.IsDBNull(6) ? null : reader.GetString(6),
+                    AtendidoPorUsuarioId = reader.IsDBNull(7) ? null : reader.GetInt32(7),
+                    AtendidoPorNombre = reader.IsDBNull(8) ? null : reader.GetString(8),
+                    FechaAtencion = reader.IsDBNull(9) ? null : reader.GetDateTime(9),
+                    FechaCreacion = reader.IsDBNull(10) ? DateTime.MinValue : reader.GetDateTime(10)
+                });
+            }
+
+            return consultas;
+        }
+
+        public async Task<ConsultationDetailViewModel?> GetConsultationByIdAsync(int consultaId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_GetConsultationById", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.AddWithValue("@ConsultaId", consultaId);
+
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync())
+            {
+                return null;
+            }
+
+            return new ConsultationDetailViewModel
+            {
+                ConsultaId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                Nombre = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+                Correo = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                Asunto = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
+                Mensaje = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
+                Estado = reader.IsDBNull(5) ? "Pendiente" : reader.GetString(5),
+                RespuestaInterna = reader.IsDBNull(6) ? null : reader.GetString(6),
+                AtendidoPorUsuarioId = reader.IsDBNull(7) ? null : reader.GetInt32(7),
+                AtendidoPorNombre = reader.IsDBNull(8) ? null : reader.GetString(8),
+                FechaAtencion = reader.IsDBNull(9) ? null : reader.GetDateTime(9),
+                FechaCreacion = reader.IsDBNull(10) ? DateTime.MinValue : reader.GetDateTime(10)
+            };
+        }
+
+        public async Task UpdateConsultationStatusAsync(int consultaId, string estado, string? respuestaInterna, int? usuarioId, string? usuarioNombre)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_UpdateConsultationStatus", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.AddWithValue("@ConsultaId", consultaId);
+            command.Parameters.AddWithValue("@Estado", estado.Trim());
+            command.Parameters.Add("@RespuestaInterna", SqlDbType.NVarChar, 1000).Value = string.IsNullOrWhiteSpace(respuestaInterna) ? DBNull.Value : respuestaInterna.Trim();
+            command.Parameters.Add("@AtendidoPorUsuarioId", SqlDbType.Int).Value = usuarioId.HasValue ? usuarioId.Value : DBNull.Value;
+            command.Parameters.Add("@AtendidoPorNombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(usuarioNombre) ? DBNull.Value : usuarioNombre.Trim();
+
+            await connection.OpenAsync();
+            await command.ExecuteNonQueryAsync();
+        }
+
         private static async Task CreateMovementInternalAsync(SqlConnection connection, SqlTransaction transaction, int productoId, string tipoMovimiento, int cantidad, int stockAnterior, int stockNuevo, string? motivo, int usuarioId, string usuarioNombre, string? productoNombre = null)
         {
             if (string.IsNullOrWhiteSpace(productoNombre))

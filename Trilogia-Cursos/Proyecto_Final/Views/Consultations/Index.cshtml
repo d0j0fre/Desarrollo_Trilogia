@@ -1,0 +1,110 @@
+@model Proyecto_Final.Models.Admin.ConsultationFilterViewModel
+@{
+    ViewData["Title"] = "Historial de consultas";
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+                <div>
+                    <h2 class="mb-2">Historial de consultas</h2>
+                    <p>Consulta, búsqueda y seguimiento de mensajes enviados desde el formulario de contacto.</p>
+                </div>
+                <a asp-controller="Admin" asp-action="Index" class="btn btn-outline-secondary mt-3 mt-md-0">
+                    <i class="fa fa-arrow-left mr-1"></i>Volver al panel
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-3">
+        <div class="col-12">
+            <div class="admin-card">
+                <form asp-controller="Consultations" asp-action="Index" method="get">
+                    <div class="form-row align-items-end">
+                        <div class="form-group col-md-4">
+                            <label>Estado</label>
+                            <select name="estado" class="form-control">
+                                <option value="">Todos</option>
+                                <option value="Pendiente" selected="@(Model.Estado == "Pendiente")">Pendiente</option>
+                                <option value="Atendida" selected="@(Model.Estado == "Atendida")">Atendida</option>
+                                <option value="Cerrada" selected="@(Model.Estado == "Cerrada")">Cerrada</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>Buscar</label>
+                            <input type="text" name="buscar" value="@Model.Buscar" class="form-control" placeholder="Nombre, correo, asunto o mensaje" />
+                        </div>
+                        <div class="form-group col-md-2">
+                            <button type="submit" class="btn btn-primary btn-block">
+                                <i class="fa fa-search mr-1"></i>Buscar
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-12">
+            <div class="admin-table-wrapper">
+                <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Consultas registradas</h5>
+                    <span class="badge badge-dark">@Model.Consultas.Count registro(s)</span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Fecha</th>
+                                <th>Cliente</th>
+                                <th>Correo</th>
+                                <th>Asunto</th>
+                                <th>Estado</th>
+                                <th class="text-right">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Consultas == null || !Model.Consultas.Any())
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4">
+                                        No hay consultas registradas con los filtros seleccionados.
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var item in Model.Consultas)
+                                {
+                                    var estadoClase = item.Estado == "Pendiente" ? "warning" : item.Estado == "Atendida" ? "success" : "dark";
+                                    <tr>
+                                        <td>#@item.ConsultaId</td>
+                                        <td>@item.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td>@item.Nombre</td>
+                                        <td>@item.Correo</td>
+                                        <td>@item.Asunto</td>
+                                        <td><span class="admin-badge-soft @estadoClase">@item.Estado</span></td>
+                                        <td class="text-right">
+                                            <a asp-controller="Consultations" asp-action="Details" asp-route-id="@item.ConsultaId" class="btn btn-sm btn-primary">
+                                                <i class="fa fa-eye mr-1"></i>Ver
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
