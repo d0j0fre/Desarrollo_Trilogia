@@ -618,6 +618,86 @@ namespace Proyecto_Final.Services
             }
         }
 
+        public async Task<RolePermissionAssignmentViewModel?> GetRolePermissionAssignmentAsync(int perfilId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_GetRolePermissions", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add("@PerfilId", SqlDbType.Int).Value = perfilId;
+
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync()) return null;
+
+            var model = new RolePermissionAssignmentViewModel
+            {
+                PerfilId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                RolNombre = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+                RolDescripcion = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                RolActivo = !reader.IsDBNull(3) && reader.GetBoolean(3)
+            };
+
+            await reader.NextResultAsync();
+
+            var permisos = new List<PermissionItemViewModel>();
+            while (await reader.ReadAsync())
+            {
+                permisos.Add(new PermissionItemViewModel
+                {
+                    PermisoId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                    Codigo = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+                    Modulo = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                    Nombre = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
+                    Descripcion = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
+                    Activo = !reader.IsDBNull(5) && reader.GetBoolean(5),
+                    Asignado = !reader.IsDBNull(6) && reader.GetBoolean(6)
+                });
+            }
+
+            model.PermisosSeleccionados = permisos
+                .Where(p => p.Asignado)
+                .Select(p => p.PermisoId)
+                .ToList();
+
+            model.Modulos = permisos
+                .GroupBy(p => p.Modulo)
+                .Select(g => new PermissionModuleGroupViewModel
+                {
+                    Modulo = g.Key,
+                    Permisos = g.ToList()
+                })
+                .ToList();
+
+            return model;
+        }
+
+        public async Task UpdateRolePermissionsAsync(int perfilId, List<int> permisosSeleccionados, int? usuarioId, string? usuarioNombre)
+        {
+            try
+            {
+                var permisosCsv = permisosSeleccionados == null || permisosSeleccionados.Count == 0
+                    ? string.Empty
+                    : string.Join(",", permisosSeleccionados.Distinct().OrderBy(x => x));
+
+                await using var connection = new SqlConnection(_connectionString);
+                await using var command = new SqlCommand("dbo.sp_Admin_UpdateRolePermissions", connection);
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.Add("@PerfilId", SqlDbType.Int).Value = perfilId;
+                command.Parameters.Add("@PermisosCsv", SqlDbType.NVarChar, -1).Value = permisosCsv;
+                command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId.HasValue && usuarioId.Value > 0 ? usuarioId.Value : DBNull.Value;
+                command.Parameters.Add("@UsuarioNombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(usuarioNombre) ? DBNull.Value : usuarioNombre.Trim();
+
+                await connection.OpenAsync();
+                await command.ExecuteNonQueryAsync();
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException(ex.Message, ex);
+            }
+        }
+
+
         public async Task<List<AuditLogViewModel>> GetAuditLogsAsync(string? modulo, string? accion, string? buscar)
         {
             var registros = new List<AuditLogViewModel>();
