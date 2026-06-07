@@ -80,5 +80,27 @@ namespace Proyecto_Final.Services
             await connection.OpenAsync();
             await command.ExecuteNonQueryAsync();
         }
+
+
+        //New method to update user profile
+        public async Task UpdateProfileAsync(int usuarioId, string nombreCompleto, string correo)
+        {
+            const string sql = @"
+        UPDATE dbo.Usuarios
+        SET NombreCompleto = @NombreCompleto,
+            Correo = @Correo
+        WHERE UsuarioId = @UsuarioId";
+
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand(sql, connection);
+
+            command.Parameters.AddWithValue("@UsuarioId", usuarioId);
+            command.Parameters.AddWithValue("@NombreCompleto", nombreCompleto.Trim());
+            command.Parameters.AddWithValue("@Correo", correo.Trim());
+
+            await connection.OpenAsync();
+            await command.ExecuteNonQueryAsync();
+        }
+
     }
 }

@@ -47,14 +47,25 @@
                 @if (isLoggedIn)
                 {
                     <div class="user-panel float-lg-right">
-                        <div class="text-left mr-1">
-                            <p class="user-panel__name"><i class="fa fa-user mr-1 text-primary"></i>@userName</p>
-                            <p class="user-panel__role">@userRole</p>
-                        </div>
+
+                        <a asp-controller="Profile"
+                           asp-action="Edit"
+                           class="text-decoration-none text-reset">
+
+                            <div class="text-left mr-1">
+                                <p class="user-panel__name">
+                                    <i class="fa fa-user mr-1 text-primary"></i>@userName
+                                </p>
+                                <p class="user-panel__role">@userRole</p>
+                            </div>
+
+                        </a>
 
                         <form asp-controller="Account" asp-action="Logout" method="post" class="m-0">
                             @Html.AntiForgeryToken()
-                            <button type="submit" class="btn btn-primary logout-btn"><i class="fa fa-sign-out-alt mr-1"></i>Logout</button>
+                            <button type="submit" class="btn btn-primary logout-btn">
+                                <i class="fa fa-sign-out-alt mr-1"></i>Logout
+                            </button>
                         </form>
                     </div>
                 }
