@@ -506,6 +506,118 @@ namespace Proyecto_Final.Services
         }
 
 
+
+        public async Task<List<RoleListItemViewModel>> GetRolesAsync(string? buscar)
+        {
+            var roles = new List<RoleListItemViewModel>();
+
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_GetRoles", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add("@Buscar", SqlDbType.NVarChar, 100).Value = string.IsNullOrWhiteSpace(buscar) ? DBNull.Value : buscar.Trim();
+
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                roles.Add(new RoleListItemViewModel
+                {
+                    PerfilId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                    Nombre = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+                    Descripcion = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                    Activo = !reader.IsDBNull(3) && reader.GetBoolean(3),
+                    FechaCreacion = reader.IsDBNull(4) ? DateTime.MinValue : reader.GetDateTime(4),
+                    TotalUsuarios = reader.IsDBNull(5) ? 0 : reader.GetInt32(5)
+                });
+            }
+
+            return roles;
+        }
+
+        public async Task<RoleFormViewModel?> GetRoleByIdAsync(int perfilId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_GetRoleById", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.AddWithValue("@PerfilId", perfilId);
+
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync()) return null;
+
+            return new RoleFormViewModel
+            {
+                PerfilId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                Nombre = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+                Descripcion = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                Activo = !reader.IsDBNull(3) && reader.GetBoolean(3),
+                FechaCreacion = reader.IsDBNull(4) ? DateTime.MinValue : reader.GetDateTime(4),
+                TotalUsuarios = reader.IsDBNull(5) ? 0 : reader.GetInt32(5)
+            };
+        }
+
+        public async Task<int> CreateRoleAsync(RoleFormViewModel model)
+        {
+            try
+            {
+                await using var connection = new SqlConnection(_connectionString);
+                await using var command = new SqlCommand("dbo.sp_Admin_CreateRole", connection);
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.Add("@Nombre", SqlDbType.NVarChar, 50).Value = model.Nombre.Trim();
+                command.Parameters.Add("@Descripcion", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.Descripcion) ? DBNull.Value : model.Descripcion.Trim();
+                command.Parameters.Add("@Activo", SqlDbType.Bit).Value = model.Activo;
+
+                await connection.OpenAsync();
+                var result = await command.ExecuteScalarAsync();
+                return Convert.ToInt32(result);
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException(ex.Message, ex);
+            }
+        }
+
+        public async Task UpdateRoleAsync(RoleFormViewModel model)
+        {
+            try
+            {
+                await using var connection = new SqlConnection(_connectionString);
+                await using var command = new SqlCommand("dbo.sp_Admin_UpdateRole", connection);
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.Add("@PerfilId", SqlDbType.Int).Value = model.PerfilId;
+                command.Parameters.Add("@Nombre", SqlDbType.NVarChar, 50).Value = model.Nombre.Trim();
+                command.Parameters.Add("@Descripcion", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.Descripcion) ? DBNull.Value : model.Descripcion.Trim();
+                command.Parameters.Add("@Activo", SqlDbType.Bit).Value = model.Activo;
+
+                await connection.OpenAsync();
+                await command.ExecuteNonQueryAsync();
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException(ex.Message, ex);
+            }
+        }
+
+        public async Task ToggleRoleStatusAsync(int perfilId)
+        {
+            try
+            {
+                await using var connection = new SqlConnection(_connectionString);
+                await using var command = new SqlCommand("dbo.sp_Admin_ToggleRoleStatus", connection);
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.Add("@PerfilId", SqlDbType.Int).Value = perfilId;
+
+                await connection.OpenAsync();
+                await command.ExecuteNonQueryAsync();
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException(ex.Message, ex);
+            }
+        }
+
         public async Task<List<AuditLogViewModel>> GetAuditLogsAsync(string? modulo, string? accion, string? buscar)
         {
             var registros = new List<AuditLogViewModel>();
