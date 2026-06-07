@@ -38,10 +38,17 @@ namespace Proyecto_Final.Controllers
         {
             ViewBag.Categorias = await _adminDbService.GetStoreCategoriesAsync();
             if (!ModelState.IsValid) return View(model);
+
             var usuarioId = HttpContext.Session.GetInt32("UserId") ?? 0;
             var usuarioNombre = HttpContext.Session.GetString("UserFullName") ?? "Administrador";
             model.ImagenUrl = await SaveProductImageAsync(model.ImagenArchivo, model.ImagenUrl);
             await _adminDbService.CreateProductAsync(model, usuarioId, usuarioNombre);
+
+            await RegistrarAuditoriaAsync(
+                "Crear",
+                "Inventario",
+                $"Se creó el producto {model.Nombre} con stock inicial {model.Stock}.");
+
             TempData["SuccessMessage"] = "Producto creado correctamente.";
             return RedirectToAction(nameof(Index));
         }
@@ -61,10 +68,17 @@ namespace Proyecto_Final.Controllers
         {
             ViewBag.Categorias = await _adminDbService.GetStoreCategoriesAsync();
             if (!ModelState.IsValid) return View(model);
+
             var usuarioId = HttpContext.Session.GetInt32("UserId") ?? 0;
             var usuarioNombre = HttpContext.Session.GetString("UserFullName") ?? "Administrador";
             model.ImagenUrl = await SaveProductImageAsync(model.ImagenArchivo, model.ImagenUrl);
             await _adminDbService.UpdateProductAsync(model, usuarioId, usuarioNombre);
+
+            await RegistrarAuditoriaAsync(
+                "Editar",
+                "Inventario",
+                $"Se actualizó el producto {model.Nombre}.");
+
             TempData["SuccessMessage"] = "Producto actualizado correctamente.";
             return RedirectToAction(nameof(Index));
         }
@@ -74,6 +88,12 @@ namespace Proyecto_Final.Controllers
         public async Task<IActionResult> ToggleFeatured(int productoId, string? filtro)
         {
             await _adminDbService.ToggleFeaturedAsync(productoId);
+
+            await RegistrarAuditoriaAsync(
+                "Editar",
+                "Inventario",
+                $"Se cambió el estado destacado del producto #{productoId}.");
+
             return RedirectToAction(nameof(Index), new { filtro });
         }
 
@@ -82,6 +102,12 @@ namespace Proyecto_Final.Controllers
         public async Task<IActionResult> Delete(int productoId, string? filtro)
         {
             await _adminDbService.ToggleProductStatusAsync(productoId);
+
+            await RegistrarAuditoriaAsync(
+                "Eliminar/Inactivar",
+                "Inventario",
+                $"Se activó o inactivó el producto #{productoId}.");
+
             TempData["SuccessMessage"] = "Producto desactivado correctamente.";
             return RedirectToAction(nameof(Index), new { filtro });
         }
@@ -140,17 +166,21 @@ namespace Proyecto_Final.Controllers
                 var usuarioId = HttpContext.Session.GetInt32("UserId") ?? 0;
                 var usuarioNombre = HttpContext.Session.GetString("UserFullName") ?? "Administrador";
                 await _adminDbService.RegisterInventoryMovementAsync(model, usuarioId, usuarioNombre);
+
+                await RegistrarAuditoriaAsync(
+                    "Movimiento",
+                    "Inventario",
+                    $"Se registró movimiento de inventario tipo {model.TipoMovimiento} para el producto #{model.ProductoId} con cantidad {model.Cantidad}.");
+
                 TempData["SuccessMessage"] = "Movimiento registrado correctamente.";
                 return RedirectToAction(nameof(Movements));
             }
             catch (InvalidOperationException ex)
             {
-                // Escenario 2: stock insuficiente para la salida
                 ModelState.AddModelError(string.Empty, ex.Message);
             }
             catch (Exception)
             {
-                // Escenario 3: fallo de BD u otro error inesperado
                 ModelState.AddModelError(string.Empty, "Ocurrió un error al registrar el movimiento. Intente nuevamente.");
             }
 
@@ -161,6 +191,20 @@ namespace Proyecto_Final.Controllers
                 Text = $"{p.Nombre} (Stock actual: {p.Stock})"
             }).ToList();
             return View(model);
+        }
+
+        private async Task RegistrarAuditoriaAsync(string accion, string modulo, string descripcion)
+        {
+            await _adminDbService.CreateAuditLogAsync(
+                HttpContext.Session.GetInt32("UserId"),
+                HttpContext.Session.GetString("UserFullName"),
+                HttpContext.Session.GetString("UserEmail"),
+                HttpContext.Session.GetString("UserRole"),
+                accion,
+                modulo,
+                descripcion,
+                HttpContext.Connection.RemoteIpAddress?.ToString(),
+                Request.Headers.UserAgent.ToString());
         }
     }
 }

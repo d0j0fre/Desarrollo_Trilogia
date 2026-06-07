@@ -1,4 +1,4 @@
-﻿using Microsoft.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using Proyecto_Final.Models.Admin;
 using Proyecto_Final.Models.Store;
 using System.Data;
@@ -503,6 +503,68 @@ namespace Proyecto_Final.Services
             }
 
             return model;
+        }
+
+
+        public async Task<List<AuditLogViewModel>> GetAuditLogsAsync(string? modulo, string? accion, string? buscar)
+        {
+            var registros = new List<AuditLogViewModel>();
+
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_GetAuditLogs", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add("@Modulo", SqlDbType.NVarChar, 80).Value = string.IsNullOrWhiteSpace(modulo) ? DBNull.Value : modulo.Trim();
+            command.Parameters.Add("@Accion", SqlDbType.NVarChar, 80).Value = string.IsNullOrWhiteSpace(accion) ? DBNull.Value : accion.Trim();
+            command.Parameters.Add("@Buscar", SqlDbType.NVarChar, 200).Value = string.IsNullOrWhiteSpace(buscar) ? DBNull.Value : buscar.Trim();
+
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                registros.Add(new AuditLogViewModel
+                {
+                    AuditoriaId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                    UsuarioId = reader.IsDBNull(1) ? null : reader.GetInt32(1),
+                    UsuarioNombre = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                    UsuarioCorreo = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
+                    Rol = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
+                    Accion = reader.IsDBNull(5) ? string.Empty : reader.GetString(5),
+                    Modulo = reader.IsDBNull(6) ? string.Empty : reader.GetString(6),
+                    Descripcion = reader.IsDBNull(7) ? string.Empty : reader.GetString(7),
+                    DireccionIp = reader.IsDBNull(8) ? null : reader.GetString(8),
+                    UserAgent = reader.IsDBNull(9) ? null : reader.GetString(9),
+                    FechaRegistro = reader.IsDBNull(10) ? DateTime.MinValue : reader.GetDateTime(10)
+                });
+            }
+
+            return registros;
+        }
+
+        public async Task CreateAuditLogAsync(int? usuarioId, string? usuarioNombre, string? usuarioCorreo, string? rol, string accion, string modulo, string descripcion, string? direccionIp, string? userAgent)
+        {
+            try
+            {
+                await using var connection = new SqlConnection(_connectionString);
+                await using var command = new SqlCommand("dbo.sp_Admin_CreateAuditLog", connection);
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId.HasValue && usuarioId.Value > 0 ? usuarioId.Value : DBNull.Value;
+                command.Parameters.Add("@UsuarioNombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(usuarioNombre) ? "Usuario no identificado" : usuarioNombre.Trim();
+                command.Parameters.Add("@UsuarioCorreo", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(usuarioCorreo) ? "No disponible" : usuarioCorreo.Trim();
+                command.Parameters.Add("@Rol", SqlDbType.NVarChar, 50).Value = string.IsNullOrWhiteSpace(rol) ? "No disponible" : rol.Trim();
+                command.Parameters.Add("@Accion", SqlDbType.NVarChar, 80).Value = accion.Trim();
+                command.Parameters.Add("@Modulo", SqlDbType.NVarChar, 80).Value = modulo.Trim();
+                command.Parameters.Add("@Descripcion", SqlDbType.NVarChar, 500).Value = descripcion.Trim();
+                command.Parameters.Add("@DireccionIp", SqlDbType.NVarChar, 80).Value = string.IsNullOrWhiteSpace(direccionIp) ? DBNull.Value : direccionIp.Trim();
+                command.Parameters.Add("@UserAgent", SqlDbType.NVarChar, 300).Value = string.IsNullOrWhiteSpace(userAgent) ? DBNull.Value : userAgent.Trim();
+
+                await connection.OpenAsync();
+                await command.ExecuteNonQueryAsync();
+            }
+            catch
+            {
+                // La auditoría no debe bloquear las acciones principales del sistema.
+            }
         }
 
         public async Task<List<string>> GetStoreCategoriesAsync()

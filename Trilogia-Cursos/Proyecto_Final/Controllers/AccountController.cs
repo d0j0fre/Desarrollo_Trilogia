@@ -6,10 +6,12 @@ namespace Proyecto_Final.Controllers
     public class AccountController : Controller
     {
         private readonly AccountApiService _accountApiService;
+        private readonly AdminDbService _adminDbService;
 
-        public AccountController(AccountApiService accountApiService)
+        public AccountController(AccountApiService accountApiService, AdminDbService adminDbService)
         {
             _accountApiService = accountApiService;
+            _adminDbService = adminDbService;
         }
 
         [HttpGet]
@@ -50,6 +52,15 @@ namespace Proyecto_Final.Controllers
                 HttpContext.Session.SetString("UserEmail", response.Email ?? string.Empty);
                 HttpContext.Session.SetString("UserFullName", response.FullName ?? string.Empty);
                 HttpContext.Session.SetString("UserRole", response.Role ?? string.Empty);
+
+                await RegistrarAuditoriaAsync(
+                    response.UserId ?? 0,
+                    response.FullName,
+                    response.Email,
+                    response.Role,
+                    "Login",
+                    "Autenticación",
+                    "El usuario inició sesión correctamente.");
 
                 TempData["LoginSuccess"] = $"Bienvenido, {response.FullName}.";
                 return RedirectToAction("Index", "Home");
@@ -97,6 +108,15 @@ namespace Proyecto_Final.Controllers
                     return View("Registro", model);
                 }
 
+                await RegistrarAuditoriaAsync(
+                    null,
+                    model.FullName,
+                    model.Email,
+                    "Cliente",
+                    "Registro",
+                    "Usuarios",
+                    $"Se registró una nueva cuenta de cliente para el correo {model.Email}.");
+
                 TempData["SuccessMessage"] = "Tu cuenta fue creada correctamente. Ahora puedes iniciar sesión.";
                 return RedirectToAction(nameof(Login));
             }
@@ -134,6 +154,15 @@ namespace Proyecto_Final.Controllers
                     ModelState.AddModelError(string.Empty, response?.Message ?? "No fue posible procesar la solicitud.");
                     return View(model);
                 }
+
+                await RegistrarAuditoriaAsync(
+                    null,
+                    "Usuario no autenticado",
+                    model.Email,
+                    "No disponible",
+                    "Recuperación de contraseña",
+                    "Autenticación",
+                    $"Se solicitó recuperación de contraseña para el correo {model.Email}.");
 
                 TempData["SuccessMessage"] = response.Message ?? "Se procesó la recuperación de contraseña correctamente.";
                 return RedirectToAction(nameof(Login));
@@ -177,6 +206,15 @@ namespace Proyecto_Final.Controllers
                     return View(model);
                 }
 
+                await RegistrarAuditoriaAsync(
+                    null,
+                    "Usuario no autenticado",
+                    "No disponible",
+                    "No disponible",
+                    "Cambio de contraseña",
+                    "Autenticación",
+                    "Se restableció una contraseña mediante token de recuperación.");
+
                 TempData["SuccessMessage"] = response.Message ?? "La contraseña se restableció correctamente.";
                 return RedirectToAction(nameof(Login));
             }
@@ -189,11 +227,39 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Logout()
+        public async Task<IActionResult> Logout()
         {
+            var usuarioId = HttpContext.Session.GetInt32("UserId");
+            var usuarioNombre = HttpContext.Session.GetString("UserFullName");
+            var usuarioCorreo = HttpContext.Session.GetString("UserEmail");
+            var rol = HttpContext.Session.GetString("UserRole");
+
+            await RegistrarAuditoriaAsync(
+                usuarioId,
+                usuarioNombre,
+                usuarioCorreo,
+                rol,
+                "Logout",
+                "Autenticación",
+                "El usuario cerró sesión correctamente.");
+
             HttpContext.Session.Clear();
             TempData["SuccessMessage"] = "Sesión cerrada correctamente.";
             return RedirectToAction("Index", "Home");
+        }
+
+        private async Task RegistrarAuditoriaAsync(int? usuarioId, string? usuarioNombre, string? usuarioCorreo, string? rol, string accion, string modulo, string descripcion)
+        {
+            await _adminDbService.CreateAuditLogAsync(
+                usuarioId,
+                usuarioNombre,
+                usuarioCorreo,
+                rol,
+                accion,
+                modulo,
+                descripcion,
+                HttpContext.Connection.RemoteIpAddress?.ToString(),
+                Request.Headers.UserAgent.ToString());
         }
     }
 }
