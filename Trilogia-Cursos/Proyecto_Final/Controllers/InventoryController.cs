@@ -29,7 +29,11 @@ namespace Proyecto_Final.Controllers
         public async Task<IActionResult> Create()
         {
             ViewBag.Categorias = await _adminDbService.GetStoreCategoriesAsync();
-            return View(new ProductFormViewModel { Activo = true });
+            return View(new ProductFormViewModel
+            {
+                Activo = true,
+                StockMinimo = 5
+            });
         }
 
         [HttpPost]
@@ -47,7 +51,7 @@ namespace Proyecto_Final.Controllers
             await RegistrarAuditoriaAsync(
                 "Crear",
                 "Inventario",
-                $"Se creó el producto {model.Nombre} con stock inicial {model.Stock}.");
+                $"Se creó el producto {model.Nombre} con stock inicial {model.Stock} y stock mínimo {model.StockMinimo}.");
 
             TempData["SuccessMessage"] = "Producto creado correctamente.";
             return RedirectToAction(nameof(Index));
@@ -77,7 +81,7 @@ namespace Proyecto_Final.Controllers
             await RegistrarAuditoriaAsync(
                 "Editar",
                 "Inventario",
-                $"Se actualizó el producto {model.Nombre}.");
+                $"Se actualizó el producto {model.Nombre}. Stock actual: {model.Stock}. Stock mínimo: {model.StockMinimo}.");
 
             TempData["SuccessMessage"] = "Producto actualizado correctamente.";
             return RedirectToAction(nameof(Index));
@@ -99,16 +103,52 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Delete(int productoId, string? filtro)
+        public async Task<IActionResult> ToggleStatus(int productoId, string? filtro)
         {
-            await _adminDbService.ToggleProductStatusAsync(productoId);
+            var activo = await _adminDbService.ToggleProductStatusAsync(productoId);
 
             await RegistrarAuditoriaAsync(
-                "Eliminar/Inactivar",
+                activo ? "Activar" : "Inactivar",
                 "Inventario",
-                $"Se activó o inactivó el producto #{productoId}.");
+                activo
+                    ? $"Se reactivó el producto #{productoId}."
+                    : $"Se inactivó el producto #{productoId} para ocultarlo del catálogo.");
 
-            TempData["SuccessMessage"] = "Producto desactivado correctamente.";
+            TempData["SuccessMessage"] = activo
+                ? "Producto reactivado correctamente."
+                : "Producto inactivado correctamente.";
+
+            return RedirectToAction(nameof(Index), new { filtro });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int productoId, string? filtro)
+        {
+            // Compatibilidad con formularios anteriores: esta acción ahora solo inactiva/reactiva.
+            return await ToggleStatus(productoId, filtro);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeletePermanent(int productoId, string? filtro)
+        {
+            try
+            {
+                var productoNombre = await _adminDbService.DeleteProductPermanentlyAsync(productoId);
+
+                await RegistrarAuditoriaAsync(
+                    "Eliminar",
+                    "Inventario",
+                    $"Se eliminó permanentemente el producto {productoNombre}.");
+
+                TempData["SuccessMessage"] = "Producto eliminado permanentemente.";
+            }
+            catch (InvalidOperationException ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+            }
+
             return RedirectToAction(nameof(Index), new { filtro });
         }
 

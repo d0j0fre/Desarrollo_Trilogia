@@ -11,6 +11,7 @@ namespace Proyecto_Final.Models.Admin
         public string? Descripcion { get; set; }
         public decimal Precio { get; set; }
         public int Stock { get; set; }
+        public int StockMinimo { get; set; } = 5;
         public string EstadoStock { get; set; } = string.Empty;
         public bool Activo { get; set; }
         public bool EsDestacado { get; set; }
@@ -40,6 +41,11 @@ namespace Proyecto_Final.Models.Admin
         [Required(ErrorMessage = "El stock es obligatorio.")]
         [Range(0, int.MaxValue, ErrorMessage = "El stock no puede ser negativo.")]
         public int Stock { get; set; }
+
+        [Required(ErrorMessage = "El stock mínimo es obligatorio.")]
+        [Display(Name = "Stock mínimo")]
+        [Range(0, int.MaxValue, ErrorMessage = "El stock mínimo no puede ser negativo.")]
+        public int StockMinimo { get; set; } = 5;
 
         [Display(Name = "Ruta o URL de imagen")]
         [StringLength(255)]

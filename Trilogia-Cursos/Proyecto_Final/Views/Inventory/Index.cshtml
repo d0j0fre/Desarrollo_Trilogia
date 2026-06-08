@@ -1,4 +1,4 @@
-﻿@model IEnumerable<Proyecto_Final.Models.Admin.ProductAdminViewModel>
+@model IEnumerable<Proyecto_Final.Models.Admin.ProductAdminViewModel>
 @{
     ViewData["Title"] = "Inventario";
     var filtro = ViewBag.Filtro as string;
@@ -23,7 +23,6 @@
         </div>
     </div>
 
-    @*-- Barra de búsqueda --*@
     <div class="row px-xl-5 mb-3">
         <div class="col-12">
             <form asp-controller="Inventory" asp-action="Index" method="get" class="d-flex" style="gap:8px;">
@@ -38,12 +37,12 @@
         </div>
     </div>
 
-    @*-- Alerta de Stock Bajo --*@
     @{
         var productosConAlerta = Model.Where(p =>
             p.EstadoStock == "Agotado" ||
             p.EstadoStock == "Bajo" ||
-            p.EstadoStock == "Stock bajo").ToList();
+            p.EstadoStock == "Stock bajo" ||
+            p.Stock <= p.StockMinimo).ToList();
     }
 
     @if (productosConAlerta.Any())
@@ -60,9 +59,9 @@
                             {
                                 <li>
                                     <strong>@p.Nombre</strong> —
-                                    @(p.EstadoStock == "Agotado"
+                                    @(p.Stock <= 0
                                         ? "sin stock disponible"
-                                        : $"solo {p.Stock} unidad(es) disponibles")
+                                        : $"stock actual {p.Stock}, mínimo configurado {p.StockMinimo}")
                                 </li>
                             }
                         </ul>
@@ -72,7 +71,6 @@
         </div>
     }
 
-    @*-- Tabla de productos --*@
     <div class="row px-xl-5 pb-5">
         <div class="col-12">
             <div class="admin-table-wrapper">
@@ -87,15 +85,16 @@
                                 <th>Destacado</th>
                                 <th>Precio</th>
                                 <th>Stock</th>
+                                <th>Mínimo</th>
                                 <th>Estado</th>
-                                <th>Acciones</th>
+                                <th style="min-width:180px;">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             @if (!Model.Any())
                             {
                                 <tr>
-                                    <td colspan="9" class="text-center text-muted py-4">
+                                    <td colspan="10" class="text-center text-muted py-4">
                                         @if (!string.IsNullOrWhiteSpace(filtro))
                                         {
                                             <span>No se encontraron productos para "<strong>@filtro</strong>".</span>
@@ -115,9 +114,13 @@
                                         ? Url.Content("~/img/whisky-premium.webp")
                                         : Url.Content(item.ImagenUrl);
 
-                                    var stockClass = item.EstadoStock == "Agotado" ? "danger"
-                                        : item.EstadoStock == "Bajo" || item.EstadoStock == "Stock bajo" ? "warning"
+                                    var stockClass = item.Stock <= 0 ? "danger"
+                                        : item.Stock <= item.StockMinimo ? "warning"
                                         : "success";
+
+                                    var estadoStock = item.Stock <= 0 ? "Agotado"
+                                        : item.Stock <= item.StockMinimo ? "Stock bajo"
+                                        : "Disponible";
 
                                     <tr>
                                         <td>@item.ProductoId</td>
@@ -139,7 +142,9 @@
                                         <td>₡@item.Precio.ToString("N2")</td>
                                         <td>
                                             <span class="badge badge-@stockClass">@item.Stock</span>
+                                            <div class="small text-muted">@estadoStock</div>
                                         </td>
+                                        <td>@item.StockMinimo</td>
                                         <td>
                                             @if (item.Activo)
                                             {
@@ -154,16 +159,24 @@
                                             <div class="d-flex flex-column" style="gap:5px;">
                                                 <a asp-controller="Inventory" asp-action="Edit"
                                                    asp-route-id="@item.ProductoId" class="btn btn-sm btn-primary">Editar</a>
-                                                @if (item.Activo)
-                                                {
-                                                    <form asp-controller="Inventory" asp-action="Delete" method="post" class="mb-0"
-                                                          onsubmit="return confirm('¿Desactivar este producto?');">
-                                                        @Html.AntiForgeryToken()
-                                                        <input type="hidden" name="productoId" value="@item.ProductoId" />
-                                                        <input type="hidden" name="filtro" value="@filtro" />
-                                                        <button type="submit" class="btn btn-sm btn-danger">Desactivar</button>
-                                                    </form>
-                                                }
+
+                                                <form asp-controller="Inventory" asp-action="ToggleStatus" method="post" class="mb-0"
+                                                      onsubmit="return confirm('@(item.Activo ? "¿Inactivar este producto? Ya no se mostrará en el catálogo." : "¿Reactivar este producto? Volverá a mostrarse en el catálogo.")');">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="productoId" value="@item.ProductoId" />
+                                                    <input type="hidden" name="filtro" value="@filtro" />
+                                                    <button type="submit" class="btn btn-sm @(item.Activo ? "btn-warning" : "btn-success")">
+                                                        @(item.Activo ? "Inactivar" : "Reactivar")
+                                                    </button>
+                                                </form>
+
+                                                <form asp-controller="Inventory" asp-action="DeletePermanent" method="post" class="mb-0"
+                                                      onsubmit="return confirm('¿Eliminar definitivamente este producto? Solo se podrá eliminar si no tiene pedidos, facturas ni movimientos de inventario asociados.');">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="productoId" value="@item.ProductoId" />
+                                                    <input type="hidden" name="filtro" value="@filtro" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">Eliminar</button>
+                                                </form>
                                             </div>
                                         </td>
                                     </tr>

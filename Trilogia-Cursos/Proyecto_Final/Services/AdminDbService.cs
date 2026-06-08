@@ -54,7 +54,8 @@ namespace Proyecto_Final.Services
                         Nombre = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
                         Categoria = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
                         Stock = reader.IsDBNull(3) ? 0 : reader.GetInt32(3),
-                        EstadoStock = reader.IsDBNull(4) ? string.Empty : reader.GetString(4)
+                        EstadoStock = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
+                        StockMinimo = reader.FieldCount > 5 && !reader.IsDBNull(5) ? reader.GetInt32(5) : 5
                     });
                 }
             }
@@ -102,7 +103,8 @@ namespace Proyecto_Final.Services
                     Activo = !reader.IsDBNull(7) && reader.GetBoolean(7),
                     FechaCreacion = reader.IsDBNull(8) ? DateTime.MinValue : reader.GetDateTime(8),
                     ImagenUrl = reader.FieldCount > 9 && !reader.IsDBNull(9) ? reader.GetString(9) : string.Empty,
-                    EsDestacado = reader.FieldCount > 10 && !reader.IsDBNull(10) && reader.GetBoolean(10)
+                    EsDestacado = reader.FieldCount > 10 && !reader.IsDBNull(10) && reader.GetBoolean(10),
+                    StockMinimo = reader.FieldCount > 11 && !reader.IsDBNull(11) ? reader.GetInt32(11) : 5
                 });
             }
             return products;
@@ -130,7 +132,8 @@ namespace Proyecto_Final.Services
                     Activo = !reader.IsDBNull(7) && reader.GetBoolean(7),
                     FechaCreacion = reader.IsDBNull(8) ? DateTime.MinValue : reader.GetDateTime(8),
                     ImagenUrl = reader.FieldCount > 9 && !reader.IsDBNull(9) ? reader.GetString(9) : string.Empty,
-                    EsDestacado = reader.FieldCount > 10 && !reader.IsDBNull(10) && reader.GetBoolean(10)
+                    EsDestacado = reader.FieldCount > 10 && !reader.IsDBNull(10) && reader.GetBoolean(10),
+                    StockMinimo = reader.FieldCount > 11 && !reader.IsDBNull(11) ? reader.GetInt32(11) : 5
                 });
             }
             return products;
@@ -155,7 +158,8 @@ namespace Proyecto_Final.Services
                 Stock = reader.IsDBNull(5) ? 0 : reader.GetInt32(5),
                 Activo = !reader.IsDBNull(6) && reader.GetBoolean(6),
                 ImagenUrl = reader.FieldCount > 7 && !reader.IsDBNull(7) ? reader.GetString(7) : string.Empty,
-                EsDestacado = reader.FieldCount > 8 && !reader.IsDBNull(8) && reader.GetBoolean(8)
+                EsDestacado = reader.FieldCount > 8 && !reader.IsDBNull(8) && reader.GetBoolean(8),
+                StockMinimo = reader.FieldCount > 9 && !reader.IsDBNull(9) ? reader.GetInt32(9) : 5
             };
         }
 
@@ -175,6 +179,7 @@ namespace Proyecto_Final.Services
                     command.Parameters.AddWithValue("@Descripcion", string.IsNullOrWhiteSpace(model.Descripcion) ? DBNull.Value : model.Descripcion.Trim());
                     command.Parameters.AddWithValue("@Precio", model.Precio);
                     command.Parameters.AddWithValue("@Stock", model.Stock);
+                    command.Parameters.AddWithValue("@StockMinimo", model.StockMinimo);
                     command.Parameters.AddWithValue("@Activo", model.Activo);
                     command.Parameters.AddWithValue("@ImagenUrl", string.IsNullOrWhiteSpace(model.ImagenUrl) ? DBNull.Value : model.ImagenUrl.Trim());
                     command.Parameters.AddWithValue("@EsDestacado", model.EsDestacado);
@@ -226,6 +231,7 @@ namespace Proyecto_Final.Services
                     updateCommand.Parameters.AddWithValue("@Descripcion", string.IsNullOrWhiteSpace(model.Descripcion) ? DBNull.Value : model.Descripcion.Trim());
                     updateCommand.Parameters.AddWithValue("@Precio", model.Precio);
                     updateCommand.Parameters.AddWithValue("@Stock", model.Stock);
+                    updateCommand.Parameters.AddWithValue("@StockMinimo", model.StockMinimo);
                     updateCommand.Parameters.AddWithValue("@Activo", model.Activo);
                     updateCommand.Parameters.AddWithValue("@ImagenUrl", string.IsNullOrWhiteSpace(model.ImagenUrl) ? DBNull.Value : model.ImagenUrl.Trim());
                     updateCommand.Parameters.AddWithValue("@EsDestacado", model.EsDestacado);
@@ -265,14 +271,35 @@ namespace Proyecto_Final.Services
             await command.ExecuteNonQueryAsync();
         }
 
-        public async Task ToggleProductStatusAsync(int productoId)
+        public async Task<bool> ToggleProductStatusAsync(int productoId)
         {
             await using var connection = new SqlConnection(_connectionString);
             await using var command = new SqlCommand("dbo.sp_Admin_ToggleProductStatus", connection);
             command.CommandType = CommandType.StoredProcedure;
             command.Parameters.AddWithValue("@ProductoId", productoId);
             await connection.OpenAsync();
-            await command.ExecuteNonQueryAsync();
+
+            var result = await command.ExecuteScalarAsync();
+            return result != null && result != DBNull.Value && Convert.ToBoolean(result);
+        }
+
+        public async Task<string> DeleteProductPermanentlyAsync(int productoId)
+        {
+            try
+            {
+                await using var connection = new SqlConnection(_connectionString);
+                await using var command = new SqlCommand("dbo.sp_Admin_DeleteProductPermanently", connection);
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@ProductoId", productoId);
+                await connection.OpenAsync();
+
+                var result = await command.ExecuteScalarAsync();
+                return Convert.ToString(result) ?? $"Producto #{productoId}";
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException(ex.Message, ex);
+            }
         }
 
         public async Task<List<InventoryMovementViewModel>> GetInventoryMovementsAsync()
