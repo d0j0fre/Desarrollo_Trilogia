@@ -919,6 +919,188 @@ namespace Proyecto_Final.Services
             return productos;
         }
 
+
+        public async Task<List<ClientListItemViewModel>> GetClientsAsync(string? buscar, string? estado)
+        {
+            var clientes = new List<ClientListItemViewModel>();
+
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_GetClients", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add("@Buscar", SqlDbType.NVarChar, 200).Value = string.IsNullOrWhiteSpace(buscar) ? DBNull.Value : buscar.Trim();
+            command.Parameters.Add("@Estado", SqlDbType.NVarChar, 20).Value = string.IsNullOrWhiteSpace(estado) ? DBNull.Value : estado.Trim();
+
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                clientes.Add(new ClientListItemViewModel
+                {
+                    UsuarioId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                    NombreCompleto = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+                    Correo = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                    Telefono = reader.IsDBNull(3) ? null : reader.GetString(3),
+                    Direccion = reader.IsDBNull(4) ? null : reader.GetString(4),
+                    Activo = !reader.IsDBNull(5) && reader.GetBoolean(5),
+                    FechaRegistro = reader.IsDBNull(6) ? DateTime.MinValue : reader.GetDateTime(6),
+                    TotalPedidos = reader.IsDBNull(7) ? 0 : reader.GetInt32(7),
+                    TotalComprado = reader.IsDBNull(8) ? 0 : reader.GetDecimal(8),
+                    UltimoPedido = reader.IsDBNull(9) ? null : reader.GetDateTime(9),
+                    MotivoInactivacion = reader.IsDBNull(10) ? null : reader.GetString(10),
+                    FechaInactivacion = reader.IsDBNull(11) ? null : reader.GetDateTime(11)
+                });
+            }
+
+            return clientes;
+        }
+
+        public async Task<ClientFormViewModel?> GetClientByIdAsync(int usuarioId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_GetClientById", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId;
+
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync()) return null;
+
+            return new ClientFormViewModel
+            {
+                UsuarioId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                NombreCompleto = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+                Correo = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                Telefono = reader.IsDBNull(3) ? null : reader.GetString(3),
+                Direccion = reader.IsDBNull(4) ? null : reader.GetString(4),
+                Activo = !reader.IsDBNull(5) && reader.GetBoolean(5),
+                FechaRegistro = reader.IsDBNull(6) ? DateTime.MinValue : reader.GetDateTime(6),
+                TotalPedidos = reader.IsDBNull(7) ? 0 : reader.GetInt32(7),
+                TotalComprado = reader.IsDBNull(8) ? 0 : reader.GetDecimal(8),
+                UltimoPedido = reader.IsDBNull(9) ? null : reader.GetDateTime(9),
+                MotivoInactivacion = reader.IsDBNull(10) ? null : reader.GetString(10),
+                FechaInactivacion = reader.IsDBNull(11) ? null : reader.GetDateTime(11)
+            };
+        }
+
+        public async Task<ClientDetailViewModel?> GetClientDetailAsync(int usuarioId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_GetClientDetail", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId;
+
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync()) return null;
+
+            var model = new ClientDetailViewModel
+            {
+                UsuarioId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                NombreCompleto = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+                Correo = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                Telefono = reader.IsDBNull(3) ? null : reader.GetString(3),
+                Direccion = reader.IsDBNull(4) ? null : reader.GetString(4),
+                Activo = !reader.IsDBNull(5) && reader.GetBoolean(5),
+                FechaRegistro = reader.IsDBNull(6) ? DateTime.MinValue : reader.GetDateTime(6),
+                TotalPedidos = reader.IsDBNull(7) ? 0 : reader.GetInt32(7),
+                TotalComprado = reader.IsDBNull(8) ? 0 : reader.GetDecimal(8),
+                UltimoPedido = reader.IsDBNull(9) ? null : reader.GetDateTime(9),
+                MotivoInactivacion = reader.IsDBNull(10) ? null : reader.GetString(10),
+                FechaInactivacion = reader.IsDBNull(11) ? null : reader.GetDateTime(11)
+            };
+
+            await reader.NextResultAsync();
+
+            while (await reader.ReadAsync())
+            {
+                model.Pedidos.Add(new ClientOrderSummaryViewModel
+                {
+                    PedidoId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                    FechaPedido = reader.IsDBNull(1) ? DateTime.MinValue : reader.GetDateTime(1),
+                    Estado = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                    TipoEntrega = reader.IsDBNull(3) ? null : reader.GetString(3),
+                    DireccionEntrega = reader.IsDBNull(4) ? null : reader.GetString(4),
+                    Total = reader.IsDBNull(5) ? 0 : reader.GetDecimal(5),
+                    Observaciones = reader.IsDBNull(6) ? null : reader.GetString(6)
+                });
+            }
+
+            return model;
+        }
+
+        public async Task<int> CreateClientAsync(ClientFormViewModel model)
+        {
+            try
+            {
+                await using var connection = new SqlConnection(_connectionString);
+                await using var command = new SqlCommand("dbo.sp_Admin_CreateClient", connection);
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.Add("@NombreCompleto", SqlDbType.NVarChar, 150).Value = model.NombreCompleto.Trim();
+                command.Parameters.Add("@Correo", SqlDbType.NVarChar, 150).Value = model.Correo.Trim();
+                command.Parameters.Add("@Contrasena", SqlDbType.NVarChar, 255).Value = (model.Contrasena ?? string.Empty).Trim();
+                command.Parameters.Add("@Telefono", SqlDbType.NVarChar, 30).Value = string.IsNullOrWhiteSpace(model.Telefono) ? DBNull.Value : model.Telefono.Trim();
+                command.Parameters.Add("@Direccion", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.Direccion) ? DBNull.Value : model.Direccion.Trim();
+                command.Parameters.Add("@Activo", SqlDbType.Bit).Value = model.Activo;
+                command.Parameters.Add("@MotivoInactivacion", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.MotivoInactivacion) ? DBNull.Value : model.MotivoInactivacion.Trim();
+
+                await connection.OpenAsync();
+                var result = await command.ExecuteScalarAsync();
+                return Convert.ToInt32(result);
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException(ex.Message, ex);
+            }
+        }
+
+        public async Task UpdateClientAsync(ClientFormViewModel model)
+        {
+            try
+            {
+                await using var connection = new SqlConnection(_connectionString);
+                await using var command = new SqlCommand("dbo.sp_Admin_UpdateClient", connection);
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = model.UsuarioId;
+                command.Parameters.Add("@NombreCompleto", SqlDbType.NVarChar, 150).Value = model.NombreCompleto.Trim();
+                command.Parameters.Add("@Correo", SqlDbType.NVarChar, 150).Value = model.Correo.Trim();
+                command.Parameters.Add("@Telefono", SqlDbType.NVarChar, 30).Value = string.IsNullOrWhiteSpace(model.Telefono) ? DBNull.Value : model.Telefono.Trim();
+                command.Parameters.Add("@Direccion", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.Direccion) ? DBNull.Value : model.Direccion.Trim();
+                command.Parameters.Add("@Contrasena", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.Contrasena) ? DBNull.Value : model.Contrasena.Trim();
+                command.Parameters.Add("@Activo", SqlDbType.Bit).Value = model.Activo;
+                command.Parameters.Add("@MotivoInactivacion", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.MotivoInactivacion) ? DBNull.Value : model.MotivoInactivacion.Trim();
+
+                await connection.OpenAsync();
+                await command.ExecuteNonQueryAsync();
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException(ex.Message, ex);
+            }
+        }
+
+        public async Task<bool> ToggleClientStatusAsync(int usuarioId, string? motivo)
+        {
+            try
+            {
+                await using var connection = new SqlConnection(_connectionString);
+                await using var command = new SqlCommand("dbo.sp_Admin_ToggleClientStatus", connection);
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId;
+                command.Parameters.Add("@MotivoInactivacion", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(motivo) ? DBNull.Value : motivo.Trim();
+
+                await connection.OpenAsync();
+                var result = await command.ExecuteScalarAsync();
+                return Convert.ToBoolean(result);
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException(ex.Message, ex);
+            }
+        }
+
         public async Task<int> CreateConsultationAsync(string nombre, string correo, string asunto, string mensaje)
         {
             await using var connection = new SqlConnection(_connectionString);

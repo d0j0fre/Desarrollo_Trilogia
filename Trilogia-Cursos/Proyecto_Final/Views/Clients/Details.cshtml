@@ -1,0 +1,149 @@
+@model Proyecto_Final.Models.Admin.ClientDetailViewModel
+@{
+    ViewData["Title"] = "Detalle de cliente";
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">Detalle de cliente</h2>
+                    <p class="text-muted mb-0">Información general, estado e historial comercial.</p>
+                </div>
+                <div>
+                    <a asp-controller="Clients" asp-action="Edit" asp-route-id="@Model.UsuarioId" class="btn btn-primary mr-2">Editar</a>
+                    <a asp-controller="Clients" asp-action="Index" class="btn btn-outline-secondary">← Volver</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="row px-xl-5">
+            <div class="col-12">
+                <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+            </div>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="row px-xl-5">
+            <div class="col-12">
+                <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+            </div>
+        </div>
+    }
+
+    <div class="row px-xl-5 pb-3">
+        <div class="col-lg-4 pb-3">
+            <div class="admin-card h-100">
+                <h5 class="mb-3">Información del cliente</h5>
+                <p class="mb-2"><strong>ID:</strong> @Model.UsuarioId</p>
+                <p class="mb-2"><strong>Nombre:</strong> @Model.NombreCompleto</p>
+                <p class="mb-2"><strong>Correo:</strong> @Model.Correo</p>
+                <p class="mb-2"><strong>Teléfono:</strong> @(string.IsNullOrWhiteSpace(Model.Telefono) ? "Sin teléfono" : Model.Telefono)</p>
+                <p class="mb-2"><strong>Dirección:</strong> @(string.IsNullOrWhiteSpace(Model.Direccion) ? "Sin dirección" : Model.Direccion)</p>
+                <p class="mb-0"><strong>Registro:</strong> @Model.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</p>
+            </div>
+        </div>
+
+        <div class="col-lg-4 pb-3">
+            <div class="admin-card h-100 text-center">
+                <h5 class="mb-3">Historial comercial</h5>
+                <h3 class="mb-1">@Model.TotalPedidos</h3>
+                <p class="text-muted mb-3">Pedido(s)</p>
+                <h4 class="mb-1">₡@Model.TotalComprado.ToString("N2")</h4>
+                <p class="text-muted mb-3">Total comprado</p>
+                <p class="mb-0"><strong>Último pedido:</strong> @(Model.UltimoPedido.HasValue ? Model.UltimoPedido.Value.ToString("dd/MM/yyyy") : "Sin pedidos")</p>
+            </div>
+        </div>
+
+        <div class="col-lg-4 pb-3">
+            <div class="admin-card h-100">
+                <h5 class="mb-3">Estado del cliente</h5>
+                @if (Model.Activo)
+                {
+                    <span class="badge badge-success mb-3">Activo</span>
+                    <p class="text-muted">El cliente puede iniciar sesión y realizar pedidos.</p>
+                }
+                else
+                {
+                    <span class="badge badge-secondary mb-3">Inactivo</span>
+                    <p class="text-muted mb-2">El cliente no puede iniciar sesión ni realizar pedidos.</p>
+                    <p class="mb-2"><strong>Fecha:</strong> @(Model.FechaInactivacion.HasValue ? Model.FechaInactivacion.Value.ToString("dd/MM/yyyy HH:mm") : "No registrada")</p>
+                    <p class="mb-3"><strong>Motivo:</strong> @(string.IsNullOrWhiteSpace(Model.MotivoInactivacion) ? "No indicado" : Model.MotivoInactivacion)</p>
+                }
+
+                <form asp-controller="Clients" asp-action="ToggleStatus" method="post"
+                      onsubmit="return confirm('@(Model.Activo ? "¿Desea inactivar este cliente?" : "¿Desea reactivar este cliente?")');">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="usuarioId" value="@Model.UsuarioId" />
+                    <input type="hidden" name="returnTo" value="details" />
+                    <div class="form-group">
+                        <label class="font-weight-bold">Motivo</label>
+                        <textarea name="motivo" class="form-control" rows="2" placeholder="Motivo del cambio de estado"></textarea>
+                    </div>
+                    <button type="submit" class="btn @(Model.Activo ? "btn-danger" : "btn-success") btn-block">
+                        @(Model.Activo ? "Inactivar cliente" : "Reactivar cliente")
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-12">
+            <div class="admin-table-wrapper">
+                <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Pedidos del cliente</h5>
+                    <span class="badge badge-light">@Model.Pedidos.Count registro(s)</span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th># Pedido</th>
+                                <th>Fecha</th>
+                                <th>Estado</th>
+                                <th>Entrega</th>
+                                <th>Total</th>
+                                <th>Observaciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Pedidos == null || !Model.Pedidos.Any())
+                            {
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-4">Este cliente no tiene pedidos registrados.</td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var pedido in Model.Pedidos)
+                                {
+                                    var claseEstado = pedido.Estado == "Pendiente" ? "warning" : pedido.Estado == "Entregado" ? "success" : pedido.Estado == "Cancelado" ? "danger" : "dark";
+                                    <tr>
+                                        <td>#@pedido.PedidoId</td>
+                                        <td>@pedido.FechaPedido.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td><span class="admin-badge-soft @claseEstado">@pedido.Estado</span></td>
+                                        <td>@(string.IsNullOrWhiteSpace(pedido.TipoEntrega) ? "No indicado" : pedido.TipoEntrega)</td>
+                                        <td>₡@pedido.Total.ToString("N2")</td>
+                                        <td>@(string.IsNullOrWhiteSpace(pedido.Observaciones) ? "Sin observaciones" : pedido.Observaciones)</td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

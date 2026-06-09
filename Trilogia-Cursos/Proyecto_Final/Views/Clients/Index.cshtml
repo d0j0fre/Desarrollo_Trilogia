@@ -1,0 +1,149 @@
+@model Proyecto_Final.Models.Admin.ClientFilterViewModel
+@{
+    ViewData["Title"] = "Clientes";
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">Clientes</h2>
+                    <p class="text-muted mb-0">Registrar, administrar, activar e inactivar clientes del sistema.</p>
+                </div>
+                <a asp-controller="Clients" asp-action="Create" class="btn btn-primary">
+                    + Nuevo cliente
+                </a>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="row px-xl-5">
+            <div class="col-12">
+                <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+            </div>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="row px-xl-5">
+            <div class="col-12">
+                <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+            </div>
+        </div>
+    }
+
+    <div class="row px-xl-5 mb-3">
+        <div class="col-12">
+            <form asp-controller="Clients" asp-action="Index" method="get" class="d-flex flex-wrap" style="gap:8px;">
+                <input type="text" name="buscar" value="@Model.Buscar"
+                       class="form-control" style="min-width:260px; flex:1;"
+                       placeholder="Buscar por nombre, correo, teléfono o dirección..." />
+
+                <select name="estado" class="form-control" style="max-width:180px;">
+                    <option value="">Todos</option>
+                    <option value="Activo" selected="@(Model.Estado == "Activo")">Activos</option>
+                    <option value="Inactivo" selected="@(Model.Estado == "Inactivo")">Inactivos</option>
+                </select>
+
+                <button type="submit" class="btn btn-dark">Buscar</button>
+                @if (!string.IsNullOrWhiteSpace(Model.Buscar) || !string.IsNullOrWhiteSpace(Model.Estado))
+                {
+                    <a asp-controller="Clients" asp-action="Index" class="btn btn-outline-secondary">Limpiar</a>
+                }
+            </form>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-12">
+            <div class="admin-table-wrapper">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Cliente</th>
+                                <th>Contacto</th>
+                                <th>Pedidos</th>
+                                <th>Total comprado</th>
+                                <th>Último pedido</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Clientes == null || !Model.Clientes.Any())
+                            {
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted py-4">
+                                        No se encontraron clientes con los filtros indicados.
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var item in Model.Clientes)
+                                {
+                                    <tr>
+                                        <td>@item.UsuarioId</td>
+                                        <td>
+                                            <strong>@item.NombreCompleto</strong><br />
+                                            <small class="text-muted">Registrado: @item.FechaRegistro.ToString("dd/MM/yyyy")</small>
+                                        </td>
+                                        <td>
+                                            <div>@item.Correo</div>
+                                            <small class="text-muted">@(string.IsNullOrWhiteSpace(item.Telefono) ? "Sin teléfono" : item.Telefono)</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-light">@item.TotalPedidos pedido(s)</span>
+                                        </td>
+                                        <td>₡@item.TotalComprado.ToString("N2")</td>
+                                        <td>
+                                            @(item.UltimoPedido.HasValue ? item.UltimoPedido.Value.ToString("dd/MM/yyyy") : "Sin pedidos")
+                                        </td>
+                                        <td>
+                                            @if (item.Activo)
+                                            {
+                                                <span class="badge badge-success">Activo</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge badge-secondary">Inactivo</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <div class="d-flex flex-column" style="gap:5px; min-width:130px;">
+                                                <a asp-controller="Clients" asp-action="Details" asp-route-id="@item.UsuarioId" class="btn btn-sm btn-outline-dark">Detalle</a>
+                                                <a asp-controller="Clients" asp-action="Edit" asp-route-id="@item.UsuarioId" class="btn btn-sm btn-primary">Editar</a>
+
+                                                <form asp-controller="Clients" asp-action="ToggleStatus" method="post" class="mb-0"
+                                                      onsubmit="return confirm('@(item.Activo ? "¿Desea inactivar este cliente? El cliente no podrá iniciar sesión ni realizar pedidos." : "¿Desea reactivar este cliente?")');">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="usuarioId" value="@item.UsuarioId" />
+                                                    <input type="hidden" name="buscar" value="@Model.Buscar" />
+                                                    <input type="hidden" name="estado" value="@Model.Estado" />
+                                                    <input type="hidden" name="motivo" value="@(item.Activo ? "Inactivación realizada desde el listado de clientes." : "Reactivación realizada desde el listado de clientes.")" />
+                                                    <button type="submit" class="btn btn-sm @(item.Activo ? "btn-danger" : "btn-success")">
+                                                        @(item.Activo ? "Inactivar" : "Activar")
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
