@@ -1195,6 +1195,171 @@ namespace Proyecto_Final.Services
             await command.ExecuteNonQueryAsync();
         }
 
+
+
+        public async Task<List<ClientCreditListItemViewModel>> GetClientCreditsAsync(string? buscar, string? estadoCredito)
+        {
+            var clientes = new List<ClientCreditListItemViewModel>();
+
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_GetClientCredits", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add("@Buscar", SqlDbType.NVarChar, 200).Value = string.IsNullOrWhiteSpace(buscar) ? DBNull.Value : buscar.Trim();
+            command.Parameters.Add("@EstadoCredito", SqlDbType.NVarChar, 30).Value = string.IsNullOrWhiteSpace(estadoCredito) ? DBNull.Value : estadoCredito.Trim();
+
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                clientes.Add(new ClientCreditListItemViewModel
+                {
+                    UsuarioId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                    NombreCompleto = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+                    Correo = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                    Telefono = reader.IsDBNull(3) ? null : reader.GetString(3),
+                    ClienteActivo = !reader.IsDBNull(4) && reader.GetBoolean(4),
+                    LimiteCredito = reader.IsDBNull(5) ? 0 : reader.GetDecimal(5),
+                    CreditoActivo = !reader.IsDBNull(6) && reader.GetBoolean(6),
+                    CreditoBloqueado = !reader.IsDBNull(7) && reader.GetBoolean(7),
+                    MotivoBloqueo = reader.IsDBNull(8) ? null : reader.GetString(8),
+                    DeudaActual = reader.IsDBNull(9) ? 0 : reader.GetDecimal(9),
+                    CreditoDisponible = reader.IsDBNull(10) ? 0 : reader.GetDecimal(10),
+                    TotalMovimientos = reader.IsDBNull(11) ? 0 : reader.GetInt32(11),
+                    UltimoMovimiento = reader.IsDBNull(12) ? null : reader.GetDateTime(12),
+                    FechaActualizacion = reader.IsDBNull(13) ? null : reader.GetDateTime(13)
+                });
+            }
+
+            return clientes;
+        }
+
+        public async Task<ClientCreditDetailViewModel?> GetClientCreditDetailAsync(int usuarioId)
+        {
+            try
+            {
+                await using var connection = new SqlConnection(_connectionString);
+                await using var command = new SqlCommand("dbo.sp_Admin_GetClientCreditDetail", connection);
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId;
+
+                await connection.OpenAsync();
+                await using var reader = await command.ExecuteReaderAsync();
+
+                if (!await reader.ReadAsync()) return null;
+
+                var model = new ClientCreditDetailViewModel
+                {
+                    UsuarioId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                    NombreCompleto = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+                    Correo = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                    Telefono = reader.IsDBNull(3) ? null : reader.GetString(3),
+                    Direccion = reader.IsDBNull(4) ? null : reader.GetString(4),
+                    ClienteActivo = !reader.IsDBNull(5) && reader.GetBoolean(5),
+                    LimiteCredito = reader.IsDBNull(6) ? 0 : reader.GetDecimal(6),
+                    CreditoActivo = !reader.IsDBNull(7) && reader.GetBoolean(7),
+                    CreditoBloqueado = !reader.IsDBNull(8) && reader.GetBoolean(8),
+                    MotivoBloqueo = reader.IsDBNull(9) ? null : reader.GetString(9),
+                    DeudaActual = reader.IsDBNull(10) ? 0 : reader.GetDecimal(10),
+                    CreditoDisponible = reader.IsDBNull(11) ? 0 : reader.GetDecimal(11),
+                    TotalCargos = reader.IsDBNull(12) ? 0 : reader.GetDecimal(12),
+                    TotalAbonos = reader.IsDBNull(13) ? 0 : reader.GetDecimal(13),
+                    FechaActualizacion = reader.IsDBNull(14) ? null : reader.GetDateTime(14)
+                };
+
+                model.SettingsForm = new ClientCreditSettingsViewModel
+                {
+                    UsuarioId = model.UsuarioId,
+                    LimiteCredito = model.LimiteCredito,
+                    CreditoActivo = model.CreditoActivo,
+                    CreditoBloqueado = model.CreditoBloqueado,
+                    MotivoBloqueo = model.MotivoBloqueo
+                };
+
+                model.MovementForm = new ClientCreditMovementFormViewModel
+                {
+                    UsuarioId = model.UsuarioId,
+                    TipoMovimiento = "Abono"
+                };
+
+                await reader.NextResultAsync();
+
+                while (await reader.ReadAsync())
+                {
+                    model.Movimientos.Add(new ClientCreditMovementViewModel
+                    {
+                        CreditoMovimientoId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                        TipoMovimiento = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+                        Monto = reader.IsDBNull(2) ? 0 : reader.GetDecimal(2),
+                        Descripcion = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
+                        Referencia = reader.IsDBNull(4) ? null : reader.GetString(4),
+                        RegistradoPorUsuarioId = reader.IsDBNull(5) ? null : reader.GetInt32(5),
+                        RegistradoPorNombre = reader.IsDBNull(6) ? null : reader.GetString(6),
+                        FechaMovimiento = reader.IsDBNull(7) ? DateTime.MinValue : reader.GetDateTime(7)
+                    });
+                }
+
+                return model;
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException(ex.Message, ex);
+            }
+        }
+
+        public async Task UpdateClientCreditSettingsAsync(ClientCreditSettingsViewModel model, int? usuarioId, string? usuarioNombre)
+        {
+            try
+            {
+                await using var connection = new SqlConnection(_connectionString);
+                await using var command = new SqlCommand("dbo.sp_Admin_UpdateClientCreditSettings", connection);
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = model.UsuarioId;
+                command.Parameters.Add("@LimiteCredito", SqlDbType.Decimal).Value = model.LimiteCredito;
+                command.Parameters["@LimiteCredito"].Precision = 18;
+                command.Parameters["@LimiteCredito"].Scale = 2;
+                command.Parameters.Add("@CreditoActivo", SqlDbType.Bit).Value = model.CreditoActivo;
+                command.Parameters.Add("@CreditoBloqueado", SqlDbType.Bit).Value = model.CreditoBloqueado;
+                command.Parameters.Add("@MotivoBloqueo", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.MotivoBloqueo) ? DBNull.Value : model.MotivoBloqueo.Trim();
+                command.Parameters.Add("@RegistradoPorUsuarioId", SqlDbType.Int).Value = usuarioId.HasValue ? usuarioId.Value : DBNull.Value;
+                command.Parameters.Add("@RegistradoPorNombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(usuarioNombre) ? DBNull.Value : usuarioNombre.Trim();
+
+                await connection.OpenAsync();
+                await command.ExecuteNonQueryAsync();
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException(ex.Message, ex);
+            }
+        }
+
+        public async Task<int> RegisterClientCreditMovementAsync(ClientCreditMovementFormViewModel model, int? usuarioId, string? usuarioNombre)
+        {
+            try
+            {
+                await using var connection = new SqlConnection(_connectionString);
+                await using var command = new SqlCommand("dbo.sp_Admin_RegisterClientCreditMovement", connection);
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = model.UsuarioId;
+                command.Parameters.Add("@TipoMovimiento", SqlDbType.NVarChar, 30).Value = model.TipoMovimiento.Trim();
+                command.Parameters.Add("@Monto", SqlDbType.Decimal).Value = model.Monto;
+                command.Parameters["@Monto"].Precision = 18;
+                command.Parameters["@Monto"].Scale = 2;
+                command.Parameters.Add("@Descripcion", SqlDbType.NVarChar, 500).Value = model.Descripcion.Trim();
+                command.Parameters.Add("@Referencia", SqlDbType.NVarChar, 100).Value = string.IsNullOrWhiteSpace(model.Referencia) ? DBNull.Value : model.Referencia.Trim();
+                command.Parameters.Add("@RegistradoPorUsuarioId", SqlDbType.Int).Value = usuarioId.HasValue ? usuarioId.Value : DBNull.Value;
+                command.Parameters.Add("@RegistradoPorNombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(usuarioNombre) ? DBNull.Value : usuarioNombre.Trim();
+
+                await connection.OpenAsync();
+                var result = await command.ExecuteScalarAsync();
+                return Convert.ToInt32(result);
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException(ex.Message, ex);
+            }
+        }
+
         private static async Task CreateMovementInternalAsync(SqlConnection connection, SqlTransaction transaction, int productoId, string tipoMovimiento, int cantidad, int stockAnterior, int stockNuevo, string? motivo, int usuarioId, string usuarioNombre, string? productoNombre = null)
         {
             if (string.IsNullOrWhiteSpace(productoNombre))

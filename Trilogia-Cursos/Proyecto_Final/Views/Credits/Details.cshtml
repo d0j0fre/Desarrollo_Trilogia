@@ -1,0 +1,238 @@
+@model Proyecto_Final.Models.Admin.ClientCreditDetailViewModel
+@{
+    ViewData["Title"] = "Detalle de crédito";
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">Crédito de cliente</h2>
+                    <p class="text-muted mb-0">Configuración financiera, deuda actual y movimientos del cliente.</p>
+                </div>
+                <div>
+                    <a asp-controller="Clients" asp-action="Details" asp-route-id="@Model.UsuarioId" class="btn btn-outline-dark mr-2">Ver cliente</a>
+                    <a asp-controller="Credits" asp-action="Index" class="btn btn-outline-secondary">← Volver</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="row px-xl-5">
+            <div class="col-12">
+                <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+            </div>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="row px-xl-5">
+            <div class="col-12">
+                <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+            </div>
+        </div>
+    }
+
+    <div class="row px-xl-5 pb-3">
+        <div class="col-lg-3 col-md-6 pb-3">
+            <div class="admin-card h-100">
+                <h6 class="text-muted mb-2">Cliente</h6>
+                <h5 class="mb-2">@Model.NombreCompleto</h5>
+                <p class="mb-1">@Model.Correo</p>
+                <small class="text-muted">@(string.IsNullOrWhiteSpace(Model.Telefono) ? "Sin teléfono" : Model.Telefono)</small><br />
+                @if (Model.ClienteActivo)
+                {
+                    <span class="badge badge-success mt-2">Cliente activo</span>
+                }
+                else
+                {
+                    <span class="badge badge-secondary mt-2">Cliente inactivo</span>
+                }
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 pb-3">
+            <div class="admin-card h-100 text-center">
+                <h6 class="text-muted mb-2">Límite de crédito</h6>
+                <h3 class="mb-1">₡@Model.LimiteCredito.ToString("N2")</h3>
+                @if (Model.CreditoBloqueado)
+                {
+                    <span class="badge badge-danger">Bloqueado</span>
+                }
+                else if (Model.CreditoActivo)
+                {
+                    <span class="badge badge-success">Activo</span>
+                }
+                else
+                {
+                    <span class="badge badge-secondary">Inactivo</span>
+                }
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 pb-3">
+            <div class="admin-card h-100 text-center">
+                <h6 class="text-muted mb-2">Deuda actual</h6>
+                <h3 class="@(Model.DeudaActual > 0 ? "text-danger" : "text-muted") mb-1">₡@Model.DeudaActual.ToString("N2")</h3>
+                <small class="text-muted">Cargos menos abonos y ajustes</small>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 pb-3">
+            <div class="admin-card h-100 text-center">
+                <h6 class="text-muted mb-2">Crédito disponible</h6>
+                <h3 class="@(Model.CreditoDisponible < 0 ? "text-danger" : "text-success") mb-1">₡@Model.CreditoDisponible.ToString("N2")</h3>
+                <small class="text-muted">Límite menos deuda actual</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-3">
+        <div class="col-lg-5 pb-3">
+            <div class="admin-card h-100">
+                <h5 class="mb-3">Configurar crédito</h5>
+
+                <form asp-controller="Credits" asp-action="UpdateSettings" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="UsuarioId" value="@Model.UsuarioId" />
+
+                    <div class="form-group">
+                        <label class="font-weight-bold">Límite de crédito</label>
+                        <input type="number" step="0.01" min="0" name="LimiteCredito" value="@Model.LimiteCredito" class="form-control" required />
+                    </div>
+
+                    <div class="form-group">
+                        <div class="custom-control custom-checkbox mb-2">
+                            <input type="checkbox" class="custom-control-input" id="CreditoActivo" name="CreditoActivo" value="true" @(Model.CreditoActivo ? "checked" : string.Empty) />
+                            <input type="hidden" name="CreditoActivo" value="false" />
+                            <label class="custom-control-label" for="CreditoActivo">Crédito activo</label>
+                        </div>
+
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="CreditoBloqueado" name="CreditoBloqueado" value="true" @(Model.CreditoBloqueado ? "checked" : string.Empty) />
+                            <input type="hidden" name="CreditoBloqueado" value="false" />
+                            <label class="custom-control-label" for="CreditoBloqueado">Crédito bloqueado</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="font-weight-bold">Motivo de bloqueo o desactivación</label>
+                        <textarea name="MotivoBloqueo" class="form-control" rows="3" maxlength="255" placeholder="Obligatorio si bloquea o desactiva el crédito">@Model.MotivoBloqueo</textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block"
+                            onclick="return confirm('¿Desea guardar la configuración de crédito de este cliente?');">
+                        Guardar configuración
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-7 pb-3">
+            <div class="admin-card h-100">
+                <h5 class="mb-3">Registrar movimiento</h5>
+                <p class="text-muted">Los movimientos no se eliminan. La deuda se calcula con base en cargos, abonos y ajustes.</p>
+
+                <form asp-controller="Credits" asp-action="RegisterMovement" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="UsuarioId" value="@Model.UsuarioId" />
+
+                    <div class="form-row">
+                        <div class="form-group col-md-4">
+                            <label class="font-weight-bold">Tipo</label>
+                            <select name="TipoMovimiento" class="form-control" required>
+                                <option value="Cargo">Cargo</option>
+                                <option value="Abono" selected>Abono</option>
+                                <option value="AjustePositivo">Ajuste positivo</option>
+                                <option value="AjusteNegativo">Ajuste negativo</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group col-md-4">
+                            <label class="font-weight-bold">Monto</label>
+                            <input type="number" step="0.01" min="1" name="Monto" class="form-control" required />
+                        </div>
+
+                        <div class="form-group col-md-4">
+                            <label class="font-weight-bold">Referencia</label>
+                            <input type="text" name="Referencia" class="form-control" maxlength="100" placeholder="Factura, pedido, recibo" />
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="font-weight-bold">Descripción</label>
+                        <textarea name="Descripcion" class="form-control" rows="3" maxlength="500" required placeholder="Detalle del movimiento financiero"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-dark btn-block"
+                            onclick="return confirm('¿Desea registrar este movimiento financiero?');">
+                        Registrar movimiento
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-12">
+            <div class="admin-table-wrapper">
+                <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0">Historial de movimientos</h5>
+                        <small class="text-muted">Total cargos: ₡@Model.TotalCargos.ToString("N2") | Total abonos/ajustes negativos: ₡@Model.TotalAbonos.ToString("N2")</small>
+                    </div>
+                    <span class="badge badge-light">@Model.Movimientos.Count movimiento(s)</span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Fecha</th>
+                                <th>Tipo</th>
+                                <th>Monto</th>
+                                <th>Descripción</th>
+                                <th>Referencia</th>
+                                <th>Registrado por</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Movimientos == null || !Model.Movimientos.Any())
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4">Este cliente no tiene movimientos de crédito registrados.</td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var mov in Model.Movimientos)
+                                {
+                                    var tipoTexto = mov.TipoMovimiento == "Cargo" ? "Cargo" : mov.TipoMovimiento == "Abono" ? "Abono" : mov.TipoMovimiento == "AjustePositivo" ? "Ajuste +" : "Ajuste -";
+                                    var badgeClass = mov.TipoMovimiento == "Cargo" || mov.TipoMovimiento == "AjustePositivo" ? "badge-danger" : "badge-success";
+                                    <tr>
+                                        <td>#@mov.CreditoMovimientoId</td>
+                                        <td>@mov.FechaMovimiento.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td><span class="badge @badgeClass">@tipoTexto</span></td>
+                                        <td>₡@mov.Monto.ToString("N2")</td>
+                                        <td>@mov.Descripcion</td>
+                                        <td>@(string.IsNullOrWhiteSpace(mov.Referencia) ? "Sin referencia" : mov.Referencia)</td>
+                                        <td>@(string.IsNullOrWhiteSpace(mov.RegistradoPorNombre) ? "Sistema" : mov.RegistradoPorNombre)</td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
