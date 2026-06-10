@@ -19,6 +19,7 @@
     <link href="~/lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet">
     <link href="~/css/style.css" rel="stylesheet">
     <link href="~/css/custom-theme.css" rel="stylesheet">
+    <link href="~/css/ui-modern-2027.css" rel="stylesheet">
 
     @RenderSection("Styles", required: false)
 </head>
@@ -70,9 +71,9 @@
         </div>
     </div>
 
-    <div class="container-fluid bg-dark mb-30">
+    <div class="container-fluid bg-dark mb-30 modern-nav-shell">
         <div class="row px-xl-5">
-            <div class="col-lg-3 d-none d-lg-block">
+            <div class="col-lg-2 d-none d-lg-block">
                 <a class="btn d-flex align-items-center justify-content-between bg-primary w-100 header-categories-button" data-toggle="collapse" href="#navbar-vertical">
                     <h6 class="text-dark m-0"><i class="fa fa-bars mr-2"></i>Categorías</h6>
                     <i class="fa fa-angle-down text-dark"></i>
@@ -88,7 +89,7 @@
                 </nav>
             </div>
 
-            <div class="col-lg-9">
+            <div class="col-lg-10">
                 <nav class="navbar navbar-expand-lg bg-dark navbar-dark py-3 py-lg-0 px-0">
                     <a asp-controller="Home" asp-action="Index" class="text-decoration-none d-block d-lg-none">
                         <span class="h1 text-uppercase text-dark bg-light px-2">La</span>
@@ -100,7 +101,7 @@
                     </button>
 
                     <div class="collapse navbar-collapse justify-content-between" id="navbarCollapse">
-                        <div class="navbar-nav mr-auto py-0 main-nav-clean">
+                        <div class="navbar-nav mr-auto py-0 main-nav-clean main-nav-2027">
                             <a asp-controller="Home" asp-action="Index" class="nav-item nav-link">Inicio</a>
                             <a asp-controller="Home" asp-action="Shop" class="nav-item nav-link">Tienda</a>
                             <a asp-controller="Cart" asp-action="Index" class="nav-item nav-link"><i class="fa fa-shopping-cart mr-1"></i>Carrito</a>
@@ -117,7 +118,7 @@
                             {
                                 <div class="nav-item dropdown admin-nav-dropdown">
                                     <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">
-                                        <i class="fa fa-th-large mr-1"></i>Administración
+                                        <i class="fa fa-th-large mr-1"></i>Operación
                                     </a>
                                     <div class="dropdown-menu admin-dropdown-menu rounded-0 border-0 m-0">
                                         <a asp-controller="Admin" asp-action="Index" class="dropdown-item"><i class="fa fa-chart-line"></i> Dashboard</a>
@@ -130,7 +131,7 @@
 
                                 <div class="nav-item dropdown admin-nav-dropdown">
                                     <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">
-                                        <i class="fa fa-users-cog mr-1"></i>Gestión
+                                        <i class="fa fa-users-cog mr-1"></i>Clientes
                                     </a>
                                     <div class="dropdown-menu admin-dropdown-menu rounded-0 border-0 m-0">
                                         <a asp-controller="Clients" asp-action="Index" class="dropdown-item"><i class="fa fa-users"></i> Clientes</a>

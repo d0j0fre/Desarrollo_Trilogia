@@ -6,6 +6,7 @@
 
 @section Styles {
     <link href="~/css/custom-theme.css" rel="stylesheet" />
+    <link href="~/css/ui-modern-2027.css" rel="stylesheet" />
 }
 
 <div class="container-fluid pt-4">
@@ -16,8 +17,8 @@
                     <h2 class="mb-1">Roles de usuario</h2>
                     <p class="text-muted mb-0">Crear, editar, activar e inactivar roles del sistema.</p>
                 </div>
-                <a asp-controller="Roles" asp-action="Create" class="btn btn-primary">
-                    + Nuevo rol
+                <a asp-controller="Roles" asp-action="Create" class="btn btn-primary btn-modern-primary">
+                    <i class="fa fa-plus mr-1"></i>Nuevo rol
                 </a>
             </div>
         </div>
@@ -25,13 +26,13 @@
 
     <div class="row px-xl-5 mb-3">
         <div class="col-12">
-            <form asp-controller="Roles" asp-action="Index" method="get" class="d-flex" style="gap:8px;">
+            <form asp-controller="Roles" asp-action="Index" method="get" class="admin-filter-grid">
                 <input type="text" name="buscar" value="@buscar"
                        class="form-control" placeholder="Buscar por nombre o descripción..." />
-                <button type="submit" class="btn btn-dark">Buscar</button>
+                <button type="submit" class="btn btn-dark"><i class="fa fa-search mr-1"></i>Buscar</button>
                 @if (!string.IsNullOrWhiteSpace(buscar))
                 {
-                    <a asp-controller="Roles" asp-action="Index" class="btn btn-outline-secondary">Limpiar</a>
+                    <a asp-controller="Roles" asp-action="Index" class="btn btn-outline-secondary"><i class="fa fa-times mr-1"></i>Limpiar</a>
                 }
             </form>
         </div>
@@ -98,14 +99,14 @@
                                             }
                                         </td>
                                         <td>
-                                            <div class="admin-actions">
+                                            <div class="admin-actions admin-actions--roles">
                                                 <a asp-controller="Roles" asp-action="Edit"
-                                                   asp-route-id="@item.PerfilId" class="btn btn-sm btn-primary">Editar</a>
+                                                   asp-route-id="@item.PerfilId" class="btn btn-sm btn-primary"><i class="fa fa-edit mr-1"></i>Editar</a>
 
                                                 @if (item.BloqueaInactivacion && item.Activo)
                                                 {
                                                     <button type="button" class="btn btn-sm btn-outline-secondary" disabled>
-                                                        Protegido
+                                                        <i class="fa fa-lock mr-1"></i>Protegido
                                                     </button>
                                                 }
                                                 else
@@ -116,7 +117,7 @@
                                                         <input type="hidden" name="perfilId" value="@item.PerfilId" />
                                                         <input type="hidden" name="buscar" value="@buscar" />
                                                         <button type="submit" class="btn btn-sm @(item.Activo ? "btn-danger" : "btn-success")">
-                                                            @(item.Activo ? "Inactivar" : "Activar")
+                                                            <i class="fa @(item.Activo ? "fa-ban" : "fa-check") mr-1"></i>@(item.Activo ? "Inactivar" : "Activar")
                                                         </button>
                                                     </form>
                                                 }

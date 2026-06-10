@@ -6,6 +6,7 @@
 
 @section Styles {
     <link href="~/css/custom-theme.css" rel="stylesheet" />
+    <link href="~/css/ui-modern-2027.css" rel="stylesheet" />
 }
 
 <div class="container-fluid pt-4">
@@ -16,8 +17,8 @@
                     <h2 class="mb-1">Inventario</h2>
                     <p class="text-muted mb-0">Gestión de productos del catálogo.</p>
                 </div>
-                <a asp-controller="Inventory" asp-action="Create" class="btn btn-primary">
-                    + Nuevo producto
+                <a asp-controller="Inventory" asp-action="Create" class="btn btn-primary btn-modern-primary">
+                    <i class="fa fa-plus mr-1"></i>Nuevo producto
                 </a>
             </div>
         </div>
@@ -25,13 +26,13 @@
 
     <div class="row px-xl-5 mb-3">
         <div class="col-12">
-            <form asp-controller="Inventory" asp-action="Index" method="get" class="d-flex" style="gap:8px;">
+            <form asp-controller="Inventory" asp-action="Index" method="get" class="admin-filter-grid">
                 <input type="text" name="filtro" value="@filtro"
                        class="form-control" placeholder="Buscar por nombre o categoría..." />
-                <button type="submit" class="btn btn-dark">Buscar</button>
+                <button type="submit" class="btn btn-dark"><i class="fa fa-search mr-1"></i>Buscar</button>
                 @if (!string.IsNullOrWhiteSpace(filtro))
                 {
-                    <a asp-controller="Inventory" asp-action="Index" class="btn btn-outline-secondary">Limpiar</a>
+                    <a asp-controller="Inventory" asp-action="Index" class="btn btn-outline-secondary"><i class="fa fa-times mr-1"></i>Limpiar</a>
                 }
             </form>
         </div>
@@ -125,7 +126,7 @@
                                     <tr>
                                         <td>@item.ProductoId</td>
                                         <td>
-                                            <img src="@imagen" style="width:56px;height:56px;object-fit:cover;border-radius:6px;" />
+                                            <img src="@imagen" class="table-product-thumb" />
                                         </td>
                                         <td class="font-weight-bold">@item.Nombre</td>
                                         <td>@item.Categoria</td>
@@ -156,9 +157,9 @@
                                             }
                                         </td>
                                         <td>
-                                            <div class="admin-actions">
+                                            <div class="admin-actions admin-actions--products">
                                                 <a asp-controller="Inventory" asp-action="Edit"
-                                                   asp-route-id="@item.ProductoId" class="btn btn-sm btn-primary">Editar</a>
+                                                   asp-route-id="@item.ProductoId" class="btn btn-sm btn-primary"><i class="fa fa-edit mr-1"></i>Editar</a>
 
                                                 <form asp-controller="Inventory" asp-action="ToggleStatus" method="post" class="mb-0"
                                                       onsubmit="return confirm('@(item.Activo ? "¿Inactivar este producto? Ya no se mostrará en el catálogo." : "¿Reactivar este producto? Volverá a mostrarse en el catálogo.")');">
@@ -166,7 +167,7 @@
                                                     <input type="hidden" name="productoId" value="@item.ProductoId" />
                                                     <input type="hidden" name="filtro" value="@filtro" />
                                                     <button type="submit" class="btn btn-sm @(item.Activo ? "btn-warning" : "btn-success")">
-                                                        @(item.Activo ? "Inactivar" : "Reactivar")
+                                                        <i class="fa @(item.Activo ? "fa-eye-slash" : "fa-eye") mr-1"></i>@(item.Activo ? "Inactivar" : "Reactivar")
                                                     </button>
                                                 </form>
 
@@ -175,7 +176,7 @@
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="productoId" value="@item.ProductoId" />
                                                     <input type="hidden" name="filtro" value="@filtro" />
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger">Eliminar</button>
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fa fa-trash mr-1"></i>Eliminar</button>
                                                 </form>
                                             </div>
                                         </td>

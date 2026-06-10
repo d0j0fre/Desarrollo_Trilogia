@@ -5,6 +5,7 @@
 
 @section Styles {
     <link href="~/css/custom-theme.css" rel="stylesheet" />
+    <link href="~/css/ui-modern-2027.css" rel="stylesheet" />
 }
 
 <div class="container-fluid pt-4">
@@ -15,8 +16,8 @@
                     <h2 class="mb-1">Clientes</h2>
                     <p class="text-muted mb-0">Registrar, administrar, activar e inactivar clientes del sistema.</p>
                 </div>
-                <a asp-controller="Clients" asp-action="Create" class="btn btn-primary">
-                    + Nuevo cliente
+                <a asp-controller="Clients" asp-action="Create" class="btn btn-primary btn-modern-primary">
+                    <i class="fa fa-plus mr-1"></i>Nuevo cliente
                 </a>
             </div>
         </div>
@@ -42,21 +43,21 @@
 
     <div class="row px-xl-5 mb-3">
         <div class="col-12">
-            <form asp-controller="Clients" asp-action="Index" method="get" class="d-flex flex-wrap" style="gap:8px;">
+            <form asp-controller="Clients" asp-action="Index" method="get" class="admin-filter-grid admin-filter-grid--clients">
                 <input type="text" name="buscar" value="@Model.Buscar"
-                       class="form-control" style="min-width:260px; flex:1;"
+                       class="form-control"
                        placeholder="Buscar por nombre, correo, teléfono o dirección..." />
 
-                <select name="estado" class="form-control" style="max-width:180px;">
+                <select name="estado" class="form-control filter-select">
                     <option value="">Todos</option>
                     <option value="Activo" selected="@(Model.Estado == "Activo")">Activos</option>
                     <option value="Inactivo" selected="@(Model.Estado == "Inactivo")">Inactivos</option>
                 </select>
 
-                <button type="submit" class="btn btn-dark">Buscar</button>
+                <button type="submit" class="btn btn-dark"><i class="fa fa-search mr-1"></i>Buscar</button>
                 @if (!string.IsNullOrWhiteSpace(Model.Buscar) || !string.IsNullOrWhiteSpace(Model.Estado))
                 {
-                    <a asp-controller="Clients" asp-action="Index" class="btn btn-outline-secondary">Limpiar</a>
+                    <a asp-controller="Clients" asp-action="Index" class="btn btn-outline-secondary"><i class="fa fa-times mr-1"></i>Limpiar</a>
                 }
             </form>
         </div>
@@ -120,9 +121,9 @@
                                             }
                                         </td>
                                         <td>
-                                            <div class="admin-actions">
-                                                <a asp-controller="Clients" asp-action="Details" asp-route-id="@item.UsuarioId" class="btn btn-sm btn-outline-dark">Detalle</a>
-                                                <a asp-controller="Clients" asp-action="Edit" asp-route-id="@item.UsuarioId" class="btn btn-sm btn-primary">Editar</a>
+                                            <div class="admin-actions admin-actions--clients">
+                                                <a asp-controller="Clients" asp-action="Details" asp-route-id="@item.UsuarioId" class="btn btn-sm btn-outline-dark"><i class="fa fa-eye mr-1"></i>Detalle</a>
+                                                <a asp-controller="Clients" asp-action="Edit" asp-route-id="@item.UsuarioId" class="btn btn-sm btn-primary"><i class="fa fa-edit mr-1"></i>Editar</a>
 
                                                 <form asp-controller="Clients" asp-action="ToggleStatus" method="post" class="mb-0"
                                                       onsubmit="return confirm('@(item.Activo ? "¿Desea inactivar este cliente? El cliente no podrá iniciar sesión ni realizar pedidos." : "¿Desea reactivar este cliente?")');">
@@ -132,7 +133,7 @@
                                                     <input type="hidden" name="estado" value="@Model.Estado" />
                                                     <input type="hidden" name="motivo" value="@(item.Activo ? "Inactivación realizada desde el listado de clientes." : "Reactivación realizada desde el listado de clientes.")" />
                                                     <button type="submit" class="btn btn-sm @(item.Activo ? "btn-danger" : "btn-success")">
-                                                        @(item.Activo ? "Inactivar" : "Activar")
+                                                        <i class="fa @(item.Activo ? "fa-user-slash" : "fa-user-check") mr-1"></i>@(item.Activo ? "Inactivar" : "Activar")
                                                     </button>
                                                 </form>
                                             </div>
