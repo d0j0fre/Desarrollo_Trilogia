@@ -28,6 +28,11 @@
         var userName = Context.Session.GetString("UserFullName");
         var userRole = Context.Session.GetString("UserRole");
         var isLoggedIn = !string.IsNullOrWhiteSpace(Context.Session.GetString("UserEmail"));
+        var isAdmin = isLoggedIn && string.Equals(userRole, "Administrador", StringComparison.OrdinalIgnoreCase);
+        var isSellerOrStaff = isLoggedIn && (
+            string.Equals(userRole, "Administrador", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(userRole, "Empleado", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(userRole, "Vendedor", StringComparison.OrdinalIgnoreCase));
         var categoriasLayout = await AdminDbService.GetStoreCategoriesAsync();
     }
     <div class="container-fluid topbar">
@@ -44,18 +49,13 @@
                 @if (isLoggedIn)
                 {
                     <div class="user-panel float-lg-right">
-
-                        <a asp-controller="Profile"
-                           asp-action="Edit"
-                           class="text-decoration-none text-reset">
-
+                        <a asp-controller="Profile" asp-action="Edit" class="text-decoration-none text-reset">
                             <div class="text-left mr-1">
                                 <p class="user-panel__name">
                                     <i class="fa fa-user mr-1 text-primary"></i>@userName
                                 </p>
                                 <p class="user-panel__role">@userRole</p>
                             </div>
-
                         </a>
 
                         <form asp-controller="Account" asp-action="Logout" method="post" class="m-0">
@@ -100,26 +100,55 @@
                     </button>
 
                     <div class="collapse navbar-collapse justify-content-between" id="navbarCollapse">
-                        <div class="navbar-nav mr-auto py-0">
+                        <div class="navbar-nav mr-auto py-0 main-nav-clean">
                             <a asp-controller="Home" asp-action="Index" class="nav-item nav-link">Inicio</a>
                             <a asp-controller="Home" asp-action="Shop" class="nav-item nav-link">Tienda</a>
                             <a asp-controller="Cart" asp-action="Index" class="nav-item nav-link"><i class="fa fa-shopping-cart mr-1"></i>Carrito</a>
                             <a asp-controller="Home" asp-action="Contact" class="nav-item nav-link">Contacto</a>
 
-
-                            @if (isLoggedIn && string.Equals(userRole, "Administrador", StringComparison.OrdinalIgnoreCase))
+                            @if (isSellerOrStaff)
                             {
-                                <a asp-controller="Admin" asp-action="Index" class="nav-item nav-link"><i class="fa fa-chart-line mr-1"></i>Dashboard</a>
-                                <a asp-controller="Inventory" asp-action="Index" class="nav-item nav-link"><i class="fa fa-boxes mr-1"></i>Inventario</a>
-                                <a asp-controller="Inventory" asp-action="Movements" class="nav-item nav-link"><i class="fa fa-exchange-alt mr-1"></i>Movimientos</a>
-                                <a asp-controller="Roles" asp-action="Index" class="nav-item nav-link"><i class="fa fa-user-shield mr-1"></i>Roles</a>
-                                <a asp-controller="Permissions" asp-action="Index" class="nav-item nav-link"><i class="fa fa-key mr-1"></i>Permisos</a>
-                                <a asp-controller="Clients" asp-action="Index" class="nav-item nav-link"><i class="fa fa-users mr-1"></i>Clientes</a>
-                                <a asp-controller="Credits" asp-action="Index" class="nav-item nav-link"><i class="fa fa-credit-card mr-1"></i>Créditos</a>
-                                <a asp-controller="OrdersAdmin" asp-action="Index" class="nav-item nav-link"><i class="fa fa-clipboard-list mr-1"></i>Pedidos</a>
-                                <a asp-controller="Billing" asp-action="Index" class="nav-item nav-link"><i class="fa fa-file-invoice-dollar mr-1"></i>Facturación</a>
-                                <a asp-controller="Consultations" asp-action="Index" class="nav-item nav-link"><i class="fa fa-comments mr-1"></i>Consultas</a>
-                                <a asp-controller="Audit" asp-action="Index" class="nav-item nav-link"><i class="fa fa-history mr-1"></i>Auditoría</a>
+                                <a asp-controller="SellerOrders" asp-action="Index" class="nav-item nav-link nav-highlight">
+                                    <i class="fa fa-mobile-alt mr-1"></i>Venta móvil
+                                </a>
+                            }
+
+                            @if (isAdmin)
+                            {
+                                <div class="nav-item dropdown admin-nav-dropdown">
+                                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">
+                                        <i class="fa fa-th-large mr-1"></i>Administración
+                                    </a>
+                                    <div class="dropdown-menu admin-dropdown-menu rounded-0 border-0 m-0">
+                                        <a asp-controller="Admin" asp-action="Index" class="dropdown-item"><i class="fa fa-chart-line"></i> Dashboard</a>
+                                        <a asp-controller="Inventory" asp-action="Index" class="dropdown-item"><i class="fa fa-boxes"></i> Inventario</a>
+                                        <a asp-controller="Inventory" asp-action="Movements" class="dropdown-item"><i class="fa fa-exchange-alt"></i> Movimientos</a>
+                                        <a asp-controller="OrdersAdmin" asp-action="Index" class="dropdown-item"><i class="fa fa-clipboard-list"></i> Pedidos</a>
+                                        <a asp-controller="Billing" asp-action="Index" class="dropdown-item"><i class="fa fa-file-invoice-dollar"></i> Facturación</a>
+                                    </div>
+                                </div>
+
+                                <div class="nav-item dropdown admin-nav-dropdown">
+                                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">
+                                        <i class="fa fa-users-cog mr-1"></i>Gestión
+                                    </a>
+                                    <div class="dropdown-menu admin-dropdown-menu rounded-0 border-0 m-0">
+                                        <a asp-controller="Clients" asp-action="Index" class="dropdown-item"><i class="fa fa-users"></i> Clientes</a>
+                                        <a asp-controller="Credits" asp-action="Index" class="dropdown-item"><i class="fa fa-credit-card"></i> Créditos</a>
+                                        <a asp-controller="Consultations" asp-action="Index" class="dropdown-item"><i class="fa fa-comments"></i> Consultas</a>
+                                        <a asp-controller="Audit" asp-action="Index" class="dropdown-item"><i class="fa fa-history"></i> Auditoría</a>
+                                    </div>
+                                </div>
+
+                                <div class="nav-item dropdown admin-nav-dropdown">
+                                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">
+                                        <i class="fa fa-shield-alt mr-1"></i>Seguridad
+                                    </a>
+                                    <div class="dropdown-menu admin-dropdown-menu rounded-0 border-0 m-0">
+                                        <a asp-controller="Roles" asp-action="Index" class="dropdown-item"><i class="fa fa-user-shield"></i> Roles</a>
+                                        <a asp-controller="Permissions" asp-action="Index" class="dropdown-item"><i class="fa fa-key"></i> Permisos</a>
+                                    </div>
+                                </div>
                             }
 
                             @if (!isLoggedIn)

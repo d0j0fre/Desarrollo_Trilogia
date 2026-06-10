@@ -1,0 +1,236 @@
+@model Proyecto_Final.Models.Admin.SellerOrderCreateViewModel
+@{
+    ViewData["Title"] = "Venta móvil";
+}
+
+@section Styles {
+    <style>
+        .seller-mobile-summary {
+            position: sticky;
+            bottom: 0;
+            z-index: 20;
+            border-radius: 18px 18px 0 0;
+            box-shadow: 0 -8px 24px rgba(0,0,0,.12);
+        }
+
+        .seller-product-card {
+            border: 1px solid #e8e8e8;
+            border-radius: 16px;
+            padding: 14px;
+            background: #fff;
+            height: 100%;
+            box-shadow: 0 8px 20px rgba(17,17,17,.04);
+        }
+
+        .seller-product-card__title {
+            min-height: 42px;
+            font-weight: 700;
+            color: #1b1b1b;
+        }
+
+        .seller-qty {
+            max-width: 110px;
+            margin-left: auto;
+        }
+
+        @@media (max-width: 767.98px) {
+            .seller-qty {
+                max-width: 100%;
+                margin-left: 0;
+            }
+        }
+    </style>
+}
+
+<div class="container-fluid pt-4">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+                <div>
+                    <h2 class="mb-1">Venta móvil</h2>
+                    <p class="mb-0">Registrar pedidos de clientes desde celular o tablet.</p>
+                </div>
+                <a asp-controller="OrdersAdmin" asp-action="Index" class="btn btn-outline-light mt-3 mt-md-0">
+                    <i class="fa fa-clipboard-list mr-1"></i> Ver pedidos
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <form asp-controller="SellerOrders" asp-action="Create" method="post" id="sellerOrderForm">
+        @Html.AntiForgeryToken()
+
+        <div class="row px-xl-5">
+            <div class="col-12">
+                <div asp-validation-summary="All" class="text-danger mb-3"></div>
+            </div>
+        </div>
+
+        <div class="row px-xl-5">
+            <div class="col-lg-4 mb-4">
+                <div class="admin-card h-100">
+                    <h5 class="mb-3">Cliente y entrega</h5>
+
+                    <div class="form-group">
+                        <label asp-for="ClienteUsuarioId" class="font-weight-bold"></label>
+                        <select asp-for="ClienteUsuarioId" class="form-control">
+                            <option value="0">Seleccione un cliente...</option>
+                            @foreach (var cliente in Model.Clientes)
+                            {
+                                <option value="@cliente.UsuarioId" data-address="@cliente.Direccion">
+                                    @cliente.DisplayText
+                                </option>
+                            }
+                        </select>
+                        <span asp-validation-for="ClienteUsuarioId" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="IdentificacionCliente" class="font-weight-bold"></label>
+                        <input asp-for="IdentificacionCliente" class="form-control" placeholder="Cédula física o jurídica" />
+                        <span asp-validation-for="IdentificacionCliente" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="TipoEntrega" class="font-weight-bold"></label>
+                        <select asp-for="TipoEntrega" class="form-control">
+                            <option>Entrega por vendedor</option>
+                            <option>Retiro en local</option>
+                            <option>Envío a domicilio</option>
+                        </select>
+                        <span asp-validation-for="TipoEntrega" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="DireccionEntrega" class="font-weight-bold"></label>
+                        <textarea asp-for="DireccionEntrega" class="form-control" rows="4" placeholder="Dirección, señas o punto de entrega"></textarea>
+                        <span asp-validation-for="DireccionEntrega" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group mb-0">
+                        <label asp-for="Observaciones" class="font-weight-bold"></label>
+                        <textarea asp-for="Observaciones" class="form-control" rows="3" placeholder="Notas para despacho o facturación"></textarea>
+                        <span asp-validation-for="Observaciones" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-8 mb-4">
+                <div class="admin-card mb-3">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center" style="gap:12px;">
+                        <div>
+                            <h5 class="mb-1">Productos disponibles</h5>
+                            <p class="text-muted mb-0">Digite cantidades. Solo se guardan productos con cantidad mayor a cero.</p>
+                        </div>
+                        <input type="text" id="productSearch" class="form-control" style="max-width:320px;" placeholder="Buscar producto o categoría..." />
+                    </div>
+                </div>
+
+                <div class="row" id="productsGrid">
+                    @for (var i = 0; i < Model.Productos.Count; i++)
+                    {
+                        <div class="col-md-6 col-xl-4 mb-3 seller-product-item" data-name="@Model.Productos[i].Nombre.ToLower()" data-category="@Model.Productos[i].Categoria.ToLower()">
+                            <div class="seller-product-card">
+                                <input type="hidden" asp-for="Productos[i].ProductoId" />
+                                <input type="hidden" asp-for="Productos[i].Nombre" />
+                                <input type="hidden" asp-for="Productos[i].Categoria" />
+                                <input type="hidden" asp-for="Productos[i].Precio" />
+                                <input type="hidden" asp-for="Productos[i].Stock" />
+
+                                <div class="seller-product-card__title">@Model.Productos[i].Nombre</div>
+                                <div class="text-muted small mb-2">@Model.Productos[i].Categoria</div>
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <span class="font-weight-bold">₡@Model.Productos[i].Precio.ToString("N2")</span>
+                                    <span class="badge badge-light">Stock: @Model.Productos[i].Stock</span>
+                                </div>
+
+                                <label class="small text-muted mb-1">Cantidad</label>
+                                <input asp-for="Productos[i].Cantidad"
+                                       type="number"
+                                       min="0"
+                                       max="@Model.Productos[i].Stock"
+                                       class="form-control seller-quantity"
+                                       data-price="@Model.Productos[i].Precio.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                       data-stock="@Model.Productos[i].Stock" />
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="container-fluid px-xl-5 seller-mobile-summary">
+            <div class="admin-card d-flex flex-column flex-md-row justify-content-between align-items-md-center" style="gap:12px;">
+                <div>
+                    <strong>Total seleccionado:</strong>
+                    <span id="selectedItems">0</span> producto(s) / <span id="selectedUnits">0</span> unidad(es)
+                    <div class="text-muted small">Total estimado: <strong id="selectedTotal">₡0,00</strong></div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="fa fa-save mr-1"></i> Registrar pedido
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const search = document.getElementById('productSearch');
+            const items = Array.from(document.querySelectorAll('.seller-product-item'));
+            const quantities = Array.from(document.querySelectorAll('.seller-quantity'));
+            const selectedItems = document.getElementById('selectedItems');
+            const selectedUnits = document.getElementById('selectedUnits');
+            const selectedTotal = document.getElementById('selectedTotal');
+            const clientSelect = document.getElementById('ClienteUsuarioId');
+            const address = document.getElementById('DireccionEntrega');
+
+            function formatCurrency(value) {
+                return '₡' + value.toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+
+            function updateSummary() {
+                let productCount = 0;
+                let unitCount = 0;
+                let total = 0;
+
+                quantities.forEach(input => {
+                    const qty = parseInt(input.value || '0', 10);
+                    const price = parseFloat(input.dataset.price || '0');
+                    if (qty > 0) {
+                        productCount += 1;
+                        unitCount += qty;
+                        total += qty * price;
+                    }
+                });
+
+                selectedItems.textContent = productCount;
+                selectedUnits.textContent = unitCount;
+                selectedTotal.textContent = formatCurrency(total);
+            }
+
+            function filterProducts() {
+                const term = (search.value || '').trim().toLowerCase();
+                items.forEach(item => {
+                    const match = !term || item.dataset.name.includes(term) || item.dataset.category.includes(term);
+                    item.style.display = match ? '' : 'none';
+                });
+            }
+
+            quantities.forEach(input => input.addEventListener('input', updateSummary));
+            search.addEventListener('input', filterProducts);
+
+            clientSelect.addEventListener('change', function () {
+                const selected = clientSelect.options[clientSelect.selectedIndex];
+                const savedAddress = selected ? selected.getAttribute('data-address') : '';
+                if (savedAddress && !address.value.trim()) {
+                    address.value = savedAddress;
+                }
+            });
+
+            updateSummary();
+        })();
+    </script>
+}
