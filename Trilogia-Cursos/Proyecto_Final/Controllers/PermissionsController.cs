@@ -4,7 +4,7 @@ using Proyecto_Final.Services;
 
 namespace Proyecto_Final.Controllers
 {
-    [AdminAuthorize]
+    [AdminAuthorize("Seguridad")]
     public class PermissionsController : Controller
     {
         private readonly AdminDbService _adminDbService;

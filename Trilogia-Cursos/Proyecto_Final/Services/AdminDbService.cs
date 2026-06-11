@@ -1458,6 +1458,169 @@ namespace Proyecto_Final.Services
             }
         }
 
+
+        public async Task<bool> TienePermisoAsync(int perfilId, string modulo)
+        {
+            if (perfilId <= 0 || string.IsNullOrWhiteSpace(modulo))
+            {
+                return false;
+            }
+
+            var aliasModulo = ObtenerAliasModulo(modulo);
+            var prefijosCodigo = ObtenerPrefijosCodigo(modulo);
+
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand();
+            command.Connection = connection;
+
+            var condiciones = new List<string>();
+
+            for (var i = 0; i < aliasModulo.Count; i++)
+            {
+                var parameterName = $"@Modulo{i}";
+                condiciones.Add($"pe.Modulo = {parameterName}");
+                command.Parameters.Add(parameterName, SqlDbType.NVarChar, 80).Value = aliasModulo[i];
+            }
+
+            for (var i = 0; i < prefijosCodigo.Count; i++)
+            {
+                var parameterName = $"@Codigo{i}";
+                condiciones.Add($"pe.Codigo LIKE {parameterName}");
+                command.Parameters.Add(parameterName, SqlDbType.NVarChar, 100).Value = prefijosCodigo[i] + "%";
+            }
+
+            if (condiciones.Count == 0)
+            {
+                return false;
+            }
+
+            command.CommandText = $@"
+                SELECT COUNT(1)
+                FROM dbo.PerfilPermisos pp
+                INNER JOIN dbo.Permisos pe ON pe.PermisoId = pp.PermisoId
+                WHERE pp.PerfilId = @PerfilId
+                  AND pe.Activo = 1
+                  AND ({string.Join(" OR ", condiciones)});";
+
+            command.Parameters.Add("@PerfilId", SqlDbType.Int).Value = perfilId;
+
+            await connection.OpenAsync();
+            var result = await command.ExecuteScalarAsync();
+            return Convert.ToInt32(result ?? 0) > 0;
+        }
+
+        public async Task<bool> TienePermisoPorRolAsync(string? nombreRol, string modulo)
+        {
+            if (string.IsNullOrWhiteSpace(nombreRol) || string.IsNullOrWhiteSpace(modulo))
+            {
+                return false;
+            }
+
+            if (string.Equals(nombreRol.Trim(), "Administrador", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            var aliasModulo = ObtenerAliasModulo(modulo);
+            var prefijosCodigo = ObtenerPrefijosCodigo(modulo);
+
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand();
+            command.Connection = connection;
+
+            var condiciones = new List<string>();
+
+            for (var i = 0; i < aliasModulo.Count; i++)
+            {
+                var parameterName = $"@Modulo{i}";
+                condiciones.Add($"pe.Modulo = {parameterName}");
+                command.Parameters.Add(parameterName, SqlDbType.NVarChar, 80).Value = aliasModulo[i];
+            }
+
+            for (var i = 0; i < prefijosCodigo.Count; i++)
+            {
+                var parameterName = $"@Codigo{i}";
+                condiciones.Add($"pe.Codigo LIKE {parameterName}");
+                command.Parameters.Add(parameterName, SqlDbType.NVarChar, 100).Value = prefijosCodigo[i] + "%";
+            }
+
+            if (condiciones.Count == 0)
+            {
+                return false;
+            }
+
+            command.CommandText = $@"
+                SELECT COUNT(1)
+                FROM dbo.Perfiles p
+                INNER JOIN dbo.PerfilPermisos pp ON pp.PerfilId = p.PerfilId
+                INNER JOIN dbo.Permisos pe ON pe.PermisoId = pp.PermisoId
+                WHERE p.Nombre = @NombreRol
+                  AND p.Activo = 1
+                  AND pe.Activo = 1
+                  AND ({string.Join(" OR ", condiciones)});";
+
+            command.Parameters.Add("@NombreRol", SqlDbType.NVarChar, 100).Value = nombreRol.Trim();
+
+            await connection.OpenAsync();
+            var result = await command.ExecuteScalarAsync();
+            return Convert.ToInt32(result ?? 0) > 0;
+        }
+
+        private static List<string> ObtenerAliasModulo(string modulo)
+        {
+            var clave = NormalizarModulo(modulo);
+
+            return clave switch
+            {
+                "admin" or "dashboard" => new List<string> { "Dashboard", "Admin" },
+                "facturacion" => new List<string> { "Facturación", "Facturacion" },
+                "auditoria" => new List<string> { "Auditoría", "Auditoria" },
+                "creditos" => new List<string> { "Créditos", "Creditos" },
+                "seguridad" => new List<string> { "Seguridad", "Roles", "Permisos" },
+                "ventamovil" => new List<string> { "Venta móvil", "Venta movil", "VentaMovil" },
+                "clientes" => new List<string> { "Clientes" },
+                "consultas" => new List<string> { "Consultas" },
+                "inventario" => new List<string> { "Inventario" },
+                "pedidos" => new List<string> { "Pedidos" },
+                _ => new List<string> { modulo.Trim() }
+            };
+        }
+
+        private static List<string> ObtenerPrefijosCodigo(string modulo)
+        {
+            var clave = NormalizarModulo(modulo);
+
+            return clave switch
+            {
+                "admin" or "dashboard" => new List<string> { "DASHBOARD_" },
+                "facturacion" => new List<string> { "FACTURACION_" },
+                "auditoria" => new List<string> { "AUDITORIA_" },
+                "creditos" => new List<string> { "CREDITOS_" },
+                "seguridad" => new List<string> { "ROLES_", "PERMISOS_" },
+                "ventamovil" => new List<string> { "VENTA_MOVIL_" },
+                "clientes" => new List<string> { "CLIENTES_" },
+                "consultas" => new List<string> { "CONSULTAS_" },
+                "inventario" => new List<string> { "INVENTARIO_" },
+                "pedidos" => new List<string> { "PEDIDOS_" },
+                _ => new List<string>()
+            };
+        }
+
+        private static string NormalizarModulo(string modulo)
+        {
+            return modulo
+                .Trim()
+                .ToLowerInvariant()
+                .Replace("á", "a")
+                .Replace("é", "e")
+                .Replace("í", "i")
+                .Replace("ó", "o")
+                .Replace("ú", "u")
+                .Replace(" ", string.Empty)
+                .Replace("-", string.Empty)
+                .Replace("_", string.Empty);
+        }
+
         private static async Task CreateMovementInternalAsync(SqlConnection connection, SqlTransaction transaction, int productoId, string tipoMovimiento, int cantidad, int stockAnterior, int stockNuevo, string? motivo, int usuarioId, string usuarioNombre, string? productoNombre = null)
         {
             if (string.IsNullOrWhiteSpace(productoNombre))

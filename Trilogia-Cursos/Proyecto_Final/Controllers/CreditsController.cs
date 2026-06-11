@@ -5,7 +5,7 @@ using Proyecto_Final.Services;
 
 namespace Proyecto_Final.Controllers
 {
-    [AdminAuthorize]
+    [AdminAuthorize("Creditos")]
     public class CreditsController : Controller
     {
         private readonly AdminDbService _adminDbService;

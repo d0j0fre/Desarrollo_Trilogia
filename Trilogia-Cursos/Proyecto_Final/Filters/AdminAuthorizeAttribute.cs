@@ -1,10 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Proyecto_Final.Services; // Ajusta al namespace de tu servicio
+using Proyecto_Final.Services;
 
 namespace Proyecto_Final.Filters
 {
-    // El atributo que decorarás en los controladores
     public class AdminAuthorizeAttribute : TypeFilterAttribute
     {
         public AdminAuthorizeAttribute(string modulo) : base(typeof(AdminAuthorizeFilter))
@@ -13,7 +12,6 @@ namespace Proyecto_Final.Filters
         }
     }
 
-    // La lógica de validación
     public class AdminAuthorizeFilter : IAsyncAuthorizationFilter
     {
         private readonly string _modulo;
@@ -27,21 +25,24 @@ namespace Proyecto_Final.Filters
 
         public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
         {
-            // 1. Validar sesión activa
-            var perfilIdStr = context.HttpContext.Session.GetString("PerfilId");
+            var userEmail = context.HttpContext.Session.GetString("UserEmail");
+            var userRole = context.HttpContext.Session.GetString("UserRole");
 
-            if (string.IsNullOrEmpty(perfilIdStr) || !int.TryParse(perfilIdStr, out int perfilId))
+            if (string.IsNullOrWhiteSpace(userEmail))
             {
                 context.Result = new RedirectToActionResult("Login", "Account", null);
                 return;
             }
 
-            // 2. Validar permiso contra la base de datos
-            bool tienePermiso = await _dbService.TienePermisoAsync(perfilId, _modulo);
+            if (string.Equals(userRole, "Administrador", StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            var tienePermiso = await _dbService.TienePermisoPorRolAsync(userRole, _modulo);
 
             if (!tienePermiso)
             {
-                // Retorna un error 403 o redirige a una vista "AccesoDenegado"
                 context.Result = new RedirectToActionResult("AccesoDenegado", "Home", null);
             }
         }

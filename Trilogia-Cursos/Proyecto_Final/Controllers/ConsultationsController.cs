@@ -5,7 +5,7 @@ using Proyecto_Final.Services;
 
 namespace Proyecto_Final.Controllers
 {
-    [AdminAuthorize]
+    [AdminAuthorize("Consultas")]
     public class ConsultationsController : Controller
     {
         private readonly AdminDbService _adminDbService;
