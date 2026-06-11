@@ -1,0 +1,71 @@
+@model Proyecto_Final.Models.Admin.RoleFormViewModel
+@{
+    ViewData["Title"] = "Crear rol";
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">Crear rol</h2>
+                    <p class="text-muted mb-0">Registra un nuevo rol para clasificar usuarios del sistema.</p>
+                </div>
+                <a asp-controller="Roles" asp-action="Index" class="btn btn-outline-secondary">← Volver</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-lg-8">
+            <div class="admin-card">
+                <form asp-controller="Roles" asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3"></div>
+
+                    <div class="form-group">
+                        <label asp-for="Nombre" class="font-weight-bold">Nombre del rol <span class="text-danger">*</span></label>
+                        <input asp-for="Nombre" class="form-control" placeholder="Ejemplo: Supervisor" />
+                        <span asp-validation-for="Nombre" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Descripcion" class="font-weight-bold">Descripción</label>
+                        <textarea asp-for="Descripcion" class="form-control" rows="3" placeholder="Describa para qué se utilizará este rol"></textarea>
+                        <span asp-validation-for="Descripcion" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-check mb-4">
+                        <input asp-for="Activo" class="form-check-input" />
+                        <label asp-for="Activo" class="form-check-label">Rol activo</label>
+                    </div>
+
+                    <div class="d-flex" style="gap:10px;">
+                        <button type="submit" class="btn btn-primary">Guardar rol</button>
+                        <a asp-controller="Roles" asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mt-4 mt-lg-0">
+            <div class="admin-card">
+                <h5 class="mb-3">ℹ️ Información</h5>
+                <ul class="contact-list">
+                    <li>Los roles permiten clasificar usuarios por nivel de acceso.</li>
+                    <li>El nombre del rol debe ser único.</li>
+                    <li>Los roles creados aquí se usarán como base para el módulo de permisos.</li>
+                    <li>La creación del rol quedará registrada en Auditoría.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

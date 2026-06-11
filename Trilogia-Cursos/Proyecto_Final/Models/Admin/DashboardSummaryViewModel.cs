@@ -22,6 +22,7 @@ namespace Proyecto_Final.Models.Admin
         public string Nombre { get; set; } = string.Empty;
         public string Categoria { get; set; } = string.Empty;
         public int Stock { get; set; }
+        public int StockMinimo { get; set; } = 5;
         public string EstadoStock { get; set; } = string.Empty;
     }
 

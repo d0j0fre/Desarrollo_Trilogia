@@ -1,0 +1,127 @@
+@model Proyecto_Final.Models.Admin.AuditLogFilterViewModel
+@{
+    ViewData["Title"] = "Auditoría del sistema";
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header">
+                <h2 class="mb-2">Auditoría del sistema</h2>
+                <p>Registro de acciones realizadas por los usuarios para trazabilidad y seguridad.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-3">
+        <div class="col-12">
+            <div class="admin-card">
+                <form asp-controller="Audit" asp-action="Index" method="get">
+                    <div class="row">
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <label class="font-weight-bold">Módulo</label>
+                            <select name="modulo" class="form-control">
+                                <option value="">Todos</option>
+                                <option value="Autenticación" selected="@(Model.Modulo == "Autenticación")">Autenticación</option>
+                                <option value="Usuarios" selected="@(Model.Modulo == "Usuarios")">Usuarios</option>
+                                <option value="Inventario" selected="@(Model.Modulo == "Inventario")">Inventario</option>
+                                <option value="Pedidos" selected="@(Model.Modulo == "Pedidos")">Pedidos</option>
+                                <option value="Auditoría" selected="@(Model.Modulo == "Auditoría")">Auditoría</option>
+                            </select>
+                        </div>
+
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <label class="font-weight-bold">Acción</label>
+                            <select name="accion" class="form-control">
+                                <option value="">Todas</option>
+                                <option value="Login" selected="@(Model.Accion == "Login")">Login</option>
+                                <option value="Logout" selected="@(Model.Accion == "Logout")">Logout</option>
+                                <option value="Registro" selected="@(Model.Accion == "Registro")">Registro</option>
+                                <option value="Crear" selected="@(Model.Accion == "Crear")">Crear</option>
+                                <option value="Editar" selected="@(Model.Accion == "Editar")">Editar</option>
+                                <option value="Eliminar/Inactivar" selected="@(Model.Accion == "Eliminar/Inactivar")">Eliminar/Inactivar</option>
+                                <option value="Movimiento" selected="@(Model.Accion == "Movimiento")">Movimiento</option>
+                                <option value="Cambio de estado" selected="@(Model.Accion == "Cambio de estado")">Cambio de estado</option>
+                            </select>
+                        </div>
+
+                        <div class="col-lg-4 col-md-8 mb-3">
+                            <label class="font-weight-bold">Buscar</label>
+                            <input type="text" name="buscar" value="@Model.Buscar" class="form-control" placeholder="Usuario, correo, módulo o descripción" />
+                        </div>
+
+                        <div class="col-lg-2 col-md-4 mb-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary btn-block">
+                                <i class="fa fa-search mr-1"></i>Filtrar
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-12">
+            <div class="admin-table-wrapper">
+                <div class="p-4 border-bottom d-flex justify-content-between align-items-center flex-wrap">
+                    <div>
+                        <h5 class="mb-1">Registros recientes</h5>
+                        <small class="text-muted">Se muestran máximo 200 registros.</small>
+                    </div>
+                    <a asp-controller="Audit" asp-action="Index" class="btn btn-outline-secondary btn-sm mt-2 mt-md-0">
+                        <i class="fa fa-sync-alt mr-1"></i>Limpiar filtros
+                    </a>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Usuario</th>
+                                <th>Rol</th>
+                                <th>Módulo</th>
+                                <th>Acción</th>
+                                <th>Descripción</th>
+                                <th>IP</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Registros == null || !Model.Registros.Any())
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4">
+                                        No hay registros de auditoría para mostrar.
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                foreach (var item in Model.Registros)
+                                {
+                                    <tr>
+                                        <td>@item.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td>
+                                            <strong>@item.UsuarioNombre</strong><br />
+                                            <small class="text-muted">@item.UsuarioCorreo</small>
+                                        </td>
+                                        <td>@item.Rol</td>
+                                        <td><span class="admin-badge-soft dark">@item.Modulo</span></td>
+                                        <td><span class="admin-badge-soft success">@item.Accion</span></td>
+                                        <td>@item.Descripcion</td>
+                                        <td>@(string.IsNullOrWhiteSpace(item.DireccionIp) ? "-" : item.DireccionIp)</td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

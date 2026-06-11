@@ -1,0 +1,95 @@
+@model Proyecto_Final.Models.Admin.RoleFormViewModel
+@{
+    ViewData["Title"] = "Editar rol";
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">Editar rol</h2>
+                    <p class="text-muted mb-0">Modifica la información general del rol seleccionado.</p>
+                </div>
+                <a asp-controller="Roles" asp-action="Index" class="btn btn-outline-secondary">← Volver</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-lg-8">
+            <div class="admin-card">
+                <form asp-controller="Roles" asp-action="Edit" method="post">
+                    @Html.AntiForgeryToken()
+                    <input asp-for="PerfilId" type="hidden" />
+                    <input asp-for="FechaCreacion" type="hidden" />
+                    <input asp-for="TotalUsuarios" type="hidden" />
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3"></div>
+
+                    <div class="form-group">
+                        <label class="font-weight-bold">ID del rol</label>
+                        <input type="text" class="form-control" value="ROL-@Model.PerfilId.ToString("D4")" readonly />
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Nombre" class="font-weight-bold">Nombre del rol <span class="text-danger">*</span></label>
+                        <input asp-for="Nombre" class="form-control" placeholder="Nombre del rol" readonly="@(Model.EsRolBase ? "readonly" : null)" />
+                        @if (Model.EsRolBase)
+                        {
+                            <small class="text-muted">Este es un rol base del sistema. Su nombre no debe modificarse para evitar errores en autenticación y registro.</small>
+                        }
+                        <span asp-validation-for="Nombre" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Descripcion" class="font-weight-bold">Descripción</label>
+                        <textarea asp-for="Descripcion" class="form-control" rows="3"></textarea>
+                        <span asp-validation-for="Descripcion" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-check mb-4">
+                        <input asp-for="Activo" class="form-check-input" disabled="@(Model.BloqueaInactivacion ? "disabled" : null)" />
+                        @if (Model.BloqueaInactivacion)
+                        {
+                            <input type="hidden" asp-for="Activo" />
+                        }
+                        <label asp-for="Activo" class="form-check-label">Rol activo</label>
+                        @if (Model.BloqueaInactivacion)
+                        {
+                            <small class="d-block text-muted">Este rol se mantiene activo porque es requerido por el sistema.</small>
+                        }
+                    </div>
+
+                    <div class="alert alert-light border">
+                        <strong>Usuarios asociados:</strong> @Model.TotalUsuarios<br />
+                        <strong>Fecha de creación:</strong> @Model.FechaCreacion.ToString("dd/MM/yyyy")
+                    </div>
+
+                    <div class="d-flex" style="gap:10px;">
+                        <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                        <a asp-controller="Roles" asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mt-4 mt-lg-0">
+            <div class="admin-card">
+                <h5 class="mb-3">ℹ️ Información</h5>
+                <ul class="contact-list">
+                    <li>Los cambios realizados aquí quedan registrados en Auditoría.</li>
+                    <li>Los roles base no se renombran para no afectar login, registro y autorización.</li>
+                    <li>El rol Administrador y Cliente no se pueden inactivar desde este módulo.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

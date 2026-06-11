@@ -1,0 +1,97 @@
+@model Proyecto_Final.Models.Admin.ConsultationDetailViewModel
+@{
+    ViewData["Title"] = "Detalle de consulta";
+    var estadoClase = Model.Estado == "Pendiente" ? "warning" : Model.Estado == "Atendida" ? "success" : "dark";
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+                <div>
+                    <h2 class="mb-2">Consulta #@Model.ConsultaId</h2>
+                    <p>Detalle y seguimiento de la consulta recibida.</p>
+                </div>
+                <a asp-controller="Consultations" asp-action="Index" class="btn btn-outline-secondary mt-3 mt-md-0">
+                    <i class="fa fa-arrow-left mr-1"></i>Volver
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-lg-7 pb-3">
+            <div class="admin-card h-100">
+                <div class="d-flex justify-content-between align-items-start mb-4">
+                    <div>
+                        <h4 class="mb-1">@Model.Asunto</h4>
+                        <p class="text-muted mb-0">Recibida el @Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</p>
+                    </div>
+                    <span class="admin-badge-soft @estadoClase">@Model.Estado</span>
+                </div>
+
+                <div class="mb-3">
+                    <h6 class="text-muted">Nombre</h6>
+                    <p class="mb-0">@Model.Nombre</p>
+                </div>
+
+                <div class="mb-3">
+                    <h6 class="text-muted">Correo</h6>
+                    <p class="mb-0">@Model.Correo</p>
+                </div>
+
+                <div class="mb-3">
+                    <h6 class="text-muted">Mensaje</h6>
+                    <div class="p-3 bg-light rounded border">
+                        @Model.Mensaje
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(Model.AtendidoPorNombre))
+                {
+                    <div class="alert alert-info mb-0">
+                        <strong>Última atención:</strong> @Model.AtendidoPorNombre
+                        @if (Model.FechaAtencion.HasValue)
+                        {
+                            <span> - @Model.FechaAtencion.Value.ToString("dd/MM/yyyy HH:mm")</span>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="col-lg-5 pb-3">
+            <div class="admin-card h-100">
+                <h4 class="mb-4">Actualizar seguimiento</h4>
+
+                <form asp-controller="Consultations" asp-action="UpdateStatus" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="ConsultaId" value="@Model.ConsultaId" />
+
+                    <div class="form-group">
+                        <label>Estado</label>
+                        <select name="Estado" class="form-control">
+                            <option value="Pendiente" selected="@(Model.Estado == "Pendiente")">Pendiente</option>
+                            <option value="Atendida" selected="@(Model.Estado == "Atendida")">Atendida</option>
+                            <option value="Cerrada" selected="@(Model.Estado == "Cerrada")">Cerrada</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Respuesta u observación interna</label>
+                        <textarea name="RespuestaInterna" class="form-control" rows="7" maxlength="1000" placeholder="Ejemplo: se llamó al cliente, se confirmó disponibilidad, se respondió por correo, etc.">@Model.RespuestaInterna</textarea>
+                        <small class="form-text text-muted">Esta información es administrativa y no se muestra al cliente.</small>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block py-2">
+                        <i class="fa fa-save mr-1"></i>Guardar cambios
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

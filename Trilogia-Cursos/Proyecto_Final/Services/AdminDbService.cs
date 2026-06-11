@@ -1,5 +1,4 @@
-﻿using Microsoft.Data.SqlClient;
-using Proyecto_Final.Models;
+using Microsoft.Data.SqlClient;
 using Proyecto_Final.Models.Admin;
 using Proyecto_Final.Models.Store;
 using System.Data;
@@ -13,7 +12,7 @@ namespace Proyecto_Final.Services
         public AdminDbService(IConfiguration configuration)
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection")
-                ?? throw new InvalidOperationException("No se encontró la cadena de conexión DefaultConnection.");
+                ?? throw new InvalidOperationException("No se encontrÃ‡Ã¼ la cadena de conexiÃ‡Ã¼n DefaultConnection.");
         }
 
         public async Task<DashboardSummaryViewModel> GetDashboardSummaryAsync()
@@ -55,7 +54,8 @@ namespace Proyecto_Final.Services
                         Nombre = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
                         Categoria = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
                         Stock = reader.IsDBNull(3) ? 0 : reader.GetInt32(3),
-                        EstadoStock = reader.IsDBNull(4) ? string.Empty : reader.GetString(4)
+                        EstadoStock = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
+                        StockMinimo = reader.FieldCount > 5 && !reader.IsDBNull(5) ? reader.GetInt32(5) : 5
                     });
                 }
             }
@@ -103,7 +103,8 @@ namespace Proyecto_Final.Services
                     Activo = !reader.IsDBNull(7) && reader.GetBoolean(7),
                     FechaCreacion = reader.IsDBNull(8) ? DateTime.MinValue : reader.GetDateTime(8),
                     ImagenUrl = reader.FieldCount > 9 && !reader.IsDBNull(9) ? reader.GetString(9) : string.Empty,
-                    EsDestacado = reader.FieldCount > 10 && !reader.IsDBNull(10) && reader.GetBoolean(10)
+                    EsDestacado = reader.FieldCount > 10 && !reader.IsDBNull(10) && reader.GetBoolean(10),
+                    StockMinimo = reader.FieldCount > 11 && !reader.IsDBNull(11) ? reader.GetInt32(11) : 5
                 });
             }
             return products;
@@ -131,7 +132,8 @@ namespace Proyecto_Final.Services
                     Activo = !reader.IsDBNull(7) && reader.GetBoolean(7),
                     FechaCreacion = reader.IsDBNull(8) ? DateTime.MinValue : reader.GetDateTime(8),
                     ImagenUrl = reader.FieldCount > 9 && !reader.IsDBNull(9) ? reader.GetString(9) : string.Empty,
-                    EsDestacado = reader.FieldCount > 10 && !reader.IsDBNull(10) && reader.GetBoolean(10)
+                    EsDestacado = reader.FieldCount > 10 && !reader.IsDBNull(10) && reader.GetBoolean(10),
+                    StockMinimo = reader.FieldCount > 11 && !reader.IsDBNull(11) ? reader.GetInt32(11) : 5
                 });
             }
             return products;
@@ -156,7 +158,8 @@ namespace Proyecto_Final.Services
                 Stock = reader.IsDBNull(5) ? 0 : reader.GetInt32(5),
                 Activo = !reader.IsDBNull(6) && reader.GetBoolean(6),
                 ImagenUrl = reader.FieldCount > 7 && !reader.IsDBNull(7) ? reader.GetString(7) : string.Empty,
-                EsDestacado = reader.FieldCount > 8 && !reader.IsDBNull(8) && reader.GetBoolean(8)
+                EsDestacado = reader.FieldCount > 8 && !reader.IsDBNull(8) && reader.GetBoolean(8),
+                StockMinimo = reader.FieldCount > 9 && !reader.IsDBNull(9) ? reader.GetInt32(9) : 5
             };
         }
 
@@ -176,6 +179,7 @@ namespace Proyecto_Final.Services
                     command.Parameters.AddWithValue("@Descripcion", string.IsNullOrWhiteSpace(model.Descripcion) ? DBNull.Value : model.Descripcion.Trim());
                     command.Parameters.AddWithValue("@Precio", model.Precio);
                     command.Parameters.AddWithValue("@Stock", model.Stock);
+                    command.Parameters.AddWithValue("@StockMinimo", model.StockMinimo);
                     command.Parameters.AddWithValue("@Activo", model.Activo);
                     command.Parameters.AddWithValue("@ImagenUrl", string.IsNullOrWhiteSpace(model.ImagenUrl) ? DBNull.Value : model.ImagenUrl.Trim());
                     command.Parameters.AddWithValue("@EsDestacado", model.EsDestacado);
@@ -227,6 +231,7 @@ namespace Proyecto_Final.Services
                     updateCommand.Parameters.AddWithValue("@Descripcion", string.IsNullOrWhiteSpace(model.Descripcion) ? DBNull.Value : model.Descripcion.Trim());
                     updateCommand.Parameters.AddWithValue("@Precio", model.Precio);
                     updateCommand.Parameters.AddWithValue("@Stock", model.Stock);
+                    updateCommand.Parameters.AddWithValue("@StockMinimo", model.StockMinimo);
                     updateCommand.Parameters.AddWithValue("@Activo", model.Activo);
                     updateCommand.Parameters.AddWithValue("@ImagenUrl", string.IsNullOrWhiteSpace(model.ImagenUrl) ? DBNull.Value : model.ImagenUrl.Trim());
                     updateCommand.Parameters.AddWithValue("@EsDestacado", model.EsDestacado);
@@ -244,7 +249,7 @@ namespace Proyecto_Final.Services
                 {
                     var cantidad = Math.Abs(model.Stock - previousStock);
                     var tipo = model.Stock > previousStock ? "AjusteEntrada" : "AjusteSalida";
-                    await CreateMovementInternalAsync(connection, (SqlTransaction)transaction, model.ProductoId, tipo, cantidad, previousStock, model.Stock, "Ajuste realizado desde edición de producto.", usuarioId, usuarioNombre);
+                    await CreateMovementInternalAsync(connection, (SqlTransaction)transaction, model.ProductoId, tipo, cantidad, previousStock, model.Stock, "Ajuste realizado desde ediciÃ‡Ã¼n de producto.", usuarioId, usuarioNombre);
                 }
 
                 await transaction.CommitAsync();
@@ -266,14 +271,35 @@ namespace Proyecto_Final.Services
             await command.ExecuteNonQueryAsync();
         }
 
-        public async Task ToggleProductStatusAsync(int productoId)
+        public async Task<bool> ToggleProductStatusAsync(int productoId)
         {
             await using var connection = new SqlConnection(_connectionString);
             await using var command = new SqlCommand("dbo.sp_Admin_ToggleProductStatus", connection);
             command.CommandType = CommandType.StoredProcedure;
             command.Parameters.AddWithValue("@ProductoId", productoId);
             await connection.OpenAsync();
-            await command.ExecuteNonQueryAsync();
+
+            var result = await command.ExecuteScalarAsync();
+            return result != null && result != DBNull.Value && Convert.ToBoolean(result);
+        }
+
+        public async Task<string> DeleteProductPermanentlyAsync(int productoId)
+        {
+            try
+            {
+                await using var connection = new SqlConnection(_connectionString);
+                await using var command = new SqlCommand("dbo.sp_Admin_DeleteProductPermanently", connection);
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@ProductoId", productoId);
+                await connection.OpenAsync();
+
+                var result = await command.ExecuteScalarAsync();
+                return Convert.ToString(result) ?? $"Producto #{productoId}";
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException(ex.Message, ex);
+            }
         }
 
         public async Task<List<InventoryMovementViewModel>> GetInventoryMovementsAsync()
@@ -317,7 +343,7 @@ namespace Proyecto_Final.Services
                     selectCommand.CommandType = CommandType.StoredProcedure;
                     selectCommand.Parameters.AddWithValue("@ProductoId", model.ProductoId);
                     await using var reader = await selectCommand.ExecuteReaderAsync();
-                    if (!await reader.ReadAsync()) throw new InvalidOperationException("El producto seleccionado no existe o está inactivo.");
+                    if (!await reader.ReadAsync()) throw new InvalidOperationException("El producto seleccionado no existe o estÃ‡Â­ inactivo.");
                     productoNombre = reader.IsDBNull(0) ? "Producto" : reader.GetString(0);
                     stockAnterior = reader.IsDBNull(1) ? 0 : reader.GetInt32(1);
                 }
@@ -327,7 +353,7 @@ namespace Proyecto_Final.Services
                     "Entrada" => stockAnterior + model.Cantidad,
                     "Salida" => stockAnterior - model.Cantidad,
                     "Ajuste" => model.Cantidad,
-                    _ => throw new InvalidOperationException("Tipo de movimiento no válido.")
+                    _ => throw new InvalidOperationException("Tipo de movimiento no vÃ‡Â­lido.")
                 };
 
                 if (nuevoStock < 0) throw new InvalidOperationException("El movimiento deja el stock en negativo.");
@@ -506,6 +532,260 @@ namespace Proyecto_Final.Services
             return model;
         }
 
+
+
+        public async Task<List<RoleListItemViewModel>> GetRolesAsync(string? buscar)
+        {
+            var roles = new List<RoleListItemViewModel>();
+
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_GetRoles", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add("@Buscar", SqlDbType.NVarChar, 100).Value = string.IsNullOrWhiteSpace(buscar) ? DBNull.Value : buscar.Trim();
+
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                roles.Add(new RoleListItemViewModel
+                {
+                    PerfilId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                    Nombre = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+                    Descripcion = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                    Activo = !reader.IsDBNull(3) && reader.GetBoolean(3),
+                    FechaCreacion = reader.IsDBNull(4) ? DateTime.MinValue : reader.GetDateTime(4),
+                    TotalUsuarios = reader.IsDBNull(5) ? 0 : reader.GetInt32(5)
+                });
+            }
+
+            return roles;
+        }
+
+        public async Task<RoleFormViewModel?> GetRoleByIdAsync(int perfilId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_GetRoleById", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.AddWithValue("@PerfilId", perfilId);
+
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync()) return null;
+
+            return new RoleFormViewModel
+            {
+                PerfilId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                Nombre = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+                Descripcion = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                Activo = !reader.IsDBNull(3) && reader.GetBoolean(3),
+                FechaCreacion = reader.IsDBNull(4) ? DateTime.MinValue : reader.GetDateTime(4),
+                TotalUsuarios = reader.IsDBNull(5) ? 0 : reader.GetInt32(5)
+            };
+        }
+
+        public async Task<int> CreateRoleAsync(RoleFormViewModel model)
+        {
+            try
+            {
+                await using var connection = new SqlConnection(_connectionString);
+                await using var command = new SqlCommand("dbo.sp_Admin_CreateRole", connection);
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.Add("@Nombre", SqlDbType.NVarChar, 50).Value = model.Nombre.Trim();
+                command.Parameters.Add("@Descripcion", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.Descripcion) ? DBNull.Value : model.Descripcion.Trim();
+                command.Parameters.Add("@Activo", SqlDbType.Bit).Value = model.Activo;
+
+                await connection.OpenAsync();
+                var result = await command.ExecuteScalarAsync();
+                return Convert.ToInt32(result);
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException(ex.Message, ex);
+            }
+        }
+
+        public async Task UpdateRoleAsync(RoleFormViewModel model)
+        {
+            try
+            {
+                await using var connection = new SqlConnection(_connectionString);
+                await using var command = new SqlCommand("dbo.sp_Admin_UpdateRole", connection);
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.Add("@PerfilId", SqlDbType.Int).Value = model.PerfilId;
+                command.Parameters.Add("@Nombre", SqlDbType.NVarChar, 50).Value = model.Nombre.Trim();
+                command.Parameters.Add("@Descripcion", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.Descripcion) ? DBNull.Value : model.Descripcion.Trim();
+                command.Parameters.Add("@Activo", SqlDbType.Bit).Value = model.Activo;
+
+                await connection.OpenAsync();
+                await command.ExecuteNonQueryAsync();
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException(ex.Message, ex);
+            }
+        }
+
+        public async Task ToggleRoleStatusAsync(int perfilId)
+        {
+            try
+            {
+                await using var connection = new SqlConnection(_connectionString);
+                await using var command = new SqlCommand("dbo.sp_Admin_ToggleRoleStatus", connection);
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.Add("@PerfilId", SqlDbType.Int).Value = perfilId;
+
+                await connection.OpenAsync();
+                await command.ExecuteNonQueryAsync();
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException(ex.Message, ex);
+            }
+        }
+
+        public async Task<RolePermissionAssignmentViewModel?> GetRolePermissionAssignmentAsync(int perfilId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_GetRolePermissions", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add("@PerfilId", SqlDbType.Int).Value = perfilId;
+
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync()) return null;
+
+            var model = new RolePermissionAssignmentViewModel
+            {
+                PerfilId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                RolNombre = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+                RolDescripcion = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                RolActivo = !reader.IsDBNull(3) && reader.GetBoolean(3)
+            };
+
+            await reader.NextResultAsync();
+
+            var permisos = new List<PermissionItemViewModel>();
+            while (await reader.ReadAsync())
+            {
+                permisos.Add(new PermissionItemViewModel
+                {
+                    PermisoId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                    Codigo = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+                    Modulo = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                    Nombre = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
+                    Descripcion = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
+                    Activo = !reader.IsDBNull(5) && reader.GetBoolean(5),
+                    Asignado = !reader.IsDBNull(6) && reader.GetBoolean(6)
+                });
+            }
+
+            model.PermisosSeleccionados = permisos
+                .Where(p => p.Asignado)
+                .Select(p => p.PermisoId)
+                .ToList();
+
+            model.Modulos = permisos
+                .GroupBy(p => p.Modulo)
+                .Select(g => new PermissionModuleGroupViewModel
+                {
+                    Modulo = g.Key,
+                    Permisos = g.ToList()
+                })
+                .ToList();
+
+            return model;
+        }
+
+        public async Task UpdateRolePermissionsAsync(int perfilId, List<int> permisosSeleccionados, int? usuarioId, string? usuarioNombre)
+        {
+            try
+            {
+                var permisosCsv = permisosSeleccionados == null || permisosSeleccionados.Count == 0
+                    ? string.Empty
+                    : string.Join(",", permisosSeleccionados.Distinct().OrderBy(x => x));
+
+                await using var connection = new SqlConnection(_connectionString);
+                await using var command = new SqlCommand("dbo.sp_Admin_UpdateRolePermissions", connection);
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.Add("@PerfilId", SqlDbType.Int).Value = perfilId;
+                command.Parameters.Add("@PermisosCsv", SqlDbType.NVarChar, -1).Value = permisosCsv;
+                command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId.HasValue && usuarioId.Value > 0 ? usuarioId.Value : DBNull.Value;
+                command.Parameters.Add("@UsuarioNombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(usuarioNombre) ? DBNull.Value : usuarioNombre.Trim();
+
+                await connection.OpenAsync();
+                await command.ExecuteNonQueryAsync();
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException(ex.Message, ex);
+            }
+        }
+
+
+        public async Task<List<AuditLogViewModel>> GetAuditLogsAsync(string? modulo, string? accion, string? buscar)
+        {
+            var registros = new List<AuditLogViewModel>();
+
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_GetAuditLogs", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add("@Modulo", SqlDbType.NVarChar, 80).Value = string.IsNullOrWhiteSpace(modulo) ? DBNull.Value : modulo.Trim();
+            command.Parameters.Add("@Accion", SqlDbType.NVarChar, 80).Value = string.IsNullOrWhiteSpace(accion) ? DBNull.Value : accion.Trim();
+            command.Parameters.Add("@Buscar", SqlDbType.NVarChar, 200).Value = string.IsNullOrWhiteSpace(buscar) ? DBNull.Value : buscar.Trim();
+
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                registros.Add(new AuditLogViewModel
+                {
+                    AuditoriaId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                    UsuarioId = reader.IsDBNull(1) ? null : reader.GetInt32(1),
+                    UsuarioNombre = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                    UsuarioCorreo = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
+                    Rol = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
+                    Accion = reader.IsDBNull(5) ? string.Empty : reader.GetString(5),
+                    Modulo = reader.IsDBNull(6) ? string.Empty : reader.GetString(6),
+                    Descripcion = reader.IsDBNull(7) ? string.Empty : reader.GetString(7),
+                    DireccionIp = reader.IsDBNull(8) ? null : reader.GetString(8),
+                    UserAgent = reader.IsDBNull(9) ? null : reader.GetString(9),
+                    FechaRegistro = reader.IsDBNull(10) ? DateTime.MinValue : reader.GetDateTime(10)
+                });
+            }
+
+            return registros;
+        }
+
+        public async Task CreateAuditLogAsync(int? usuarioId, string? usuarioNombre, string? usuarioCorreo, string? rol, string accion, string modulo, string descripcion, string? direccionIp, string? userAgent)
+        {
+            try
+            {
+                await using var connection = new SqlConnection(_connectionString);
+                await using var command = new SqlCommand("dbo.sp_Admin_CreateAuditLog", connection);
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId.HasValue && usuarioId.Value > 0 ? usuarioId.Value : DBNull.Value;
+                command.Parameters.Add("@UsuarioNombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(usuarioNombre) ? "Usuario no identificado" : usuarioNombre.Trim();
+                command.Parameters.Add("@UsuarioCorreo", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(usuarioCorreo) ? "No disponible" : usuarioCorreo.Trim();
+                command.Parameters.Add("@Rol", SqlDbType.NVarChar, 50).Value = string.IsNullOrWhiteSpace(rol) ? "No disponible" : rol.Trim();
+                command.Parameters.Add("@Accion", SqlDbType.NVarChar, 80).Value = accion.Trim();
+                command.Parameters.Add("@Modulo", SqlDbType.NVarChar, 80).Value = modulo.Trim();
+                command.Parameters.Add("@Descripcion", SqlDbType.NVarChar, 500).Value = descripcion.Trim();
+                command.Parameters.Add("@DireccionIp", SqlDbType.NVarChar, 80).Value = string.IsNullOrWhiteSpace(direccionIp) ? DBNull.Value : direccionIp.Trim();
+                command.Parameters.Add("@UserAgent", SqlDbType.NVarChar, 300).Value = string.IsNullOrWhiteSpace(userAgent) ? DBNull.Value : userAgent.Trim();
+
+                await connection.OpenAsync();
+                await command.ExecuteNonQueryAsync();
+            }
+            catch
+            {
+                // La auditoría no debe bloquear las acciones principales del sistema.
+            }
+        }
+
         public async Task<List<string>> GetStoreCategoriesAsync()
         {
             var categorias = new List<string>();
@@ -638,6 +918,546 @@ namespace Proyecto_Final.Services
             }
             return productos;
         }
+
+
+        public async Task<List<ClientListItemViewModel>> GetClientsAsync(string? buscar, string? estado)
+        {
+            var clientes = new List<ClientListItemViewModel>();
+
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_GetClients", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add("@Buscar", SqlDbType.NVarChar, 200).Value = string.IsNullOrWhiteSpace(buscar) ? DBNull.Value : buscar.Trim();
+            command.Parameters.Add("@Estado", SqlDbType.NVarChar, 20).Value = string.IsNullOrWhiteSpace(estado) ? DBNull.Value : estado.Trim();
+
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                clientes.Add(new ClientListItemViewModel
+                {
+                    UsuarioId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                    NombreCompleto = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+                    Correo = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                    Telefono = reader.IsDBNull(3) ? null : reader.GetString(3),
+                    Direccion = reader.IsDBNull(4) ? null : reader.GetString(4),
+                    Activo = !reader.IsDBNull(5) && reader.GetBoolean(5),
+                    FechaRegistro = reader.IsDBNull(6) ? DateTime.MinValue : reader.GetDateTime(6),
+                    TotalPedidos = reader.IsDBNull(7) ? 0 : reader.GetInt32(7),
+                    TotalComprado = reader.IsDBNull(8) ? 0 : reader.GetDecimal(8),
+                    UltimoPedido = reader.IsDBNull(9) ? null : reader.GetDateTime(9),
+                    MotivoInactivacion = reader.IsDBNull(10) ? null : reader.GetString(10),
+                    FechaInactivacion = reader.IsDBNull(11) ? null : reader.GetDateTime(11)
+                });
+            }
+
+            return clientes;
+        }
+
+        public async Task<ClientFormViewModel?> GetClientByIdAsync(int usuarioId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_GetClientById", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId;
+
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync()) return null;
+
+            return new ClientFormViewModel
+            {
+                UsuarioId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                NombreCompleto = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+                Correo = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                Telefono = reader.IsDBNull(3) ? null : reader.GetString(3),
+                Direccion = reader.IsDBNull(4) ? null : reader.GetString(4),
+                Activo = !reader.IsDBNull(5) && reader.GetBoolean(5),
+                FechaRegistro = reader.IsDBNull(6) ? DateTime.MinValue : reader.GetDateTime(6),
+                TotalPedidos = reader.IsDBNull(7) ? 0 : reader.GetInt32(7),
+                TotalComprado = reader.IsDBNull(8) ? 0 : reader.GetDecimal(8),
+                UltimoPedido = reader.IsDBNull(9) ? null : reader.GetDateTime(9),
+                MotivoInactivacion = reader.IsDBNull(10) ? null : reader.GetString(10),
+                FechaInactivacion = reader.IsDBNull(11) ? null : reader.GetDateTime(11)
+            };
+        }
+
+        public async Task<ClientDetailViewModel?> GetClientDetailAsync(int usuarioId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_GetClientDetail", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId;
+
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync()) return null;
+
+            var model = new ClientDetailViewModel
+            {
+                UsuarioId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                NombreCompleto = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+                Correo = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                Telefono = reader.IsDBNull(3) ? null : reader.GetString(3),
+                Direccion = reader.IsDBNull(4) ? null : reader.GetString(4),
+                Activo = !reader.IsDBNull(5) && reader.GetBoolean(5),
+                FechaRegistro = reader.IsDBNull(6) ? DateTime.MinValue : reader.GetDateTime(6),
+                TotalPedidos = reader.IsDBNull(7) ? 0 : reader.GetInt32(7),
+                TotalComprado = reader.IsDBNull(8) ? 0 : reader.GetDecimal(8),
+                UltimoPedido = reader.IsDBNull(9) ? null : reader.GetDateTime(9),
+                MotivoInactivacion = reader.IsDBNull(10) ? null : reader.GetString(10),
+                FechaInactivacion = reader.IsDBNull(11) ? null : reader.GetDateTime(11)
+            };
+
+            await reader.NextResultAsync();
+
+            while (await reader.ReadAsync())
+            {
+                model.Pedidos.Add(new ClientOrderSummaryViewModel
+                {
+                    PedidoId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                    FechaPedido = reader.IsDBNull(1) ? DateTime.MinValue : reader.GetDateTime(1),
+                    Estado = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                    TipoEntrega = reader.IsDBNull(3) ? null : reader.GetString(3),
+                    DireccionEntrega = reader.IsDBNull(4) ? null : reader.GetString(4),
+                    Total = reader.IsDBNull(5) ? 0 : reader.GetDecimal(5),
+                    Observaciones = reader.IsDBNull(6) ? null : reader.GetString(6)
+                });
+            }
+
+            return model;
+        }
+
+        public async Task<int> CreateClientAsync(ClientFormViewModel model)
+        {
+            try
+            {
+                await using var connection = new SqlConnection(_connectionString);
+                await using var command = new SqlCommand("dbo.sp_Admin_CreateClient", connection);
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.Add("@NombreCompleto", SqlDbType.NVarChar, 150).Value = model.NombreCompleto.Trim();
+                command.Parameters.Add("@Correo", SqlDbType.NVarChar, 150).Value = model.Correo.Trim();
+                command.Parameters.Add("@Contrasena", SqlDbType.NVarChar, 255).Value = (model.Contrasena ?? string.Empty).Trim();
+                command.Parameters.Add("@Telefono", SqlDbType.NVarChar, 30).Value = string.IsNullOrWhiteSpace(model.Telefono) ? DBNull.Value : model.Telefono.Trim();
+                command.Parameters.Add("@Direccion", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.Direccion) ? DBNull.Value : model.Direccion.Trim();
+                command.Parameters.Add("@Activo", SqlDbType.Bit).Value = model.Activo;
+                command.Parameters.Add("@MotivoInactivacion", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.MotivoInactivacion) ? DBNull.Value : model.MotivoInactivacion.Trim();
+
+                await connection.OpenAsync();
+                var result = await command.ExecuteScalarAsync();
+                return Convert.ToInt32(result);
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException(ex.Message, ex);
+            }
+        }
+
+        public async Task UpdateClientAsync(ClientFormViewModel model)
+        {
+            try
+            {
+                await using var connection = new SqlConnection(_connectionString);
+                await using var command = new SqlCommand("dbo.sp_Admin_UpdateClient", connection);
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = model.UsuarioId;
+                command.Parameters.Add("@NombreCompleto", SqlDbType.NVarChar, 150).Value = model.NombreCompleto.Trim();
+                command.Parameters.Add("@Correo", SqlDbType.NVarChar, 150).Value = model.Correo.Trim();
+                command.Parameters.Add("@Telefono", SqlDbType.NVarChar, 30).Value = string.IsNullOrWhiteSpace(model.Telefono) ? DBNull.Value : model.Telefono.Trim();
+                command.Parameters.Add("@Direccion", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.Direccion) ? DBNull.Value : model.Direccion.Trim();
+                command.Parameters.Add("@Contrasena", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.Contrasena) ? DBNull.Value : model.Contrasena.Trim();
+                command.Parameters.Add("@Activo", SqlDbType.Bit).Value = model.Activo;
+                command.Parameters.Add("@MotivoInactivacion", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.MotivoInactivacion) ? DBNull.Value : model.MotivoInactivacion.Trim();
+
+                await connection.OpenAsync();
+                await command.ExecuteNonQueryAsync();
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException(ex.Message, ex);
+            }
+        }
+
+        public async Task<bool> ToggleClientStatusAsync(int usuarioId, string? motivo)
+        {
+            try
+            {
+                await using var connection = new SqlConnection(_connectionString);
+                await using var command = new SqlCommand("dbo.sp_Admin_ToggleClientStatus", connection);
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId;
+                command.Parameters.Add("@MotivoInactivacion", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(motivo) ? DBNull.Value : motivo.Trim();
+
+                await connection.OpenAsync();
+                var result = await command.ExecuteScalarAsync();
+                return Convert.ToBoolean(result);
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException(ex.Message, ex);
+            }
+        }
+
+        public async Task<int> CreateConsultationAsync(string nombre, string correo, string asunto, string mensaje)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_CreateConsultation", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.AddWithValue("@Nombre", nombre.Trim());
+            command.Parameters.AddWithValue("@Correo", correo.Trim());
+            command.Parameters.AddWithValue("@Asunto", asunto.Trim());
+            command.Parameters.AddWithValue("@Mensaje", mensaje.Trim());
+
+            await connection.OpenAsync();
+            return Convert.ToInt32(await command.ExecuteScalarAsync());
+        }
+
+        public async Task<List<ConsultationViewModel>> GetConsultationsAsync(string? estado, string? buscar)
+        {
+            var consultas = new List<ConsultationViewModel>();
+
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_GetConsultations", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add("@Estado", SqlDbType.NVarChar, 30).Value = string.IsNullOrWhiteSpace(estado) ? DBNull.Value : estado.Trim();
+            command.Parameters.Add("@Buscar", SqlDbType.NVarChar, 200).Value = string.IsNullOrWhiteSpace(buscar) ? DBNull.Value : buscar.Trim();
+
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                consultas.Add(new ConsultationViewModel
+                {
+                    ConsultaId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                    Nombre = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+                    Correo = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                    Asunto = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
+                    Mensaje = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
+                    Estado = reader.IsDBNull(5) ? "Pendiente" : reader.GetString(5),
+                    RespuestaInterna = reader.IsDBNull(6) ? null : reader.GetString(6),
+                    AtendidoPorUsuarioId = reader.IsDBNull(7) ? null : reader.GetInt32(7),
+                    AtendidoPorNombre = reader.IsDBNull(8) ? null : reader.GetString(8),
+                    FechaAtencion = reader.IsDBNull(9) ? null : reader.GetDateTime(9),
+                    FechaCreacion = reader.IsDBNull(10) ? DateTime.MinValue : reader.GetDateTime(10)
+                });
+            }
+
+            return consultas;
+        }
+
+        public async Task<ConsultationDetailViewModel?> GetConsultationByIdAsync(int consultaId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_GetConsultationById", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.AddWithValue("@ConsultaId", consultaId);
+
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync())
+            {
+                return null;
+            }
+
+            return new ConsultationDetailViewModel
+            {
+                ConsultaId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                Nombre = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+                Correo = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                Asunto = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
+                Mensaje = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
+                Estado = reader.IsDBNull(5) ? "Pendiente" : reader.GetString(5),
+                RespuestaInterna = reader.IsDBNull(6) ? null : reader.GetString(6),
+                AtendidoPorUsuarioId = reader.IsDBNull(7) ? null : reader.GetInt32(7),
+                AtendidoPorNombre = reader.IsDBNull(8) ? null : reader.GetString(8),
+                FechaAtencion = reader.IsDBNull(9) ? null : reader.GetDateTime(9),
+                FechaCreacion = reader.IsDBNull(10) ? DateTime.MinValue : reader.GetDateTime(10)
+            };
+        }
+
+        public async Task UpdateConsultationStatusAsync(int consultaId, string estado, string? respuestaInterna, int? usuarioId, string? usuarioNombre)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_UpdateConsultationStatus", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.AddWithValue("@ConsultaId", consultaId);
+            command.Parameters.AddWithValue("@Estado", estado.Trim());
+            command.Parameters.Add("@RespuestaInterna", SqlDbType.NVarChar, 1000).Value = string.IsNullOrWhiteSpace(respuestaInterna) ? DBNull.Value : respuestaInterna.Trim();
+            command.Parameters.Add("@AtendidoPorUsuarioId", SqlDbType.Int).Value = usuarioId.HasValue ? usuarioId.Value : DBNull.Value;
+            command.Parameters.Add("@AtendidoPorNombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(usuarioNombre) ? DBNull.Value : usuarioNombre.Trim();
+
+            await connection.OpenAsync();
+            await command.ExecuteNonQueryAsync();
+        }
+
+
+
+        public async Task<List<ClientCreditListItemViewModel>> GetClientCreditsAsync(string? buscar, string? estadoCredito)
+        {
+            var clientes = new List<ClientCreditListItemViewModel>();
+
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_GetClientCredits", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add("@Buscar", SqlDbType.NVarChar, 200).Value = string.IsNullOrWhiteSpace(buscar) ? DBNull.Value : buscar.Trim();
+            command.Parameters.Add("@EstadoCredito", SqlDbType.NVarChar, 30).Value = string.IsNullOrWhiteSpace(estadoCredito) ? DBNull.Value : estadoCredito.Trim();
+
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                clientes.Add(new ClientCreditListItemViewModel
+                {
+                    UsuarioId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                    NombreCompleto = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+                    Correo = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                    Telefono = reader.IsDBNull(3) ? null : reader.GetString(3),
+                    ClienteActivo = !reader.IsDBNull(4) && reader.GetBoolean(4),
+                    LimiteCredito = reader.IsDBNull(5) ? 0 : reader.GetDecimal(5),
+                    CreditoActivo = !reader.IsDBNull(6) && reader.GetBoolean(6),
+                    CreditoBloqueado = !reader.IsDBNull(7) && reader.GetBoolean(7),
+                    MotivoBloqueo = reader.IsDBNull(8) ? null : reader.GetString(8),
+                    DeudaActual = reader.IsDBNull(9) ? 0 : reader.GetDecimal(9),
+                    CreditoDisponible = reader.IsDBNull(10) ? 0 : reader.GetDecimal(10),
+                    TotalMovimientos = reader.IsDBNull(11) ? 0 : reader.GetInt32(11),
+                    UltimoMovimiento = reader.IsDBNull(12) ? null : reader.GetDateTime(12),
+                    FechaActualizacion = reader.IsDBNull(13) ? null : reader.GetDateTime(13)
+                });
+            }
+
+            return clientes;
+        }
+
+        public async Task<ClientCreditDetailViewModel?> GetClientCreditDetailAsync(int usuarioId)
+        {
+            try
+            {
+                await using var connection = new SqlConnection(_connectionString);
+                await using var command = new SqlCommand("dbo.sp_Admin_GetClientCreditDetail", connection);
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId;
+
+                await connection.OpenAsync();
+                await using var reader = await command.ExecuteReaderAsync();
+
+                if (!await reader.ReadAsync()) return null;
+
+                var model = new ClientCreditDetailViewModel
+                {
+                    UsuarioId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                    NombreCompleto = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+                    Correo = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                    Telefono = reader.IsDBNull(3) ? null : reader.GetString(3),
+                    Direccion = reader.IsDBNull(4) ? null : reader.GetString(4),
+                    ClienteActivo = !reader.IsDBNull(5) && reader.GetBoolean(5),
+                    LimiteCredito = reader.IsDBNull(6) ? 0 : reader.GetDecimal(6),
+                    CreditoActivo = !reader.IsDBNull(7) && reader.GetBoolean(7),
+                    CreditoBloqueado = !reader.IsDBNull(8) && reader.GetBoolean(8),
+                    MotivoBloqueo = reader.IsDBNull(9) ? null : reader.GetString(9),
+                    DeudaActual = reader.IsDBNull(10) ? 0 : reader.GetDecimal(10),
+                    CreditoDisponible = reader.IsDBNull(11) ? 0 : reader.GetDecimal(11),
+                    TotalCargos = reader.IsDBNull(12) ? 0 : reader.GetDecimal(12),
+                    TotalAbonos = reader.IsDBNull(13) ? 0 : reader.GetDecimal(13),
+                    FechaActualizacion = reader.IsDBNull(14) ? null : reader.GetDateTime(14)
+                };
+
+                model.SettingsForm = new ClientCreditSettingsViewModel
+                {
+                    UsuarioId = model.UsuarioId,
+                    LimiteCredito = model.LimiteCredito,
+                    CreditoActivo = model.CreditoActivo,
+                    CreditoBloqueado = model.CreditoBloqueado,
+                    MotivoBloqueo = model.MotivoBloqueo
+                };
+
+                model.MovementForm = new ClientCreditMovementFormViewModel
+                {
+                    UsuarioId = model.UsuarioId,
+                    TipoMovimiento = "Abono"
+                };
+
+                await reader.NextResultAsync();
+
+                while (await reader.ReadAsync())
+                {
+                    model.Movimientos.Add(new ClientCreditMovementViewModel
+                    {
+                        CreditoMovimientoId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                        TipoMovimiento = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+                        Monto = reader.IsDBNull(2) ? 0 : reader.GetDecimal(2),
+                        Descripcion = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
+                        Referencia = reader.IsDBNull(4) ? null : reader.GetString(4),
+                        RegistradoPorUsuarioId = reader.IsDBNull(5) ? null : reader.GetInt32(5),
+                        RegistradoPorNombre = reader.IsDBNull(6) ? null : reader.GetString(6),
+                        FechaMovimiento = reader.IsDBNull(7) ? DateTime.MinValue : reader.GetDateTime(7)
+                    });
+                }
+
+                return model;
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException(ex.Message, ex);
+            }
+        }
+
+        public async Task UpdateClientCreditSettingsAsync(ClientCreditSettingsViewModel model, int? usuarioId, string? usuarioNombre)
+        {
+            try
+            {
+                await using var connection = new SqlConnection(_connectionString);
+                await using var command = new SqlCommand("dbo.sp_Admin_UpdateClientCreditSettings", connection);
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = model.UsuarioId;
+                command.Parameters.Add("@LimiteCredito", SqlDbType.Decimal).Value = model.LimiteCredito;
+                command.Parameters["@LimiteCredito"].Precision = 18;
+                command.Parameters["@LimiteCredito"].Scale = 2;
+                command.Parameters.Add("@CreditoActivo", SqlDbType.Bit).Value = model.CreditoActivo;
+                command.Parameters.Add("@CreditoBloqueado", SqlDbType.Bit).Value = model.CreditoBloqueado;
+                command.Parameters.Add("@MotivoBloqueo", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.MotivoBloqueo) ? DBNull.Value : model.MotivoBloqueo.Trim();
+                command.Parameters.Add("@RegistradoPorUsuarioId", SqlDbType.Int).Value = usuarioId.HasValue ? usuarioId.Value : DBNull.Value;
+                command.Parameters.Add("@RegistradoPorNombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(usuarioNombre) ? DBNull.Value : usuarioNombre.Trim();
+
+                await connection.OpenAsync();
+                await command.ExecuteNonQueryAsync();
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException(ex.Message, ex);
+            }
+        }
+
+        public async Task<int> RegisterClientCreditMovementAsync(ClientCreditMovementFormViewModel model, int? usuarioId, string? usuarioNombre)
+        {
+            try
+            {
+                await using var connection = new SqlConnection(_connectionString);
+                await using var command = new SqlCommand("dbo.sp_Admin_RegisterClientCreditMovement", connection);
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = model.UsuarioId;
+                command.Parameters.Add("@TipoMovimiento", SqlDbType.NVarChar, 30).Value = model.TipoMovimiento.Trim();
+                command.Parameters.Add("@Monto", SqlDbType.Decimal).Value = model.Monto;
+                command.Parameters["@Monto"].Precision = 18;
+                command.Parameters["@Monto"].Scale = 2;
+                command.Parameters.Add("@Descripcion", SqlDbType.NVarChar, 500).Value = model.Descripcion.Trim();
+                command.Parameters.Add("@Referencia", SqlDbType.NVarChar, 100).Value = string.IsNullOrWhiteSpace(model.Referencia) ? DBNull.Value : model.Referencia.Trim();
+                command.Parameters.Add("@RegistradoPorUsuarioId", SqlDbType.Int).Value = usuarioId.HasValue ? usuarioId.Value : DBNull.Value;
+                command.Parameters.Add("@RegistradoPorNombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(usuarioNombre) ? DBNull.Value : usuarioNombre.Trim();
+
+                await connection.OpenAsync();
+                var result = await command.ExecuteScalarAsync();
+                return Convert.ToInt32(result);
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException(ex.Message, ex);
+            }
+        }
+
+
+        public async Task<List<SellerOrderClientViewModel>> GetSellerOrderClientsAsync(string? buscar = null)
+        {
+            var clientes = new List<SellerOrderClientViewModel>();
+
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Seller_GetClientsForOrder", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add("@Buscar", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(buscar) ? DBNull.Value : buscar.Trim();
+
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                clientes.Add(new SellerOrderClientViewModel
+                {
+                    UsuarioId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                    NombreCompleto = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+                    Correo = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                    Telefono = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
+                    Direccion = reader.IsDBNull(4) ? string.Empty : reader.GetString(4)
+                });
+            }
+
+            return clientes;
+        }
+
+        public async Task<List<SellerOrderProductViewModel>> GetSellerOrderProductsAsync(string? buscar = null)
+        {
+            var productos = new List<SellerOrderProductViewModel>();
+
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Seller_GetProductsForOrder", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add("@Buscar", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(buscar) ? DBNull.Value : buscar.Trim();
+
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                productos.Add(new SellerOrderProductViewModel
+                {
+                    ProductoId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                    Nombre = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+                    Categoria = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                    Descripcion = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
+                    Precio = reader.IsDBNull(4) ? 0 : reader.GetDecimal(4),
+                    Stock = reader.IsDBNull(5) ? 0 : reader.GetInt32(5),
+                    ImagenUrl = reader.IsDBNull(6) ? string.Empty : reader.GetString(6)
+                });
+            }
+
+            return productos;
+        }
+
+        public async Task<int> CreateSellerOrderAsync(
+            SellerOrderCreateViewModel model,
+            int vendedorUsuarioId,
+            string vendedorNombre,
+            Guid? pedidoOfflineGuid = null,
+            string? canalPedido = null)
+        {
+            var itemsPayload = model.Productos
+                .Where(x => x.Cantidad > 0)
+                .Select(x => new
+                {
+                    productoId = x.ProductoId,
+                    cantidad = x.Cantidad
+                });
+
+            var itemsJson = System.Text.Json.JsonSerializer.Serialize(itemsPayload);
+
+            try
+            {
+                await using var connection = new SqlConnection(_connectionString);
+                await using var command = new SqlCommand("dbo.sp_Seller_CreateOrder", connection);
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.Add("@ClienteUsuarioId", SqlDbType.Int).Value = model.ClienteUsuarioId;
+                command.Parameters.Add("@VendedorUsuarioId", SqlDbType.Int).Value = vendedorUsuarioId;
+                command.Parameters.Add("@VendedorNombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(vendedorNombre) ? "Vendedor" : vendedorNombre.Trim();
+                command.Parameters.Add("@TipoEntrega", SqlDbType.NVarChar, 100).Value = model.TipoEntrega.Trim();
+                command.Parameters.Add("@DireccionEntrega", SqlDbType.NVarChar, 500).Value = string.IsNullOrWhiteSpace(model.DireccionEntrega) ? DBNull.Value : model.DireccionEntrega.Trim();
+                command.Parameters.Add("@Observaciones", SqlDbType.NVarChar, 500).Value = string.IsNullOrWhiteSpace(model.Observaciones) ? DBNull.Value : model.Observaciones.Trim();
+                command.Parameters.Add("@IdentificacionCliente", SqlDbType.NVarChar, 100).Value = string.IsNullOrWhiteSpace(model.IdentificacionCliente) ? DBNull.Value : model.IdentificacionCliente.Trim();
+                command.Parameters.Add("@ItemsJson", SqlDbType.NVarChar, -1).Value = itemsJson;
+                command.Parameters.Add("@PedidoOfflineGuid", SqlDbType.UniqueIdentifier).Value = pedidoOfflineGuid.HasValue ? pedidoOfflineGuid.Value : DBNull.Value;
+                command.Parameters.Add("@CanalPedido", SqlDbType.NVarChar, 50).Value = string.IsNullOrWhiteSpace(canalPedido) ? "Venta móvil" : canalPedido.Trim();
+
+                await connection.OpenAsync();
+                var result = await command.ExecuteScalarAsync();
+                return Convert.ToInt32(result);
+            }
+            catch (SqlException ex)
+            {
+                throw new InvalidOperationException(ex.Message, ex);
+            }
+        }
+
         private static async Task CreateMovementInternalAsync(SqlConnection connection, SqlTransaction transaction, int productoId, string tipoMovimiento, int cantidad, int stockAnterior, int stockNuevo, string? motivo, int usuarioId, string usuarioNombre, string? productoNombre = null)
         {
             if (string.IsNullOrWhiteSpace(productoNombre))
@@ -669,250 +1489,9 @@ namespace Proyecto_Final.Services
             command.Parameters.AddWithValue("@NuevoStock", nuevoStock);
             await command.ExecuteNonQueryAsync();
         }
-
-        // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-        // CU-043: Registro de Auditoría
-        public async Task RegistrarAuditoriaAsync(int usuarioId, string accion, string modulo, string detalles)
-        {
-            using var connection = new SqlConnection(_connectionString);
-            using var command = new SqlCommand(@"
-        INSERT INTO dbo.HistorialAuditoria (UsuarioId, Accion, Modulo, Detalles) 
-        VALUES (@UsuarioId, @Accion, @Modulo, @Detalles)", connection);
-
-            command.Parameters.AddWithValue("@UsuarioId", usuarioId);
-            command.Parameters.AddWithValue("@Accion", accion);
-            command.Parameters.AddWithValue("@Modulo", modulo);
-            command.Parameters.AddWithValue("@Detalles", string.IsNullOrEmpty(detalles) ? DBNull.Value : detalles);
-
-            await connection.OpenAsync();
-            await command.ExecuteNonQueryAsync();
-        }
-
-        // CU-042: Verificación de Permisos
-        public async Task<bool> TienePermisoAsync(int perfilId, string nombreModulo)
-        {
-            using var connection = new SqlConnection(_connectionString);
-            using var command = new SqlCommand(@"
-        SELECT COUNT(1) FROM dbo.PermisosPerfil pp
-        INNER JOIN dbo.Modulos m ON pp.ModuloId = m.ModuloId
-        WHERE pp.PerfilId = @PerfilId AND m.NombreModulo = @NombreModulo", connection);
-
-            command.Parameters.AddWithValue("@PerfilId", perfilId);
-            command.Parameters.AddWithValue("@NombreModulo", nombreModulo);
-
-            await connection.OpenAsync();
-            int count = (int)await command.ExecuteScalarAsync();
-            return count > 0;
-        }
-
-        // CU-041: Eliminación de Rol/Perfil con validación de integridad
-        public async Task EliminarPerfilAsync(int perfilId)
-        {
-            using var connection = new SqlConnection(_connectionString);
-            await connection.OpenAsync();
-
-            // 1. Validar si el perfil tiene usuarios (Criterio de Aceptación 3)
-            using var checkCmd = new SqlCommand("SELECT COUNT(1) FROM dbo.Usuarios WHERE PerfilId = @PerfilId", connection);
-            checkCmd.Parameters.AddWithValue("@PerfilId", perfilId);
-            int usersCount = (int)await checkCmd.ExecuteScalarAsync();
-
-            if (usersCount > 0)
-            {
-                throw new InvalidOperationException("No se puede eliminar el perfil porque tiene usuarios activos asignados.");
-            }
-
-            // 2. Eliminar permisos asociados primero (Integridad referencial)
-            using var deletePermisosCmd = new SqlCommand("DELETE FROM dbo.PermisosPerfil WHERE PerfilId = @PerfilId", connection);
-            deletePermisosCmd.Parameters.AddWithValue("@PerfilId", perfilId);
-            await deletePermisosCmd.ExecuteNonQueryAsync();
-
-            // 3. Eliminar el perfil
-            using var deletePerfilCmd = new SqlCommand("DELETE FROM dbo.Perfiles WHERE PerfilId = @PerfilId", connection);
-            deletePerfilCmd.Parameters.AddWithValue("@PerfilId", perfilId);
-            await deletePerfilCmd.ExecuteNonQueryAsync();
-        }
-
-        // Extraer todos los perfiles (Para HU-041)
-        public async Task<List<Perfil>> ObtenerPerfilesAsync()
-        {
-            var perfiles = new List<Perfil>();
-            using var connection = new SqlConnection(_connectionString);
-            using var command = new SqlCommand("SELECT PerfilId, Nombre, Descripcion, Activo FROM dbo.Perfiles", connection);
-
-            await connection.OpenAsync();
-            using var reader = await command.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
-            {
-                perfiles.Add(new Perfil
-                {
-                    PerfilId = reader.GetInt32(0),
-                    Nombre = reader.GetString(1),
-                    Descripcion = reader.IsDBNull(2) ? null : reader.GetString(2),
-                    Activo = reader.GetBoolean(3)
-                });
-            }
-            return perfiles;
-        }
-
-        // Extraer historial para trazabilidad (Para HU-043)
-        public async Task<List<HistorialAuditoria>> ObtenerAuditoriaAsync()
-        {
-            var auditoria = new List<HistorialAuditoria>();
-            using var connection = new SqlConnection(_connectionString);
-            using var command = new SqlCommand(@"
-        SELECT top 100 a.AuditoriaId, u.Correo, a.Accion, a.Modulo, a.Detalles, a.FechaHora 
-        FROM dbo.HistorialAuditoria a
-        INNER JOIN dbo.Usuarios u ON a.UsuarioId = u.UsuarioId
-        ORDER BY a.FechaHora DESC", connection);
-
-            await connection.OpenAsync();
-            using var reader = await command.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
-            {
-                auditoria.Add(new HistorialAuditoria
-                {
-                    AuditoriaId = reader.GetInt32(0),
-                    Modulo = reader.GetString(3),
-                    Accion = reader.GetString(2),
-                    Detalles = reader.IsDBNull(4) ? "" : reader.GetString(4),
-                    FechaHora = reader.GetDateTime(5)
-                });
-            }
-            return auditoria;
-        }
-
-        public async Task CrearPerfilAsync(Perfil perfil)
-        {
-            using var connection = new SqlConnection(_connectionString);
-            using var command = new SqlCommand(@"
-        INSERT INTO dbo.Perfiles (Nombre, Descripcion, Activo, FechaCreacion) 
-        VALUES (@Nombre, @Descripcion, 1, GETDATE())", connection);
-
-            command.Parameters.AddWithValue("@Nombre", perfil.Nombre);
-            command.Parameters.AddWithValue("@Descripcion", string.IsNullOrEmpty(perfil.Descripcion) ? DBNull.Value : perfil.Descripcion);
-
-            await connection.OpenAsync();
-            await command.ExecuteNonQueryAsync();
-        }
-
-        // --- MÉTODOS AÑADIDOS PARA EDITAR ROL ---
-        public async Task<Perfil> ObtenerPerfilPorIdAsync(int perfilId)
-        {
-            using var connection = new SqlConnection(_connectionString);
-            using var command = new SqlCommand("SELECT PerfilId, Nombre, Descripcion, Activo FROM dbo.Perfiles WHERE PerfilId = @Id", connection);
-            command.Parameters.AddWithValue("@Id", perfilId);
-
-            await connection.OpenAsync();
-            using var reader = await command.ExecuteReaderAsync();
-            if (await reader.ReadAsync())
-            {
-                return new Perfil
-                {
-                    PerfilId = reader.GetInt32(0),
-                    Nombre = reader.GetString(1),
-                    Descripcion = reader.IsDBNull(2) ? null : reader.GetString(2),
-                    Activo = reader.GetBoolean(3)
-                };
-            }
-            return null;
-        }
-
-        public async Task ActualizarPerfilAsync(Perfil perfil)
-        {
-            using var connection = new SqlConnection(_connectionString);
-            using var command = new SqlCommand("UPDATE dbo.Perfiles SET Nombre = @Nombre, Descripcion = @Descripcion WHERE PerfilId = @Id", connection);
-            command.Parameters.AddWithValue("@Nombre", perfil.Nombre);
-            command.Parameters.AddWithValue("@Descripcion", string.IsNullOrEmpty(perfil.Descripcion) ? DBNull.Value : perfil.Descripcion);
-            command.Parameters.AddWithValue("@Id", perfil.PerfilId);
-
-            await connection.OpenAsync();
-            await command.ExecuteNonQueryAsync();
-        }
-
-        // --- MÉTODOS AÑADIDOS PARA GESTIÓN DE PERMISOS (HU-042) ---
-        public async Task<List<Modulo>> ObtenerTodosLosModulosAsync()
-        {
-            var modulos = new List<Modulo>();
-            using var connection = new SqlConnection(_connectionString);
-            using var command = new SqlCommand("SELECT ModuloId, NombreModulo FROM dbo.Modulos", connection);
-            await connection.OpenAsync();
-            using var reader = await command.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
-                modulos.Add(new Modulo { ModuloId = reader.GetInt32(0), NombreModulo = reader.GetString(1) });
-            return modulos;
-        }
-
-        public async Task<List<int>> ObtenerModulosPorPerfilAsync(int perfilId)
-        {
-            var asignados = new List<int>();
-            using var connection = new SqlConnection(_connectionString);
-            using var command = new SqlCommand("SELECT ModuloId FROM dbo.PermisosPerfil WHERE PerfilId = @Id", connection);
-            command.Parameters.AddWithValue("@Id", perfilId);
-            await connection.OpenAsync();
-            using var reader = await command.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
-                asignados.Add(reader.GetInt32(0));
-            return asignados;
-        }
-
-        public async Task ActualizarPermisosAsync(int perfilId, List<int> modulosSeleccionados)
-        {
-            using var connection = new SqlConnection(_connectionString);
-            await connection.OpenAsync();
-            using var transaction = connection.BeginTransaction();
-
-            try
-            {
-                // 1. Limpiar permisos actuales
-                using var deleteCmd = new SqlCommand("DELETE FROM dbo.PermisosPerfil WHERE PerfilId = @Id", connection, transaction);
-                deleteCmd.Parameters.AddWithValue("@Id", perfilId);
-                await deleteCmd.ExecuteNonQueryAsync();
-
-                // 2. Insertar los nuevos
-                if (modulosSeleccionados != null && modulosSeleccionados.Any())
-                {
-                    foreach (var moduloId in modulosSeleccionados)
-                    {
-                        using var insertCmd = new SqlCommand("INSERT INTO dbo.PermisosPerfil (PerfilId, ModuloId) VALUES (@PId, @MId)", connection, transaction);
-                        insertCmd.Parameters.AddWithValue("@PId", perfilId);
-                        insertCmd.Parameters.AddWithValue("@MId", moduloId);
-                        await insertCmd.ExecuteNonQueryAsync();
-                    }
-                }
-                transaction.Commit();
-            }
-            catch
-            {
-                transaction.Rollback();
-                throw;
-            }
-        }
-
-        public async Task<List<string>> ObtenerNombresModulosPorUsuarioIdAsync(int usuarioId)
-        {
-            var modulos = new List<string>();
-            using var connection = new SqlConnection(_connectionString);
-            using var command = new SqlCommand(@"
-        SELECT m.NombreModulo 
-        FROM dbo.PermisosPerfil pp 
-        INNER JOIN dbo.Modulos m ON pp.ModuloId = m.ModuloId 
-        INNER JOIN dbo.Usuarios u ON pp.PerfilId = u.PerfilId
-        WHERE u.UsuarioId = @UserId", connection);
-
-            command.Parameters.AddWithValue("@UserId", usuarioId);
-            await connection.OpenAsync();
-            using var reader = await command.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
-            {
-                modulos.Add(reader.GetString(0));
-            }
-            return modulos;
-        }
     }
 }
+
 
 
 

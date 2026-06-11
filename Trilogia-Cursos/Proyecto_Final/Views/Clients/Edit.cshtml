@@ -1,0 +1,115 @@
+@model Proyecto_Final.Models.Admin.ClientFormViewModel
+@{
+    ViewData["Title"] = "Editar cliente";
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">Editar cliente</h2>
+                    <p class="text-muted mb-0">Actualiza los datos comerciales y el estado del cliente.</p>
+                </div>
+                <div>
+                    <a asp-controller="Clients" asp-action="Details" asp-route-id="@Model.UsuarioId" class="btn btn-outline-dark mr-2">Detalle</a>
+                    <a asp-controller="Clients" asp-action="Index" class="btn btn-outline-secondary">← Volver</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-lg-8">
+            <div class="admin-card">
+                <form asp-controller="Clients" asp-action="Edit" method="post">
+                    @Html.AntiForgeryToken()
+                    <input asp-for="UsuarioId" type="hidden" />
+                    <input asp-for="FechaRegistro" type="hidden" />
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3"></div>
+
+                    <div class="form-group">
+                        <label asp-for="NombreCompleto" class="font-weight-bold">Nombre completo <span class="text-danger">*</span></label>
+                        <input asp-for="NombreCompleto" class="form-control" />
+                        <span asp-validation-for="NombreCompleto" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Correo" class="font-weight-bold">Correo electrónico <span class="text-danger">*</span></label>
+                        <input asp-for="Correo" class="form-control" />
+                        <span asp-validation-for="Correo" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label asp-for="Telefono" class="font-weight-bold">Teléfono</label>
+                            <input asp-for="Telefono" class="form-control" />
+                            <span asp-validation-for="Telefono" class="text-danger small"></span>
+                        </div>
+
+                        <div class="form-group col-md-6">
+                            <label asp-for="Contrasena" class="font-weight-bold">Nueva contraseña</label>
+                            <input asp-for="Contrasena" class="form-control" placeholder="Dejar en blanco para no cambiar" />
+                            <span asp-validation-for="Contrasena" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Direccion" class="font-weight-bold">Dirección</label>
+                        <textarea asp-for="Direccion" class="form-control" rows="3"></textarea>
+                        <span asp-validation-for="Direccion" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input asp-for="Activo" class="form-check-input" />
+                        <label asp-for="Activo" class="form-check-label">Cliente activo</label>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="MotivoInactivacion" class="font-weight-bold">Motivo de inactivación</label>
+                        <textarea asp-for="MotivoInactivacion" class="form-control" rows="3" placeholder="Requerido si se inactiva el cliente"></textarea>
+                        <span asp-validation-for="MotivoInactivacion" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-flex" style="gap:10px;">
+                        <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                        <a asp-controller="Clients" asp-action="Details" asp-route-id="@Model.UsuarioId" class="btn btn-outline-secondary">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mt-4 mt-lg-0">
+            <div class="admin-card mb-3">
+                <h5 class="mb-3">Resumen comercial</h5>
+                <p class="mb-2"><strong>Pedidos:</strong> @Model.TotalPedidos</p>
+                <p class="mb-2"><strong>Total comprado:</strong> ₡@Model.TotalComprado.ToString("N2")</p>
+                <p class="mb-2"><strong>Último pedido:</strong> @(Model.UltimoPedido.HasValue ? Model.UltimoPedido.Value.ToString("dd/MM/yyyy") : "Sin pedidos")</p>
+                <p class="mb-0"><strong>Registrado:</strong> @Model.FechaRegistro.ToString("dd/MM/yyyy")</p>
+            </div>
+
+            <div class="admin-card">
+                <h5 class="mb-3">Estado actual</h5>
+                @if (Model.Activo)
+                {
+                    <span class="badge badge-success mb-3">Activo</span>
+                    <p class="text-muted mb-0">El cliente puede iniciar sesión y realizar pedidos.</p>
+                }
+                else
+                {
+                    <span class="badge badge-secondary mb-3">Inactivo</span>
+                    <p class="text-muted mb-2">El cliente no puede iniciar sesión ni realizar pedidos.</p>
+                    <p class="mb-0"><strong>Motivo:</strong> @(string.IsNullOrWhiteSpace(Model.MotivoInactivacion) ? "No indicado" : Model.MotivoInactivacion)</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

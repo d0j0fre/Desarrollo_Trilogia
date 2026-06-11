@@ -1,4 +1,4 @@
-﻿@model Proyecto_Final.Models.Admin.ProductFormViewModel
+@model Proyecto_Final.Models.Admin.ProductFormViewModel
 @{
     ViewData["Title"] = "Editar producto";
     var categorias = ViewBag.Categorias as List<string> ?? new List<string>();
@@ -14,7 +14,7 @@
             <div class="admin-page-header d-flex justify-content-between align-items-center">
                 <div>
                     <h2 class="mb-1">Editar producto</h2>
-                    <p class="text-muted mb-0">Modifica los datos del producto en el catálogo.</p>
+                    <p class="text-muted mb-0">Modifica precio, descripción, stock, stock mínimo y estado del producto.</p>
                 </div>
                 <a asp-controller="Inventory" asp-action="Index" class="btn btn-outline-secondary">← Volver</a>
             </div>
@@ -66,15 +66,21 @@
                     </div>
 
                     <div class="form-row">
-                        <div class="form-group col-md-6">
+                        <div class="form-group col-md-4">
                             <label class="font-weight-bold">Precio (₡) <span class="text-danger">*</span></label>
                             <input asp-for="Precio" class="form-control" placeholder="0.00" />
                             <span asp-validation-for="Precio" class="text-danger small"></span>
                         </div>
-                        <div class="form-group col-md-6">
+                        <div class="form-group col-md-4">
                             <label class="font-weight-bold">Stock <span class="text-danger">*</span></label>
                             <input asp-for="Stock" class="form-control" placeholder="0" />
                             <span asp-validation-for="Stock" class="text-danger small"></span>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label class="font-weight-bold">Stock mínimo <span class="text-danger">*</span></label>
+                            <input asp-for="StockMinimo" class="form-control" placeholder="5" />
+                            <span asp-validation-for="StockMinimo" class="text-danger small"></span>
+                            <small class="text-muted">Alerta cuando el stock sea igual o menor a este valor.</small>
                         </div>
                     </div>
 
@@ -119,6 +125,7 @@
                 <ul class="contact-list">
                     <li>El <strong>código SKU</strong> es único e irrepetible por producto.</li>
                     <li>Cambiar el stock aquí registra un ajuste automático en el historial.</li>
+                    <li>El <strong>stock mínimo</strong> permite alertas diferentes para cada producto.</li>
                     <li>Los campos marcados con <span class="text-danger">*</span> son obligatorios.</li>
                 </ul>
             </div>

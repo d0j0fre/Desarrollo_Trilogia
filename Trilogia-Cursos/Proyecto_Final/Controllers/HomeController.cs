@@ -74,7 +74,7 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Contact(ContactViewModel model)
+        public async Task<IActionResult> Contact(ContactViewModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -83,6 +83,12 @@ namespace Proyecto_Final.Controllers
 
             try
             {
+                await _adminDbService.CreateConsultationAsync(
+                    model.Nombre,
+                    model.Correo,
+                    model.Asunto,
+                    model.Mensaje);
+
                 string asunto = $"Consulta Web - {model.Asunto}";
 
                 string contenido = $@"
@@ -93,16 +99,24 @@ namespace Proyecto_Final.Controllers
             <p><strong>Mensaje:</strong></p>
             <p>{model.Mensaje}</p>";
 
-                _emailService.SendEmail(
-                    "p13972127@gmail.com",
-                    asunto,
-                    contenido);
+                try
+                {
+                    _emailService.SendEmail(
+                        "p13972127@gmail.com",
+                        asunto,
+                        contenido);
+                }
+                catch
+                {
+                    TempData["ErrorMessage"] = "La consulta fue guardada, pero no fue posible enviar la notificación por correo.";
+                    return RedirectToAction(nameof(Contact));
+                }
 
                 TempData["SuccessMessage"] = "Tu mensaje fue enviado correctamente.";
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = $"No fue posible enviar el mensaje: {ex.Message}";
+                TempData["ErrorMessage"] = $"No fue posible registrar la consulta: {ex.Message}";
             }
 
             return RedirectToAction(nameof(Contact));

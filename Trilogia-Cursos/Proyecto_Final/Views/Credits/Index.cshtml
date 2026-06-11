@@ -1,0 +1,144 @@
+@model Proyecto_Final.Models.Admin.ClientCreditFilterViewModel
+@{
+    ViewData["Title"] = "Créditos";
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">Crédito y deudas de clientes</h2>
+                    <p class="text-muted mb-0">Control del límite de crédito, deuda actual, crédito disponible y movimientos financieros.</p>
+                </div>
+                <a asp-controller="Clients" asp-action="Index" class="btn btn-outline-secondary">Ver clientes</a>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="row px-xl-5">
+            <div class="col-12">
+                <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+            </div>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="row px-xl-5">
+            <div class="col-12">
+                <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+            </div>
+        </div>
+    }
+
+    <div class="row px-xl-5 mb-3">
+        <div class="col-12">
+            <form asp-controller="Credits" asp-action="Index" method="get" class="d-flex flex-wrap" style="gap:8px;">
+                <input type="text" name="buscar" value="@Model.Buscar"
+                       class="form-control" style="min-width:260px; flex:1;"
+                       placeholder="Buscar por nombre, correo o teléfono..." />
+
+                <select name="estadoCredito" class="form-control" style="max-width:220px;">
+                    <option value="">Todos</option>
+                    <option value="Activo" selected="@(Model.EstadoCredito == "Activo")">Crédito activo</option>
+                    <option value="Bloqueado" selected="@(Model.EstadoCredito == "Bloqueado")">Crédito bloqueado</option>
+                    <option value="Inactivo" selected="@(Model.EstadoCredito == "Inactivo")">Crédito inactivo</option>
+                    <option value="ConDeuda" selected="@(Model.EstadoCredito == "ConDeuda")">Con deuda</option>
+                    <option value="SinDeuda" selected="@(Model.EstadoCredito == "SinDeuda")">Sin deuda</option>
+                    <option value="SinCredito" selected="@(Model.EstadoCredito == "SinCredito")">Sin crédito asignado</option>
+                </select>
+
+                <button type="submit" class="btn btn-dark">Buscar</button>
+                @if (!string.IsNullOrWhiteSpace(Model.Buscar) || !string.IsNullOrWhiteSpace(Model.EstadoCredito))
+                {
+                    <a asp-controller="Credits" asp-action="Index" class="btn btn-outline-secondary">Limpiar</a>
+                }
+            </form>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-12">
+            <div class="admin-table-wrapper">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Cliente</th>
+                                <th>Estado crédito</th>
+                                <th>Límite</th>
+                                <th>Deuda actual</th>
+                                <th>Disponible</th>
+                                <th>Movimientos</th>
+                                <th>Último movimiento</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Clientes == null || !Model.Clientes.Any())
+                            {
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted py-4">
+                                        No se encontraron clientes con los filtros indicados.
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var item in Model.Clientes)
+                                {
+                                    var disponibleClass = item.CreditoDisponible < 0 ? "text-danger" : "text-success";
+                                    <tr>
+                                        <td>
+                                            <strong>@item.NombreCompleto</strong><br />
+                                            <small class="text-muted">@item.Correo</small><br />
+                                            @if (!item.ClienteActivo)
+                                            {
+                                                <span class="badge badge-secondary">Cliente inactivo</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (item.CreditoBloqueado)
+                                            {
+                                                <span class="badge badge-danger">Bloqueado</span>
+                                                <br />
+                                                <small class="text-muted">@(string.IsNullOrWhiteSpace(item.MotivoBloqueo) ? "Sin motivo" : item.MotivoBloqueo)</small>
+                                            }
+                                            else if (item.CreditoActivo)
+                                            {
+                                                <span class="badge badge-success">Activo</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge badge-secondary">Inactivo</span>
+                                            }
+                                        </td>
+                                        <td>₡@item.LimiteCredito.ToString("N2")</td>
+                                        <td>
+                                            <strong class="@(item.DeudaActual > 0 ? "text-danger" : "text-muted")">₡@item.DeudaActual.ToString("N2")</strong>
+                                        </td>
+                                        <td><strong class="@disponibleClass">₡@item.CreditoDisponible.ToString("N2")</strong></td>
+                                        <td>@item.TotalMovimientos</td>
+                                        <td>@(item.UltimoMovimiento.HasValue ? item.UltimoMovimiento.Value.ToString("dd/MM/yyyy HH:mm") : "Sin movimientos")</td>
+                                        <td>
+                                            <a asp-controller="Credits" asp-action="Details" asp-route-id="@item.UsuarioId" class="btn btn-sm btn-primary">
+                                                Administrar
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

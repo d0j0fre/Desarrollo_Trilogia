@@ -30,7 +30,7 @@ namespace Proyecto_Final.Controllers
 
             if (pedido == null)
             {
-                TempData["ErrorMessage"] = "No se encontró el pedido solicitado.";
+                TempData["ErrorMessage"] = "No se encontrÃ³ el pedido solicitado.";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -43,7 +43,7 @@ namespace Proyecto_Final.Controllers
         {
             if (pedidoId <= 0 || string.IsNullOrWhiteSpace(nuevoEstado))
             {
-                TempData["ErrorMessage"] = "La solicitud para actualizar el estado no es válida.";
+                TempData["ErrorMessage"] = "La solicitud para actualizar el estado no es vÃ¡lida.";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -53,6 +53,12 @@ namespace Proyecto_Final.Controllers
             try
             {
                 await _adminDbService.UpdateOrderStatusAsync(pedidoId, nuevoEstado.Trim(), usuarioId, usuarioNombre);
+
+                await RegistrarAuditoriaAsync(
+                    "Cambio de estado",
+                    "Pedidos",
+                    $"Se cambiÃ³ el estado del pedido #{pedidoId} a {nuevoEstado.Trim()}.");
+
                 TempData["SuccessMessage"] = "Estado del pedido actualizado correctamente.";
             }
             catch (Exception ex)
@@ -61,6 +67,20 @@ namespace Proyecto_Final.Controllers
             }
 
             return RedirectToAction(nameof(Detail), new { id = pedidoId });
+        }
+
+        private async Task RegistrarAuditoriaAsync(string accion, string modulo, string descripcion)
+        {
+            await _adminDbService.CreateAuditLogAsync(
+                HttpContext.Session.GetInt32("UserId"),
+                HttpContext.Session.GetString("UserFullName"),
+                HttpContext.Session.GetString("UserEmail"),
+                HttpContext.Session.GetString("UserRole"),
+                accion,
+                modulo,
+                descripcion,
+                HttpContext.Connection.RemoteIpAddress?.ToString(),
+                Request.Headers.UserAgent.ToString());
         }
     }
 }

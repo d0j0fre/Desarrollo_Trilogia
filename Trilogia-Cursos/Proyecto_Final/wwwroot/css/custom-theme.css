@@ -579,3 +579,103 @@ body {
         min-height: auto;
     }
 }
+
+/* =========================================================
+   MENÚ ADMINISTRATIVO LIMPIO Y ACCIONES UNIFORMES
+   ========================================================= */
+
+.main-nav-clean {
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
+.nav-highlight {
+    color: var(--theme-gold) !important;
+}
+
+.admin-nav-dropdown .dropdown-toggle {
+    white-space: nowrap;
+}
+
+.admin-dropdown-menu {
+    background: #181818;
+    min-width: 230px;
+    padding: .6rem;
+    border-radius: 0 0 14px 14px !important;
+    box-shadow: 0 14px 30px rgba(0,0,0,.25);
+}
+
+.admin-dropdown-menu .dropdown-item {
+    color: #f4f4f4;
+    font-weight: 600;
+    border-radius: 10px;
+    padding: .7rem .85rem;
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+}
+
+.admin-dropdown-menu .dropdown-item i {
+    width: 18px;
+    color: var(--theme-gold);
+    text-align: center;
+}
+
+.admin-dropdown-menu .dropdown-item:hover,
+.admin-dropdown-menu .dropdown-item:focus {
+    color: #111111;
+    background: var(--theme-gold);
+}
+
+.admin-dropdown-menu .dropdown-item:hover i,
+.admin-dropdown-menu .dropdown-item:focus i {
+    color: #111111;
+}
+
+.admin-actions {
+    display: flex;
+    flex-direction: column;
+    gap: .45rem;
+    width: 150px;
+}
+
+.admin-actions form {
+    width: 100%;
+    margin: 0;
+}
+
+.admin-actions .btn {
+    width: 100%;
+    min-height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    line-height: 1.1;
+    border-radius: 0;
+    white-space: nowrap;
+}
+
+.admin-actions .btn-outline-secondary:disabled,
+.admin-actions .btn:disabled {
+    opacity: .65;
+}
+
+.admin-table-wrapper td,
+.admin-table-wrapper th {
+    vertical-align: middle !important;
+}
+
+@media (max-width: 991.98px) {
+    .main-nav-clean {
+        align-items: stretch;
+        flex-wrap: nowrap;
+    }
+
+    .admin-dropdown-menu {
+        background: #222222;
+        box-shadow: none;
+        border-radius: 12px !important;
+        margin-bottom: .5rem !important;
+    }
+}

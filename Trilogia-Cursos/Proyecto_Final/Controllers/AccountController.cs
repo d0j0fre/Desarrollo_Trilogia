@@ -6,7 +6,7 @@ namespace Proyecto_Final.Controllers
     public class AccountController : Controller
     {
         private readonly AccountApiService _accountApiService;
-        private readonly AdminDbService _adminDbService; // Inyectado para permisos y auditoría
+        private readonly AdminDbService _adminDbService;
 
         public AccountController(AccountApiService accountApiService, AdminDbService adminDbService)
         {
@@ -48,22 +48,19 @@ namespace Proyecto_Final.Controllers
                     return View(model);
                 }
 
-                int userId = response.UserId ?? 0;
-                HttpContext.Session.SetInt32("UserId", userId);
+                HttpContext.Session.SetInt32("UserId", response.UserId ?? 0);
                 HttpContext.Session.SetString("UserEmail", response.Email ?? string.Empty);
                 HttpContext.Session.SetString("UserFullName", response.FullName ?? string.Empty);
                 HttpContext.Session.SetString("UserRole", response.Role ?? string.Empty);
 
-                // --- INTEGRACIÓN HU-42 y HU-43 ---
-                if (userId > 0)
-                {
-                    // 1. Obtener y guardar los módulos a los que tiene acceso
-                    var permisos = await _adminDbService.ObtenerNombresModulosPorUsuarioIdAsync(userId);
-                    HttpContext.Session.SetString("PermisosUsuario", string.Join(",", permisos));
-
-                    // 2. Registrar en auditoría el ingreso
-                    await _adminDbService.RegistrarAuditoriaAsync(userId, "LOGIN_EXITOSO", "Seguridad", $"Inicio de sesión correcto de: {response.Email}");
-                }
+                await RegistrarAuditoriaAsync(
+                    response.UserId ?? 0,
+                    response.FullName,
+                    response.Email,
+                    response.Role,
+                    "Login",
+                    "Autenticación",
+                    "El usuario inició sesión correctamente.");
 
                 TempData["LoginSuccess"] = $"Bienvenido, {response.FullName}.";
                 return RedirectToAction("Index", "Home");
@@ -111,6 +108,15 @@ namespace Proyecto_Final.Controllers
                     return View("Registro", model);
                 }
 
+                await RegistrarAuditoriaAsync(
+                    null,
+                    model.FullName,
+                    model.Email,
+                    "Cliente",
+                    "Registro",
+                    "Usuarios",
+                    $"Se registró una nueva cuenta de cliente para el correo {model.Email}.");
+
                 TempData["SuccessMessage"] = "Tu cuenta fue creada correctamente. Ahora puedes iniciar sesión.";
                 return RedirectToAction(nameof(Login));
             }
@@ -148,6 +154,15 @@ namespace Proyecto_Final.Controllers
                     ModelState.AddModelError(string.Empty, response?.Message ?? "No fue posible procesar la solicitud.");
                     return View(model);
                 }
+
+                await RegistrarAuditoriaAsync(
+                    null,
+                    "Usuario no autenticado",
+                    model.Email,
+                    "No disponible",
+                    "Recuperación de contraseña",
+                    "Autenticación",
+                    $"Se solicitó recuperación de contraseña para el correo {model.Email}.");
 
                 TempData["SuccessMessage"] = response.Message ?? "Se procesó la recuperación de contraseña correctamente.";
                 return RedirectToAction(nameof(Login));
@@ -191,6 +206,15 @@ namespace Proyecto_Final.Controllers
                     return View(model);
                 }
 
+                await RegistrarAuditoriaAsync(
+                    null,
+                    "Usuario no autenticado",
+                    "No disponible",
+                    "No disponible",
+                    "Cambio de contraseña",
+                    "Autenticación",
+                    "Se restableció una contraseña mediante token de recuperación.");
+
                 TempData["SuccessMessage"] = response.Message ?? "La contraseña se restableció correctamente.";
                 return RedirectToAction(nameof(Login));
             }
@@ -205,22 +229,37 @@ namespace Proyecto_Final.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (userId.HasValue && userId.Value > 0)
-            {
-                await _adminDbService.RegistrarAuditoriaAsync(userId.Value, "LOGOUT", "Seguridad", "El usuario cerró sesión manualmente.");
-            }
+            var usuarioId = HttpContext.Session.GetInt32("UserId");
+            var usuarioNombre = HttpContext.Session.GetString("UserFullName");
+            var usuarioCorreo = HttpContext.Session.GetString("UserEmail");
+            var rol = HttpContext.Session.GetString("UserRole");
+
+            await RegistrarAuditoriaAsync(
+                usuarioId,
+                usuarioNombre,
+                usuarioCorreo,
+                rol,
+                "Logout",
+                "Autenticación",
+                "El usuario cerró sesión correctamente.");
 
             HttpContext.Session.Clear();
             TempData["SuccessMessage"] = "Sesión cerrada correctamente.";
             return RedirectToAction("Index", "Home");
         }
 
-        // Endpoint para cuando el Filtro AdminAuthorize bloquea el acceso
-        [HttpGet]
-        public IActionResult AccesoDenegado()
+        private async Task RegistrarAuditoriaAsync(int? usuarioId, string? usuarioNombre, string? usuarioCorreo, string? rol, string accion, string modulo, string descripcion)
         {
-            return View();
+            await _adminDbService.CreateAuditLogAsync(
+                usuarioId,
+                usuarioNombre,
+                usuarioCorreo,
+                rol,
+                accion,
+                modulo,
+                descripcion,
+                HttpContext.Connection.RemoteIpAddress?.ToString(),
+                Request.Headers.UserAgent.ToString());
         }
     }
 }
