@@ -1415,7 +1415,12 @@ namespace Proyecto_Final.Services
             return productos;
         }
 
-        public async Task<int> CreateSellerOrderAsync(SellerOrderCreateViewModel model, int vendedorUsuarioId, string vendedorNombre)
+        public async Task<int> CreateSellerOrderAsync(
+            SellerOrderCreateViewModel model,
+            int vendedorUsuarioId,
+            string vendedorNombre,
+            Guid? pedidoOfflineGuid = null,
+            string? canalPedido = null)
         {
             var itemsPayload = model.Productos
                 .Where(x => x.Cantidad > 0)
@@ -1440,6 +1445,8 @@ namespace Proyecto_Final.Services
                 command.Parameters.Add("@Observaciones", SqlDbType.NVarChar, 500).Value = string.IsNullOrWhiteSpace(model.Observaciones) ? DBNull.Value : model.Observaciones.Trim();
                 command.Parameters.Add("@IdentificacionCliente", SqlDbType.NVarChar, 100).Value = string.IsNullOrWhiteSpace(model.IdentificacionCliente) ? DBNull.Value : model.IdentificacionCliente.Trim();
                 command.Parameters.Add("@ItemsJson", SqlDbType.NVarChar, -1).Value = itemsJson;
+                command.Parameters.Add("@PedidoOfflineGuid", SqlDbType.UniqueIdentifier).Value = pedidoOfflineGuid.HasValue ? pedidoOfflineGuid.Value : DBNull.Value;
+                command.Parameters.Add("@CanalPedido", SqlDbType.NVarChar, 50).Value = string.IsNullOrWhiteSpace(canalPedido) ? "Venta móvil" : canalPedido.Trim();
 
                 await connection.OpenAsync();
                 var result = await command.ExecuteScalarAsync();

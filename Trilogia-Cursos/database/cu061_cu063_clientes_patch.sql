@@ -79,16 +79,16 @@ BEGIN
 
         IF @PerfilAdministrador IS NOT NULL
         BEGIN
-            INSERT INTO dbo.PerfilPermisos (PerfilId, PermisoId, AsignadoPorUsuarioId, AsignadoPorNombre)
-            SELECT @PerfilAdministrador, p.PermisoId, NULL, 'Script CU-061/CU-063'
-            FROM dbo.Permisos p
-            WHERE p.Modulo = 'Clientes'
-              AND NOT EXISTS (
-                    SELECT 1
-                    FROM dbo.PerfilPermisos pp
-                    WHERE pp.PerfilId = @PerfilAdministrador
-                      AND pp.PermisoId = p.PermisoId
-              );
+INSERT INTO dbo.PerfilPermisos (PerfilId, PermisoId, UsuarioAsignacionId, UsuarioAsignacionNombre)
+SELECT @PerfilAdministrador, p.PermisoId, NULL, 'Script CU-061/CU-063'
+FROM dbo.Permisos p
+WHERE p.Modulo = 'Clientes'
+  AND NOT EXISTS (
+        SELECT 1
+        FROM dbo.PerfilPermisos pp
+        WHERE pp.PerfilId = @PerfilAdministrador
+          AND pp.PermisoId = p.PermisoId
+  );
         END
     END
 END

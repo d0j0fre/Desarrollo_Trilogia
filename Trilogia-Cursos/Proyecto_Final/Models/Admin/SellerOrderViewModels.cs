@@ -67,4 +67,47 @@ namespace Proyecto_Final.Models.Admin
         public int TotalItems => Productos.Sum(x => x.Cantidad);
         public decimal Total => Productos.Sum(x => x.Subtotal);
     }
+
+    public class SellerOfflineOrderProductViewModel
+    {
+        [Range(1, int.MaxValue, ErrorMessage = "El producto no es válido.")]
+        public int ProductoId { get; set; }
+
+        [Range(1, 9999, ErrorMessage = "La cantidad no es válida.")]
+        public int Cantidad { get; set; }
+    }
+
+    public class SellerOfflineOrderSyncRequestViewModel
+    {
+        [Required]
+        public string PedidoOfflineGuid { get; set; } = string.Empty;
+
+        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un cliente.")]
+        public int ClienteUsuarioId { get; set; }
+
+        [Required(ErrorMessage = "El tipo de entrega es obligatorio.")]
+        [StringLength(100)]
+        public string TipoEntrega { get; set; } = "Entrega por vendedor";
+
+        [Required(ErrorMessage = "La dirección de entrega es obligatoria.")]
+        [StringLength(500)]
+        public string? DireccionEntrega { get; set; }
+
+        [StringLength(100)]
+        public string? IdentificacionCliente { get; set; }
+
+        [StringLength(500)]
+        public string? Observaciones { get; set; }
+
+        public List<SellerOfflineOrderProductViewModel> Productos { get; set; } = new();
+    }
+
+    public class SellerOfflineOrderSyncResponseViewModel
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public int? PedidoId { get; set; }
+        public string PedidoOfflineGuid { get; set; } = string.Empty;
+        public string RedirectUrl { get; set; } = string.Empty;
+    }
 }
