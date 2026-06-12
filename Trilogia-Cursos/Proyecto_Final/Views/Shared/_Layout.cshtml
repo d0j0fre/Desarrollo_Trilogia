@@ -20,6 +20,7 @@
     <link href="~/css/style.css" rel="stylesheet">
     <link href="~/css/custom-theme.css" rel="stylesheet">
     <link href="~/css/ui-modern-2027.css" rel="stylesheet">
+    <link href="~/css/sprint3-ui-polish.css" rel="stylesheet">
 
     @RenderSection("Styles", required: false)
 </head>
@@ -36,13 +37,14 @@
             || string.Equals(userRole, "Vendedor", StringComparison.OrdinalIgnoreCase));
         var categoriasLayout = await AdminDbService.GetStoreCategoriesAsync();
     }
+
     <div class="container-fluid topbar">
         <div class="row align-items-center py-2 px-xl-5">
             <div class="col-lg-6 d-none d-lg-block">
-                <div class="d-inline-flex align-items-center">
+                <div class="d-inline-flex align-items-center flex-wrap">
                     <small class="text-light"><i class="fa fa-map-marker-alt mr-2 text-primary"></i>San José, Costa Rica</small>
                     <small class="px-2 text-light">|</small>
-                    <small class="text-light"><i class="fa fa-envelope mr-2 text-primary"></i>info@labodega.com</small>
+                    <small class="text-light"><i class="fa fa-shield-alt mr-2 text-primary"></i>Compra segura y catálogo actualizado</small>
                 </div>
             </div>
 
@@ -62,7 +64,7 @@
                         <form asp-controller="Account" asp-action="Logout" method="post" class="m-0">
                             @Html.AntiForgeryToken()
                             <button type="submit" class="btn btn-primary logout-btn">
-                                <i class="fa fa-sign-out-alt mr-1"></i>Logout
+                                <i class="fa fa-sign-out-alt mr-1"></i>Cerrar sesión
                             </button>
                         </form>
                     </div>
@@ -102,10 +104,9 @@
 
                     <div class="collapse navbar-collapse justify-content-between" id="navbarCollapse">
                         <div class="navbar-nav mr-auto py-0 main-nav-clean main-nav-2027">
-                            <a asp-controller="Home" asp-action="Index" class="nav-item nav-link">Inicio</a>
-                            <a asp-controller="Home" asp-action="Shop" class="nav-item nav-link">Tienda</a>
+                            <a asp-controller="Home" asp-action="Index" class="nav-item nav-link"><i class="fa fa-home mr-1"></i>Inicio</a>
+                            <a asp-controller="Home" asp-action="Shop" class="nav-item nav-link"><i class="fa fa-store mr-1"></i>Tienda</a>
                             <a asp-controller="Cart" asp-action="Index" class="nav-item nav-link"><i class="fa fa-shopping-cart mr-1"></i>Carrito</a>
-                            <a asp-controller="Home" asp-action="Contact" class="nav-item nav-link">Contacto</a>
 
                             @if (isSellerOrStaff)
                             {
@@ -154,7 +155,7 @@
 
                             @if (!isLoggedIn)
                             {
-                                <a asp-controller="Account" asp-action="Login" class="nav-item nav-link text-primary font-weight-bold"><i class="fa fa-user mr-1"></i>Iniciar Sesión</a>
+                                <a asp-controller="Account" asp-action="Login" class="nav-item nav-link text-primary font-weight-bold"><i class="fa fa-user mr-1"></i>Iniciar sesión</a>
                                 <a asp-controller="Account" asp-action="Register" class="nav-item nav-link"><i class="fa fa-user-plus mr-1"></i>Registro</a>
                             }
                         </div>
@@ -181,16 +182,75 @@
         @RenderBody()
     </main>
 
-    <div class="container-fluid bg-dark text-secondary mt-5 pt-5">
-        <div class="row border-top mx-xl-5 py-4 footer-border-top">
-            <div class="col-md-6 px-xl-0">
-                <p class="mb-md-0 text-center text-md-left text-secondary">&copy; <a class="text-primary" href="#">Licorera La Bodega</a>. Todos los derechos reservados.</p>
+    <footer class="container-fluid s3-footer mt-5 pt-5">
+        <div class="row px-xl-5 pb-4">
+            <div class="col-lg-4 col-md-6">
+                <a asp-controller="Home" asp-action="Index" class="s3-footer__brand text-decoration-none">
+                    <i class="fa fa-wine-bottle text-primary"></i>
+                    Licorera <span>La Bodega</span>
+                </a>
+                <p class="s3-footer__text mb-3">
+                    Sistema web para consulta de productos, gestión de pedidos, venta móvil, inventario, facturación y administración general de la distribuidora.
+                </p>
+                <a asp-controller="Home" asp-action="Contact" class="btn btn-primary btn-sm">
+                    <i class="fa fa-envelope mr-1"></i>Ir a contacto
+                </a>
             </div>
-            <div class="col-md-6 px-xl-0 text-center text-md-right">
-                <img class="img-fluid" src="@Url.Content("~/img/payments.png")" alt="Payments">
+
+            <div class="col-lg-2 col-md-6">
+                <h6 class="s3-footer__title">Navegación</h6>
+                <ul class="s3-footer__list">
+                    <li><a asp-controller="Home" asp-action="Index"><i class="fa fa-angle-right mr-1"></i>Inicio</a></li>
+                    <li><a asp-controller="Home" asp-action="Shop"><i class="fa fa-angle-right mr-1"></i>Tienda</a></li>
+                    <li><a asp-controller="Cart" asp-action="Index"><i class="fa fa-angle-right mr-1"></i>Carrito</a></li>
+                    <li><a asp-controller="Home" asp-action="Contact"><i class="fa fa-angle-right mr-1"></i>Contacto</a></li>
+                </ul>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <h6 class="s3-footer__title">Categorías</h6>
+                <ul class="s3-footer__list">
+                    @foreach (var categoria in categoriasLayout.Take(6))
+                    {
+                        <li>
+                            <a asp-controller="Home" asp-action="Shop" asp-route-categoria="@categoria">
+                                <i class="fa fa-angle-right mr-1"></i>@categoria
+                            </a>
+                        </li>
+                    }
+                </ul>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <h6 class="s3-footer__title">Contacto</h6>
+                <div class="s3-footer__contact-item">
+                    <i class="fa fa-map-marker-alt"></i>
+                    <span>San José, Costa Rica</span>
+                </div>
+                <div class="s3-footer__contact-item">
+                    <i class="fa fa-envelope"></i>
+                    <span>info@labodega.com</span>
+                </div>
+                <div class="s3-footer__contact-item">
+                    <i class="fa fa-phone-alt"></i>
+                    <span>+506 2222-2222</span>
+                </div>
+                <div class="s3-footer__contact-item">
+                    <i class="fa fa-clock"></i>
+                    <span>Lunes a sábado · 8:00 a.m. - 6:00 p.m.</span>
+                </div>
             </div>
         </div>
-    </div>
+
+        <div class="row mx-xl-5 py-4 s3-footer__bottom">
+            <div class="col-md-6 px-xl-0">
+                <p class="mb-md-0 text-center text-md-left">&copy; @DateTime.Now.Year <a class="text-primary" href="#">Licorera La Bodega</a>. Todos los derechos reservados.</p>
+            </div>
+            <div class="col-md-6 px-xl-0 text-center text-md-right">
+                <img class="img-fluid s3-footer__payments" src="@Url.Content("~/img/payments.png")" alt="Métodos de pago">
+            </div>
+        </div>
+    </footer>
 
     <a href="#" class="btn btn-primary back-to-top"><i class="fa fa-angle-double-up"></i></a>
 

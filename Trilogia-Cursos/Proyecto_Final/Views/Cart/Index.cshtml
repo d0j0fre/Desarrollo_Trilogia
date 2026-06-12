@@ -1,70 +1,150 @@
-﻿@model Proyecto_Final.Models.Store.CartViewModel
+@model Proyecto_Final.Models.Store.CartViewModel
 @{
     ViewData["Title"] = "Carrito";
 }
-<div class="container py-4">
-    <h2 class="mb-4">Tu carrito</h2>
+
+<div class="container-fluid s3-page-shell s3-cart-page">
+    <div class="s3-cart-hero">
+        <div>
+            <span class="s3-eyebrow"><i class="fa fa-shopping-cart"></i> Carrito de compras</span>
+            <h1>Revisá tu pedido</h1>
+            <p>
+                Verificá cantidades, stock disponible y subtotal antes de finalizar la compra.
+            </p>
+        </div>
+        <div class="s3-cart-hero__icon">
+            <i class="fa fa-shopping-basket"></i>
+        </div>
+    </div>
 
     @if (Model.Items.Count == 0)
     {
-        <div class="alert alert-info">Tu carrito estÃ¡ vacÃ­o.</div>
-        <a asp-controller="Home" asp-action="Shop" class="btn btn-primary">Ir a la tienda</a>
+        <div class="s3-cart-empty">
+            <div>
+                <div class="s3-cart-empty__icon">
+                    <i class="fa fa-shopping-cart"></i>
+                </div>
+                <h2>Tu carrito está vacío</h2>
+                <p>
+                    Agregá productos desde la tienda para preparar tu pedido. Podés revisar whiskies, vinos, rones, cervezas y más categorías disponibles.
+                </p>
+                <a asp-controller="Home" asp-action="Shop" class="btn btn-primary btn-lg">
+                    <i class="fa fa-store mr-1"></i>Ir a la tienda
+                </a>
+            </div>
+        </div>
     }
     else
     {
-        <div class="table-responsive">
-            <table class="table table-dark table-hover">
-                <thead>
-                    <tr>
-                        <th>Producto</th>
-                        <th>Precio</th>
-                        <th style="width:180px;">Cantidad</th>
-                        <th>Subtotal</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
+        <div class="s3-cart-grid">
+            <div class="s3-cart-list">
                 @foreach (var item in Model.Items)
                 {
-                    <tr>
-                        <td>
-                            <strong>@item.Nombre</strong><br />
-                            <small class="text-muted">@item.Categoria Â· Stock disponible: @item.StockDisponible</small>
-                        </td>
-                        <td>â‚¡@item.Precio.ToString("N2")</td>
-                        <td>
-                            <form asp-action="Update" method="post" class="form-inline">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="productoId" value="@item.ProductoId" />
-                                <input type="number" name="cantidad" value="@item.Cantidad" min="0" max="@item.StockDisponible" class="form-control form-control-sm mr-2" />
-                                <button class="btn btn-primary btn-sm" type="submit">Actualizar</button>
-                            </form>
-                        </td>
-                        <td>â‚¡@item.Subtotal.ToString("N2")</td>
-                        <td>
-                            <form asp-action="Remove" method="post">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="productoId" value="@item.ProductoId" />
-                                <button class="btn btn-danger btn-sm" type="submit">Quitar</button>
-                            </form>
-                        </td>
-                    </tr>
-                }
-                </tbody>
-            </table>
-        </div>
+                    var imagen = string.IsNullOrWhiteSpace(item.ImagenUrl) ? Url.Content("~/img/whisky-premium.webp") : Url.Content(item.ImagenUrl);
+                    var puedeAumentar = item.Cantidad < item.StockDisponible;
+                    var puedeDisminuir = item.Cantidad > 1;
 
-        <div class="d-flex justify-content-between align-items-center mt-4">
-            <div>
-                <strong>Total de artÃ­culos:</strong> @Model.TotalItems<br />
-                <strong>Subtotal:</strong> â‚¡@Model.Subtotal.ToString("N2")
+                    <article class="s3-cart-item">
+                        <div class="s3-cart-item__image">
+                            <img src="@imagen" alt="@item.Nombre" />
+                        </div>
+
+                        <div class="s3-cart-item__info">
+                            <span class="s3-cart-item__category">@item.Categoria</span>
+                            <h3 class="s3-cart-item__name">@item.Nombre</h3>
+                            <p class="s3-cart-item__meta">
+                                Stock disponible: <strong>@item.StockDisponible</strong>
+                            </p>
+                            <div class="s3-cart-item__price">
+                                ₡@item.Precio.ToString("N2")
+                            </div>
+                        </div>
+
+                        <div class="s3-cart-qty">
+                            <small class="text-muted font-weight-bold">Cantidad</small>
+
+                            <div class="s3-cart-qty__buttons">
+                                <form asp-action="Update" method="post" class="s3-cart-qty__form">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="productoId" value="@item.ProductoId" />
+                                    <input type="hidden" name="cantidad" value="@(item.Cantidad - 1)" />
+                                    <button class="btn btn-outline-secondary btn-sm" type="submit" disabled="@(!puedeDisminuir)" aria-label="Disminuir cantidad">
+                                        <i class="fa fa-minus"></i>
+                                    </button>
+                                </form>
+
+                                <form asp-action="Update" method="post" class="s3-cart-qty__input-form">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="productoId" value="@item.ProductoId" />
+                                    <input type="number" name="cantidad" value="@item.Cantidad" min="1" max="@item.StockDisponible" class="form-control form-control-sm s3-cart-qty__input" />
+                                    <button class="btn btn-primary btn-sm" type="submit">
+                                        <i class="fa fa-sync-alt mr-1"></i>Actualizar
+                                    </button>
+                                </form>
+
+                                <form asp-action="Update" method="post" class="s3-cart-qty__form">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="productoId" value="@item.ProductoId" />
+                                    <input type="hidden" name="cantidad" value="@(item.Cantidad + 1)" />
+                                    <button class="btn btn-outline-secondary btn-sm" type="submit" disabled="@(!puedeAumentar)" aria-label="Aumentar cantidad">
+                                        <i class="fa fa-plus"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="s3-cart-item__subtotal">
+                            <div>
+                                <span>Subtotal</span>
+                                <strong>₡@item.Subtotal.ToString("N2")</strong>
+                            </div>
+
+                            <form asp-action="Remove" method="post" class="s3-cart-remove-form">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="productoId" value="@item.ProductoId" />
+                                <button class="btn btn-outline-danger btn-sm" type="submit">
+                                    <i class="fa fa-trash-alt mr-1"></i>Quitar
+                                </button>
+                            </form>
+                        </div>
+                    </article>
+                }
             </div>
-            <div>
-                <a asp-controller="Home" asp-action="Shop" class="btn btn-secondary mr-2">Seguir comprando</a>
-                <a asp-action="Checkout" class="btn btn-primary">Finalizar compra</a>
-            </div>
+
+            <aside class="s3-cart-summary">
+                <div class="s3-cart-summary__head">
+                    <h3><i class="fa fa-receipt mr-2 text-primary"></i>Resumen</h3>
+                </div>
+
+                <div class="s3-cart-summary__body">
+                    <div class="s3-cart-summary__row">
+                        <span>Total de productos</span>
+                        <strong>@Model.TotalItems</strong>
+                    </div>
+                    <div class="s3-cart-summary__row">
+                        <span>Líneas del pedido</span>
+                        <strong>@Model.Items.Count</strong>
+                    </div>
+                    <div class="s3-cart-summary__total">
+                        <span>Total</span>
+                        <strong>₡@Model.Subtotal.ToString("N2")</strong>
+                    </div>
+
+                    <div class="s3-cart-note">
+                        <i class="fa fa-info-circle text-primary mr-1"></i>
+                        El stock y los precios se validan nuevamente al finalizar la compra para proteger el inventario.
+                    </div>
+
+                    <div class="s3-cart-summary__actions">
+                        <a asp-action="Checkout" class="btn btn-primary btn-lg">
+                            <i class="fa fa-check-circle mr-1"></i>Finalizar compra
+                        </a>
+                        <a asp-controller="Home" asp-action="Shop" class="btn btn-outline-dark">
+                            <i class="fa fa-arrow-left mr-1"></i>Seguir comprando
+                        </a>
+                    </div>
+                </div>
+            </aside>
         </div>
     }
 </div>
-
-

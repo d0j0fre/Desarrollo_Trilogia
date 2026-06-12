@@ -2,34 +2,75 @@
 @{
     ViewData["Title"] = "Pedido creado";
 }
-<div class="container py-5">
-    <div class="alert alert-success">
-        <h3 class="mb-3">¡Pedido creado correctamente!</h3>
-        <p class="mb-1"><strong>Número de pedido:</strong> #@Model.PedidoId</p>
-        <p class="mb-1"><strong>Tipo de entrega:</strong> @Model.TipoEntrega</p>
-        @if (!string.IsNullOrWhiteSpace(Model.DireccionEntrega))
-        {
-            <p class="mb-1"><strong>Dirección:</strong> @Model.DireccionEntrega</p>
-        }
-        <p class="mb-0"><strong>Total:</strong> ₡@Model.Total.ToString("N2")</p>
-    </div>
 
-    <div class="card bg-dark text-light border-secondary">
-        <div class="card-body">
-            <h4 class="card-title">Productos</h4>
-            <ul class="list-group list-group-flush">
+<div class="container-fluid s3-page-shell py-5">
+    <div class="s3-confirmation-card">
+        <div class="s3-confirmation-card__head">
+            <div class="s3-confirmation-icon">
+                <i class="fa fa-check"></i>
+            </div>
+            <h1>Pedido creado correctamente</h1>
+            <p>
+                El pedido fue registrado en el sistema. Podés seguir comprando o revisar el detalle de los productos incluidos.
+            </p>
+        </div>
+
+        <div class="s3-confirmation-card__body">
+            <div class="s3-confirmation-facts">
+                <div class="s3-confirmation-fact">
+                    <span>Número de pedido</span>
+                    <strong>#@Model.PedidoId</strong>
+                </div>
+                <div class="s3-confirmation-fact">
+                    <span>Tipo de entrega</span>
+                    <strong>@Model.TipoEntrega</strong>
+                </div>
+                <div class="s3-confirmation-fact">
+                    <span>Productos</span>
+                    <strong>@Model.Items.Sum(x => x.Cantidad)</strong>
+                </div>
+                <div class="s3-confirmation-fact">
+                    <span>Total</span>
+                    <strong>₡@Model.Total.ToString("N2")</strong>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(Model.DireccionEntrega))
+            {
+                <div class="alert alert-light border mb-4">
+                    <strong><i class="fa fa-map-marker-alt text-primary mr-1"></i>Dirección:</strong>
+                    @Model.DireccionEntrega
+                </div>
+            }
+
+            <div class="s3-section-title">
+                <div>
+                    <span class="s3-section-title__eyebrow"><i class="fa fa-box"></i> Detalle</span>
+                    <h3>Productos del pedido</h3>
+                </div>
+            </div>
+
+            <div class="s3-confirmation-products">
                 @foreach (var item in Model.Items)
                 {
-                    <li class="list-group-item bg-dark text-light d-flex justify-content-between">
-                        <span>@item.Nombre x @item.Cantidad</span>
-                        <span>₡@item.Subtotal.ToString("N2")</span>
-                    </li>
+                    <div class="s3-confirmation-product">
+                        <div>
+                            <strong>@item.Nombre</strong>
+                            <span class="d-block">Cantidad: @item.Cantidad · @item.Categoria</span>
+                        </div>
+                        <strong>₡@item.Subtotal.ToString("N2")</strong>
+                    </div>
                 }
-            </ul>
-        </div>
-    </div>
+            </div>
 
-    <div class="mt-4">
-        <a asp-controller="Home" asp-action="Shop" class="btn btn-primary">Seguir comprando</a>
+            <div class="s3-confirmation-actions">
+                <a asp-controller="Home" asp-action="Shop" class="btn btn-primary">
+                    <i class="fa fa-store mr-1"></i>Seguir comprando
+                </a>
+                <a asp-controller="Home" asp-action="Index" class="btn btn-outline-dark">
+                    <i class="fa fa-home mr-1"></i>Volver al inicio
+                </a>
+            </div>
+        </div>
     </div>
 </div>
