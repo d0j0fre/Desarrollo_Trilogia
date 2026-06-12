@@ -162,7 +162,11 @@
                                                    asp-route-id="@item.ProductoId" class="btn btn-sm btn-primary"><i class="fa fa-edit mr-1"></i>Editar</a>
 
                                                 <form asp-controller="Inventory" asp-action="ToggleStatus" method="post" class="mb-0"
-                                                      onsubmit="return confirm('@(item.Activo ? "¿Inactivar este producto? Ya no se mostrará en el catálogo." : "¿Reactivar este producto? Volverá a mostrarse en el catálogo.")');">
+                                                      data-s3-confirm="@(item.Activo ? "¿Inactivar este producto? Ya no se mostrará en el catálogo." : "¿Reactivar este producto? Volverá a mostrarse en el catálogo.")"
+                                                      data-s3-confirm-title="Confirmar cambio de producto"
+                                                      data-s3-confirm-type="warning"
+                                                      data-s3-confirm-ok="Sí, continuar"
+                                                      data-s3-confirm-cancel="Cancelar">
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="productoId" value="@item.ProductoId" />
                                                     <input type="hidden" name="filtro" value="@filtro" />
@@ -172,7 +176,11 @@
                                                 </form>
 
                                                 <form asp-controller="Inventory" asp-action="DeletePermanent" method="post" class="mb-0"
-                                                      onsubmit="return confirm('¿Eliminar definitivamente este producto? Solo se podrá eliminar si no tiene pedidos, facturas ni movimientos de inventario asociados.');">
+                                                      data-s3-confirm="¿Eliminar definitivamente este producto? Solo se podrá eliminar si no tiene pedidos, facturas ni movimientos de inventario asociados."
+                                                      data-s3-confirm-title="Confirmar eliminación definitiva"
+                                                      data-s3-confirm-type="danger"
+                                                      data-s3-confirm-ok="Eliminar"
+                                                      data-s3-confirm-cancel="Cancelar">
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="productoId" value="@item.ProductoId" />
                                                     <input type="hidden" name="filtro" value="@filtro" />

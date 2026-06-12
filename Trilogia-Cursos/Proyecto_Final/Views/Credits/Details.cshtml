@@ -100,7 +100,12 @@
             <div class="admin-card h-100">
                 <h5 class="mb-3">Configurar crédito</h5>
 
-                <form asp-controller="Credits" asp-action="UpdateSettings" method="post">
+                <form asp-controller="Credits" asp-action="UpdateSettings" method="post"
+                      data-s3-confirm="¿Desea guardar la configuración de crédito de este cliente?"
+                      data-s3-confirm-title="Confirmar configuración de crédito"
+                      data-s3-confirm-type="warning"
+                      data-s3-confirm-ok="Guardar configuración"
+                      data-s3-confirm-cancel="Cancelar">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="UsuarioId" value="@Model.UsuarioId" />
 
@@ -128,8 +133,7 @@
                         <textarea name="MotivoBloqueo" class="form-control" rows="3" maxlength="255" placeholder="Obligatorio si bloquea o desactiva el crédito">@Model.MotivoBloqueo</textarea>
                     </div>
 
-                    <button type="submit" class="btn btn-primary btn-block"
-                            onclick="return confirm('¿Desea guardar la configuración de crédito de este cliente?');">
+                    <button type="submit" class="btn btn-primary btn-block">
                         Guardar configuración
                     </button>
                 </form>
@@ -141,7 +145,12 @@
                 <h5 class="mb-3">Registrar movimiento</h5>
                 <p class="text-muted">Los movimientos no se eliminan. La deuda se calcula con base en cargos, abonos y ajustes.</p>
 
-                <form asp-controller="Credits" asp-action="RegisterMovement" method="post">
+                <form asp-controller="Credits" asp-action="RegisterMovement" method="post"
+                      data-s3-confirm="¿Desea registrar este movimiento financiero?"
+                      data-s3-confirm-title="Confirmar movimiento financiero"
+                      data-s3-confirm-type="warning"
+                      data-s3-confirm-ok="Registrar movimiento"
+                      data-s3-confirm-cancel="Cancelar">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="UsuarioId" value="@Model.UsuarioId" />
 
@@ -172,8 +181,7 @@
                         <textarea name="Descripcion" class="form-control" rows="3" maxlength="500" required placeholder="Detalle del movimiento financiero"></textarea>
                     </div>
 
-                    <button type="submit" class="btn btn-dark btn-block"
-                            onclick="return confirm('¿Desea registrar este movimiento financiero?');">
+                    <button type="submit" class="btn btn-dark btn-block">
                         Registrar movimiento
                     </button>
                 </form>

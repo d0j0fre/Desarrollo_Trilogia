@@ -99,7 +99,12 @@
                                 <strong>₡@item.Subtotal.ToString("N2")</strong>
                             </div>
 
-                            <form asp-action="Remove" method="post" class="s3-cart-remove-form">
+                            <form asp-action="Remove" method="post" class="s3-cart-remove-form"
+                                  data-s3-confirm="¿Desea quitar este producto del carrito?"
+                                  data-s3-confirm-title="Quitar producto"
+                                  data-s3-confirm-type="warning"
+                                  data-s3-confirm-ok="Quitar"
+                                  data-s3-confirm-cancel="Cancelar">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="productoId" value="@item.ProductoId" />
                                 <button class="btn btn-outline-danger btn-sm" type="submit">
