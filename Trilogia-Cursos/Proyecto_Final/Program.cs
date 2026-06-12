@@ -1,3 +1,4 @@
+using Proyecto_Final.Middleware;
 using Proyecto_Final.Services;
 using Proyecto_FinalAPI.Services;
 
@@ -10,9 +11,12 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromMinutes(60);
+    options.IdleTimeout = TimeSpan.FromMinutes(45);
+    options.Cookie.Name = ".DistribuidoraJJ.Session";
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
 });
 
 // Servicios propios
@@ -43,6 +47,8 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
     app.UseHttpsRedirection();
 }
+
+app.UseMiddleware<SecurityHeadersMiddleware>();
 
 app.UseStaticFiles();
 

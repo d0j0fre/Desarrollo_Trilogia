@@ -65,9 +65,9 @@ namespace Proyecto_Final.Controllers
                 TempData["LoginSuccess"] = $"Bienvenido, {response.FullName}.";
                 return RedirectToAction("Index", "Home");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                ModelState.AddModelError(string.Empty, $"Ocurrió un error al iniciar sesión: {ex.Message}");
+                ModelState.AddModelError(string.Empty, "No fue posible iniciar sesión en este momento. Intentá nuevamente.");
                 return View(model);
             }
         }
@@ -120,9 +120,9 @@ namespace Proyecto_Final.Controllers
                 TempData["SuccessMessage"] = "Tu cuenta fue creada correctamente. Ahora puedes iniciar sesión.";
                 return RedirectToAction(nameof(Login));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                ModelState.AddModelError(string.Empty, $"Ocurrió un error durante el registro: {ex.Message}");
+                ModelState.AddModelError(string.Empty, "No fue posible completar el registro en este momento. Intentá nuevamente.");
                 return View("Registro", model);
             }
         }
@@ -167,9 +167,9 @@ namespace Proyecto_Final.Controllers
                 TempData["SuccessMessage"] = response.Message ?? "Se procesó la recuperación de contraseña correctamente.";
                 return RedirectToAction(nameof(Login));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                ModelState.AddModelError(string.Empty, $"Ocurrió un error al procesar la solicitud: {ex.Message}");
+                ModelState.AddModelError(string.Empty, "No fue posible procesar la solicitud en este momento. Intentá nuevamente.");
                 return View(model);
             }
         }
@@ -218,9 +218,9 @@ namespace Proyecto_Final.Controllers
                 TempData["SuccessMessage"] = response.Message ?? "La contraseña se restableció correctamente.";
                 return RedirectToAction(nameof(Login));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                ModelState.AddModelError(string.Empty, $"Ocurrió un error al restablecer la contraseña: {ex.Message}");
+                ModelState.AddModelError(string.Empty, "No fue posible restablecer la contraseña en este momento. Intentá nuevamente.");
                 return View(model);
             }
         }

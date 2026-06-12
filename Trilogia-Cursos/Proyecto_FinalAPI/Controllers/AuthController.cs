@@ -10,11 +10,16 @@ namespace Proyecto_FinalAPI.Controllers
     {
         private readonly AccountApiDbService _accountApiDbService;
         private readonly EmailService _emailService;
+        private readonly LoginAttemptLimiter _loginAttemptLimiter;
 
-        public AuthController(AccountApiDbService accountApiDbService, EmailService emailService)
+        public AuthController(
+            AccountApiDbService accountApiDbService,
+            EmailService emailService,
+            LoginAttemptLimiter loginAttemptLimiter)
         {
             _accountApiDbService = accountApiDbService;
             _emailService = emailService;
+            _loginAttemptLimiter = loginAttemptLimiter;
         }
 
         [HttpPost("login")]
@@ -31,16 +36,32 @@ namespace Proyecto_FinalAPI.Controllers
                 });
             }
 
-            var user = await _accountApiDbService.ValidateUserAsync(request.Email, request.Password);
+            var email = request.Email.Trim();
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+            if (_loginAttemptLimiter.IsBlocked(email, ipAddress, out var remainingTime))
+            {
+                return StatusCode(StatusCodes.Status429TooManyRequests, new AuthResult
+                {
+                    Success = false,
+                    Message = $"Demasiados intentos fallidos. Intentá nuevamente en {Math.Ceiling(remainingTime.TotalMinutes)} minuto(s)."
+                });
+            }
+
+            var user = await _accountApiDbService.ValidateUserAsync(email, request.Password);
 
             if (user == null)
             {
+                _loginAttemptLimiter.RegisterFailedAttempt(email, ipAddress);
+
                 return Unauthorized(new AuthResult
                 {
                     Success = false,
                     Message = "Correo o contraseña incorrectos."
                 });
             }
+
+            _loginAttemptLimiter.Reset(email, ipAddress);
 
             return Ok(new AuthResult
             {
