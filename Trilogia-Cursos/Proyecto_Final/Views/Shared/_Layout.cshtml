@@ -36,6 +36,9 @@
             string.Equals(userRole, "Administrador", StringComparison.OrdinalIgnoreCase)
             || string.Equals(userRole, "Empleado", StringComparison.OrdinalIgnoreCase)
             || string.Equals(userRole, "Vendedor", StringComparison.OrdinalIgnoreCase));
+        var isEmployeePortalUser = isLoggedIn && (
+            string.Equals(userRole, "Empleado", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(userRole, "Vendedor", StringComparison.OrdinalIgnoreCase));
         var categoriasLayout = await AdminDbService.GetStoreCategoriesAsync();
     }
 
@@ -109,6 +112,13 @@
                             <a asp-controller="Home" asp-action="Shop" class="nav-item nav-link"><i class="fa fa-store mr-1"></i>Tienda</a>
                             <a asp-controller="Cart" asp-action="Index" class="nav-item nav-link"><i class="fa fa-shopping-cart mr-1"></i>Carrito</a>
 
+                            @if (isEmployeePortalUser)
+                            {
+                                <a asp-controller="EmployeePortal" asp-action="Index" class="nav-item nav-link nav-highlight">
+                                    <i class="fa fa-id-badge mr-1"></i>Mi portal
+                                </a>
+                            }
+
                             @if (isSellerOrStaff)
                             {
                                 <a asp-controller="SellerOrders" asp-action="Index" class="nav-item nav-link nav-highlight">
@@ -140,6 +150,16 @@
                                         <a asp-controller="Credits" asp-action="Index" class="dropdown-item"><i class="fa fa-credit-card"></i> Créditos</a>
                                         <a asp-controller="Consultations" asp-action="Index" class="dropdown-item"><i class="fa fa-comments"></i> Consultas</a>
                                         <a asp-controller="Audit" asp-action="Index" class="dropdown-item"><i class="fa fa-history"></i> Auditoría</a>
+                                    </div>
+                                </div>
+
+                                <div class="nav-item dropdown admin-nav-dropdown">
+                                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">
+                                        <i class="fa fa-user-tie mr-1"></i>Personal
+                                    </a>
+                                    <div class="dropdown-menu admin-dropdown-menu rounded-0 border-0 m-0">
+                                        <a asp-controller="Employees" asp-action="Index" class="dropdown-item"><i class="fa fa-id-badge"></i> Empleados</a>
+                                        <a asp-controller="Employees" asp-action="LeaveRequests" class="dropdown-item"><i class="fa fa-calendar-check"></i> Solicitudes</a>
                                     </div>
                                 </div>
 

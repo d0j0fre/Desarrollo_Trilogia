@@ -1,0 +1,36 @@
+@model Proyecto_Final.Models.Admin.EmployeeFormViewModel
+@{
+    ViewData["Title"] = "Editar empleado";
+}
+
+@section Styles {
+    <link href="~/css/sprint3-employees.css" rel="stylesheet" />
+}
+
+<div class="container-fluid s3-page-shell employee-page py-4">
+    <div class="employee-title-row mb-4">
+        <div>
+            <span class="s3-eyebrow"><i class="fa fa-user-edit"></i> Edición laboral</span>
+            <h1>Editar empleado</h1>
+            <p>Actualizá datos laborales, salario, rol del sistema y responsabilidades.</p>
+        </div>
+        <a asp-controller="Employees" asp-action="Details" asp-route-id="@Model.EmpleadoId" class="btn btn-outline-dark"><i class="fa fa-arrow-left mr-1"></i>Volver</a>
+    </div>
+
+    <div class="employee-card p-4">
+        <form asp-controller="Employees" asp-action="Edit" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="EmpleadoId" />
+            <input type="hidden" asp-for="UsuarioId" />
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+            @await Html.PartialAsync("_EmployeeForm", Model)
+            <div class="text-right mt-4">
+                <button type="submit" class="btn btn-primary btn-lg"><i class="fa fa-save mr-1"></i>Guardar cambios</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,164 @@
+@model Proyecto_Final.Models.Admin.EmployeePortalViewModel
+@{
+    ViewData["Title"] = "Mi portal de empleado";
+    var perfil = Model.Perfil!;
+}
+
+@section Styles {
+    <link href="~/css/sprint3-employees.css" rel="stylesheet" />
+}
+
+<div class="container-fluid s3-page-shell employee-page py-4">
+    <div class="employee-profile-hero mb-4">
+        <div class="employee-profile-hero__main">
+            <div class="employee-avatar employee-avatar--lg">@perfil.NombreCompleto.Substring(0, 1).ToUpper()</div>
+            <div>
+                <span class="s3-eyebrow"><i class="fa fa-user-clock"></i> Portal interno</span>
+                <h1>Hola, @perfil.NombreCompleto</h1>
+                <p>@perfil.Puesto · @(string.IsNullOrWhiteSpace(perfil.Departamento) ? "Sin departamento" : perfil.Departamento)</p>
+                <span class="badge badge-light">@perfil.Rol</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-4 mb-4">
+            <div class="employee-card p-4 h-100">
+                <h4 class="employee-card-title"><i class="fa fa-address-card mr-1"></i>Mis datos</h4>
+                <dl class="employee-dl">
+                    <dt>Correo</dt>
+                    <dd>@perfil.Correo</dd>
+                    <dt>Teléfono</dt>
+                    <dd>@(string.IsNullOrWhiteSpace(perfil.Telefono) ? "No indicado" : perfil.Telefono)</dd>
+                    <dt>Puesto</dt>
+                    <dd>@perfil.Puesto</dd>
+                    <dt>Salario actual</dt>
+                    <dd class="employee-salary">₡@perfil.Salario.ToString("N2")</dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="col-xl-8 mb-4">
+            <div class="employee-card p-4 h-100">
+                <h4 class="employee-card-title"><i class="fa fa-clipboard-check mr-1"></i>Mis responsabilidades</h4>
+                @if (string.IsNullOrWhiteSpace(perfil.Responsabilidades))
+                {
+                    <p class="text-muted mb-0">Aún no tenés responsabilidades registradas.</p>
+                }
+                else
+                {
+                    <p class="employee-text-block">@perfil.Responsabilidades</p>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-7 mb-4">
+            <div class="employee-card p-4 h-100">
+                <h4 class="employee-card-title"><i class="fa fa-tasks mr-1"></i>Mis tareas</h4>
+                @if (!Model.Tareas.Any())
+                {
+                    <p class="text-muted mb-0">No tenés tareas asignadas.</p>
+                }
+                else
+                {
+                    <div class="employee-task-list">
+                        @foreach (var tarea in Model.Tareas)
+                        {
+                            <div class="employee-task-item">
+                                <div>
+                                    <strong>@tarea.Titulo</strong>
+                                    <p>@(string.IsNullOrWhiteSpace(tarea.Descripcion) ? "Sin descripción." : tarea.Descripcion)</p>
+                                    <span class="badge badge-light">@tarea.Prioridad</span>
+                                    <span class="badge badge-info">@tarea.Estado</span>
+                                    @if (tarea.FechaLimite.HasValue)
+                                    {
+                                        <span class="badge badge-warning">Límite: @tarea.FechaLimite.Value.ToString("dd/MM/yyyy")</span>
+                                    }
+                                </div>
+                                <form asp-controller="EmployeePortal" asp-action="UpdateMyTaskStatus" method="post" class="employee-task-status-form">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="tareaId" value="@tarea.TareaId" />
+                                    <select name="estado" class="form-control form-control-sm">
+                                        <option selected="@(tarea.Estado == "Pendiente")">Pendiente</option>
+                                        <option selected="@(tarea.Estado == "En proceso")">En proceso</option>
+                                        <option selected="@(tarea.Estado == "Completada")">Completada</option>
+                                    </select>
+                                    <button type="submit" class="btn btn-sm btn-outline-dark">Actualizar</button>
+                                </form>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="col-xl-5 mb-4">
+            <div class="employee-card p-4 h-100">
+                <h4 class="employee-card-title"><i class="fa fa-calendar-plus mr-1"></i>Solicitar días libres</h4>
+                <form asp-controller="EmployeePortal" asp-action="RequestTimeOff" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label asp-for="NuevaSolicitud.FechaInicio"></label>
+                            <input asp-for="NuevaSolicitud.FechaInicio" name="FechaInicio" class="form-control" type="date" />
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label asp-for="NuevaSolicitud.FechaFin"></label>
+                            <input asp-for="NuevaSolicitud.FechaFin" name="FechaFin" class="form-control" type="date" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="NuevaSolicitud.TipoSolicitud"></label>
+                        <select asp-for="NuevaSolicitud.TipoSolicitud" name="TipoSolicitud" class="form-control">
+                            <option>Con goce salarial</option>
+                            <option>Sin goce salarial</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="NuevaSolicitud.Motivo"></label>
+                        <textarea asp-for="NuevaSolicitud.Motivo" name="Motivo" class="form-control" rows="4"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block"><i class="fa fa-paper-plane mr-1"></i>Enviar solicitud</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="employee-card p-4">
+        <h4 class="employee-card-title"><i class="fa fa-history mr-1"></i>Mis solicitudes</h4>
+        @if (!Model.Solicitudes.Any())
+        {
+            <p class="text-muted mb-0">No tenés solicitudes registradas.</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead>
+                        <tr>
+                            <th>Fechas</th>
+                            <th>Tipo</th>
+                            <th>Motivo</th>
+                            <th>Estado</th>
+                            <th>Respuesta</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Solicitudes)
+                        {
+                            <tr>
+                                <td>@item.FechaInicio.ToString("dd/MM/yyyy") - @item.FechaFin.ToString("dd/MM/yyyy")</td>
+                                <td>@item.TipoSolicitud</td>
+                                <td>@item.Motivo</td>
+                                <td><span class="badge badge-light">@item.Estado</span></td>
+                                <td>@(string.IsNullOrWhiteSpace(item.RespuestaAdmin) ? "Pendiente" : item.RespuestaAdmin)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
