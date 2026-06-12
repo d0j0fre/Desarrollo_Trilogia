@@ -21,14 +21,14 @@ builder.Services.AddScoped<StoreDbService>();
 builder.Services.AddScoped<AccountDbService>();
 builder.Services.AddScoped<EmailService>();
 
-// HttpClient para consumir la API de autenticación
+// HttpClient para consumir la API de autenticaciÃ³n
 builder.Services.AddHttpClient<AccountApiService>(client =>
 {
     var baseUrl = builder.Configuration["ApiSettings:BaseUrl"];
 
     if (string.IsNullOrWhiteSpace(baseUrl))
     {
-        throw new InvalidOperationException("No se encontró la configuración ApiSettings:BaseUrl en appsettings.json.");
+        throw new InvalidOperationException("No se encontrÃ³ la configuraciÃ³n ApiSettings:BaseUrl en appsettings.json.");
     }
 
     client.BaseAddress = new Uri(baseUrl);
@@ -41,9 +41,9 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
+    app.UseHttpsRedirection();
 }
 
-app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
