@@ -51,6 +51,8 @@ namespace Proyecto_Final.Middleware
                 || path.StartsWithSegments("/Billing")
                 || path.StartsWithSegments("/Clients")
                 || path.StartsWithSegments("/Credits")
+                || path.StartsWithSegments("/Employees")
+                || path.StartsWithSegments("/EmployeePortal")
                 || path.StartsWithSegments("/Roles")
                 || path.StartsWithSegments("/Permissions")
                 || path.StartsWithSegments("/Audit")
