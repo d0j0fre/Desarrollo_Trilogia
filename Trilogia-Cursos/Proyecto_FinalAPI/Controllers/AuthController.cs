@@ -125,13 +125,10 @@ namespace Proyecto_FinalAPI.Controllers
                 var baseUrl = "https://localhost:7013";
                 var resetUrl = $"{baseUrl}/Account/ResetPassword?token={token}&email={Uri.EscapeDataString(user.Correo)}";
 
-                var asunto = "Recuperación de contraseña";
-                var contenido = $@"
-                    <h3>Hola, {user.NombreCompleto}</h3>
-                    <p>Recibimos una solicitud para restablecer tu contraseña.</p>
-                    <p>Puedes hacerlo desde el siguiente enlace:</p>
-                    <p><a href='{resetUrl}'>Restablecer contraseña</a></p>
-                    <p>Este enlace vence en 30 minutos.</p>";
+                var asunto = "Recuperación de contraseña - Licorera La Bodega";
+                var contenido = EmailTemplateBuilder.BuildPasswordResetEmail(
+                    user.NombreCompleto,
+                    resetUrl);
 
                 _emailService.SendEmail(user.Correo, asunto, contenido);
             }
