@@ -82,7 +82,11 @@
                 }
 
                 <form asp-controller="Clients" asp-action="ToggleStatus" method="post"
-                      onsubmit="return confirm('@(Model.Activo ? "¿Desea inactivar este cliente?" : "¿Desea reactivar este cliente?")');">
+                      data-s3-confirm="@(Model.Activo ? "¿Desea inactivar este cliente?" : "¿Desea reactivar este cliente?")"
+                      data-s3-confirm-title="Confirmar cambio de estado"
+                      data-s3-confirm-type="warning"
+                      data-s3-confirm-ok="Sí, continuar"
+                      data-s3-confirm-cancel="Cancelar">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="usuarioId" value="@Model.UsuarioId" />
                     <input type="hidden" name="returnTo" value="details" />

@@ -1,0 +1,204 @@
+@model Proyecto_Final.Models.Admin.EmployeeDetailViewModel
+@{
+    ViewData["Title"] = "Detalle de empleado";
+}
+
+@section Styles {
+    <link href="~/css/sprint3-employees.css" rel="stylesheet" />
+}
+
+<div class="container-fluid s3-page-shell employee-page py-4">
+    <div class="employee-profile-hero mb-4">
+        <div class="employee-profile-hero__main">
+            <div class="employee-avatar employee-avatar--lg">@Model.NombreCompleto.Substring(0, 1).ToUpper()</div>
+            <div>
+                <span class="s3-eyebrow"><i class="fa fa-id-card"></i> Expediente laboral</span>
+                <h1>@Model.NombreCompleto</h1>
+                <p>@Model.Puesto · @(string.IsNullOrWhiteSpace(Model.Departamento) ? "Sin departamento" : Model.Departamento)</p>
+                <span class="badge @(Model.Activo && Model.UsuarioActivo ? "badge-success" : "badge-secondary")">@(Model.Activo && Model.UsuarioActivo ? "Activo" : "Inactivo")</span>
+                <span class="badge badge-light ml-1">@Model.Rol</span>
+            </div>
+        </div>
+        <div class="employee-actions">
+            <a asp-controller="Employees" asp-action="Edit" asp-route-id="@Model.EmpleadoId" class="btn btn-primary"><i class="fa fa-edit mr-1"></i>Editar</a>
+            <a asp-controller="Employees" asp-action="Index" class="btn btn-outline-light"><i class="fa fa-arrow-left mr-1"></i>Volver</a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-4 mb-4">
+            <div class="employee-card p-4 h-100">
+                <h4 class="employee-card-title"><i class="fa fa-address-card mr-1"></i>Datos generales</h4>
+                <dl class="employee-dl">
+                    <dt>Correo</dt>
+                    <dd>@Model.Correo</dd>
+                    <dt>Teléfono</dt>
+                    <dd>@(string.IsNullOrWhiteSpace(Model.Telefono) ? "No indicado" : Model.Telefono)</dd>
+                    <dt>Dirección</dt>
+                    <dd>@(string.IsNullOrWhiteSpace(Model.Direccion) ? "No indicada" : Model.Direccion)</dd>
+                    <dt>Fecha contratación</dt>
+                    <dd>@(Model.FechaContratacion.HasValue ? Model.FechaContratacion.Value.ToString("dd/MM/yyyy") : "No indicada")</dd>
+                    <dt>Salario actual</dt>
+                    <dd class="employee-salary">₡@Model.Salario.ToString("N2")</dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="col-xl-8 mb-4">
+            <div class="employee-card p-4 h-100">
+                <h4 class="employee-card-title"><i class="fa fa-clipboard-list mr-1"></i>Responsabilidades</h4>
+                @if (string.IsNullOrWhiteSpace(Model.Responsabilidades))
+                {
+                    <p class="text-muted mb-0">No hay responsabilidades registradas.</p>
+                }
+                else
+                {
+                    <p class="employee-text-block">@Model.Responsabilidades</p>
+                }
+
+                <hr />
+                <h5 class="font-weight-bold">Observaciones internas</h5>
+                <p class="text-muted mb-0">@(string.IsNullOrWhiteSpace(Model.ObservacionesInternas) ? "Sin observaciones internas." : Model.ObservacionesInternas)</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-5 mb-4">
+            <div class="employee-card p-4 h-100">
+                <h4 class="employee-card-title"><i class="fa fa-tasks mr-1"></i>Asignar tarea</h4>
+                <form asp-controller="Employees" asp-action="CreateTask" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="EmpleadoId" value="@Model.EmpleadoId" />
+                    <div class="form-group">
+                        <label>Título</label>
+                        <input name="Titulo" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label>Descripción</label>
+                        <textarea name="Descripcion" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>Prioridad</label>
+                            <select name="Prioridad" class="form-control">
+                                <option>Baja</option>
+                                <option selected>Media</option>
+                                <option>Alta</option>
+                                <option>Urgente</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>Fecha límite</label>
+                            <input name="FechaLimite" class="form-control" type="date" />
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block"><i class="fa fa-plus mr-1"></i>Asignar tarea</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-xl-7 mb-4">
+            <div class="employee-card p-4 h-100">
+                <h4 class="employee-card-title"><i class="fa fa-list-check mr-1"></i>Tareas asignadas</h4>
+                @if (!Model.Tareas.Any())
+                {
+                    <p class="text-muted mb-0">No hay tareas asignadas.</p>
+                }
+                else
+                {
+                    <div class="employee-task-list">
+                        @foreach (var tarea in Model.Tareas)
+                        {
+                            <div class="employee-task-item">
+                                <div>
+                                    <strong>@tarea.Titulo</strong>
+                                    <p>@(string.IsNullOrWhiteSpace(tarea.Descripcion) ? "Sin descripción." : tarea.Descripcion)</p>
+                                    <span class="badge badge-light">@tarea.Prioridad</span>
+                                    <span class="badge badge-info">@tarea.Estado</span>
+                                    @if (tarea.FechaLimite.HasValue)
+                                    {
+                                        <span class="badge badge-warning">Límite: @tarea.FechaLimite.Value.ToString("dd/MM/yyyy")</span>
+                                    }
+                                </div>
+                                <form asp-controller="Employees" asp-action="UpdateTaskStatus" method="post" class="employee-task-status-form">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="TareaId" value="@tarea.TareaId" />
+                                    <input type="hidden" name="EmpleadoId" value="@Model.EmpleadoId" />
+                                    <select name="Estado" class="form-control form-control-sm">
+                                        <option selected="@(tarea.Estado == "Pendiente")">Pendiente</option>
+                                        <option selected="@(tarea.Estado == "En proceso")">En proceso</option>
+                                        <option selected="@(tarea.Estado == "Completada")">Completada</option>
+                                        <option selected="@(tarea.Estado == "Cancelada")">Cancelada</option>
+                                    </select>
+                                    <button type="submit" class="btn btn-sm btn-outline-dark">Actualizar</button>
+                                </form>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-7 mb-4">
+            <div class="employee-card p-4 h-100">
+                <h4 class="employee-card-title"><i class="fa fa-calendar-alt mr-1"></i>Solicitudes de días libres</h4>
+                @if (!Model.Solicitudes.Any())
+                {
+                    <p class="text-muted mb-0">El empleado no tiene solicitudes registradas.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Fechas</th>
+                                    <th>Tipo</th>
+                                    <th>Estado</th>
+                                    <th>Respuesta</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var solicitud in Model.Solicitudes)
+                                {
+                                    <tr>
+                                        <td>@solicitud.FechaInicio.ToString("dd/MM/yyyy") - @solicitud.FechaFin.ToString("dd/MM/yyyy")</td>
+                                        <td>@solicitud.TipoSolicitud</td>
+                                        <td><span class="badge badge-light">@solicitud.Estado</span></td>
+                                        <td>@(string.IsNullOrWhiteSpace(solicitud.RespuestaAdmin) ? "Pendiente" : solicitud.RespuestaAdmin)</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="col-xl-5 mb-4">
+            <div class="employee-card p-4 h-100">
+                <h4 class="employee-card-title"><i class="fa fa-money-check-alt mr-1"></i>Historial salarial</h4>
+                @if (!Model.HistorialSalarios.Any())
+                {
+                    <p class="text-muted mb-0">No hay movimientos salariales registrados.</p>
+                }
+                else
+                {
+                    <div class="employee-salary-history">
+                        @foreach (var item in Model.HistorialSalarios)
+                        {
+                            <div>
+                                <strong>₡@item.SalarioNuevo.ToString("N2")</strong>
+                                <span>@item.FechaCambio.ToString("dd/MM/yyyy HH:mm")</span>
+                                <small>@(string.IsNullOrWhiteSpace(item.Motivo) ? "Sin motivo indicado" : item.Motivo)</small>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

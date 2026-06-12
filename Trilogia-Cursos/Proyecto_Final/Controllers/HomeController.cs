@@ -91,13 +91,11 @@ namespace Proyecto_Final.Controllers
 
                 string asunto = $"Consulta Web - {model.Asunto}";
 
-                string contenido = $@"
-            <h2>Nueva consulta recibida</h2>
-            <p><strong>Nombre:</strong> {model.Nombre}</p>
-            <p><strong>Correo:</strong> {model.Correo}</p>
-            <p><strong>Asunto:</strong> {model.Asunto}</p>
-            <p><strong>Mensaje:</strong></p>
-            <p>{model.Mensaje}</p>";
+                string contenido = EmailTemplateBuilder.BuildContactNotificationEmail(
+                    model.Nombre,
+                    model.Correo,
+                    model.Asunto,
+                    model.Mensaje);
 
                 try
                 {

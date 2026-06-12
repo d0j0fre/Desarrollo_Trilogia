@@ -1,0 +1,125 @@
+@model Proyecto_Final.Models.Admin.EmployeeFilterViewModel
+@{
+    ViewData["Title"] = "Empleados";
+}
+
+@section Styles {
+    <link href="~/css/sprint3-employees.css" rel="stylesheet" />
+}
+
+<div class="container-fluid s3-page-shell employee-page py-4">
+    <div class="employee-hero mb-4">
+        <div>
+            <span class="s3-eyebrow"><i class="fa fa-id-badge"></i> Gestión interna</span>
+            <h1>Empleados</h1>
+            <p>Administrá datos laborales, puestos, salarios, tareas y solicitudes del personal.</p>
+        </div>
+        <a asp-controller="Employees" asp-action="Create" class="btn btn-primary btn-lg">
+            <i class="fa fa-user-plus mr-1"></i>Nuevo empleado
+        </a>
+    </div>
+
+    <form asp-controller="Employees" asp-action="Index" method="get" class="employee-filter mb-4">
+        <input type="text" name="buscar" value="@Model.Buscar" class="form-control" placeholder="Buscar por nombre, correo, puesto o departamento..." />
+        <select name="estado" class="form-control">
+            <option value="">Todos los estados</option>
+            <option value="Activo" selected="@(Model.Estado == "Activo")">Activos</option>
+            <option value="Inactivo" selected="@(Model.Estado == "Inactivo")">Inactivos</option>
+        </select>
+        <button type="submit" class="btn btn-dark"><i class="fa fa-search mr-1"></i>Buscar</button>
+        <a asp-controller="Employees" asp-action="LeaveRequests" class="btn btn-outline-primary"><i class="fa fa-calendar-check mr-1"></i>Solicitudes</a>
+    </form>
+
+    <div class="employee-card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 employee-table">
+                <thead>
+                    <tr>
+                        <th>Empleado</th>
+                        <th>Puesto</th>
+                        <th>Salario</th>
+                        <th>Seguimiento</th>
+                        <th>Estado</th>
+                        <th class="text-right">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Empleados.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-5">
+                                <i class="fa fa-users fa-2x mb-2 d-block"></i>
+                                No hay empleados para mostrar.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        foreach (var item in Model.Empleados)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="employee-person">
+                                        <div class="employee-avatar">@item.NombreCompleto.Substring(0, 1).ToUpper()</div>
+                                        <div>
+                                            <strong>@item.NombreCompleto</strong>
+                                            <span>@item.Correo</span>
+                                            @if (!string.IsNullOrWhiteSpace(item.Telefono))
+                                            {
+                                                <small><i class="fa fa-phone mr-1"></i>@item.Telefono</small>
+                                            }
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <strong>@item.Puesto</strong>
+                                    <span class="d-block text-muted">@(string.IsNullOrWhiteSpace(item.Departamento) ? "Sin departamento" : item.Departamento)</span>
+                                    <span class="badge badge-light mt-1">@item.Rol</span>
+                                </td>
+                                <td class="font-weight-bold">₡@item.Salario.ToString("N2")</td>
+                                <td>
+                                    <span class="badge badge-warning mr-1">@item.TareasPendientes tarea(s)</span>
+                                    <span class="badge badge-info">@item.SolicitudesPendientes solicitud(es)</span>
+                                </td>
+                                <td>
+                                    @if (item.Activo && item.UsuarioActivo)
+                                    {
+                                        <span class="badge badge-success">Activo</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-secondary">Inactivo</span>
+                                    }
+                                </td>
+                                <td class="text-right">
+                                    <div class="employee-actions">
+                                        <a asp-controller="Employees" asp-action="Details" asp-route-id="@item.EmpleadoId" class="btn btn-sm btn-outline-dark">
+                                            <i class="fa fa-eye mr-1"></i>Ver
+                                        </a>
+                                        <a asp-controller="Employees" asp-action="Edit" asp-route-id="@item.EmpleadoId" class="btn btn-sm btn-primary">
+                                            <i class="fa fa-edit mr-1"></i>Editar
+                                        </a>
+                                        <form asp-controller="Employees" asp-action="ToggleStatus" method="post" class="d-inline"
+                                              data-s3-confirm="¿Desea cambiar el estado de este empleado?"
+                                              data-s3-confirm-title="Confirmar estado de empleado"
+                                              data-s3-confirm-type="warning"
+                                              data-s3-confirm-ok="Sí, continuar"
+                                              data-s3-confirm-cancel="Cancelar">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="empleadoId" value="@item.EmpleadoId" />
+                                            <input type="hidden" name="buscar" value="@Model.Buscar" />
+                                            <input type="hidden" name="estado" value="@Model.Estado" />
+                                            <button type="submit" class="btn btn-sm @(item.Activo ? "btn-outline-danger" : "btn-outline-success")">
+                                                <i class="fa @(item.Activo ? "fa-ban" : "fa-check") mr-1"></i>@(item.Activo ? "Inactivar" : "Activar")
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

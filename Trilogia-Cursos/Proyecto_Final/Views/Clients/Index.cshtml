@@ -126,7 +126,11 @@
                                                 <a asp-controller="Clients" asp-action="Edit" asp-route-id="@item.UsuarioId" class="btn btn-sm btn-primary"><i class="fa fa-edit mr-1"></i>Editar</a>
 
                                                 <form asp-controller="Clients" asp-action="ToggleStatus" method="post" class="mb-0"
-                                                      onsubmit="return confirm('@(item.Activo ? "¿Desea inactivar este cliente? El cliente no podrá iniciar sesión ni realizar pedidos." : "¿Desea reactivar este cliente?")');">
+                                                      data-s3-confirm="@(item.Activo ? "¿Desea inactivar este cliente? El cliente no podrá iniciar sesión ni realizar pedidos." : "¿Desea reactivar este cliente?")"
+                                                      data-s3-confirm-title="Confirmar cambio de estado"
+                                                      data-s3-confirm-type="warning"
+                                                      data-s3-confirm-ok="Sí, continuar"
+                                                      data-s3-confirm-cancel="Cancelar">
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="usuarioId" value="@item.UsuarioId" />
                                                     <input type="hidden" name="buscar" value="@Model.Buscar" />

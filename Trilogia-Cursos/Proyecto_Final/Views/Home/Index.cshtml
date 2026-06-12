@@ -1,207 +1,205 @@
 @model Proyecto_Final.Models.Store.HomeFeaturedViewModel
 @{
     ViewData["Title"] = "Inicio";
+
+    var categorias = new[]
+    {
+        new { Nombre = "Whisky", Texto = "Etiquetas premium", Imagen = "~/img/CAT-Whisky.png", Icono = "fa-glass-cheers" },
+        new { Nombre = "Vino", Texto = "Tintos y espumantes", Imagen = "~/img/CAT-Vino.png", Icono = "fa-wine-bottle" },
+        new { Nombre = "Ron", Texto = "Nacionales e importados", Imagen = "~/img/CAT- Ron.png", Icono = "fa-cocktail" },
+        new { Nombre = "Tequila", Texto = "Blanco y reposado", Imagen = "~/img/CAT-Tequila.webp", Icono = "fa-star" },
+        new { Nombre = "Vodka", Texto = "Clásicos y sabores", Imagen = "~/img/CAT-Vodka.webp", Icono = "fa-snowflake" },
+        new { Nombre = "Cerveza", Texto = "Lager, artesanal y packs", Imagen = "~/img/CAT-Cerveza.png", Icono = "fa-beer" }
+    };
 }
 
 @section Styles {
     <link href="~/css/custom-theme.css" rel="stylesheet" />
+    <link href="~/css/sprint3-storefront-polish.css" rel="stylesheet" />
 }
 
-<div class="container-fluid mb-4">
-    <div class="row px-xl-5">
-        <div class="col-lg-8">
-            <div id="header-carousel" class="carousel slide carousel-fade mb-30 mb-lg-0" data-ride="carousel">
-                <ol class="carousel-indicators">
-                    <li data-target="#header-carousel" data-slide-to="0" class="active"></li>
-                    <li data-target="#header-carousel" data-slide-to="1"></li>
-                    <li data-target="#header-carousel" data-slide-to="2"></li>
-                </ol>
+<div class="s3-storefront-page">
+    <section class="s3-home-hero">
+        <div class="s3-home-hero__content">
+            <span class="s3-home-eyebrow">
+                <i class="fa fa-store"></i>
+                Licorera La Bodega
+            </span>
 
-                <div class="carousel-inner">
-                    <div class="carousel-item position-relative active home-carousel-item">
-                        <img class="position-absolute w-100 h-100 home-carousel-image"
-                             src="@Url.Content("~/img/whisky-premium.webp")"
-                             alt="Whisky premium">
-                        <div class="carousel-caption d-flex flex-column align-items-center justify-content-center">
-                            <div class="p-3 text-center carousel-caption-box">
-                                <h1 class="display-4 text-white font-weight-bold mb-3">Whisky Premium</h1>
-                                <p class="mx-md-5 px-4 mb-4">
-                                    Selección destacada de etiquetas premium con una presentación más limpia, legible y consistente.
-                                </p>
-                                <a asp-controller="Home" asp-action="Shop" asp-route-categoria="Whisky" class="btn btn-primary py-2 px-4">
-                                    Ver whiskies
-                                </a>
-                            </div>
-                        </div>
-                    </div>
+            <h1>Comprá licores, vinos y cervezas con una experiencia más clara y profesional.</h1>
 
-                    <div class="carousel-item position-relative home-carousel-item">
-                        <img class="position-absolute w-100 h-100 home-carousel-image"
-                             src="@Url.Content("~/img/CARR-Vino y espumantes.jpg")"
-                             alt="Vinos y espumantes">
-                        <div class="carousel-caption d-flex flex-column align-items-center justify-content-center">
-                            <div class="p-3 text-center carousel-caption-box">
-                                <h1 class="display-4 text-white font-weight-bold mb-3">Vinos y Espumantes</h1>
-                                <p class="mx-md-5 px-4 mb-4">
-                                    Variedad de opciones para celebraciones, regalos y consumo personal con mejor navegación por categorías.
-                                </p>
-                                <a asp-controller="Home" asp-action="Shop" asp-route-categoria="Vino" class="btn btn-primary py-2 px-4">
-                                    Explorar vinos
-                                </a>
-                            </div>
-                        </div>
-                    </div>
+            <p>
+                Catálogo organizado, productos destacados, control de inventario y una navegación pensada para clientes, vendedores y administradores.
+            </p>
 
-                    <div class="carousel-item position-relative home-carousel-item">
-                        <img class="position-absolute w-100 h-100 home-carousel-image"
-                             src="@Url.Content("~/img/CervesayLicores.webp")"
-                             alt="Cervezas y licores">
-                        <div class="carousel-caption d-flex flex-column align-items-center justify-content-center">
-                            <div class="p-3 text-center carousel-caption-box">
-                                <h1 class="display-4 text-white font-weight-bold mb-3">Cervezas y Licores</h1>
-                                <p class="mx-md-5 px-4 mb-4">
-                                    Catálogo organizado con acceso directo a productos activos, inventario y navegación mejorada.
-                                </p>
-                                <a asp-controller="Home" asp-action="Shop" class="btn btn-primary py-2 px-4">
-                                    Ir a la tienda
-                                </a>
-                            </div>
-                        </div>
-                    </div>
+            <div class="s3-home-hero__actions">
+                <a asp-controller="Home" asp-action="Shop" class="btn btn-primary btn-lg">
+                    <i class="fa fa-shopping-bag mr-1"></i>Ir a la tienda
+                </a>
+                <a asp-controller="Home" asp-action="Shop" asp-route-categoria="Whisky" class="btn btn-outline-light btn-lg">
+                    <i class="fa fa-glass-cheers mr-1"></i>Ver premium
+                </a>
+            </div>
+
+            <div class="s3-home-hero__metrics">
+                <div>
+                    <strong>6+</strong>
+                    <span>Categorías</span>
                 </div>
+                <div>
+                    <strong>24/7</strong>
+                    <span>Catálogo web</span>
+                </div>
+                <div>
+                    <strong>CR</strong>
+                    <span>Datos locales</span>
+                </div>
+            </div>
+        </div>
 
-                <a class="carousel-control-prev" href="#header-carousel" data-slide="prev">
-                    <div class="btn btn-dark carousel-control-btn">
-                        <span class="carousel-control-prev-icon mb-n2"></span>
+        <div class="s3-home-hero__visual">
+            <div class="s3-hero-product-card s3-hero-product-card--main">
+                <img src="@Url.Content("~/img/whisky-premium.webp")" alt="Whisky premium" />
+                <div>
+                    <span>Selección destacada</span>
+                    <h3>Whisky Premium</h3>
+                    <p>Productos con mejor presentación, stock visible y acceso directo al detalle.</p>
+                    <a asp-controller="Home" asp-action="Shop" asp-route-categoria="Whisky">Explorar categoría</a>
+                </div>
+            </div>
+
+            <div class="s3-hero-mini-grid">
+                <a asp-controller="Home" asp-action="Shop" asp-route-buscar="Combo" class="s3-hero-mini-card">
+                    <img src="@Url.Content("~/img/OFER-Combo.webp")" alt="Combos" />
+                    <div>
+                        <span>Promos</span>
+                        <strong>Combos</strong>
                     </div>
                 </a>
-                <a class="carousel-control-next" href="#header-carousel" data-slide="next">
-                    <div class="btn btn-dark carousel-control-btn">
-                        <span class="carousel-control-next-icon mb-n2"></span>
+
+                <a asp-controller="Home" asp-action="Shop" asp-route-categoria="Vino" class="s3-hero-mini-card">
+                    <img src="@Url.Content("~/img/CARR-Vino y espumantes.jpg")" alt="Vinos" />
+                    <div>
+                        <span>Celebraciones</span>
+                        <strong>Vinos</strong>
                     </div>
                 </a>
             </div>
         </div>
+    </section>
 
-        <div class="col-lg-4">
-            <div class="product-offer mb-30 offer-card">
-                <img class="img-fluid offer-image" src="@Url.Content("~/img/OFER-Combo.webp")" alt="Promociones">
-                <div class="offer-text">
-                    <h6 class="text-white text-uppercase">Promociones</h6>
-                    <h3 class="text-white mb-3">Combos del fin de semana</h3>
-                    <a asp-controller="Home" asp-action="Shop" asp-route-buscar="Combo" class="btn btn-primary">Ver promos</a>
-                </div>
+    <section class="s3-benefit-grid">
+        <article class="s3-benefit-card">
+            <i class="fa fa-shipping-fast"></i>
+            <div>
+                <h3>Entrega rápida</h3>
+                <p>Cobertura sujeta a disponibilidad y operación del negocio.</p>
             </div>
+        </article>
 
-            <div class="product-offer mb-30 offer-card">
-                <img class="img-fluid offer-image" src="@Url.Content("~/img/OFER-Premium.jpg")" alt="Selección premium">
-                <div class="offer-text">
-                    <h6 class="text-white text-uppercase">Selección</h6>
-                    <h3 class="text-white mb-3">Productos premium</h3>
-                    <a asp-controller="Home" asp-action="Shop" asp-route-categoria="Whisky" class="btn btn-primary">Explorar</a>
-                </div>
+        <article class="s3-benefit-card">
+            <i class="fa fa-lock"></i>
+            <div>
+                <h3>Compra segura</h3>
+                <p>Validación de stock y precios antes de finalizar pedidos.</p>
             </div>
-        </div>
-    </div>
-</div>
+        </article>
 
-<div class="container-fluid pt-2">
-    <div class="row px-xl-5 pb-3">
-        <div class="col-lg-3 col-md-6 col-sm-12 pb-3 d-flex">
-            <div class="d-flex align-items-center bg-light mb-4 w-100">
-                <h1 class="fa fa-shipping-fast text-primary m-0 mr-3"></h1>
-                <div>
-                    <h5 class="font-weight-semi-bold m-0">Entrega rápida</h5>
-                    <small class="text-body">Cobertura sujeta a disponibilidad</small>
-                </div>
+        <article class="s3-benefit-card">
+            <i class="fa fa-certificate"></i>
+            <div>
+                <h3>Inventario controlado</h3>
+                <p>Productos activos administrados desde el panel interno.</p>
             </div>
-        </div>
-        <div class="col-lg-3 col-md-6 col-sm-12 pb-3 d-flex">
-            <div class="d-flex align-items-center bg-light mb-4 w-100">
-                <h1 class="fas fa-lock text-primary m-0 mr-3"></h1>
-                <div>
-                    <h5 class="font-weight-semi-bold m-0">Pago seguro</h5>
-                    <small class="text-body">Proceso de compra confiable</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6 col-sm-12 pb-3 d-flex">
-            <div class="d-flex align-items-center bg-light mb-4 w-100">
-                <h1 class="fas fa-certificate text-primary m-0 mr-3"></h1>
-                <div>
-                    <h5 class="font-weight-semi-bold m-0">Productos originales</h5>
-                    <small class="text-body">Catálogo gestionado por inventario</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6 col-sm-12 pb-3 d-flex">
-            <div class="d-flex align-items-center bg-light mb-4 w-100">
-                <h1 class="fas fa-comments text-primary m-0 mr-3"></h1>
-                <div>
-                    <h5 class="font-weight-semi-bold m-0">Soporte</h5>
-                    <small class="text-body">Atención por consulta y pedidos</small>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+        </article>
 
-<div class="container-fluid pt-2">
-    <div class="row px-xl-5">
-        <div class="col-12">
-            <div class="section-title position-relative text-uppercase mb-4">
-                <h4 class="bg-secondary pr-3">Categorías destacadas</h4>
+        <article class="s3-benefit-card">
+            <i class="fa fa-headset"></i>
+            <div>
+                <h3>Soporte</h3>
+                <p>Consultas y pedidos conectados con la gestión administrativa.</p>
             </div>
-        </div>
-    </div>
+        </article>
+    </section>
 
-    <div class="row px-xl-5 pb-3">
-        <div class="col-lg-3 col-md-4 col-sm-6 pb-3 d-flex align-items-stretch">
-            <a class="text-decoration-none w-100" asp-controller="Home" asp-action="Shop" asp-route-categoria="Whisky"><div class="cat-item d-flex align-items-center justify-content-between h-100"><div class="d-flex align-items-center"><div class="overflow-hidden mr-3"><img class="img-fluid" src="@Url.Content("~/img/CAT-Whisky.png")" alt="Whisky"></div><div class="flex-fill"><h6 class="m-0">Whisky</h6><small class="text-body">Etiquetas premium</small></div></div><span class="btn btn-sm btn-primary ml-2">Ver</span></div></a>
+    <section class="s3-home-section">
+        <div class="s3-home-section__head">
+            <div>
+                <span class="s3-home-eyebrow"><i class="fa fa-layer-group"></i>Categorías</span>
+                <h2>Encontrá más rápido lo que buscás</h2>
+            </div>
+            <a asp-controller="Home" asp-action="Shop" class="btn btn-outline-dark">
+                Ver todo el catálogo
+            </a>
         </div>
-        <div class="col-lg-3 col-md-4 col-sm-6 pb-3 d-flex align-items-stretch">
-            <a class="text-decoration-none w-100" asp-controller="Home" asp-action="Shop" asp-route-categoria="Vino"><div class="cat-item d-flex align-items-center justify-content-between h-100"><div class="d-flex align-items-center"><div class="overflow-hidden mr-3"><img class="img-fluid" src="@Url.Content("~/img/CAT-Vino.png")" alt="Vino"></div><div class="flex-fill"><h6 class="m-0">Vino</h6><small class="text-body">Tinto, blanco y rosado</small></div></div><span class="btn btn-sm btn-primary ml-2">Ver</span></div></a>
-        </div>
-        <div class="col-lg-3 col-md-4 col-sm-6 pb-3 d-flex align-items-stretch">
-            <a class="text-decoration-none w-100" asp-controller="Home" asp-action="Shop" asp-route-categoria="Ron"><div class="cat-item d-flex align-items-center justify-content-between h-100"><div class="d-flex align-items-center"><div class="overflow-hidden mr-3"><img class="img-fluid" src="@Url.Content("~/img/CAT- Ron.png")" alt="Ron"></div><div class="flex-fill"><h6 class="m-0">Ron</h6><small class="text-body">Nacionales e importados</small></div></div><span class="btn btn-sm btn-primary ml-2">Ver</span></div></a>
-        </div>
-        <div class="col-lg-3 col-md-4 col-sm-6 pb-3 d-flex align-items-stretch">
-            <a class="text-decoration-none w-100" asp-controller="Home" asp-action="Shop" asp-route-categoria="Tequila"><div class="cat-item d-flex align-items-center justify-content-between h-100"><div class="d-flex align-items-center"><div class="overflow-hidden mr-3"><img class="img-fluid" src="@Url.Content("~/img/CAT-Tequila.webp")" alt="Tequila"></div><div class="flex-fill"><h6 class="m-0">Tequila</h6><small class="text-body">Blanco, reposado y añejo</small></div></div><span class="btn btn-sm btn-primary ml-2">Ver</span></div></a>
-        </div>
-        <div class="col-lg-3 col-md-4 col-sm-6 pb-3 d-flex align-items-stretch">
-            <a class="text-decoration-none w-100" asp-controller="Home" asp-action="Shop" asp-route-categoria="Vodka"><div class="cat-item d-flex align-items-center justify-content-between h-100"><div class="d-flex align-items-center"><div class="overflow-hidden mr-3"><img class="img-fluid" src="@Url.Content("~/img/CAT-Vodka.webp")" alt="Vodka"></div><div class="flex-fill"><h6 class="m-0">Vodka</h6><small class="text-body">Sabores y clásicos</small></div></div><span class="btn btn-sm btn-primary ml-2">Ver</span></div></a>
-        </div>
-        <div class="col-lg-3 col-md-4 col-sm-6 pb-3 d-flex align-items-stretch">
-            <a class="text-decoration-none w-100" asp-controller="Home" asp-action="Shop" asp-route-categoria="Cerveza"><div class="cat-item d-flex align-items-center justify-content-between h-100"><div class="d-flex align-items-center"><div class="overflow-hidden mr-3"><img class="img-fluid" src="@Url.Content("~/img/CAT-Cerveza.png")" alt="Cerveza"></div><div class="flex-fill"><h6 class="m-0">Cerveza</h6><small class="text-body">Lager, artesanal y packs</small></div></div><span class="btn btn-sm btn-primary ml-2">Ver</span></div></a>
-        </div>
-    </div>
-</div>
 
-<div class="container-fluid pt-3">
-    <div class="row px-xl-5"><div class="col-12"><div class="section-title position-relative text-uppercase mb-4"><h4 class="bg-secondary pr-3">Productos destacados</h4></div></div></div>
-    <div class="row px-xl-5 pb-3">
+        <div class="s3-category-grid">
+            @foreach (var categoria in categorias)
+            {
+                <a class="s3-category-card" asp-controller="Home" asp-action="Shop" asp-route-categoria="@categoria.Nombre">
+                    <div class="s3-category-card__image">
+                        <img src="@Url.Content(categoria.Imagen)" alt="@categoria.Nombre" />
+                    </div>
+                    <div>
+                        <span><i class="fa @categoria.Icono"></i>@categoria.Nombre</span>
+                        <p>@categoria.Texto</p>
+                    </div>
+                    <i class="fa fa-arrow-right s3-category-card__arrow"></i>
+                </a>
+            }
+        </div>
+    </section>
+
+    <section class="s3-home-section">
+        <div class="s3-home-section__head">
+            <div>
+                <span class="s3-home-eyebrow"><i class="fa fa-star"></i>Destacados</span>
+                <h2>Productos recomendados</h2>
+            </div>
+            <a asp-controller="Home" asp-action="Shop" class="btn btn-primary">
+                <i class="fa fa-store mr-1"></i>Comprar ahora
+            </a>
+        </div>
+
         @if (Model?.ProductosDestacados != null && Model.ProductosDestacados.Any())
         {
-            @foreach (var item in Model.ProductosDestacados.Take(4))
-            {
-                var imagen = string.IsNullOrWhiteSpace(item.ImagenUrl) ? Url.Content("~/img/whisky-premium.webp") : Url.Content(item.ImagenUrl);
-                var stockClass = item.Stock > 0 ? "ok" : "low";
-                <div class="col-lg-3 col-md-6 col-sm-6 pb-4 d-flex align-items-stretch">
-                    <div class="product-card-v2 w-100">
-                        <div class="product-card-v2__image-wrap"><img class="product-card-v2__image" src="@imagen" alt="@item.Nombre"></div>
-                        <div class="product-card-v2__body">
-                            <span class="product-card-v2__category">@item.Categoria</span>
-                            <h5 class="product-card-v2__title">@item.Nombre</h5>
-                            <p class="product-card-v2__desc">@item.Descripcion</p>
-                            <div class="product-card-v2__footer"><div><div class="product-card-v2__price">₡@item.Precio.ToString("N2")</div><small class="product-card-v2__stock @stockClass">@item.EstadoStock</small></div><a asp-controller="Home" asp-action="Detail" asp-route-id="@item.ProductoId" class="btn btn-primary btn-sm px-3">Ver</a></div>
+            <div class="s3-product-grid s3-product-grid--home">
+                @foreach (var item in Model.ProductosDestacados.Take(4))
+                {
+                    var imagen = string.IsNullOrWhiteSpace(item.ImagenUrl) ? Url.Content("~/img/whisky-premium.webp") : Url.Content(item.ImagenUrl);
+                    var stockClass = item.Stock <= 0 ? "out" : item.Stock <= 5 ? "low" : "ok";
+
+                    <article class="s3-product-card">
+                        <a asp-controller="Home" asp-action="Detail" asp-route-id="@item.ProductoId" class="s3-product-card__image">
+                            <img src="@imagen" alt="@item.Nombre" />
+                        </a>
+
+                        <div class="s3-product-card__body">
+                            <span class="s3-product-card__category">@item.Categoria</span>
+                            <h3>@item.Nombre</h3>
+                            <p>@(string.IsNullOrWhiteSpace(item.Descripcion) ? "Producto disponible dentro del catálogo activo." : item.Descripcion)</p>
+
+                            <div class="s3-product-card__footer">
+                                <div>
+                                    <strong>₡@item.Precio.ToString("N0")</strong>
+                                    <small class="s3-stock-badge @stockClass">@item.EstadoStock</small>
+                                </div>
+                                <a asp-controller="Home" asp-action="Detail" asp-route-id="@item.ProductoId" class="btn btn-primary btn-sm">
+                                    Ver
+                                </a>
+                            </div>
                         </div>
-                    </div>
-                </div>
-            }
+                    </article>
+                }
+            </div>
         }
         else
         {
-            <div class="col-12"><div class="alert alert-light border mb-0">No hay productos destacados configurados.</div></div>
+            <div class="s3-empty-state">
+                <i class="fa fa-box-open"></i>
+                <h3>No hay productos destacados configurados</h3>
+                <p>Podés asignar productos destacados desde el módulo de inventario.</p>
+            </div>
         }
-    </div>
+    </section>
 </div>

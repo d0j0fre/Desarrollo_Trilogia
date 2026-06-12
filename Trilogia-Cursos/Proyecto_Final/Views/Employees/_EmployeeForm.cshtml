@@ -1,0 +1,89 @@
+@model Proyecto_Final.Models.Admin.EmployeeFormViewModel
+
+<div class="row">
+    <div class="col-lg-6">
+        <h5 class="employee-form-section"><i class="fa fa-user mr-1"></i>Datos de usuario</h5>
+        <div class="form-group">
+            <label asp-for="NombreCompleto"></label>
+            <input asp-for="NombreCompleto" class="form-control" />
+            <span asp-validation-for="NombreCompleto" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="Correo"></label>
+            <input asp-for="Correo" class="form-control" />
+            <span asp-validation-for="Correo" class="text-danger"></span>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label asp-for="Telefono"></label>
+                <input asp-for="Telefono" class="form-control" />
+                <span asp-validation-for="Telefono" class="text-danger"></span>
+            </div>
+            <div class="form-group col-md-6">
+                <label asp-for="PerfilId"></label>
+                <select asp-for="PerfilId" asp-items="Model.RolesDisponibles" class="form-control">
+                    <option value="">Seleccione un rol</option>
+                </select>
+                <span asp-validation-for="PerfilId" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="form-group">
+            <label asp-for="Direccion"></label>
+            <input asp-for="Direccion" class="form-control" />
+            <span asp-validation-for="Direccion" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="Contrasena"></label>
+            <input asp-for="Contrasena" class="form-control" autocomplete="new-password" />
+            <small class="form-text text-muted">En edición podés dejarla vacía para conservar la contraseña actual.</small>
+            <span asp-validation-for="Contrasena" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <h5 class="employee-form-section"><i class="fa fa-briefcase mr-1"></i>Datos laborales</h5>
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label asp-for="Puesto"></label>
+                <input asp-for="Puesto" class="form-control" />
+                <span asp-validation-for="Puesto" class="text-danger"></span>
+            </div>
+            <div class="form-group col-md-6">
+                <label asp-for="Departamento"></label>
+                <input asp-for="Departamento" class="form-control" />
+                <span asp-validation-for="Departamento" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label asp-for="Salario"></label>
+                <input asp-for="Salario" class="form-control" type="number" min="0" step="0.01" />
+                <span asp-validation-for="Salario" class="text-danger"></span>
+            </div>
+            <div class="form-group col-md-6">
+                <label asp-for="FechaContratacion"></label>
+                <input asp-for="FechaContratacion" class="form-control" type="date" />
+                <span asp-validation-for="FechaContratacion" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="form-group">
+            <label asp-for="MotivoCambioSalario"></label>
+            <input asp-for="MotivoCambioSalario" class="form-control" placeholder="Ejemplo: aumento por desempeño, ajuste anual, corrección administrativa..." />
+            <span asp-validation-for="MotivoCambioSalario" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="Responsabilidades"></label>
+            <textarea asp-for="Responsabilidades" class="form-control" rows="4" placeholder="Responsabilidades principales del puesto..."></textarea>
+            <span asp-validation-for="Responsabilidades" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="ObservacionesInternas"></label>
+            <textarea asp-for="ObservacionesInternas" class="form-control" rows="3" placeholder="Notas internas visibles para administración..."></textarea>
+            <span asp-validation-for="ObservacionesInternas" class="text-danger"></span>
+        </div>
+        <div class="custom-control custom-switch mt-3">
+            <input asp-for="Activo" class="custom-control-input" />
+            <label asp-for="Activo" class="custom-control-label"></label>
+        </div>
+    </div>
+</div>

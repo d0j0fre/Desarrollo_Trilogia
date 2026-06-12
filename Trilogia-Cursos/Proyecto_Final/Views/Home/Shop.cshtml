@@ -1,97 +1,182 @@
 @model Proyecto_Final.Models.Store.ShopViewModel
 @{
     ViewData["Title"] = Model.Titulo;
+    var cantidadProductos = Model.Productos?.Count ?? 0;
+    var productosDisponibles = Model.Productos?.Count(p => p.Stock > 0) ?? 0;
+    var categoriasCount = Model.Categorias?.Count ?? 0;
 }
 
 @section Styles {
     <link href="~/css/custom-theme.css" rel="stylesheet" />
+    <link href="~/css/sprint3-storefront-polish.css" rel="stylesheet" />
 }
 
-<div class="container-fluid store-hero mb-4">
-    <div class="row px-xl-5 py-4">
-        <div class="col-12">
-            <div class="store-banner">
-                <div>
-                    <span class="store-eyebrow">Catálogo disponible</span>
-                    <h1 class="store-title">@Model.Titulo</h1>
-                    <p class="store-copy">
-                        Explora el inventario activo con una presentación clara, consistente y fácil de navegar.
-                    </p>
-                </div>
+<div class="s3-storefront-page s3-shop-page">
+    <section class="s3-shop-hero">
+        <div class="s3-shop-hero__content">
+            <span class="s3-home-eyebrow">
+                <i class="fa fa-shopping-bag"></i>
+                Catálogo disponible
+            </span>
 
-                <form asp-controller="Home" asp-action="Shop" method="get" class="store-search-form">
-                    <input type="hidden" name="categoria" value="@Model.Categoria" />
-                    <div class="input-group">
-                        <input type="text" name="buscar" value="@Model.Buscar" class="form-control" placeholder="Buscar producto..." />
-                        <div class="input-group-append">
-                            <button class="btn btn-primary px-4" type="submit"><i class="fa fa-search mr-2"></i>Buscar</button>
-                        </div>
-                    </div>
-                </form>
+            <h1>@Model.Titulo</h1>
+            <p>
+                Navegá por categorías, buscá productos específicos y agregá al carrito desde una vista más limpia y ordenada.
+            </p>
+
+            <div class="s3-shop-hero__stats">
+                <div>
+                    <strong>@cantidadProductos</strong>
+                    <span>Productos mostrados</span>
+                </div>
+                <div>
+                    <strong>@productosDisponibles</strong>
+                    <span>Disponibles</span>
+                </div>
+                <div>
+                    <strong>@categoriasCount</strong>
+                    <span>Categorías</span>
+                </div>
             </div>
         </div>
-    </div>
-</div>
 
-<div class="container-fluid pb-5">
-    <div class="row px-xl-5">
-        <div class="col-12 mb-4">
-            <div class="store-filters">
-                <a asp-controller="Home" asp-action="Shop" class="filter-chip @(string.IsNullOrWhiteSpace(Model.Categoria) ? "active" : "")">Todos</a>
+        <form asp-controller="Home" asp-action="Shop" method="get" class="s3-shop-search-card">
+            <input type="hidden" name="categoria" value="@Model.Categoria" />
+            <label for="buscar" class="s3-shop-search-card__label">Buscar producto</label>
+            <div class="s3-shop-search-card__group">
+                <input id="buscar" type="text" name="buscar" value="@Model.Buscar" class="form-control" placeholder="Ejemplo: whisky, vino, combo..." />
+                <button class="btn btn-primary" type="submit">
+                    <i class="fa fa-search mr-1"></i>Buscar
+                </button>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(Model.Buscar) || !string.IsNullOrWhiteSpace(Model.Categoria))
+            {
+                <a asp-controller="Home" asp-action="Shop" class="s3-clear-filter">
+                    <i class="fa fa-times-circle mr-1"></i>Limpiar filtros
+                </a>
+            }
+        </form>
+    </section>
+
+    <section class="s3-shop-layout">
+        <aside class="s3-shop-sidebar">
+            <div class="s3-shop-sidebar__head">
+                <i class="fa fa-filter"></i>
+                <div>
+                    <h3>Filtros</h3>
+                    <p>Seleccioná una categoría</p>
+                </div>
+            </div>
+
+            <div class="s3-shop-filter-list">
+                <a asp-controller="Home" asp-action="Shop" class="s3-shop-filter @(string.IsNullOrWhiteSpace(Model.Categoria) ? "active" : "")">
+                    <span><i class="fa fa-border-all"></i>Todos</span>
+                    <i class="fa fa-angle-right"></i>
+                </a>
+
                 @foreach (var categoria in Model.Categorias)
                 {
-                    <a asp-controller="Home" asp-action="Shop" asp-route-categoria="@categoria" class="filter-chip @(string.Equals(Model.Categoria, categoria, StringComparison.OrdinalIgnoreCase) ? "active" : "")">@categoria</a>
+                    <a asp-controller="Home" asp-action="Shop" asp-route-categoria="@categoria" class="s3-shop-filter @(string.Equals(Model.Categoria, categoria, StringComparison.OrdinalIgnoreCase) ? "active" : "")">
+                        <span><i class="fa fa-tag"></i>@categoria</span>
+                        <i class="fa fa-angle-right"></i>
+                    </a>
                 }
             </div>
-        </div>
-    </div>
+        </aside>
 
-    <div class="row px-xl-5">
-        @if (Model.Productos == null || Model.Productos.Count == 0)
-        {
-            <div class="col-12"><div class="store-empty"><h4>No se encontraron productos</h4><p>Prueba con otra categoría o con otro texto en la búsqueda.</p></div></div>
-        }
-        else
-        {
-            @foreach (var producto in Model.Productos)
+        <div class="s3-shop-content">
+            <div class="s3-shop-toolbar">
+                <div>
+                    <span>Resultado</span>
+                    <strong>@cantidadProductos producto(s)</strong>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(Model.Categoria))
+                {
+                    <span class="s3-active-pill">
+                        <i class="fa fa-tag mr-1"></i>@Model.Categoria
+                    </span>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(Model.Buscar))
+                {
+                    <span class="s3-active-pill">
+                        <i class="fa fa-search mr-1"></i>@Model.Buscar
+                    </span>
+                }
+            </div>
+
+            @if (Model.Productos == null || Model.Productos.Count == 0)
             {
-                var claseStock = producto.Stock <= 0 ? "out" : producto.Stock <= 5 ? "low" : "ok";
-                var imagen = string.IsNullOrWhiteSpace(producto.ImagenUrl) ? Url.Content("~/img/whisky-premium.webp") : Url.Content(producto.ImagenUrl);
-                <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6 pb-4 d-flex align-items-stretch">
-                    <div class="product-card-v2 w-100">
-                        <div class="product-card-v2__image-wrap"><img src="@imagen" alt="@producto.Nombre" class="product-card-v2__image" /></div>
-                        <div class="product-card-v2__body d-flex flex-column">
-                            <span class="product-card-v2__category">@producto.Categoria</span>
-                            <h5 class="product-card-v2__title">@producto.Nombre</h5>
-                            <p class="product-card-v2__desc">@(string.IsNullOrWhiteSpace(producto.Descripcion) ? "Producto disponible dentro del catálogo activo." : producto.Descripcion)</p>
-                            <div class="mt-auto">
-                                <div class="product-card-v2__footer mb-3">
+                <div class="s3-empty-state s3-empty-state--shop">
+                    <i class="fa fa-search"></i>
+                    <h3>No se encontraron productos</h3>
+                    <p>Probá con otra categoría o con otro texto de búsqueda.</p>
+                    <a asp-controller="Home" asp-action="Shop" class="btn btn-primary">
+                        Ver todo el catálogo
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="s3-product-grid">
+                    @foreach (var producto in Model.Productos)
+                    {
+                        var claseStock = producto.Stock <= 0 ? "out" : producto.Stock <= 5 ? "low" : "ok";
+                        var imagen = string.IsNullOrWhiteSpace(producto.ImagenUrl) ? Url.Content("~/img/whisky-premium.webp") : Url.Content(producto.ImagenUrl);
+
+                        <article class="s3-product-card">
+                            <a asp-controller="Home" asp-action="Detail" asp-route-id="@producto.ProductoId" class="s3-product-card__image">
+                                <img src="@imagen" alt="@producto.Nombre" />
+                            </a>
+
+                            <div class="s3-product-card__body">
+                                <div class="s3-product-card__topline">
+                                    <span class="s3-product-card__category">@producto.Categoria</span>
+                                    <small class="s3-stock-dot @claseStock"></small>
+                                </div>
+
+                                <h3>@producto.Nombre</h3>
+                                <p>@(string.IsNullOrWhiteSpace(producto.Descripcion) ? "Producto disponible dentro del catálogo activo." : producto.Descripcion)</p>
+
+                                <div class="s3-product-card__footer">
                                     <div>
-                                        <div class="product-card-v2__price">₡@producto.Precio.ToString("N0")</div>
-                                        <small class="product-card-v2__stock @claseStock">@(producto.Stock <= 0 ? "Agotado" : producto.Stock <= 5 ? "Stock bajo" : "Disponible") · Stock: @producto.Stock</small>
+                                        <strong>₡@producto.Precio.ToString("N0")</strong>
+                                        <small class="s3-stock-badge @claseStock">
+                                            @(producto.Stock <= 0 ? "Agotado" : producto.Stock <= 5 ? "Stock bajo" : "Disponible") · Stock: @producto.Stock
+                                        </small>
                                     </div>
                                 </div>
-                                <div class="d-flex flex-wrap">
-                                    <a asp-controller="Home" asp-action="Detail" asp-route-id="@producto.ProductoId" class="btn btn-primary btn-sm mr-2 mb-2">Ver detalle</a>
+
+                                <div class="s3-product-card__actions">
+                                    <a asp-controller="Home" asp-action="Detail" asp-route-id="@producto.ProductoId" class="btn btn-outline-dark btn-sm">
+                                        <i class="fa fa-eye mr-1"></i>Detalle
+                                    </a>
+
                                     @if (producto.Stock > 0)
                                     {
-                                        <form asp-controller="Cart" asp-action="Add" method="post" class="mb-2">
+                                        <form asp-controller="Cart" asp-action="Add" method="post">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="productoId" value="@producto.ProductoId" />
                                             <input type="hidden" name="cantidad" value="1" />
-                                            <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-shopping-cart mr-1"></i>Comprar</button>
+                                            <button type="submit" class="btn btn-primary btn-sm">
+                                                <i class="fa fa-shopping-cart mr-1"></i>Agregar
+                                            </button>
                                         </form>
                                     }
                                     else
                                     {
-                                        <button type="button" class="btn btn-secondary btn-sm mb-2" disabled>Agotado</button>
+                                        <button type="button" class="btn btn-secondary btn-sm" disabled>
+                                            Agotado
+                                        </button>
                                     }
                                 </div>
                             </div>
-                        </div>
-                    </div>
+                        </article>
+                    }
                 </div>
             }
-        }
-    </div>
+        </div>
+    </section>
 </div>

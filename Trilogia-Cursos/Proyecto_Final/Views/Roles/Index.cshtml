@@ -112,7 +112,11 @@
                                                 else
                                                 {
                                                     <form asp-controller="Roles" asp-action="ToggleStatus" method="post" class="mb-0"
-                                                          onsubmit="return confirm('¿Desea cambiar el estado de este rol?');">
+                                                          data-s3-confirm="¿Desea cambiar el estado de este rol?"
+                                                          data-s3-confirm-title="Confirmar cambio de rol"
+                                                          data-s3-confirm-type="warning"
+                                                          data-s3-confirm-ok="Sí, cambiar"
+                                                          data-s3-confirm-cancel="Cancelar">
                                                         @Html.AntiForgeryToken()
                                                         <input type="hidden" name="perfilId" value="@item.PerfilId" />
                                                         <input type="hidden" name="buscar" value="@buscar" />
