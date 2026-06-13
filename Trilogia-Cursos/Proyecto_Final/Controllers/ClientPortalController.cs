@@ -60,6 +60,40 @@ namespace Proyecto_Final.Controllers
             return View(MapOrderDetail(pedido, hasInvoice));
         }
 
+        [HttpGet]
+        [SessionAuthorize("Cliente")]
+        public async Task<IActionResult> Invoice(int id)
+        {
+            if (id <= 0)
+            {
+                TempData["ErrorMessage"] = "No fue posible cargar el comprobante solicitado.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var usuarioId = HttpContext.Session.GetInt32("UserId") ?? 0;
+            if (usuarioId <= 0)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            try
+            {
+                var comprobante = await _adminDbService.GetClientInvoiceByOrderAsync(id, usuarioId);
+                if (comprobante == null)
+                {
+                    TempData["ErrorMessage"] = "No fue posible cargar el comprobante solicitado.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                return View(comprobante);
+            }
+            catch (Exception)
+            {
+                TempData["ErrorMessage"] = "No fue posible cargar el comprobante en este momento. Intente nuevamente.";
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         [SessionAuthorize("Cliente")]

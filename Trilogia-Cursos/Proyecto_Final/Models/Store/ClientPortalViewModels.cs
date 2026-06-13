@@ -64,4 +64,26 @@ namespace Proyecto_Final.Models.Store
         public decimal PrecioUnitario { get; set; }
         public decimal Subtotal { get; set; }
     }
+
+    public class ClientPortalInvoiceViewModel
+    {
+        public int PedidoId { get; set; }
+        public string NumeroFactura { get; set; } = string.Empty;
+        public string Cliente { get; set; } = string.Empty;
+        public string Correo { get; set; } = string.Empty;
+        public DateTime FechaFactura { get; set; }
+        public decimal Subtotal { get; set; }
+        public decimal Impuesto { get; set; }
+        public decimal Total { get; set; }
+        public string Estado { get; set; } = string.Empty;
+        public List<ClientPortalInvoiceLineViewModel> Lineas { get; set; } = new();
+    }
+
+    public class ClientPortalInvoiceLineViewModel
+    {
+        public string Producto { get; set; } = string.Empty;
+        public int Cantidad { get; set; }
+        public decimal PrecioUnitario { get; set; }
+        public decimal Subtotal { get; set; }
+    }
 }
