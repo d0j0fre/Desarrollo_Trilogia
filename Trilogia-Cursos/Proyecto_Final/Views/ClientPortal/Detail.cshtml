@@ -70,7 +70,27 @@
                 <h3 class="mb-1">@Model.Lineas.Sum(x => x.Cantidad)</h3>
                 <p class="text-muted mb-3">Unidad(es)</p>
                 <h4 class="mb-1">&#8353;@Model.Total.ToString("N2")</h4>
-                <p class="text-muted mb-0">Total del pedido</p>
+                <p class="text-muted mb-3">Total del pedido</p>
+
+                @if (Model.CanCancel)
+                {
+                    <form asp-controller="ClientPortal" asp-action="Cancel" method="post"
+                          data-s3-confirm="Desea cancelar este pedido pendiente?"
+                          data-s3-confirm-title="Confirmar cancelacion"
+                          data-s3-confirm-type="warning"
+                          data-s3-confirm-ok="Si, cancelar"
+                          data-s3-confirm-cancel="Volver">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.PedidoId" />
+                        <button type="submit" class="btn btn-danger btn-block">
+                            Cancelar pedido
+                        </button>
+                    </form>
+                }
+                else
+                {
+                    <p class="text-muted mb-0">@Model.CancelStatusMessage</p>
+                }
             </div>
         </div>
     </div>

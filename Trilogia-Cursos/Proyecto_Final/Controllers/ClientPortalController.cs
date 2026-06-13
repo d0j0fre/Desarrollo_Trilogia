@@ -56,7 +56,50 @@ namespace Proyecto_Final.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            return View(MapOrderDetail(pedido));
+            var hasInvoice = await _adminDbService.OrderHasInvoiceAsync(id);
+            return View(MapOrderDetail(pedido, hasInvoice));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [SessionAuthorize("Cliente")]
+        public async Task<IActionResult> Cancel(int id)
+        {
+            if (id <= 0)
+            {
+                TempData["ErrorMessage"] = "No fue posible cancelar el pedido solicitado.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var usuarioId = HttpContext.Session.GetInt32("UserId") ?? 0;
+            if (usuarioId <= 0)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            try
+            {
+                var cancelled = await _adminDbService.CancelClientPendingOrderAsync(id, usuarioId);
+
+                if (!cancelled)
+                {
+                    TempData["ErrorMessage"] = "No fue posible cancelar el pedido solicitado.";
+                    return RedirectToAction(nameof(Detail), new { id });
+                }
+
+                await RegistrarAuditoriaAsync(
+                    "Cancelar pedido",
+                    "Portal cliente",
+                    $"El cliente cancelo el pedido #{id} desde el portal.");
+
+                TempData["SuccessMessage"] = "Pedido cancelado correctamente.";
+            }
+            catch (Exception)
+            {
+                TempData["ErrorMessage"] = "No fue posible cancelar el pedido en este momento. Intente nuevamente.";
+            }
+
+            return RedirectToAction(nameof(Detail), new { id });
         }
 
         private async Task<ClientPortalCreditSummaryViewModel?> TryGetCreditSummaryAsync(int usuarioId)
@@ -116,8 +159,24 @@ namespace Proyecto_Final.Controllers
             };
         }
 
-        private static ClientPortalOrderDetailViewModel MapOrderDetail(OrderDetailViewModel pedido)
+        private async Task RegistrarAuditoriaAsync(string accion, string modulo, string descripcion)
         {
+            await _adminDbService.CreateAuditLogAsync(
+                HttpContext.Session.GetInt32("UserId"),
+                HttpContext.Session.GetString("UserFullName"),
+                HttpContext.Session.GetString("UserEmail"),
+                HttpContext.Session.GetString("UserRole"),
+                accion,
+                modulo,
+                descripcion,
+                HttpContext.Connection.RemoteIpAddress?.ToString(),
+                Request.Headers.UserAgent.ToString());
+        }
+
+        private static ClientPortalOrderDetailViewModel MapOrderDetail(OrderDetailViewModel pedido, bool hasInvoice)
+        {
+            var canCancel = string.Equals(pedido.Estado, "Pendiente", StringComparison.OrdinalIgnoreCase) && !hasInvoice;
+
             return new ClientPortalOrderDetailViewModel
             {
                 PedidoId = pedido.PedidoId,
@@ -127,6 +186,11 @@ namespace Proyecto_Final.Controllers
                 DireccionEntrega = pedido.DireccionEntrega,
                 Total = pedido.Total,
                 Observaciones = pedido.Observaciones,
+                HasInvoice = hasInvoice,
+                CanCancel = canCancel,
+                CancelStatusMessage = canCancel
+                    ? "Puede cancelar este pedido mientras permanezca pendiente y sin factura asociada."
+                    : "Este pedido no permite cancelacion desde el portal.",
                 Lineas = pedido.Detalles.Select(linea => new ClientPortalOrderLineViewModel
                 {
                     Producto = linea.Producto,

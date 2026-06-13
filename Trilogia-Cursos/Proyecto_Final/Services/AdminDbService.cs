@@ -415,6 +415,39 @@ namespace Proyecto_Final.Services
             await command.ExecuteNonQueryAsync();
         }
 
+        public async Task<bool> CancelClientPendingOrderAsync(int pedidoId, int usuarioId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Client_CancelPendingOrder", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add("@PedidoId", SqlDbType.Int).Value = pedidoId;
+            command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId;
+
+            await connection.OpenAsync();
+            var result = await command.ExecuteScalarAsync();
+            return result != null && result != DBNull.Value && Convert.ToBoolean(result);
+        }
+
+        public async Task<bool> OrderHasInvoiceAsync(int pedidoId)
+        {
+            const string sql = @"
+                SELECT CASE WHEN EXISTS
+                (
+                    SELECT 1
+                    FROM dbo.Facturas
+                    WHERE PedidoId = @PedidoId
+                )
+                THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END";
+
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand(sql, connection);
+            command.Parameters.Add("@PedidoId", SqlDbType.Int).Value = pedidoId;
+
+            await connection.OpenAsync();
+            var result = await command.ExecuteScalarAsync();
+            return result != null && result != DBNull.Value && Convert.ToBoolean(result);
+        }
+
         public async Task<SalesReportViewModel> GetSalesReportAsync()
         {
             var model = new SalesReportViewModel();

@@ -51,6 +51,9 @@ namespace Proyecto_Final.Models.Store
         public string? DireccionEntrega { get; set; }
         public decimal Total { get; set; }
         public string? Observaciones { get; set; }
+        public bool HasInvoice { get; set; }
+        public bool CanCancel { get; set; }
+        public string CancelStatusMessage { get; set; } = string.Empty;
         public List<ClientPortalOrderLineViewModel> Lineas { get; set; } = new();
     }
 

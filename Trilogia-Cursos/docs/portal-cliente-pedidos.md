@@ -7,14 +7,18 @@
 - Bloque de credito disponible cuando existe informacion de credito.
 - Historial de pedidos del cliente autenticado.
 - Detalle de pedido con estado, entrega, direccion, total y lineas de productos.
+- Cancelacion segura de pedidos propios en estado `Pendiente` y sin factura asociada.
 - Enlace `Mis pedidos` en la navegacion para clientes logueados.
 - Enlace a `Mis pedidos` desde la confirmacion de compra.
 
-## Limitaciones
+## Reglas de cancelacion
 
-- La cancelacion de pedidos no se implemento en esta fase.
-- Motivo: aunque se puede validar que el pedido pertenece al usuario y esta en estado `Pendiente`, el servicio actual no expone una validacion segura de factura asociada por `PedidoId`.
-- Recomendacion: agregar un procedimiento dedicado de cancelacion de cliente que valide pertenencia, estado pendiente, ausencia de factura y transicion unica a `Cancelado`.
+- El pedido debe pertenecer al `UserId` de la sesion.
+- El estado debe ser `Pendiente`.
+- No debe existir una factura asociada en `Facturas`.
+- La transicion permitida es unicamente `Pendiente` a `Cancelado`.
+- No se devuelve stock, porque actualmente la creacion del pedido valida disponibilidad pero no descuenta inventario.
+- La validacion principal vive en `dbo.sp_Client_CancelPendingOrder`.
 
 ## Pruebas sugeridas
 
@@ -22,5 +26,8 @@
 2. Confirmar que solo aparecen pedidos del usuario autenticado.
 3. Abrir el detalle de un pedido propio desde `Mis pedidos`.
 4. Intentar acceder por URL directa a un pedido de otro usuario y confirmar que redirige a `Mis pedidos`.
-5. Crear un pedido desde carrito y usar el enlace `Mis pedidos` desde la confirmacion.
-6. Iniciar sesion como administrador o empleado e intentar abrir `ClientPortal/Index`; debe redirigir a una vista segura.
+5. Cancelar un pedido propio pendiente y confirmar que cambia a `Cancelado`.
+6. Intentar cancelar un pedido propio no pendiente y confirmar que no cambia.
+7. Intentar cancelar un pedido facturado y confirmar que no cambia.
+8. Crear un pedido desde carrito y usar el enlace `Mis pedidos` desde la confirmacion.
+9. Iniciar sesion como administrador o empleado e intentar abrir `ClientPortal/Index`; debe redirigir a una vista segura.
