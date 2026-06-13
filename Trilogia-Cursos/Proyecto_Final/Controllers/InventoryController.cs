@@ -8,6 +8,15 @@ namespace Proyecto_Final.Controllers
     [AdminAuthorize]
     public class InventoryController : Controller
     {
+        private const long MaxProductImageBytes = 2 * 1024 * 1024;
+        private static readonly IReadOnlyDictionary<string, string[]> PermittedImageContentTypes = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
+        {
+            [".jpg"] = new[] { "image/jpeg" },
+            [".jpeg"] = new[] { "image/jpeg" },
+            [".png"] = new[] { "image/png" },
+            [".webp"] = new[] { "image/webp" }
+        };
+
         private readonly AdminDbService _adminDbService;
         private readonly IWebHostEnvironment _environment;
 
@@ -45,7 +54,17 @@ namespace Proyecto_Final.Controllers
 
             var usuarioId = HttpContext.Session.GetInt32("UserId") ?? 0;
             var usuarioNombre = HttpContext.Session.GetString("UserFullName") ?? "Administrador";
-            model.ImagenUrl = await SaveProductImageAsync(model.ImagenArchivo, model.ImagenUrl);
+
+            try
+            {
+                model.ImagenUrl = await SaveProductImageAsync(model.ImagenArchivo, model.ImagenUrl);
+            }
+            catch (InvalidOperationException ex)
+            {
+                ModelState.AddModelError(nameof(model.ImagenArchivo), ex.Message);
+                return View(model);
+            }
+
             await _adminDbService.CreateProductAsync(model, usuarioId, usuarioNombre);
 
             await RegistrarAuditoriaAsync(
@@ -75,7 +94,17 @@ namespace Proyecto_Final.Controllers
 
             var usuarioId = HttpContext.Session.GetInt32("UserId") ?? 0;
             var usuarioNombre = HttpContext.Session.GetString("UserFullName") ?? "Administrador";
-            model.ImagenUrl = await SaveProductImageAsync(model.ImagenArchivo, model.ImagenUrl);
+
+            try
+            {
+                model.ImagenUrl = await SaveProductImageAsync(model.ImagenArchivo, model.ImagenUrl);
+            }
+            catch (InvalidOperationException ex)
+            {
+                ModelState.AddModelError(nameof(model.ImagenArchivo), ex.Message);
+                return View(model);
+            }
+
             await _adminDbService.UpdateProductAsync(model, usuarioId, usuarioNombre);
 
             await RegistrarAuditoriaAsync(
@@ -155,9 +184,23 @@ namespace Proyecto_Final.Controllers
         private async Task<string?> SaveProductImageAsync(IFormFile? archivo, string? currentImageUrl)
         {
             if (archivo == null || archivo.Length == 0) return string.IsNullOrWhiteSpace(currentImageUrl) ? currentImageUrl : currentImageUrl.Trim();
-            var permittedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+
+            if (archivo.Length > MaxProductImageBytes)
+            {
+                throw new InvalidOperationException("La imagen supera el tamano maximo permitido de 2 MB.");
+            }
+
             var extension = Path.GetExtension(archivo.FileName).ToLowerInvariant();
-            if (string.IsNullOrWhiteSpace(extension) || !permittedExtensions.Contains(extension)) throw new InvalidOperationException("La imagen debe estar en formato JPG, JPEG, PNG o WEBP.");
+            if (string.IsNullOrWhiteSpace(extension) || !PermittedImageContentTypes.TryGetValue(extension, out var allowedContentTypes))
+            {
+                throw new InvalidOperationException("La imagen debe estar en formato JPG, JPEG, PNG o WEBP.");
+            }
+
+            if (string.IsNullOrWhiteSpace(archivo.ContentType) || !allowedContentTypes.Contains(archivo.ContentType, StringComparer.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException("El tipo de archivo de la imagen no es valido.");
+            }
+
             var uploadsRoot = Path.Combine(_environment.WebRootPath, "uploads", "productos");
             Directory.CreateDirectory(uploadsRoot);
             var fileName = $"producto-{Guid.NewGuid():N}{extension}";

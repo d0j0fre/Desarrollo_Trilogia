@@ -112,9 +112,9 @@ namespace Proyecto_Final.Controllers
 
                 TempData["SuccessMessage"] = "Tu mensaje fue enviado correctamente.";
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                TempData["ErrorMessage"] = $"No fue posible registrar la consulta: {ex.Message}";
+                TempData["ErrorMessage"] = "No fue posible registrar la consulta en este momento. Intente nuevamente.";
             }
 
             return RedirectToAction(nameof(Contact));

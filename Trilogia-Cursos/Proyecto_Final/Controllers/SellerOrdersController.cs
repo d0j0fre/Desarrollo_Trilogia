@@ -62,9 +62,9 @@ namespace Proyecto_Final.Controllers
                 TempData["SuccessMessage"] = $"Pedido móvil #{pedidoId} registrado correctamente.";
                 return RedirectToAction("Detail", "OrdersAdmin", new { id = pedidoId });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                ModelState.AddModelError(string.Empty, ex.Message);
+                ModelState.AddModelError(string.Empty, "No fue posible registrar el pedido en este momento. Intente nuevamente.");
                 return View("Index", await BuildCreateModelAsync(model));
             }
         }
@@ -176,12 +176,12 @@ namespace Proyecto_Final.Controllers
                     RedirectUrl = Url.Action("Detail", "OrdersAdmin", new { id = pedidoId }) ?? string.Empty
                 });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return Json(new SellerOfflineOrderSyncResponseViewModel
                 {
                     Success = false,
-                    Message = ex.Message,
+                    Message = "No fue posible sincronizar el pedido offline en este momento. Intente nuevamente.",
                     PedidoOfflineGuid = request.PedidoOfflineGuid
                 });
             }

@@ -60,9 +60,9 @@ namespace Proyecto_Final.Controllers
 
                 return RedirectToAction(nameof(Edit));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                TempData["ErrorMessage"] = ex.Message;
+                TempData["ErrorMessage"] = "No fue posible actualizar el perfil en este momento. Intente nuevamente.";
                 return View();
             }
         }
