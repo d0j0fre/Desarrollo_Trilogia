@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Proyecto_Final.Filters;
+using Proyecto_Final.Models;
 using Proyecto_Final.Services;
 
 namespace Proyecto_Final.Controllers
@@ -15,7 +16,7 @@ namespace Proyecto_Final.Controllers
         }
 
         [HttpGet]
-        public IActionResult Edit()
+        public async Task<IActionResult> Edit()
         {
             var usuarioId = HttpContext.Session.GetInt32("UserId");
 
@@ -24,15 +25,19 @@ namespace Proyecto_Final.Controllers
                 return RedirectToAction("Login", "Account");
             }
 
-            ViewBag.NombreCompleto = HttpContext.Session.GetString("UserFullName");
-            ViewBag.Correo = HttpContext.Session.GetString("UserEmail");
+            var model = await _accountDbService.GetProfileAsync(usuarioId.Value);
+            if (model == null)
+            {
+                TempData["ErrorMessage"] = "No fue posible cargar la informacion del perfil.";
+                return RedirectToAction("Index", "Home");
+            }
 
-            return View();
+            return View(model);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(string fullName, string email)
+        public async Task<IActionResult> Edit(ProfileEditViewModel model)
         {
             var usuarioId = HttpContext.Session.GetInt32("UserId");
 
@@ -41,31 +46,48 @@ namespace Proyecto_Final.Controllers
                 return RedirectToAction("Login", "Account");
             }
 
-            if (string.IsNullOrWhiteSpace(fullName) ||
-                string.IsNullOrWhiteSpace(email))
+            model.NombreCompleto = model.NombreCompleto?.Trim() ?? string.Empty;
+            model.Correo = model.Correo?.Trim() ?? string.Empty;
+            model.Telefono = string.IsNullOrWhiteSpace(model.Telefono) ? null : model.Telefono.Trim();
+            model.Direccion = string.IsNullOrWhiteSpace(model.Direccion) ? null : model.Direccion.Trim();
+
+            ModelState.Clear();
+            TryValidateModel(model);
+
+            if (!ModelState.IsValid)
             {
-                TempData["ErrorMessage"] = "Todos los campos son obligatorios.";
-                return View();
+                TempData["ErrorMessage"] = "Revise los datos ingresados e intente nuevamente.";
+                return View(model);
             }
 
             try
             {
-                await _accountDbService.UpdateProfileAsync(
-                    usuarioId.Value,
-                    fullName,
-                    email);
+                if (await _accountDbService.EmailExistsForOtherUserAsync(model.Correo, usuarioId.Value))
+                {
+                    ModelState.AddModelError(nameof(model.Correo), "El correo indicado ya esta en uso.");
+                    TempData["ErrorMessage"] = "No fue posible actualizar el perfil con ese correo.";
+                    return View(model);
+                }
 
-                HttpContext.Session.SetString("UserFullName", fullName);
-                HttpContext.Session.SetString("UserEmail", email);
+                await _accountDbService.UpdateProfileAsync(usuarioId.Value, model);
+
+                HttpContext.Session.SetString("UserFullName", model.NombreCompleto);
+                HttpContext.Session.SetString("UserEmail", model.Correo);
 
                 TempData["SuccessMessage"] = "Perfil actualizado correctamente.";
 
                 return RedirectToAction(nameof(Edit));
             }
+            catch (InvalidOperationException ex) when (ex.Message == "DuplicateEmail")
+            {
+                ModelState.AddModelError(nameof(model.Correo), "El correo indicado ya esta en uso.");
+                TempData["ErrorMessage"] = "No fue posible actualizar el perfil con ese correo.";
+                return View(model);
+            }
             catch (Exception)
             {
                 TempData["ErrorMessage"] = "No fue posible actualizar el perfil en este momento. Intente nuevamente.";
-                return View();
+                return View(model);
             }
         }
     }
