@@ -39,6 +39,7 @@
         var isEmployeePortalUser = isLoggedIn && (
             string.Equals(userRole, "Empleado", StringComparison.OrdinalIgnoreCase)
             || string.Equals(userRole, "Vendedor", StringComparison.OrdinalIgnoreCase));
+        var isClient = isLoggedIn && string.Equals(userRole, "Cliente", StringComparison.OrdinalIgnoreCase);
         var categoriasLayout = await AdminDbService.GetStoreCategoriesAsync();
     }
 
@@ -111,6 +112,13 @@
                             <a asp-controller="Home" asp-action="Index" class="nav-item nav-link"><i class="fa fa-home mr-1"></i>Inicio</a>
                             <a asp-controller="Home" asp-action="Shop" class="nav-item nav-link"><i class="fa fa-store mr-1"></i>Tienda</a>
                             <a asp-controller="Cart" asp-action="Index" class="nav-item nav-link"><i class="fa fa-shopping-cart mr-1"></i>Carrito</a>
+
+                            @if (isClient)
+                            {
+                                <a asp-controller="ClientPortal" asp-action="Index" class="nav-item nav-link">
+                                    <i class="fa fa-clipboard-list mr-1"></i>Mis pedidos
+                                </a>
+                            }
 
                             @if (isEmployeePortalUser)
                             {
