@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
+using Proyecto_Final.Filters;
 using Proyecto_Final.Services;
 
 namespace Proyecto_Final.Controllers
 {
+    [SessionAuthorize]
     public class ProfileController : Controller
     {
         private readonly AccountDbService _accountDbService;
