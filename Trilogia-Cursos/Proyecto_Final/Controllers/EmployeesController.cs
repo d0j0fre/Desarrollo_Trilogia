@@ -5,7 +5,7 @@ using Proyecto_Final.Services;
 
 namespace Proyecto_Final.Controllers
 {
-    [AdminAuthorize]
+    [AdminAuthorize("Empleados")]
     public class EmployeesController : Controller
     {
         private readonly EmployeesDbService _employeesDbService;
