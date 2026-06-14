@@ -1239,3 +1239,399 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* Sprint 4 frontend polish: printable client invoice screen. */
+.s4-client-invoice-page {
+    background: linear-gradient(180deg, #ffffff 0%, #f7f7f7 100%);
+    padding: 2rem 0 3.5rem;
+}
+
+.s4-client-invoice-page .container {
+    max-width: 1120px;
+}
+
+.s4-client-invoice-toolbar {
+    align-items: center;
+    background: #101010;
+    border: 1px solid rgba(242, 190, 34, 0.35);
+    border-radius: 8px;
+    display: flex;
+    gap: 1.25rem;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+    padding: 1.35rem;
+}
+
+.s4-client-invoice-toolbar span,
+.s4-client-invoice-brand span,
+.s4-client-invoice-meta span,
+.s4-client-invoice-card-title span:first-child,
+.s4-client-invoice-totals span,
+.s4-client-invoice-products-head span {
+    color: #9b7600;
+    display: block;
+    font-size: 0.76rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.s4-client-invoice-toolbar span,
+.s4-client-invoice-brand span {
+    color: #f2be22;
+}
+
+.s4-client-invoice-toolbar h1 {
+    color: #ffffff;
+    font-size: clamp(1.7rem, 3vw, 2.35rem);
+    font-weight: 900;
+    letter-spacing: 0;
+    margin: 0.15rem 0 0.3rem;
+}
+
+.s4-client-invoice-toolbar p {
+    color: rgba(255, 255, 255, 0.78);
+    margin: 0;
+}
+
+.s4-client-invoice-actions {
+    display: flex;
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    justify-content: flex-end;
+}
+
+.s4-client-invoice-primary,
+.s4-client-invoice-secondary {
+    align-items: center;
+    border-radius: 8px;
+    cursor: pointer;
+    display: inline-flex;
+    font-weight: 900;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0.75rem 1rem;
+    text-decoration: none;
+}
+
+.s4-client-invoice-primary {
+    background: #f2be22;
+    border: 1px solid #f2be22;
+    color: #101010;
+}
+
+.s4-client-invoice-primary:hover,
+.s4-client-invoice-primary:focus {
+    background: #d9a914;
+    border-color: #d9a914;
+    color: #101010;
+    text-decoration: none;
+}
+
+.s4-client-invoice-secondary {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    color: #ffffff;
+}
+
+.s4-client-invoice-secondary:hover,
+.s4-client-invoice-secondary:focus {
+    background: #ffffff;
+    border-color: #ffffff;
+    color: #101010;
+    text-decoration: none;
+}
+
+.s4-client-invoice-document {
+    background: #ffffff;
+    border: 1px solid #e6e2d8;
+    border-radius: 8px;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.08);
+    padding: 1.5rem;
+}
+
+.s4-client-invoice-header {
+    align-items: stretch;
+    border-bottom: 1px solid #ece7dc;
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 460px);
+    margin-bottom: 1.25rem;
+    padding-bottom: 1.25rem;
+}
+
+.s4-client-invoice-brand {
+    background: #101010;
+    border-radius: 8px;
+    color: #ffffff;
+    padding: 1.25rem;
+}
+
+.s4-client-invoice-brand h2 {
+    color: #ffffff;
+    font-size: clamp(1.5rem, 3vw, 2.15rem);
+    font-weight: 900;
+    letter-spacing: 0;
+    margin: 0.25rem 0 0.35rem;
+}
+
+.s4-client-invoice-brand p {
+    color: rgba(255, 255, 255, 0.76);
+    margin: 0;
+}
+
+.s4-client-invoice-meta {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.s4-client-invoice-meta div,
+.s4-client-invoice-card,
+.s4-client-invoice-totals,
+.s4-client-invoice-products {
+    background: #fbfaf7;
+    border: 1px solid #ece7dc;
+    border-radius: 8px;
+}
+
+.s4-client-invoice-meta div {
+    padding: 1rem;
+}
+
+.s4-client-invoice-meta strong {
+    color: #151515;
+    display: block;
+    font-size: 1rem;
+    font-weight: 900;
+    margin-top: 0.3rem;
+    overflow-wrap: anywhere;
+}
+
+.s4-client-invoice-grid {
+    align-items: stretch;
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: minmax(0, 1fr) minmax(290px, 360px);
+    margin-bottom: 1rem;
+}
+
+.s4-client-invoice-card,
+.s4-client-invoice-totals {
+    padding: 1.15rem;
+}
+
+.s4-client-invoice-card-title {
+    align-items: center;
+    border-bottom: 1px solid #ece7dc;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    padding-bottom: 0.85rem;
+}
+
+.s4-client-invoice-status {
+    align-items: center;
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 0.78rem;
+    font-weight: 900;
+    justify-content: center;
+    min-height: 30px;
+    padding: 0.35rem 0.75rem;
+}
+
+.s4-client-invoice-status.success {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.s4-client-invoice-status.dark {
+    background: #e5e7eb;
+    color: #111827;
+}
+
+.s4-client-invoice-facts {
+    display: grid;
+    gap: 0.85rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 0;
+}
+
+.s4-client-invoice-facts div {
+    min-width: 0;
+}
+
+.s4-client-invoice-facts dt {
+    color: #9b7600;
+    font-size: 0.76rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.2rem;
+    text-transform: uppercase;
+}
+
+.s4-client-invoice-facts dd {
+    color: #151515;
+    font-weight: 800;
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.s4-client-invoice-disclaimer {
+    border-top: 1px solid #ece7dc;
+    color: #5c574f;
+    margin: 1rem 0 0;
+    padding-top: 0.85rem;
+}
+
+.s4-client-invoice-totals h3,
+.s4-client-invoice-products-head h3 {
+    color: #151515;
+    font-size: 1.1rem;
+    font-weight: 900;
+    letter-spacing: 0;
+    margin: 0.2rem 0 0;
+}
+
+.s4-client-invoice-totals div {
+    align-items: center;
+    border-bottom: 1px solid #ece7dc;
+    display: flex;
+    justify-content: space-between;
+    padding: 0.9rem 0;
+}
+
+.s4-client-invoice-totals div:first-of-type {
+    margin-top: 0.6rem;
+}
+
+.s4-client-invoice-totals strong {
+    color: #151515;
+    font-weight: 900;
+}
+
+.s4-client-invoice-total-row {
+    background: #101010;
+    border: 0 !important;
+    border-radius: 8px;
+    color: #ffffff;
+    margin-top: 0.85rem;
+    padding: 1rem !important;
+}
+
+.s4-client-invoice-total-row span {
+    color: #f2be22;
+}
+
+.s4-client-invoice-total-row strong {
+    color: #ffffff;
+    font-size: 1.45rem;
+}
+
+.s4-client-invoice-products {
+    overflow: hidden;
+}
+
+.s4-client-invoice-products-head {
+    border-bottom: 1px solid #ece7dc;
+    padding: 1.1rem 1.2rem;
+}
+
+.s4-client-invoice-table-wrap {
+    overflow-x: auto;
+}
+
+.s4-client-invoice-table {
+    border-collapse: collapse;
+    margin: 0;
+    min-width: 680px;
+    width: 100%;
+}
+
+.s4-client-invoice-table th,
+.s4-client-invoice-table td {
+    border-bottom: 1px solid #ece7dc;
+    padding: 0.95rem 1.2rem;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.s4-client-invoice-table th {
+    background: #f7f4ec;
+    color: #5c4500;
+    font-size: 0.78rem;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.s4-client-invoice-table tbody td {
+    color: #2a2926;
+}
+
+.s4-client-invoice-table tfoot th {
+    background: #ffffff;
+    color: #151515;
+}
+
+.s4-client-invoice-table tfoot tr:last-child th {
+    background: #101010;
+    color: #ffffff;
+    font-size: 1rem;
+}
+
+.s4-client-invoice-empty {
+    color: #5c574f;
+    padding: 2rem 1.2rem !important;
+    text-align: center !important;
+}
+
+@media (max-width: 991.98px) {
+    .s4-client-invoice-toolbar,
+    .s4-client-invoice-header,
+    .s4-client-invoice-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .s4-client-invoice-toolbar {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .s4-client-invoice-actions,
+    .s4-client-invoice-primary,
+    .s4-client-invoice-secondary {
+        width: 100%;
+    }
+
+    .s4-client-invoice-actions {
+        justify-content: stretch;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .s4-client-invoice-page {
+        padding: 1rem 0 2.5rem;
+    }
+
+    .s4-client-invoice-toolbar,
+    .s4-client-invoice-document,
+    .s4-client-invoice-brand,
+    .s4-client-invoice-card,
+    .s4-client-invoice-totals {
+        padding: 1.1rem;
+    }
+
+    .s4-client-invoice-meta,
+    .s4-client-invoice-facts {
+        grid-template-columns: 1fr;
+    }
+
+    .s4-client-invoice-card-title {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}

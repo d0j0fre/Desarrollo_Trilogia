@@ -40,11 +40,39 @@
             }
 
             .admin-card,
-            .admin-table-wrapper {
+            .admin-table-wrapper,
+            .s4-client-invoice-document,
+            .s4-client-invoice-card,
+            .s4-client-invoice-products {
                 box-shadow: none !important;
                 border: 1px solid #ddd !important;
                 break-inside: avoid;
                 page-break-inside: avoid;
+            }
+
+            .s4-client-invoice-page,
+            .s4-client-invoice-document {
+                background: #fff !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            .s4-client-invoice-header,
+            .s4-client-invoice-grid,
+            .s4-client-invoice-meta {
+                display: block !important;
+            }
+
+            .s4-client-invoice-brand,
+            .s4-client-invoice-meta,
+            .s4-client-invoice-card,
+            .s4-client-invoice-totals,
+            .s4-client-invoice-products {
+                margin-bottom: 12px !important;
+            }
+
+            .s4-client-invoice-table {
+                width: 100% !important;
             }
 
             .row,
@@ -67,110 +95,107 @@
     </style>
 }
 
-<div class="container-fluid pt-4">
-    <div class="row px-xl-5 no-print">
-        <div class="col-12">
-            <div class="admin-page-header d-flex justify-content-between align-items-center flex-wrap">
-                <div>
-                    <h2 class="mb-2">Comprobante de pedido</h2>
-                    <p>Consulta e imprime el comprobante generado por el sistema.</p>
-                </div>
-                <div class="d-flex flex-wrap">
-                    <a asp-controller="ClientPortal" asp-action="Detail" asp-route-id="@Model.PedidoId" class="btn btn-outline-light mr-2 mb-2">
-                        Volver al detalle
-                    </a>
-                    <a asp-controller="ClientPortal" asp-action="Index" class="btn btn-outline-light mr-2 mb-2">
-                        Mis pedidos
-                    </a>
-                    <button type="button" class="btn btn-light mb-2" onclick="window.print();">
-                        Imprimir
-                    </button>
-                </div>
+<div class="s4-client-invoice-page">
+    <div class="container">
+        <div class="s4-client-invoice-toolbar no-print">
+            <div>
+                <span>Portal del cliente</span>
+                <h1>Comprobante de pedido</h1>
+                <p>Consulta e imprime el comprobante generado por el sistema.</p>
+            </div>
+
+            <div class="s4-client-invoice-actions no-print">
+                <a asp-controller="ClientPortal" asp-action="Detail" asp-route-id="@Model.PedidoId" class="s4-client-invoice-secondary">
+                    Volver al detalle
+                </a>
+                <a asp-controller="ClientPortal" asp-action="Index" class="s4-client-invoice-secondary">
+                    Mis pedidos
+                </a>
+                <button type="button" class="s4-client-invoice-primary" onclick="window.print();">
+                    Imprimir
+                </button>
             </div>
         </div>
-    </div>
 
-    <div class="row px-xl-5 pb-3">
-        <div class="col-lg-8 pb-3">
-            <div class="admin-card h-100">
-                <h4 class="mb-1">Licorera La Bodega</h4>
-                <p class="text-muted mb-4">Comprobante del sistema para el pedido #@Model.PedidoId</p>
+        <section class="s4-client-invoice-document">
+            <div class="s4-client-invoice-header">
+                <div class="s4-client-invoice-brand">
+                    <span>Licorera La Bodega</span>
+                    <h2>Comprobante del sistema</h2>
+                    <p>Pedido #@Model.PedidoId</p>
+                </div>
 
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="font-weight-bold d-block">Numero de comprobante</label>
-                        <span>@Model.NumeroFactura</span>
+                <div class="s4-client-invoice-meta">
+                    <div>
+                        <span>Numero de comprobante</span>
+                        <strong>@Model.NumeroFactura</strong>
                     </div>
+                    <div>
+                        <span>Fecha</span>
+                        <strong>@Model.FechaFactura.ToString("dd/MM/yyyy HH:mm")</strong>
+                    </div>
+                    <div>
+                        <span>Pedido asociado</span>
+                        <strong>#@Model.PedidoId</strong>
+                    </div>
+                </div>
+            </div>
 
-                    <div class="col-md-6 mb-3">
-                        <label class="font-weight-bold d-block">Estado</label>
+            <div class="s4-client-invoice-grid">
+                <div class="s4-client-invoice-card">
+                    <div class="s4-client-invoice-card-title">
+                        <span>Cliente</span>
                         @{
                             var claseEstado = Model.Estado == "Generada" ? "success" : "dark";
                         }
-                        <span class="admin-badge-soft @claseEstado">@Model.Estado</span>
+                        <span class="s4-client-invoice-status @claseEstado">@Model.Estado</span>
                     </div>
 
-                    <div class="col-md-6 mb-3">
-                        <label class="font-weight-bold d-block">Fecha</label>
-                        <span>@Model.FechaFactura.ToString("dd/MM/yyyy HH:mm")</span>
-                    </div>
+                    <dl class="s4-client-invoice-facts">
+                        <div>
+                            <dt>Cliente</dt>
+                            <dd>@Model.Cliente</dd>
+                        </div>
+                        <div>
+                            <dt>Correo</dt>
+                            <dd>@Model.Correo</dd>
+                        </div>
+                    </dl>
 
-                    <div class="col-md-6 mb-3">
-                        <label class="font-weight-bold d-block">Pedido asociado</label>
-                        <span>#@Model.PedidoId</span>
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label class="font-weight-bold d-block">Cliente</label>
-                        <span>@Model.Cliente</span>
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label class="font-weight-bold d-block">Correo</label>
-                        <span>@Model.Correo</span>
-                    </div>
+                    <p class="s4-client-invoice-disclaimer">
+                        Este documento es un comprobante visible desde el portal del cliente. No sustituye una factura electronica oficial.
+                    </p>
                 </div>
 
-                <p class="text-muted mb-0">
-                    Este documento es un comprobante visible desde el portal del cliente. No sustituye una factura electronica oficial.
-                </p>
+                <aside class="s4-client-invoice-totals">
+                    <h3>Totales</h3>
+
+                    <div>
+                        <span>Subtotal</span>
+                        <strong>&#8353;@Model.Subtotal.ToString("N2")</strong>
+                    </div>
+
+                    <div>
+                        <span>Impuesto</span>
+                        <strong>&#8353;@Model.Impuesto.ToString("N2")</strong>
+                    </div>
+
+                    <div class="s4-client-invoice-total-row">
+                        <span>Total</span>
+                        <strong>&#8353;@Model.Total.ToString("N2")</strong>
+                    </div>
+                </aside>
             </div>
-        </div>
 
-        <div class="col-lg-4 pb-3">
-            <div class="admin-card h-100">
-                <h5 class="mb-4">Totales</h5>
-
-                <div class="d-flex justify-content-between mb-2">
-                    <span>Subtotal</span>
-                    <strong>&#8353;@Model.Subtotal.ToString("N2")</strong>
+            <div class="s4-client-invoice-products">
+                <div class="s4-client-invoice-products-head">
+                    <span>Detalle</span>
+                    <h3>Productos facturados</h3>
                 </div>
 
-                <div class="d-flex justify-content-between mb-2">
-                    <span>Impuesto</span>
-                    <strong>&#8353;@Model.Impuesto.ToString("N2")</strong>
-                </div>
-
-                <hr />
-
-                <div class="d-flex justify-content-between mb-0">
-                    <span class="font-weight-bold">Total</span>
-                    <strong>&#8353;@Model.Total.ToString("N2")</strong>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row px-xl-5 pb-5">
-        <div class="col-12">
-            <div class="admin-table-wrapper">
-                <div class="p-4 border-bottom">
-                    <h5 class="mb-0">Productos facturados</h5>
-                </div>
-
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="thead-light">
+                <div class="s4-client-invoice-table-wrap">
+                    <table class="s4-client-invoice-table">
+                        <thead>
                             <tr>
                                 <th>Producto</th>
                                 <th>Cantidad</th>
@@ -182,7 +207,7 @@
                             @if (!Model.Lineas.Any())
                             {
                                 <tr>
-                                    <td colspan="4" class="text-center text-muted py-4">No hay productos registrados para este comprobante.</td>
+                                    <td colspan="4" class="s4-client-invoice-empty">No hay productos registrados para este comprobante.</td>
                                 </tr>
                             }
                             else
@@ -190,7 +215,7 @@
                                 @foreach (var item in Model.Lineas)
                                 {
                                     <tr>
-                                        <td class="font-weight-bold">@item.Producto</td>
+                                        <td><strong>@item.Producto</strong></td>
                                         <td>@item.Cantidad</td>
                                         <td>&#8353;@item.PrecioUnitario.ToString("N2")</td>
                                         <td>&#8353;@item.Subtotal.ToString("N2")</td>
@@ -215,6 +240,6 @@
                     </table>
                 </div>
             </div>
-        </div>
+        </section>
     </div>
 </div>
