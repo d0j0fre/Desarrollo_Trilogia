@@ -1,72 +1,63 @@
-﻿@model Proyecto_Final.Models.AppUser
+@model Proyecto_Final.Models.ProfileEditViewModel
 
 @{
     ViewData["Title"] = "Mi Perfil";
 }
 
-<main class="shadow p-2 mt-0">
-    <div class="container py-4 d-flex flex-column align-items-center">
-        <h1 class="fw-bold color-azul">Mi Perfil</h1>
-        <p class="lead titulo-terciario">Actualiza tu información personal</p>
-    </div>
-
-    <div class="card-card p-4 shadow-lg mb-5 mx-auto">
-
-        @if (TempData["SuccessMessage"] != null)
-        {
-            <div class="alert alert-success">
-                @TempData["SuccessMessage"]
+<div class="container-fluid pt-4">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header">
+                <h2 class="mb-2">Mi Perfil</h2>
+                <p>Actualiza tu informacion personal basica.</p>
             </div>
-        }
-
-        @if (TempData["ErrorMessage"] != null)
-        {
-            <div class="alert alert-danger">
-                @TempData["ErrorMessage"]
-            </div>
-        }
-
-        <div class="text-center mb-2">
-            <img src="~/img/Logo2.png" alt="logo" class="logo-card" />
         </div>
-
-        <form asp-action="Edit" asp-controller="Profile" method="post">
-
-            @Html.AntiForgeryToken()
-
-            <div class="mb-3">
-                <label class="form-label titulo-secundario">
-                    Nombre completo
-                </label>
-
-                <input
-                    type="text"
-                    name="fullName"
-                    class="form-control"
-                    value="@ViewBag.NombreCompleto"
-                    required />
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label titulo-secundario">
-                    Correo
-                </label>
-
-                <input
-                    type="email"
-                    name="email"
-                    class="form-control"
-                    value="@ViewBag.Correo"
-                    required />
-            </div>
-
-            <button type="submit" class="btn btn-success w-100">
-                Guardar cambios
-            </button>
-
-        </form>
     </div>
-</main>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-lg-8 col-xl-6">
+            <div class="admin-card">
+                <form asp-action="Edit" asp-controller="Profile" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="form-group">
+                        <label asp-for="NombreCompleto" class="font-weight-bold"></label>
+                        <input asp-for="NombreCompleto" class="form-control" autocomplete="name" />
+                        <span asp-validation-for="NombreCompleto" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Correo" class="font-weight-bold"></label>
+                        <input asp-for="Correo" class="form-control" autocomplete="email" />
+                        <span asp-validation-for="Correo" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Telefono" class="font-weight-bold"></label>
+                        <input asp-for="Telefono" class="form-control" autocomplete="tel" />
+                        <span asp-validation-for="Telefono" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Direccion" class="font-weight-bold"></label>
+                        <textarea asp-for="Direccion" class="form-control" rows="3" autocomplete="street-address"></textarea>
+                        <span asp-validation-for="Direccion" class="text-danger"></span>
+                    </div>
+
+                    <div class="d-flex flex-wrap">
+                        <button type="submit" class="btn btn-primary mr-2 mb-2">
+                            Guardar cambios
+                        </button>
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary mb-2">
+                            Volver
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

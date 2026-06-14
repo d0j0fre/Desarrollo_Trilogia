@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
+using Proyecto_Final.Filters;
 using Proyecto_Final.Models.Admin;
 using Proyecto_Final.Services;
 
 namespace Proyecto_Final.Controllers
 {
+    [SessionAuthorize("Empleado", "Vendedor")]
     public class EmployeePortalController : Controller
     {
         private readonly EmployeesDbService _employeesDbService;

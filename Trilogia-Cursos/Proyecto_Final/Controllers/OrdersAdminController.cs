@@ -61,9 +61,9 @@ namespace Proyecto_Final.Controllers
 
                 TempData["SuccessMessage"] = "Estado del pedido actualizado correctamente.";
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                TempData["ErrorMessage"] = ex.Message;
+                TempData["ErrorMessage"] = "No fue posible actualizar el estado del pedido en este momento. Intente nuevamente.";
             }
 
             return RedirectToAction(nameof(Detail), new { id = pedidoId });

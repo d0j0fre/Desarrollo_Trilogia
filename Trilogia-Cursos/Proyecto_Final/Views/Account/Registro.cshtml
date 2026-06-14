@@ -4,75 +4,80 @@
     ViewData["Title"] = "Registro";
 }
 
-<div class="container-fluid">
-    <div class="row px-xl-5">
-        <div class="col-12">
-            <nav class="breadcrumb bg-light mb-30">
-                <a class="breadcrumb-item text-primary" asp-controller="Home" asp-action="Index">Inicio</a>
-                <a class="breadcrumb-item text-primary" asp-controller="Account" asp-action="Login">Iniciar Sesión</a>
-                <span class="breadcrumb-item active text-body">Registro</span>
-            </nav>
-        </div>
-    </div>
-</div>
+<div class="s4-auth-page">
+    <div class="container">
+        <nav class="s4-auth-breadcrumb">
+            <a asp-controller="Home" asp-action="Index">Inicio</a>
+            <a asp-controller="Account" asp-action="Login">Iniciar Sesion</a>
+            <span>Registro</span>
+        </nav>
 
-<div class="container-fluid">
-    <h2 class="section-title position-relative text-uppercase mx-xl-5 mb-4">
-        <span class="text-secondary pr-3">Crear cuenta</span>
-    </h2>
+        <div class="s4-auth-shell s4-auth-shell--register">
+            <aside class="s4-auth-hero">
+                <span>Licorera La Bodega</span>
+                <h1>Crea tu cuenta</h1>
+                <p>Registra tus datos para comprar mas rapido y consultar tus pedidos desde el portal del cliente.</p>
 
-    <div class="row px-xl-5">
-        <div class="col-lg-6 offset-lg-3 mb-5">
-            <div class="contact-form bg-light p-30">
-                <h4 class="text-secondary mb-4 text-center">Registrate en La Bodega</h4>
+                <div class="s4-auth-hero-note">
+                    <strong>Tu cuenta en pocos pasos</strong>
+                    <span>Completa los datos basicos y acepta los terminos para empezar.</span>
+                </div>
+            </aside>
+
+            <section class="s4-auth-card">
+                <div class="s4-auth-card-title">
+                    <span>Registro</span>
+                    <h2>Registrate en La Bodega</h2>
+                    <p>Completa el formulario con tu informacion personal.</p>
+                </div>
 
                 <form asp-controller="Account" asp-action="Register" method="post" novalidate="novalidate">
                     <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-                    <div class="control-group mb-3">
+                    <div class="control-group mb-3 s4-auth-field">
                         <label asp-for="FullName" class="text-body"></label>
                         <input asp-for="FullName" class="form-control" placeholder="Tu nombre completo" />
                         <span asp-validation-for="FullName" class="text-danger help-block"></span>
                     </div>
 
-                    <div class="control-group mb-3">
+                    <div class="control-group mb-3 s4-auth-field">
                         <label asp-for="Email" class="text-body"></label>
                         <input asp-for="Email" class="form-control" placeholder="ejemplo@correo.com" />
                         <span asp-validation-for="Email" class="text-danger help-block"></span>
                     </div>
 
-                    <div class="control-group mb-3">
+                    <div class="control-group mb-3 s4-auth-field">
                         <label asp-for="Password" class="text-body"></label>
-                        <input asp-for="Password" class="form-control" placeholder="Creá una contraseña" />
+                        <input asp-for="Password" class="form-control" placeholder="Crea una contrasena" />
                         <span asp-validation-for="Password" class="text-danger help-block"></span>
                     </div>
 
-                    <div class="control-group mb-4">
+                    <div class="control-group mb-4 s4-auth-field">
                         <label asp-for="ConfirmPassword" class="text-body"></label>
-                        <input asp-for="ConfirmPassword" class="form-control" placeholder="Repetí la contraseña" />
+                        <input asp-for="ConfirmPassword" class="form-control" placeholder="Repeti la contrasena" />
                         <span asp-validation-for="ConfirmPassword" class="text-danger help-block"></span>
                     </div>
 
-                    <div class="control-group mb-4">
+                    <div class="control-group mb-4 s4-auth-check">
                         <div class="custom-control custom-checkbox">
                             <input asp-for="AcceptTerms" type="checkbox" class="custom-control-input" id="termsCheck">
                             <label class="custom-control-label text-secondary" for="termsCheck">
-                                Acepto los términos y condiciones
+                                Acepto los terminos y condiciones
                             </label>
                         </div>
                         <span asp-validation-for="AcceptTerms" class="text-danger help-block"></span>
                     </div>
 
-                    <div class="text-center">
-                        <button class="btn btn-primary btn-block px-4 py-2" type="submit">CREAR CUENTA</button>
+                    <div class="s4-auth-actions">
+                        <button class="btn btn-primary btn-block px-4 py-2 s4-auth-primary" type="submit">CREAR CUENTA</button>
                     </div>
 
-                    <div class="mt-3 text-center">
-                        <span class="text-body small">¿Ya tenés cuenta?</span>
-                        <a class="text-primary small font-weight-bold" asp-controller="Account" asp-action="Login">Iniciá sesión</a>
+                    <div class="mt-3 text-center s4-auth-switch">
+                        <span class="text-body small">Ya tenes cuenta?</span>
+                        <a class="text-primary small font-weight-bold s4-auth-link" asp-controller="Account" asp-action="Login">Inicia sesion</a>
                     </div>
                 </form>
-            </div>
+            </section>
         </div>
     </div>
 </div>

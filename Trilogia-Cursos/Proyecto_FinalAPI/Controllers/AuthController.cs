@@ -11,15 +11,18 @@ namespace Proyecto_FinalAPI.Controllers
         private readonly AccountApiDbService _accountApiDbService;
         private readonly EmailService _emailService;
         private readonly LoginAttemptLimiter _loginAttemptLimiter;
+        private readonly PasswordRecoveryAttemptLimiter _passwordRecoveryAttemptLimiter;
 
         public AuthController(
             AccountApiDbService accountApiDbService,
             EmailService emailService,
-            LoginAttemptLimiter loginAttemptLimiter)
+            LoginAttemptLimiter loginAttemptLimiter,
+            PasswordRecoveryAttemptLimiter passwordRecoveryAttemptLimiter)
         {
             _accountApiDbService = accountApiDbService;
             _emailService = emailService;
             _loginAttemptLimiter = loginAttemptLimiter;
+            _passwordRecoveryAttemptLimiter = passwordRecoveryAttemptLimiter;
         }
 
         [HttpPost("login")]
@@ -119,6 +122,8 @@ namespace Proyecto_FinalAPI.Controllers
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordApiRequest request)
         {
+            const string safeRecoveryMessage = "Si la solicitud es válida, se procesará la recuperación de contraseña.";
+
             if (request == null || string.IsNullOrWhiteSpace(request.Email))
             {
                 return BadRequest(new AuthResult
@@ -128,14 +133,28 @@ namespace Proyecto_FinalAPI.Controllers
                 });
             }
 
-            var user = await _accountApiDbService.GetUserByEmailAsync(request.Email);
+            var email = request.Email.Trim();
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+            if (_passwordRecoveryAttemptLimiter.IsForgotPasswordBlocked(email, ipAddress, out _))
+            {
+                return StatusCode(StatusCodes.Status429TooManyRequests, new AuthResult
+                {
+                    Success = false,
+                    Message = "No fue posible procesar la solicitud en este momento. Intente nuevamente más tarde."
+                });
+            }
+
+            _passwordRecoveryAttemptLimiter.RegisterForgotPasswordAttempt(email, ipAddress);
+
+            var user = await _accountApiDbService.GetUserByEmailAsync(email);
 
             if (user == null)
             {
                 return Ok(new AuthResult
                 {
                     Success = true,
-                    Message = "Si el correo existe, se enviará un enlace de recuperación."
+                    Message = safeRecoveryMessage
                 });
             }
 
@@ -158,14 +177,14 @@ namespace Proyecto_FinalAPI.Controllers
                 return Ok(new AuthResult
                 {
                     Success = true,
-                    Message = "Se generó el proceso de recuperación, pero el correo no pudo enviarse automáticamente."
+                    Message = safeRecoveryMessage
                 });
             }
 
             return Ok(new AuthResult
             {
                 Success = true,
-                Message = "Si el correo existe, se enviará un enlace de recuperación."
+                Message = safeRecoveryMessage
             });
         }
 
@@ -183,7 +202,21 @@ namespace Proyecto_FinalAPI.Controllers
                 });
             }
 
-            var tokenInfo = await _accountApiDbService.GetValidResetTokenAsync(request.Token);
+            var token = request.Token.Trim();
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+            if (_passwordRecoveryAttemptLimiter.IsResetPasswordBlocked(token, ipAddress, out _))
+            {
+                return StatusCode(StatusCodes.Status429TooManyRequests, new AuthResult
+                {
+                    Success = false,
+                    Message = "No fue posible procesar la solicitud en este momento. Intente nuevamente más tarde."
+                });
+            }
+
+            _passwordRecoveryAttemptLimiter.RegisterResetPasswordAttempt(token, ipAddress);
+
+            var tokenInfo = await _accountApiDbService.GetValidResetTokenAsync(token);
 
             if (tokenInfo == null)
             {
@@ -194,7 +227,8 @@ namespace Proyecto_FinalAPI.Controllers
                 });
             }
 
-            await _accountApiDbService.ResetPasswordAsync(tokenInfo.UsuarioId, request.Token, request.NewPassword);
+            await _accountApiDbService.ResetPasswordAsync(tokenInfo.UsuarioId, token, request.NewPassword);
+            _passwordRecoveryAttemptLimiter.ResetResetPasswordAttempts(token, ipAddress);
 
             return Ok(new AuthResult
             {

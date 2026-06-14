@@ -415,6 +415,39 @@ namespace Proyecto_Final.Services
             await command.ExecuteNonQueryAsync();
         }
 
+        public async Task<bool> CancelClientPendingOrderAsync(int pedidoId, int usuarioId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Client_CancelPendingOrder", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add("@PedidoId", SqlDbType.Int).Value = pedidoId;
+            command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId;
+
+            await connection.OpenAsync();
+            var result = await command.ExecuteScalarAsync();
+            return result != null && result != DBNull.Value && Convert.ToBoolean(result);
+        }
+
+        public async Task<bool> OrderHasInvoiceAsync(int pedidoId)
+        {
+            const string sql = @"
+                SELECT CASE WHEN EXISTS
+                (
+                    SELECT 1
+                    FROM dbo.Facturas
+                    WHERE PedidoId = @PedidoId
+                )
+                THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END";
+
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand(sql, connection);
+            command.Parameters.Add("@PedidoId", SqlDbType.Int).Value = pedidoId;
+
+            await connection.OpenAsync();
+            var result = await command.ExecuteScalarAsync();
+            return result != null && result != DBNull.Value && Convert.ToBoolean(result);
+        }
+
         public async Task<SalesReportViewModel> GetSalesReportAsync()
         {
             var model = new SalesReportViewModel();
@@ -520,6 +553,94 @@ namespace Proyecto_Final.Services
                 while (await reader.ReadAsync())
                 {
                     model.Detalles.Add(new InvoiceDetailLineViewModel
+                    {
+                        Producto = reader.IsDBNull(0) ? string.Empty : reader.GetString(0),
+                        Cantidad = reader.IsDBNull(1) ? 0 : reader.GetInt32(1),
+                        PrecioUnitario = reader.IsDBNull(2) ? 0 : reader.GetDecimal(2),
+                        Subtotal = reader.IsDBNull(3) ? 0 : reader.GetDecimal(3)
+                    });
+                }
+            }
+
+            return model;
+        }
+
+        public async Task<ClientPortalInvoiceViewModel?> GetClientInvoiceByOrderAsync(int pedidoId, int usuarioId)
+        {
+            const string headerSql = @"
+                SELECT
+                    f.FacturaId,
+                    f.PedidoId,
+                    f.NumeroFactura,
+                    f.ClienteNombre,
+                    f.ClienteCorreo,
+                    f.FechaFactura,
+                    f.Subtotal,
+                    f.Impuesto,
+                    f.Total,
+                    f.Estado
+                FROM dbo.Facturas f
+                INNER JOIN dbo.Pedidos p
+                    ON p.PedidoId = f.PedidoId
+                WHERE f.PedidoId = @PedidoId
+                  AND f.UsuarioId = @UsuarioId
+                  AND p.UsuarioId = @UsuarioId;";
+
+            const string linesSql = @"
+                SELECT
+                    ProductoNombre,
+                    Cantidad,
+                    PrecioUnitario,
+                    Subtotal
+                FROM dbo.FacturaDetalle
+                WHERE FacturaId = @FacturaId
+                ORDER BY FacturaDetalleId ASC;";
+
+            await using var connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
+
+            int facturaId;
+            ClientPortalInvoiceViewModel? model = null;
+
+            await using (var command = new SqlCommand(headerSql, connection))
+            {
+                command.Parameters.Add("@PedidoId", SqlDbType.Int).Value = pedidoId;
+                command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId;
+
+                await using var reader = await command.ExecuteReaderAsync();
+                if (!await reader.ReadAsync())
+                {
+                    return null;
+                }
+
+                facturaId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0);
+                model = new ClientPortalInvoiceViewModel
+                {
+                    PedidoId = reader.IsDBNull(1) ? 0 : reader.GetInt32(1),
+                    NumeroFactura = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                    Cliente = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
+                    Correo = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
+                    FechaFactura = reader.IsDBNull(5) ? DateTime.MinValue : reader.GetDateTime(5),
+                    Subtotal = reader.IsDBNull(6) ? 0 : reader.GetDecimal(6),
+                    Impuesto = reader.IsDBNull(7) ? 0 : reader.GetDecimal(7),
+                    Total = reader.IsDBNull(8) ? 0 : reader.GetDecimal(8),
+                    Estado = reader.IsDBNull(9) ? string.Empty : reader.GetString(9)
+                };
+            }
+
+            if (facturaId <= 0 || model == null)
+            {
+                return null;
+            }
+
+            await using (var command = new SqlCommand(linesSql, connection))
+            {
+                command.Parameters.Add("@FacturaId", SqlDbType.Int).Value = facturaId;
+
+                await using var reader = await command.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    model.Lineas.Add(new ClientPortalInvoiceLineViewModel
                     {
                         Producto = reader.IsDBNull(0) ? string.Empty : reader.GetString(0),
                         Cantidad = reader.IsDBNull(1) ? 0 : reader.GetInt32(1),

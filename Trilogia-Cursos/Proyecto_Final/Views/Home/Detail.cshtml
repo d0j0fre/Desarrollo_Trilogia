@@ -4,68 +4,96 @@
     var imagen = string.IsNullOrWhiteSpace(Model.ImagenUrl)
         ? Url.Content("~/img/whisky-premium.webp")
         : Url.Content(Model.ImagenUrl);
+    var stockClass = Model.Stock <= 0 ? "out" : Model.Stock <= 5 ? "low" : "ok";
+    var stockText = Model.Stock <= 0 ? "Agotado" : Model.Stock <= 5 ? "Stock bajo" : "Disponible";
 }
 
 @section Styles {
     <link href="~/css/custom-theme.css" rel="stylesheet" />
 }
 
-<div class="container-fluid py-5">
-    <div class="row px-xl-5">
-        <div class="col-lg-6 pb-4">
-            <div class="bg-light p-4 h-100 d-flex align-items-center justify-content-center rounded">
-                <img src="@imagen" alt="@Model.Nombre" class="img-fluid" style="max-height: 420px; object-fit: contain;" />
-            </div>
-        </div>
+<section class="s4-product-detail-page">
+    <div class="container">
+        <div class="s4-product-detail-hero">
+            <a asp-controller="Home" asp-action="Shop" asp-route-categoria="@Model.Categoria" class="s4-product-detail-back">
+                <i class="fa fa-arrow-left"></i>
+                Volver a categoria
+            </a>
 
-        <div class="col-lg-6 pb-4">
-            <div class="admin-card h-100">
-                <span class="badge badge-primary mb-3">@Model.Categoria</span>
-                <h2 class="mb-3">@Model.Nombre</h2>
-                <h3 class="text-primary mb-3">â‚¡@Model.Precio.ToString("N2")</h3>
+            <div class="s4-product-detail-grid">
+                <div class="s4-product-detail-media">
+                    <span class="s4-product-detail-eyebrow">
+                        <i class="fa fa-tag"></i>
+                        @Model.Categoria
+                    </span>
 
-                <p class="mb-4">
-                    @(string.IsNullOrWhiteSpace(Model.Descripcion)
-                        ? "Producto disponible dentro del catÃ¡logo activo de la tienda."
-                        : Model.Descripcion)
-                </p>
+                    <div class="s4-product-detail-image">
+                        <img src="@imagen" alt="@Model.Nombre" />
+                    </div>
+                </div>
 
-                <p class="mb-4">
-                    <strong>Estado:</strong>
-                    @if (Model.Stock > 0)
-                    {
-                        <span>Disponible (stock: @Model.Stock)</span>
-                    }
-                    else
-                    {
-                        <span>Agotado</span>
-                    }
-                </p>
+                <div class="s4-product-detail-panel">
+                    <div class="s4-product-detail-heading">
+                        <span class="s4-product-detail-eyebrow">
+                            <i class="fa fa-wine-bottle"></i>
+                            Producto destacado
+                        </span>
+                        <h1 class="s4-product-detail-title">@Model.Nombre</h1>
+                    </div>
 
-                <div class="d-flex flex-wrap">
-                    @if (Model.Stock > 0)
-                    {
-                        <form asp-controller="Cart" asp-action="Add" method="post" class="mr-2 mb-2">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="productoId" value="@Model.ProductoId" />
-                            <input type="hidden" name="cantidad" value="1" />
-                            <button type="submit" class="btn btn-primary px-4">
-                                <i class="fa fa-shopping-cart mr-2"></i>Agregar al carrito
+                    <div class="s4-product-detail-price">
+                        <span>Precio</span>
+                        <strong>&#8353;@Model.Precio.ToString("N2")</strong>
+                    </div>
+
+                    <p class="s4-product-detail-description">
+                        @(string.IsNullOrWhiteSpace(Model.Descripcion)
+                            ? "Producto disponible dentro del catalogo activo de la tienda."
+                            : Model.Descripcion)
+                    </p>
+
+                    <div class="s4-product-detail-meta">
+                        <div class="s4-product-detail-stock">
+                            <span>Estado</span>
+                            <strong class="s4-stock-pill @stockClass">
+                                <i class="fa fa-circle"></i>
+                                @stockText
+                            </strong>
+                        </div>
+
+                        <div class="s4-product-detail-stock">
+                            <span>Stock</span>
+                            <strong>@Model.Stock unidad(es)</strong>
+                        </div>
+                    </div>
+
+                    <div class="s4-product-detail-actions">
+                        @if (Model.Stock > 0)
+                        {
+                            <form asp-controller="Cart" asp-action="Add" method="post" class="s4-product-detail-form">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="productoId" value="@Model.ProductoId" />
+                                <input type="hidden" name="cantidad" value="1" />
+                                <button type="submit" class="btn btn-primary s4-product-detail-primary">
+                                    <i class="fa fa-shopping-cart mr-2"></i>Agregar al carrito
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <button type="button" class="btn btn-secondary s4-product-detail-primary" disabled>
+                                Producto agotado
                             </button>
-                        </form>
-                    }
-                    else
-                    {
-                        <button type="button" class="btn btn-secondary px-4 mr-2 mb-2" disabled>Producto agotado</button>
-                    }
+                        }
 
-                    <a asp-controller="Home" asp-action="Shop" asp-route-categoria="@Model.Categoria" class="btn btn-secondary mb-2">
-                        Volver a categorÃ­a
-                    </a>
+                        <a asp-controller="Home" asp-action="Shop" asp-route-categoria="@Model.Categoria" class="btn s4-product-detail-secondary">
+                            <i class="fa fa-store mr-2"></i>Volver a categoria
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</section>
 
 

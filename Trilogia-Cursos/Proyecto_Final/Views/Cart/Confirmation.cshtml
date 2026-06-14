@@ -1,6 +1,8 @@
+@using Microsoft.AspNetCore.Http
 @model Proyecto_Final.Models.Store.OrderConfirmationViewModel
 @{
     ViewData["Title"] = "Pedido creado";
+    var isClient = string.Equals(Context.Session.GetString("UserRole"), "Cliente", StringComparison.OrdinalIgnoreCase);
 }
 
 <div class="container-fluid s3-page-shell py-5">
@@ -67,6 +69,12 @@
                 <a asp-controller="Home" asp-action="Shop" class="btn btn-primary">
                     <i class="fa fa-store mr-1"></i>Seguir comprando
                 </a>
+                @if (isClient)
+                {
+                    <a asp-controller="ClientPortal" asp-action="Index" class="btn btn-outline-primary">
+                        <i class="fa fa-clipboard-list mr-1"></i>Mis pedidos
+                    </a>
+                }
                 <a asp-controller="Home" asp-action="Index" class="btn btn-outline-dark">
                     <i class="fa fa-home mr-1"></i>Volver al inicio
                 </a>
