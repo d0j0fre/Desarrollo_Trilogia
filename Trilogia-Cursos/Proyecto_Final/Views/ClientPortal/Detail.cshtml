@@ -1,150 +1,161 @@
 @model Proyecto_Final.Models.Store.ClientPortalOrderDetailViewModel
 @{
     ViewData["Title"] = "Detalle de pedido";
+    var claseEstado = Model.Estado == "Pendiente" ? "warning" : Model.Estado == "Entregado" ? "success" : Model.Estado == "Cancelado" ? "danger" : "dark";
 }
 
 @section Styles {
     <link href="~/css/custom-theme.css" rel="stylesheet" />
 }
 
-<div class="container-fluid pt-4">
-    <div class="row px-xl-5">
-        <div class="col-12">
-            <div class="admin-page-header d-flex justify-content-between align-items-center">
-                <div>
-                    <h2 class="mb-2">Pedido #@Model.PedidoId</h2>
-                    <p>Detalle de productos, entrega y estado actual.</p>
-                </div>
-                <a asp-controller="ClientPortal" asp-action="Index" class="btn btn-outline-light">
-                    Volver a Mis pedidos
-                </a>
+<section class="s4-client-portal-page">
+    <div class="container">
+        <div class="s4-client-portal-hero s4-client-portal-hero--detail">
+            <div>
+                <span class="s4-client-portal-eyebrow">
+                    <i class="fa fa-receipt"></i>
+                    Detalle de pedido
+                </span>
+                <h1>Pedido #@Model.PedidoId</h1>
+                <p>Detalle de productos, entrega y estado actual.</p>
             </div>
-        </div>
-    </div>
 
-    <div class="row px-xl-5 pb-3">
-        <div class="col-lg-8 pb-3">
-            <div class="admin-card h-100">
-                <h5 class="mb-4">Informacion general</h5>
-
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="font-weight-bold d-block">Fecha</label>
-                        <span>@Model.FechaPedido.ToString("dd/MM/yyyy HH:mm")</span>
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label class="font-weight-bold d-block">Estado</label>
-                        @{
-                            var claseEstado = Model.Estado == "Pendiente" ? "warning" : Model.Estado == "Entregado" ? "success" : Model.Estado == "Cancelado" ? "danger" : "dark";
-                        }
-                        <span class="admin-badge-soft @claseEstado">@Model.Estado</span>
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label class="font-weight-bold d-block">Tipo de entrega</label>
-                        <span>@(string.IsNullOrWhiteSpace(Model.TipoEntrega) ? "No indicado" : Model.TipoEntrega)</span>
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label class="font-weight-bold d-block">Total</label>
-                        <span class="font-weight-bold">&#8353;@Model.Total.ToString("N2")</span>
-                    </div>
-
-                    <div class="col-md-12 mb-3">
-                        <label class="font-weight-bold d-block">Direccion de entrega</label>
-                        <span>@(string.IsNullOrWhiteSpace(Model.DireccionEntrega) ? "No registrada" : Model.DireccionEntrega)</span>
-                    </div>
-
-                    <div class="col-md-12 mb-0">
-                        <label class="font-weight-bold d-block">Observaciones</label>
-                        <span>@(string.IsNullOrWhiteSpace(Model.Observaciones) ? "Sin observaciones." : Model.Observaciones)</span>
-                    </div>
-                </div>
-            </div>
+            <a asp-controller="ClientPortal" asp-action="Index" class="btn s4-client-hero-action">
+                Volver a Mis pedidos
+            </a>
         </div>
 
-        <div class="col-lg-4 pb-3">
-            <div class="admin-card h-100 text-center">
-                <h5 class="mb-3">Resumen</h5>
-                <h3 class="mb-1">@Model.Lineas.Sum(x => x.Cantidad)</h3>
-                <p class="text-muted mb-3">Unidad(es)</p>
-                <h4 class="mb-1">&#8353;@Model.Total.ToString("N2")</h4>
-                <p class="text-muted mb-3">Total del pedido</p>
+        <div class="s4-client-detail-grid">
+            <div class="s4-client-detail-main">
+                <article class="s4-client-detail-card">
+                    <div class="s4-client-detail-card__head">
+                        <div>
+                            <span>Informacion general</span>
+                            <h2>Estado y entrega</h2>
+                        </div>
+                        <span class="s4-client-status-pill @claseEstado">@Model.Estado</span>
+                    </div>
 
-                @if (Model.HasInvoice)
-                {
-                    <a asp-controller="ClientPortal"
-                       asp-action="Invoice"
-                       asp-route-id="@Model.PedidoId"
-                       class="btn btn-primary btn-block mb-2">
-                        Ver comprobante
-                    </a>
-                }
+                    <div class="s4-client-detail-facts">
+                        <div>
+                            <span>Fecha</span>
+                            <strong>@Model.FechaPedido.ToString("dd/MM/yyyy HH:mm")</strong>
+                        </div>
+                        <div>
+                            <span>Tipo de entrega</span>
+                            <strong>@(string.IsNullOrWhiteSpace(Model.TipoEntrega) ? "No indicado" : Model.TipoEntrega)</strong>
+                        </div>
+                        <div>
+                            <span>Total</span>
+                            <strong>&#8353;@Model.Total.ToString("N2")</strong>
+                        </div>
+                    </div>
 
-                @if (Model.CanCancel)
-                {
-                    <form asp-controller="ClientPortal" asp-action="Cancel" method="post"
-                          data-s3-confirm="Desea cancelar este pedido pendiente?"
-                          data-s3-confirm-title="Confirmar cancelacion"
-                          data-s3-confirm-type="warning"
-                          data-s3-confirm-ok="Si, cancelar"
-                          data-s3-confirm-cancel="Volver">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="id" value="@Model.PedidoId" />
-                        <button type="submit" class="btn btn-danger btn-block">
-                            Cancelar pedido
-                        </button>
-                    </form>
-                }
-                else
-                {
-                    <p class="text-muted mb-0">@Model.CancelStatusMessage</p>
-                }
-            </div>
-        </div>
-    </div>
+                    <div class="s4-client-detail-note">
+                        <span>Direccion de entrega</span>
+                        <p>@(string.IsNullOrWhiteSpace(Model.DireccionEntrega) ? "No registrada" : Model.DireccionEntrega)</p>
+                    </div>
 
-    <div class="row px-xl-5 pb-5">
-        <div class="col-12">
-            <div class="admin-table-wrapper">
-                <div class="p-4 border-bottom">
-                    <h5 class="mb-0">Productos</h5>
-                </div>
+                    <div class="s4-client-detail-note">
+                        <span>Observaciones</span>
+                        <p>@(string.IsNullOrWhiteSpace(Model.Observaciones) ? "Sin observaciones." : Model.Observaciones)</p>
+                    </div>
+                </article>
 
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="thead-light">
-                            <tr>
-                                <th>Producto</th>
-                                <th>Cantidad</th>
-                                <th>Precio unitario</th>
-                                <th>Subtotal</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @if (!Model.Lineas.Any())
-                            {
+                <section class="s4-client-orders-panel s4-client-order-products">
+                    <div class="s4-client-orders-panel__head">
+                        <div>
+                            <span>Productos</span>
+                            <h2>Lineas del pedido</h2>
+                        </div>
+                        <strong>@Model.Lineas.Count producto(s)</strong>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 s4-client-orders-table">
+                            <thead>
                                 <tr>
-                                    <td colspan="4" class="text-center text-muted py-4">No hay productos registrados para este pedido.</td>
+                                    <th>Producto</th>
+                                    <th>Cantidad</th>
+                                    <th>Precio unitario</th>
+                                    <th>Subtotal</th>
                                 </tr>
-                            }
-                            else
-                            {
-                                @foreach (var item in Model.Lineas)
+                            </thead>
+                            <tbody>
+                                @if (!Model.Lineas.Any())
                                 {
                                     <tr>
-                                        <td class="font-weight-bold">@item.Producto</td>
-                                        <td>@item.Cantidad</td>
-                                        <td>&#8353;@item.PrecioUnitario.ToString("N2")</td>
-                                        <td>&#8353;@item.Subtotal.ToString("N2")</td>
+                                        <td colspan="4" class="text-center text-muted py-4">No hay productos registrados para este pedido.</td>
                                     </tr>
                                 }
-                            }
-                        </tbody>
-                    </table>
-                </div>
+                                else
+                                {
+                                    @foreach (var item in Model.Lineas)
+                                    {
+                                        <tr>
+                                            <td class="font-weight-bold">@item.Producto</td>
+                                            <td>@item.Cantidad</td>
+                                            <td>&#8353;@item.PrecioUnitario.ToString("N2")</td>
+                                            <td class="font-weight-bold">&#8353;@item.Subtotal.ToString("N2")</td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
             </div>
+
+            <aside class="s4-client-action-panel">
+                <div>
+                    <span>Resumen</span>
+                    <h2>@Model.Lineas.Sum(x => x.Cantidad) unidad(es)</h2>
+                    <p>Total del pedido</p>
+                </div>
+
+                <div class="s4-client-order-total">
+                    <span>Total</span>
+                    <strong>&#8353;@Model.Total.ToString("N2")</strong>
+                </div>
+
+                <div class="s4-client-action-panel__buttons">
+                    <a asp-controller="ClientPortal" asp-action="Index" class="btn s4-client-secondary-action">
+                        Volver a Mis pedidos
+                    </a>
+
+                    @if (Model.HasInvoice)
+                    {
+                        <a asp-controller="ClientPortal"
+                           asp-action="Invoice"
+                           asp-route-id="@Model.PedidoId"
+                           class="btn s4-client-primary-action">
+                            Ver comprobante
+                        </a>
+                    }
+
+                    @if (Model.CanCancel)
+                    {
+                        <form asp-controller="ClientPortal" asp-action="Cancel" method="post"
+                              data-s3-confirm="Desea cancelar este pedido pendiente?"
+                              data-s3-confirm-title="Confirmar cancelacion"
+                              data-s3-confirm-type="warning"
+                              data-s3-confirm-ok="Si, cancelar"
+                              data-s3-confirm-cancel="Volver">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.PedidoId" />
+                            <button type="submit" class="btn s4-client-danger-action">
+                                Cancelar pedido
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <p class="s4-client-empty-text">@Model.CancelStatusMessage</p>
+                    }
+                </div>
+
+                <span class="s4-client-status-pill @claseEstado">@Model.Estado</span>
+            </aside>
         </div>
     </div>
-</div>
+</section>

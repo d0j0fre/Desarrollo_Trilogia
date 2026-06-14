@@ -722,3 +722,520 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* Sprint 4 frontend polish: client portal orders. */
+.s4-client-portal-page {
+    background: linear-gradient(180deg, #ffffff 0%, #f7f7f7 100%);
+    padding: 2rem 0 3.5rem;
+}
+
+.s4-client-portal-page .container {
+    max-width: 1180px;
+}
+
+.s4-client-portal-hero {
+    align-items: center;
+    background: #101010;
+    border: 1px solid rgba(242, 190, 34, 0.35);
+    border-radius: 8px;
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.14);
+    color: #ffffff;
+    display: flex;
+    gap: 1.5rem;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+    padding: 1.75rem;
+    position: relative;
+}
+
+.s4-client-portal-hero::before {
+    background: #f2be22;
+    content: "";
+    height: 100%;
+    left: 0;
+    position: absolute;
+    top: 0;
+    width: 6px;
+}
+
+.s4-client-portal-hero h1 {
+    color: #ffffff;
+    font-size: clamp(1.8rem, 3vw, 2.5rem);
+    font-weight: 900;
+    letter-spacing: 0;
+    line-height: 1.08;
+    margin: 0 0 0.45rem;
+}
+
+.s4-client-portal-hero p {
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 1rem;
+    margin: 0;
+    max-width: 680px;
+}
+
+.s4-client-portal-eyebrow {
+    align-items: center;
+    color: #f2be22;
+    display: inline-flex;
+    font-size: 0.78rem;
+    font-weight: 900;
+    gap: 0.45rem;
+    letter-spacing: 0;
+    margin-bottom: 0.45rem;
+    text-transform: uppercase;
+}
+
+.s4-client-portal-hero__stats {
+    display: flex;
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.s4-client-portal-hero__stats div {
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    min-width: 145px;
+    padding: 0.85rem 1rem;
+}
+
+.s4-client-portal-hero__stats span,
+.s4-client-summary-card span,
+.s4-client-orders-panel__head span,
+.s4-client-detail-card__head span,
+.s4-client-detail-facts span,
+.s4-client-detail-note span,
+.s4-client-action-panel span,
+.s4-client-order-total span {
+    color: #9b7600;
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 900;
+    letter-spacing: 0;
+    margin-bottom: 0.2rem;
+    text-transform: uppercase;
+}
+
+.s4-client-portal-hero__stats span {
+    color: rgba(255, 255, 255, 0.68);
+}
+
+.s4-client-portal-hero__stats strong {
+    color: #f2be22;
+    display: block;
+    font-size: 1.2rem;
+    font-weight: 900;
+}
+
+.s4-client-summary-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-bottom: 1.5rem;
+}
+
+.s4-client-summary-card,
+.s4-client-orders-panel,
+.s4-client-detail-card,
+.s4-client-action-panel {
+    background: #ffffff;
+    border: 1px solid #e6e2d8;
+    border-radius: 8px;
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.08);
+}
+
+.s4-client-summary-card {
+    min-width: 0;
+    padding: 1.2rem;
+}
+
+.s4-client-summary-card--dark {
+    background: #101010;
+    border-color: rgba(242, 190, 34, 0.35);
+    color: #ffffff;
+}
+
+.s4-client-summary-card__icon {
+    align-items: center;
+    background: rgba(242, 190, 34, 0.13);
+    border-radius: 8px;
+    color: #9b7600;
+    display: inline-flex;
+    height: 42px;
+    justify-content: center;
+    margin-bottom: 0.85rem;
+    width: 42px;
+}
+
+.s4-client-summary-card--dark .s4-client-summary-card__icon {
+    background: rgba(242, 190, 34, 0.18);
+    color: #f2be22;
+}
+
+.s4-client-summary-card h2 {
+    color: #151515;
+    font-size: 1.1rem;
+    font-weight: 900;
+    letter-spacing: 0;
+    margin: 0 0 0.25rem;
+}
+
+.s4-client-summary-card--dark h2 {
+    color: #ffffff;
+}
+
+.s4-client-summary-card p,
+.s4-client-empty-text {
+    color: #5c574f;
+    margin: 0;
+}
+
+.s4-client-summary-card--dark p {
+    color: rgba(255, 255, 255, 0.74);
+}
+
+.s4-client-summary-list {
+    border-top: 1px solid #ece7dc;
+    display: grid;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+}
+
+.s4-client-summary-card--dark .s4-client-summary-list {
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.s4-client-summary-list strong {
+    color: #151515;
+    display: block;
+    font-weight: 900;
+    overflow-wrap: anywhere;
+}
+
+.s4-client-summary-card--dark .s4-client-summary-list strong {
+    color: #ffffff;
+}
+
+.s4-client-credit-amount {
+    font-size: 1.6rem;
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 0.25rem;
+}
+
+.s4-client-credit-amount.success {
+    color: #15803d;
+}
+
+.s4-client-credit-amount.danger {
+    color: #b91c1c;
+}
+
+.s4-client-status-pill {
+    align-items: center;
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 0.78rem;
+    font-weight: 900;
+    justify-content: center;
+    min-height: 28px;
+    padding: 0.32rem 0.7rem;
+}
+
+.s4-client-status-pill.warning {
+    background: #fff7db;
+    color: #92400e;
+}
+
+.s4-client-status-pill.success {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.s4-client-status-pill.danger {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.s4-client-status-pill.dark {
+    background: #e5e7eb;
+    color: #111827;
+}
+
+.s4-client-orders-panel {
+    overflow: hidden;
+}
+
+.s4-client-orders-panel__head {
+    align-items: center;
+    background: #ffffff;
+    border-bottom: 1px solid #ece7dc;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    padding: 1.15rem 1.2rem;
+}
+
+.s4-client-orders-panel__head h2,
+.s4-client-detail-card__head h2,
+.s4-client-action-panel h2 {
+    color: #151515;
+    font-size: 1.15rem;
+    font-weight: 900;
+    letter-spacing: 0;
+    margin: 0;
+}
+
+.s4-client-orders-panel__head strong {
+    background: #fbfaf7;
+    border: 1px solid #ece7dc;
+    border-radius: 999px;
+    color: #151515;
+    flex: 0 0 auto;
+    font-size: 0.85rem;
+    padding: 0.4rem 0.75rem;
+}
+
+.s4-client-orders-table {
+    min-width: 720px;
+}
+
+.s4-client-orders-table thead th {
+    background: #fbfaf7;
+    border-bottom: 1px solid #ece7dc;
+    color: #5c574f;
+    font-size: 0.78rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.s4-client-orders-table td,
+.s4-client-orders-table th {
+    vertical-align: middle;
+}
+
+.s4-client-table-action,
+.s4-client-primary-action,
+.s4-client-secondary-action,
+.s4-client-danger-action,
+.s4-client-hero-action {
+    border-radius: 8px;
+    font-weight: 900;
+}
+
+.s4-client-table-action {
+    background: #ffffff;
+    border: 1px solid #d8d3c8;
+    color: #151515;
+}
+
+.s4-client-table-action:hover,
+.s4-client-table-action:focus,
+.s4-client-secondary-action:hover,
+.s4-client-secondary-action:focus {
+    background: #101010;
+    border-color: #101010;
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.s4-client-detail-grid {
+    align-items: start;
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: minmax(0, 1fr) minmax(310px, 360px);
+}
+
+.s4-client-detail-main {
+    display: grid;
+    gap: 1.5rem;
+    min-width: 0;
+}
+
+.s4-client-detail-card {
+    padding: 1.25rem;
+}
+
+.s4-client-detail-card__head {
+    align-items: center;
+    border-bottom: 1px solid #ece7dc;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    margin-bottom: 1.1rem;
+    padding-bottom: 1rem;
+}
+
+.s4-client-detail-facts {
+    display: grid;
+    gap: 0.85rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-bottom: 1rem;
+}
+
+.s4-client-detail-facts div,
+.s4-client-detail-note {
+    background: #fbfaf7;
+    border: 1px solid #ece7dc;
+    border-radius: 8px;
+    padding: 0.95rem;
+}
+
+.s4-client-detail-facts strong {
+    color: #151515;
+    display: block;
+    font-weight: 900;
+}
+
+.s4-client-detail-note + .s4-client-detail-note {
+    margin-top: 0.85rem;
+}
+
+.s4-client-detail-note p {
+    color: #151515;
+    font-weight: 700;
+    margin: 0;
+}
+
+.s4-client-action-panel {
+    padding: 1.25rem;
+    position: sticky;
+    top: 1rem;
+}
+
+.s4-client-action-panel p {
+    color: #5c574f;
+    margin: 0.25rem 0 0;
+}
+
+.s4-client-order-total {
+    background: #101010;
+    border-radius: 8px;
+    color: #ffffff;
+    margin: 1rem 0;
+    padding: 1rem;
+}
+
+.s4-client-order-total span {
+    color: #f2be22;
+}
+
+.s4-client-order-total strong {
+    color: #ffffff;
+    display: block;
+    font-size: 1.65rem;
+    font-weight: 900;
+}
+
+.s4-client-action-panel__buttons {
+    display: grid;
+    gap: 0.7rem;
+}
+
+.s4-client-action-panel__buttons form {
+    margin: 0;
+}
+
+.s4-client-primary-action,
+.s4-client-secondary-action,
+.s4-client-danger-action,
+.s4-client-hero-action {
+    align-items: center;
+    display: inline-flex;
+    justify-content: center;
+    min-height: 46px;
+    padding: 0.75rem 1rem;
+    width: 100%;
+}
+
+.s4-client-primary-action,
+.s4-client-hero-action {
+    background: #f2be22;
+    border: 1px solid #f2be22;
+    color: #101010;
+}
+
+.s4-client-primary-action:hover,
+.s4-client-primary-action:focus,
+.s4-client-hero-action:hover,
+.s4-client-hero-action:focus {
+    background: #d9a914;
+    border-color: #d9a914;
+    color: #101010;
+    text-decoration: none;
+}
+
+.s4-client-secondary-action {
+    background: #ffffff;
+    border: 1px solid #d8d3c8;
+    color: #151515;
+}
+
+.s4-client-danger-action {
+    background: #b91c1c;
+    border: 1px solid #b91c1c;
+    color: #ffffff;
+}
+
+.s4-client-danger-action:hover,
+.s4-client-danger-action:focus {
+    background: #991b1b;
+    border-color: #991b1b;
+    color: #ffffff;
+}
+
+.s4-client-order-products {
+    margin-bottom: 0;
+}
+
+@media (max-width: 991.98px) {
+    .s4-client-portal-hero {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .s4-client-portal-hero__stats,
+    .s4-client-hero-action {
+        width: 100%;
+    }
+
+    .s4-client-summary-grid,
+    .s4-client-detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .s4-client-action-panel {
+        position: static;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .s4-client-portal-page {
+        padding: 1rem 0 2.5rem;
+    }
+
+    .s4-client-portal-hero,
+    .s4-client-summary-card,
+    .s4-client-detail-card,
+    .s4-client-action-panel {
+        padding: 1.1rem;
+    }
+
+    .s4-client-portal-hero__stats {
+        flex-direction: column;
+    }
+
+    .s4-client-detail-card__head,
+    .s4-client-orders-panel__head {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .s4-client-detail-facts {
+        grid-template-columns: 1fr;
+    }
+}

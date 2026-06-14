@@ -7,120 +7,171 @@
     <link href="~/css/custom-theme.css" rel="stylesheet" />
 }
 
-<div class="container-fluid pt-4">
-    <div class="row px-xl-5">
-        <div class="col-12">
-            <div class="admin-page-header">
-                <h2 class="mb-2">Mis pedidos</h2>
-                <p>Consulta tu informacion de cliente, credito disponible e historial de compras.</p>
+<section class="s4-client-portal-page">
+    <div class="container">
+        <div class="s4-client-portal-hero">
+            <div>
+                <span class="s4-client-portal-eyebrow">
+                    <i class="fa fa-clipboard-list"></i>
+                    Portal del cliente
+                </span>
+                <h1>Mis pedidos</h1>
+                <p>Consulta tu informacion, credito disponible e historial de compras en un solo lugar.</p>
             </div>
-        </div>
-    </div>
 
-    <div class="row px-xl-5 pb-3">
-        <div class="col-lg-4 pb-3">
-            <div class="admin-card h-100">
-                <h5 class="mb-3">Informacion del cliente</h5>
-                <p class="mb-2"><strong>Nombre:</strong> @Model.Cliente.NombreCompleto</p>
-                <p class="mb-2"><strong>Correo:</strong> @Model.Cliente.Correo</p>
-                <p class="mb-2"><strong>Telefono:</strong> @(string.IsNullOrWhiteSpace(Model.Cliente.Telefono) ? "Sin telefono" : Model.Cliente.Telefono)</p>
-                <p class="mb-2"><strong>Direccion:</strong> @(string.IsNullOrWhiteSpace(Model.Cliente.Direccion) ? "Sin direccion" : Model.Cliente.Direccion)</p>
-                <p class="mb-0"><strong>Cliente desde:</strong> @Model.Cliente.FechaRegistro.ToString("dd/MM/yyyy")</p>
-            </div>
-        </div>
-
-        <div class="col-lg-4 pb-3">
-            <div class="admin-card h-100 text-center">
-                <h5 class="mb-3">Historial</h5>
-                <h3 class="mb-1">@Model.Cliente.TotalPedidos</h3>
-                <p class="text-muted mb-3">Pedido(s)</p>
-                <h4 class="mb-1">&#8353;@Model.Cliente.TotalComprado.ToString("N2")</h4>
-                <p class="text-muted mb-3">Total comprado</p>
-                <p class="mb-0"><strong>Ultimo pedido:</strong> @(Model.Cliente.UltimoPedido.HasValue ? Model.Cliente.UltimoPedido.Value.ToString("dd/MM/yyyy") : "Sin pedidos")</p>
+            <div class="s4-client-portal-hero__stats">
+                <div>
+                    <span>Pedidos</span>
+                    <strong>@Model.Cliente.TotalPedidos</strong>
+                </div>
+                <div>
+                    <span>Total comprado</span>
+                    <strong>&#8353;@Model.Cliente.TotalComprado.ToString("N2")</strong>
+                </div>
             </div>
         </div>
 
-        <div class="col-lg-4 pb-3">
-            <div class="admin-card h-100 text-center">
-                <h5 class="mb-3">Credito</h5>
+        <div class="s4-client-summary-grid">
+            <article class="s4-client-summary-card">
+                <div class="s4-client-summary-card__icon">
+                    <i class="fa fa-user"></i>
+                </div>
+                <div>
+                    <span>Cliente</span>
+                    <h2>@Model.Cliente.NombreCompleto</h2>
+                    <p>@Model.Cliente.Correo</p>
+                </div>
+
+                <div class="s4-client-summary-list">
+                    <div>
+                        <span>Telefono</span>
+                        <strong>@(string.IsNullOrWhiteSpace(Model.Cliente.Telefono) ? "Sin telefono" : Model.Cliente.Telefono)</strong>
+                    </div>
+                    <div>
+                        <span>Direccion</span>
+                        <strong>@(string.IsNullOrWhiteSpace(Model.Cliente.Direccion) ? "Sin direccion" : Model.Cliente.Direccion)</strong>
+                    </div>
+                    <div>
+                        <span>Cliente desde</span>
+                        <strong>@Model.Cliente.FechaRegistro.ToString("dd/MM/yyyy")</strong>
+                    </div>
+                </div>
+            </article>
+
+            <article class="s4-client-summary-card s4-client-summary-card--dark">
+                <div class="s4-client-summary-card__icon">
+                    <i class="fa fa-shopping-bag"></i>
+                </div>
+                <div>
+                    <span>Historial</span>
+                    <h2>@Model.Cliente.TotalPedidos pedido(s)</h2>
+                    <p>Total comprado: &#8353;@Model.Cliente.TotalComprado.ToString("N2")</p>
+                </div>
+
+                <div class="s4-client-summary-list">
+                    <div>
+                        <span>Ultimo pedido</span>
+                        <strong>@(Model.Cliente.UltimoPedido.HasValue ? Model.Cliente.UltimoPedido.Value.ToString("dd/MM/yyyy") : "Sin pedidos")</strong>
+                    </div>
+                </div>
+            </article>
+
+            <article class="s4-client-summary-card">
+                <div class="s4-client-summary-card__icon">
+                    <i class="fa fa-credit-card"></i>
+                </div>
+                <div>
+                    <span>Credito</span>
+                    <h2>Estado de cuenta</h2>
+                </div>
                 @if (Model.Credito == null)
                 {
-                    <p class="text-muted mb-0">No hay credito asignado actualmente.</p>
+                    <p class="s4-client-empty-text">No hay credito asignado actualmente.</p>
                 }
                 else
                 {
-                    <h3 class="@(Model.Credito.CreditoDisponible < 0 ? "text-danger" : "text-success") mb-1">&#8353;@Model.Credito.CreditoDisponible.ToString("N2")</h3>
-                    <p class="text-muted mb-2">Credito disponible</p>
-                    <p class="mb-1"><strong>Limite:</strong> &#8353;@Model.Credito.LimiteCredito.ToString("N2")</p>
-                    <p class="mb-2"><strong>Deuda:</strong> &#8353;@Model.Credito.DeudaActual.ToString("N2")</p>
+                    <div class="s4-client-credit-amount @(Model.Credito.CreditoDisponible < 0 ? "danger" : "success")">
+                        &#8353;@Model.Credito.CreditoDisponible.ToString("N2")
+                    </div>
+                    <p class="s4-client-empty-text">Credito disponible</p>
+
+                    <div class="s4-client-summary-list">
+                        <div>
+                            <span>Limite</span>
+                            <strong>&#8353;@Model.Credito.LimiteCredito.ToString("N2")</strong>
+                        </div>
+                        <div>
+                            <span>Deuda</span>
+                            <strong>&#8353;@Model.Credito.DeudaActual.ToString("N2")</strong>
+                        </div>
+                    </div>
 
                     @if (Model.Credito.CreditoBloqueado)
                     {
-                        <span class="badge badge-danger">Bloqueado</span>
+                        <span class="s4-client-status-pill danger">Bloqueado</span>
                     }
                     else if (Model.Credito.CreditoActivo)
                     {
-                        <span class="badge badge-success">Activo</span>
+                        <span class="s4-client-status-pill success">Activo</span>
                     }
                     else
                     {
-                        <span class="badge badge-secondary">Inactivo</span>
+                        <span class="s4-client-status-pill dark">Inactivo</span>
                     }
                 }
-            </div>
+            </article>
         </div>
-    </div>
 
-    <div class="row px-xl-5 pb-5">
-        <div class="col-12">
-            <div class="admin-table-wrapper">
-                <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Historial de pedidos</h5>
-                    <span class="badge badge-light">@Model.Pedidos.Count registro(s)</span>
+        <section class="s4-client-orders-panel">
+            <div class="s4-client-orders-panel__head">
+                <div>
+                    <span>Historial</span>
+                    <h2>Pedidos recientes</h2>
                 </div>
+                <strong>@Model.Pedidos.Count registro(s)</strong>
+            </div>
 
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="thead-light">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 s4-client-orders-table">
+                    <thead>
+                        <tr>
+                            <th># Pedido</th>
+                            <th>Fecha</th>
+                            <th>Estado</th>
+                            <th>Entrega</th>
+                            <th>Total</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Pedidos.Any())
+                        {
                             <tr>
-                                <th># Pedido</th>
-                                <th>Fecha</th>
-                                <th>Estado</th>
-                                <th>Entrega</th>
-                                <th>Total</th>
-                                <th></th>
+                                <td colspan="6" class="text-center text-muted py-4">No hay pedidos registrados.</td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            @if (!Model.Pedidos.Any())
+                        }
+                        else
+                        {
+                            @foreach (var pedido in Model.Pedidos)
                             {
+                                var claseEstado = pedido.Estado == "Pendiente" ? "warning" : pedido.Estado == "Entregado" ? "success" : pedido.Estado == "Cancelado" ? "danger" : "dark";
                                 <tr>
-                                    <td colspan="6" class="text-center text-muted py-4">No hay pedidos registrados.</td>
+                                    <td class="font-weight-bold">#@pedido.PedidoId</td>
+                                    <td>@pedido.FechaPedido.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td><span class="s4-client-status-pill @claseEstado">@pedido.Estado</span></td>
+                                    <td>@(string.IsNullOrWhiteSpace(pedido.TipoEntrega) ? "No indicado" : pedido.TipoEntrega)</td>
+                                    <td class="font-weight-bold">&#8353;@pedido.Total.ToString("N2")</td>
+                                    <td class="text-right">
+                                        <a asp-controller="ClientPortal" asp-action="Detail" asp-route-id="@pedido.PedidoId" class="btn btn-sm s4-client-table-action">
+                                            Ver detalle
+                                        </a>
+                                    </td>
                                 </tr>
                             }
-                            else
-                            {
-                                @foreach (var pedido in Model.Pedidos)
-                                {
-                                    var claseEstado = pedido.Estado == "Pendiente" ? "warning" : pedido.Estado == "Entregado" ? "success" : pedido.Estado == "Cancelado" ? "danger" : "dark";
-                                    <tr>
-                                        <td class="font-weight-bold">#@pedido.PedidoId</td>
-                                        <td>@pedido.FechaPedido.ToString("dd/MM/yyyy HH:mm")</td>
-                                        <td><span class="admin-badge-soft @claseEstado">@pedido.Estado</span></td>
-                                        <td>@(string.IsNullOrWhiteSpace(pedido.TipoEntrega) ? "No indicado" : pedido.TipoEntrega)</td>
-                                        <td>&#8353;@pedido.Total.ToString("N2")</td>
-                                        <td class="text-right">
-                                            <a asp-controller="ClientPortal" asp-action="Detail" asp-route-id="@pedido.PedidoId" class="btn btn-sm btn-outline-primary">
-                                                Ver detalle
-                                            </a>
-                                        </td>
-                                    </tr>
-                                }
-                            }
-                        </tbody>
-                    </table>
-                </div>
+                        }
+                    </tbody>
+                </table>
             </div>
-        </div>
+        </section>
     </div>
-</div>
+</section>
