@@ -525,24 +525,31 @@ namespace Proyecto_Final.Services
                 }
             }
 
-            foreach (var factura in model.Facturas.Take(5))
+            await using (var command = new SqlCommand("dbo.sp_Admin_GetTopSellingProducts", connection))
             {
-                model.ProductosMasVendidos.Add(new TopSellingProductViewModel
+                command.CommandType = CommandType.StoredProcedure;
+                await using var reader = await command.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
                 {
-                    Producto = factura.Cliente,
-                    CantidadVendida = 1,
-                    MontoVendido = factura.Total
-                });
+                    model.ProductosMasVendidos.Add(new TopSellingProductViewModel
+                    {
+                        Producto = reader.IsDBNull(0) ? string.Empty : reader.GetString(0),
+                        CantidadVendida = reader.IsDBNull(1) ? 0 : reader.GetInt32(1),
+                        MontoVendido = reader.IsDBNull(2) ? 0 : reader.GetDecimal(2)
+                    });
+                }
             }
 
-            if (model.Facturas.Any())
+            await using (var command = new SqlCommand("dbo.sp_Admin_GetMonthlySales", connection))
             {
-                foreach (var group in model.Facturas.GroupBy(f => new { f.FechaFactura.Year, f.FechaFactura.Month }).OrderByDescending(g => g.Key.Year).ThenByDescending(g => g.Key.Month).Take(6).OrderBy(g => g.Key.Year).ThenBy(g => g.Key.Month))
+                command.CommandType = CommandType.StoredProcedure;
+                await using var reader = await command.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
                 {
                     model.VentasPorMes.Add(new MonthlySalesViewModel
                     {
-                        Periodo = new DateTime(group.Key.Year, group.Key.Month, 1).ToString("MM/yyyy"),
-                        Total = group.Sum(x => x.Total)
+                        Periodo = reader.IsDBNull(0) ? string.Empty : reader.GetString(0),
+                        Total = reader.IsDBNull(1) ? 0 : reader.GetDecimal(1)
                     });
                 }
             }
