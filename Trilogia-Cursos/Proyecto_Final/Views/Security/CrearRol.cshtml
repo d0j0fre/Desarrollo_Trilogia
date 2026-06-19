@@ -14,6 +14,7 @@
     <div class="card shadow-sm border-0">
         <div class="card-body p-4">
             <form asp-controller="Security" asp-action="CrearRol" method="post">
+                @Html.AntiForgeryToken()
 
                 <div class="mb-3">
                     <label asp-for="Nombre" class="form-label" style="font-weight: bold; color: #555;">Nombre del Perfil <span class="text-danger">*</span></label>

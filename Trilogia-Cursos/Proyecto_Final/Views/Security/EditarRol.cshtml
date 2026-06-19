@@ -12,6 +12,7 @@
     <div class="card shadow-sm border-0">
         <div class="card-body p-4">
             <form asp-controller="Security" asp-action="EditarRol" method="post">
+                @Html.AntiForgeryToken()
                 <input type="hidden" asp-for="PerfilId" />
 
                 <div class="mb-3">
