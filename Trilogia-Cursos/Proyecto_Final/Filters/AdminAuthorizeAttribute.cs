@@ -25,10 +25,11 @@ namespace Proyecto_Final.Filters
 
         public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
         {
+            var userId = context.HttpContext.Session.GetInt32("UserId");
             var userEmail = context.HttpContext.Session.GetString("UserEmail");
             var userRole = context.HttpContext.Session.GetString("UserRole");
 
-            if (string.IsNullOrWhiteSpace(userEmail))
+            if (!userId.HasValue || userId.Value <= 0 || string.IsNullOrWhiteSpace(userEmail))
             {
                 context.Result = new RedirectToActionResult("Login", "Account", null);
                 return;
