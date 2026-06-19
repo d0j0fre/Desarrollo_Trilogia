@@ -6,20 +6,22 @@ namespace Proyecto_Final.Filters
 {
     public class AdminAuthorizeAttribute : TypeFilterAttribute
     {
-        public AdminAuthorizeAttribute(string modulo) : base(typeof(AdminAuthorizeFilter))
+        public AdminAuthorizeAttribute(string modulo, string? permisoCodigo = null) : base(typeof(AdminAuthorizeFilter))
         {
-            Arguments = new object[] { modulo };
+            Arguments = new object[] { modulo, permisoCodigo ?? string.Empty };
         }
     }
 
     public class AdminAuthorizeFilter : IAsyncAuthorizationFilter
     {
         private readonly string _modulo;
+        private readonly string? _permisoCodigo;
         private readonly AdminDbService _dbService;
 
-        public AdminAuthorizeFilter(string modulo, AdminDbService dbService)
+        public AdminAuthorizeFilter(string modulo, string? permisoCodigo, AdminDbService dbService)
         {
             _modulo = modulo;
+            _permisoCodigo = permisoCodigo;
             _dbService = dbService;
         }
 
@@ -40,7 +42,9 @@ namespace Proyecto_Final.Filters
                 return;
             }
 
-            var tienePermiso = await _dbService.TienePermisoPorRolAsync(userRole, _modulo);
+            var tienePermiso = string.IsNullOrWhiteSpace(_permisoCodigo)
+                ? await _dbService.TienePermisoPorRolAsync(userRole, _modulo)
+                : await _dbService.TienePermisoCodigoPorRolAsync(userRole ?? string.Empty, _permisoCodigo);
 
             if (!tienePermiso)
             {

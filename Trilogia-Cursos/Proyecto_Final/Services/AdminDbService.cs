@@ -1704,6 +1704,24 @@ namespace Proyecto_Final.Services
             return Convert.ToInt32(result ?? 0) > 0;
         }
 
+        public async Task<bool> TienePermisoCodigoPorRolAsync(string nombreRol, string codigoPermiso)
+        {
+            if (string.IsNullOrWhiteSpace(nombreRol) || string.IsNullOrWhiteSpace(codigoPermiso))
+            {
+                return false;
+            }
+
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_HasPermissionByCode", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add("@NombreRol", SqlDbType.NVarChar, 100).Value = nombreRol.Trim();
+            command.Parameters.Add("@Codigo", SqlDbType.NVarChar, 100).Value = codigoPermiso.Trim();
+
+            await connection.OpenAsync();
+            var result = await command.ExecuteScalarAsync();
+            return result != null && result != DBNull.Value && Convert.ToBoolean(result);
+        }
+
         private static List<string> ObtenerAliasModulo(string modulo)
         {
             var clave = NormalizarModulo(modulo);
