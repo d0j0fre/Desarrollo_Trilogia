@@ -117,9 +117,46 @@
 
                 <hr />
 
-                <p class="text-muted mb-0">
-                    Cuando el pedido pasa a entregado, el sistema puede generar la factura y registrar movimientos de inventario según corresponda.
-                </p>
+                <h5 class="mb-3">Facturacion</h5>
+
+                @if (Model.HasInvoice && Model.FacturaId.HasValue)
+                {
+                    <a asp-controller="Billing"
+                       asp-action="Detail"
+                       asp-route-id="@Model.FacturaId.Value"
+                       class="btn btn-outline-primary btn-block mb-2">
+                        <i class="fa fa-file-invoice mr-2"></i>Ver factura
+                    </a>
+                    <p class="text-muted mb-0">
+                        Este pedido ya tiene una factura asociada.
+                    </p>
+                }
+                else if (Model.CanGenerateInvoice)
+                {
+                    <form asp-controller="Billing"
+                          asp-action="GenerateFromOrder"
+                          method="post"
+                          data-s3-confirm="Desea generar la factura para este pedido?"
+                          data-s3-confirm-title="Generar factura"
+                          data-s3-confirm-type="warning"
+                          data-s3-confirm-ok="Si, generar"
+                          data-s3-confirm-cancel="Volver">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="pedidoId" value="@Model.PedidoId" />
+                        <button type="submit" class="btn btn-success btn-block mb-2">
+                            <i class="fa fa-file-invoice-dollar mr-2"></i>Generar factura
+                        </button>
+                    </form>
+                    <p class="text-muted mb-0">
+                        La factura se genera desde las lineas actuales del pedido. No se descuenta inventario en esta accion.
+                    </p>
+                }
+                else
+                {
+                    <p class="text-muted mb-0">
+                        Este pedido no permite generar factura desde esta vista.
+                    </p>
+                }
             </div>
         </div>
     </div>

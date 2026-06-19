@@ -25,6 +25,11 @@ namespace Proyecto_Final.Models.Admin
         public string? DireccionEntrega { get; set; }
         public decimal Total { get; set; }
         public string? Observaciones { get; set; }
+        public bool HasInvoice { get; set; }
+        public int? FacturaId { get; set; }
+        public bool CanGenerateInvoice => !HasInvoice
+            && Detalles.Any()
+            && (Estado == "Pendiente" || Estado == "Aprobado" || Estado == "EnProceso" || Estado == "Entregado");
         public List<OrderDetailLineViewModel> Detalles { get; set; } = new();
         public List<string> EstadosDisponibles { get; set; } = new() { "Pendiente", "Aprobado", "EnProceso", "Entregado", "Cancelado" };
     }
@@ -38,5 +43,13 @@ namespace Proyecto_Final.Models.Admin
         public decimal PrecioUnitario { get; set; }
         public decimal Subtotal { get; set; }
         public int StockActual { get; set; }
+    }
+
+    public class GenerateInvoiceResultViewModel
+    {
+        public int FacturaId { get; set; }
+        public int PedidoId { get; set; }
+        public string NumeroFactura { get; set; } = string.Empty;
+        public string EstadoPedido { get; set; } = string.Empty;
     }
 }

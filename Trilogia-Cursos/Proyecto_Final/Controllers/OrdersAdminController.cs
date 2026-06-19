@@ -34,6 +34,9 @@ namespace Proyecto_Final.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            pedido.FacturaId = await _adminDbService.GetInvoiceIdByOrderAsync(id);
+            pedido.HasInvoice = pedido.FacturaId.HasValue;
+
             return View(pedido);
         }
 

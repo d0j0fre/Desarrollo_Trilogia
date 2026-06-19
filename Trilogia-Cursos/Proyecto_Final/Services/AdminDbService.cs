@@ -448,6 +448,50 @@ namespace Proyecto_Final.Services
             return result != null && result != DBNull.Value && Convert.ToBoolean(result);
         }
 
+        public async Task<int?> GetInvoiceIdByOrderAsync(int pedidoId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_GetInvoiceByOrderId", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add("@PedidoId", SqlDbType.Int).Value = pedidoId;
+
+            await connection.OpenAsync();
+            var result = await command.ExecuteScalarAsync();
+            if (result == null || result == DBNull.Value)
+            {
+                return null;
+            }
+
+            return Convert.ToInt32(result);
+        }
+
+        public async Task<GenerateInvoiceResultViewModel> GenerateInvoiceFromOrderAsync(int pedidoId, int usuarioId, string usuarioNombre)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_GenerateInvoiceFromOrder", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add("@PedidoId", SqlDbType.Int).Value = pedidoId;
+            command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId;
+            command.Parameters.Add("@UsuarioNombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(usuarioNombre)
+                ? DBNull.Value
+                : usuarioNombre.Trim();
+
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+            if (!await reader.ReadAsync())
+            {
+                throw new InvalidOperationException("No fue posible generar la factura del pedido.");
+            }
+
+            return new GenerateInvoiceResultViewModel
+            {
+                FacturaId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                PedidoId = reader.IsDBNull(1) ? 0 : reader.GetInt32(1),
+                NumeroFactura = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                EstadoPedido = reader.IsDBNull(3) ? string.Empty : reader.GetString(3)
+            };
+        }
+
         public async Task<SalesReportViewModel> GetSalesReportAsync()
         {
             var model = new SalesReportViewModel();
