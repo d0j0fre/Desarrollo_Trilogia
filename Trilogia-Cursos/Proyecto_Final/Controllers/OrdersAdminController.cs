@@ -42,6 +42,7 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AdminAuthorize("Pedidos", "PEDIDOS_CAMBIAR_ESTADO")]
         public async Task<IActionResult> UpdateStatus(int pedidoId, string nuevoEstado)
         {
             if (pedidoId <= 0 || string.IsNullOrWhiteSpace(nuevoEstado))

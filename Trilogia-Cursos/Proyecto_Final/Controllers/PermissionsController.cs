@@ -46,6 +46,7 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AdminAuthorize("Seguridad", "PERMISOS_ASIGNAR")]
         public async Task<IActionResult> Edit(int perfilId, List<int>? permisosSeleccionados)
         {
             var model = await _adminDbService.GetRolePermissionAssignmentAsync(perfilId);

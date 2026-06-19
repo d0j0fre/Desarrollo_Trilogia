@@ -31,6 +31,7 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AdminAuthorize("Seguridad", "ROLES_CREAR_EDITAR")]
         public async Task<IActionResult> Create(RoleFormViewModel model)
         {
             if (!ModelState.IsValid) return View(model);
@@ -75,6 +76,7 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AdminAuthorize("Seguridad", "ROLES_CREAR_EDITAR")]
         public async Task<IActionResult> Edit(RoleFormViewModel model)
         {
             if (!ModelState.IsValid) return View(model);
@@ -105,6 +107,7 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AdminAuthorize("Seguridad", "ROLES_CREAR_EDITAR")]
         public async Task<IActionResult> ToggleStatus(int perfilId, string? buscar)
         {
             if (perfilId <= 0)
