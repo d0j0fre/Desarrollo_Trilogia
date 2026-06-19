@@ -430,17 +430,9 @@ namespace Proyecto_Final.Services
 
         public async Task<bool> OrderHasInvoiceAsync(int pedidoId)
         {
-            const string sql = @"
-                SELECT CASE WHEN EXISTS
-                (
-                    SELECT 1
-                    FROM dbo.Facturas
-                    WHERE PedidoId = @PedidoId
-                )
-                THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END";
-
             await using var connection = new SqlConnection(_connectionString);
-            await using var command = new SqlCommand(sql, connection);
+            await using var command = new SqlCommand("dbo.sp_Admin_OrderHasInvoice", connection);
+            command.CommandType = CommandType.StoredProcedure;
             command.Parameters.Add("@PedidoId", SqlDbType.Int).Value = pedidoId;
 
             await connection.OpenAsync();
@@ -611,43 +603,15 @@ namespace Proyecto_Final.Services
 
         public async Task<ClientPortalInvoiceViewModel?> GetClientInvoiceByOrderAsync(int pedidoId, int usuarioId)
         {
-            const string headerSql = @"
-                SELECT
-                    f.FacturaId,
-                    f.PedidoId,
-                    f.NumeroFactura,
-                    f.ClienteNombre,
-                    f.ClienteCorreo,
-                    f.FechaFactura,
-                    f.Subtotal,
-                    f.Impuesto,
-                    f.Total,
-                    f.Estado
-                FROM dbo.Facturas f
-                INNER JOIN dbo.Pedidos p
-                    ON p.PedidoId = f.PedidoId
-                WHERE f.PedidoId = @PedidoId
-                  AND f.UsuarioId = @UsuarioId
-                  AND p.UsuarioId = @UsuarioId;";
-
-            const string linesSql = @"
-                SELECT
-                    ProductoNombre,
-                    Cantidad,
-                    PrecioUnitario,
-                    Subtotal
-                FROM dbo.FacturaDetalle
-                WHERE FacturaId = @FacturaId
-                ORDER BY FacturaDetalleId ASC;";
-
             await using var connection = new SqlConnection(_connectionString);
             await connection.OpenAsync();
 
             int facturaId;
             ClientPortalInvoiceViewModel? model = null;
 
-            await using (var command = new SqlCommand(headerSql, connection))
+            await using (var command = new SqlCommand("dbo.sp_Client_GetInvoiceHeaderByOrder", connection))
             {
+                command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.Add("@PedidoId", SqlDbType.Int).Value = pedidoId;
                 command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId;
 
@@ -677,9 +641,11 @@ namespace Proyecto_Final.Services
                 return null;
             }
 
-            await using (var command = new SqlCommand(linesSql, connection))
+            await using (var command = new SqlCommand("dbo.sp_Client_GetInvoiceLinesByOrder", connection))
             {
-                command.Parameters.Add("@FacturaId", SqlDbType.Int).Value = facturaId;
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.Add("@PedidoId", SqlDbType.Int).Value = pedidoId;
+                command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId;
 
                 await using var reader = await command.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
