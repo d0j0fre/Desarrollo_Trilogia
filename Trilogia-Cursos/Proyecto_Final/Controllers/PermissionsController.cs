@@ -80,9 +80,9 @@ namespace Proyecto_Final.Controllers
                 TempData["SuccessMessage"] = "Permisos actualizados correctamente.";
                 return RedirectToAction(nameof(Edit), new { id = perfilId });
             }
-            catch (InvalidOperationException ex)
+            catch (InvalidOperationException)
             {
-                TempData["ErrorMessage"] = ex.Message;
+                TempData["ErrorMessage"] = "No se pudieron actualizar los permisos.";
             }
             catch (Exception)
             {

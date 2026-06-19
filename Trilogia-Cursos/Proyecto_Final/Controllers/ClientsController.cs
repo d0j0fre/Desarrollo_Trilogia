@@ -64,9 +64,9 @@ namespace Proyecto_Final.Controllers
                 TempData["SuccessMessage"] = "Cliente registrado correctamente.";
                 return RedirectToAction(nameof(Index));
             }
-            catch (InvalidOperationException ex)
+            catch (InvalidOperationException)
             {
-                ModelState.AddModelError(string.Empty, ex.Message);
+                ModelState.AddModelError(string.Empty, "No se pudo registrar el cliente. Revise los datos e intente nuevamente.");
             }
             catch (Exception)
             {
@@ -113,9 +113,9 @@ namespace Proyecto_Final.Controllers
                 TempData["SuccessMessage"] = "Cliente actualizado correctamente.";
                 return RedirectToAction(nameof(Details), new { id = model.UsuarioId });
             }
-            catch (InvalidOperationException ex)
+            catch (InvalidOperationException)
             {
-                ModelState.AddModelError(string.Empty, ex.Message);
+                ModelState.AddModelError(string.Empty, "No se pudo actualizar el cliente. Revise los datos e intente nuevamente.");
             }
             catch (Exception)
             {
@@ -165,9 +165,9 @@ namespace Proyecto_Final.Controllers
                     ? "Cliente reactivado correctamente."
                     : "Cliente inactivado correctamente.";
             }
-            catch (InvalidOperationException ex)
+            catch (InvalidOperationException)
             {
-                TempData["ErrorMessage"] = ex.Message;
+                TempData["ErrorMessage"] = "No se pudo cambiar el estado del cliente.";
             }
             catch (Exception)
             {

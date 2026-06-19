@@ -70,9 +70,9 @@ namespace Proyecto_Final.Controllers
 
                 TempData["SuccessMessage"] = "Consulta actualizada correctamente.";
             }
-            catch (InvalidOperationException ex)
+            catch (InvalidOperationException)
             {
-                TempData["ErrorMessage"] = ex.Message;
+                TempData["ErrorMessage"] = "No se pudo actualizar la consulta.";
             }
             catch (Exception)
             {

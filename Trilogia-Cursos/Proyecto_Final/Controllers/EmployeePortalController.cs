@@ -69,11 +69,9 @@ namespace Proyecto_Final.Controllers
 
                 TempData["SuccessMessage"] = "Solicitud enviada correctamente. Quedó pendiente de revisión administrativa.";
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                TempData["ErrorMessage"] = ex.Message.Contains("empleado", StringComparison.OrdinalIgnoreCase)
-                    ? ex.Message
-                    : "No fue posible registrar la solicitud.";
+                TempData["ErrorMessage"] = "No fue posible registrar la solicitud.";
             }
 
             return RedirectToAction(nameof(Index));

@@ -59,9 +59,9 @@ namespace Proyecto_Final.Controllers
             {
                 model.ImagenUrl = await SaveProductImageAsync(model.ImagenArchivo, model.ImagenUrl);
             }
-            catch (InvalidOperationException ex)
+            catch (ProductImageValidationException ex)
             {
-                ModelState.AddModelError(nameof(model.ImagenArchivo), ex.Message);
+                ModelState.AddModelError(nameof(model.ImagenArchivo), ex.UserMessage);
                 return View(model);
             }
 
@@ -99,9 +99,9 @@ namespace Proyecto_Final.Controllers
             {
                 model.ImagenUrl = await SaveProductImageAsync(model.ImagenArchivo, model.ImagenUrl);
             }
-            catch (InvalidOperationException ex)
+            catch (ProductImageValidationException ex)
             {
-                ModelState.AddModelError(nameof(model.ImagenArchivo), ex.Message);
+                ModelState.AddModelError(nameof(model.ImagenArchivo), ex.UserMessage);
                 return View(model);
             }
 
@@ -173,9 +173,9 @@ namespace Proyecto_Final.Controllers
 
                 TempData["SuccessMessage"] = "Producto eliminado permanentemente.";
             }
-            catch (InvalidOperationException ex)
+            catch (InvalidOperationException)
             {
-                TempData["ErrorMessage"] = ex.Message;
+                TempData["ErrorMessage"] = "No se pudo eliminar el producto.";
             }
 
             return RedirectToAction(nameof(Index), new { filtro });
@@ -187,18 +187,18 @@ namespace Proyecto_Final.Controllers
 
             if (archivo.Length > MaxProductImageBytes)
             {
-                throw new InvalidOperationException("La imagen supera el tamano maximo permitido de 2 MB.");
+                throw new ProductImageValidationException("La imagen supera el tamano maximo permitido de 2 MB.");
             }
 
             var extension = Path.GetExtension(archivo.FileName).ToLowerInvariant();
             if (string.IsNullOrWhiteSpace(extension) || !PermittedImageContentTypes.TryGetValue(extension, out var allowedContentTypes))
             {
-                throw new InvalidOperationException("La imagen debe estar en formato JPG, JPEG, PNG o WEBP.");
+                throw new ProductImageValidationException("La imagen debe estar en formato JPG, JPEG, PNG o WEBP.");
             }
 
             if (string.IsNullOrWhiteSpace(archivo.ContentType) || !allowedContentTypes.Contains(archivo.ContentType, StringComparer.OrdinalIgnoreCase))
             {
-                throw new InvalidOperationException("El tipo de archivo de la imagen no es valido.");
+                throw new ProductImageValidationException("El tipo de archivo de la imagen no es valido.");
             }
 
             var uploadsRoot = Path.Combine(_environment.WebRootPath, "uploads", "productos");
@@ -208,6 +208,17 @@ namespace Proyecto_Final.Controllers
             await using var stream = new FileStream(filePath, FileMode.Create);
             await archivo.CopyToAsync(stream);
             return $"~/uploads/productos/{fileName}";
+        }
+
+        private sealed class ProductImageValidationException : Exception
+        {
+            public ProductImageValidationException(string userMessage)
+                : base(userMessage)
+            {
+                UserMessage = userMessage;
+            }
+
+            public string UserMessage { get; }
         }
 
         [HttpGet]
@@ -258,9 +269,9 @@ namespace Proyecto_Final.Controllers
                 TempData["SuccessMessage"] = "Movimiento registrado correctamente.";
                 return RedirectToAction(nameof(Movements));
             }
-            catch (InvalidOperationException ex)
+            catch (InvalidOperationException)
             {
-                ModelState.AddModelError(string.Empty, ex.Message);
+                ModelState.AddModelError(string.Empty, "No se pudo registrar el movimiento de inventario. Revise los datos e intente nuevamente.");
             }
             catch (Exception)
             {

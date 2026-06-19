@@ -179,9 +179,9 @@ namespace Proyecto_Final.Controllers
                 TempData["LoginSuccess"] = $"Pedido #{pedidoId} creado correctamente.";
                 return RedirectToAction(nameof(Confirmation));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                ModelState.AddModelError(string.Empty, ex.Message);
+                ModelState.AddModelError(string.Empty, "No se pudo completar el pedido. Intente nuevamente.");
                 return View(model);
             }
         }

@@ -79,9 +79,9 @@ namespace Proyecto_Final.Controllers
 
                 TempData["SuccessMessage"] = "Configuración de crédito actualizada correctamente.";
             }
-            catch (InvalidOperationException ex)
+            catch (InvalidOperationException)
             {
-                TempData["ErrorMessage"] = ex.Message;
+                TempData["ErrorMessage"] = "No se pudo actualizar la configuracion del credito.";
             }
             catch (Exception)
             {
@@ -121,9 +121,9 @@ namespace Proyecto_Final.Controllers
 
                 TempData["SuccessMessage"] = "Movimiento de crédito registrado correctamente.";
             }
-            catch (InvalidOperationException ex)
+            catch (InvalidOperationException)
             {
-                TempData["ErrorMessage"] = ex.Message;
+                TempData["ErrorMessage"] = "No se pudo registrar el movimiento de credito.";
             }
             catch (Exception)
             {

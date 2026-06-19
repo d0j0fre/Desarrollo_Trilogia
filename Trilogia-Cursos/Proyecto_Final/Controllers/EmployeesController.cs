@@ -78,15 +78,13 @@ namespace Proyecto_Final.Controllers
                 TempData["SuccessMessage"] = "Empleado registrado correctamente.";
                 return RedirectToAction(nameof(Details), new { id = empleadoId });
             }
-            catch (InvalidOperationException ex)
+            catch (InvalidOperationException)
             {
-                ModelState.AddModelError(string.Empty, ex.Message);
+                ModelState.AddModelError(string.Empty, "No se pudo registrar el empleado. Revise los datos e intente nuevamente.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                ModelState.AddModelError(string.Empty, ex.Message.Contains("correo", StringComparison.OrdinalIgnoreCase)
-                    ? ex.Message
-                    : "Ocurrió un error al registrar el empleado. Intente nuevamente.");
+                ModelState.AddModelError(string.Empty, "Ocurrio un error al registrar el empleado. Intente nuevamente.");
             }
 
             model.RolesDisponibles = await _employeesDbService.GetEmployeeRoleSelectListAsync(model.PerfilId);
@@ -137,11 +135,9 @@ namespace Proyecto_Final.Controllers
                 TempData["SuccessMessage"] = "Empleado actualizado correctamente.";
                 return RedirectToAction(nameof(Details), new { id = model.EmpleadoId });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                ModelState.AddModelError(string.Empty, ex.Message.Contains("correo", StringComparison.OrdinalIgnoreCase)
-                    ? ex.Message
-                    : "Ocurrió un error al actualizar el empleado. Intente nuevamente.");
+                ModelState.AddModelError(string.Empty, "Ocurrio un error al actualizar el empleado. Intente nuevamente.");
             }
 
             model.RolesDisponibles = await _employeesDbService.GetEmployeeRoleSelectListAsync(model.PerfilId);

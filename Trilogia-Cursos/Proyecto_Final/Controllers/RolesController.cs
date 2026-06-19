@@ -47,9 +47,9 @@ namespace Proyecto_Final.Controllers
                 TempData["SuccessMessage"] = "Rol creado correctamente.";
                 return RedirectToAction(nameof(Index));
             }
-            catch (InvalidOperationException ex)
+            catch (InvalidOperationException)
             {
-                ModelState.AddModelError(string.Empty, ex.Message);
+                ModelState.AddModelError(string.Empty, "No se pudo crear el rol. Revise los datos e intente nuevamente.");
             }
             catch (Exception)
             {
@@ -91,9 +91,9 @@ namespace Proyecto_Final.Controllers
                 TempData["SuccessMessage"] = "Rol actualizado correctamente.";
                 return RedirectToAction(nameof(Index));
             }
-            catch (InvalidOperationException ex)
+            catch (InvalidOperationException)
             {
-                ModelState.AddModelError(string.Empty, ex.Message);
+                ModelState.AddModelError(string.Empty, "No se pudo actualizar el rol. Revise los datos e intente nuevamente.");
             }
             catch (Exception)
             {
@@ -125,9 +125,9 @@ namespace Proyecto_Final.Controllers
 
                 TempData["SuccessMessage"] = "Estado del rol actualizado correctamente.";
             }
-            catch (InvalidOperationException ex)
+            catch (InvalidOperationException)
             {
-                TempData["ErrorMessage"] = ex.Message;
+                TempData["ErrorMessage"] = "No se pudo cambiar el estado del rol.";
             }
             catch (Exception)
             {
