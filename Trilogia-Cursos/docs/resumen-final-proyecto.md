@@ -40,11 +40,13 @@ Commits destacados:
 
 Ejecutar en la base `DistribuidoraJJ_DB` antes de QA funcional completo:
 
-1. `database/cu091_migracion_pedidos_facturacion_sp.sql`
-2. `database/cu092_admin_estado_pedido_seguro.sql`
-3. `database/cu093_admin_reportes_facturacion_sp.sql`
-4. `database/cu094_permisos_granulares_acciones.sql`
-5. `database/cu095_facturacion_generar_permiso.sql`
+1. `database/cu090_admin_facturar_pedido.sql`
+2. `database/cu091_migracion_pedidos_facturacion_sp.sql`
+3. `database/cu092_admin_estado_pedido_seguro.sql`
+4. `database/cu093_admin_reportes_facturacion_sp.sql`
+5. `database/cu094_permisos_granulares_acciones.sql`
+6. `database/cu095_facturacion_generar_permiso.sql`
+7. `database/cu096_corregir_mojibake_productos.sql`
 
 Notas:
 
@@ -52,6 +54,7 @@ Notas:
 - Revisar mensajes de SSMS.
 - No ejecutar sobre otra base sin confirmar.
 - No modificar scripts manualmente antes de probar.
+- Si no se ejecuta `database/cu090_admin_facturar_pedido.sql`, la generacion de facturas puede fallar porque falta `dbo.sp_Admin_GenerateInvoiceFromOrder`.
 
 ## Build final esperado
 
@@ -75,6 +78,7 @@ Resultado esperado:
 - Estados de pedidos facturados protegidos.
 - Reportes de facturacion corregidos con procedimientos agregados.
 - Generacion de factura protegida con permiso granular.
+- Correccion controlada de mojibake en productos y nombres copiados a detalle de factura.
 
 ### Seguridad y autorizacion
 
@@ -159,6 +163,8 @@ API:
 - Producto inexistente con `404`.
 - Parametros invalidos de productos con `400`.
 - Destacados con `take` invalido y limite maximo de 24.
+- Producto `Ron Añejo` visible correctamente en tienda, checkout y API.
+- Producto `Ron Añejo` visible correctamente en factura/Billing si aplica.
 
 Tecnico:
 

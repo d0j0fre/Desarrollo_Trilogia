@@ -126,7 +126,20 @@ Se creo el permiso `FACTURACION_GENERAR` y se protegio la accion administrativa 
 
 Script relacionado:
 
+- `database/cu090_admin_facturar_pedido.sql`
 - `database/cu095_facturacion_generar_permiso.sql`
+
+Nota:
+
+- `database/cu090_admin_facturar_pedido.sql` crea `dbo.sp_Admin_GenerateInvoiceFromOrder`; debe ejecutarse antes de probar generacion de facturas desde pedidos.
+
+### Correccion controlada de mojibake en productos
+
+Se agrego un script especifico para corregir nombres y descripciones de productos afectados por texto mal codificado, incluyendo nombres copiados en detalles historicos de factura cuando aplique.
+
+Script relacionado:
+
+- `database/cu096_corregir_mojibake_productos.sql`
 
 ### API publica de productos y categorias
 

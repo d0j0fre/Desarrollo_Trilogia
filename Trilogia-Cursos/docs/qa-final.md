@@ -78,6 +78,13 @@ Este documento deja el checklist de pruebas finales para validar la rama `featur
 - [ ] `GET /api/products/featured?take=-1` debe devolver `400`.
 - [ ] `GET /api/products/featured?take=100` debe devolver `200` con maximo 24 resultados.
 
+## Checklist datos y mojibake
+
+- [ ] Confirmar que Tienda muestra `Ron Añejo`.
+- [ ] Confirmar que Checkout muestra `Ron Añejo`.
+- [ ] Confirmar que API `/api/products` muestra `Ron Añejo`.
+- [ ] Confirmar que Billing/Factura muestra `Ron Añejo` si aplica.
+
 ## Checklist tecnico
 
 - [ ] Build solucion completa.
@@ -96,11 +103,13 @@ Este documento deja el checklist de pruebas finales para validar la rama `featur
 
 Estos scripts deben ejecutarse en la base `DistribuidoraJJ_DB` antes de pruebas funcionales completas:
 
+- `database/cu090_admin_facturar_pedido.sql`
 - `database/cu091_migracion_pedidos_facturacion_sp.sql`
 - `database/cu092_admin_estado_pedido_seguro.sql`
 - `database/cu093_admin_reportes_facturacion_sp.sql`
 - `database/cu094_permisos_granulares_acciones.sql`
 - `database/cu095_facturacion_generar_permiso.sql`
+- `database/cu096_corregir_mojibake_productos.sql`
 
 ## Pruebas negativas recomendadas
 
