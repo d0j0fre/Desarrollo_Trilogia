@@ -8,7 +8,7 @@
     <div class="container">
         <nav class="s4-auth-breadcrumb">
             <a asp-controller="Home" asp-action="Index">Inicio</a>
-            <a asp-controller="Account" asp-action="Login">Iniciar Sesion</a>
+            <a asp-controller="Account" asp-action="Login">Iniciar sesión</a>
             <span>Registro</span>
         </nav>
 
@@ -16,19 +16,19 @@
             <aside class="s4-auth-hero">
                 <span>Licorera La Bodega</span>
                 <h1>Crea tu cuenta</h1>
-                <p>Registra tus datos para comprar mas rapido y consultar tus pedidos desde el portal del cliente.</p>
+                <p>Registra tus datos para comprar más rápido y consultar tus pedidos desde el portal del cliente.</p>
 
                 <div class="s4-auth-hero-note">
                     <strong>Tu cuenta en pocos pasos</strong>
-                    <span>Completa los datos basicos y acepta los terminos para empezar.</span>
+                    <span>Completa tus datos básicos y acepta los términos para empezar.</span>
                 </div>
             </aside>
 
-            <section class="s4-auth-card">
+            <section class="s4-auth-card s4-auth-card--register">
                 <div class="s4-auth-card-title">
                     <span>Registro</span>
                     <h2>Registrate en La Bodega</h2>
-                    <p>Completa el formulario con tu informacion personal.</p>
+                    <p>Completa el formulario con tu información personal.</p>
                 </div>
 
                 <form asp-controller="Account" asp-action="Register" method="post" novalidate="novalidate">
@@ -48,13 +48,13 @@
 
                     <div class="control-group mb-3 s4-auth-field">
                         <label asp-for="Password" class="text-body"></label>
-                        <input asp-for="Password" class="form-control" placeholder="Crea una contrasena" />
+                        <input asp-for="Password" class="form-control" placeholder="Crea una contraseña" />
                         <span asp-validation-for="Password" class="text-danger help-block"></span>
                     </div>
 
                     <div class="control-group mb-4 s4-auth-field">
                         <label asp-for="ConfirmPassword" class="text-body"></label>
-                        <input asp-for="ConfirmPassword" class="form-control" placeholder="Repeti la contrasena" />
+                        <input asp-for="ConfirmPassword" class="form-control" placeholder="Repetí la contraseña" />
                         <span asp-validation-for="ConfirmPassword" class="text-danger help-block"></span>
                     </div>
 
@@ -62,7 +62,7 @@
                         <div class="custom-control custom-checkbox">
                             <input asp-for="AcceptTerms" type="checkbox" class="custom-control-input" id="termsCheck">
                             <label class="custom-control-label text-secondary" for="termsCheck">
-                                Acepto los terminos y condiciones
+                                Acepto los términos y condiciones
                             </label>
                         </div>
                         <span asp-validation-for="AcceptTerms" class="text-danger help-block"></span>
@@ -73,8 +73,8 @@
                     </div>
 
                     <div class="mt-3 text-center s4-auth-switch">
-                        <span class="text-body small">Ya tenes cuenta?</span>
-                        <a class="text-primary small font-weight-bold s4-auth-link" asp-controller="Account" asp-action="Login">Inicia sesion</a>
+                        <span class="text-body small">¿Ya tenés cuenta?</span>
+                        <a class="text-primary small font-weight-bold s4-auth-link" asp-controller="Account" asp-action="Login">Inicia sesión</a>
                     </div>
                 </form>
             </section>

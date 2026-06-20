@@ -16,6 +16,9 @@ Este documento deja el checklist de pruebas finales para validar la rama `featur
 ## Checklist cliente
 
 - [ ] Login cliente.
+- [ ] Login visualmente limpio en escritorio, pantalla mediana y movil.
+- [ ] Login invalido muestra error sin romper el diseño.
+- [ ] Link de recuperar contrasena visible.
 - [ ] Home.
 - [ ] Tienda.
 - [ ] Detalle producto.
@@ -33,6 +36,7 @@ Este documento deja el checklist de pruebas finales para validar la rama `featur
 ## Checklist admin
 
 - [ ] Login admin.
+- [ ] Login admin correcto desde la pantalla rediseñada.
 - [ ] Dashboard.
 - [ ] Inventario.
 - [ ] Pedidos admin.
@@ -53,6 +57,16 @@ Este documento deja el checklist de pruebas finales para validar la rama `featur
 - [ ] Permisos.
 - [ ] Auditoria.
 - [ ] Logout.
+
+## Checklist registro
+
+- [ ] Abrir Registro.
+- [ ] Registro visualmente consistente con Login.
+- [ ] Registro vacio muestra validaciones.
+- [ ] Checkbox de terminos sigue funcionando.
+- [ ] Registro con datos validos funciona.
+- [ ] Link hacia Login funciona.
+- [ ] Responsive en pantalla mediana y movil.
 
 ## Checklist empleado y vendedor
 

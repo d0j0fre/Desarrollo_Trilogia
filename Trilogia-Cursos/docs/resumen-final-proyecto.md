@@ -16,6 +16,7 @@ Objetivo de la rama:
 - Documentar autenticacion API futura.
 - Agregar pago simulado academico en checkout.
 - Descontar inventario al crear pedido y restaurarlo en cancelaciones pendientes.
+- Pulir visualmente Login y Registro sin cambiar logica de autenticacion.
 - Reducir warnings de nullability.
 - Preparar QA final para Pull Request hacia `main`.
 
@@ -93,6 +94,7 @@ Resultado esperado:
 - Permisos granulares por codigo exacto.
 - Acciones criticas protegidas.
 - Antiforgery reforzado en vistas legacy.
+- Login y Registro conservan formularios, rutas y validaciones, con presentacion visual mas limpia y equilibrada.
 
 ### Inventario
 

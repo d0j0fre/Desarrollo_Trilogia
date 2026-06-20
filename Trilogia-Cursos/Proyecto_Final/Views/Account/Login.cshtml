@@ -1,33 +1,33 @@
 @model Proyecto_Final.Models.LoginViewModel
 
 @{
-    ViewData["Title"] = "Iniciar Sesion";
+    ViewData["Title"] = "Iniciar sesión";
 }
 
 <div class="s4-auth-page">
     <div class="container">
         <nav class="s4-auth-breadcrumb">
             <a asp-controller="Home" asp-action="Index">Inicio</a>
-            <span>Iniciar Sesion</span>
+            <span>Iniciar sesión</span>
         </nav>
 
         <div class="s4-auth-shell">
             <aside class="s4-auth-hero">
                 <span>Licorera La Bodega</span>
-                <h1>Acceso de clientes</h1>
-                <p>Entra a tu cuenta para revisar pedidos, comprobantes y datos de perfil desde el portal oficial.</p>
+                <h1>Acceso a tu cuenta</h1>
+                <p>Consulta pedidos, comprobantes y datos de perfil desde un portal seguro y claro.</p>
 
                 <div class="s4-auth-hero-note">
                     <strong>Compra con confianza</strong>
-                    <span>Una experiencia clara, moderna y segura para clientes de La Bodega.</span>
+                    <span>Tu información y tus compras en un mismo lugar.</span>
                 </div>
             </aside>
 
-            <section class="s4-auth-card">
+            <section class="s4-auth-card s4-auth-card--login">
                 <div class="s4-auth-card-title">
                     <span>Bienvenido</span>
                     <h2>Bienvenido a La Bodega</h2>
-                    <p>Ingresa con tu correo y contrasena para continuar.</p>
+                    <p>Ingresa con tu correo y contraseña para continuar.</p>
                 </div>
 
                 @if (TempData["RegisterSuccess"] is string msg && !string.IsNullOrWhiteSpace(msg))
@@ -47,12 +47,12 @@
 
                     <div class="control-group mb-3 s4-auth-field">
                         <label asp-for="Password" class="text-body"></label>
-                        <input asp-for="Password" class="form-control" placeholder="Tu contrasena" />
+                        <input asp-for="Password" class="form-control" placeholder="Tu contraseña" />
                         <span asp-validation-for="Password" class="text-danger help-block"></span>
                     </div>
 
                     <div class="control-group mb-3 s4-auth-inline-link">
-                        <a asp-controller="Account" asp-action="ForgotPassword" class="text-primary small font-weight-bold s4-auth-link">Olvidaste tu contrasena?</a>
+                        <a asp-controller="Account" asp-action="ForgotPassword" class="text-primary small font-weight-bold s4-auth-link">¿Olvidaste tu contraseña?</a>
                     </div>
 
                     <div class="control-group mb-4 s4-auth-check">
@@ -67,7 +67,7 @@
                     </div>
 
                     <div class="mt-3 text-center s4-auth-switch">
-                        <span class="text-body small">No tenes cuenta?</span>
+                        <span class="text-body small">¿No tenés cuenta?</span>
                         <a class="text-primary small font-weight-bold s4-auth-link" asp-controller="Account" asp-action="Register">Registrate</a>
                     </div>
                 </form>
