@@ -37,6 +37,7 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AdminAuthorize("Facturacion", "FACTURACION_GENERAR")]
         public async Task<IActionResult> GenerateFromOrder(int pedidoId)
         {
             if (pedidoId <= 0)
