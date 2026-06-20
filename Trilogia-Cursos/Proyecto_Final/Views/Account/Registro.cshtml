@@ -4,7 +4,7 @@
     ViewData["Title"] = "Registro";
 }
 
-<div class="s4-auth-page">
+<div class="s4-auth-page s4-auth-page--clean">
     <div class="container">
         <nav class="s4-auth-breadcrumb">
             <a asp-controller="Home" asp-action="Index">Inicio</a>
@@ -12,23 +12,21 @@
             <span>Registro</span>
         </nav>
 
-        <div class="s4-auth-shell s4-auth-shell--register">
-            <aside class="s4-auth-hero">
-                <span>Licorera La Bodega</span>
-                <h1>Crea tu cuenta</h1>
-                <p>Registra tus datos para comprar más rápido y consultar tus pedidos desde el portal del cliente.</p>
-
-                <div class="s4-auth-hero-note">
-                    <strong>Tu cuenta en pocos pasos</strong>
-                    <span>Completa tus datos básicos y acepta los términos para empezar.</span>
+        <div class="s4-auth-panel s4-auth-panel--register">
+            <div class="s4-auth-brand-strip">
+                <div class="s4-auth-brand-mark">LB</div>
+                <div>
+                    <span>Licorera La Bodega</span>
+                    <h1>Crea tu cuenta</h1>
+                    <p>Compra más rápido y consulta tus pedidos desde el portal del cliente.</p>
                 </div>
-            </aside>
+            </div>
 
-            <section class="s4-auth-card s4-auth-card--register">
+            <section class="s4-auth-card s4-auth-card--register s4-auth-card--clean">
                 <div class="s4-auth-card-title">
-                    <span>Registro</span>
+                    <span>Nueva cuenta</span>
                     <h2>Registrate en La Bodega</h2>
-                    <p>Completa el formulario con tu información personal.</p>
+                    <p>Completa tus datos para empezar.</p>
                 </div>
 
                 <form asp-controller="Account" asp-action="Register" method="post" novalidate="novalidate">
@@ -78,6 +76,12 @@
                     </div>
                 </form>
             </section>
+
+            <div class="s4-auth-meta-row">
+                <span><i class="fa fa-shopping-basket"></i> Compra en línea</span>
+                <span><i class="fa fa-box"></i> Historial de pedidos</span>
+                <span><i class="fa fa-file-invoice"></i> Comprobantes</span>
+            </div>
         </div>
     </div>
 </div>

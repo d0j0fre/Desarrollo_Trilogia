@@ -4,30 +4,28 @@
     ViewData["Title"] = "Iniciar sesión";
 }
 
-<div class="s4-auth-page">
+<div class="s4-auth-page s4-auth-page--clean">
     <div class="container">
         <nav class="s4-auth-breadcrumb">
             <a asp-controller="Home" asp-action="Index">Inicio</a>
             <span>Iniciar sesión</span>
         </nav>
 
-        <div class="s4-auth-shell">
-            <aside class="s4-auth-hero">
-                <span>Licorera La Bodega</span>
-                <h1>Acceso a tu cuenta</h1>
-                <p>Consulta pedidos, comprobantes y datos de perfil desde un portal seguro y claro.</p>
-
-                <div class="s4-auth-hero-note">
-                    <strong>Compra con confianza</strong>
-                    <span>Tu información y tus compras en un mismo lugar.</span>
+        <div class="s4-auth-panel s4-auth-panel--login">
+            <div class="s4-auth-brand-strip">
+                <div class="s4-auth-brand-mark">LB</div>
+                <div>
+                    <span>Licorera La Bodega</span>
+                    <h1>Iniciar sesión</h1>
+                    <p>Accede a pedidos, comprobantes y perfil desde tu cuenta.</p>
                 </div>
-            </aside>
+            </div>
 
-            <section class="s4-auth-card s4-auth-card--login">
+            <section class="s4-auth-card s4-auth-card--login s4-auth-card--clean">
                 <div class="s4-auth-card-title">
-                    <span>Bienvenido</span>
-                    <h2>Bienvenido a La Bodega</h2>
-                    <p>Ingresa con tu correo y contraseña para continuar.</p>
+                    <span>Acceso seguro</span>
+                    <h2>Bienvenido de nuevo</h2>
+                    <p>Ingresa tus datos para continuar.</p>
                 </div>
 
                 @if (TempData["RegisterSuccess"] is string msg && !string.IsNullOrWhiteSpace(msg))
@@ -78,6 +76,12 @@
                     </p>
                 </div>
             </section>
+
+            <div class="s4-auth-meta-row">
+                <span><i class="fa fa-shield-alt"></i> Sesión protegida</span>
+                <span><i class="fa fa-receipt"></i> Pedidos y comprobantes</span>
+                <span><i class="fa fa-user-circle"></i> Portal del cliente</span>
+            </div>
         </div>
     </div>
 </div>
