@@ -95,6 +95,8 @@ Resultado esperado:
 - Documentacion de endpoints actuales.
 - Diagnostico de autenticacion API futura.
 - Recomendacion de no exponer endpoints protegidos sin JWT o mecanismo equivalente.
+- El API publico queda cerrado para el alcance actual: autenticacion basica existente, productos publicos, categorias publicas, destacados publicos, validaciones de parametros, documentacion de endpoints y pruebas manuales API documentadas.
+- JWT y endpoints protegidos quedan documentados como mejora futura.
 
 ### Calidad tecnica
 
@@ -145,6 +147,8 @@ API:
 - Productos publicos.
 - Categorias.
 - Producto inexistente con `404`.
+- Parametros invalidos de productos con `400`.
+- Destacados con `take` invalido y limite maximo de 24.
 
 Tecnico:
 

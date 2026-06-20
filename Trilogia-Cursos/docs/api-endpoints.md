@@ -310,9 +310,18 @@ GET /api/products/1
 }
 ```
 
+**Respuesta 400:**
+
+```json
+{
+  "message": "El identificador del producto debe ser mayor a cero."
+}
+```
+
 **Codigos esperados:**
 
 - `200`: producto encontrado.
+- `400`: `id` menor o igual a cero.
 - `404`: producto inexistente o no activo.
 - `500`: error interno al cargar producto.
 
@@ -353,7 +362,7 @@ GET /api/products/categories
 
 **Parametros:**
 
-- `take`: cantidad maxima de productos a devolver. Si no se indica, usa `8`.
+- `take`: cantidad maxima de productos a devolver. Si no se indica, usa `8`. Si es mayor a `24`, el API lo limita a `24`.
 
 **Ejemplo de request:**
 
@@ -379,12 +388,21 @@ GET /api/products/featured?take=4
 ]
 ```
 
+**Respuesta 400:**
+
+```json
+{
+  "message": "La cantidad solicitada debe ser mayor a cero."
+}
+```
+
 **Codigos esperados:**
 
 - `200`: productos destacados cargados correctamente.
+- `400`: `take` menor o igual a cero.
 - `500`: error interno al cargar destacados.
 
-**Notas de seguridad:** endpoint publico y de solo lectura. El parametro `take` se limita desde el servicio para evitar respuestas excesivas.
+**Notas de seguridad:** endpoint publico y de solo lectura. El parametro `take` se limita a un maximo de `24` para evitar respuestas excesivas.
 
 ## Pendiente para versiones futuras
 
@@ -405,7 +423,12 @@ Antes de agregar esos endpoints se debe definir una estrategia formal, por ejemp
 - Probar `GET /api/products`.
 - Probar filtros `categoria` y `buscar`.
 - Probar `GET /api/products/{id}` con producto existente.
+- Probar `GET /api/products/0` y confirmar `400`.
+- Probar `GET /api/products/-1` y confirmar `400`.
 - Probar `GET /api/products/{id}` con producto inexistente y confirmar `404`.
 - Probar `GET /api/products/categories`.
 - Probar `GET /api/products/featured?take=4`.
+- Probar `GET /api/products/featured?take=0` y confirmar `400`.
+- Probar `GET /api/products/featured?take=-1` y confirmar `400`.
+- Probar `GET /api/products/featured?take=100` y confirmar maximo 24 resultados.
 - Confirmar que endpoints protegidos futuros no se agregaron en este bloque.

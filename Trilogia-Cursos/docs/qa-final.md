@@ -70,8 +70,13 @@ Este documento deja el checklist de pruebas finales para validar la rama `featur
 - [ ] `GET /api/products?buscar=`.
 - [ ] `GET /api/products/{id}` con producto existente.
 - [ ] `GET /api/products/{id}` con producto inexistente y respuesta `404`.
+- [ ] `GET /api/products/0` debe devolver `400`.
+- [ ] `GET /api/products/-1` debe devolver `400`.
 - [ ] `GET /api/products/categories`.
 - [ ] `GET /api/products/featured?take=`.
+- [ ] `GET /api/products/featured?take=0` debe devolver `400`.
+- [ ] `GET /api/products/featured?take=-1` debe devolver `400`.
+- [ ] `GET /api/products/featured?take=100` debe devolver `200` con maximo 24 resultados.
 
 ## Checklist tecnico
 

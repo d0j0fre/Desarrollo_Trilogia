@@ -34,6 +34,14 @@ namespace Proyecto_FinalAPI.Controllers
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetProductById(int id)
         {
+            if (id <= 0)
+            {
+                return BadRequest(new
+                {
+                    message = "El identificador del producto debe ser mayor a cero."
+                });
+            }
+
             try
             {
                 var producto = await _productsApiDbService.GetProductByIdAsync(id);
@@ -77,9 +85,17 @@ namespace Proyecto_FinalAPI.Controllers
         [HttpGet("featured")]
         public async Task<IActionResult> GetFeatured([FromQuery] int take = 8)
         {
+            if (take <= 0)
+            {
+                return BadRequest(new
+                {
+                    message = "La cantidad solicitada debe ser mayor a cero."
+                });
+            }
+
             try
             {
-                var productos = await _productsApiDbService.GetFeaturedProductsAsync(take);
+                var productos = await _productsApiDbService.GetFeaturedProductsAsync(Math.Min(take, 24));
                 return Ok(productos);
             }
             catch
