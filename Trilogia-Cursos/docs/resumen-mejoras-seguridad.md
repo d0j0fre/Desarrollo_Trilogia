@@ -141,6 +141,24 @@ Script relacionado:
 
 - `database/cu096_corregir_mojibake_productos.sql`
 
+### Pago simulado e inventario en checkout
+
+Se agrego flujo academico de pago simulado al checkout sin pasarelas reales ni almacenamiento de datos sensibles.
+
+Reglas aplicadas:
+
+- El pedido guarda metodo, estado, referencia opcional y fecha de pago simulado.
+- No se guardan numeros reales de tarjeta, CVV ni datos bancarios.
+- El inventario se descuenta una sola vez al crear el pedido.
+- El descuento valida stock disponible en SQL para evitar stock negativo.
+- Se registra movimiento de inventario por salida de pedido.
+- La cancelacion de pedido pendiente no facturado restaura stock una sola vez.
+- La generacion de factura no descuenta inventario nuevamente.
+
+Script relacionado:
+
+- `database/cu097_pago_simulado_inventario_checkout.sql`
+
 ### API publica de productos y categorias
 
 Se agregaron endpoints publicos de solo lectura:

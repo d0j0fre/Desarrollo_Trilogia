@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Proyecto_Final.Models.Store;
 using Proyecto_Final.Services;
 
@@ -8,6 +9,14 @@ namespace Proyecto_Final.Controllers
     public class CartController : Controller
     {
         private const string CartSessionKey = "CartItems";
+        private static readonly HashSet<string> PaymentMethods = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "Efectivo contra entrega",
+            "SINPE Móvil simulado",
+            "Tarjeta demo",
+            "Transferencia simulada"
+        };
+
         private readonly StoreDbService _storeDbService;
 
         public CartController(StoreDbService storeDbService)
@@ -122,7 +131,8 @@ namespace Proyecto_Final.Controllers
             {
                 Cart = cart,
                 CorreoElectronico = HttpContext.Session.GetString("UserEmail"),
-                TipoEntrega = "Envío a domicilio"
+                TipoEntrega = "Envío a domicilio",
+                MetodoPago = "Efectivo contra entrega"
             };
             return View(model);
         }
@@ -133,6 +143,12 @@ namespace Proyecto_Final.Controllers
         {
             model.Cart = BuildCartViewModel();
             model.TipoEntrega = "Envío a domicilio";
+            model.MetodoPago = string.IsNullOrWhiteSpace(model.MetodoPago)
+                ? "Efectivo contra entrega"
+                : model.MetodoPago.Trim();
+            model.ReferenciaPago = string.IsNullOrWhiteSpace(model.ReferenciaPago)
+                ? null
+                : model.ReferenciaPago.Trim();
 
             if (!IsLoggedIn())
             {
@@ -156,6 +172,8 @@ namespace Proyecto_Final.Controllers
                 ModelState.AddModelError(nameof(model.DireccionDetalle), "La dirección es obligatoria.");
             if (string.IsNullOrWhiteSpace(model.Identificacion))
                 ModelState.AddModelError(nameof(model.Identificacion), "La identificación es obligatoria.");
+            if (!PaymentMethods.Contains(model.MetodoPago))
+                ModelState.AddModelError(nameof(model.MetodoPago), "Seleccione un método de pago válido.");
 
             model.DireccionEntrega = $"{model.Pais}, {model.Provincia}, {model.Canton}, {model.Distrito}. {model.DireccionDetalle}";
 
@@ -178,6 +196,11 @@ namespace Proyecto_Final.Controllers
 
                 TempData["LoginSuccess"] = $"Pedido #{pedidoId} creado correctamente.";
                 return RedirectToAction(nameof(Confirmation));
+            }
+            catch (SqlException ex) when (ex.Message.Contains("stock", StringComparison.OrdinalIgnoreCase))
+            {
+                ModelState.AddModelError(string.Empty, "No hay stock suficiente para completar el pedido. Revise el carrito e intente nuevamente.");
+                return View(model);
             }
             catch (Exception)
             {

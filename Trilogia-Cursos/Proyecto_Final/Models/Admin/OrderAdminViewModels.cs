@@ -25,6 +25,10 @@ namespace Proyecto_Final.Models.Admin
         public string? DireccionEntrega { get; set; }
         public decimal Total { get; set; }
         public string? Observaciones { get; set; }
+        public string MetodoPago { get; set; } = string.Empty;
+        public string EstadoPago { get; set; } = string.Empty;
+        public string? ReferenciaPago { get; set; }
+        public DateTime? FechaPago { get; set; }
         public bool HasInvoice { get; set; }
         public int? FacturaId { get; set; }
         public bool CanGenerateInvoice => !HasInvoice

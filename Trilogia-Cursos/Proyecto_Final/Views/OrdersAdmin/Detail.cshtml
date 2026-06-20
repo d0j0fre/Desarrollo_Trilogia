@@ -66,6 +66,40 @@
                         <span class="font-weight-bold">₡@Model.Total.ToString("N2")</span>
                     </div>
 
+                    <div class="col-md-6 mb-3">
+                        <label class="font-weight-bold d-block">Método de pago</label>
+                        <span>
+                            @(string.IsNullOrWhiteSpace(Model.MetodoPago)
+                                                        ? "No registrado"
+                                                        : Model.MetodoPago)
+                        </span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="font-weight-bold d-block">Estado de pago</label>
+                        <span>
+                            @(string.IsNullOrWhiteSpace(Model.EstadoPago)
+                                                        ? "No registrado"
+                                                        : Model.EstadoPago)
+                        </span>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(Model.ReferenciaPago))
+                    {
+                        <div class="col-md-6 mb-3">
+                            <label class="font-weight-bold d-block">Referencia de pago</label>
+                            <span>@Model.ReferenciaPago</span>
+                        </div>
+                    }
+
+                    @if (Model.FechaPago.HasValue)
+                    {
+                        <div class="col-md-6 mb-3">
+                            <label class="font-weight-bold d-block">Fecha de pago</label>
+                            <span>@Model.FechaPago.Value.ToString("dd/MM/yyyy HH:mm")</span>
+                        </div>
+                    }
+
                     <div class="col-md-12 mb-3">
                         <label class="font-weight-bold d-block">Dirección de entrega</label>
                         <span>

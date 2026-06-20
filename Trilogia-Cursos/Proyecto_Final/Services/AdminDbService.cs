@@ -992,7 +992,11 @@ namespace Proyecto_Final.Services
                         TipoEntrega = reader.IsDBNull(6) ? null : reader.GetString(6),
                         DireccionEntrega = reader.IsDBNull(7) ? null : reader.GetString(7),
                         Observaciones = reader.IsDBNull(8) ? null : reader.GetString(8),
-                        Total = reader.IsDBNull(9) ? 0 : reader.GetDecimal(9)
+                        Total = reader.IsDBNull(9) ? 0 : reader.GetDecimal(9),
+                        MetodoPago = reader.FieldCount > 10 && !reader.IsDBNull(10) ? reader.GetString(10) : string.Empty,
+                        EstadoPago = reader.FieldCount > 11 && !reader.IsDBNull(11) ? reader.GetString(11) : string.Empty,
+                        ReferenciaPago = reader.FieldCount > 12 && !reader.IsDBNull(12) ? reader.GetString(12) : null,
+                        FechaPago = reader.FieldCount > 13 && !reader.IsDBNull(13) ? reader.GetDateTime(13) : null
                     };
                 }
             }

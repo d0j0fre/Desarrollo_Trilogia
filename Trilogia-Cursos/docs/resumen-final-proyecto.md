@@ -14,6 +14,8 @@ Objetivo de la rama:
 - Fortalecer autorizacion administrativa.
 - Agregar API publica de productos/categorias.
 - Documentar autenticacion API futura.
+- Agregar pago simulado academico en checkout.
+- Descontar inventario al crear pedido y restaurarlo en cancelaciones pendientes.
 - Reducir warnings de nullability.
 - Preparar QA final para Pull Request hacia `main`.
 
@@ -47,6 +49,7 @@ Ejecutar en la base `DistribuidoraJJ_DB` antes de QA funcional completo:
 5. `database/cu094_permisos_granulares_acciones.sql`
 6. `database/cu095_facturacion_generar_permiso.sql`
 7. `database/cu096_corregir_mojibake_productos.sql`
+8. `database/cu097_pago_simulado_inventario_checkout.sql`
 
 Notas:
 
@@ -79,6 +82,8 @@ Resultado esperado:
 - Reportes de facturacion corregidos con procedimientos agregados.
 - Generacion de factura protegida con permiso granular.
 - Correccion controlada de mojibake en productos y nombres copiados a detalle de factura.
+- Pago simulado academico registrado en pedidos sin pasarela real ni datos sensibles.
+- Facturacion conserva la regla de no descontar inventario para evitar doble descuento.
 
 ### Seguridad y autorizacion
 
@@ -92,6 +97,10 @@ Resultado esperado:
 
 - Validacion de firma real para imagenes.
 - Mantiene validaciones previas de tamano, extension y content-type.
+- Stock descontado al crear pedido desde checkout.
+- Prevencion de stock negativo en el procedimiento de creacion de pedido.
+- Movimiento de inventario registrado por salida de pedido.
+- Restauracion de stock al cancelar pedido pendiente no facturado desde cliente o admin.
 
 ### API
 
@@ -124,6 +133,8 @@ Cliente:
 - Login cliente.
 - Tienda y detalle de producto.
 - Carrito y checkout.
+- Pago simulado en checkout.
+- Rebaja de inventario al finalizar pedido.
 - Mis pedidos.
 - Detalle de pedido.
 - Comprobante.
@@ -138,6 +149,7 @@ Admin:
 - Pedidos admin.
 - Cambio de estado.
 - Generacion de factura.
+- Cancelacion administrativa de pedido pendiente con restauracion de stock.
 - Facturacion.
 - Reportes.
 - Clientes.
@@ -165,6 +177,8 @@ API:
 - Destacados con `take` invalido y limite maximo de 24.
 - Producto `Ron Añejo` visible correctamente en tienda, checkout y API.
 - Producto `Ron Añejo` visible correctamente en factura/Billing si aplica.
+- Pedido con pago simulado visible en detalle administrativo.
+- Facturacion posterior no descuenta inventario nuevamente.
 
 Tecnico:
 

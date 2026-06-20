@@ -21,6 +21,7 @@ Este documento deja el checklist de pruebas finales para validar la rama `featur
 - [ ] Detalle producto.
 - [ ] Carrito.
 - [ ] Checkout.
+- [ ] Checkout con pago simulado academico.
 - [ ] Confirmacion de compra.
 - [ ] Mis pedidos.
 - [ ] Detalle pedido.
@@ -41,6 +42,8 @@ Este documento deja el checklist de pruebas finales para validar la rama `featur
 - [ ] Detalle factura.
 - [ ] Reporte de productos mas vendidos.
 - [ ] Reporte de ventas por mes.
+- [ ] Inventario descuenta stock al crear pedido desde checkout.
+- [ ] Inventario no vuelve a descontar stock al generar factura.
 - [ ] Clientes.
 - [ ] Creditos.
 - [ ] Consultas.
@@ -85,6 +88,21 @@ Este documento deja el checklist de pruebas finales para validar la rama `featur
 - [ ] Confirmar que API `/api/products` muestra `Ron Añejo`.
 - [ ] Confirmar que Billing/Factura muestra `Ron Añejo` si aplica.
 
+## Checklist pago simulado e inventario
+
+- [ ] Producto con stock 15: comprar 10 unidades y confirmar stock final 5.
+- [ ] Intentar comprar mas unidades que el stock disponible y confirmar rechazo con mensaje claro.
+- [ ] Confirmar que el stock no cambia cuando el pedido falla por stock insuficiente.
+- [ ] Crear pedido con `Efectivo contra entrega`.
+- [ ] Crear pedido con `SINPE Movil simulado` y referencia opcional.
+- [ ] Crear pedido con `Tarjeta demo` sin ingresar numero real de tarjeta ni CVV.
+- [ ] Crear pedido con `Transferencia simulada` y referencia opcional.
+- [ ] Confirmar que el admin puede ver metodo, estado, referencia y fecha de pago en detalle de pedido.
+- [ ] Crear pedido pendiente con inventario descontado, cancelarlo como cliente y confirmar que el stock se restaura.
+- [ ] Crear pedido pendiente con inventario descontado, cancelarlo como admin y confirmar que el stock se restaura.
+- [ ] Generar factura de un pedido con inventario descontado y confirmar que el stock no se descuenta otra vez.
+- [ ] Confirmar que la factura aparece en reportes de facturacion.
+
 ## Checklist tecnico
 
 - [ ] Build solucion completa.
@@ -110,6 +128,7 @@ Estos scripts deben ejecutarse en la base `DistribuidoraJJ_DB` antes de pruebas 
 - `database/cu094_permisos_granulares_acciones.sql`
 - `database/cu095_facturacion_generar_permiso.sql`
 - `database/cu096_corregir_mojibake_productos.sql`
+- `database/cu097_pago_simulado_inventario_checkout.sql`
 
 ## Pruebas negativas recomendadas
 

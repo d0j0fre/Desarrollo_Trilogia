@@ -73,6 +73,13 @@ namespace Proyecto_Final.Models.Store
         [Display(Name = "Dirección escrita o señas")]
         public string? DireccionDetalle { get; set; }
 
+        [Display(Name = "Método de pago")]
+        public string MetodoPago { get; set; } = "Efectivo contra entrega";
+
+        [Display(Name = "Referencia de pago")]
+        [StringLength(80, ErrorMessage = "La referencia no puede superar 80 caracteres.")]
+        public string? ReferenciaPago { get; set; }
+
         public CartViewModel Cart { get; set; } = new();
     }
 

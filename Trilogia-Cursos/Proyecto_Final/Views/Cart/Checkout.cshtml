@@ -149,6 +149,46 @@
                         <i class="fa fa-clipboard-list"></i>
                         <div>
                             <span>Paso 4</span>
+                            <h2>Pago simulado</h2>
+                        </div>
+                    </div>
+
+                    <div class="s4-checkout-note">
+                        Este pago es una simulación académica. No se realizará ningún cobro real y no se deben ingresar datos bancarios sensibles.
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="MetodoPago"></label>
+                        <div class="btn-group-toggle s4-checkout-option-grid" data-toggle="buttons">
+                            <label class="btn btn-secondary s4-checkout-option @(Model.MetodoPago == "Efectivo contra entrega" ? "active" : "")">
+                                <input type="radio" asp-for="MetodoPago" value="Efectivo contra entrega" autocomplete="off"> Efectivo contra entrega
+                            </label>
+                            <label class="btn btn-secondary s4-checkout-option @(Model.MetodoPago == "SINPE Móvil simulado" ? "active" : "")">
+                                <input type="radio" asp-for="MetodoPago" value="SINPE Móvil simulado" autocomplete="off"> SINPE Móvil simulado
+                            </label>
+                            <label class="btn btn-secondary s4-checkout-option @(Model.MetodoPago == "Tarjeta demo" ? "active" : "")">
+                                <input type="radio" asp-for="MetodoPago" value="Tarjeta demo" autocomplete="off"> Tarjeta demo
+                            </label>
+                            <label class="btn btn-secondary s4-checkout-option @(Model.MetodoPago == "Transferencia simulada" ? "active" : "")">
+                                <input type="radio" asp-for="MetodoPago" value="Transferencia simulada" autocomplete="off"> Transferencia simulada
+                            </label>
+                        </div>
+                        <span asp-validation-for="MetodoPago" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="ReferenciaPago"></label>
+                        <input asp-for="ReferenciaPago" class="form-control" maxlength="80" placeholder="Referencia opcional para SINPE o transferencia simulada" />
+                        <small class="form-text text-muted">No ingreses números reales de tarjeta, CVV ni datos bancarios.</small>
+                        <span asp-validation-for="ReferenciaPago" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="s4-checkout-section">
+                    <div class="s4-checkout-section-title">
+                        <i class="fa fa-clipboard-list"></i>
+                        <div>
+                            <span>Paso 5</span>
                             <h2>Notas del pedido</h2>
                         </div>
                     </div>

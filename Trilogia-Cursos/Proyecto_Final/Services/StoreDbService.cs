@@ -66,6 +66,10 @@ namespace Proyecto_Final.Services
             command.Parameters.AddWithValue("@Observaciones", (object?)checkout.Observaciones?.Trim() ?? DBNull.Value);
             command.Parameters.AddWithValue("@IdentificacionCliente", (object?)checkout.Identificacion?.Trim() ?? DBNull.Value);
             command.Parameters.AddWithValue("@ItemsJson", itemsJson);
+            command.Parameters.Add("@MetodoPago", SqlDbType.NVarChar, 40).Value = checkout.MetodoPago.Trim();
+            command.Parameters.Add("@ReferenciaPago", SqlDbType.NVarChar, 80).Value = string.IsNullOrWhiteSpace(checkout.ReferenciaPago)
+                ? DBNull.Value
+                : checkout.ReferenciaPago.Trim();
 
             await connection.OpenAsync();
             var result = await command.ExecuteScalarAsync();
