@@ -7,6 +7,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<AccountApiDbService>();
+builder.Services.AddScoped<ProductsApiDbService>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddSingleton<LoginAttemptLimiter>();
 builder.Services.AddSingleton<PasswordRecoveryAttemptLimiter>();
