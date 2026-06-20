@@ -1,9 +1,9 @@
 ﻿@{
     ViewData["Title"] = "Permisos de Rol";
     Layout = "~/Views/Shared/_Layout.cshtml";
-    var perfil = ViewBag.Perfil as Proyecto_Final.Models.Perfil;
-    var todosModulos = ViewBag.TodosModulos as List<Proyecto_Final.Models.Modulo>;
-    var asignados = ViewBag.Asignados as List<int>;
+    var perfil = ViewBag.Perfil as Proyecto_Final.Models.Perfil ?? new Proyecto_Final.Models.Perfil();
+    var todosModulos = ViewBag.TodosModulos as List<Proyecto_Final.Models.Modulo> ?? new List<Proyecto_Final.Models.Modulo>();
+    var asignados = ViewBag.Asignados as List<int> ?? new List<int>();
 }
 
 <div class="container mt-5 mb-5" style="max-width: 700px;">

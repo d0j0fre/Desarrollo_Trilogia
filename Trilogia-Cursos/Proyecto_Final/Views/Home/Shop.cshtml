@@ -3,7 +3,8 @@
     ViewData["Title"] = Model.Titulo;
     var cantidadProductos = Model.Productos?.Count ?? 0;
     var productosDisponibles = Model.Productos?.Count(p => p.Stock > 0) ?? 0;
-    var categoriasCount = Model.Categorias?.Count ?? 0;
+    var categorias = Model.Categorias ?? new List<string>();
+    var categoriasCount = categorias.Count;
 }
 
 @section Styles {
@@ -75,7 +76,7 @@
                     <i class="fa fa-angle-right"></i>
                 </a>
 
-                @foreach (var categoria in Model.Categorias)
+                @foreach (var categoria in categorias)
                 {
                     <a asp-controller="Home" asp-action="Shop" asp-route-categoria="@categoria" class="s3-shop-filter @(string.Equals(Model.Categoria, categoria, StringComparison.OrdinalIgnoreCase) ? "active" : "")">
                         <span><i class="fa fa-tag"></i>@categoria</span>
