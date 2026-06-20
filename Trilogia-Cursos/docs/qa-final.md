@@ -40,6 +40,7 @@ Este documento deja el checklist de pruebas finales para validar la rama `featur
 - [ ] Generacion de factura desde pedido.
 - [ ] Facturacion.
 - [ ] Detalle factura.
+- [ ] Tabla de facturas: boton `Ver` visible completo en escritorio y pantalla mediana.
 - [ ] Reporte de productos mas vendidos.
 - [ ] Reporte de ventas por mes.
 - [ ] Inventario descuenta stock al crear pedido desde checkout.

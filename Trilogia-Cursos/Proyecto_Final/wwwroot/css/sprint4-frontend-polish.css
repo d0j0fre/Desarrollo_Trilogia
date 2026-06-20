@@ -1919,3 +1919,59 @@
         text-align: left;
     }
 }
+
+/* Billing admin table */
+.billing-table-wrapper.admin-table-wrapper {
+    overflow: hidden;
+}
+
+.billing-table-wrapper .table-responsive {
+    overflow-x: auto;
+}
+
+.billing-invoices-table {
+    min-width: 1080px;
+}
+
+.billing-invoices-table td,
+.billing-invoices-table th {
+    padding: 0.9rem 0.7rem !important;
+}
+
+.billing-table-wrapper.admin-table-wrapper td:last-child,
+.billing-table-wrapper.admin-table-wrapper th:last-child,
+.billing-invoices-table .billing-action-cell {
+    min-width: 104px !important;
+    width: 104px;
+    padding-left: 0.45rem !important;
+    padding-right: 0.9rem !important;
+    white-space: nowrap;
+}
+
+.billing-action-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 68px;
+    border-radius: 8px;
+    font-weight: 800;
+    line-height: 1.15;
+    white-space: nowrap;
+}
+
+@media (max-width: 1199.98px) {
+    .billing-invoices-table {
+        min-width: 1040px;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .billing-table-wrapper {
+        border-radius: 12px;
+    }
+
+    .billing-invoices-table td,
+    .billing-invoices-table th {
+        padding: 0.8rem 0.62rem !important;
+    }
+}

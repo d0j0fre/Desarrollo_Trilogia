@@ -84,6 +84,7 @@ Resultado esperado:
 - Correccion controlada de mojibake en productos y nombres copiados a detalle de factura.
 - Pago simulado academico registrado en pedidos sin pasarela real ni datos sensibles.
 - Facturacion conserva la regla de no descontar inventario para evitar doble descuento.
+- Vista de facturacion ajustada para mostrar la tabla de facturas y la accion `Ver` sin cortes en escritorio y pantalla mediana.
 
 ### Seguridad y autorizacion
 
