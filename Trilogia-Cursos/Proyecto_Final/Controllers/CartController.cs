@@ -27,7 +27,7 @@ namespace Proyecto_Final.Controllers
             var product = await _storeDbService.GetStoreProductByIdAsync(productoId);
             if (product is null)
             {
-                TempData["LoginSuccess"] = "El producto no estÃ¡ disponible.";
+                TempData["LoginSuccess"] = "El producto no está disponible.";
                 return RedirectToAction("Shop", "Home");
             }
 
@@ -78,7 +78,7 @@ namespace Proyecto_Final.Controllers
                 if (product is null)
                 {
                     items.Remove(item);
-                    TempData["LoginSuccess"] = "Un producto del carrito ya no estÃ¡ disponible.";
+                    TempData["LoginSuccess"] = "Un producto del carrito ya no está disponible.";
                 }
                 else
                 {
@@ -107,14 +107,14 @@ namespace Proyecto_Final.Controllers
         {
             if (!IsLoggedIn())
             {
-                TempData["LoginSuccess"] = "Debes iniciar sesiÃ³n para finalizar la compra.";
+                TempData["LoginSuccess"] = "Debes iniciar sesión para finalizar la compra.";
                 return RedirectToAction("Login", "Account", new { returnUrl = Url.Action(nameof(Checkout), "Cart") });
             }
 
             var cart = BuildCartViewModel();
             if (cart.Items.Count == 0)
             {
-                TempData["LoginSuccess"] = "Tu carrito estÃ¡ vacÃ­o.";
+                TempData["LoginSuccess"] = "Tu carrito está vacío.";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -122,7 +122,7 @@ namespace Proyecto_Final.Controllers
             {
                 Cart = cart,
                 CorreoElectronico = HttpContext.Session.GetString("UserEmail"),
-                TipoEntrega = "EnvÃ­o a domicilio"
+                TipoEntrega = "Envío a domicilio"
             };
             return View(model);
         }
@@ -132,30 +132,30 @@ namespace Proyecto_Final.Controllers
         public async Task<IActionResult> Checkout(CheckoutViewModel model)
         {
             model.Cart = BuildCartViewModel();
-            model.TipoEntrega = "EnvÃ­o a domicilio";
+            model.TipoEntrega = "Envío a domicilio";
 
             if (!IsLoggedIn())
             {
-                TempData["LoginSuccess"] = "Debes iniciar sesiÃ³n para finalizar la compra.";
+                TempData["LoginSuccess"] = "Debes iniciar sesión para finalizar la compra.";
                 return RedirectToAction("Login", "Account", new { returnUrl = Url.Action(nameof(Checkout), "Cart") });
             }
 
             if (model.Cart.Items.Count == 0)
             {
-                TempData["LoginSuccess"] = "Tu carrito estÃ¡ vacÃ­o.";
+                TempData["LoginSuccess"] = "Tu carrito está vacío.";
                 return RedirectToAction(nameof(Index));
             }
 
             if (string.IsNullOrWhiteSpace(model.Provincia))
                 ModelState.AddModelError(nameof(model.Provincia), "La provincia es obligatoria.");
             if (string.IsNullOrWhiteSpace(model.Canton))
-                ModelState.AddModelError(nameof(model.Canton), "El cantÃ³n es obligatorio.");
+                ModelState.AddModelError(nameof(model.Canton), "El cantón es obligatorio.");
             if (string.IsNullOrWhiteSpace(model.Distrito))
                 ModelState.AddModelError(nameof(model.Distrito), "El distrito es obligatorio.");
             if (string.IsNullOrWhiteSpace(model.DireccionDetalle))
-                ModelState.AddModelError(nameof(model.DireccionDetalle), "La direcciÃ³n es obligatoria.");
+                ModelState.AddModelError(nameof(model.DireccionDetalle), "La dirección es obligatoria.");
             if (string.IsNullOrWhiteSpace(model.Identificacion))
-                ModelState.AddModelError(nameof(model.Identificacion), "La identificaciÃ³n es obligatoria.");
+                ModelState.AddModelError(nameof(model.Identificacion), "La identificación es obligatoria.");
 
             model.DireccionEntrega = $"{model.Pais}, {model.Provincia}, {model.Canton}, {model.Distrito}. {model.DireccionDetalle}";
 

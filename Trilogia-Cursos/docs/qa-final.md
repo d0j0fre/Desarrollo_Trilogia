@@ -90,6 +90,7 @@ Este documento deja el checklist de pruebas finales para validar la rama `featur
 - [ ] Confirmar que no hay 404 de scripts principales.
 - [ ] Confirmar que comprobante cliente imprime correctamente.
 - [ ] Confirmar que factura admin imprime correctamente.
+- [ ] Revisar que no haya textos con caracteres dañados tipo `Ã`, `Â`, `estÃ¡`, `opciÃ³n` o `contraseÃ±a` en pantallas principales.
 
 ## Scripts SQL a validar en SSMS
 

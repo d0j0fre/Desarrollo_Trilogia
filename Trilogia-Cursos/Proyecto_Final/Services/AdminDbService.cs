@@ -12,7 +12,7 @@ namespace Proyecto_Final.Services
         public AdminDbService(IConfiguration configuration)
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection")
-                ?? throw new InvalidOperationException("No se encontrÃ‡Ã¼ la cadena de conexiÃ‡Ã¼n DefaultConnection.");
+                ?? throw new InvalidOperationException("No se encontró la cadena de conexión DefaultConnection.");
         }
 
         public async Task<DashboardSummaryViewModel> GetDashboardSummaryAsync()
@@ -249,7 +249,7 @@ namespace Proyecto_Final.Services
                 {
                     var cantidad = Math.Abs(model.Stock - previousStock);
                     var tipo = model.Stock > previousStock ? "AjusteEntrada" : "AjusteSalida";
-                    await CreateMovementInternalAsync(connection, (SqlTransaction)transaction, model.ProductoId, tipo, cantidad, previousStock, model.Stock, "Ajuste realizado desde ediciÃ‡Ã¼n de producto.", usuarioId, usuarioNombre);
+                    await CreateMovementInternalAsync(connection, (SqlTransaction)transaction, model.ProductoId, tipo, cantidad, previousStock, model.Stock, "Ajuste realizado desde edición de producto.", usuarioId, usuarioNombre);
                 }
 
                 await transaction.CommitAsync();
@@ -343,7 +343,7 @@ namespace Proyecto_Final.Services
                     selectCommand.CommandType = CommandType.StoredProcedure;
                     selectCommand.Parameters.AddWithValue("@ProductoId", model.ProductoId);
                     await using var reader = await selectCommand.ExecuteReaderAsync();
-                    if (!await reader.ReadAsync()) throw new InvalidOperationException("El producto seleccionado no existe o estÃ‡Â­ inactivo.");
+                    if (!await reader.ReadAsync()) throw new InvalidOperationException("El producto seleccionado no existe o está inactivo.");
                     productoNombre = reader.IsDBNull(0) ? "Producto" : reader.GetString(0);
                     stockAnterior = reader.IsDBNull(1) ? 0 : reader.GetInt32(1);
                 }
@@ -353,7 +353,7 @@ namespace Proyecto_Final.Services
                     "Entrada" => stockAnterior + model.Cantidad,
                     "Salida" => stockAnterior - model.Cantidad,
                     "Ajuste" => model.Cantidad,
-                    _ => throw new InvalidOperationException("Tipo de movimiento no vÃ‡Â­lido.")
+                    _ => throw new InvalidOperationException("Tipo de movimiento no válido.")
                 };
 
                 if (nuevoStock < 0) throw new InvalidOperationException("El movimiento deja el stock en negativo.");

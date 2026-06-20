@@ -103,6 +103,16 @@ Resultado esperado:
 - Warnings conocidos de nullability corregidos.
 - Build final esperado con 0 errores y 0 warnings.
 
+## Mejoras futuras de mantenibilidad
+
+- Separar `AdminDbService` en servicios especializados.
+- Migrar SQL inline residual de `AccountDbService` y algunos metodos administrativos a procedimientos almacenados.
+- Migrar gradualmente `ViewBag` y `TempData` a ViewModels.
+- Agregar paginacion real en listados grandes.
+- Consolidar CSS acumulado por sprints.
+- Mantener vistas legacy de `Security` solo como compatibilidad o retirarlas en una fase futura.
+- Implementar JWT antes de exponer endpoints protegidos del API.
+
 ## Pruebas manuales pendientes
 
 Cliente:
