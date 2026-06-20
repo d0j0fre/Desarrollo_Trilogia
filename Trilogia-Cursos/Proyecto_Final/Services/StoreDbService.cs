@@ -12,7 +12,7 @@ namespace Proyecto_Final.Services
         public StoreDbService(IConfiguration configuration)
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection")
-                ?? throw new InvalidOperationException("No se encontrÃ³ la cadena de conexiÃ³n DefaultConnection.");
+                ?? throw new InvalidOperationException("No se encontró la cadena de conexión DefaultConnection.");
         }
 
         public async Task<StoreProductViewModel?> GetStoreProductByIdAsync(int productoId)
@@ -44,7 +44,7 @@ namespace Proyecto_Final.Services
         public async Task<int> CreateOrderAsync(int usuarioId, CheckoutViewModel checkout, IReadOnlyCollection<CartItemViewModel> items)
         {
             if (items.Count == 0)
-                throw new InvalidOperationException("El carrito estÃ¡ vacÃ­o.");
+                throw new InvalidOperationException("El carrito está vacío.");
 
             var itemsPayload = items.Select(item => new
             {
