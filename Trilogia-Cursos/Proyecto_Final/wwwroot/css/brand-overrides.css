@@ -1681,3 +1681,584 @@
         letter-spacing: .03em;
     }
 }
+
+/* =========================================================
+   Backoffice - dashboard, inventory, orders and access
+   ========================================================= */
+
+.backoffice-page {
+    color: var(--brand-black);
+}
+
+.backoffice-page .admin-page-header {
+    border: 1px solid rgba(var(--brand-gold-primary-rgb), .42) !important;
+    border-left: 6px solid var(--brand-gold-primary) !important;
+    border-radius: 8px !important;
+    background: linear-gradient(115deg, var(--brand-black) 0%, #321719 56%, var(--brand-red-primary) 100%) !important;
+    box-shadow: 0 14px 30px rgba(var(--brand-black-rgb), .16) !important;
+}
+
+.backoffice-page .admin-page-header::after {
+    display: none;
+}
+
+.backoffice-page .admin-page-header h1,
+.backoffice-page .admin-page-header h2,
+.backoffice-page .admin-page-header h3,
+.backoffice-page .admin-page-header h4 {
+    color: var(--brand-white);
+    letter-spacing: 0;
+}
+
+.backoffice-page .admin-page-header p,
+.backoffice-page .admin-page-header .text-muted {
+    color: rgba(255, 255, 255, .78) !important;
+}
+
+.backoffice-page .admin-card,
+.backoffice-page .admin-table-wrapper,
+.backoffice-page .admin-filter-bar,
+.backoffice-page .admin-filter-grid {
+    border: 1px solid rgba(var(--brand-black-rgb), .12) !important;
+    border-radius: 8px !important;
+    background: var(--brand-white) !important;
+    box-shadow: 0 9px 24px rgba(var(--brand-black-rgb), .08) !important;
+}
+
+.backoffice-page .admin-card h3,
+.backoffice-page .admin-card h4,
+.backoffice-page .admin-card h5,
+.backoffice-page .admin-table-wrapper h5,
+.backoffice-page .admin-filter-bar h5 {
+    color: var(--brand-black);
+    letter-spacing: 0;
+}
+
+.backoffice-page .admin-card .text-primary,
+.backoffice-page .admin-table-wrapper .text-primary {
+    color: var(--brand-red-primary) !important;
+}
+
+.backoffice-page .admin-card label,
+.backoffice-page .admin-filter-bar label {
+    color: var(--brand-black);
+}
+
+.backoffice-page .form-control,
+.backoffice-page .custom-select,
+.backoffice-page select.form-control,
+.backoffice-page textarea.form-control {
+    border: 1px solid rgba(var(--brand-black-rgb), .2) !important;
+    border-radius: 6px !important;
+    background: var(--brand-white) !important;
+    color: var(--brand-black) !important;
+}
+
+.backoffice-page .form-control:focus,
+.backoffice-page .custom-select:focus,
+.backoffice-page select.form-control:focus,
+.backoffice-page textarea.form-control:focus {
+    border-color: var(--brand-gold-primary) !important;
+    box-shadow: var(--brand-focus-ring) !important;
+}
+
+.backoffice-page .btn {
+    border-radius: 6px !important;
+    letter-spacing: 0;
+}
+
+.backoffice-page .btn-primary,
+.backoffice-page .btn-modern-primary {
+    border-color: var(--brand-red-primary) !important;
+    background: var(--brand-red-primary) !important;
+    color: var(--brand-white) !important;
+}
+
+.backoffice-page .btn-primary:hover,
+.backoffice-page .btn-primary:focus,
+.backoffice-page .btn-modern-primary:hover,
+.backoffice-page .btn-modern-primary:focus {
+    border-color: var(--brand-red-secondary) !important;
+    background: var(--brand-red-secondary) !important;
+    color: var(--brand-white) !important;
+}
+
+.backoffice-page .btn-dark {
+    border-color: var(--brand-black) !important;
+    background: var(--brand-black) !important;
+    color: var(--brand-white) !important;
+}
+
+.backoffice-page .btn-dark:hover,
+.backoffice-page .btn-dark:focus {
+    border-color: var(--brand-red-primary) !important;
+    background: var(--brand-red-primary) !important;
+}
+
+.backoffice-page .btn-outline-primary {
+    border-color: var(--brand-red-primary) !important;
+    color: var(--brand-red-primary) !important;
+}
+
+.backoffice-page .btn-outline-primary:hover,
+.backoffice-page .btn-outline-primary:focus {
+    background: var(--brand-red-primary) !important;
+    color: var(--brand-white) !important;
+}
+
+.backoffice-page .btn-outline-secondary {
+    border-color: rgba(var(--brand-black-rgb), .34) !important;
+    color: var(--brand-black) !important;
+}
+
+.backoffice-page .btn-outline-secondary:hover,
+.backoffice-page .btn-outline-secondary:focus {
+    border-color: var(--brand-black) !important;
+    background: var(--brand-black) !important;
+    color: var(--brand-white) !important;
+}
+
+.backoffice-page .btn-warning {
+    border-color: var(--brand-gold-primary) !important;
+    background: var(--brand-gold-light) !important;
+    color: var(--brand-black) !important;
+}
+
+.backoffice-page .btn-success {
+    border-color: #247145 !important;
+    background: #247145 !important;
+    color: var(--brand-white) !important;
+}
+
+.backoffice-page .btn-danger,
+.backoffice-page .btn-outline-danger:hover,
+.backoffice-page .btn-outline-danger:focus {
+    border-color: var(--brand-red-secondary) !important;
+    background: var(--brand-red-secondary) !important;
+    color: var(--brand-white) !important;
+}
+
+.backoffice-page .btn-outline-danger {
+    border-color: var(--brand-red-secondary) !important;
+    color: var(--brand-red-secondary) !important;
+}
+
+.backoffice-page .admin-table-wrapper {
+    overflow: hidden;
+}
+
+.backoffice-page .admin-table-wrapper thead th,
+.backoffice-page .admin-table-wrapper .thead-light th {
+    border-color: rgba(var(--brand-gold-primary-rgb), .34) !important;
+    background: var(--brand-black) !important;
+    color: var(--brand-white) !important;
+    font-weight: 700 !important;
+    letter-spacing: 0;
+}
+
+.backoffice-page .admin-table-wrapper tbody td {
+    border-top-color: rgba(var(--brand-black-rgb), .09) !important;
+}
+
+.backoffice-page .admin-table-wrapper tbody tr:hover {
+    background: rgba(var(--brand-gold-primary-rgb), .08) !important;
+}
+
+.backoffice-page .admin-table-wrapper > .border-bottom,
+.backoffice-page .admin-table-wrapper .p-4.border-bottom {
+    border-bottom-color: rgba(var(--brand-gold-primary-rgb), .32) !important;
+    background: #fffdf7;
+}
+
+.backoffice-page .admin-badge-soft,
+.backoffice-page .badge {
+    letter-spacing: 0 !important;
+}
+
+.backoffice-page .admin-badge-soft.success,
+.backoffice-page .badge-success {
+    background: rgba(36, 113, 69, .12) !important;
+    color: #1d6039 !important;
+}
+
+.backoffice-page .admin-badge-soft.warning,
+.backoffice-page .badge-warning {
+    background: rgba(var(--brand-gold-primary-rgb), .2) !important;
+    color: #715405 !important;
+}
+
+.backoffice-page .admin-badge-soft.danger,
+.backoffice-page .badge-danger {
+    background: rgba(var(--brand-red-secondary-rgb), .12) !important;
+    color: var(--brand-red-primary) !important;
+}
+
+.backoffice-page .admin-badge-soft.dark,
+.backoffice-page .badge-secondary {
+    background: rgba(var(--brand-black-rgb), .1) !important;
+    color: var(--brand-black) !important;
+}
+
+.backoffice-page .badge-info {
+    background: rgba(var(--brand-red-primary-rgb), .11) !important;
+    color: var(--brand-red-primary) !important;
+}
+
+.backoffice-page .badge-light {
+    background: #f3f1ec !important;
+    color: #4b4b4b !important;
+}
+
+.backoffice-page .alert {
+    border-radius: 8px !important;
+    box-shadow: none;
+}
+
+.backoffice-page .alert-warning {
+    border-color: rgba(var(--brand-gold-primary-rgb), .46);
+    background: #fff9df;
+    color: #5e4708;
+}
+
+.backoffice-page .alert-info {
+    border-color: rgba(var(--brand-red-primary-rgb), .22);
+    background: rgba(var(--brand-red-primary-rgb), .06);
+    color: #5f1117;
+}
+
+.backoffice-page .form-check-input:checked,
+.backoffice-page .custom-control-input:checked ~ .custom-control-label::before {
+    border-color: var(--brand-red-primary) !important;
+    background-color: var(--brand-red-primary) !important;
+}
+
+.backoffice-page .admin-actions {
+    gap: .45rem;
+}
+
+.backoffice-page .admin-actions .btn {
+    min-width: 104px;
+    border-radius: 6px !important;
+}
+
+/* Dashboard */
+
+.admin-dashboard-page .admin-card.text-center {
+    position: relative;
+    overflow: hidden;
+    border-top: 3px solid var(--brand-gold-primary) !important;
+}
+
+.admin-dashboard-page .admin-card.text-center::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 46px;
+    height: 3px;
+    background: var(--brand-red-primary);
+}
+
+.admin-dashboard-page .admin-card.text-center .fa-2x {
+    display: inline-grid;
+    width: 48px;
+    height: 48px;
+    place-items: center;
+    border-radius: 50%;
+    background: rgba(var(--brand-red-primary-rgb), .09);
+    color: var(--brand-red-primary) !important;
+    font-size: 1.35rem;
+}
+
+.admin-dashboard-page .admin-card.text-center h3 {
+    color: var(--brand-red-primary);
+    font-weight: 800;
+}
+
+.admin-dashboard-page .admin-card:not(.text-center) > h5 {
+    padding-bottom: .8rem;
+    border-bottom: 2px solid rgba(var(--brand-gold-primary-rgb), .36);
+}
+
+.admin-dashboard-page .admin-card:not(.text-center) .btn-primary {
+    min-height: 48px;
+    border-left: 4px solid var(--brand-gold-primary) !important;
+    text-align: left;
+}
+
+/* Inventory and order management */
+
+.inventory-admin-page .table-product-thumb {
+    border: 1px solid rgba(var(--brand-gold-primary-rgb), .38);
+    border-radius: 6px;
+    box-shadow: 0 6px 14px rgba(var(--brand-black-rgb), .1);
+}
+
+.inventory-admin-page .admin-filter-grid,
+.orders-admin-page .admin-filter-bar,
+.access-admin-page .admin-filter-grid {
+    border-top: 3px solid var(--brand-gold-primary) !important;
+}
+
+.inventory-admin-page .admin-card > h5,
+.orders-admin-page .admin-card > h5,
+.access-admin-page .admin-card > h5 {
+    padding-bottom: .7rem;
+    border-bottom: 2px solid rgba(var(--brand-gold-primary-rgb), .3);
+}
+
+.orders-admin-page .admin-card hr {
+    border-top-color: rgba(var(--brand-gold-primary-rgb), .34);
+}
+
+.orders-admin-page .admin-card .col-md-6 > label,
+.orders-admin-page .admin-card .col-md-12 > label {
+    color: #696969;
+    font-size: .78rem;
+    text-transform: uppercase;
+}
+
+.orders-admin-page .admin-card .col-md-6 > span,
+.orders-admin-page .admin-card .col-md-12 > span {
+    color: var(--brand-black);
+    font-weight: 600;
+}
+
+/* Roles and permissions */
+
+.access-admin-page .admin-card.text-center {
+    border-top: 3px solid var(--brand-gold-primary) !important;
+}
+
+.access-admin-page .admin-card.text-center h3 {
+    color: var(--brand-red-primary);
+    font-weight: 800;
+}
+
+.permissions-admin-page .admin-card .border.rounded {
+    border-color: rgba(var(--brand-black-rgb), .12) !important;
+    border-radius: 6px !important;
+    background: #fbfaf7;
+}
+
+.permissions-admin-page .admin-card .border.rounded:hover {
+    border-color: rgba(var(--brand-gold-primary-rgb), .6) !important;
+    background: #fffdf5;
+}
+
+.permissions-admin-page .admin-card .fa-folder-open {
+    color: var(--brand-red-primary) !important;
+}
+
+/* Seller orders and offline workflow */
+
+.seller-orders-page .offline-status-card {
+    border: 1px solid rgba(var(--brand-gold-primary-rgb), .44);
+    border-left: 6px solid var(--brand-gold-primary);
+    border-radius: 8px;
+    background: linear-gradient(120deg, var(--brand-black) 0%, #361719 60%, var(--brand-red-primary) 100%);
+    box-shadow: 0 14px 30px rgba(var(--brand-black-rgb), .16);
+}
+
+.seller-orders-page .offline-status-pill {
+    border: 1px solid rgba(255, 255, 255, .22);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .1);
+}
+
+.seller-orders-page .seller-product-card,
+.seller-orders-page .offline-order-card {
+    border-color: rgba(var(--brand-black-rgb), .13);
+    border-radius: 8px !important;
+    background: var(--brand-white);
+    box-shadow: 0 7px 18px rgba(var(--brand-black-rgb), .07);
+}
+
+.seller-orders-page .seller-product-card:hover {
+    border-color: rgba(var(--brand-gold-primary-rgb), .68) !important;
+    box-shadow: 0 10px 24px rgba(var(--brand-black-rgb), .11) !important;
+}
+
+.seller-orders-page .seller-product-card__title {
+    color: var(--brand-black);
+}
+
+.seller-orders-page .seller-mobile-summary {
+    border-radius: 8px 8px 0 0;
+}
+
+.seller-orders-page .seller-mobile-summary .admin-card {
+    border-top: 3px solid var(--brand-gold-primary) !important;
+}
+
+/* Employee portal uses its existing isolated page root. */
+
+body .employee-page .employee-profile-hero {
+    border: 1px solid rgba(var(--brand-gold-primary-rgb), .42);
+    border-left: 6px solid var(--brand-gold-primary);
+    border-radius: 8px;
+    background: linear-gradient(115deg, var(--brand-black) 0%, #321719 56%, var(--brand-red-primary) 100%);
+    box-shadow: 0 14px 30px rgba(var(--brand-black-rgb), .16);
+}
+
+body .employee-page .employee-profile-hero::after {
+    display: none;
+}
+
+body .employee-page .employee-avatar--lg {
+    border-radius: 50%;
+    background: var(--brand-gold-primary);
+    color: var(--brand-black);
+    box-shadow: 0 10px 24px rgba(var(--brand-gold-primary-rgb), .2);
+}
+
+body .employee-page .employee-card {
+    border-color: rgba(var(--brand-black-rgb), .12);
+    border-radius: 8px;
+    box-shadow: 0 9px 24px rgba(var(--brand-black-rgb), .08);
+}
+
+body .employee-page .employee-card-title {
+    padding-bottom: .7rem;
+    border-bottom: 2px solid rgba(var(--brand-gold-primary-rgb), .3);
+    color: var(--brand-black);
+    letter-spacing: 0;
+}
+
+body .employee-page .employee-card-title i {
+    color: var(--brand-red-primary);
+}
+
+body .employee-page .employee-task-item {
+    border-color: rgba(var(--brand-black-rgb), .12);
+    border-radius: 6px;
+    background: #fbfaf7;
+}
+
+body .employee-page .employee-salary {
+    color: var(--brand-red-primary) !important;
+}
+
+body .employee-page .btn-primary {
+    border-color: var(--brand-red-primary);
+    background: var(--brand-red-primary);
+    color: var(--brand-white);
+}
+
+body .employee-page .btn-primary:hover,
+body .employee-page .btn-primary:focus {
+    border-color: var(--brand-red-secondary);
+    background: var(--brand-red-secondary);
+}
+
+body .employee-page .btn-outline-dark {
+    border-color: var(--brand-black);
+    color: var(--brand-black);
+}
+
+body .employee-page .btn-outline-dark:hover,
+body .employee-page .btn-outline-dark:focus {
+    background: var(--brand-black);
+    color: var(--brand-white);
+}
+
+body .employee-page .form-control:focus,
+body .employee-page .custom-select:focus {
+    border-color: var(--brand-gold-primary);
+    box-shadow: var(--brand-focus-ring);
+}
+
+body .employee-page .table thead th {
+    border-color: rgba(var(--brand-gold-primary-rgb), .34);
+    background: var(--brand-black);
+    color: var(--brand-white);
+    letter-spacing: 0;
+}
+
+body .employee-page .table tbody tr:hover {
+    background: rgba(var(--brand-gold-primary-rgb), .08);
+}
+
+@media (max-width: 991.98px) {
+    .backoffice-page .admin-page-header {
+        padding: 24px !important;
+    }
+
+    .backoffice-page .admin-filter-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .backoffice-page .admin-filter-grid .btn,
+    .backoffice-page .admin-page-header .btn {
+        width: 100%;
+    }
+
+    .backoffice-page .admin-actions,
+    .backoffice-page .admin-actions--products,
+    .backoffice-page .admin-actions--roles {
+        min-width: 0;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .backoffice-page {
+        padding-top: 1rem !important;
+    }
+
+    .backoffice-page > .row.px-xl-5 {
+        margin-right: -8px;
+        margin-left: -8px;
+    }
+
+    .backoffice-page .admin-page-header {
+        align-items: stretch !important;
+        padding: 20px !important;
+    }
+
+    .backoffice-page .admin-page-header h2 {
+        font-size: 1.55rem;
+    }
+
+    .backoffice-page .admin-card {
+        padding: 1rem !important;
+    }
+
+    .backoffice-page .admin-table-wrapper td,
+    .backoffice-page .admin-table-wrapper th {
+        padding: .75rem !important;
+    }
+
+    .backoffice-page .admin-actions {
+        display: grid !important;
+        grid-template-columns: 1fr;
+        width: 100% !important;
+    }
+
+    .backoffice-page .admin-actions form,
+    .backoffice-page .admin-actions .btn {
+        width: 100% !important;
+    }
+
+    .permissions-admin-page .admin-card.d-flex {
+        align-items: stretch !important;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .permissions-admin-page .admin-card.d-flex > .d-flex {
+        flex-direction: column;
+    }
+
+    .permissions-admin-page .admin-card.d-flex .btn {
+        width: 100%;
+    }
+
+    .seller-orders-page .offline-status-card {
+        padding: 14px;
+    }
+
+    body .employee-page .employee-profile-hero__main {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
