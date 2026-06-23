@@ -1,0 +1,260 @@
+/* =========================================================
+   Brand overrides - shared layout only
+   Loaded after legacy visual layers to avoid rewriting them.
+   ========================================================= */
+
+.text-primary {
+    color: var(--brand-gold-primary) !important;
+}
+
+.bg-primary {
+    background-color: var(--brand-gold-primary) !important;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--brand-red-primary), var(--brand-red-secondary)) !important;
+    border-color: var(--brand-red-primary) !important;
+    color: var(--brand-white) !important;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background: linear-gradient(135deg, var(--brand-red-secondary), var(--brand-red-primary)) !important;
+    border-color: var(--brand-red-secondary) !important;
+    color: var(--brand-white) !important;
+}
+
+.btn:focus,
+.btn:active:focus,
+.nav-link:focus,
+.form-control:focus {
+    box-shadow: var(--brand-focus-ring) !important;
+}
+
+.topbar,
+.modern-nav-shell {
+    background:
+        radial-gradient(circle at 16% 0%, rgba(var(--brand-gold-primary-rgb), .18), transparent 30%),
+        linear-gradient(135deg, #151515 0%, var(--brand-red-primary) 52%, #1F1F1F 100%) !important;
+}
+
+.topbar {
+    border-bottom-color: rgba(var(--brand-gold-primary-rgb), .24) !important;
+}
+
+.modern-nav-shell {
+    border-bottom-color: rgba(var(--brand-gold-primary-rgb), .22) !important;
+}
+
+.header-categories-button {
+    background: linear-gradient(135deg, var(--brand-gold-primary), var(--brand-gold-light)) !important;
+    border: 1px solid rgba(var(--brand-gold-primary-rgb), .38);
+}
+
+.header-categories-button h6,
+.header-categories-button i {
+    color: var(--brand-black) !important;
+}
+
+.brand-navbar-shell {
+    gap: .85rem;
+}
+
+.brand-navbar {
+    display: inline-flex;
+    align-items: center;
+    gap: .7rem;
+    min-width: 0;
+    max-width: 300px;
+    color: var(--brand-white);
+    padding: .52rem .7rem .52rem 0;
+}
+
+.brand-navbar:hover,
+.brand-navbar:focus {
+    color: var(--brand-white);
+    text-decoration: none;
+}
+
+.brand-navbar__mark {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    overflow: hidden;
+    border: 2px solid rgba(var(--brand-gold-primary-rgb), .72);
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 32% 22%, rgba(255, 255, 255, .22), transparent 35%),
+        linear-gradient(135deg, var(--brand-red-secondary), var(--brand-red-primary));
+    box-shadow: 0 10px 24px rgba(var(--brand-black-rgb), .24);
+}
+
+.brand-navbar__icon {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 2;
+}
+
+.brand-navbar__initials {
+    color: var(--brand-gold-light);
+    font-size: .82rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.brand-navbar__copy,
+.brand-footer__copy {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    line-height: 1.05;
+}
+
+.brand-navbar__name {
+    color: var(--brand-white);
+    font-size: 1rem;
+    font-weight: 900;
+    letter-spacing: 0;
+    white-space: nowrap;
+}
+
+.brand-navbar__subtitle {
+    color: var(--brand-gold-light);
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.navbar-dark .navbar-nav .nav-link:hover,
+.navbar-dark .navbar-nav .nav-link:focus,
+.navbar-dark .navbar-nav .nav-link.active {
+    background: rgba(var(--brand-gold-primary-rgb), .14) !important;
+    color: var(--brand-gold-light) !important;
+}
+
+.nav-highlight {
+    border-color: rgba(var(--brand-gold-primary-rgb), .34) !important;
+    background: rgba(var(--brand-red-secondary-rgb), .2) !important;
+    color: var(--brand-gold-light) !important;
+}
+
+.admin-dropdown-menu {
+    border-color: rgba(var(--brand-gold-primary-rgb), .24) !important;
+    background: rgba(31, 31, 31, .98) !important;
+}
+
+.admin-dropdown-menu .dropdown-item i {
+    color: var(--brand-gold-light) !important;
+}
+
+.admin-dropdown-menu .dropdown-item:hover,
+.admin-dropdown-menu .dropdown-item:focus {
+    background: linear-gradient(135deg, var(--brand-gold-primary), var(--brand-gold-light)) !important;
+    color: var(--brand-black) !important;
+}
+
+.admin-dropdown-menu .dropdown-item:hover i,
+.admin-dropdown-menu .dropdown-item:focus i {
+    color: var(--brand-black) !important;
+}
+
+.s3-footer {
+    background:
+        radial-gradient(circle at 14% 0%, rgba(var(--brand-gold-primary-rgb), .18), transparent 30%),
+        linear-gradient(135deg, #151515 0%, var(--brand-red-primary) 54%, #1F1F1F 100%) !important;
+    border-top-color: rgba(var(--brand-gold-primary-rgb), .24) !important;
+}
+
+.brand-footer {
+    align-items: center;
+    gap: .75rem;
+    letter-spacing: 0;
+}
+
+.brand-footer__mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    border: 1px solid rgba(var(--brand-gold-primary-rgb), .42);
+    border-radius: 50%;
+    background: rgba(var(--brand-black-rgb), .24);
+}
+
+.brand-footer__name {
+    color: var(--brand-white);
+    font-size: 1.12rem;
+    font-weight: 900;
+}
+
+.brand-footer small {
+    color: var(--brand-gold-light);
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.back-to-top {
+    border-color: var(--brand-gold-primary) !important;
+}
+
+@media (max-width: 1199.98px) {
+    .brand-navbar {
+        max-width: 240px;
+    }
+
+    .brand-navbar__name {
+        font-size: .92rem;
+    }
+
+    .brand-navbar__subtitle {
+        font-size: .66rem;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .brand-navbar-shell {
+        gap: .6rem;
+    }
+
+    .brand-navbar {
+        max-width: calc(100% - 72px);
+        padding-right: .35rem;
+    }
+
+    .main-nav-clean,
+    .main-nav-2027 {
+        min-height: 0;
+        padding-top: .75rem;
+    }
+}
+
+@media (max-width: 420px) {
+    .brand-navbar__mark {
+        width: 40px;
+        height: 40px;
+        flex-basis: 40px;
+    }
+
+    .brand-navbar__name {
+        font-size: .84rem;
+        white-space: normal;
+    }
+
+    .brand-navbar__subtitle {
+        font-size: .6rem;
+        white-space: normal;
+    }
+}
