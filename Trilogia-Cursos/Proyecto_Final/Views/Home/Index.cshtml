@@ -171,7 +171,8 @@
 
                     <article class="s3-product-card">
                         <a asp-controller="Home" asp-action="Detail" asp-route-id="@item.ProductoId" class="s3-product-card__image">
-                            <img src="@imagen" alt="@item.Nombre" />
+                            <img src="@imagen" alt="@item.Nombre"
+                                 onerror="this.onerror=null;this.src='/img/whisky-premium.webp';" />
                         </a>
 
                         <div class="s3-product-card__body">
