@@ -682,6 +682,428 @@
     color: var(--brand-white);
 }
 
+/* =========================================================
+   Purchase flow: cart, checkout and confirmation
+   ========================================================= */
+
+.s3-cart-page .s3-cart-hero {
+    border: 1px solid rgba(var(--brand-gold-primary-rgb), .3);
+    border-radius: 8px;
+    background:
+        linear-gradient(110deg, rgba(31, 31, 31, .98), rgba(139, 14, 22, .94)),
+        url("../img/CervesayLicores.webp") center / cover no-repeat;
+    box-shadow: 0 18px 40px rgba(var(--brand-black-rgb), .18);
+}
+
+.s3-cart-page .s3-cart-hero h1,
+.s3-cart-page .s3-cart-item__name,
+.s3-cart-page .s3-cart-summary__head h3,
+.s3-confirmation-card__head h1 {
+    letter-spacing: 0;
+}
+
+.s3-cart-page .s3-eyebrow {
+    background: rgba(var(--brand-gold-primary-rgb), .14);
+    color: var(--brand-gold-light);
+}
+
+.s3-cart-page .s3-cart-hero__icon {
+    border: 1px solid rgba(var(--brand-gold-primary-rgb), .5);
+    border-radius: 8px;
+    background: var(--brand-gold-primary);
+    color: var(--brand-black);
+    box-shadow: 0 14px 28px rgba(var(--brand-black-rgb), .2);
+}
+
+.s3-cart-page .s3-cart-item,
+.s3-cart-page .s3-cart-summary,
+.s3-cart-page .s3-cart-empty {
+    border-color: rgba(var(--brand-black-rgb), .12);
+    border-radius: 8px;
+    background: var(--brand-white);
+    box-shadow: 0 12px 28px rgba(var(--brand-black-rgb), .08);
+}
+
+.s3-cart-page .s3-cart-item {
+    border-left: 4px solid var(--brand-red-primary);
+}
+
+.s3-cart-page .s3-cart-item__image {
+    border: 1px solid rgba(var(--brand-gold-primary-rgb), .25);
+    border-radius: 6px;
+    background: #FAFAFA;
+}
+
+.s3-cart-page .s3-cart-item__category {
+    background: rgba(var(--brand-red-primary-rgb), .08);
+    color: var(--brand-red-primary);
+    letter-spacing: 0;
+}
+
+.s3-cart-page .s3-cart-item__price,
+.s3-cart-page .s3-cart-item__subtotal strong,
+.s3-cart-page .s3-cart-summary__total strong {
+    color: var(--brand-red-primary);
+}
+
+.s3-cart-page .s3-cart-qty__input {
+    border-color: rgba(var(--brand-black-rgb), .2);
+    border-radius: 6px !important;
+}
+
+.s3-cart-page .s3-cart-qty__input:focus {
+    border-color: var(--brand-red-primary);
+    box-shadow: var(--brand-focus-ring);
+}
+
+.s3-cart-page .s3-cart-qty__form .btn,
+.s3-cart-page .s3-cart-qty__input-form .btn,
+.s3-cart-page .s3-cart-remove-form .btn,
+.s3-cart-page .s3-cart-summary__actions .btn,
+.s3-cart-page .s3-cart-empty .btn {
+    border-radius: 6px !important;
+}
+
+.s3-cart-page .s3-cart-qty__form .btn-outline-secondary {
+    border-color: rgba(var(--brand-black-rgb), .28);
+    color: var(--brand-black);
+}
+
+.s3-cart-page .s3-cart-qty__form .btn-outline-secondary:hover,
+.s3-cart-page .s3-cart-qty__form .btn-outline-secondary:focus {
+    background: var(--brand-black);
+    border-color: var(--brand-black);
+    color: var(--brand-white);
+}
+
+.s3-cart-page .btn-primary {
+    background: var(--brand-red-primary) !important;
+    border-color: var(--brand-red-primary) !important;
+    color: var(--brand-white) !important;
+}
+
+.s3-cart-page .btn-primary:hover,
+.s3-cart-page .btn-primary:focus {
+    background: var(--brand-red-secondary) !important;
+    border-color: var(--brand-gold-primary) !important;
+    color: var(--brand-white) !important;
+}
+
+.s3-cart-page .btn-outline-dark {
+    border-color: var(--brand-black) !important;
+    color: var(--brand-black) !important;
+}
+
+.s3-cart-page .btn-outline-dark:hover,
+.s3-cart-page .btn-outline-dark:focus {
+    background: var(--brand-black) !important;
+    border-color: var(--brand-black) !important;
+    color: var(--brand-white) !important;
+}
+
+.s3-cart-page .btn-outline-danger {
+    border-color: var(--brand-red-secondary);
+    color: var(--brand-red-secondary);
+}
+
+.s3-cart-page .btn-outline-danger:hover,
+.s3-cart-page .btn-outline-danger:focus {
+    background: var(--brand-red-secondary);
+    border-color: var(--brand-red-secondary);
+    color: var(--brand-white);
+}
+
+.s3-cart-page .s3-cart-item__subtotal {
+    border-left-color: rgba(var(--brand-red-primary-rgb), .14);
+}
+
+.s3-cart-page .s3-cart-summary {
+    border-top: 4px solid var(--brand-gold-primary);
+}
+
+.s3-cart-page .s3-cart-summary__head {
+    background: var(--brand-black);
+}
+
+.s3-cart-page .s3-cart-summary__head .text-primary {
+    color: var(--brand-gold-light) !important;
+}
+
+.s3-cart-page .s3-cart-summary__total {
+    border-top-color: rgba(var(--brand-red-primary-rgb), .18);
+}
+
+.s3-cart-page .s3-cart-note {
+    border: 1px solid rgba(var(--brand-gold-primary-rgb), .3);
+    border-radius: 6px;
+    background: rgba(var(--brand-gold-primary-rgb), .08);
+    color: var(--brand-black);
+}
+
+.s3-cart-page .s3-cart-empty {
+    border-top: 4px solid var(--brand-red-primary);
+}
+
+.s3-cart-page .s3-cart-empty__icon {
+    border-radius: 8px;
+    background: rgba(var(--brand-red-primary-rgb), .08);
+    color: var(--brand-red-primary);
+}
+
+.s4-checkout-page {
+    background: #F7F7F7;
+}
+
+.s4-checkout-page .s4-checkout-hero {
+    border-color: rgba(var(--brand-gold-primary-rgb), .36);
+    background:
+        linear-gradient(110deg, rgba(31, 31, 31, .98), rgba(139, 14, 22, .94)),
+        url("../img/CervesayLicores.webp") center / cover no-repeat;
+    box-shadow: 0 18px 42px rgba(var(--brand-black-rgb), .18);
+}
+
+.s4-checkout-page .s4-checkout-hero::before {
+    background: var(--brand-gold-primary);
+}
+
+.s4-checkout-page .s4-checkout-hero__eyebrow,
+.s4-checkout-page .s4-checkout-hero__badge i {
+    color: var(--brand-gold-light);
+}
+
+.s4-checkout-page .s4-checkout-hero__badge {
+    border-color: rgba(var(--brand-gold-primary-rgb), .36);
+    background: rgba(var(--brand-black-rgb), .26);
+}
+
+.s4-checkout-page .s4-checkout-card,
+.s4-checkout-page .s4-checkout-summary {
+    border-color: rgba(var(--brand-black-rgb), .12);
+    box-shadow: 0 14px 32px rgba(var(--brand-black-rgb), .08);
+}
+
+.s4-checkout-page .s4-checkout-card {
+    border-top: 4px solid var(--brand-red-primary);
+}
+
+.s4-checkout-page .s4-checkout-section {
+    border-top-color: rgba(var(--brand-red-primary-rgb), .12);
+}
+
+.s4-checkout-page .s4-checkout-section-title i {
+    background: var(--brand-red-primary);
+    color: var(--brand-gold-light);
+}
+
+.s4-checkout-page .s4-checkout-section-title span,
+.s4-checkout-page .s4-checkout-summary__header span {
+    color: var(--brand-red-primary);
+}
+
+.s4-checkout-page .s4-checkout-section-title h2,
+.s4-checkout-page .s4-checkout-summary__header h2 {
+    color: var(--brand-black);
+}
+
+.s4-checkout-page .form-control {
+    border-color: rgba(var(--brand-black-rgb), .2);
+    border-radius: 6px;
+}
+
+.s4-checkout-page .form-control:focus {
+    border-color: var(--brand-red-primary);
+    box-shadow: var(--brand-focus-ring);
+}
+
+.s4-checkout-page .form-control[readonly] {
+    background: rgba(var(--brand-black-rgb), .035);
+}
+
+.s4-checkout-page .s4-checkout-option {
+    border-color: rgba(var(--brand-black-rgb), .2);
+    border-radius: 6px;
+    background: var(--brand-white);
+    color: var(--brand-black);
+}
+
+.s4-checkout-page .s4-checkout-option:hover,
+.s4-checkout-page .s4-checkout-option.active {
+    border-color: var(--brand-red-primary);
+    background: var(--brand-red-primary);
+    color: var(--brand-white);
+}
+
+.s4-checkout-page .s4-checkout-note {
+    border-color: rgba(var(--brand-gold-primary-rgb), .32);
+    border-left: 4px solid var(--brand-gold-primary);
+    border-radius: 6px;
+    background: rgba(var(--brand-gold-primary-rgb), .08);
+    color: var(--brand-black);
+}
+
+.s4-checkout-page .form-check-input:checked {
+    accent-color: var(--brand-red-primary);
+}
+
+.s4-checkout-page .s4-checkout-validation {
+    border-color: rgba(var(--brand-red-secondary-rgb), .3);
+    background: rgba(var(--brand-red-secondary-rgb), .06);
+}
+
+.s4-checkout-page .s4-checkout-actions {
+    border-top-color: rgba(var(--brand-red-primary-rgb), .14);
+}
+
+.s4-checkout-page .s4-checkout-submit,
+.s4-checkout-page .s4-checkout-secondary {
+    border-radius: 6px;
+}
+
+.s4-checkout-page .s4-checkout-submit {
+    background: var(--brand-red-primary) !important;
+    border-color: var(--brand-red-primary) !important;
+    color: var(--brand-white) !important;
+}
+
+.s4-checkout-page .s4-checkout-submit:hover,
+.s4-checkout-page .s4-checkout-submit:focus {
+    background: var(--brand-red-secondary) !important;
+    border-color: var(--brand-gold-primary) !important;
+    color: var(--brand-white) !important;
+}
+
+.s4-checkout-page .s4-checkout-secondary {
+    border-color: var(--brand-black);
+    color: var(--brand-black);
+}
+
+.s4-checkout-page .s4-checkout-secondary:hover,
+.s4-checkout-page .s4-checkout-secondary:focus {
+    background: var(--brand-black);
+    border-color: var(--brand-black);
+    color: var(--brand-white);
+}
+
+.s4-checkout-page .s4-checkout-summary {
+    border-top: 4px solid var(--brand-gold-primary);
+}
+
+.s4-checkout-page .s4-checkout-summary__header {
+    background: var(--brand-black);
+}
+
+.s4-checkout-page .s4-checkout-summary__header span,
+.s4-checkout-page .s4-checkout-summary__header h2 {
+    color: var(--brand-white);
+}
+
+.s4-checkout-page .s4-checkout-summary__header i {
+    color: var(--brand-gold-light);
+}
+
+.s4-checkout-page .s4-checkout-summary-row + .s4-checkout-summary-row,
+.s4-checkout-page .s4-checkout-summary-total {
+    border-top-color: rgba(var(--brand-black-rgb), .1);
+}
+
+.s4-checkout-page .s4-checkout-summary-row strong {
+    color: var(--brand-red-primary);
+}
+
+.s4-checkout-page .s4-checkout-summary-total {
+    background: rgba(var(--brand-red-primary-rgb), .045);
+}
+
+.s3-confirmation-card {
+    border-color: rgba(var(--brand-black-rgb), .12);
+    border-radius: 8px;
+    box-shadow: 0 18px 40px rgba(var(--brand-black-rgb), .1);
+}
+
+.s3-confirmation-card .s3-confirmation-card__head {
+    border-bottom: 4px solid var(--brand-gold-primary);
+    background:
+        linear-gradient(110deg, rgba(31, 31, 31, .98), rgba(139, 14, 22, .94)),
+        url("../img/CervesayLicores.webp") center / cover no-repeat;
+}
+
+.s3-confirmation-card .s3-confirmation-icon {
+    border: 2px solid var(--brand-gold-light);
+    border-radius: 50%;
+    background: var(--brand-white);
+    color: var(--brand-red-primary);
+}
+
+.s3-confirmation-card .s3-confirmation-fact {
+    border-color: rgba(var(--brand-red-primary-rgb), .12);
+    border-radius: 6px;
+    background: rgba(var(--brand-red-primary-rgb), .035);
+}
+
+.s3-confirmation-card .s3-confirmation-fact span,
+.s3-confirmation-card .s3-section-title__eyebrow {
+    color: var(--brand-red-primary);
+    letter-spacing: 0;
+}
+
+.s3-confirmation-card .s3-confirmation-fact strong {
+    color: var(--brand-black);
+}
+
+.s3-confirmation-card .s3-confirmation-product {
+    border-color: rgba(var(--brand-black-rgb), .12);
+    border-radius: 6px;
+}
+
+.s3-confirmation-card .s3-confirmation-product > strong {
+    color: var(--brand-red-primary);
+}
+
+.s3-confirmation-card .alert-light {
+    border-color: rgba(var(--brand-gold-primary-rgb), .34) !important;
+    background: rgba(var(--brand-gold-primary-rgb), .07);
+}
+
+.s3-confirmation-card .s3-confirmation-actions .btn {
+    border-radius: 6px !important;
+}
+
+.s3-confirmation-card .btn-primary {
+    background: var(--brand-red-primary) !important;
+    border-color: var(--brand-red-primary) !important;
+    color: var(--brand-white) !important;
+}
+
+.s3-confirmation-card .btn-primary:hover,
+.s3-confirmation-card .btn-primary:focus {
+    background: var(--brand-red-secondary) !important;
+    border-color: var(--brand-gold-primary) !important;
+}
+
+.s3-confirmation-card .btn-outline-primary {
+    border-color: var(--brand-red-primary);
+    color: var(--brand-red-primary);
+}
+
+.s3-confirmation-card .btn-outline-primary:hover,
+.s3-confirmation-card .btn-outline-primary:focus {
+    background: var(--brand-red-primary);
+    border-color: var(--brand-red-primary);
+    color: var(--brand-white);
+}
+
+.s3-confirmation-card .btn-outline-dark {
+    border-color: var(--brand-black);
+    color: var(--brand-black);
+}
+
+.s3-confirmation-card .btn-outline-dark:hover,
+.s3-confirmation-card .btn-outline-dark:focus {
+    background: var(--brand-black);
+    border-color: var(--brand-black);
+    color: var(--brand-white);
+}
+
 @media (max-width: 1199.98px) {
     .brand-navbar {
         max-width: 240px;
