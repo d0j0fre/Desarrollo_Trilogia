@@ -1,5 +1,5 @@
 /* =========================================================
-   Brand overrides - shared layout only
+   Brand overrides - shared layout and branded views
    Loaded after legacy visual layers to avoid rewriting them.
    ========================================================= */
 
@@ -210,6 +210,161 @@
     border-color: var(--brand-gold-primary) !important;
 }
 
+/* =========================================================
+   Login and registration
+   ========================================================= */
+
+.s4-auth-page--clean {
+    background:
+        linear-gradient(180deg, rgba(var(--brand-red-primary-rgb), .05), transparent 220px),
+        var(--brand-surface);
+}
+
+.s4-auth-page--clean .s4-auth-breadcrumb a {
+    color: var(--brand-red-primary);
+    font-weight: 800;
+}
+
+.s4-auth-page--clean .s4-auth-breadcrumb a:hover,
+.s4-auth-page--clean .s4-auth-breadcrumb a:focus {
+    color: var(--brand-red-secondary);
+}
+
+.s4-auth-page--clean .s4-auth-panel {
+    border-color: rgba(var(--brand-red-primary-rgb), .2);
+    box-shadow: 0 22px 52px rgba(var(--brand-black-rgb), .14);
+}
+
+.s4-auth-page--clean .s4-auth-brand-strip {
+    background:
+        linear-gradient(135deg, var(--brand-black) 0%, var(--brand-red-primary) 72%, var(--brand-red-secondary) 100%);
+    border-bottom-color: var(--brand-gold-primary);
+    gap: 1.15rem;
+    min-height: 126px;
+    padding: 1.4rem 1.65rem;
+}
+
+.s4-auth-page--clean .s4-auth-brand-strip::before {
+    background: var(--brand-gold-primary);
+    width: 6px;
+}
+
+.s4-auth-page--clean .s4-auth-brand-mark {
+    background: var(--brand-white);
+    border: 2px solid var(--brand-gold-primary);
+    border-radius: 50%;
+    box-shadow: 0 12px 28px rgba(var(--brand-black-rgb), .28);
+    flex: 0 0 72px;
+    height: 72px;
+    overflow: hidden;
+    padding: 3px;
+    width: 72px;
+}
+
+.s4-auth-page--clean .s4-auth-brand-logo {
+    display: block;
+    height: 100%;
+    object-fit: cover;
+    width: 100%;
+}
+
+.s4-auth-page--clean .s4-auth-brand-copy {
+    min-width: 0;
+}
+
+.s4-auth-page--clean .s4-auth-brand-strip .s4-auth-brand-name {
+    color: var(--brand-gold-light);
+    font-size: .8rem;
+    letter-spacing: .08em;
+    margin: 0 0 .15rem;
+}
+
+.s4-auth-page--clean .s4-auth-brand-subtitle {
+    color: rgba(255, 255, 255, .78);
+    display: block;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+    margin-bottom: .45rem;
+    text-transform: uppercase;
+}
+
+.s4-auth-page--clean .s4-auth-brand-strip h1 {
+    color: var(--brand-white);
+}
+
+.s4-auth-page--clean .s4-auth-brand-strip p {
+    color: rgba(255, 255, 255, .78);
+}
+
+.s4-auth-page--clean .s4-auth-card--clean .s4-auth-card-title span {
+    color: var(--brand-red-primary);
+}
+
+.s4-auth-page--clean .s4-auth-card--clean .s4-auth-card-title h2 {
+    color: var(--brand-black);
+}
+
+.s4-auth-page--clean .s4-auth-card--clean .s4-auth-field .form-control {
+    background: var(--brand-white);
+    border-color: rgba(var(--brand-black-rgb), .2);
+}
+
+.s4-auth-page--clean .s4-auth-card--clean .s4-auth-field .form-control:focus {
+    background: var(--brand-white);
+    border-color: var(--brand-red-primary);
+    box-shadow: var(--brand-focus-ring);
+}
+
+.s4-auth-page--clean .s4-auth-card--clean .s4-auth-check,
+.s4-auth-page--clean .s4-auth-card--clean .s4-auth-switch {
+    background: rgba(var(--brand-red-primary-rgb), .045);
+    border-color: rgba(var(--brand-red-primary-rgb), .14);
+}
+
+.s4-auth-page--clean .custom-control-input:checked ~ .custom-control-label::before {
+    background-color: var(--brand-red-primary);
+    border-color: var(--brand-red-primary);
+}
+
+.s4-auth-page--clean .s4-auth-card--clean .s4-auth-primary {
+    background: linear-gradient(135deg, var(--brand-red-primary), var(--brand-red-secondary)) !important;
+    border-color: var(--brand-red-primary) !important;
+    box-shadow: 0 14px 28px rgba(var(--brand-red-primary-rgb), .22);
+    color: var(--brand-white) !important;
+}
+
+.s4-auth-page--clean .s4-auth-card--clean .s4-auth-primary:hover,
+.s4-auth-page--clean .s4-auth-card--clean .s4-auth-primary:focus {
+    background: var(--brand-red-secondary) !important;
+    border-color: var(--brand-gold-primary) !important;
+    box-shadow: 0 14px 28px rgba(var(--brand-red-primary-rgb), .28);
+    color: var(--brand-white) !important;
+}
+
+.s4-auth-page--clean .s4-auth-link {
+    color: var(--brand-red-primary) !important;
+}
+
+.s4-auth-page--clean .s4-auth-link:hover,
+.s4-auth-page--clean .s4-auth-link:focus {
+    color: var(--brand-red-secondary) !important;
+}
+
+.s4-auth-page--clean .s4-auth-card--clean .s4-auth-demo-note {
+    border-top-color: rgba(var(--brand-red-primary-rgb), .14);
+}
+
+.s4-auth-page--clean .s4-auth-meta-row {
+    background: var(--brand-black);
+    border-top: 3px solid var(--brand-gold-primary);
+    color: var(--brand-white);
+}
+
+.s4-auth-page--clean .s4-auth-meta-row i {
+    color: var(--brand-gold-light);
+}
+
 @media (max-width: 1199.98px) {
     .brand-navbar {
         max-width: 240px;
@@ -241,6 +396,20 @@
     }
 }
 
+@media (max-width: 767.98px) {
+    .s4-auth-page--clean .s4-auth-brand-strip {
+        align-items: center;
+        min-height: 112px;
+        padding: 1.15rem;
+    }
+
+    .s4-auth-page--clean .s4-auth-brand-mark {
+        flex-basis: 58px;
+        height: 58px;
+        width: 58px;
+    }
+}
+
 @media (max-width: 420px) {
     .brand-navbar__mark {
         width: 40px;
@@ -256,5 +425,27 @@
     .brand-navbar__subtitle {
         font-size: .6rem;
         white-space: normal;
+    }
+
+    .s4-auth-page--clean .s4-auth-brand-strip {
+        align-items: flex-start;
+        gap: .8rem;
+        padding: 1rem;
+    }
+
+    .s4-auth-page--clean .s4-auth-brand-mark {
+        flex-basis: 52px;
+        height: 52px;
+        width: 52px;
+    }
+
+    .s4-auth-page--clean .s4-auth-brand-strip .s4-auth-brand-name {
+        font-size: .7rem;
+        letter-spacing: .05em;
+    }
+
+    .s4-auth-page--clean .s4-auth-brand-subtitle {
+        font-size: .62rem;
+        letter-spacing: .03em;
     }
 }
