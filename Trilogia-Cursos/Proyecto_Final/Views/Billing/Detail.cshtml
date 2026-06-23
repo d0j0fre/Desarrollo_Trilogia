@@ -5,12 +5,71 @@
 
 @section Styles {
     <link href="~/css/custom-theme.css" rel="stylesheet" />
+    <style>
+        @@media print {
+            .topbar,
+            .modern-nav-shell,
+            .navbar,
+            .header-categories-button,
+            .header-categories-panel,
+            .user-panel,
+            footer,
+            .s3-footer,
+            .back-to-top,
+            .alert,
+            .billing-detail-actions {
+                display: none !important;
+            }
+
+            @@page {
+                margin: 12mm;
+            }
+
+            html,
+            body,
+            main,
+            .billing-detail-page {
+                background: #fff !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            .billing-detail-page .col-lg-8,
+            .billing-detail-page .col-12 {
+                flex: 0 0 100% !important;
+                max-width: 100% !important;
+                width: 100% !important;
+            }
+
+            .billing-detail-page .admin-page-header,
+            .billing-detail-page .admin-card,
+            .billing-detail-page .admin-table-wrapper {
+                box-shadow: none !important;
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+
+            .billing-detail-page tr {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+        }
+    </style>
 }
 
-<div class="container-fluid pt-4">
+<div class="container-fluid pt-4 billing-detail-page">
     <div class="row px-xl-5">
         <div class="col-12">
             <div class="admin-page-header">
+                <div class="billing-detail-brand">
+                    <img src="~/brand/logo-icon.png"
+                         asp-append-version="true"
+                         alt="Supermercado Mayoreo" />
+                    <div>
+                        <span>Supermercado Mayoreo</span>
+                        <small>Licorera - Distribuidora</small>
+                    </div>
+                </div>
                 <h2 class="mb-2">Detalle de factura</h2>
                 <p>Consulta la información general de la factura y el desglose de productos facturados.</p>
             </div>
@@ -79,7 +138,7 @@
             </div>
         </div>
 
-        <div class="col-lg-4 pb-3">
+        <div class="col-lg-4 pb-3 billing-detail-actions">
             <div class="admin-card h-100">
                 <h5 class="mb-4">Acciones</h5>
 

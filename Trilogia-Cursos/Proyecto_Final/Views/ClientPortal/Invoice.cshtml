@@ -120,7 +120,16 @@
         <section class="s4-client-invoice-document">
             <div class="s4-client-invoice-header">
                 <div class="s4-client-invoice-brand">
-                    <span>Licorera La Bodega</span>
+                    <div class="s4-client-invoice-brand-heading">
+                        <img src="~/brand/logo-icon.png"
+                             asp-append-version="true"
+                             class="s4-client-invoice-logo"
+                             alt="Supermercado Mayoreo" />
+                        <div>
+                            <span>Supermercado Mayoreo</span>
+                            <small>Licorera - Distribuidora</small>
+                        </div>
+                    </div>
                     <h2>Comprobante del sistema</h2>
                     <p>Pedido #@Model.PedidoId</p>
                 </div>

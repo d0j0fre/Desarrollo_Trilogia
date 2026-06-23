@@ -1104,6 +1104,499 @@
     color: var(--brand-white);
 }
 
+/* =========================================================
+   Post-purchase: client portal, invoices and billing
+   ========================================================= */
+
+.s4-client-portal-page,
+.s4-client-invoice-page {
+    background: #F7F7F7;
+}
+
+.s4-client-portal-page .s4-client-portal-hero,
+.s4-client-invoice-page .s4-client-invoice-toolbar {
+    border-color: rgba(var(--brand-gold-primary-rgb), .34);
+    background:
+        linear-gradient(110deg, rgba(31, 31, 31, .98), rgba(139, 14, 22, .94)),
+        url("../img/CervesayLicores.webp") center / cover no-repeat;
+    box-shadow: 0 18px 42px rgba(var(--brand-black-rgb), .18);
+}
+
+.s4-client-portal-page .s4-client-portal-hero::before {
+    background: var(--brand-gold-primary);
+}
+
+.s4-client-portal-page .s4-client-portal-eyebrow,
+.s4-client-portal-page .s4-client-portal-hero__stats strong {
+    color: var(--brand-gold-light);
+}
+
+.s4-client-portal-page .s4-client-portal-hero__stats div {
+    border-color: rgba(var(--brand-gold-primary-rgb), .28);
+    background: rgba(var(--brand-black-rgb), .24);
+}
+
+.s4-client-portal-page .s4-client-summary-card,
+.s4-client-portal-page .s4-client-orders-panel,
+.s4-client-portal-page .s4-client-detail-card,
+.s4-client-portal-page .s4-client-action-panel {
+    border-color: rgba(var(--brand-black-rgb), .12);
+    box-shadow: 0 14px 32px rgba(var(--brand-black-rgb), .08);
+}
+
+.s4-client-portal-page .s4-client-summary-card {
+    border-top: 4px solid var(--brand-red-primary);
+}
+
+.s4-client-portal-page .s4-client-summary-card--dark {
+    border-color: rgba(var(--brand-gold-primary-rgb), .34);
+    border-top-color: var(--brand-gold-primary);
+    background: linear-gradient(145deg, var(--brand-black), var(--brand-red-primary));
+}
+
+.s4-client-portal-page .s4-client-summary-card__icon {
+    background: rgba(var(--brand-red-primary-rgb), .08);
+    color: var(--brand-red-primary);
+}
+
+.s4-client-portal-page .s4-client-summary-card--dark .s4-client-summary-card__icon {
+    background: rgba(var(--brand-gold-primary-rgb), .16);
+    color: var(--brand-gold-light);
+}
+
+.s4-client-portal-page .s4-client-summary-card span,
+.s4-client-portal-page .s4-client-orders-panel__head span,
+.s4-client-portal-page .s4-client-detail-card__head > div > span,
+.s4-client-portal-page .s4-client-detail-facts span,
+.s4-client-portal-page .s4-client-detail-note span,
+.s4-client-portal-page .s4-client-action-panel > div > span {
+    color: var(--brand-red-primary);
+}
+
+.s4-client-portal-page .s4-client-summary-card--dark span {
+    color: var(--brand-gold-light);
+}
+
+.s4-client-portal-page .s4-client-summary-list,
+.s4-client-portal-page .s4-client-detail-card__head {
+    border-color: rgba(var(--brand-red-primary-rgb), .12);
+}
+
+.s4-client-portal-page .s4-client-credit-amount.success {
+    color: #18723A;
+}
+
+.s4-client-portal-page .s4-client-credit-amount.danger {
+    color: var(--brand-red-secondary);
+}
+
+.s4-client-portal-page .s4-client-status-pill {
+    border: 1px solid transparent;
+}
+
+.s4-client-portal-page .s4-client-status-pill.warning {
+    border-color: rgba(var(--brand-gold-primary-rgb), .4);
+    background: rgba(var(--brand-gold-primary-rgb), .14);
+    color: #805A00;
+}
+
+.s4-client-portal-page .s4-client-status-pill.success {
+    border-color: rgba(24, 114, 58, .24);
+    background: rgba(24, 114, 58, .1);
+    color: #176A37;
+}
+
+.s4-client-portal-page .s4-client-status-pill.danger {
+    border-color: rgba(var(--brand-red-secondary-rgb), .25);
+    background: rgba(var(--brand-red-secondary-rgb), .08);
+    color: var(--brand-red-primary);
+}
+
+.s4-client-portal-page .s4-client-status-pill.dark {
+    border-color: rgba(var(--brand-black-rgb), .2);
+    background: rgba(var(--brand-black-rgb), .07);
+    color: var(--brand-black);
+}
+
+.s4-client-portal-page .s4-client-orders-panel {
+    border-top: 4px solid var(--brand-gold-primary);
+}
+
+.s4-client-portal-page .s4-client-orders-panel__head {
+    border-bottom-color: rgba(var(--brand-black-rgb), .1);
+    background: var(--brand-white);
+}
+
+.s4-client-portal-page .s4-client-orders-panel__head strong {
+    border-color: rgba(var(--brand-red-primary-rgb), .16);
+    background: rgba(var(--brand-red-primary-rgb), .05);
+    color: var(--brand-red-primary);
+}
+
+.s4-client-portal-page .s4-client-orders-table thead th {
+    border-bottom-color: rgba(var(--brand-red-primary-rgb), .18);
+    background: rgba(var(--brand-red-primary-rgb), .06);
+    color: var(--brand-black);
+}
+
+.s4-client-portal-page .s4-client-orders-table tbody tr:hover {
+    background: rgba(var(--brand-gold-primary-rgb), .06);
+}
+
+.s4-client-portal-page .s4-client-table-action,
+.s4-client-portal-page .s4-client-primary-action,
+.s4-client-portal-page .s4-client-secondary-action,
+.s4-client-portal-page .s4-client-danger-action,
+.s4-client-portal-page .s4-client-hero-action {
+    border-radius: 6px;
+}
+
+.s4-client-portal-page .s4-client-table-action,
+.s4-client-portal-page .s4-client-secondary-action {
+    border-color: var(--brand-black);
+    background: var(--brand-white);
+    color: var(--brand-black);
+}
+
+.s4-client-portal-page .s4-client-table-action:hover,
+.s4-client-portal-page .s4-client-table-action:focus,
+.s4-client-portal-page .s4-client-secondary-action:hover,
+.s4-client-portal-page .s4-client-secondary-action:focus {
+    background: var(--brand-black);
+    border-color: var(--brand-black);
+    color: var(--brand-white);
+}
+
+.s4-client-portal-page .s4-client-primary-action,
+.s4-client-portal-page .s4-client-hero-action {
+    border-color: var(--brand-gold-primary);
+    background: var(--brand-red-primary);
+    color: var(--brand-white);
+}
+
+.s4-client-portal-page .s4-client-primary-action:hover,
+.s4-client-portal-page .s4-client-primary-action:focus,
+.s4-client-portal-page .s4-client-hero-action:hover,
+.s4-client-portal-page .s4-client-hero-action:focus {
+    border-color: var(--brand-gold-light);
+    background: var(--brand-red-secondary);
+    color: var(--brand-white);
+}
+
+.s4-client-portal-page .s4-client-danger-action {
+    border-color: var(--brand-red-secondary);
+    background: var(--brand-red-secondary);
+    color: var(--brand-white);
+}
+
+.s4-client-portal-page .s4-client-detail-facts div,
+.s4-client-portal-page .s4-client-detail-note {
+    border-color: rgba(var(--brand-red-primary-rgb), .12);
+    border-radius: 6px;
+    background: rgba(var(--brand-red-primary-rgb), .035);
+}
+
+.s4-client-portal-page .s4-client-action-panel {
+    border-top: 4px solid var(--brand-gold-primary);
+}
+
+.s4-client-portal-page .s4-client-order-total {
+    border-radius: 6px;
+    background: var(--brand-red-primary);
+}
+
+.s4-client-portal-page .s4-client-order-total span {
+    color: var(--brand-gold-light);
+}
+
+.s4-client-invoice-page .s4-client-invoice-toolbar span {
+    color: var(--brand-gold-light);
+}
+
+.s4-client-invoice-page .s4-client-invoice-primary,
+.s4-client-invoice-page .s4-client-invoice-secondary {
+    border-radius: 6px;
+}
+
+.s4-client-invoice-page .s4-client-invoice-primary {
+    border-color: var(--brand-gold-primary);
+    background: var(--brand-red-primary);
+    color: var(--brand-white);
+}
+
+.s4-client-invoice-page .s4-client-invoice-primary:hover,
+.s4-client-invoice-page .s4-client-invoice-primary:focus {
+    border-color: var(--brand-gold-light);
+    background: var(--brand-red-secondary);
+    color: var(--brand-white);
+}
+
+.s4-client-invoice-page .s4-client-invoice-document {
+    border-color: rgba(var(--brand-black-rgb), .14);
+    box-shadow: 0 18px 42px rgba(var(--brand-black-rgb), .1);
+}
+
+.s4-client-invoice-page .s4-client-invoice-header {
+    border-bottom-color: rgba(var(--brand-red-primary-rgb), .15);
+}
+
+.s4-client-invoice-page .s4-client-invoice-brand {
+    border: 1px solid rgba(var(--brand-gold-primary-rgb), .35);
+    border-radius: 6px;
+    background: linear-gradient(135deg, var(--brand-black), var(--brand-red-primary));
+}
+
+.s4-client-invoice-page .s4-client-invoice-brand-heading {
+    align-items: center;
+    display: flex;
+    gap: .8rem;
+}
+
+.s4-client-invoice-page .s4-client-invoice-logo {
+    background: var(--brand-white);
+    border: 2px solid var(--brand-gold-primary);
+    border-radius: 50%;
+    flex: 0 0 54px;
+    height: 54px;
+    object-fit: cover;
+    padding: 2px;
+    width: 54px;
+}
+
+.s4-client-invoice-page .s4-client-invoice-brand-heading small {
+    color: rgba(255, 255, 255, .76);
+    display: block;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.s4-client-invoice-page .s4-client-invoice-meta div,
+.s4-client-invoice-page .s4-client-invoice-card,
+.s4-client-invoice-page .s4-client-invoice-totals,
+.s4-client-invoice-page .s4-client-invoice-products {
+    border-color: rgba(var(--brand-black-rgb), .12);
+    border-radius: 6px;
+    background: #FAFAFA;
+}
+
+.s4-client-invoice-page .s4-client-invoice-meta span,
+.s4-client-invoice-page .s4-client-invoice-card-title span:first-child,
+.s4-client-invoice-page .s4-client-invoice-totals span,
+.s4-client-invoice-page .s4-client-invoice-products-head span,
+.s4-client-invoice-page .s4-client-invoice-facts dt {
+    color: var(--brand-red-primary);
+    letter-spacing: 0;
+}
+
+.s4-client-invoice-page .s4-client-invoice-card-title,
+.s4-client-invoice-page .s4-client-invoice-totals div,
+.s4-client-invoice-page .s4-client-invoice-products-head {
+    border-color: rgba(var(--brand-red-primary-rgb), .12);
+}
+
+.s4-client-invoice-page .s4-client-invoice-total-row {
+    border-radius: 6px;
+    background: var(--brand-red-primary);
+}
+
+.s4-client-invoice-page .s4-client-invoice-total-row span {
+    color: var(--brand-gold-light);
+}
+
+.s4-client-invoice-page .s4-client-invoice-table th {
+    border-bottom-color: rgba(var(--brand-red-primary-rgb), .16);
+    background: rgba(var(--brand-red-primary-rgb), .07);
+    color: var(--brand-black);
+    letter-spacing: 0;
+}
+
+.s4-client-invoice-page .s4-client-invoice-table tbody tr:hover {
+    background: rgba(var(--brand-gold-primary-rgb), .06);
+}
+
+.s4-client-invoice-page .s4-client-invoice-table tfoot tr:last-child th {
+    background: var(--brand-red-primary);
+    color: var(--brand-white);
+}
+
+.billing-page .admin-page-header,
+.billing-detail-page .admin-page-header {
+    border: 1px solid rgba(var(--brand-gold-primary-rgb), .32);
+    border-radius: 8px;
+    background:
+        linear-gradient(110deg, rgba(31, 31, 31, .98), rgba(139, 14, 22, .94)),
+        url("../img/CervesayLicores.webp") center / cover no-repeat;
+    box-shadow: 0 18px 40px rgba(var(--brand-black-rgb), .16);
+}
+
+.billing-page .admin-card,
+.billing-page .admin-table-wrapper,
+.billing-detail-page .admin-card,
+.billing-detail-page .admin-table-wrapper {
+    border-color: rgba(var(--brand-black-rgb), .12);
+    border-radius: 8px;
+    box-shadow: 0 12px 28px rgba(var(--brand-black-rgb), .07);
+}
+
+.billing-page .admin-card {
+    border-top: 4px solid var(--brand-red-primary);
+}
+
+.billing-page .admin-card .text-primary {
+    color: var(--brand-red-primary) !important;
+}
+
+.billing-page .admin-card h3 {
+    color: var(--brand-red-primary);
+}
+
+.billing-page .billing-table-wrapper,
+.billing-detail-page .admin-table-wrapper {
+    border-top: 4px solid var(--brand-gold-primary);
+}
+
+.billing-page .billing-table-wrapper > .border-bottom,
+.billing-detail-page .admin-table-wrapper > .border-bottom {
+    border-bottom-color: rgba(var(--brand-red-primary-rgb), .12) !important;
+}
+
+.billing-page .billing-invoices-table thead th,
+.billing-detail-page .admin-table-wrapper thead th {
+    border-bottom-color: rgba(var(--brand-red-primary-rgb), .18);
+    background: rgba(var(--brand-red-primary-rgb), .07);
+    color: var(--brand-black);
+}
+
+.billing-page .billing-invoices-table tbody tr:hover,
+.billing-detail-page .admin-table-wrapper tbody tr:hover {
+    background: rgba(var(--brand-gold-primary-rgb), .06);
+}
+
+.billing-page .billing-invoices-table td:nth-child(8),
+.billing-detail-page .admin-table-wrapper tbody td:last-child,
+.billing-detail-page .admin-table-wrapper tfoot tr:last-child th {
+    color: var(--brand-red-primary);
+    font-weight: 900;
+}
+
+.billing-page .billing-action-link {
+    border-color: var(--brand-red-primary);
+    border-radius: 6px;
+    color: var(--brand-red-primary);
+}
+
+.billing-page .billing-action-link:hover,
+.billing-page .billing-action-link:focus {
+    background: var(--brand-red-primary);
+    border-color: var(--brand-red-primary);
+    color: var(--brand-white);
+}
+
+.billing-page .list-group-item {
+    border-color: rgba(var(--brand-black-rgb), .1);
+}
+
+.billing-page .admin-badge-soft.success,
+.billing-detail-page .admin-badge-soft.success {
+    background: rgba(24, 114, 58, .1);
+    color: #176A37;
+}
+
+.billing-page .admin-badge-soft.dark,
+.billing-detail-page .admin-badge-soft.dark {
+    background: rgba(var(--brand-black-rgb), .08);
+    color: var(--brand-black);
+}
+
+.billing-detail-page .billing-detail-brand {
+    align-items: center;
+    display: flex;
+    gap: .75rem;
+    margin-bottom: 1rem;
+}
+
+.billing-detail-page .billing-detail-brand img {
+    background: var(--brand-white);
+    border: 2px solid var(--brand-gold-primary);
+    border-radius: 50%;
+    height: 54px;
+    object-fit: cover;
+    padding: 2px;
+    width: 54px;
+}
+
+.billing-detail-page .billing-detail-brand span,
+.billing-detail-page .billing-detail-brand small {
+    display: block;
+}
+
+.billing-detail-page .billing-detail-brand span {
+    color: var(--brand-gold-light);
+    font-size: .82rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.billing-detail-page .billing-detail-brand small {
+    color: rgba(255, 255, 255, .74);
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.billing-detail-page .admin-card h5,
+.billing-detail-page .admin-table-wrapper h5 {
+    color: var(--brand-black);
+}
+
+.billing-detail-page .admin-card label {
+    color: var(--brand-red-primary);
+}
+
+.billing-detail-page .billing-detail-actions .btn {
+    border-radius: 6px !important;
+}
+
+.billing-detail-page .billing-detail-actions .btn-primary {
+    background: var(--brand-red-primary) !important;
+    border-color: var(--brand-red-primary) !important;
+    color: var(--brand-white) !important;
+}
+
+.billing-detail-page .billing-detail-actions .btn-primary:hover,
+.billing-detail-page .billing-detail-actions .btn-primary:focus {
+    background: var(--brand-red-secondary) !important;
+    border-color: var(--brand-gold-primary) !important;
+}
+
+@media print {
+    .s4-client-invoice-page {
+        background: var(--brand-white) !important;
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+    }
+
+    .s4-client-invoice-page .s4-client-invoice-logo,
+    .billing-detail-page .billing-detail-brand img {
+        height: 46px;
+        width: 46px;
+    }
+
+    .s4-client-invoice-page .s4-client-invoice-document,
+    .billing-detail-page .admin-page-header,
+    .billing-detail-page .admin-card,
+    .billing-detail-page .admin-table-wrapper {
+        box-shadow: none !important;
+    }
+
+    .billing-detail-page {
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+    }
+}
+
 @media (max-width: 1199.98px) {
     .brand-navbar {
         max-width: 240px;
