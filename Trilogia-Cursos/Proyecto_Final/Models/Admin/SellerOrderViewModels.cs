@@ -109,5 +109,33 @@ namespace Proyecto_Final.Models.Admin
         public int? PedidoId { get; set; }
         public string PedidoOfflineGuid { get; set; } = string.Empty;
         public string RedirectUrl { get; set; } = string.Empty;
+        public string Estado { get; set; } = string.Empty;
+        public string NumeroFactura { get; set; } = string.Empty;
+    }
+
+    public class SellerOrderResultViewModel
+    {
+        public int PedidoId { get; set; }
+        public string Estado { get; set; } = string.Empty;
+        public int FacturaId { get; set; }
+        public string NumeroFactura { get; set; } = string.Empty;
+        public bool EsRetenido => Estado == "Retenido";
+        public bool TieneFactura => FacturaId > 0;
+    }
+
+    public class SellerMyOrderViewModel
+    {
+        public int PedidoId { get; set; }
+        public string Cliente { get; set; } = string.Empty;
+        public DateTime FechaPedido { get; set; }
+        public string Estado { get; set; } = string.Empty;
+        public decimal Total { get; set; }
+        public string MotivoRechazo { get; set; } = string.Empty;
+        public string NumeroFactura { get; set; } = string.Empty;
+        public DateTime? FechaActualizacion { get; set; }
+        public bool EsRetenido => Estado == "Retenido";
+        public bool EsRechazado => Estado == "Rechazado";
+        public bool EsLiberado => Estado == "Liberado";
+        public bool TieneFactura => !string.IsNullOrWhiteSpace(NumeroFactura);
     }
 }

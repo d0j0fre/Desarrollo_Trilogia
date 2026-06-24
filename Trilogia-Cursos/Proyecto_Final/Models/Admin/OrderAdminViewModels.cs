@@ -29,13 +29,20 @@ namespace Proyecto_Final.Models.Admin
         public string EstadoPago { get; set; } = string.Empty;
         public string? ReferenciaPago { get; set; }
         public DateTime? FechaPago { get; set; }
+        public string? MotivoRechazo { get; set; }
         public bool HasInvoice { get; set; }
         public int? FacturaId { get; set; }
+        public string NumeroFactura { get; set; } = string.Empty;
         public bool CanGenerateInvoice => !HasInvoice
             && Detalles.Any()
-            && (Estado == "Pendiente" || Estado == "Aprobado" || Estado == "EnProceso" || Estado == "Entregado");
+            && (Estado == "Pendiente" || Estado == "Aprobado" || Estado == "EnProceso"
+                || Estado == "Entregado" || Estado == "Liberado");
         public List<OrderDetailLineViewModel> Detalles { get; set; } = new();
-        public List<string> EstadosDisponibles { get; set; } = new() { "Pendiente", "Aprobado", "EnProceso", "Entregado", "Cancelado" };
+        public List<string> EstadosDisponibles { get; set; } = new()
+        {
+            "Pendiente", "Aprobado", "EnProceso", "Entregado", "Cancelado",
+            "Retenido", "Liberado", "Rechazado"
+        };
     }
 
     public class OrderDetailLineViewModel

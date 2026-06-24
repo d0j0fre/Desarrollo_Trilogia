@@ -1,0 +1,148 @@
+@model List<Proyecto_Final.Models.Admin.SellerMyOrderViewModel>
+@{
+    ViewData["Title"] = "Mis pedidos";
+}
+
+@section Styles {
+    <style>
+        .status-retenido  { background: #fff3cd; color: #856404; }
+        .status-rechazado { background: #f8d7da; color: #842029; }
+        .status-liberado  { background: #d1e7dd; color: #0f5132; }
+        .status-pendiente { background: #fff3cd; color: #856404; }
+        .status-default   { background: #e2e3e5; color: #383d41; }
+        .motivo-badge {
+            background: #f8d7da;
+            border-left: 3px solid #dc3545;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: .85rem;
+        }
+    </style>
+}
+
+<div class="container-fluid pt-4">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+                <div>
+                    <h2 class="mb-1">Mis pedidos</h2>
+                    <p class="mb-0">Seguimiento de los pedidos que has registrado, incluyendo su estado de aprobación.</p>
+                </div>
+                <a asp-controller="SellerOrders" asp-action="Index" class="btn btn-primary mt-3 mt-md-0">
+                    <i class="fa fa-plus mr-1"></i> Nuevo pedido
+                </a>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="row px-xl-5">
+            <div class="col-12">
+                <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+            </div>
+        </div>
+    }
+
+    <div class="row px-xl-5">
+        <div class="col-12">
+            @if (!Model.Any())
+            {
+                <div class="admin-card text-center py-5">
+                    <i class="fa fa-clipboard-list text-muted mb-3" style="font-size:48px;"></i>
+                    <p class="text-muted mb-0">No has registrado ningún pedido todavía.</p>
+                </div>
+            }
+            else
+            {
+                <div class="admin-card">
+                    <div class="table-responsive">
+                        <table class="table admin-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Cliente</th>
+                                    <th>Fecha</th>
+                                    <th>Total</th>
+                                    <th>Estado</th>
+                                    <th>Factura</th>
+                                    <th>Actualizado</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var pedido in Model)
+                                {
+                                    var statusClass = pedido.Estado switch
+                                    {
+                                        "Retenido"  => "status-retenido",
+                                        "Rechazado" => "status-rechazado",
+                                        "Liberado"  => "status-liberado",
+                                        "Pendiente" => "status-pendiente",
+                                        _           => "status-default"
+                                    };
+
+                                    <tr>
+                                        <td class="font-weight-bold">#@pedido.PedidoId</td>
+                                        <td>@pedido.Cliente</td>
+                                        <td>@pedido.FechaPedido.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td>₡@pedido.Total.ToString("N2")</td>
+                                        <td>
+                                            <span class="badge @statusClass" style="font-size:.8rem; padding:5px 10px;">
+                                                @pedido.Estado
+                                            </span>
+                                        </td>
+                                        <td>
+                                            @if (pedido.TieneFactura)
+                                            {
+                                                <span class="text-success small font-weight-bold">@pedido.NumeroFactura</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted small">—</span>
+                                            }
+                                        </td>
+                                        <td class="text-muted small">
+                                            @(pedido.FechaActualizacion.HasValue
+                                                ? pedido.FechaActualizacion.Value.ToString("dd/MM/yy HH:mm")
+                                                : "—")
+                                        </td>
+                                        <td>
+                                            <a asp-controller="OrdersAdmin" asp-action="Detail" asp-route-id="@pedido.PedidoId"
+                                               class="btn btn-sm btn-outline-secondary">
+                                                <i class="fa fa-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+
+                                    @if (pedido.EsRechazado && !string.IsNullOrWhiteSpace(pedido.MotivoRechazo))
+                                    {
+                                        <tr>
+                                            <td colspan="8" class="pt-0 pb-2">
+                                                <div class="motivo-badge">
+                                                    <i class="fa fa-times-circle text-danger mr-1"></i>
+                                                    <strong>Motivo de rechazo:</strong> @pedido.MotivoRechazo
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                    @if (pedido.EsRetenido)
+                                    {
+                                        <tr>
+                                            <td colspan="8" class="pt-0 pb-2">
+                                                <div class="alert alert-warning py-1 px-3 mb-0 small">
+                                                    <i class="fa fa-clock mr-1"></i>
+                                                    Este pedido supera el umbral de autorización y está pendiente de revisión por el Gerente.
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

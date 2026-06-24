@@ -1,0 +1,101 @@
+@model Proyecto_Final.Models.Admin.OrderDetailViewModel
+@{
+    ViewData["Title"] = "Pedido registrado";
+    var numeroFactura = ViewBag.NumeroFactura as string ?? Model.NumeroFactura;
+}
+
+<div class="container-fluid pt-4">
+    <div class="row px-xl-5 justify-content-center">
+        <div class="col-lg-8">
+
+            <div class="admin-card text-center py-5 mb-4">
+                <div class="mb-3">
+                    <i class="fa fa-check-circle text-success" style="font-size:64px;"></i>
+                </div>
+                <h2 class="mb-2">¡Pedido registrado con éxito!</h2>
+                <p class="text-muted mb-0">El pedido fue confirmado y la factura generada automáticamente.</p>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-6 mb-3">
+                    <div class="admin-card text-center py-4">
+                        <div class="text-muted small mb-1">Número de pedido</div>
+                        <div class="font-weight-bold" style="font-size:1.6rem;">#@Model.PedidoId</div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="admin-card text-center py-4">
+                        <div class="text-muted small mb-1">Factura generada (CU-091)</div>
+                        <div class="font-weight-bold text-success" style="font-size:1.3rem;">
+                            @(string.IsNullOrWhiteSpace(numeroFactura) ? "—" : numeroFactura)
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="admin-card mb-4">
+                <h5 class="mb-3">Resumen del pedido</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-2">
+                        <span class="text-muted small d-block">Cliente</span>
+                        <strong>@Model.Cliente</strong>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <span class="text-muted small d-block">Estado</span>
+                        <span class="admin-badge-soft warning">@Model.Estado</span>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <span class="text-muted small d-block">Tipo de entrega</span>
+                        @(Model.TipoEntrega ?? "—")
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <span class="text-muted small d-block">Total del pedido</span>
+                        <strong class="text-success">₡@Model.Total.ToString("N2")</strong>
+                    </div>
+                </div>
+
+                @if (Model.Detalles.Any())
+                {
+                    <hr />
+                    <h6 class="mb-3">Productos</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm admin-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th class="text-center">Cant.</th>
+                                    <th class="text-right">Precio unit.</th>
+                                    <th class="text-right">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.Detalles)
+                                {
+                                    <tr>
+                                        <td>@item.Producto</td>
+                                        <td class="text-center">@item.Cantidad</td>
+                                        <td class="text-right">₡@item.PrecioUnitario.ToString("N2")</td>
+                                        <td class="text-right">₡@item.Subtotal.ToString("N2")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+
+            <div class="d-flex flex-column flex-md-row justify-content-center" style="gap:12px;">
+                <a asp-controller="SellerOrders" asp-action="Index" class="btn btn-primary btn-lg">
+                    <i class="fa fa-plus mr-1"></i> Nuevo pedido
+                </a>
+                <a asp-controller="SellerOrders" asp-action="MyOrders" class="btn btn-outline-secondary btn-lg">
+                    <i class="fa fa-list mr-1"></i> Mis pedidos
+                </a>
+                <a asp-controller="OrdersAdmin" asp-action="Detail" asp-route-id="@Model.PedidoId" class="btn btn-outline-dark btn-lg">
+                    <i class="fa fa-eye mr-1"></i> Ver detalle completo
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>

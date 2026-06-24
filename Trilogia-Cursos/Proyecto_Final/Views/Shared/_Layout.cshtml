@@ -41,6 +41,7 @@
             string.Equals(userRole, "Empleado", StringComparison.OrdinalIgnoreCase)
             || string.Equals(userRole, "Vendedor", StringComparison.OrdinalIgnoreCase));
         var isClient = isLoggedIn && string.Equals(userRole, "Cliente", StringComparison.OrdinalIgnoreCase);
+        var isGerente = isLoggedIn && string.Equals(userRole, "Gerente", StringComparison.OrdinalIgnoreCase);
         var categoriasLayout = await AdminDbService.GetStoreCategoriesAsync();
     }
 
@@ -132,6 +133,13 @@
                             {
                                 <a asp-controller="SellerOrders" asp-action="Index" class="nav-item nav-link nav-highlight">
                                     <i class="fa fa-mobile-alt mr-1"></i>Venta móvil
+                                </a>
+                            }
+
+                            @if (isGerente)
+                            {
+                                <a asp-controller="ManagerOrders" asp-action="Index" class="nav-item nav-link nav-highlight">
+                                    <i class="fa fa-clipboard-check mr-1"></i>Pedidos retenidos
                                 </a>
                             }
 
