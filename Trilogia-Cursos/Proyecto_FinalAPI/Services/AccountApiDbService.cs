@@ -20,6 +20,7 @@ namespace Proyecto_FinalAPI.Services
             await using var command = new SqlCommand("dbo.sp_Auth_ValidateUser", connection);
             command.CommandType = CommandType.StoredProcedure;
             command.Parameters.AddWithValue("@Correo", email.Trim());
+            command.Parameters.AddWithValue("@Contrasena", password.Trim());
 
             await connection.OpenAsync();
             await using var reader = await command.ExecuteReaderAsync();
@@ -32,12 +33,11 @@ namespace Proyecto_FinalAPI.Services
                 UsuarioId = reader.GetInt32(0),
                 NombreCompleto = reader.GetString(1),
                 Correo = reader.GetString(2),
-                Contrasena = reader.GetString(3),
                 PerfilNombre = reader.GetString(4),
                 Activo = reader.GetBoolean(5)
             };
 
-            return user.Contrasena == password ? user : null;
+            return user;
         }
 
         public async Task<bool> EmailExistsAsync(string email)

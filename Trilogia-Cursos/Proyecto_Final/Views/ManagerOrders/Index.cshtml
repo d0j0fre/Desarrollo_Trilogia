@@ -1,0 +1,114 @@
+@model List<Proyecto_Final.Models.Admin.RetainedOrderListItemViewModel>
+@{
+    ViewData["Title"] = "Pedidos retenidos";
+    var buscar = ViewBag.Buscar as string ?? string.Empty;
+}
+
+<div class="container-fluid pt-4">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+                <div>
+                    <h2 class="mb-1">Pedidos retenidos</h2>
+                    <p class="mb-0">Pedidos en espera de autorización por superar el umbral de aprobación.</p>
+                </div>
+                <span class="badge badge-warning p-2 mt-3 mt-md-0" style="font-size:1rem;">
+                    @Model.Count pendiente(s)
+                </span>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="row px-xl-5">
+            <div class="col-12"><div class="alert alert-success">@TempData["SuccessMessage"]</div></div>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="row px-xl-5">
+            <div class="col-12"><div class="alert alert-danger">@TempData["ErrorMessage"]</div></div>
+        </div>
+    }
+
+    <div class="row px-xl-5 mb-3">
+        <div class="col-md-5">
+            <form asp-action="Index" method="get" class="d-flex" style="gap:8px;">
+                <input type="text" name="buscar" value="@buscar"
+                       class="form-control"
+                       placeholder="Buscar por cliente, vendedor o # pedido..." />
+                <button type="submit" class="btn btn-outline-secondary">
+                    <i class="fa fa-search"></i>
+                </button>
+                @if (!string.IsNullOrWhiteSpace(buscar))
+                {
+                    <a asp-action="Index" class="btn btn-outline-danger"><i class="fa fa-times"></i></a>
+                }
+            </form>
+        </div>
+    </div>
+
+    <div class="row px-xl-5">
+        <div class="col-12">
+            @if (!Model.Any())
+            {
+                <div class="admin-card text-center py-5">
+                    <i class="fa fa-check-circle text-success mb-3" style="font-size:48px;"></i>
+                    <h5>Sin pedidos pendientes de revisión</h5>
+                    <p class="text-muted mb-0">
+                        @(string.IsNullOrWhiteSpace(buscar)
+                            ? "No hay pedidos retenidos en este momento."
+                            : "La búsqueda no devolvió resultados.")
+                    </p>
+                </div>
+            }
+            else
+            {
+                <div class="admin-card">
+                    <div class="table-responsive">
+                        <table class="table admin-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Cliente</th>
+                                    <th>Vendedor</th>
+                                    <th>Fecha</th>
+                                    <th>Canal</th>
+                                    <th>Líneas</th>
+                                    <th class="text-right">Total</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var p in Model)
+                                {
+                                    <tr>
+                                        <td class="font-weight-bold">#@p.PedidoId</td>
+                                        <td>
+                                            <div>@p.Cliente</div>
+                                            <small class="text-muted">@p.Correo</small>
+                                        </td>
+                                        <td>@p.VendedorNombre</td>
+                                        <td>@p.FechaPedido.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td>
+                                            <span class="badge badge-light">@(string.IsNullOrWhiteSpace(p.CanalPedido) ? "—" : p.CanalPedido)</span>
+                                        </td>
+                                        <td class="text-center">@p.TotalLineas</td>
+                                        <td class="text-right font-weight-bold">₡@p.Total.ToString("N2")</td>
+                                        <td>
+                                            <a asp-action="Review" asp-route-id="@p.PedidoId"
+                                               class="btn btn-warning btn-sm">
+                                                <i class="fa fa-gavel mr-1"></i> Revisar
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

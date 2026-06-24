@@ -1,0 +1,104 @@
+@model Proyecto_Final.Models.Admin.OrderDetailViewModel
+@{
+    ViewData["Title"] = "Pedido en revisión";
+}
+
+<div class="container-fluid pt-4">
+    <div class="row px-xl-5 justify-content-center">
+        <div class="col-lg-8">
+
+            <div class="admin-card text-center py-5 mb-4" style="border-left: 5px solid #ffc107;">
+                <div class="mb-3">
+                    <i class="fa fa-clock text-warning" style="font-size:64px;"></i>
+                </div>
+                <h2 class="mb-2">Pedido enviado a revisión</h2>
+                <p class="text-muted mb-2">
+                    El total del pedido supera el umbral de autorización. Un <strong>Gerente</strong>
+                    debe aprobarlo antes de que sea procesado.
+                </p>
+                <span class="admin-badge-soft warning" style="font-size:1rem; padding:6px 18px;">Retenido</span>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-6 mb-3">
+                    <div class="admin-card text-center py-4">
+                        <div class="text-muted small mb-1">Número de pedido</div>
+                        <div class="font-weight-bold" style="font-size:1.6rem;">#@Model.PedidoId</div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="admin-card text-center py-4">
+                        <div class="text-muted small mb-1">Total del pedido</div>
+                        <div class="font-weight-bold" style="font-size:1.4rem;">₡@Model.Total.ToString("N2")</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="admin-card mb-4">
+                <h5 class="mb-3">Detalle del pedido retenido</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-2">
+                        <span class="text-muted small d-block">Cliente</span>
+                        <strong>@Model.Cliente</strong>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <span class="text-muted small d-block">Tipo de entrega</span>
+                        @(Model.TipoEntrega ?? "—")
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(Model.DireccionEntrega))
+                    {
+                        <div class="col-12 mb-2">
+                            <span class="text-muted small d-block">Dirección de entrega</span>
+                            @Model.DireccionEntrega
+                        </div>
+                    }
+                </div>
+
+                @if (Model.Detalles.Any())
+                {
+                    <hr />
+                    <h6 class="mb-3">Productos</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm admin-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th class="text-center">Cant.</th>
+                                    <th class="text-right">Precio unit.</th>
+                                    <th class="text-right">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.Detalles)
+                                {
+                                    <tr>
+                                        <td>@item.Producto</td>
+                                        <td class="text-center">@item.Cantidad</td>
+                                        <td class="text-right">₡@item.PrecioUnitario.ToString("N2")</td>
+                                        <td class="text-right">₡@item.Subtotal.ToString("N2")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+
+            <div class="alert alert-info">
+                <i class="fa fa-info-circle mr-1"></i>
+                El inventario <strong>no fue descontado</strong> todavía. Se reservará cuando el Gerente apruebe el pedido.
+                Puedes revisar el estado actualizado en <strong>Mis pedidos</strong>.
+            </div>
+
+            <div class="d-flex flex-column flex-md-row justify-content-center" style="gap:12px;">
+                <a asp-controller="SellerOrders" asp-action="Index" class="btn btn-primary btn-lg">
+                    <i class="fa fa-plus mr-1"></i> Nuevo pedido
+                </a>
+                <a asp-controller="SellerOrders" asp-action="MyOrders" class="btn btn-outline-secondary btn-lg">
+                    <i class="fa fa-bell mr-1"></i> Mis pedidos
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>

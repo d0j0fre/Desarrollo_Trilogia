@@ -54,15 +54,18 @@ namespace Proyecto_Final.Controllers
 
             try
             {
-                var pedidoId = await _adminDbService.CreateSellerOrderAsync(model, vendedorId, vendedorNombre);
+                var result = await _adminDbService.CreateSellerOrderAsync(model, vendedorId, vendedorNombre);
 
                 await RegistrarAuditoriaAsync(
-                    "Registrar pedido móvil",
+                    result.EsRetenido ? "Registrar pedido retenido" : "Registrar pedido móvil",
                     "Venta móvil",
-                    $"El usuario {vendedorNombre} registró el pedido móvil #{pedidoId} para el cliente #{model.ClienteUsuarioId}.");
+                    $"El usuario {vendedorNombre} registró el pedido #{result.PedidoId} para el cliente #{model.ClienteUsuarioId}. Estado: {result.Estado}.");
 
-                TempData["SuccessMessage"] = $"Pedido móvil #{pedidoId} registrado correctamente.";
-                return RedirectToAction("Detail", "OrdersAdmin", new { id = pedidoId });
+                if (result.EsRetenido)
+                    return RedirectToAction(nameof(RetainedConfirmation), new { id = result.PedidoId });
+
+                TempData["ConfirmNumeroFactura"] = result.NumeroFactura;
+                return RedirectToAction(nameof(Confirmation), new { id = result.PedidoId });
             }
             catch (Exception)
             {
@@ -157,7 +160,7 @@ namespace Proyecto_Final.Controllers
 
             try
             {
-                var pedidoId = await _adminDbService.CreateSellerOrderAsync(
+                var result = await _adminDbService.CreateSellerOrderAsync(
                     model,
                     vendedorId,
                     vendedorNombre,
@@ -165,17 +168,25 @@ namespace Proyecto_Final.Controllers
                     "Venta móvil offline");
 
                 await RegistrarAuditoriaAsync(
-                    "Sincronizar pedido offline",
+                    result.EsRetenido ? "Sincronizar pedido offline retenido" : "Sincronizar pedido offline",
                     "Venta móvil",
-                    $"El usuario {vendedorNombre} sincronizó el pedido offline {pedidoOfflineGuid} como pedido #{pedidoId} para el cliente #{model.ClienteUsuarioId}.");
+                    $"El usuario {vendedorNombre} sincronizó el pedido offline {pedidoOfflineGuid} como pedido #{result.PedidoId}. Estado: {result.Estado}.");
+
+                var redirectUrl = result.EsRetenido
+                    ? Url.Action(nameof(RetainedConfirmation), "SellerOrders", new { id = result.PedidoId }) ?? string.Empty
+                    : Url.Action(nameof(Confirmation),         "SellerOrders", new { id = result.PedidoId }) ?? string.Empty;
 
                 return Json(new SellerOfflineOrderSyncResponseViewModel
                 {
-                    Success = true,
-                    Message = $"Pedido offline sincronizado correctamente como pedido #{pedidoId}.",
-                    PedidoId = pedidoId,
+                    Success       = true,
+                    Message       = result.EsRetenido
+                        ? $"Pedido #{result.PedidoId} enviado a revisión del Gerente por superar el umbral de autorización."
+                        : $"Pedido #{result.PedidoId} sincronizado y facturado como {result.NumeroFactura}.",
+                    PedidoId      = result.PedidoId,
                     PedidoOfflineGuid = request.PedidoOfflineGuid,
-                    RedirectUrl = Url.Action("Detail", "OrdersAdmin", new { id = pedidoId }) ?? string.Empty
+                    Estado        = result.Estado,
+                    NumeroFactura = result.NumeroFactura,
+                    RedirectUrl   = redirectUrl
                 });
             }
             catch (Exception)
@@ -187,6 +198,52 @@ namespace Proyecto_Final.Controllers
                     PedidoOfflineGuid = request.PedidoOfflineGuid
                 });
             }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Confirmation(int id)
+        {
+            if (!IsAuthorizedSeller())
+                return RedirectToAction("Login", "Account");
+
+            var pedido = await _adminDbService.GetOrderDetailAsync(id);
+            if (pedido == null)
+                return RedirectToAction(nameof(Index));
+
+            var factura = await _adminDbService.GetInvoiceSummaryByOrderAsync(id);
+            if (factura.HasValue)
+            {
+                pedido.FacturaId      = factura.Value.FacturaId;
+                pedido.NumeroFactura  = factura.Value.NumeroFactura;
+                pedido.HasInvoice     = true;
+            }
+
+            ViewBag.NumeroFactura = TempData["ConfirmNumeroFactura"] as string ?? pedido.NumeroFactura;
+            return View(pedido);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> RetainedConfirmation(int id)
+        {
+            if (!IsAuthorizedSeller())
+                return RedirectToAction("Login", "Account");
+
+            var pedido = await _adminDbService.GetOrderDetailAsync(id);
+            if (pedido == null)
+                return RedirectToAction(nameof(Index));
+
+            return View(pedido);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> MyOrders()
+        {
+            if (!IsAuthorizedSeller())
+                return RedirectToAction("Login", "Account");
+
+            var vendedorId = HttpContext.Session.GetInt32("UserId") ?? 0;
+            var pedidos = await _adminDbService.GetSellerMyOrdersAsync(vendedorId);
+            return View(pedidos);
         }
 
         private async Task<SellerOrderCreateViewModel> BuildCreateModelAsync(SellerOrderCreateViewModel model)
