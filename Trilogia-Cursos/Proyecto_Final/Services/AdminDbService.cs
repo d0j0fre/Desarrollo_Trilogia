@@ -935,10 +935,9 @@ namespace Proyecto_Final.Services
 
             while (await reader.ReadAsync())
             {
-                // El índice 1 corresponde a la columna 'Nombre' que vimos en tu captura
-                if (!reader.IsDBNull(1))
+                if (!reader.IsDBNull(0))
                 {
-                    var categoria = reader.GetString(1).Trim();
+                    var categoria = reader.GetString(0).Trim();
                     if (!string.IsNullOrWhiteSpace(categoria))
                     {
                         categorias.Add(categoria);
@@ -1516,7 +1515,7 @@ namespace Proyecto_Final.Services
             await using var connection = new SqlConnection(_connectionString);
             await using var command = new SqlCommand("dbo.sp_Seller_GetClientsForOrder", connection);
             command.CommandType = CommandType.StoredProcedure;
-            command.Parameters.Add("@Filtro", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(buscar) ? DBNull.Value : buscar.Trim();
+            command.Parameters.Add("@Buscar", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(buscar) ? DBNull.Value : buscar.Trim();
 
             await connection.OpenAsync();
             await using var reader = await command.ExecuteReaderAsync();
@@ -1542,7 +1541,7 @@ namespace Proyecto_Final.Services
             await using var connection = new SqlConnection(_connectionString);
             await using var command = new SqlCommand("dbo.sp_Seller_GetProductsForOrder", connection);
             command.CommandType = CommandType.StoredProcedure;
-            command.Parameters.Add("@Filtro", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(buscar) ? DBNull.Value : buscar.Trim();
+            command.Parameters.Add("@Buscar", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(buscar) ? DBNull.Value : buscar.Trim();
 
             await connection.OpenAsync();
             await using var reader = await command.ExecuteReaderAsync();
