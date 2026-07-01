@@ -1,0 +1,93 @@
+# Referencias actuales para Codex
+
+Este archivo es el indice principal de documentacion vigente del proyecto.
+
+Antes de iniciar un bloque nuevo, leer primero este archivo y luego abrir unicamente los documentos especificos que apliquen al bloque.
+
+## Estado actual importante
+
+- La Fase 0 quedo cerrada con commits locales.
+- Los `appsettings` fueron limpiados y usan placeholders.
+- No se debe volver a poner secretos ni conexiones locales personales en Git.
+- `cu101_sp_auth_validate_user_password.sql` esta versionado, pero aun no se ha ejecutado en SSMS.
+- El proyecto todavia usa contrasenas en texto plano; la migracion a hash queda para una fase futura.
+- La preparacion de Azure todavia no se ha ejecutado.
+- El push sigue pendiente hasta cerrar pruebas locales.
+
+## Documentos vigentes
+
+### API
+
+- `docs/api-endpoints.md`: endpoints actuales del API.
+- `docs/api-pruebas-manuales.md`: checklist de pruebas manuales del API.
+- `docs/api-auth-futura.md`: analisis para autenticacion futura con JWT u otro mecanismo.
+
+### Base de datos y SQL
+
+- `docs/inventario-sql-directo.md`: inventario de SQL directo en C# y ruta de migracion gradual a procedimientos almacenados.
+- `docs/resumen-mejoras-seguridad.md`: resumen de mejoras de seguridad, SQL, permisos, reportes y arquitectura.
+
+### Cliente, pedidos y facturacion
+
+- `docs/portal-cliente-pedidos.md`: reglas del portal cliente, historial, cancelacion y comprobantes.
+- `docs/resumen-final-proyecto.md`: resumen general del estado funcional del proyecto.
+
+### QA y pruebas
+
+- `docs/qa-final.md`: checklist general de pruebas.
+- `docs/seguridad-sprint3-refuerzo.md`: refuerzos de seguridad posteriores al Sprint 3.
+- `docs/acceso-red-local.md`: guia para probar desde celular u otra computadora en red local.
+
+## Regla para ahorrar tokens
+
+No leer todos los documentos de `docs` por defecto.
+
+Para cada bloque:
+
+1. Leer este indice.
+2. Leer solo los documentos relacionados con el bloque.
+3. No usar prompts antiguos como fuente de verdad.
+4. No asumir que documentacion historica esta actualizada si contradice el codigo o scripts actuales.
+
+## Referencias recomendadas por tipo de bloque
+
+### Si el bloque es API
+
+Leer:
+
+- `docs/api-endpoints.md`
+- `docs/api-pruebas-manuales.md`
+- `docs/api-auth-futura.md`
+
+### Si el bloque es base de datos, SQL o refactor SOLID
+
+Leer:
+
+- `docs/inventario-sql-directo.md`
+- `docs/resumen-mejoras-seguridad.md`
+- scripts en `database/`
+
+### Si el bloque es portal cliente, pedidos o facturacion
+
+Leer:
+
+- `docs/portal-cliente-pedidos.md`
+- `docs/resumen-final-proyecto.md`
+- `docs/qa-final.md`
+
+### Si el bloque es pruebas finales
+
+Leer:
+
+- `docs/qa-final.md`
+- `docs/api-pruebas-manuales.md`
+- `docs/acceso-red-local.md`
+
+### Si el bloque es Azure
+
+Leer:
+
+- Este indice.
+- `docs/resumen-final-proyecto.md`
+- `docs/api-endpoints.md`
+- revisar `appsettings` y `Program.cs` directamente.
