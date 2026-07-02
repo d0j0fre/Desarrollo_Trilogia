@@ -9,10 +9,12 @@ Antes de iniciar un bloque nuevo, leer primero este archivo y luego abrir unicam
 - La Fase 0 quedo cerrada con commits locales.
 - Los `appsettings` fueron limpiados y usan placeholders.
 - No se debe volver a poner secretos ni conexiones locales personales en Git.
-- `cu101_sp_auth_validate_user_password.sql` esta versionado, pero aun no se ha ejecutado en SSMS.
+- `cu101_sp_auth_validate_user_password.sql` fue ejecutado manualmente en SSMS.
+- `cu102_sp_seller_get_my_orders.sql` fue ejecutado manualmente en SSMS.
+- Azure SQL DEV quedo creado e importado desde el BACPAC final `DistribuidoraJJ_DB_Azure_Final_20260702.bacpac`.
+- MVC/API local fueron probados contra Azure SQL DEV mediante variable de entorno.
 - El proyecto todavia usa contrasenas en texto plano; la migracion a hash queda para una fase futura.
-- La preparacion de Azure todavia no se ha ejecutado.
-- El push sigue pendiente hasta cerrar pruebas locales.
+- La publicacion de API/MVC en Azure App Service todavia esta pendiente.
 
 ## Documentos vigentes
 
@@ -24,6 +26,7 @@ Antes de iniciar un bloque nuevo, leer primero este archivo y luego abrir unicam
 
 ### Base de datos y SQL
 
+- `docs/azure-sql-dev-companeros.md`: guia para que los companeros usen Azure SQL DEV compartido sin tocar appsettings ni subir secretos.
 - `docs/inventario-sql-directo.md`: inventario de SQL directo en C# y ruta de migracion gradual a procedimientos almacenados.
 - `docs/resumen-mejoras-seguridad.md`: resumen de mejoras de seguridad, SQL, permisos, reportes y arquitectura.
 
@@ -88,6 +91,7 @@ Leer:
 Leer:
 
 - Este indice.
+- `docs/azure-sql-dev-companeros.md`
 - `docs/resumen-final-proyecto.md`
 - `docs/api-endpoints.md`
 - revisar `appsettings` y `Program.cs` directamente.
