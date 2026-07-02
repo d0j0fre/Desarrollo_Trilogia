@@ -13,6 +13,8 @@ Antes de iniciar un bloque nuevo, leer primero este archivo y luego abrir unicam
 - `cu102_sp_seller_get_my_orders.sql` fue ejecutado manualmente en SSMS.
 - Azure SQL DEV quedo creado e importado desde el BACPAC final `DistribuidoraJJ_DB_Azure_Final_20260702.bacpac`.
 - MVC/API local fueron probados contra Azure SQL DEV mediante variable de entorno.
+- Swagger/OpenAPI quedo habilitado en `Proyecto_FinalAPI` para el Bloque 8.
+- `Proyecto_FinalAPI` tiene endpoints de diagnostico `GET /` y `GET /health`.
 - El proyecto todavia usa contrasenas en texto plano; la migracion a hash queda para una fase futura.
 - La publicacion de API/MVC en Azure App Service todavia esta pendiente.
 

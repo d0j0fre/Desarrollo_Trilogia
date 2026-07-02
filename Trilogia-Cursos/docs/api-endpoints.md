@@ -6,6 +6,108 @@
 
 El API usa controladores ASP.NET Core y servicios propios que consultan procedimientos almacenados existentes. Los endpoints de productos son publicos y de solo lectura. No existen todavia endpoints protegidos para pedidos, facturacion, inventario administrativo, clientes, creditos, roles o permisos.
 
+## Documentacion visual y diagnostico
+
+### GET /swagger
+
+**Descripcion:** abre Swagger UI para navegar y probar los endpoints publicados por `Proyecto_FinalAPI`.
+
+**Parametros:** ninguno.
+
+**Ejemplo de request:**
+
+```http
+GET /swagger
+```
+
+**Respuesta 200:** interfaz web de Swagger UI.
+
+**Codigos esperados:**
+
+- `200`: Swagger UI disponible.
+- `404`: Swagger no esta habilitado en el entorno actual.
+
+**Notas de seguridad:** Swagger no debe mostrar secretos ni connection strings. En Azure DEV puede habilitarse con configuracion, por ejemplo `Swagger__Enabled=true`.
+
+### GET /swagger/v1/swagger.json
+
+**Descripcion:** devuelve el documento OpenAPI JSON usado por Swagger UI.
+
+**Parametros:** ninguno.
+
+**Ejemplo de request:**
+
+```http
+GET /swagger/v1/swagger.json
+```
+
+**Respuesta 200:** documento OpenAPI en formato JSON.
+
+**Codigos esperados:**
+
+- `200`: documento OpenAPI disponible.
+- `404`: Swagger/OpenAPI no esta habilitado en el entorno actual.
+
+**Notas de seguridad:** no debe incluir datos sensibles.
+
+### GET /
+
+**Descripcion:** endpoint raiz simple para confirmar que la API esta activa.
+
+**Parametros:** ninguno.
+
+**Ejemplo de request:**
+
+```http
+GET /
+```
+
+**Respuesta 200:**
+
+```json
+{
+  "service": "Proyecto_FinalAPI",
+  "project": "DistribuidoraJJ - Licorera La Bodega",
+  "status": "OK",
+  "environment": "Development",
+  "swagger": "/swagger",
+  "health": "/health"
+}
+```
+
+**Codigos esperados:**
+
+- `200`: API activa.
+
+**Notas de seguridad:** no expone connection strings, credenciales ni informacion sensible.
+
+### GET /health
+
+**Descripcion:** healthcheck simple para verificar que la API responde.
+
+**Parametros:** ninguno.
+
+**Ejemplo de request:**
+
+```http
+GET /health
+```
+
+**Respuesta 200:**
+
+```json
+{
+  "status": "OK",
+  "service": "Proyecto_FinalAPI"
+}
+```
+
+**Codigos esperados:**
+
+- `200`: API activa.
+
+**Notas de seguridad:** no consulta ni modifica base de datos.
+
 ## Nota de seguridad sobre autenticacion API
 
 Actualmente el login del API devuelve datos del usuario autenticado, pero no emite JWT, API key, cookie de sesion compartida ni token de autorizacion.
@@ -194,6 +296,25 @@ GET /api/products
 
 **Notas de seguridad:** endpoint publico y de solo lectura. No expone costos internos, proveedores ni datos administrativos.
 
+### GET /api/productos
+
+**Descripcion:** alias en espanol de `GET /api/products`. Devuelve el catalogo publico de productos activos.
+
+**Parametros:** acepta los mismos parametros opcionales que `/api/products`.
+
+**Ejemplo de request:**
+
+```http
+GET /api/productos
+```
+
+**Codigos esperados:**
+
+- `200`: listado cargado correctamente.
+- `500`: error interno al cargar catalogo.
+
+**Notas de seguridad:** mantiene el mismo comportamiento de solo lectura que `/api/products`.
+
 ### GET /api/products?categoria=
 
 **Descripcion:** devuelve productos activos filtrados por categoria.
@@ -356,6 +477,25 @@ GET /api/products/categories
 
 **Notas de seguridad:** endpoint publico y de solo lectura.
 
+### GET /api/productos/categories
+
+**Descripcion:** alias en espanol de `GET /api/products/categories`. Devuelve categorias activas disponibles en tienda.
+
+**Parametros:** ninguno.
+
+**Ejemplo de request:**
+
+```http
+GET /api/productos/categories
+```
+
+**Codigos esperados:**
+
+- `200`: categorias cargadas correctamente.
+- `500`: error interno al cargar categorias.
+
+**Notas de seguridad:** endpoint publico y de solo lectura.
+
 ### GET /api/products/featured?take=
 
 **Descripcion:** devuelve productos destacados del catalogo publico.
@@ -420,13 +560,19 @@ Antes de agregar esos endpoints se debe definir una estrategia formal, por ejemp
 ## Pruebas recomendadas
 
 - Ejecutar `dotnet build Trilogia-Cursos\Proyecto_Final.slnx`.
+- Abrir `GET /swagger`.
+- Abrir `GET /swagger/v1/swagger.json`.
+- Probar `GET /`.
+- Probar `GET /health`.
 - Probar `GET /api/products`.
+- Probar `GET /api/productos`.
 - Probar filtros `categoria` y `buscar`.
 - Probar `GET /api/products/{id}` con producto existente.
 - Probar `GET /api/products/0` y confirmar `400`.
 - Probar `GET /api/products/-1` y confirmar `400`.
 - Probar `GET /api/products/{id}` con producto inexistente y confirmar `404`.
 - Probar `GET /api/products/categories`.
+- Probar `GET /api/productos/categories`.
 - Probar `GET /api/products/featured?take=4`.
 - Probar `GET /api/products/featured?take=0` y confirmar `400`.
 - Probar `GET /api/products/featured?take=-1` y confirmar `400`.
