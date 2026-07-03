@@ -1,6 +1,5 @@
 using Proyecto_Final.Middleware;
 using Proyecto_Final.Services;
-using Proyecto_FinalAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
