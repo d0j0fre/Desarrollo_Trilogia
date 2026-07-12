@@ -87,7 +87,7 @@ Variables requeridas:
 | -------- | -------------- | -------- |
 | `ASPNETCORE_ENVIRONMENT` | `Development` | No |
 | `Swagger__Enabled` | `true` | No |
-| `ConnectionStrings__DefaultConnection` | Connection string a Azure SQL DEV con `Password=<password>` | Si |
+| `ConnectionStrings__DefaultConnection` | Connection string a Azure SQL DEV con `<sql-user>` y `<sql-password>` | Si |
 
 Endpoints validados:
 
@@ -114,7 +114,7 @@ Variables requeridas:
 | -------- | -------------- | -------- |
 | `ASPNETCORE_ENVIRONMENT` | `Production` | No |
 | `ApiSettings__BaseUrl` | `https://api-trilogia-cursos-dev-cr01-haefhbgrd8dvcvc5.centralus-01.azurewebsites.net/` | No |
-| `ConnectionStrings__DefaultConnection` | Connection string a Azure SQL DEV con `Password=<password>` | Si |
+| `ConnectionStrings__DefaultConnection` | Connection string a Azure SQL DEV con `<sql-user>` y `<sql-password>` | Si |
 
 Dependencias:
 
@@ -171,7 +171,7 @@ Dependencias:
 - No ejecutar scripts SQL sin aprobacion.
 - No cambiar variables Azure sin documentarlo.
 - No documentar contrasenas reales.
-- Usar plantillas con `<password>` cuando se necesite mostrar una connection string.
+- Usar `<sql-user>` y `<sql-password>` cuando se necesite mostrar una connection string.
 
 ## 12. Proximos bloques recomendados
 

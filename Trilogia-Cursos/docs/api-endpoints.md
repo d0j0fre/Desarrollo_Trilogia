@@ -124,8 +124,8 @@ Por esa razon, no deben exponerse endpoints protegidos nuevos hasta disenar e im
 
 ```json
 {
-  "email": "admin@distribuidorajj.com",
-  "password": "1234"
+  "email": "usuario.demo@example.invalid",
+  "password": "<demo-password>"
 }
 ```
 
@@ -136,8 +136,8 @@ Por esa razon, no deben exponerse endpoints protegidos nuevos hasta disenar e im
   "success": true,
   "message": "Inicio de sesion correcto.",
   "userId": 1,
-  "fullName": "Administrador",
-  "email": "admin@distribuidorajj.com",
+  "fullName": "Usuario Demo",
+  "email": "usuario.demo@example.invalid",
   "role": "Administrador"
 }
 ```
@@ -161,8 +161,8 @@ Por esa razon, no deben exponerse endpoints protegidos nuevos hasta disenar e im
 ```json
 {
   "fullName": "Cliente Demo",
-  "email": "cliente.demo@correo.com",
-  "password": "1234"
+  "email": "cliente.demo@example.invalid",
+  "password": "<demo-password>"
 }
 ```
 
@@ -196,7 +196,7 @@ Por esa razon, no deben exponerse endpoints protegidos nuevos hasta disenar e im
 
 ```json
 {
-  "email": "cliente.demo@correo.com"
+  "email": "usuario.demo@example.invalid"
 }
 ```
 
@@ -230,10 +230,12 @@ Por esa razon, no deben exponerse endpoints protegidos nuevos hasta disenar e im
 
 ```json
 {
-  "token": "token-de-recuperacion",
-  "newPassword": "NuevaClave123"
+  "token": "<reset-token>",
+  "newPassword": "<demo-password>"
 }
 ```
+
+Los valores de estos ejemplos no son funcionales. Para pruebas reales, solicitar una credencial temporal al responsable del entorno por un canal privado.
 
 **Respuesta 200:**
 

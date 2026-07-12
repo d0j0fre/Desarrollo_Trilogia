@@ -55,18 +55,19 @@ Nota: el archivo anterior `DistribuidoraJJ_DB_post_bloque2_20260701.bacpac` qued
 Usar esta plantilla sin reemplazarla dentro de archivos versionados:
 
 ```text
-Server=tcp:sql-trilogia-cursos-dev-cr01.database.windows.net,1433;Initial Catalog=DistribuidoraJJ_DB_DEV;Persist Security Info=False;User ID=trilogiaadmin;Password=<password>;MultipleActiveResultSets=True;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;
+Server=tcp:sql-trilogia-cursos-dev-cr01.database.windows.net,1433;Initial Catalog=DistribuidoraJJ_DB_DEV;Persist Security Info=False;User ID=<sql-user>;Password=<sql-password>;MultipleActiveResultSets=True;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;
 ```
 
-La contrasena real debe configurarse localmente y quedar fuera del repositorio.
+Solicitar una credencial temporal al responsable del entorno por un canal privado. La credencial real debe configurarse localmente y quedar fuera del repositorio.
 
 ## Configurar variable de entorno en Windows
 
 Ejecutar en PowerShell. No pegar la contrasena en documentos ni commits.
 
 ```powershell
-$SqlPassword = Read-Host "Pega aqui la contrasena de Azure SQL"
-setx ConnectionStrings__DefaultConnection "Server=tcp:sql-trilogia-cursos-dev-cr01.database.windows.net,1433;Initial Catalog=DistribuidoraJJ_DB_DEV;Persist Security Info=False;User ID=trilogiaadmin;Password=$SqlPassword;MultipleActiveResultSets=True;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+$SqlUser = "<sql-user>"
+$SqlPassword = "<sql-password>"
+setx ConnectionStrings__DefaultConnection "Server=tcp:sql-trilogia-cursos-dev-cr01.database.windows.net,1433;Initial Catalog=DistribuidoraJJ_DB_DEV;Persist Security Info=False;User ID=$SqlUser;Password=$SqlPassword;MultipleActiveResultSets=True;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
 ```
 
 Despues de ejecutar `setx`:
@@ -86,7 +87,7 @@ Datos de conexion:
 | ----- | ----- |
 | Server | `sql-trilogia-cursos-dev-cr01.database.windows.net` |
 | Authentication | `SQL Server Authentication` |
-| User | `trilogiaadmin` |
+| User | `<sql-user>` |
 | Database | `DistribuidoraJJ_DB_DEV` |
 | Encrypt | Obligatorio |
 | Trust Server Certificate | No |

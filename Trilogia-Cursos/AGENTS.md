@@ -11,7 +11,7 @@ Main projects:
 - Docs: `docs/`
 
 ## Current expected state
-`main` already includes the work merged from branch `Danny`, including Sprint 3:
+`origin/Danny` currently contains changes that are not yet integrated into `main`, including Sprint 3:
 - Modern UI improvements for client side, home, shop, cart, footer, and confirmation page.
 - Reusable custom modal replacing native browser alerts/confirmations.
 - HTML email templates for password recovery and contact notifications.
@@ -19,6 +19,8 @@ Main projects:
 - Base security hardening: security headers, safer session cookie, reduced technical error exposure, and login attempt limiter.
 - Employee management module with admin views, employee portal, leave requests, tasks, salary/history, demo seed data, and documentation.
 - Previous modules: login, register, forgot/reset password, dashboard, inventory, movements, orders, invoicing, roles, permissions, clients, credits, consultations, audit, mobile sales, offline orders CU-072, and Costa Rica demo data.
+
+P0 work is performed from a branch based on `origin/Danny`. Do not assume that `main` and `Danny` are equivalent until the integration pull request is reviewed and merged.
 
 ## Non-negotiable rules
 1. Do not modify `appsettings.json` or `appsettings.Development.json` unless explicitly requested.
@@ -43,17 +45,14 @@ Main projects:
 Important: local connection strings may differ between collaborators. Do not standardize everyone’s machine-specific settings into committed files.
 
 ## Authentication and demo users
-Admin test user:
-- Email: `admin@distribuidorajj.com`
-- Password: `1234`
+Roles to validate include administrator, customer, seller, and employee. Their credentials are not stored in this repository.
 
-Many demo users use password `1234`.
-
-Employee demo examples:
-- `jose.solano@distribuidorajj.com`
-- `maria.vargas@distribuidorajj.com`
-- `valeria.mora@distribuidorajj.com`
-- `gabriela.alpizar@distribuidorajj.com`
+- Provision required test accounts through an approved script or manually for the current environment.
+- Share temporary credentials only through a private channel.
+- Do not reuse local demo credentials in shared Azure DEV.
+- Do not use credentials present in historical SQL scripts for shared environments.
+- Rotate or disable temporary accounts after testing.
+- Codex must never show secret values in responses.
 
 ## Important database conventions
 Use the current permissions structure:
@@ -94,7 +93,7 @@ Build:
 - Confirm 0 errors.
 
 Core tests:
-- Login admin: `admin@distribuidorajj.com / 1234`
+- Login with a temporary account supplied by the environment owner through a private channel.
 - Home
 - Shop
 - Cart

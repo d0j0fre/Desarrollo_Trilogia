@@ -41,7 +41,7 @@ Estas pruebas deben ejecutarse con `ConnectionStrings__DefaultConnection` config
 | API-010 | Productos | GET | `/api/products/featured?take=0` | `take=0`. | Devuelve mensaje de cantidad invalida. | 400 | Pendiente | No debe consultar base de datos. |
 | API-011 | Productos | GET | `/api/products/featured?take=-1` | `take=-1`. | Devuelve mensaje de cantidad invalida. | 400 | Pendiente | No debe consultar base de datos. |
 | API-012 | Productos | GET | `/api/products/featured?take=100` | `take=100`. | Devuelve 200 con maximo 24 productos destacados. | 200 | Pendiente | El limite maximo queda aplicado por el controlador. |
-| API-013 | Auth | POST | `/api/auth/login` | Credenciales validas. | Devuelve datos basicos de usuario sin JWT. | 200 | Pendiente | Usar credencial demo local si existe. |
+| API-013 | Auth | POST | `/api/auth/login` | Credencial temporal valida. | Devuelve datos basicos de usuario sin JWT. | 200 | Pendiente | Solicitar una credencial temporal al responsable del entorno por un canal privado. |
 | API-014 | Auth | POST | `/api/auth/login` | Credenciales invalidas. | Devuelve credenciales invalidas. | 401 | Pendiente | Puede activar rate-limit tras varios intentos. |
 | API-015 | Auth | POST | `/api/auth/register` | Datos validos no duplicados. | Crea cuenta o devuelve validacion segun estado de la base. | 200/409/400 | Pendiente | No usar correo real sensible. |
 | API-016 | Auth | POST | `/api/auth/forgot-password` | Correo de prueba. | Devuelve mensaje generico de recuperacion. | 200/400/429 | Pendiente | No debe revelar si el correo existe. |
