@@ -1,6 +1,8 @@
 ﻿-- =============================================
 -- SCRIPT CONSOLIDADO LIMPIO PARA EJECUCION UNICA
 -- Base de datos: DistribuidoraJJ_DB
+-- ADVERTENCIA P0: contiene DROP TABLE y no es una migracion incremental.
+-- No ejecutar contra Azure SQL DEV. Requiere respaldo y aprobacion explicita.
 -- =============================================
 
 PRINT 'Paso 1/5: estructura base y datos iniciales';
@@ -194,11 +196,17 @@ VALUES
 ('Empleado', 'Personal interno de la distribuidora');
 GO
 
+DECLARE @DemoPassword NVARCHAR(256) = N'<SET_AT_EXECUTION>';
+IF @DemoPassword = N'<SET_AT_EXECUTION>'
+BEGIN
+    THROW 51000, 'Debe proporcionar una credencial temporal fuera del repositorio.', 1;
+END;
+
 INSERT INTO dbo.Usuarios (PerfilId, NombreCompleto, Correo, Contrasena, Telefono, Direccion)
 VALUES
-(1, 'Administrador General', 'admin@distribuidorajj.com', '1234', '0000-0000', 'Oficina Central'),
-(2, 'Cliente Demo', 'cliente@distribuidorajj.com', '1234', '8888-1111', 'San JosÃ© Centro'),
-(2, 'Cliente Tienda', 'ventas@clientejj.com', '1234', '8888-2222', 'Desamparados');
+(1, 'Administrador General', 'admin@distribuidorajj.com', @DemoPassword, '0000-0000', 'Oficina Central'),
+(2, 'Cliente Demo', 'cliente@distribuidorajj.com', @DemoPassword, '8888-1111', 'San JosÃ© Centro'),
+(2, 'Cliente Tienda', 'ventas@clientejj.com', @DemoPassword, '8888-2222', 'Desamparados');
 GO
 
 INSERT INTO dbo.Empleados (UsuarioId, Puesto, Salario, FechaContratacion, Activo)

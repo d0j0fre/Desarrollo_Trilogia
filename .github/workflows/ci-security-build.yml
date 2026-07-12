@@ -1,0 +1,40 @@
+name: CI Security Build
+
+on:
+  push:
+    branches: [main, Danny]
+  pull_request:
+    branches: [main, Danny]
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - name: Scan tracked files for secrets
+        shell: pwsh
+        run: ./Trilogia-Cursos/scripts/security/Test-RepositorySecrets.ps1
+      - name: Restore SQL syntax validator
+        run: dotnet restore ./Trilogia-Cursos/tools/SqlSyntaxValidator/SqlSyntaxValidator.csproj
+      - name: Validate sanitized SQL scripts
+        run: >
+          dotnet run
+          --project ./Trilogia-Cursos/tools/SqlSyntaxValidator/SqlSyntaxValidator.csproj
+          --no-restore
+          --
+          ./Trilogia-Cursos/database/00_todo_en_uno.sql
+          ./Trilogia-Cursos/database/DistribuidoraJJ_DB.sql
+          ./Trilogia-Cursos/database/seed_datos_demo_costa_rica.sql
+          ./Trilogia-Cursos/database/seed_empleados_demo_costa_rica.sql
+          ./Trilogia-Cursos/database/sp_Store_GetProducts.sql
+          ./Trilogia-Cursos/database/security/p0_audit_demo_accounts.sql
+          ./Trilogia-Cursos/database_Esteban/Fase3_3-3.sql
+          ./Trilogia-Cursos/database_Esteban/Fase4.sql
+      - name: Restore solution
+        run: dotnet restore ./Trilogia-Cursos/Proyecto_Final.slnx
+      - name: Build solution
+        run: dotnet build ./Trilogia-Cursos/Proyecto_Final.slnx --configuration Release --no-restore

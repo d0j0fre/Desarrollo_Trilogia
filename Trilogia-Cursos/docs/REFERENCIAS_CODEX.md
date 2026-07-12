@@ -6,7 +6,7 @@ Antes de iniciar un bloque nuevo, leer primero este archivo y luego abrir unicam
 
 ## Estado actual importante
 
-- La Fase 0 quedo cerrada con commits locales.
+- El trabajo P0 se realiza desde una rama basada en `origin/Danny`; no asumir que `main` y `Danny` son equivalentes hasta completar la integracion revisada.
 - Los `appsettings` fueron limpiados y usan placeholders.
 - No se debe volver a poner secretos ni conexiones locales personales en Git.
 - `cu101_sp_auth_validate_user_password.sql` fue ejecutado manualmente en SSMS.
@@ -45,6 +45,10 @@ Antes de iniciar un bloque nuevo, leer primero este archivo y luego abrir unicam
 - `docs/qa-final.md`: checklist general de pruebas.
 - `docs/seguridad-sprint3-refuerzo.md`: refuerzos de seguridad posteriores al Sprint 3.
 - `docs/acceso-red-local.md`: guia para probar desde celular u otra computadora en red local.
+
+### Seguridad, configuracion y onboarding
+
+- `docs/credenciales-configuracion-segura.md`: politica para secretos, cuentas demo, configuracion local, Azure, respuesta ante exposicion y revision previa a un PR.
 
 ## Regla para ahorrar tokens
 
@@ -100,4 +104,13 @@ Leer:
 - `docs/azure-despliegue-final-qa.md`
 - `docs/resumen-final-proyecto.md`
 - `docs/api-endpoints.md`
+- `docs/credenciales-configuracion-segura.md`
 - revisar `appsettings` y `Program.cs` directamente.
+
+### Si el bloque involucra seguridad, autenticacion, correo, configuracion u onboarding
+
+Leer:
+
+- `docs/credenciales-configuracion-segura.md`
+
+Antes de cualquier bloque que involucre Azure, autenticacion, correo, variables de entorno o colaboradores, leer `docs/credenciales-configuracion-segura.md`.
