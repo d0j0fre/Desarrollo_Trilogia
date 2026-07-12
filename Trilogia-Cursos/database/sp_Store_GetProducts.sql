@@ -50,9 +50,16 @@ WHERE p.Nombre = 'Administrador';
 
 
 USE DistribuidoraJJ_DB;
- @DemoPasswordSeedOne NVARCHAR(256) = N'<SET_AT_EXECUTION>'; @DemoPasswordSeedOne = N'<SET_AT_EXECUTION>'
-    THROW 51001, 'Debe proporcionar una credencial temporal fuera del repositorio.', 1;;
- INTO dbo.Usuarios
+GO
+
+DECLARE @DemoPasswordSeedOne NVARCHAR(256) = N'<SET_AT_EXECUTION>';
+
+IF @DemoPasswordSeedOne = N'<SET_AT_EXECUTION>'
+BEGIN
+    THROW 51001, 'Debe proporcionar una credencial temporal fuera del repositorio.', 1;
+END;
+
+INSERT INTO dbo.Usuarios
 (
     PerfilId,
     NombreCompleto,
@@ -113,7 +120,7 @@ BEGIN
 END
 GO
 
-IF NOT EXISTS (SELECT 1 FROM dbo.Productos WHERE Nombre = 'Ron Añejo 750ml')
+IF NOT EXISTS (SELECT 1 FROM dbo.Productos WHERE Nombre = 'Ron AÃ±ejo 750ml')
 BEGIN
     INSERT INTO dbo.Productos
     (
@@ -127,9 +134,9 @@ BEGIN
     )
     VALUES
     (
-        'Ron Añejo 750ml',
+        'Ron AÃ±ejo 750ml',
         'Ron',
-        'Ron añejo de presentación estándar.',
+        'Ron aÃ±ejo de presentaciÃ³n estÃ¡ndar.',
         12900,
         20,
         1,
@@ -154,7 +161,7 @@ BEGIN
     (
         'Vodka Premium 750ml',
         'Vodka',
-        'Vodka clásico de 750ml.',
+        'Vodka clÃ¡sico de 750ml.',
         10900,
         18,
         1,
@@ -333,7 +340,7 @@ BEGIN
 END
 GO
 
-IF NOT EXISTS (SELECT 1 FROM dbo.Productos WHERE Nombre = 'Ron Añejo 750ml')
+IF NOT EXISTS (SELECT 1 FROM dbo.Productos WHERE Nombre = 'Ron AÃ±ejo 750ml')
 BEGIN
     INSERT INTO dbo.Productos
     (
@@ -347,9 +354,9 @@ BEGIN
     )
     VALUES
     (
-        'Ron Añejo 750ml',
+        'Ron AÃ±ejo 750ml',
         'Ron',
-        'Ron añejo de presentación estándar.',
+        'Ron aÃ±ejo de presentaciÃ³n estÃ¡ndar.',
         12900,
         20,
         1,
@@ -374,7 +381,7 @@ BEGIN
     (
         'Vodka Premium 750ml',
         'Vodka',
-        'Vodka clásico de 750ml.',
+        'Vodka clÃ¡sico de 750ml.',
         10900,
         18,
         1,
@@ -528,9 +535,6 @@ GO
 USE DistribuidoraJJ_DB;
 GO
 
-DECLARE @DemoPasswordSeedTwo NVARCHAR(256) = N'<SET_AT_EXECUTION>'; @DemoPasswordSeedTwo = N'<SET_AT_EXECUTION>'
-    THROW 51002, 'Debe proporcionar una credencial temporal fuera del repositorio.', 1;;
-
 SELECT
     u.UsuarioId,
     u.NombreCompleto,
@@ -542,6 +546,13 @@ INNER JOIN dbo.Perfiles p
     ON p.PerfilId = u.PerfilId
 WHERE p.Nombre = 'Administrador';
 GO
+
+DECLARE @DemoPasswordSeedTwo NVARCHAR(256) = N'<SET_AT_EXECUTION>';
+
+IF @DemoPasswordSeedTwo = N'<SET_AT_EXECUTION>'
+BEGIN
+    THROW 51002, 'Debe proporcionar una credencial temporal fuera del repositorio.', 1;
+END;
 
 INSERT INTO dbo.Usuarios
 (
@@ -609,7 +620,7 @@ BEGIN
 END
 GO
 
-IF NOT EXISTS (SELECT 1 FROM dbo.Productos WHERE Nombre = 'Ron Añejo 750ml')
+IF NOT EXISTS (SELECT 1 FROM dbo.Productos WHERE Nombre = 'Ron AÃ±ejo 750ml')
 BEGIN
     INSERT INTO dbo.Productos
     (
@@ -623,9 +634,9 @@ BEGIN
     )
     VALUES
     (
-        'Ron Añejo 750ml',
+        'Ron AÃ±ejo 750ml',
         'Ron',
-        'Ron añejo de presentación estándar.',
+        'Ron aÃ±ejo de presentaciÃ³n estÃ¡ndar.',
         12900,
         20,
         1,
@@ -650,7 +661,7 @@ BEGIN
     (
         'Vodka Premium 750ml',
         'Vodka',
-        'Vodka clásico de 750ml.',
+        'Vodka clÃ¡sico de 750ml.',
         10900,
         18,
         1,
@@ -827,9 +838,15 @@ GO
 
 /* =========================================================
    8. CREAR ADMIN SI NO EXISTE
-   ========================================================= */ @DemoPasswordSeedThree NVARCHAR(256) = N'<SET_AT_EXECUTION>'; @DemoPasswordSeedThree = N'<SET_AT_EXECUTION>'
-    THROW 51003, 'Debe proporcionar una credencial temporal fuera del repositorio.', 1;;
- NOT EXISTS
+   ========================================================= */
+DECLARE @DemoPasswordSeedThree NVARCHAR(256) = N'<SET_AT_EXECUTION>';
+
+IF @DemoPasswordSeedThree = N'<SET_AT_EXECUTION>'
+BEGIN
+    THROW 51003, 'Debe proporcionar una credencial temporal fuera del repositorio.', 1;
+END;
+
+IF NOT EXISTS
 (
     SELECT 1
     FROM dbo.Usuarios u
@@ -852,7 +869,7 @@ BEGIN
         (SELECT TOP 1 PerfilId FROM dbo.Perfiles WHERE Nombre = 'Administrador'),
         'Administrador General',
         'admin@labodega.com',
-        @DemoPasswordSeedTwo,
+        @DemoPasswordSeedThree,
         1
     );
 END

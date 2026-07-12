@@ -71,3 +71,7 @@ pwsh ./Trilogia-Cursos/scripts/security/Test-RepositorySecrets.ps1
 ```
 
 El escaneo revisa solo archivos rastreados, no imprime valores sensibles y falla cuando detecta una exposicion real. Los placeholders aprobados, como `<demo-password>`, `<sql-password>` y `<smtp-app-password>`, se permiten solo como ejemplos no funcionales.
+
+## 10. Validacion de SQL sanitizado
+
+El validador de `tools/SqlSyntaxValidator` usa Microsoft ScriptDom para analizar sintaxis T-SQL. No se conecta a SQL Server ni ejecuta instrucciones. Debe ejecutarse antes de publicar cambios SQL, porque una compilacion exitosa de la solucion .NET no garantiza que los archivos `.sql` sean validos.
