@@ -39,7 +39,6 @@ SELECT
     u.UsuarioId,
     u.NombreCompleto,
     u.Correo,
-    u.Contrasena,
     p.Nombre AS Perfil,
     u.Activo
 FROM dbo.Usuarios u
@@ -51,9 +50,9 @@ WHERE p.Nombre = 'Administrador';
 
 
 USE DistribuidoraJJ_DB;
-GO
-
-INSERT INTO dbo.Usuarios
+ @DemoPasswordSeedOne NVARCHAR(256) = N'<SET_AT_EXECUTION>'; @DemoPasswordSeedOne = N'<SET_AT_EXECUTION>'
+    THROW 51001, 'Debe proporcionar una credencial temporal fuera del repositorio.', 1;;
+ INTO dbo.Usuarios
 (
     PerfilId,
     NombreCompleto,
@@ -66,7 +65,7 @@ VALUES
     (SELECT TOP 1 PerfilId FROM dbo.Perfiles WHERE Nombre = 'Administrador'),
     'Administrador General',
     'dannyJJ@labodega.com',
-    'Admin1234',
+    @DemoPasswordSeedOne,
     1
 );
 
@@ -514,7 +513,6 @@ SELECT
     u.UsuarioId,
     u.NombreCompleto,
     u.Correo,
-    u.Contrasena,
     p.Nombre AS Perfil,
     u.Activo
 FROM dbo.Usuarios u
@@ -530,11 +528,13 @@ GO
 USE DistribuidoraJJ_DB;
 GO
 
+DECLARE @DemoPasswordSeedTwo NVARCHAR(256) = N'<SET_AT_EXECUTION>'; @DemoPasswordSeedTwo = N'<SET_AT_EXECUTION>'
+    THROW 51002, 'Debe proporcionar una credencial temporal fuera del repositorio.', 1;;
+
 SELECT
     u.UsuarioId,
     u.NombreCompleto,
     u.Correo,
-    u.Contrasena,
     p.Nombre AS Perfil,
     u.Activo
 FROM dbo.Usuarios u
@@ -556,7 +556,7 @@ VALUES
     (SELECT TOP 1 PerfilId FROM dbo.Perfiles WHERE Nombre = 'Administrador'),
     'Administrador General',
     'admin@labodega.com',
-    'Admin123',
+    @DemoPasswordSeedTwo,
     1
 );
 GO
@@ -817,7 +817,6 @@ SELECT
     u.UsuarioId,
     u.NombreCompleto,
     u.Correo,
-    u.Contrasena,
     p.Nombre AS Perfil,
     u.Activo
 FROM dbo.Usuarios u
@@ -828,8 +827,9 @@ GO
 
 /* =========================================================
    8. CREAR ADMIN SI NO EXISTE
-   ========================================================= */
-IF NOT EXISTS
+   ========================================================= */ @DemoPasswordSeedThree NVARCHAR(256) = N'<SET_AT_EXECUTION>'; @DemoPasswordSeedThree = N'<SET_AT_EXECUTION>'
+    THROW 51003, 'Debe proporcionar una credencial temporal fuera del repositorio.', 1;;
+ NOT EXISTS
 (
     SELECT 1
     FROM dbo.Usuarios u
@@ -852,7 +852,7 @@ BEGIN
         (SELECT TOP 1 PerfilId FROM dbo.Perfiles WHERE Nombre = 'Administrador'),
         'Administrador General',
         'admin@labodega.com',
-        'Admin123',
+        @DemoPasswordSeedTwo,
         1
     );
 END
@@ -865,7 +865,6 @@ SELECT
     u.UsuarioId,
     u.NombreCompleto,
     u.Correo,
-    u.Contrasena,
     p.Nombre AS Perfil,
     u.Activo
 FROM dbo.Usuarios u

@@ -11,6 +11,13 @@ GO
 
 SET NOCOUNT ON;
 
+/*
+   ADVERTENCIA P0: archivo historico, no es fuente de verdad ni debe ejecutarse en Azure SQL DEV.
+   Contiene datos demo y requiere revision, respaldo y aprobacion explicita.
+*/
+THROW 51020, 'Archivo historico: no ejecutar sin un bloque aprobado.', 1;
+GO
+
 -- ===========================================================
 -- 1. PERFILES (Roles del sistema)
 -- ===========================================================
@@ -297,7 +304,7 @@ BEGIN
         (PerfilId, NombreCompleto, Correo, Contrasena, Telefono, Activo)
     VALUES
         (@PidAdmin, N'Administrador Sistema', N'admin@distribuidorajj.com',
-         N'1234', N'2200-0000', 1);
+         N'<SET_AT_EXECUTION>', N'2200-0000', 1);
 END
 GO
 
@@ -317,7 +324,7 @@ BEGIN
         (PerfilId, NombreCompleto, Correo, Contrasena, Telefono)
     VALUES
         (@PidGerente, N'Carlos Méndez Rojas',
-         N'carlos.mendez@distribuidorajj.com', N'1234', N'8800-1111');
+         N'carlos.mendez@distribuidorajj.com', N'<SET_AT_EXECUTION>', N'8800-1111');
 
     DECLARE @UidCarlos INT = SCOPE_IDENTITY();
 
@@ -342,7 +349,7 @@ BEGIN
         (PerfilId, NombreCompleto, Correo, Contrasena, Telefono)
     VALUES
         (@PidEmpl, N'José Solano Vargas',
-         N'jose.solano@distribuidorajj.com', N'1234', N'8811-2222');
+         N'jose.solano@distribuidorajj.com', N'<SET_AT_EXECUTION>', N'8811-2222');
 
     DECLARE @UidJose INT = SCOPE_IDENTITY();
 
@@ -369,7 +376,7 @@ BEGIN
         (PerfilId, NombreCompleto, Correo, Contrasena, Telefono)
     VALUES
         (@PidEmpl2, N'María Vargas Pérez',
-         N'maria.vargas@distribuidorajj.com', N'1234', N'8822-3333');
+         N'maria.vargas@distribuidorajj.com', N'<SET_AT_EXECUTION>', N'8822-3333');
 
     DECLARE @UidMaria INT = SCOPE_IDENTITY();
 
@@ -396,7 +403,7 @@ BEGIN
         (PerfilId, NombreCompleto, Correo, Contrasena, Telefono)
     VALUES
         (@PidVend, N'Luis Fernández Castro',
-         N'luis.fernandez@distribuidorajj.com', N'1234', N'8833-4444');
+         N'luis.fernandez@distribuidorajj.com', N'<SET_AT_EXECUTION>', N'8833-4444');
 
     DECLARE @UidLuis INT = SCOPE_IDENTITY();
 
@@ -429,7 +436,7 @@ BEGIN
         (PerfilId, NombreCompleto, Correo, Contrasena, Telefono, Direccion)
     VALUES
         (@PidCli, N'Ana Jiménez Torres', N'ana.jimenez@correo.com',
-         N'1234', N'8844-5555', N'San José, Escazú');
+         N'<SET_AT_EXECUTION>', N'8844-5555', N'San José, Escazú');
 
     DECLARE @UidAna INT = SCOPE_IDENTITY();
 
@@ -448,7 +455,7 @@ BEGIN
         (PerfilId, NombreCompleto, Correo, Contrasena, Telefono, Direccion)
     VALUES
         (@PidCli2, N'Pedro Mora Salazar', N'pedro.mora@correo.com',
-         N'1234', N'8855-6666', N'Heredia, Barva');
+         N'<SET_AT_EXECUTION>', N'8855-6666', N'Heredia, Barva');
 
     DECLARE @UidPedro INT = SCOPE_IDENTITY();
 
@@ -467,7 +474,7 @@ BEGIN
         (PerfilId, NombreCompleto, Correo, Contrasena, Telefono, Direccion)
     VALUES
         (@PidCli3, N'Sofía Brenes Arias', N'sofia.brenes@correo.com',
-         N'1234', N'8866-7777', N'Alajuela, Centro');
+         N'<SET_AT_EXECUTION>', N'8866-7777', N'Alajuela, Centro');
 
     DECLARE @UidSofia INT = SCOPE_IDENTITY();
 

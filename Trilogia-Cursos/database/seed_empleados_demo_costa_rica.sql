@@ -48,6 +48,12 @@ BEGIN
 END;
 GO
 
+DECLARE @DemoPassword NVARCHAR(256) = N'<SET_AT_EXECUTION>';
+IF @DemoPassword = N'<SET_AT_EXECUTION>'
+BEGIN
+    THROW 52008, 'Debe proporcionar una credencial temporal fuera del repositorio.', 1;
+END;
+
 DECLARE @UsuarioAdminId INT = (SELECT TOP 1 UsuarioId FROM dbo.Usuarios WHERE Correo = 'admin@distribuidorajj.com' ORDER BY UsuarioId);
 DECLARE @UsuarioAdminNombre NVARCHAR(150) = ISNULL((SELECT TOP 1 NombreCompleto FROM dbo.Usuarios WHERE UsuarioId = @UsuarioAdminId), 'Sistema');
 
@@ -116,7 +122,7 @@ BEGIN
     IF @UsuarioId IS NULL
     BEGIN
         INSERT INTO dbo.Usuarios (PerfilId, NombreCompleto, Correo, Contrasena, Telefono, Direccion, Activo)
-        VALUES (@PerfilId, @NombreCompleto, @Correo, '1234', @Telefono, @Direccion, 1);
+        VALUES (@PerfilId, @NombreCompleto, @Correo, @DemoPassword, @Telefono, @Direccion, 1);
 
         SET @UsuarioId = SCOPE_IDENTITY();
     END
