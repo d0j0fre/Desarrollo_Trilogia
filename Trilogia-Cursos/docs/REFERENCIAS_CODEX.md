@@ -49,6 +49,9 @@ Antes de iniciar un bloque nuevo, leer primero este archivo y luego abrir unicam
 ### Seguridad, configuracion y onboarding
 
 - `docs/credenciales-configuracion-segura.md`: politica para secretos, cuentas demo, configuracion local, Azure, respuesta ante exposicion y revision previa a un PR.
+- `docs/azure-colaboracion-equipo.md`: modelo vigente de colaboracion, accesos minimos, conexion Entra MFA y flujo de cambios SQL.
+- `docs/azure-p1-ejecucion-20260714.md`: resultado sanitizado de la ejecucion P1.2, pruebas, rollback y riesgos pendientes.
+- `database/migrations/README.md`: politica operativa para scripts incrementales y el ledger de migraciones.
 
 ## Regla para ahorrar tokens
 
