@@ -17,6 +17,9 @@ Antes de iniciar un bloque nuevo, leer primero este archivo y luego abrir unicam
 - `Proyecto_FinalAPI` tiene endpoints de diagnostico `GET /` y `GET /health`.
 - `Proyecto_FinalAPI` quedo publicado en Azure App Service `api-trilogia-cursos-dev-cr01` y validado con `/health`, `/swagger` y `/api/productos`.
 - `Proyecto_Final` MVC quedo publicado en Azure App Service `web-trilogia-cursos-dev-cr01` y validado con Home, Login, navegacion principal, usuarios admin/cliente/vendedor y Admin.
+- Esteban, Gerald y David tienen Owner directo solo en el Resource Group y `db_owner` individual en Azure SQL DEV.
+- Danny permanece como administrador Microsoft Entra individual del servidor SQL porque el tenant institucional bloquea la administracion del grupo previsto.
+- Cada migracion compartida requiere un unico ejecutor designado en el PR.
 - El despliegue final Azure DEV esta documentado en `docs/azure-despliegue-final-qa.md`.
 - El proyecto todavia usa contrasenas en texto plano; la migracion a hash queda para una fase futura.
 
@@ -51,6 +54,7 @@ Antes de iniciar un bloque nuevo, leer primero este archivo y luego abrir unicam
 - `docs/credenciales-configuracion-segura.md`: politica para secretos, cuentas demo, configuracion local, Azure, respuesta ante exposicion y revision previa a un PR.
 - `docs/azure-colaboracion-equipo.md`: modelo vigente de colaboracion, accesos minimos, conexion Entra MFA y flujo de cambios SQL.
 - `docs/azure-p1-ejecucion-20260714.md`: resultado sanitizado de la ejecucion P1.2, pruebas, rollback y riesgos pendientes.
+- `docs/azure-permisos-directos-equipo.md`: permisos Owner y `db_owner` individuales, revocacion, cambio de IP, pruebas y riesgos del modelo directo.
 - `database/migrations/README.md`: politica operativa para scripts incrementales y el ledger de migraciones.
 
 ## Regla para ahorrar tokens
@@ -104,6 +108,7 @@ Leer:
 
 - Este indice.
 - `docs/azure-sql-dev-companeros.md`
+- `docs/azure-permisos-directos-equipo.md`
 - `docs/azure-despliegue-final-qa.md`
 - `docs/resumen-final-proyecto.md`
 - `docs/api-endpoints.md`

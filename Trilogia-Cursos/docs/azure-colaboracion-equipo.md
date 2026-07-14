@@ -2,48 +2,64 @@
 
 ## Arquitectura
 
-- Las escrituras de desarrollo se realizan en bases locales por colaborador.
-- Azure SQL DEV se usa para integracion, lectura y verificacion compartida.
-- Danny es el unico responsable autorizado para ejecutar cambios SQL en Azure.
-- Todo cambio de esquema requiere script incremental, PR, BACPAC, ScriptDom y registro en el ledger.
+- Azure SQL DEV y los recursos de `rg-trilogia-cursos-dev` son el entorno compartido de integracion.
+- Danny, Esteban, Gerald y David forman el equipo administrativo DEV mediante asignaciones individuales.
+- Esteban, Gerald y David tienen Owner directo solo en el Resource Group y `db_owner` individual en la base DEV.
+- Danny conserva el acceso heredado y permanece como administrador Microsoft Entra individual del servidor SQL por una limitacion del tenant institucional.
+- Ningun colaborador recibe Owner de la suscripcion ni credenciales SQL compartidas.
+
+El grupo administrativo previsto no pudo crearse porque el tenant institucional denego la administracion de grupos. Las asignaciones directas son una medida operativa y requieren una revocacion individual cuidadosa.
 
 ## Accesos del equipo
 
 | Colaborador | GitHub | Portal Azure | Azure SQL |
 | ----------- | ------ | ------------ | --------- |
-| Danny | `d0j0fre` | Propietario heredado | Administrador y ejecutor SQL |
-| Esteban | `EstebanAVF` | Reader del Resource Group | Solo lectura con Microsoft Entra |
-| Gerald | `GeraldRB` | Sin acceso | Solo lectura con Microsoft Entra |
-| David | `MontDavidH` | Reader del Resource Group | Solo lectura con Microsoft Entra |
+| Danny | `d0j0fre` | Propietario heredado | Administrador Entra y acceso administrativo |
+| Esteban | `EstebanAVF` | Owner directo del Resource Group | `db_owner` individual con Microsoft Entra |
+| Gerald | `GeraldRB` | Owner directo del Resource Group | `db_owner` individual con Microsoft Entra |
+| David | `MontDavidH` | Owner directo del Resource Group | `db_owner` individual con Microsoft Entra |
 
-Los lectores SQL tienen un usuario individual, `db_datareader` y `VIEW DEFINITION`. No reciben escritura, DDL, administracion de usuarios ni acceso a la cuenta administradora SQL.
+Gerald debe aceptar su invitacion B2B antes de iniciar sesion. La asignacion puede existir mientras la invitacion permanece pendiente.
 
 ## Conexion con Microsoft Entra MFA
 
 1. Abrir SSMS o una herramienta compatible con Azure SQL.
-2. Usar el servidor y la base comunicados por Danny mediante el canal del equipo.
+2. Usar el servidor y la base comunicados mediante el canal privado del equipo.
 3. Elegir autenticacion Microsoft Entra con MFA.
 4. Iniciar sesion con la cuenta individual autorizada.
-5. Confirmar una consulta `SELECT` y no ejecutar scripts de cambio.
+5. Confirmar el acceso y respetar el ejecutor designado para cualquier cambio.
 
 ## Cambio de IP publica
 
 1. Confirmar la IP nueva desde el equipo que se conectara.
-2. Enviarla a Danny por un canal privado.
-3. Danny crea una regla individual de una sola IP durante un bloque aprobado.
-4. Se prueba lectura y se retira la regla anterior cuando ya no sea necesaria.
+2. Comunicarla por un canal privado a un administrador del proyecto.
+3. Reemplazar la regla individual por otra regla de una sola IP.
+4. Probar la conexion y retirar la regla anterior.
+5. Verificar que no se creo un rango ni el bypass de servicios Azure.
 
-No se publican IPs en Git y no se crean rangos amplios.
+Las IPs no se publican en Git.
 
 ## Flujo de migraciones
 
-1. Crear un archivo incremental en `database/`.
-2. Validarlo con ScriptDom y abrir un PR.
-3. Revisar impacto y rollback.
-4. Crear un BACPAC reciente.
-5. Danny aplica el cambio en la ventana aprobada.
-6. Registrar el resultado en `dbo.SchemaMigrationHistory`.
-7. Ejecutar verificaciones de solo lectura.
+1. Crear un archivo incremental, idempotente y revisable en `database/`.
+2. Designar en el PR a un unico ejecutor para esa migracion.
+3. Validar el script con ScriptDom y CI.
+4. Revisar impacto y rollback.
+5. Crear y verificar un BACPAC reciente.
+6. El ejecutor designado aplica el cambio en una ventana coordinada.
+7. Registrar el resultado en `dbo.SchemaMigrationHistory`.
+8. Ejecutar verificaciones y adjuntar evidencia sanitizada al PR.
+
+Nunca dos administradores ejecutan simultaneamente el mismo script. Todo cambio requiere script, PR, CI, backup y ledger.
+
+## Retiro de un integrante
+
+1. Retirar su Owner directo del Resource Group.
+2. Retirar `db_owner` y los permisos SQL individuales que ya no correspondan.
+3. Retirar su regla de firewall individual.
+4. Actualizar CODEOWNERS y los permisos GitHub mediante un proceso separado.
+5. Verificar que no conserve asignaciones en el Resource Group ni en la suscripcion.
+6. Registrar el retiro y conservar evidencia sanitizada para rollback.
 
 ## Secretos
 
