@@ -2,7 +2,9 @@
 
 ## Responsabilidad
 
-Danny es el unico ejecutor autorizado de cambios SQL sobre Azure SQL DEV. Los colaboradores trabajan con bases locales para escritura y usan Azure SQL solo para lectura, integracion y verificacion.
+Danny, Esteban, Gerald y David forman el equipo administrativo DEV mediante usuarios individuales con `db_owner`. Danny permanece como administrador Microsoft Entra individual del servidor por una limitacion del tenant.
+
+Cada migracion tiene un unico ejecutor designado y registrado en el PR. Los demas administradores no ejecutan simultaneamente el mismo script.
 
 ## Flujo obligatorio
 
@@ -10,7 +12,7 @@ Danny es el unico ejecutor autorizado de cambios SQL sobre Azure SQL DEV. Los co
 2. Abrir un pull request y obtener revision antes de ejecutar.
 3. Validar el script con Microsoft ScriptDom.
 4. Crear y verificar un BACPAC antes de cualquier cambio compartido.
-5. Aplicar el script durante una ventana controlada por el responsable SQL.
+5. Aplicar el script durante una ventana controlada por el ejecutor designado.
 6. Registrar SHA-256, estado, fecha UTC, ejecutor, ambiente y notas en `dbo.SchemaMigrationHistory`.
 7. Ejecutar consultas de verificacion y documentar el rollback.
 
@@ -26,3 +28,4 @@ Cada migracion debe indicar su estrategia de rollback antes de ejecutarse. Los c
 - No ejecutar CU090-CU100 sin evidencia, revision y bloque separado.
 - No aplicar cambios manuales sin script, PR, backup y registro en el ledger.
 - No compartir la cuenta administradora SQL.
+- No ejecutar una migracion si otro administrador ya figura como ejecutor activo.
