@@ -62,6 +62,17 @@ SELECT
     dp.name AS PrincipalName,
     dp.type_desc AS PrincipalType,
     IS_ROLEMEMBER(N'db_datareader', dp.name) AS IsDataReader,
-    HAS_PERMS_BY_NAME(DB_NAME(), N'DATABASE', N'VIEW DEFINITION') AS ExecutorCanViewDefinition
+    CASE
+        WHEN EXISTS
+        (
+            SELECT 1
+            FROM sys.database_permissions AS permission
+            WHERE permission.grantee_principal_id = dp.principal_id
+              AND permission.class = 0
+              AND permission.permission_name = N'VIEW DEFINITION'
+              AND permission.state IN (N'G', N'W')
+        ) THEN CAST(1 AS BIT)
+        ELSE CAST(0 AS BIT)
+    END AS HasViewDefinition
 FROM sys.database_principals AS dp
 WHERE dp.name = @PrincipalName;
