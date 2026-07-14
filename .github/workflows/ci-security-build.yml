@@ -32,6 +32,9 @@ jobs:
           ./Trilogia-Cursos/database/seed_empleados_demo_costa_rica.sql
           ./Trilogia-Cursos/database/sp_Store_GetProducts.sql
           ./Trilogia-Cursos/database/security/p0_audit_demo_accounts.sql
+          ./Trilogia-Cursos/database/migrations/0001_create_schema_migration_history.sql
+          ./Trilogia-Cursos/database/security/p1_collaborator_access_template.sql
+          ./Trilogia-Cursos/database/verify/p1_verify_collaboration_access.sql
           ./Trilogia-Cursos/database_Esteban/Fase3_3-3.sql
           ./Trilogia-Cursos/database_Esteban/Fase4.sql
       - name: Restore solution
