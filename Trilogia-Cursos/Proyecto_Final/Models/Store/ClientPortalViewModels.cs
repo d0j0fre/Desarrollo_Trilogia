@@ -86,4 +86,13 @@ namespace Proyecto_Final.Models.Store
         public decimal PrecioUnitario { get; set; }
         public decimal Subtotal { get; set; }
     }
+
+    // Estado de cuenta descargable/imprimible del cliente
+    public class ClientPortalStatementViewModel
+    {
+        public ClientPortalSummaryViewModel Cliente { get; set; } = new();
+        public ClientPortalCreditSummaryViewModel? Credito { get; set; }
+        public List<ClientPortalOrderListItemViewModel> Pedidos { get; set; } = new();
+        public DateTime FechaGeneracion { get; set; } = DateTime.Now;
+    }
 }

@@ -39,6 +39,34 @@ namespace Proyecto_Final.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> Statement()
+        {
+            var usuarioId = HttpContext.Session.GetInt32("UserId") ?? 0;
+            var cliente = await _adminDbService.GetClientDetailAsync(usuarioId);
+
+            if (cliente == null)
+            {
+                TempData["ErrorMessage"] = "No fue posible cargar el estado de cuenta.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var model = new ClientPortalStatementViewModel
+            {
+                Cliente = MapClientSummary(cliente),
+                Credito = await TryGetCreditSummaryAsync(usuarioId),
+                Pedidos = cliente.Pedidos.Select(MapOrderListItem).ToList()
+            };
+
+            // Deja registro de auditoria de cada descarga del estado de cuenta.
+            await RegistrarAuditoriaAsync(
+                "Descargar estado de cuenta",
+                "Portal cliente",
+                $"El cliente {model.Cliente.NombreCompleto} descargo su estado de cuenta.");
+
+            return View(model);
+        }
+
+        [HttpGet]
         public async Task<IActionResult> Detail(int id)
         {
             if (id <= 0)

@@ -8,10 +8,12 @@ namespace Proyecto_Final.Controllers
     public class BillingController : Controller
     {
         private readonly AdminDbService _adminDbService;
+        private readonly EmailService _emailService;
 
-        public BillingController(AdminDbService adminDbService)
+        public BillingController(AdminDbService adminDbService, EmailService emailService)
         {
             _adminDbService = adminDbService;
+            _emailService = emailService;
         }
 
         [HttpGet]
@@ -59,12 +61,61 @@ namespace Proyecto_Final.Controllers
                     $"Se genero la factura {result.NumeroFactura} para el pedido #{pedidoId}.");
 
                 TempData["SuccessMessage"] = $"Factura {result.NumeroFactura} generada correctamente.";
+                await EnviarComprobantePorCorreoAsync(result.FacturaId);
                 return RedirectToAction(nameof(Detail), new { id = result.FacturaId });
             }
             catch (Exception)
             {
                 TempData["ErrorMessage"] = "No fue posible generar la factura del pedido. Verifique que no este cancelado ni facturado previamente.";
                 return RedirectToAction("Detail", "OrdersAdmin", new { id = pedidoId });
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [AdminAuthorize("Facturacion", "FACTURACION_GENERAR")]
+        public async Task<IActionResult> ResendEmail(int id)
+        {
+            var enviado = await EnviarComprobantePorCorreoAsync(id);
+
+            TempData[enviado ? "SuccessMessage" : "ErrorMessage"] = enviado
+                ? "Comprobante reenviado correctamente al correo del cliente."
+                : "No fue posible reenviar el comprobante. Intente nuevamente.";
+
+            return RedirectToAction(nameof(Detail), new { id });
+        }
+
+        // Envia el comprobante por correo; no interrumpe el flujo si el envio falla (CU-092).
+        private async Task<bool> EnviarComprobantePorCorreoAsync(int facturaId)
+        {
+            try
+            {
+                var factura = await _adminDbService.GetInvoiceDetailAsync(facturaId);
+                if (factura == null || string.IsNullOrWhiteSpace(factura.Correo))
+                {
+                    return false;
+                }
+
+                var contenido = EmailTemplateBuilder.BuildInvoiceEmail(
+                    factura.Cliente,
+                    factura.NumeroFactura,
+                    factura.PedidoId,
+                    factura.FechaFactura,
+                    factura.Total);
+
+                _emailService.SendEmail(factura.Correo, $"Comprobante {factura.NumeroFactura}", contenido);
+
+                await RegistrarAuditoriaAsync(
+                    "Enviar comprobante por correo",
+                    "Facturacion",
+                    $"Se envio el comprobante {factura.NumeroFactura} al correo {factura.Correo}.");
+
+                return true;
+            }
+            catch (Exception)
+            {
+                TempData["ErrorMessage"] = "La factura se genero correctamente, pero no fue posible enviar el comprobante por correo.";
+                return false;
             }
         }
 

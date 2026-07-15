@@ -150,6 +150,13 @@
                     <i class="fa fa-print mr-2"></i>Imprimir factura
                 </button>
 
+                <form asp-controller="Billing" asp-action="ResendEmail" asp-route-id="@Model.FacturaId" method="post" class="mb-2">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-outline-primary btn-block">
+                        <i class="fa fa-envelope mr-2"></i>Reenviar comprobante por correo
+                    </button>
+                </form>
+
                 <p class="text-muted mb-0 mt-3">
                     Esta vista permite consultar el detalle generado por el sistema para fines administrativos y de control.
                 </p>
