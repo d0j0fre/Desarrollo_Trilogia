@@ -34,8 +34,9 @@ builder.Services.AddHttpClient<AccountApiService>(client =>
     {
         throw new InvalidOperationException("No se encontró la configuración ApiSettings:BaseUrl en appsettings.json.");
     }
-
+    Console.WriteLine(baseUrl);
     client.BaseAddress = new Uri(baseUrl);
+    //client.BaseAddress = new Uri(baseUrl);
 });
 
 var app = builder.Build();
