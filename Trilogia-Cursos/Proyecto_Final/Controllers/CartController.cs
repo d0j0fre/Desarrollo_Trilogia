@@ -18,10 +18,14 @@ namespace Proyecto_Final.Controllers
         };
 
         private readonly StoreDbService _storeDbService;
+        private readonly EmailService _emailService;
 
-        public CartController(StoreDbService storeDbService)
+        public CartController(
+            StoreDbService storeDbService,
+            EmailService emailService)
         {
             _storeDbService = storeDbService;
+            _emailService = emailService;
         }
 
         public IActionResult Index()
@@ -143,17 +147,27 @@ namespace Proyecto_Final.Controllers
         {
             model.Cart = BuildCartViewModel();
             model.TipoEntrega = "Envío a domicilio";
+
             model.MetodoPago = string.IsNullOrWhiteSpace(model.MetodoPago)
                 ? "Efectivo contra entrega"
                 : model.MetodoPago.Trim();
+
             model.ReferenciaPago = string.IsNullOrWhiteSpace(model.ReferenciaPago)
                 ? null
                 : model.ReferenciaPago.Trim();
 
             if (!IsLoggedIn())
             {
-                TempData["LoginSuccess"] = "Debes iniciar sesión para finalizar la compra.";
-                return RedirectToAction("Login", "Account", new { returnUrl = Url.Action(nameof(Checkout), "Cart") });
+                TempData["LoginSuccess"] =
+                    "Debes iniciar sesión para finalizar la compra.";
+
+                return RedirectToAction(
+                    "Login",
+                    "Account",
+                    new
+                    {
+                        returnUrl = Url.Action(nameof(Checkout), "Cart")
+                    });
             }
 
             if (model.Cart.Items.Count == 0)
@@ -163,48 +177,131 @@ namespace Proyecto_Final.Controllers
             }
 
             if (string.IsNullOrWhiteSpace(model.Provincia))
-                ModelState.AddModelError(nameof(model.Provincia), "La provincia es obligatoria.");
-            if (string.IsNullOrWhiteSpace(model.Canton))
-                ModelState.AddModelError(nameof(model.Canton), "El cantón es obligatorio.");
-            if (string.IsNullOrWhiteSpace(model.Distrito))
-                ModelState.AddModelError(nameof(model.Distrito), "El distrito es obligatorio.");
-            if (string.IsNullOrWhiteSpace(model.DireccionDetalle))
-                ModelState.AddModelError(nameof(model.DireccionDetalle), "La dirección es obligatoria.");
-            if (string.IsNullOrWhiteSpace(model.Identificacion))
-                ModelState.AddModelError(nameof(model.Identificacion), "La identificación es obligatoria.");
-            if (!PaymentMethods.Contains(model.MetodoPago))
-                ModelState.AddModelError(nameof(model.MetodoPago), "Seleccione un método de pago válido.");
+            {
+                ModelState.AddModelError(
+                    nameof(model.Provincia),
+                    "La provincia es obligatoria.");
+            }
 
-            model.DireccionEntrega = $"{model.Pais}, {model.Provincia}, {model.Canton}, {model.Distrito}. {model.DireccionDetalle}";
+            if (string.IsNullOrWhiteSpace(model.Canton))
+            {
+                ModelState.AddModelError(
+                    nameof(model.Canton),
+                    "El cantón es obligatorio.");
+            }
+
+            if (string.IsNullOrWhiteSpace(model.Distrito))
+            {
+                ModelState.AddModelError(
+                    nameof(model.Distrito),
+                    "El distrito es obligatorio.");
+            }
+
+            if (string.IsNullOrWhiteSpace(model.DireccionDetalle))
+            {
+                ModelState.AddModelError(
+                    nameof(model.DireccionDetalle),
+                    "La dirección es obligatoria.");
+            }
+
+            if (string.IsNullOrWhiteSpace(model.Identificacion))
+            {
+                ModelState.AddModelError(
+                    nameof(model.Identificacion),
+                    "La identificación es obligatoria.");
+            }
+
+            if (!PaymentMethods.Contains(model.MetodoPago))
+            {
+                ModelState.AddModelError(
+                    nameof(model.MetodoPago),
+                    "Seleccione un método de pago válido.");
+            }
+
+            model.CorreoElectronico =
+                string.IsNullOrWhiteSpace(model.CorreoElectronico)
+                    ? HttpContext.Session.GetString("UserEmail")
+                    : model.CorreoElectronico.Trim();
+
+            if (string.IsNullOrWhiteSpace(model.CorreoElectronico))
+            {
+                ModelState.AddModelError(
+                    nameof(model.CorreoElectronico),
+                    "No se encontró un correo electrónico para enviar el comprobante.");
+            }
+
+            model.DireccionEntrega =
+                $"{model.Pais}, {model.Provincia}, {model.Canton}, " +
+                $"{model.Distrito}. {model.DireccionDetalle}";
 
             if (!ModelState.IsValid)
+            {
                 return View(model);
+            }
 
             try
             {
-                var pedidoId = await _storeDbService.CreateOrderAsync(HttpContext.Session.GetInt32("UserId") ?? 0, model, model.Cart.Items);
-                HttpContext.Session.Remove(CartSessionKey);
+                var usuarioId =
+                    HttpContext.Session.GetInt32("UserId") ?? 0;
 
-                TempData["OrderConfirmation"] = JsonSerializer.Serialize(new OrderConfirmationViewModel
+                var pedidoId = await _storeDbService.CreateOrderAsync(
+                    usuarioId,
+                    model,
+                    model.Cart.Items);
+
+                var confirmacion = new OrderConfirmationViewModel
                 {
                     PedidoId = pedidoId,
                     TipoEntrega = model.TipoEntrega,
                     DireccionEntrega = model.DireccionEntrega,
                     Total = model.Cart.Subtotal,
                     Items = model.Cart.Items
-                });
+                };
 
-                TempData["LoginSuccess"] = $"Pedido #{pedidoId} creado correctamente.";
+                var destinatario =
+                    model.CorreoElectronico
+                    ?? HttpContext.Session.GetString("UserEmail")
+                    ?? string.Empty;
+
+                var cliente =
+                    HttpContext.Session.GetString("UserFullName")
+                    ?? "Cliente";
+
+                _emailService.SendOrderReceipt(
+                    destinatario,
+                    cliente,
+                    pedidoId,
+                    model,
+                    model.Cart.Items);
+
+                HttpContext.Session.Remove(CartSessionKey);
+
+                TempData["OrderConfirmation"] =
+                    JsonSerializer.Serialize(confirmacion);
+
+                TempData["LoginSuccess"] =
+                    $"Pedido #{pedidoId} creado correctamente.";
+
                 return RedirectToAction(nameof(Confirmation));
             }
-            catch (SqlException ex) when (ex.Message.Contains("stock", StringComparison.OrdinalIgnoreCase))
+            catch (SqlException ex)
+                when (ex.Message.Contains(
+                    "stock",
+                    StringComparison.OrdinalIgnoreCase))
             {
-                ModelState.AddModelError(string.Empty, "No hay stock suficiente para completar el pedido. Revise el carrito e intente nuevamente.");
+                ModelState.AddModelError(
+                    string.Empty,
+                    "No hay stock suficiente para completar el pedido. " +
+                    "Revise el carrito e intente nuevamente.");
+
                 return View(model);
             }
             catch (Exception)
             {
-                ModelState.AddModelError(string.Empty, "No se pudo completar el pedido. Intente nuevamente.");
+                ModelState.AddModelError(
+                    string.Empty,
+                    "No se pudo completar el pedido. Intente nuevamente.");
+
                 return View(model);
             }
         }
