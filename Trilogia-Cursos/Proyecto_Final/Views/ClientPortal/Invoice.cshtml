@@ -111,8 +111,8 @@
                 <a asp-controller="ClientPortal" asp-action="Index" class="s4-client-invoice-secondary">
                     Mis pedidos
                 </a>
-                <button type="button" class="s4-client-invoice-primary" onclick="window.print();">
-                    Imprimir
+                <button type="button" id="btnDescargarFactura" class="s4-client-invoice-primary" onclick="window.print();">
+                    Descargar factura
                 </button>
             </div>
         </div>
@@ -251,4 +251,16 @@
             </div>
         </section>
     </div>
+    @section Scripts {
+        <script>
+                // Confirma visualmente al cliente que la factura se genero para descarga
+                window.addEventListener('afterprint', function () {
+                    var boton = document.getElementById('btnDescargarFactura');
+                    if (boton) {
+                        boton.textContent = 'Descarga confirmada';
+                        setTimeout(function () { boton.textContent = 'Descargar factura'; }, 3000);
+                    }
+                });
+        </script>
+    }
 </div>

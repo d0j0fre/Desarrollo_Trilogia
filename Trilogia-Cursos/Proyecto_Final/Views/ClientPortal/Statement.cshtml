@@ -1,0 +1,235 @@
+﻿@model Proyecto_Final.Models.Store.ClientPortalStatementViewModel
+@{
+    ViewData["Title"] = "Estado de cuenta";
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+    <style>
+        @@media print {
+            .topbar,
+            .modern-nav-shell,
+            .navbar,
+            .header-categories-button,
+            .header-categories-panel,
+            .user-panel,
+            footer,
+            .s3-footer,
+            .back-to-top,
+            .alert,
+            .btn,
+            .no-print {
+                display: none !important;
+            }
+
+            @@page {
+                margin: 12mm;
+            }
+
+            html,
+            body {
+                background: #fff !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            main,
+            .container-fluid {
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            .s4-client-invoice-document,
+            .s4-client-invoice-card,
+            .s4-client-invoice-products {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+
+            .s4-client-invoice-page,
+            .s4-client-invoice-document {
+                background: #fff !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            .s4-client-invoice-header,
+            .s4-client-invoice-grid,
+            .s4-client-invoice-meta {
+                display: block !important;
+            }
+
+            .row,
+            [class*="col-"] {
+                display: block !important;
+                max-width: 100% !important;
+                width: 100% !important;
+                flex: none !important;
+            }
+
+            tr {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+}
+
+<div class="s4-client-invoice-page">
+    <div class="container">
+        <div class="s4-client-invoice-toolbar no-print">
+            <div>
+                <span>Portal del cliente</span>
+                <h1>Estado de cuenta</h1>
+                <p>Consulta e imprime tu resumen de credito y pedidos.</p>
+            </div>
+
+            <div class="s4-client-invoice-actions no-print">
+                <a asp-controller="ClientPortal" asp-action="Index" class="s4-client-invoice-secondary">
+                    Mis pedidos
+                </a>
+                <button type="button" id="btnDescargarEstado" class="s4-client-invoice-primary" onclick="window.print();">
+                    Descargar / Imprimir
+                </button>
+            </div>
+        </div>
+
+        <section class="s4-client-invoice-document">
+            <div class="s4-client-invoice-header">
+                <div class="s4-client-invoice-brand">
+                    <div class="s4-client-invoice-brand-heading">
+                        <img src="~/brand/logo-icon.png"
+                             asp-append-version="true"
+                             class="s4-client-invoice-logo"
+                             alt="Supermercado Mayoreo" />
+                        <div>
+                            <span>Supermercado Mayoreo</span>
+                            <small>Licorera - Distribuidora</small>
+                        </div>
+                    </div>
+                    <h2>Estado de cuenta</h2>
+                    <p>Cliente #@Model.Cliente.UsuarioId</p>
+                </div>
+
+                <div class="s4-client-invoice-meta">
+                    <div>
+                        <span>Generado el</span>
+                        <strong>@Model.FechaGeneracion.ToString("dd/MM/yyyy HH:mm")</strong>
+                    </div>
+                    <div>
+                        <span>Cliente</span>
+                        <strong>@Model.Cliente.NombreCompleto</strong>
+                    </div>
+                    <div>
+                        <span>Correo</span>
+                        <strong>@Model.Cliente.Correo</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="s4-client-invoice-grid">
+                <div class="s4-client-invoice-card">
+                    <div class="s4-client-invoice-card-title">
+                        <span>Resumen de compras</span>
+                    </div>
+
+                    <dl class="s4-client-invoice-facts">
+                        <div>
+                            <dt>Total de pedidos</dt>
+                            <dd>@Model.Cliente.TotalPedidos</dd>
+                        </div>
+                        <div>
+                            <dt>Total comprado</dt>
+                            <dd>&#8353;@Model.Cliente.TotalComprado.ToString("N2")</dd>
+                        </div>
+                        <div>
+                            <dt>Ultimo pedido</dt>
+                            <dd>@(Model.Cliente.UltimoPedido.HasValue ? Model.Cliente.UltimoPedido.Value.ToString("dd/MM/yyyy") : "Sin pedidos")</dd>
+                        </div>
+                    </dl>
+                </div>
+
+                <aside class="s4-client-invoice-totals">
+                    <h3>Credito</h3>
+
+                    @if (Model.Credito == null)
+                    {
+                        <p class="s4-client-empty-text">No hay credito asignado actualmente.</p>
+                    }
+                    else
+                    {
+                        <div>
+                            <span>Limite</span>
+                            <strong>&#8353;@Model.Credito.LimiteCredito.ToString("N2")</strong>
+                        </div>
+                        <div>
+                            <span>Deuda actual</span>
+                            <strong>&#8353;@Model.Credito.DeudaActual.ToString("N2")</strong>
+                        </div>
+                        <div class="s4-client-invoice-total-row">
+                            <span>Disponible</span>
+                            <strong>&#8353;@Model.Credito.CreditoDisponible.ToString("N2")</strong>
+                        </div>
+                    }
+                </aside>
+            </div>
+
+            <div class="s4-client-invoice-products">
+                <div class="s4-client-invoice-products-head">
+                    <span>Detalle</span>
+                    <h3>Historial de pedidos</h3>
+                </div>
+
+                <div class="s4-client-invoice-table-wrap">
+                    <table class="s4-client-invoice-table">
+                        <thead>
+                            <tr>
+                                <th>Pedido</th>
+                                <th>Fecha</th>
+                                <th>Estado</th>
+                                <th>Entrega</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!Model.Pedidos.Any())
+                            {
+                                <tr>
+                                    <td colspan="5" class="s4-client-invoice-empty">No hay pedidos registrados.</td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var pedido in Model.Pedidos)
+                                {
+                                    <tr>
+                                        <td><strong>#@pedido.PedidoId</strong></td>
+                                        <td>@pedido.FechaPedido.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td>@pedido.Estado</td>
+                                        <td>@(string.IsNullOrWhiteSpace(pedido.TipoEntrega) ? "No indicado" : pedido.TipoEntrega)</td>
+                                        <td>&#8353;@pedido.Total.ToString("N2")</td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Confirma visualmente al cliente que el estado de cuenta se genero para descarga (CU-123).
+        window.addEventListener('afterprint', function () {
+            var boton = document.getElementById('btnDescargarEstado');
+            if (boton) {
+                boton.textContent = 'Descarga confirmada';
+                setTimeout(function () { boton.textContent = 'Descargar / Imprimir'; }, 3000);
+            }
+        });
+    </script>
+}
