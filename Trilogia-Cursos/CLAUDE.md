@@ -133,12 +133,9 @@ chore(módulo): descripción breve
 
 Examples: `feat(empleados): agregar solicitud de licencias`, `fix(checkout): descontar inventario al confirmar pedido`
 
-## Demo credentials
+## Test accounts
 
-| Role | Email | Password |
-|---|---|---|
-| Admin | `admin@distribuidorajj.com` | `1234` |
-| Employees | `jose.solano@distribuidorajj.com`, `maria.vargas@...`, etc. | `1234` |
+Test credentials are not stored in this repository. Provision the required role for the current environment and obtain a temporary credential through a private channel. Never reuse historical seed credentials in Azure.
 
 ## Testing checklist after changes
 

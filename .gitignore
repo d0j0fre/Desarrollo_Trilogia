@@ -1,0 +1,47 @@
+# Visual Studio / workspace local
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build outputs
+bin/
+obj/
+
+# Logs
+*.log
+
+# Publish / deployment local
+*.PublishSettings
+*.publishsettings
+*.pubxml
+*.pubxml.user
+
+# Local database backups / Azure SQL exports
+*.bak
+*.bacpac
+*.dacpac
+
+# Generated archives
+*.zip
+*.rar
+*.7z
+
+# Local environment / secrets
+.env
+.env.*
+!.env.example
+secrets.json
+**/secrets.json
+appsettings.Local.json
+appsettings.*.Local.json
+*.local.json
+credentials.json
+credentials*.json
+*.pem
+*.pfx
+*.key
+
+# Codex operational prompts
+Trilogia-Cursos/docs/prompt_codex_*.md

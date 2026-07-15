@@ -5,6 +5,7 @@ namespace Proyecto_FinalAPI.Controllers
 {
     [ApiController]
     [Route("api/products")]
+    [Route("api/productos")]
     public class ProductsController : ControllerBase
     {
         private readonly ProductsApiDbService _productsApiDbService;

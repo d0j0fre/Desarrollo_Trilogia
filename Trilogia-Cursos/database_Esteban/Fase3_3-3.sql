@@ -4,6 +4,8 @@
 --          Historial Salarial, Tareas, Solicitudes, Auditoría
 -- CREATE OR ALTER — idempotente.
 -- Prerequisito: Bloques 1 y 2 ejecutados sin errores.
+/* ADVERTENCIA P0: archivo historico con operaciones destructivas.
+   No ejecutar contra Azure SQL DEV. Requiere respaldo y aprobacion explicita. */
 -- ============================================================
 
 USE DistribuidoraJJ_DB;

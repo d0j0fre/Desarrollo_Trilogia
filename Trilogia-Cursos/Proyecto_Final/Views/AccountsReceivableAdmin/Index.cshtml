@@ -1,0 +1,236 @@
+@model IEnumerable<Proyecto_Final.Models.Admin.ClientCreditListItemViewModel>
+
+@{
+    ViewData["Title"] = "Cuentas por cobrar";
+
+    var buscarActual = ViewBag.Buscar as string;
+    var estadoActual = ViewBag.EstadoCredito as string;
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4 backoffice-page accounts-receivable-page">
+
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header">
+                <h2 class="mb-2">Cuentas por cobrar</h2>
+                <p>
+                    Consulta la deuda de los clientes, el crédito disponible
+                    y el estado actual de cada cuenta.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-filter-bar">
+
+                <form asp-controller="AccountsReceivableAdmin"
+                      asp-action="Index"
+                      method="get"
+                      class="row align-items-end">
+
+                    <div class="col-md-4 mb-3 mb-md-0">
+                        <label class="font-weight-bold">Buscar cliente</label>
+
+                        <input type="text"
+                               name="buscar"
+                               value="@buscarActual"
+                               class="form-control"
+                               placeholder="Nombre, correo o teléfono" />
+                    </div>
+
+                    <div class="col-md-3 mb-3 mb-md-0">
+                        <label class="font-weight-bold">Estado del crédito</label>
+
+                        <select name="estadoCredito" class="form-control">
+                            <option value="">Todos</option>
+
+                            <option value="Activo"
+                                    selected="@(estadoActual == "Activo")">
+                                Activo
+                            </option>
+
+                            <option value="Bloqueado"
+                                    selected="@(estadoActual == "Bloqueado")">
+                                Bloqueado
+                            </option>
+
+                            <option value="Inactivo"
+                                    selected="@(estadoActual == "Inactivo")">
+                                Inactivo
+                            </option>
+
+                            <option value="ConDeuda"
+                                    selected="@(estadoActual == "ConDeuda")">
+                                Con deuda
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-5">
+                        <div class="d-flex flex-wrap">
+
+                            <button type="submit"
+                                    class="btn btn-primary mr-2 mb-2">
+
+                                <i class="fa fa-search mr-2"></i>
+                                Filtrar
+                            </button>
+
+                            <a asp-controller="AccountsReceivableAdmin"
+                               asp-action="Index"
+                               class="btn btn-outline-secondary mb-2">
+
+                                <i class="fa fa-eraser mr-2"></i>
+                                Limpiar filtro
+                            </a>
+
+                        </div>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-12">
+
+            <div class="admin-table-wrapper">
+
+                <div class="p-4 border-bottom d-flex justify-content-between align-items-center flex-wrap">
+                    <h5 class="mb-2 mb-md-0">
+                        Listado de cuentas
+                    </h5>
+
+                    <span class="text-muted">
+                        Total registros: @(Model?.Count() ?? 0)
+                    </span>
+                </div>
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover mb-0">
+
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Cliente</th>
+                                <th>Correo</th>
+                                <th>Teléfono</th>
+                                <th>Límite de crédito</th>
+                                <th>Deuda actual</th>
+                                <th>Disponible</th>
+                                <th>Estado</th>
+                                <th>Movimientos</th>
+                                <th>Último movimiento</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            @if (Model == null || !Model.Any())
+                            {
+                                <tr>
+                                    <td colspan="10"
+                                        class="text-center text-muted py-4">
+
+                                        No se encontraron cuentas por cobrar.
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var item in Model)
+                                {
+                                    var estadoTexto = !item.CreditoActivo
+                                        ? "Inactivo"
+                                        : item.CreditoBloqueado
+                                            ? "Bloqueado"
+                                            : item.DeudaActual > 0
+                                                ? "Con deuda"
+                                                : "Disponible";
+
+                                    var claseEstado = !item.CreditoActivo
+                                        ? "dark"
+                                        : item.CreditoBloqueado
+                                            ? "danger"
+                                            : item.DeudaActual > 0
+                                                ? "warning"
+                                                : "success";
+
+                                    <tr>
+
+                                        <td class="font-weight-bold">
+                                            @item.NombreCompleto
+                                        </td>
+
+                                        <td>@item.Correo</td>
+
+                                        <td>
+                                            @(string.IsNullOrWhiteSpace(item.Telefono)
+                                                ? "No registrado"
+                                                : item.Telefono)
+                                        </td>
+
+                                        <td>
+                                            ₡@item.LimiteCredito.ToString("N2")
+                                        </td>
+
+                                        <td>
+                                            <span class="font-weight-bold">
+                                                ₡@item.DeudaActual.ToString("N2")
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            ₡@item.CreditoDisponible.ToString("N2")
+                                        </td>
+
+                                        <td>
+                                            <span class="admin-badge-soft @claseEstado">
+                                                @estadoTexto
+                                            </span>
+                                        </td>
+
+                                        <td>@item.TotalMovimientos</td>
+
+                                        <td>
+                                            @(item.UltimoMovimiento.HasValue
+                                                ? item.UltimoMovimiento.Value
+                                                    .ToString("dd/MM/yyyy HH:mm")
+                                                : "Sin movimientos")
+                                        </td>
+
+                                        <td class="text-center">
+
+                                            <a asp-controller="AccountsReceivableAdmin"
+                                               asp-action="Detail"
+                                               asp-route-id="@item.UsuarioId"
+                                               class="btn btn-sm btn-outline-primary mb-1">
+
+                                                <i class="fa fa-eye mr-1"></i>
+                                                Ver
+                                            </a>
+
+                                        </td>
+
+                                    </tr>
+                                }
+                            }
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -7,11 +7,17 @@ GO
    CU-042, CU-043, CU-055, CU-056, CU-061, CU-062 y CU-071.
 
    Script incremental: no elimina datos existentes y evita duplicados.
-   Contraseña temporal para usuarios demo: 1234
+   La credencial temporal debe proporcionarse al ejecutar y nunca guardarse en Git.
    ========================================================= */
 
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
+
+DECLARE @DemoPassword NVARCHAR(256) = N'<SET_AT_EXECUTION>';
+IF @DemoPassword = N'<SET_AT_EXECUTION>'
+BEGIN
+    THROW 59008, 'Debe proporcionar una credencial temporal fuera del repositorio.', 1;
+END;
 
 BEGIN TRY
     BEGIN TRANSACTION;
@@ -161,7 +167,7 @@ BEGIN TRY
         (N'Comercial Santa Lucía', N'santalucia@clientes.labodega.cr', N'8877-6161', N'San Rafael de Heredia, Santa Lucía', 0);
 
     INSERT INTO dbo.Usuarios (PerfilId, NombreCompleto, Correo, Contrasena, Telefono, Direccion, Activo)
-    SELECT @ClientePerfilId, c.NombreCompleto, c.Correo, N'1234', c.Telefono, c.Direccion, c.Activo
+    SELECT @ClientePerfilId, c.NombreCompleto, c.Correo, @DemoPassword, c.Telefono, c.Direccion, c.Activo
     FROM @Clientes c
     WHERE NOT EXISTS (SELECT 1 FROM dbo.Usuarios u WHERE u.Correo = c.Correo);
 
@@ -199,7 +205,7 @@ BEGIN TRY
         (N'Paola Andrea Núñez Salas', N'pnunez@labodega.cr', N'8890-1010', N'San Pedro de Montes de Oca', N'Auditor Interno', N'Auditora interna', 650000, '2025-01-08');
 
     INSERT INTO dbo.Usuarios (PerfilId, NombreCompleto, Correo, Contrasena, Telefono, Direccion, Activo)
-    SELECT p.PerfilId, e.NombreCompleto, e.Correo, N'1234', e.Telefono, e.Direccion, 1
+    SELECT p.PerfilId, e.NombreCompleto, e.Correo, @DemoPassword, e.Telefono, e.Direccion, 1
     FROM @EmpleadosSeed e
     INNER JOIN dbo.Perfiles p ON p.Nombre = e.PerfilNombre
     WHERE NOT EXISTS (SELECT 1 FROM dbo.Usuarios u WHERE u.Correo = e.Correo);
@@ -549,7 +555,7 @@ BEGIN TRY
     COMMIT TRANSACTION;
 
     PRINT 'Datos demo Costa Rica cargados correctamente.';
-    PRINT 'Usuarios demo: clientes y empleados con contraseña temporal 1234.';
+    PRINT 'Usuarios demo creados con una credencial temporal proporcionada fuera del repositorio.';
 END TRY
 BEGIN CATCH
     IF @@TRANCOUNT > 0

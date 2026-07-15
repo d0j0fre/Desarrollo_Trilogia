@@ -132,6 +132,46 @@ Este documento deja el checklist de pruebas finales para validar la rama `featur
 - [ ] Confirmar que factura admin imprime correctamente.
 - [ ] Revisar que no haya textos con caracteres dañados tipo `Ã`, `Â`, `estÃ¡`, `opciÃ³n` o `contraseÃ±a` en pantallas principales.
 
+## QA Azure publicado
+
+Detalle completo: `docs/azure-despliegue-final-qa.md`.
+
+URLs:
+
+- API: `https://api-trilogia-cursos-dev-cr01-haefhbgrd8dvcvc5.centralus-01.azurewebsites.net/`
+- MVC: `https://web-trilogia-cursos-dev-cr01-bbeyeedbfjejcgau.centralus-01.azurewebsites.net/`
+- Swagger: `https://api-trilogia-cursos-dev-cr01-haefhbgrd8dvcvc5.centralus-01.azurewebsites.net/swagger`
+- Healthcheck: `https://api-trilogia-cursos-dev-cr01-haefhbgrd8dvcvc5.centralus-01.azurewebsites.net/health`
+- Productos API: `https://api-trilogia-cursos-dev-cr01-haefhbgrd8dvcvc5.centralus-01.azurewebsites.net/api/productos`
+
+Pruebas aprobadas:
+
+- [x] Azure SQL DEV online.
+- [x] SSMS conecta a `DistribuidoraJJ_DB_DEV`.
+- [x] Stored Procedures principales validados.
+- [x] API local contra Azure SQL DEV.
+- [x] MVC local contra Azure SQL DEV.
+- [x] API Azure `/health`.
+- [x] API Azure `/swagger`.
+- [x] API Azure `/api/productos`.
+- [x] MVC Azure Home.
+- [x] MVC Azure Login.
+- [x] Login admin.
+- [x] Login cliente.
+- [x] Login vendedor/empleado.
+- [x] Admin.
+- [x] Shop.
+
+Pruebas recomendadas pendientes:
+
+- [ ] Checkout completo en Azure.
+- [ ] Carrito completo en Azure.
+- [ ] Facturacion completa en Azure.
+- [ ] Inventario completo en Azure.
+- [ ] Subida de imagenes en Azure.
+- [ ] Recuperacion de contrasena / SMTP real.
+- [ ] Pruebas con companeros desde otras IPs.
+
 ## Scripts SQL a validar en SSMS
 
 Estos scripts deben ejecutarse en la base `DistribuidoraJJ_DB` antes de pruebas funcionales completas:
