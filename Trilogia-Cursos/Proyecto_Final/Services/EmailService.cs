@@ -1,5 +1,7 @@
-using System.Net;
+﻿using System.Net;
 using System.Net.Mail;
+using System.Text;
+using Proyecto_Final.Models.Store;
 
 namespace Proyecto_Final.Services
 {
@@ -43,6 +45,64 @@ namespace Proyecto_Final.Services
             };
 
             smtp.Send(mensaje);
+        }
+
+        public void SendOrderReceipt(
+            string destinatario,
+            string cliente,
+            int pedidoId,
+            CheckoutViewModel checkout,
+            List<CartItemViewModel> items)
+        {
+            var rutaPlantilla = Path.Combine(
+                Directory.GetCurrentDirectory(),
+                "EmailTemplates",
+                "OrderReceipt.html");
+
+            if (!File.Exists(rutaPlantilla))
+            {
+                throw new FileNotFoundException(
+                    "No se encontró la plantilla del correo.",
+                    rutaPlantilla);
+            }
+
+            var html = File.ReadAllText(rutaPlantilla);
+
+            var productos = new StringBuilder();
+
+            foreach (var item in items)
+            {
+                productos.Append($"""
+<tr style="border-bottom:1px solid #eeeeee">
+    <td class="product" style="padding:14px">{item.Nombre}</td>
+    <td class="qty" align="center" style="padding:14px">{item.Cantidad}</td>
+    <td class="price" align="right" style="padding:14px">₡{item.Precio:N2}</td>
+    <td class="subtotal" align="right" style="padding:14px">₡{(item.Precio * item.Cantidad):N2}</td>
+</tr>
+""");
+            }
+
+            decimal subtotal = items.Sum(x => x.Precio * x.Cantidad);
+            decimal envio = 0;
+            decimal total = subtotal + envio;
+
+            html = html
+                .Replace("{{CLIENTE}}", cliente)
+                .Replace("{{PEDIDO}}", "#" + pedidoId)
+                .Replace("{{FECHA}}", DateTime.Now.ToString("dd/MM/yyyy HH:mm"))
+                .Replace("{{METODO_PAGO}}", checkout.MetodoPago)
+                .Replace("{{TIPO_ENTREGA}}", checkout.TipoEntrega)
+                .Replace("{{DIRECCION}}", checkout.DireccionEntrega)
+                .Replace("{{PRODUCTOS}}", productos.ToString())
+                .Replace("{{SUBTOTAL}}", $"₡{subtotal:N2}")
+                .Replace("{{ENVIO}}", $"₡{envio:N2}")
+                .Replace("{{TOTAL}}", $"₡{total:N2}")
+                .Replace("{{LINK_PEDIDO}}", "#");
+
+            SendEmail(
+                destinatario,
+                $"Confirmación del pedido #{pedidoId}",
+                html);
         }
     }
 }
