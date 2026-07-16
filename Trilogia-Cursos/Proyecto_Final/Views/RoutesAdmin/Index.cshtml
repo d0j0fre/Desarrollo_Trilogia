@@ -1,0 +1,121 @@
+@model IEnumerable<Proyecto_Final.Models.Admin.RouteListItemViewModel>
+@{
+    ViewData["Title"] = "Rutas de entrega";
+    var estadoActual = ViewBag.Estado as string;
+    var buscar = ViewBag.Buscar as string;
+
+    string BadgeEstado(string estado) => estado switch
+    {
+        "Planificada" => "warning",
+        "Despachada" => "dark",
+        "Completada" => "success",
+        "Cancelada" => "danger",
+        _ => "dark"
+    };
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header d-flex justify-content-between align-items-center flex-wrap">
+                <div>
+                    <h2 class="mb-2">Rutas y entregas</h2>
+                    <p class="mb-0">Genera y organiza rutas de reparto agrupando pedidos por zona y asignando chofer y vehículo.</p>
+                </div>
+                <a asp-action="Create" class="btn btn-primary mt-2 mt-md-0">
+                    <i class="fa fa-plus mr-2"></i>Nueva ruta
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-filter-bar">
+                <form asp-action="Index" method="get" class="row align-items-end">
+                    <div class="col-md-4 mb-3 mb-md-0">
+                        <label class="font-weight-bold">Estado</label>
+                        <select name="estado" class="form-control">
+                            <option value="">Todos</option>
+                            <option value="Planificada" selected="@(estadoActual == "Planificada")">Planificada</option>
+                            <option value="Despachada" selected="@(estadoActual == "Despachada")">Despachada</option>
+                            <option value="Completada" selected="@(estadoActual == "Completada")">Completada</option>
+                            <option value="Cancelada" selected="@(estadoActual == "Cancelada")">Cancelada</option>
+                        </select>
+                    </div>
+                    <div class="col-md-5 mb-3 mb-md-0">
+                        <label class="font-weight-bold">Buscar</label>
+                        <input type="text" name="buscar" value="@buscar" class="form-control" placeholder="Código, zona, chofer o placa" />
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary mr-2 mb-2"><i class="fa fa-search mr-2"></i>Filtrar</button>
+                        <a asp-action="Index" class="btn btn-outline-secondary mb-2"><i class="fa fa-eraser mr-2"></i>Limpiar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-12">
+            <div class="admin-table-wrapper">
+                <div class="p-4 border-bottom d-flex justify-content-between align-items-center flex-wrap">
+                    <h5 class="mb-2 mb-md-0">Listado de rutas</h5>
+                    <span class="text-muted">Total registros: @(Model?.Count() ?? 0)</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Código</th>
+                                <th>Zona</th>
+                                <th>Chofer</th>
+                                <th>Vehículo</th>
+                                <th>Estado</th>
+                                <th class="text-center">Pedidos</th>
+                                <th class="text-center">Progreso</th>
+                                <th>Creada</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model == null || !Model.Any())
+                            {
+                                <tr><td colspan="9" class="text-center text-muted py-4">No hay rutas registradas.</td></tr>
+                            }
+                            else
+                            {
+                                @foreach (var r in Model)
+                                {
+                                    <tr>
+                                        <td class="font-weight-bold">@r.Codigo</td>
+                                        <td>@r.Zona</td>
+                                        <td>@r.Chofer</td>
+                                        <td>@r.VehiculoPlaca</td>
+                                        <td><span class="admin-badge-soft @BadgeEstado(r.Estado)">@r.Estado</span></td>
+                                        <td class="text-center">@r.TotalPedidos</td>
+                                        <td class="text-center">
+                                            <span class="text-success">@r.Entregados&nbsp;<i class="fa fa-check"></i></span> /
+                                            <span class="text-danger">@r.Fallidos&nbsp;<i class="fa fa-times"></i></span> /
+                                            <span class="text-muted">@r.Pendientes&nbsp;<i class="fa fa-clock"></i></span>
+                                        </td>
+                                        <td>@r.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td class="text-center">
+                                            <a asp-action="Detail" asp-route-id="@r.RutaId" class="btn btn-sm btn-outline-primary mb-1">
+                                                <i class="fa fa-eye mr-1"></i>Ver
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

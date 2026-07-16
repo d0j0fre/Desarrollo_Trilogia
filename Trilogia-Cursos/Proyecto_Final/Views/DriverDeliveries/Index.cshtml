@@ -1,0 +1,56 @@
+@model IEnumerable<Proyecto_Final.Models.Admin.DriverRouteItemViewModel>
+@{
+    ViewData["Title"] = "Mis entregas";
+    string BadgeEstado(string e) => e switch { "Planificada" => "warning", "Despachada" => "dark", "Completada" => "success", _ => "dark" };
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header">
+                <h2 class="mb-2">Mis entregas</h2>
+                <p class="mb-0">Rutas asignadas a tu cuenta. Abre una ruta despachada para actualizar el estado de cada entrega.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        @if (Model == null || !Model.Any())
+        {
+            <div class="col-12">
+                <div class="alert alert-info">No tienes rutas asignadas por el momento.</div>
+            </div>
+        }
+        else
+        {
+            @foreach (var r in Model)
+            {
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="admin-table-wrapper h-100 p-4">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <h5 class="mb-1">@r.Codigo</h5>
+                            <span class="admin-badge-soft @BadgeEstado(r.Estado)">@r.Estado</span>
+                        </div>
+                        <p class="text-muted mb-2">Zona: <strong>@r.Zona</strong></p>
+                        <p class="mb-1"><i class="fa fa-truck mr-2"></i>@r.VehiculoPlaca</p>
+                        @if (r.FechaDespacho.HasValue)
+                        {
+                            <p class="mb-1"><i class="fa fa-clock mr-2"></i>Despachada @r.FechaDespacho.Value.ToString("dd/MM/yyyy HH:mm")</p>
+                        }
+                        <p class="mb-3">
+                            <span class="text-success">@r.Entregados entregado(s)</span> ·
+                            <span class="text-muted">@r.Pendientes pendiente(s)</span> de @r.TotalPedidos
+                        </p>
+                        <a asp-action="Route" asp-route-id="@r.RutaId" class="btn btn-primary btn-block">
+                            <i class="fa fa-list-ul mr-2"></i>Ver entregas
+                        </a>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>

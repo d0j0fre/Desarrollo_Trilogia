@@ -56,7 +56,11 @@ namespace Proyecto_Final.Middleware
                 || path.StartsWithSegments("/Roles")
                 || path.StartsWithSegments("/Permissions")
                 || path.StartsWithSegments("/Audit")
-                || path.StartsWithSegments("/SellerOrders");
+                || path.StartsWithSegments("/SellerOrders")
+                || path.StartsWithSegments("/RoutesAdmin")
+                || path.StartsWithSegments("/Vehicles")
+                || path.StartsWithSegments("/DriverDeliveries")
+                || path.StartsWithSegments("/ManagementDashboard");
         }
     }
 }

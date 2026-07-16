@@ -54,6 +54,7 @@
             || string.Equals(userRole, "Vendedor", StringComparison.OrdinalIgnoreCase));
         var isClient = isLoggedIn && string.Equals(userRole, "Cliente", StringComparison.OrdinalIgnoreCase);
         var isGerente = isLoggedIn && string.Equals(userRole, "Gerente", StringComparison.OrdinalIgnoreCase);
+        var isChofer = isLoggedIn && string.Equals(userRole, "Chofer", StringComparison.OrdinalIgnoreCase);
         var categoriasLayout = await AdminDbService.GetStoreCategoriesAsync();
     }
 
@@ -159,6 +160,16 @@
                                 <a asp-controller="ManagerOrders" asp-action="Index" class="nav-item nav-link nav-highlight">
                                     <i class="fa fa-clipboard-check mr-1"></i>Pedidos retenidos
                                 </a>
+                                <a asp-controller="ManagementDashboard" asp-action="Index" class="nav-item nav-link nav-highlight">
+                                    <i class="fa fa-chart-line mr-1"></i>Tablero
+                                </a>
+                            }
+
+                            @if (isChofer)
+                            {
+                                <a asp-controller="DriverDeliveries" asp-action="Index" class="nav-item nav-link nav-highlight">
+                                    <i class="fa fa-truck mr-1"></i>Mis entregas
+                                </a>
                             }
 
                             @if (isAdmin)
@@ -174,6 +185,9 @@
                                         <a asp-controller="OrdersAdmin" asp-action="Index" class="dropdown-item"><i class="fa fa-clipboard-list"></i> Pedidos</a>
                                         <a asp-controller="Billing" asp-action="Index" class="dropdown-item"><i class="fa fa-file-invoice-dollar"></i> Facturación</a>
                                         <a asp-controller="AccountsReceivableAdmin" asp-action="Index" class="dropdown-item"><i class="fa fa-solid fa-receipt"></i> Cuentas por Cobrar</a>
+                                        <a asp-controller="RoutesAdmin" asp-action="Index" class="dropdown-item"><i class="fa fa-route"></i> Rutas y Entregas</a>
+                                        <a asp-controller="Vehicles" asp-action="Index" class="dropdown-item"><i class="fa fa-truck"></i> Vehículos</a>
+                                        <a asp-controller="ManagementDashboard" asp-action="Index" class="dropdown-item"><i class="fa fa-chart-line"></i> Tablero gerencial</a>
                                     </div>
                                 </div>
 

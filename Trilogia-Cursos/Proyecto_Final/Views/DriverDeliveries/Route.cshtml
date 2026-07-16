@@ -1,0 +1,187 @@
+@model Proyecto_Final.Models.Admin.DriverRouteViewModel
+@{
+    ViewData["Title"] = $"Ruta {Model.Codigo}";
+    var editable = Model.Estado == "Despachada";
+    string BadgeEntrega(string e) => e switch { "EnRuta" => "dark", "Entregado" => "success", "Fallido" => "danger", _ => "warning" };
+    string TextoEntrega(string e) => e switch { "EnRuta" => "En ruta", _ => e };
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+    <style>
+        .sig-canvas { border: 1px dashed #bbb; border-radius: 6px; touch-action: none; background: #fff; width: 100%; max-width: 320px; height: 140px; }
+        .delivery-card { border: 1px solid #eee; border-radius: 10px; }
+    </style>
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header d-flex justify-content-between align-items-center flex-wrap">
+                <div>
+                    <h2 class="mb-2">Ruta @Model.Codigo</h2>
+                    <p class="mb-0">Zona: <strong>@Model.Zona</strong> · Vehículo: <strong>@Model.VehiculoPlaca</strong></p>
+                </div>
+                <div class="mt-2 mt-md-0 text-right">
+                    <span id="connectionBadge" class="badge badge-success"><i class="fa fa-wifi mr-1"></i>En línea</span>
+                    <span style="display:none;"><span class="badge badge-warning">Pendientes: <span id="pendingSyncBadge">0</span></span></span>
+                    <br />
+                    <a asp-action="Index" class="btn btn-outline-secondary btn-sm mt-2"><i class="fa fa-arrow-left mr-1"></i>Mis rutas</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div id="driverToast" class="alert" style="display:none;"></div>
+            @if (!editable)
+            {
+                <div class="alert alert-info">Esta ruta está en estado <strong>@Model.Estado</strong>. Solo puedes actualizar entregas de una ruta despachada.</div>
+            }
+        </div>
+    </div>
+
+    @Html.AntiForgeryToken()
+
+    <div class="row px-xl-5 pb-5">
+        @foreach (var d in Model.Entregas)
+        {
+            <div class="col-lg-6 mb-4">
+                <div class="delivery-card p-3 h-100 delivery-card-root" data-rutapedidoid="@d.RutaPedidoId" data-estado="@d.EstadoEntrega">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h5 class="mb-1">#@d.PedidoId · @d.Cliente</h5>
+                            <p class="mb-1"><i class="fa fa-map-marker-alt mr-2 text-primary"></i>@d.DireccionEntrega</p>
+                            @if (!string.IsNullOrWhiteSpace(d.Telefono))
+                            {
+                                <p class="mb-1"><i class="fa fa-phone mr-2"></i>@d.Telefono</p>
+                            }
+                            <p class="mb-1">Total: <strong>₡@d.Total.ToString("N2")</strong></p>
+                        </div>
+                        <span class="admin-badge-soft @BadgeEntrega(d.EstadoEntrega)">
+                            <span class="delivery-status-label">@TextoEntrega(d.EstadoEntrega)</span>
+                        </span>
+                    </div>
+
+                    @if (editable && d.EstadoEntrega != "Entregado" && d.EstadoEntrega != "Fallido")
+                    {
+                        <hr />
+                        <div class="delivery-actions d-flex flex-wrap">
+                            <button type="button" class="btn btn-sm btn-outline-dark mr-2 mb-2" data-action="EnRuta"><i class="fa fa-truck mr-1"></i>En ruta</button>
+                            <button type="button" class="btn btn-sm btn-success mr-2 mb-2" data-action="Entregado"><i class="fa fa-check mr-1"></i>Entregado</button>
+                            <button type="button" class="btn btn-sm btn-outline-danger mb-2" data-action="Fallido"><i class="fa fa-times mr-1"></i>Fallido</button>
+                        </div>
+                        <div class="fallido-box mt-2" hidden>
+                            <div class="form-group mb-2">
+                                <input type="text" class="fallido-motivo form-control form-control-sm" maxlength="300" placeholder="Motivo del fallo" />
+                            </div>
+                            <button type="button" class="btn btn-sm btn-danger" data-action="Fallido-confirm">Confirmar fallo</button>
+                        </div>
+                    }
+
+                    @if (d.EstadoEntrega == "Fallido" && !string.IsNullOrWhiteSpace(d.MotivoFallo))
+                    {
+                        <p class="text-danger mt-2 mb-0"><small>Motivo: @d.MotivoFallo</small></p>
+                    }
+
+                    @* CU-083 — Evidencia de entrega (foto o firma) *@
+                    @if (editable)
+                    {
+                        <hr />
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="collapse" data-target="#ev-@d.RutaPedidoId">
+                            <i class="fa fa-camera mr-1"></i>Registrar evidencia (@d.TotalEvidencias)
+                        </button>
+                        <div class="collapse mt-3" id="ev-@d.RutaPedidoId">
+                            <ul class="nav nav-tabs" role="tablist">
+                                <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#foto-@d.RutaPedidoId">Foto</a></li>
+                                <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#firma-@d.RutaPedidoId">Firma</a></li>
+                            </ul>
+                            <div class="tab-content pt-3">
+                                <div class="tab-pane fade show active" id="foto-@d.RutaPedidoId">
+                                    <form asp-action="RegisterEvidence" method="post" enctype="multipart/form-data">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="pedidoId" value="@d.PedidoId" />
+                                        <input type="hidden" name="rutaId" value="@Model.RutaId" />
+                                        <input type="hidden" name="tipo" value="Foto" />
+                                        <div class="form-group">
+                                            <input type="file" name="archivo" accept="image/*" capture="environment" class="form-control-file" required />
+                                        </div>
+                                        <div class="form-group">
+                                            <input type="text" name="observaciones" class="form-control form-control-sm" maxlength="300" placeholder="Observaciones (opcional)" />
+                                        </div>
+                                        <button type="submit" class="btn btn-sm btn-primary"><i class="fa fa-upload mr-1"></i>Guardar foto</button>
+                                    </form>
+                                </div>
+                                <div class="tab-pane fade" id="firma-@d.RutaPedidoId">
+                                    <form asp-action="RegisterEvidence" method="post" class="sig-form">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="pedidoId" value="@d.PedidoId" />
+                                        <input type="hidden" name="rutaId" value="@Model.RutaId" />
+                                        <input type="hidden" name="tipo" value="Firma" />
+                                        <input type="hidden" name="firmaBase64" class="sig-data" />
+                                        <canvas class="sig-canvas" width="320" height="140"></canvas>
+                                        <div class="form-group mt-2">
+                                            <input type="text" name="observaciones" class="form-control form-control-sm" maxlength="300" placeholder="Observaciones (opcional)" />
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary sig-clear"><i class="fa fa-eraser mr-1"></i>Limpiar</button>
+                                        <button type="submit" class="btn btn-sm btn-primary"><i class="fa fa-signature mr-1"></i>Guardar firma</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else if (d.TotalEvidencias > 0)
+                    {
+                        <hr />
+                        <p class="mb-0 text-success"><i class="fa fa-check-circle mr-1"></i>@d.TotalEvidencias evidencia(s) registrada(s)</p>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        window.driverDeliveriesConfig = {
+            updateUrl: '@Url.Action("UpdateStatus", "DriverDeliveries")',
+            token: document.querySelector('input[name="__RequestVerificationToken"]').value
+        };
+    </script>
+    <script src="~/js/driver-deliveries.js" asp-append-version="true"></script>
+    <script>
+        // Firma en canvas (mínimo, sin dependencias).
+        (function () {
+            document.querySelectorAll('.sig-form').forEach(function (form) {
+                var canvas = form.querySelector('.sig-canvas');
+                if (!canvas) return;
+                var ctx = canvas.getContext('2d');
+                var drawing = false, dirty = false;
+                ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.strokeStyle = '#222';
+
+                function pos(e) {
+                    var rect = canvas.getBoundingClientRect();
+                    var t = e.touches ? e.touches[0] : e;
+                    return { x: (t.clientX - rect.left) * (canvas.width / rect.width), y: (t.clientY - rect.top) * (canvas.height / rect.height) };
+                }
+                function start(e) { drawing = true; dirty = true; var p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); e.preventDefault(); }
+                function move(e) { if (!drawing) return; var p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); e.preventDefault(); }
+                function end() { drawing = false; }
+
+                canvas.addEventListener('mousedown', start); canvas.addEventListener('mousemove', move);
+                window.addEventListener('mouseup', end);
+                canvas.addEventListener('touchstart', start); canvas.addEventListener('touchmove', move);
+                canvas.addEventListener('touchend', end);
+
+                var clearBtn = form.querySelector('.sig-clear');
+                if (clearBtn) clearBtn.addEventListener('click', function () { ctx.clearRect(0, 0, canvas.width, canvas.height); dirty = false; });
+
+                form.addEventListener('submit', function (e) {
+                    if (!dirty) { e.preventDefault(); alert('Capture la firma antes de guardar.'); return; }
+                    form.querySelector('.sig-data').value = canvas.toDataURL('image/png');
+                });
+            });
+        })();
+    </script>
+}
