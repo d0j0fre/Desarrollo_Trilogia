@@ -28,6 +28,8 @@ namespace Proyecto_Final.Models.Admin
         public string DireccionEntrega { get; set; } = string.Empty;
         public decimal Total { get; set; }
         public int TotalEvidencias { get; set; }
+        public decimal? Latitud { get; set; }
+        public decimal? Longitud { get; set; }
     }
 
     public class DriverRouteViewModel

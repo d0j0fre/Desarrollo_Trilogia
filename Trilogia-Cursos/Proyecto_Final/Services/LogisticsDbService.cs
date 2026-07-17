@@ -36,7 +36,8 @@ namespace Proyecto_Final.Services
                     Descripcion = reader.GetString(2),
                     Capacidad = reader.IsDBNull(3) ? 0 : reader.GetInt32(3),
                     Activo = !reader.IsDBNull(4) && reader.GetBoolean(4),
-                    RutasAbiertas = reader.IsDBNull(5) ? 0 : reader.GetInt32(5)
+                    RutasAbiertas = reader.IsDBNull(5) ? 0 : reader.GetInt32(5),
+                    Marca = reader.IsDBNull(6) ? string.Empty : reader.GetString(6)
                 });
             }
             return lista;
@@ -57,7 +58,8 @@ namespace Proyecto_Final.Services
                     Placa = reader.GetString(1),
                     Descripcion = reader.GetString(2),
                     Capacidad = reader.IsDBNull(3) ? 0 : reader.GetInt32(3),
-                    Activo = !reader.IsDBNull(4) && reader.GetBoolean(4)
+                    Activo = !reader.IsDBNull(4) && reader.GetBoolean(4),
+                    Marca = reader.IsDBNull(5) ? null : reader.GetString(5)
                 };
             }
             return null;
@@ -71,6 +73,7 @@ namespace Proyecto_Final.Services
             command.Parameters.Add("@Descripcion", SqlDbType.NVarChar, 150).Value = model.Descripcion.Trim();
             command.Parameters.Add("@Capacidad", SqlDbType.Int).Value = model.Capacidad;
             command.Parameters.Add("@Activo", SqlDbType.Bit).Value = model.Activo;
+            command.Parameters.Add("@Marca", SqlDbType.NVarChar, 60).Value = string.IsNullOrWhiteSpace(model.Marca) ? DBNull.Value : model.Marca.Trim();
             await connection.OpenAsync();
             var result = await command.ExecuteScalarAsync();
             return result is int id ? id : Convert.ToInt32(result);
@@ -85,6 +88,7 @@ namespace Proyecto_Final.Services
             command.Parameters.Add("@Descripcion", SqlDbType.NVarChar, 150).Value = model.Descripcion.Trim();
             command.Parameters.Add("@Capacidad", SqlDbType.Int).Value = model.Capacidad;
             command.Parameters.Add("@Activo", SqlDbType.Bit).Value = model.Activo;
+            command.Parameters.Add("@Marca", SqlDbType.NVarChar, 60).Value = string.IsNullOrWhiteSpace(model.Marca) ? DBNull.Value : model.Marca.Trim();
             await connection.OpenAsync();
             await command.ExecuteNonQueryAsync();
         }
@@ -277,7 +281,9 @@ namespace Proyecto_Final.Services
                     DireccionEntrega = reader.IsDBNull(8) ? string.Empty : reader.GetString(8),
                     Total = reader.IsDBNull(9) ? 0 : reader.GetDecimal(9),
                     EstadoPedido = reader.IsDBNull(10) ? string.Empty : reader.GetString(10),
-                    TotalEvidencias = reader.IsDBNull(11) ? 0 : reader.GetInt32(11)
+                    TotalEvidencias = reader.IsDBNull(11) ? 0 : reader.GetInt32(11),
+                    Latitud = reader.IsDBNull(12) ? null : reader.GetDecimal(12),
+                    Longitud = reader.IsDBNull(13) ? null : reader.GetDecimal(13)
                 });
             }
             return lista;
@@ -321,6 +327,59 @@ namespace Proyecto_Final.Services
                     reader.IsDBNull(2) ? string.Empty : reader.GetString(2)));
             }
             return destinatarios;
+        }
+
+        // CU-251 E1 — Secuenciar automáticamente (vecino más cercano). Devuelve puntos secuenciados.
+        public async Task<int> SequenceRouteAsync(int rutaId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Rutas_Secuenciar", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.Add("@RutaId", SqlDbType.Int).Value = rutaId;
+            await connection.OpenAsync();
+            var result = await command.ExecuteScalarAsync();
+            return result is int n ? n : Convert.ToInt32(result ?? 0);
+        }
+
+        // CU-251 E3 — Guardar secuencia manual + coordenadas.
+        public async Task SaveSequenceAsync(int rutaId, string itemsJson)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Rutas_GuardarSecuencia", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.Add("@RutaId", SqlDbType.Int).Value = rutaId;
+            command.Parameters.Add("@ItemsJson", SqlDbType.NVarChar, -1).Value = itemsJson;
+            await connection.OpenAsync();
+            await command.ExecuteNonQueryAsync();
+        }
+
+        // CU-253 — Recalcular ruta despachada. Devuelve puntos re-secuenciados.
+        public async Task<int> RecalculateRouteAsync(int rutaId, int? excluirRutaPedidoId, string? motivoFallo)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Rutas_Recalcular", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.Add("@RutaId", SqlDbType.Int).Value = rutaId;
+            command.Parameters.Add("@ExcluirRutaPedidoId", SqlDbType.Int).Value = excluirRutaPedidoId.HasValue && excluirRutaPedidoId > 0 ? excluirRutaPedidoId.Value : DBNull.Value;
+            command.Parameters.Add("@MotivoFallo", SqlDbType.NVarChar, 300).Value = string.IsNullOrWhiteSpace(motivoFallo) ? DBNull.Value : motivoFallo.Trim();
+            await connection.OpenAsync();
+            var result = await command.ExecuteScalarAsync();
+            return result is int n ? n : Convert.ToInt32(result ?? 0);
+        }
+
+        // CU-105 — Liquidar ruta: reingresa al inventario la mercadería no entregada
+        // y cierra la ruta. Devuelve (pedidos reingresados, unidades reingresadas).
+        public async Task<(int PedidosReingresados, int UnidadesReingresadas)> LiquidateRouteAsync(int rutaId, int usuarioId, string usuarioNombre)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Rutas_Liquidar", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.Add("@RutaId", SqlDbType.Int).Value = rutaId;
+            command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId > 0 ? usuarioId : DBNull.Value;
+            command.Parameters.Add("@Nombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(usuarioNombre) ? DBNull.Value : usuarioNombre.Trim();
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+            if (await reader.ReadAsync())
+            {
+                return (reader.IsDBNull(0) ? 0 : reader.GetInt32(0), reader.IsDBNull(1) ? 0 : reader.GetInt32(1));
+            }
+            return (0, 0);
         }
 
         public async Task CancelRouteAsync(int rutaId, string? motivo, int usuarioId, string usuarioNombre)
@@ -403,7 +462,9 @@ namespace Proyecto_Final.Services
                         Telefono = reader.IsDBNull(7) ? string.Empty : reader.GetString(7),
                         DireccionEntrega = reader.IsDBNull(8) ? string.Empty : reader.GetString(8),
                         Total = reader.IsDBNull(9) ? 0 : reader.GetDecimal(9),
-                        TotalEvidencias = reader.IsDBNull(10) ? 0 : reader.GetInt32(10)
+                        TotalEvidencias = reader.IsDBNull(10) ? 0 : reader.GetInt32(10),
+                        Latitud = reader.IsDBNull(11) ? null : reader.GetDecimal(11),
+                        Longitud = reader.IsDBNull(12) ? null : reader.GetDecimal(12)
                     });
                 }
             }

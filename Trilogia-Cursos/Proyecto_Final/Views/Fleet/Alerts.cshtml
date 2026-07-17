@@ -1,0 +1,113 @@
+@model Proyecto_Final.Models.Admin.FleetAlertsViewModel
+@{
+    ViewData["Title"] = "Alertas de flota";
+    var vehiculos = ViewBag.Vehiculos as List<Proyecto_Final.Models.Admin.VehicleOptionViewModel> ?? new();
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header">
+                <h2 class="mb-2">Alertas de flota</h2>
+                <p class="mb-0">Vencimientos legales y mantenimientos preventivos próximos o vencidos, para evitar averías mayores o multas.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-lg-8 mb-4">
+            <div class="admin-filter-bar mb-3">
+                <form asp-action="Alerts" method="get" class="form-inline">
+                    <label class="mr-2 mb-2">Avisar con</label>
+                    <input type="number" name="diasAviso" value="@Model.DiasAviso" min="1" max="180" class="form-control mr-2 mb-2" style="width:90px" />
+                    <span class="mr-2 mb-2">días de anticipación</span>
+                    <button type="submit" class="btn btn-primary mb-2"><i class="fa fa-sync mr-2"></i>Actualizar</button>
+                </form>
+            </div>
+
+            <div class="admin-table-wrapper">
+                <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Alertas activas</h5>
+                    <span class="text-muted">Total: @Model.Alertas.Count</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Categoría</th>
+                                <th>Vehículo</th>
+                                <th>Detalle</th>
+                                <th class="text-center">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!Model.Alertas.Any())
+                            {
+                                <tr><td colspan="4" class="text-center text-muted py-4"><i class="fa fa-check-circle text-success mr-2"></i>Sin alertas pendientes.</td></tr>
+                            }
+                            else
+                            {
+                                @foreach (var a in Model.Alertas)
+                                {
+                                    var badge = a.Severidad == "Vencido" ? "danger" : "warning";
+                                    var texto = a.Severidad == "Vencido"
+                                        ? "Vencido"
+                                        : (a.DiasRestantes.HasValue ? $"En {a.DiasRestantes} día(s)" : "Por vencer");
+                                    var icono = a.Categoria == "Documento" ? "fa-file-contract" : "fa-wrench";
+                                    <tr>
+                                        <td><i class="fa @icono mr-2 text-muted"></i>@a.Categoria</td>
+                                        <td class="font-weight-bold">@a.VehiculoPlaca</td>
+                                        <td>@a.Detalle</td>
+                                        <td class="text-center"><span class="admin-badge-soft @badge">@texto</span></td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-4">
+            <div class="admin-table-wrapper p-4">
+                <h5 class="mb-3">Registrar documento legal</h5>
+                <p class="text-muted small">Marchamo, RTV, seguro u otro documento con fecha de vencimiento.</p>
+                <form asp-action="CreateDocument" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="form-group">
+                        <label class="font-weight-bold">Vehículo</label>
+                        <select asp-for="NuevoDocumento.VehiculoId" class="form-control">
+                            <option value="">-- Seleccione --</option>
+                            @foreach (var v in vehiculos)
+                            {
+                                <option value="@v.VehiculoId">@v.Placa — @v.Descripcion</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Tipo</label>
+                        <select asp-for="NuevoDocumento.Tipo" class="form-control">
+                            <option value="Marchamo">Marchamo</option>
+                            <option value="RTV">RTV (Riteve)</option>
+                            <option value="Seguro">Seguro</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Fecha de vencimiento</label>
+                        <input asp-for="NuevoDocumento.FechaVencimiento" class="form-control" type="date" />
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Observaciones</label>
+                        <input asp-for="NuevoDocumento.Observaciones" class="form-control" />
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block"><i class="fa fa-save mr-2"></i>Registrar documento</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -60,7 +60,11 @@ namespace Proyecto_Final.Middleware
                 || path.StartsWithSegments("/RoutesAdmin")
                 || path.StartsWithSegments("/Vehicles")
                 || path.StartsWithSegments("/DriverDeliveries")
-                || path.StartsWithSegments("/ManagementDashboard");
+                || path.StartsWithSegments("/ManagementDashboard")
+                || path.StartsWithSegments("/Returns")
+                || path.StartsWithSegments("/Fleet")
+                || path.StartsWithSegments("/Assets")
+                || path.StartsWithSegments("/Assistant");
         }
     }
 }

@@ -53,6 +53,8 @@ namespace Proyecto_Final.Models.Admin
         public decimal Total { get; set; }
         public string EstadoPedido { get; set; } = string.Empty;
         public int TotalEvidencias { get; set; }
+        public decimal? Latitud { get; set; }
+        public decimal? Longitud { get; set; }
     }
 
     // ── Pedido asignable a una ruta ─────────────────────────

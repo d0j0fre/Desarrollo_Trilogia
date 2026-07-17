@@ -1,0 +1,158 @@
+@model Proyecto_Final.Models.Admin.MaintenanceIndexViewModel
+@{
+    ViewData["Title"] = "Mantenimiento de flota";
+    var vehiculos = ViewBag.Vehiculos as List<Proyecto_Final.Models.Admin.VehicleOptionViewModel> ?? new();
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header">
+                <h2 class="mb-2">Órdenes de mantenimiento</h2>
+                <p class="mb-0">Registra el mantenimiento preventivo y correctivo de cada vehículo para llevar control de los gastos del taller.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-lg-4 mb-4">
+            <div class="admin-table-wrapper p-4">
+                <h5 class="mb-3">Nueva orden</h5>
+                <form asp-action="CreateMaintenance" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="All" class="text-danger"></div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Vehículo</label>
+                        <select asp-for="Nueva.VehiculoId" class="form-control">
+                            <option value="">-- Seleccione --</option>
+                            @foreach (var v in vehiculos)
+                            {
+                                <option value="@v.VehiculoId">@v.Placa — @v.Descripcion</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Tipo</label>
+                        <select asp-for="Nueva.Tipo" class="form-control">
+                            <option value="Preventivo">Preventivo</option>
+                            <option value="Correctivo">Correctivo</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Descripción</label>
+                        <textarea asp-for="Nueva.Descripcion" class="form-control" rows="2" placeholder="Ej: cambio de aceite y filtros"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Taller</label>
+                        <input asp-for="Nueva.Taller" class="form-control" />
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-6">
+                            <label class="font-weight-bold">Costo (₡)</label>
+                            <input asp-for="Nueva.Costo" class="form-control" type="number" step="0.01" min="0" />
+                        </div>
+                        <div class="form-group col-6">
+                            <label class="font-weight-bold">Estado</label>
+                            <select asp-for="Nueva.Estado" class="form-control">
+                                <option value="Programada">Programada</option>
+                                <option value="EnProceso">En proceso</option>
+                                <option value="Completada">Completada</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-6">
+                            <label class="font-weight-bold">Fecha programada</label>
+                            <input asp-for="Nueva.FechaProgramada" class="form-control" type="date" />
+                        </div>
+                        <div class="form-group col-6">
+                            <label class="font-weight-bold">Próximo (km)</label>
+                            <input asp-for="Nueva.KilometrajeProximo" class="form-control" type="number" min="0" placeholder="Aviso por desgaste" />
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block"><i class="fa fa-wrench mr-2"></i>Registrar orden</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="admin-filter-bar mb-3">
+                <form asp-action="Maintenance" method="get" class="form-inline">
+                    <select name="estado" class="form-control mr-2 mb-2">
+                        <option value="">Todos los estados</option>
+                        <option value="Programada" selected="@(Model.Estado == "Programada")">Programada</option>
+                        <option value="EnProceso" selected="@(Model.Estado == "EnProceso")">En proceso</option>
+                        <option value="Completada" selected="@(Model.Estado == "Completada")">Completada</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary mr-2 mb-2"><i class="fa fa-filter mr-2"></i>Filtrar</button>
+                    <a asp-action="Maintenance" class="btn btn-outline-secondary mb-2"><i class="fa fa-eraser mr-2"></i>Limpiar</a>
+                </form>
+            </div>
+
+            <div class="admin-table-wrapper">
+                <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Historial de mantenimiento</h5>
+                    <span class="text-muted">Total: @Model.Ordenes.Count</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Vehículo</th>
+                                <th>Tipo</th>
+                                <th>Descripción</th>
+                                <th class="text-right">Costo</th>
+                                <th class="text-center">Estado</th>
+                                <th class="text-center">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!Model.Ordenes.Any())
+                            {
+                                <tr><td colspan="6" class="text-center text-muted py-4">No hay órdenes registradas.</td></tr>
+                            }
+                            else
+                            {
+                                @foreach (var o in Model.Ordenes)
+                                {
+                                    var badge = o.Estado == "Completada" ? "success" : (o.Estado == "EnProceso" ? "dark" : "warning");
+                                    var tipoBadge = o.Tipo == "Preventivo" ? "info" : "danger";
+                                    <tr>
+                                        <td class="font-weight-bold">@o.VehiculoPlaca</td>
+                                        <td><span class="admin-badge-soft @tipoBadge">@o.Tipo</span></td>
+                                        <td>@o.Descripcion<br /><small class="text-muted">@o.Taller</small></td>
+                                        <td class="text-right">₡@o.Costo.ToString("N2")</td>
+                                        <td class="text-center"><span class="admin-badge-soft @badge">@o.Estado</span></td>
+                                        <td class="text-center">
+                                            @if (o.Estado != "Completada")
+                                            {
+                                                <form asp-action="CompleteMaintenance" method="post" class="d-inline"
+                                                      onsubmit="return confirm('¿Marcar la orden como completada?');">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="ordenId" value="@o.OrdenMantenimientoId" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-success"><i class="fa fa-check"></i></button>
+                                                </form>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">@o.FechaRealizada?.ToString("dd/MM/yyyy")</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

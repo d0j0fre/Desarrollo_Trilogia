@@ -8,9 +8,12 @@
 
 @section Styles {
     <link href="~/css/custom-theme.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         .sig-canvas { border: 1px dashed #bbb; border-radius: 6px; touch-action: none; background: #fff; width: 100%; max-width: 320px; height: 140px; }
         .delivery-card { border: 1px solid #eee; border-radius: 10px; }
+        #routeMap { height: 340px; border-radius: 10px; z-index: 0; }
+        .route-pin { background:#0b5ed7; color:#fff; border-radius:50%; width:26px; height:26px; display:flex; align-items:center; justify-content:center; font-weight:700; border:2px solid #fff; box-shadow:0 0 4px rgba(0,0,0,.4); }
     </style>
 }
 
@@ -39,6 +42,25 @@
             {
                 <div class="alert alert-info">Esta ruta está en estado <strong>@Model.Estado</strong>. Solo puedes actualizar entregas de una ruta despachada.</div>
             }
+        </div>
+    </div>
+
+    @* CU-252 — Mapa con la ruta y el orden de visitas *@
+    <div class="row px-xl-5 mb-4">
+        <div class="col-12">
+            <div class="admin-table-wrapper p-2">
+                <div class="d-flex justify-content-between align-items-center p-2 flex-wrap">
+                    <h6 class="mb-0"><i class="fa fa-map-marked-alt mr-2 text-primary"></i>Ruta sugerida en el mapa</h6>
+                    <button type="button" id="refreshRouteBtn" class="btn btn-sm btn-outline-primary"><i class="fa fa-sync mr-1"></i>Actualizar ruta</button>
+                </div>
+                <div id="mapOfflineBanner" class="alert alert-warning m-2" style="display:none;">
+                    <i class="fa fa-wifi-slash mr-1"></i>Sin conexión: se muestra la última ruta descargada. Los datos podrían no estar actualizados.
+                </div>
+                <div id="noCoordsBanner" class="alert alert-secondary m-2" style="display:none;">
+                    Aún no hay coordenadas capturadas para esta ruta. Contacte a logística para secuenciarla.
+                </div>
+                <div id="routeMap"></div>
+            </div>
         </div>
     </div>
 
@@ -150,6 +172,66 @@
         };
     </script>
     <script src="~/js/driver-deliveries.js" asp-append-version="true"></script>
+
+    @* CU-252 — Mapa de la ruta (Leaflet + OpenStreetMap) con caché offline *@
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        (function () {
+            var routeId = @Model.RutaId;
+            var storageKey = 'driverRoute_' + routeId;
+            // Puntos con coordenadas, en el orden de visita
+            var liveStops = [
+                @foreach (var d in Model.Entregas.Where(x => x.Latitud.HasValue && x.Longitud.HasValue))
+                {
+                    @:{ seq: @d.Secuencia, cliente: '@Html.Raw(System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(d.Cliente))', dir: '@Html.Raw(System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(d.DireccionEntrega))', estado: '@d.EstadoEntrega', lat: @d.Latitud.GetValueOrDefault().ToString(System.Globalization.CultureInfo.InvariantCulture), lng: @d.Longitud.GetValueOrDefault().ToString(System.Globalization.CultureInfo.InvariantCulture) },
+                }
+            ];
+
+            var offline = !navigator.onLine;
+            var stops = liveStops;
+
+            // E2: sin conexión, usar la última ruta descargada
+            if (offline) {
+                try {
+                    var cached = JSON.parse(localStorage.getItem(storageKey) || 'null');
+                    if (cached && cached.length) { stops = cached; document.getElementById('mapOfflineBanner').style.display = 'block'; }
+                } catch (e) { }
+            } else if (liveStops.length) {
+                // En línea: guardar como última ruta descargada
+                try { localStorage.setItem(storageKey, JSON.stringify(liveStops)); } catch (e) { }
+            }
+
+            stops.sort(function (a, b) { return a.seq - b.seq; });
+
+            if (!stops.length) {
+                document.getElementById('noCoordsBanner').style.display = 'block';
+                return;
+            }
+
+            var map = L.map('routeMap');
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19, attribution: '© OpenStreetMap'
+            }).addTo(map);
+
+            var latlngs = [];
+            stops.forEach(function (s) {
+                var ll = [s.lat, s.lng];
+                latlngs.push(ll);
+                var icon = L.divIcon({ className: '', html: '<div class="route-pin">' + s.seq + '</div>', iconSize: [26, 26], iconAnchor: [13, 13] });
+                L.marker(ll, { icon: icon }).addTo(map)
+                    .bindPopup('<strong>#' + s.seq + ' · ' + s.cliente + '</strong><br/>' + s.dir + '<br/><em>' + s.estado + '</em>');
+            });
+
+            if (latlngs.length > 1) {
+                L.polyline(latlngs, { color: '#0b5ed7', weight: 3, opacity: 0.7 }).addTo(map);
+            }
+            map.fitBounds(L.latLngBounds(latlngs).pad(0.2));
+
+            // E3: la ruta se actualiza si es recalculada (recarga al pulsar o al reconectar)
+            document.getElementById('refreshRouteBtn').addEventListener('click', function () { location.reload(); });
+            window.addEventListener('online', function () { location.reload(); });
+        })();
+    </script>
     <script>
         // Firma en canvas (mínimo, sin dependencias).
         (function () {

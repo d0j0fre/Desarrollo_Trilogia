@@ -1,0 +1,107 @@
+@{
+    ViewData["Title"] = "Asistente virtual";
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+    <style>
+        .chat-shell { max-width: 820px; margin: 0 auto; }
+        .chat-window { height: 52vh; min-height: 320px; overflow-y: auto; background: #f7f8fa; border-radius: 12px; padding: 1rem; }
+        .chat-msg { display: flex; margin-bottom: .75rem; }
+        .chat-msg.user { justify-content: flex-end; }
+        .chat-bubble { max-width: 78%; padding: .6rem .9rem; border-radius: 14px; line-height: 1.4; }
+        .chat-msg.user .chat-bubble { background: #0b5ed7; color: #fff; border-bottom-right-radius: 4px; }
+        .chat-msg.bot .chat-bubble { background: #fff; border: 1px solid #e6e8ec; border-bottom-left-radius: 4px; }
+        .chat-bubble .chat-title { font-weight: 700; display: block; margin-bottom: .2rem; }
+        .chip { display: inline-block; background: #eef2f7; border: 1px solid #dbe3ec; border-radius: 999px; padding: .25rem .7rem; margin: .2rem .2rem 0 0; cursor: pointer; font-size: .85rem; }
+        .chip:hover { background: #e2e8f1; }
+    </style>
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header">
+                <h2 class="mb-2"><i class="fa fa-robot mr-2 text-primary"></i>Asistente virtual</h2>
+                <p class="mb-0">Pregunta por métricas del negocio o por cómo usar un módulo, en lenguaje natural.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-12 chat-shell">
+            @Html.AntiForgeryToken()
+            <div class="admin-table-wrapper p-3">
+                <div id="chatWindow" class="chat-window mb-3"></div>
+                <form id="chatForm" class="form-inline">
+                    <input type="text" id="chatInput" class="form-control flex-grow-1 mr-2 mb-2" autocomplete="off"
+                           placeholder="Ej: ¿cuánto vendimos este mes? o ¿cómo uso el módulo de rutas?" maxlength="500" />
+                    <button type="submit" class="btn btn-primary mb-2"><i class="fa fa-paper-plane mr-1"></i>Enviar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            var askUrl = '@Url.Action("Ask", "Assistant")';
+            var token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+            var win = document.getElementById('chatWindow');
+            var form = document.getElementById('chatForm');
+            var input = document.getElementById('chatInput');
+            var lastMetricIntent = '';
+
+            function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+            function addUser(text) {
+                win.insertAdjacentHTML('beforeend',
+                    '<div class="chat-msg user"><div class="chat-bubble">' + esc(text) + '</div></div>');
+                win.scrollTop = win.scrollHeight;
+            }
+
+            function addBot(titulo, html, sugerencias) {
+                var chips = (sugerencias || []).map(function (s) {
+                    return '<span class="chip" data-q="' + esc(s) + '">' + esc(s) + '</span>';
+                }).join('');
+                var t = titulo ? '<span class="chat-title">' + esc(titulo) + '</span>' : '';
+                win.insertAdjacentHTML('beforeend',
+                    '<div class="chat-msg bot"><div class="chat-bubble">' + t + html +
+                    (chips ? '<div class="mt-2">' + chips + '</div>' : '') + '</div></div>');
+                win.scrollTop = win.scrollHeight;
+                win.querySelectorAll('.chip').forEach(function (c) {
+                    c.onclick = function () { input.value = c.getAttribute('data-q'); form.dispatchEvent(new Event('submit')); };
+                });
+            }
+
+            function send(text) {
+                var body = new URLSearchParams();
+                body.append('pregunta', text);
+                body.append('contexto', lastMetricIntent);
+                body.append('__RequestVerificationToken', token);
+                fetch(askUrl, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: body })
+                    .then(function (r) { return r.json(); })
+                    .then(function (d) {
+                        if (!d.ok) { addBot('', esc(d.message || 'Error.'), []); return; }
+                        addBot(d.titulo, d.respuesta, d.sugerencias);
+                        if (d.tipo === 'metrica') { lastMetricIntent = d.intent; }
+                    })
+                    .catch(function () { addBot('', 'No hay conexión con el asistente.', []); });
+            }
+
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                var text = (input.value || '').trim();
+                if (!text) return;
+                addUser(text);
+                input.value = '';
+                send(text);
+            });
+
+            // Saludo inicial
+            addBot('Hola 👋', 'Soy tu asistente. Puedo darte métricas (ventas, pedidos, stock, cobros) o ayudarte a usar los módulos.',
+                ['¿Cuánto vendimos este mes?', '¿Cuántos pedidos en ruta hay?', '¿Cómo uso el inventario?']);
+        })();
+    </script>
+}

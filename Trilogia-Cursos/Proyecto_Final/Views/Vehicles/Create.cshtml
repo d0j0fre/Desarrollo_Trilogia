@@ -26,8 +26,13 @@
                         <span asp-validation-for="Placa" class="text-danger"></span>
                     </div>
                     <div class="form-group">
+                        <label asp-for="Marca" class="font-weight-bold"></label>
+                        <input asp-for="Marca" class="form-control" placeholder="Ej: Toyota, Isuzu, Nissan" />
+                        <span asp-validation-for="Marca" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
                         <label asp-for="Descripcion" class="font-weight-bold"></label>
-                        <input asp-for="Descripcion" class="form-control" placeholder="Marca / modelo / uso" />
+                        <input asp-for="Descripcion" class="form-control" placeholder="Modelo / uso (ej: Panel de reparto GAM)" />
                         <span asp-validation-for="Descripcion" class="text-danger"></span>
                     </div>
                     <div class="form-group">

@@ -219,6 +219,130 @@ namespace Proyecto_Final.Controllers
             return RedirectToAction(nameof(Detail), new { id = rutaId });
         }
 
+        // CU-251 E1 — Secuenciar automáticamente los puntos de entrega.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Sequence(int rutaId)
+        {
+            try
+            {
+                var puntos = await _logistics.SequenceRouteAsync(rutaId);
+                if (puntos == 0)
+                {
+                    TempData["ErrorMessage"] = "No hay pedidos pendientes para secuenciar en esta ruta.";
+                }
+                else
+                {
+                    await RegistrarAuditoriaAsync("Secuenciar ruta", "Rutas", $"Se secuenciaron automáticamente {puntos} punto(s) de la ruta #{rutaId}.");
+                    TempData["SuccessMessage"] = $"Ruta secuenciada automáticamente ({puntos} punto(s)). Puede reordenar manualmente antes de despachar.";
+                }
+            }
+            catch (SqlException ex) when (ex.Number >= 50000)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al secuenciar ruta.");
+                TempData["ErrorMessage"] = "No fue posible secuenciar la ruta.";
+            }
+            return RedirectToAction(nameof(Detail), new { id = rutaId });
+        }
+
+        // CU-251 E3 — Guardar el orden manual y las coordenadas.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveSequence(int rutaId, List<int> rutaPedidoId, List<int> secuencia, List<decimal?> lat, List<decimal?> lng)
+        {
+            try
+            {
+                var items = new List<object>();
+                for (int i = 0; i < rutaPedidoId.Count; i++)
+                {
+                    items.Add(new
+                    {
+                        rutaPedidoId = rutaPedidoId[i],
+                        secuencia = i < secuencia.Count ? secuencia[i] : i + 1,
+                        lat = i < lat.Count ? lat[i] : null,
+                        lng = i < lng.Count ? lng[i] : null
+                    });
+                }
+                var json = System.Text.Json.JsonSerializer.Serialize(items);
+                await _logistics.SaveSequenceAsync(rutaId, json);
+                await RegistrarAuditoriaAsync("Reordenar ruta", "Rutas", $"Se guardó el orden manual de la ruta #{rutaId}.");
+                TempData["SuccessMessage"] = "Orden de entregas actualizado.";
+            }
+            catch (SqlException ex) when (ex.Number >= 50000)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al guardar secuencia de ruta.");
+                TempData["ErrorMessage"] = "No fue posible guardar el orden de la ruta.";
+            }
+            return RedirectToAction(nameof(Detail), new { id = rutaId });
+        }
+
+        // CU-253 — Recalcular la ruta en tiempo real ante un imprevisto.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Recalculate(int rutaId, int? excluirRutaPedidoId, string? motivoFallo)
+        {
+            try
+            {
+                var puntos = await _logistics.RecalculateRouteAsync(rutaId, excluirRutaPedidoId, motivoFallo);
+                if (puntos == 0)
+                {
+                    TempData["ErrorMessage"] = "No es posible recalcular: no quedan puntos por recalcular. Contacte al chofer manualmente.";
+                }
+                else
+                {
+                    await RegistrarAuditoriaAsync("Recalcular ruta", "Rutas", $"Se recalculó la ruta #{rutaId} ({puntos} punto(s) reordenados).");
+                    TempData["SuccessMessage"] = $"Ruta recalculada. {puntos} punto(s) reordenados. El chofer verá la ruta actualizada.";
+                }
+            }
+            catch (SqlException ex) when (ex.Number >= 50000)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al recalcular ruta.");
+                TempData["ErrorMessage"] = "No fue posible recalcular la ruta.";
+            }
+            return RedirectToAction(nameof(Detail), new { id = rutaId });
+        }
+
+        // CU-105 — Liquidar la ruta al final del día (reingresa inventario no entregado).
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Liquidate(int rutaId)
+        {
+            var usuarioId = HttpContext.Session.GetInt32("UserId") ?? 0;
+            var usuarioNombre = HttpContext.Session.GetString("UserFullName") ?? "Administrador";
+
+            try
+            {
+                var (pedidos, unidades) = await _logistics.LiquidateRouteAsync(rutaId, usuarioId, usuarioNombre);
+                await RegistrarAuditoriaAsync("Liquidar ruta", "Rutas",
+                    $"Se liquidó la ruta #{rutaId}. {pedidos} pedido(s) y {unidades} unidad(es) reingresadas al inventario.");
+                TempData["SuccessMessage"] = pedidos > 0
+                    ? $"Ruta liquidada. Se reingresaron {unidades} unidad(es) de {pedidos} pedido(s) no entregado(s)."
+                    : "Ruta liquidada. No había mercadería pendiente por reingresar.";
+            }
+            catch (SqlException ex) when (ex.Number >= 50000)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al liquidar ruta.");
+                TempData["ErrorMessage"] = "No fue posible liquidar la ruta.";
+            }
+            return RedirectToAction(nameof(Detail), new { id = rutaId });
+        }
+
         // CU-083 E3 — historial de evidencias por ruta.
         [HttpGet]
         [AdminAuthorize("Entregas", "ENTREGAS_EVIDENCIA_VER")]

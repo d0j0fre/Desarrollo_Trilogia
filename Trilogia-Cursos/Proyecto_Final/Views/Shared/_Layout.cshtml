@@ -153,6 +153,9 @@
                                 <a asp-controller="SellerOrders" asp-action="Index" class="nav-item nav-link nav-highlight">
                                     <i class="fa fa-mobile-alt mr-1"></i>Venta móvil
                                 </a>
+                                <a asp-controller="Assistant" asp-action="Index" class="nav-item nav-link nav-highlight">
+                                    <i class="fa fa-robot mr-1"></i>Asistente
+                                </a>
                             }
 
                             @if (isGerente)
@@ -163,12 +166,18 @@
                                 <a asp-controller="ManagementDashboard" asp-action="Index" class="nav-item nav-link nav-highlight">
                                     <i class="fa fa-chart-line mr-1"></i>Tablero
                                 </a>
+                                <a asp-controller="Assistant" asp-action="Index" class="nav-item nav-link nav-highlight">
+                                    <i class="fa fa-robot mr-1"></i>Asistente
+                                </a>
                             }
 
                             @if (isChofer)
                             {
                                 <a asp-controller="DriverDeliveries" asp-action="Index" class="nav-item nav-link nav-highlight">
                                     <i class="fa fa-truck mr-1"></i>Mis entregas
+                                </a>
+                                <a asp-controller="Fleet" asp-action="Mileage" class="nav-item nav-link nav-highlight">
+                                    <i class="fa fa-tachometer-alt mr-1"></i>Kilometraje
                                 </a>
                             }
 
@@ -182,11 +191,17 @@
                                         <a asp-controller="Admin" asp-action="Index" class="dropdown-item"><i class="fa fa-chart-line"></i> Dashboard</a>
                                         <a asp-controller="Inventory" asp-action="Index" class="dropdown-item"><i class="fa fa-boxes"></i> Inventario</a>
                                         <a asp-controller="Inventory" asp-action="Movements" class="dropdown-item"><i class="fa fa-exchange-alt"></i> Movimientos</a>
+                                        <a asp-controller="Returns" asp-action="Index" class="dropdown-item"><i class="fa fa-undo"></i> Devoluciones</a>
+                                        <a asp-controller="Returns" asp-action="Quarantine" class="dropdown-item"><i class="fa fa-biohazard"></i> Cuarentena</a>
                                         <a asp-controller="OrdersAdmin" asp-action="Index" class="dropdown-item"><i class="fa fa-clipboard-list"></i> Pedidos</a>
                                         <a asp-controller="Billing" asp-action="Index" class="dropdown-item"><i class="fa fa-file-invoice-dollar"></i> Facturación</a>
                                         <a asp-controller="AccountsReceivableAdmin" asp-action="Index" class="dropdown-item"><i class="fa fa-solid fa-receipt"></i> Cuentas por Cobrar</a>
                                         <a asp-controller="RoutesAdmin" asp-action="Index" class="dropdown-item"><i class="fa fa-route"></i> Rutas y Entregas</a>
                                         <a asp-controller="Vehicles" asp-action="Index" class="dropdown-item"><i class="fa fa-truck"></i> Vehículos</a>
+                                        <a asp-controller="Fleet" asp-action="Mileage" class="dropdown-item"><i class="fa fa-tachometer-alt"></i> Kilometraje</a>
+                                        <a asp-controller="Fleet" asp-action="Maintenance" class="dropdown-item"><i class="fa fa-wrench"></i> Mantenimiento</a>
+                                        <a asp-controller="Fleet" asp-action="Alerts" class="dropdown-item"><i class="fa fa-bell"></i> Alertas de flota</a>
+                                        <a asp-controller="Assets" asp-action="Index" class="dropdown-item"><i class="fa fa-snowflake"></i> Activos</a>
                                         <a asp-controller="ManagementDashboard" asp-action="Index" class="dropdown-item"><i class="fa fa-chart-line"></i> Tablero gerencial</a>
                                     </div>
                                 </div>

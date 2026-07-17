@@ -6,6 +6,7 @@ namespace Proyecto_Final.Models.Admin
     {
         public int VehiculoId { get; set; }
         public string Placa { get; set; } = string.Empty;
+        public string Marca { get; set; } = string.Empty;
         public string Descripcion { get; set; } = string.Empty;
         public int Capacidad { get; set; }
         public bool Activo { get; set; }
@@ -19,6 +20,9 @@ namespace Proyecto_Final.Models.Admin
         [Required(ErrorMessage = "La placa es obligatoria.")]
         [StringLength(20, ErrorMessage = "La placa no puede exceder 20 caracteres.")]
         public string Placa { get; set; } = string.Empty;
+
+        [StringLength(60, ErrorMessage = "La marca no puede exceder 60 caracteres.")]
+        public string? Marca { get; set; }
 
         [Required(ErrorMessage = "La descripción es obligatoria.")]
         [StringLength(150, ErrorMessage = "La descripción no puede exceder 150 caracteres.")]

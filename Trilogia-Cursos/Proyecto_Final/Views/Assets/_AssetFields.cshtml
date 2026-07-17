@@ -1,0 +1,41 @@
+@model Proyecto_Final.Models.Admin.AssetFormViewModel
+
+<div class="form-group">
+    <label asp-for="CodigoActivo" class="font-weight-bold">Código de activo (placa)</label>
+    <input asp-for="CodigoActivo" class="form-control" placeholder="Ej: ACT-0001" />
+    <span asp-validation-for="CodigoActivo" class="text-danger"></span>
+</div>
+<div class="form-group">
+    <label asp-for="Nombre" class="font-weight-bold"></label>
+    <input asp-for="Nombre" class="form-control" placeholder="Ej: Nevera exhibidora 2 puertas" />
+    <span asp-validation-for="Nombre" class="text-danger"></span>
+</div>
+<div class="form-row">
+    <div class="form-group col-md-6">
+        <label asp-for="Tipo" class="font-weight-bold"></label>
+        <select asp-for="Tipo" class="form-control">
+            <option value="Nevera">Nevera</option>
+            <option value="Exhibidor">Exhibidor</option>
+            <option value="Otro">Otro</option>
+        </select>
+    </div>
+    <div class="form-group col-md-6">
+        <label asp-for="Estado" class="font-weight-bold"></label>
+        <select asp-for="Estado" class="form-control">
+            <option value="Disponible">Disponible</option>
+            <option value="Prestado">Prestado</option>
+            <option value="Mantenimiento">Mantenimiento</option>
+            <option value="Baja">Baja</option>
+        </select>
+    </div>
+</div>
+<div class="form-group">
+    <label asp-for="ClientePrestamo" class="font-weight-bold">Prestado a (cliente/referencia)</label>
+    <input asp-for="ClientePrestamo" class="form-control" placeholder="Solo si está prestado" />
+    <span asp-validation-for="ClientePrestamo" class="text-danger"></span>
+</div>
+<div class="form-group">
+    <label asp-for="Descripcion" class="font-weight-bold"></label>
+    <textarea asp-for="Descripcion" class="form-control" rows="2"></textarea>
+    <span asp-validation-for="Descripcion" class="text-danger"></span>
+</div>

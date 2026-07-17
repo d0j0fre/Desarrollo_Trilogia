@@ -52,11 +52,32 @@
                 <div class="d-flex flex-wrap">
                     @if (esPlanificada)
                     {
+                        <form asp-action="Sequence" method="post" class="mr-2 mb-2"
+                              onsubmit="return confirm('¿Generar automáticamente el orden óptimo de entregas?');">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="rutaId" value="@c.RutaId" />
+                            <button type="submit" class="btn btn-outline-primary"><i class="fa fa-route mr-2"></i>Secuenciar automáticamente</button>
+                        </form>
                         <form asp-action="Dispatch" method="post" class="mr-2 mb-2"
                               onsubmit="return confirm('¿Despachar la ruta? Los pedidos pasarán a En ruta y se notificará a los clientes.');">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="rutaId" value="@c.RutaId" />
                             <button type="submit" class="btn btn-primary"><i class="fa fa-truck mr-2"></i>Despachar ruta</button>
+                        </form>
+                    }
+                    @if (c.Estado == "Despachada")
+                    {
+                        <button type="button" class="btn btn-outline-warning mr-2 mb-2" data-toggle="collapse" data-target="#recalcBox">
+                            <i class="fa fa-sync mr-2"></i>Recalcular ruta
+                        </button>
+                    }
+                    @if (c.Estado == "Despachada")
+                    {
+                        <form asp-action="Liquidate" method="post" class="mr-2 mb-2"
+                              onsubmit="return confirm('¿Liquidar la ruta al final del día? La mercadería de los pedidos NO entregados se reingresará al inventario.');">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="rutaId" value="@c.RutaId" />
+                            <button type="submit" class="btn btn-outline-primary"><i class="fa fa-clipboard-check mr-2"></i>Liquidar ruta</button>
                         </form>
                     }
                     @if (puedeCancelar)
@@ -79,6 +100,32 @@
                                 <input type="text" name="motivo" class="form-control" maxlength="300" placeholder="Motivo de la cancelación" />
                             </div>
                             <button type="submit" class="btn btn-danger btn-sm">Confirmar cancelación</button>
+                        </form>
+                    </div>
+                }
+
+                @if (c.Estado == "Despachada")
+                {
+                    <div class="collapse mt-2" id="recalcBox">
+                        <form asp-action="Recalculate" method="post"
+                              onsubmit="return confirm('¿Recalcular la ruta? Se reordenarán los puntos pendientes.');">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="rutaId" value="@c.RutaId" />
+                            <div class="form-group">
+                                <label class="font-weight-bold">Punto afectado (opcional)</label>
+                                <select name="excluirRutaPedidoId" class="form-control">
+                                    <option value="">— Solo reordenar los pendientes —</option>
+                                    @foreach (var p in Model.Pedidos.Where(x => x.EstadoEntrega == "Pendiente" || x.EstadoEntrega == "EnRuta"))
+                                    {
+                                        <option value="@p.RutaPedidoId">#@p.PedidoId - @p.Cliente</option>
+                                    }
+                                </select>
+                                <small class="text-muted">Si un cliente está cerrado o hubo un imprevisto, selecciónelo para excluirlo.</small>
+                            </div>
+                            <div class="form-group">
+                                <input type="text" name="motivoFallo" class="form-control" maxlength="300" placeholder="Motivo (ej: cliente cerrado)" />
+                            </div>
+                            <button type="submit" class="btn btn-warning btn-sm"><i class="fa fa-sync mr-1"></i>Recalcular</button>
                         </form>
                     </div>
                 }
@@ -167,6 +214,42 @@
                         }
                     </div>
                 </div>
+
+                @if (Model.Pedidos.Any())
+                {
+                    <div class="admin-table-wrapper mt-3">
+                        <div class="p-3 border-bottom">
+                            <h6 class="mb-0">Orden manual y coordenadas (CU-251)</h6>
+                            <small class="text-muted">Ajuste el orden y capture las coordenadas para el secuenciado óptimo. Guarde antes de despachar.</small>
+                        </div>
+                        <div class="p-3">
+                            <form asp-action="SaveSequence" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="rutaId" value="@c.RutaId" />
+                                <table class="table table-sm mb-3">
+                                    <thead class="thead-light">
+                                        <tr><th style="width:80px">Orden</th><th># Pedido</th><th>Latitud</th><th>Longitud</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var p in Model.Pedidos)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    <input type="hidden" name="rutaPedidoId" value="@p.RutaPedidoId" />
+                                                    <input type="number" name="secuencia" value="@p.Secuencia" class="form-control form-control-sm" min="1" />
+                                                </td>
+                                                <td class="align-middle font-weight-bold">#@p.PedidoId<br /><small class="text-muted">@p.Cliente</small></td>
+                                                <td><input type="number" step="0.000001" name="lat" value="@(p.Latitud?.ToString(System.Globalization.CultureInfo.InvariantCulture))" class="form-control form-control-sm" placeholder="9.93" /></td>
+                                                <td><input type="number" step="0.000001" name="lng" value="@(p.Longitud?.ToString(System.Globalization.CultureInfo.InvariantCulture))" class="form-control form-control-sm" placeholder="-84.08" /></td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                                <button type="submit" class="btn btn-outline-secondary btn-sm"><i class="fa fa-save mr-1"></i>Guardar orden y coordenadas</button>
+                            </form>
+                        </div>
+                    </div>
+                }
             }
         </div>
     </div>

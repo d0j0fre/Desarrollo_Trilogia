@@ -1,0 +1,110 @@
+@model Proyecto_Final.Models.Admin.MileageIndexViewModel
+@{
+    ViewData["Title"] = "Kilometraje de jornada";
+    var vehiculos = ViewBag.Vehiculos as List<Proyecto_Final.Models.Admin.VehicleOptionViewModel> ?? new();
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header">
+                <h2 class="mb-2">Kilometraje de jornada</h2>
+                <p class="mb-0">Registra el kilometraje inicial al salir y el final al regresar. Alimenta el control de desgaste del vehículo.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-lg-4 mb-4">
+            <div class="admin-table-wrapper p-4">
+                <h5 class="mb-3">Iniciar jornada</h5>
+                <form asp-action="OpenMileage" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="form-group">
+                        <label class="font-weight-bold">Vehículo</label>
+                        <select asp-for="Nueva.VehiculoId" class="form-control">
+                            <option value="">-- Seleccione --</option>
+                            @foreach (var v in vehiculos)
+                            {
+                                <option value="@v.VehiculoId">@v.Placa — @v.Descripcion</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Kilometraje inicial</label>
+                        <input asp-for="Nueva.KmInicial" class="form-control" type="number" min="0" />
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Observaciones (opcional)</label>
+                        <input asp-for="Nueva.Observaciones" class="form-control" />
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block"><i class="fa fa-play mr-2"></i>Iniciar jornada</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="admin-table-wrapper">
+                <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Jornadas registradas</h5>
+                    <span class="text-muted">Total: @Model.Jornadas.Count</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Vehículo</th>
+                                <th>Chofer</th>
+                                <th>Fecha</th>
+                                <th class="text-center">Km inicial</th>
+                                <th class="text-center">Km final</th>
+                                <th class="text-center">Recorrido</th>
+                                <th class="text-center">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!Model.Jornadas.Any())
+                            {
+                                <tr><td colspan="7" class="text-center text-muted py-4">No hay jornadas registradas.</td></tr>
+                            }
+                            else
+                            {
+                                @foreach (var j in Model.Jornadas)
+                                {
+                                    <tr>
+                                        <td class="font-weight-bold">@j.VehiculoPlaca</td>
+                                        <td>@j.ChoferNombre</td>
+                                        <td>@j.Fecha.ToString("dd/MM/yyyy")</td>
+                                        <td class="text-center">@j.KmInicial</td>
+                                        <td class="text-center">@(j.KmFinal?.ToString() ?? "—")</td>
+                                        <td class="text-center">@(j.Recorrido.HasValue ? $"{j.Recorrido} km" : "—")</td>
+                                        <td class="text-center">
+                                            @if (j.Abierta)
+                                            {
+                                                <form asp-action="CloseMileage" method="post" class="form-inline justify-content-center"
+                                                      onsubmit="return confirm('¿Cerrar la jornada con este kilometraje final?');">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="kilometrajeId" value="@j.KilometrajeId" />
+                                                    <input type="number" name="kmFinal" class="form-control form-control-sm mr-1" style="width:100px" min="@j.KmInicial" placeholder="Km final" required />
+                                                    <button type="submit" class="btn btn-sm btn-outline-success"><i class="fa fa-stop"></i></button>
+                                                </form>
+                                            }
+                                            else
+                                            {
+                                                <span class="admin-badge-soft success">Cerrada</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
