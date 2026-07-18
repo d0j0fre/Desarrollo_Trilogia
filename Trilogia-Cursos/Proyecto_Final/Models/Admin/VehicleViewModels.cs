@@ -11,6 +11,7 @@ namespace Proyecto_Final.Models.Admin
         public int Capacidad { get; set; }
         public bool Activo { get; set; }
         public int RutasAbiertas { get; set; }
+        public int KilometrajeActual { get; set; }
     }
 
     public class VehicleFormViewModel

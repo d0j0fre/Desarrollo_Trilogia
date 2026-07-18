@@ -1,7 +1,7 @@
 @model Proyecto_Final.Models.Admin.MileageIndexViewModel
 @{
     ViewData["Title"] = "Kilometraje de jornada";
-    var vehiculos = ViewBag.Vehiculos as List<Proyecto_Final.Models.Admin.VehicleOptionViewModel> ?? new();
+    var vehiculos = ViewBag.VehiculosKm as List<Proyecto_Final.Models.Admin.VehicleListItemViewModel> ?? new();
 }
 
 @section Styles {
@@ -26,17 +26,18 @@
                     @Html.AntiForgeryToken()
                     <div class="form-group">
                         <label class="font-weight-bold">Vehículo</label>
-                        <select asp-for="Nueva.VehiculoId" class="form-control">
+                        <select asp-for="Nueva.VehiculoId" id="kmVehiculo" class="form-control">
                             <option value="">-- Seleccione --</option>
                             @foreach (var v in vehiculos)
                             {
-                                <option value="@v.VehiculoId">@v.Placa — @v.Descripcion</option>
+                                <option value="@v.VehiculoId" data-odometro="@v.KilometrajeActual">@v.Placa — @v.Descripcion (odómetro: @v.KilometrajeActual km)</option>
                             }
                         </select>
                     </div>
                     <div class="form-group">
                         <label class="font-weight-bold">Kilometraje inicial</label>
-                        <input asp-for="Nueva.KmInicial" class="form-control" type="number" min="0" />
+                        <input asp-for="Nueva.KmInicial" id="kmInicial" class="form-control" type="number" min="0" />
+                        <small id="kmHint" class="form-text text-muted">El kilometraje inicial no puede ser menor al odómetro actual del vehículo.</small>
                     </div>
                     <div class="form-group">
                         <label class="font-weight-bold">Observaciones (opcional)</label>
@@ -86,7 +87,11 @@
                                             @if (j.Abierta)
                                             {
                                                 <form asp-action="CloseMileage" method="post" class="form-inline justify-content-center"
-                                                      onsubmit="return confirm('¿Cerrar la jornada con este kilometraje final?');">
+                                                      data-s3-confirm="¿Cerrar la jornada con este kilometraje final? El odómetro del vehículo se actualizará."
+                                                      data-s3-confirm-title="Cerrar jornada"
+                                                      data-s3-confirm-type="warning"
+                                                      data-s3-confirm-ok="Sí, cerrar"
+                                                      data-s3-confirm-cancel="Cancelar">
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="kilometrajeId" value="@j.KilometrajeId" />
                                                     <input type="number" name="kmFinal" class="form-control form-control-sm mr-1" style="width:100px" min="@j.KmInicial" placeholder="Km final" required />
@@ -108,3 +113,22 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        // Sugerir y validar el kilometraje inicial contra el odómetro del vehículo (CU-152).
+        (function () {
+            var sel = document.getElementById('kmVehiculo');
+            var km = document.getElementById('kmInicial');
+            var hint = document.getElementById('kmHint');
+            if (!sel || !km) return;
+            sel.addEventListener('change', function () {
+                var opt = sel.options[sel.selectedIndex];
+                var odo = opt ? parseInt(opt.getAttribute('data-odometro') || '0', 10) : 0;
+                km.min = odo;
+                if (!km.value || parseInt(km.value, 10) < odo) { km.value = odo; }
+                if (hint) { hint.textContent = 'Odómetro actual: ' + odo + ' km. El kilometraje inicial no puede ser menor.'; }
+            });
+        })();
+    </script>
+}

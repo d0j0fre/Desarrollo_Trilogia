@@ -4,6 +4,25 @@
     var editable = Model.Estado == "Despachada";
     string BadgeEntrega(string e) => e switch { "EnRuta" => "dark", "Entregado" => "success", "Fallido" => "danger", _ => "warning" };
     string TextoEntrega(string e) => e switch { "EnRuta" => "En ruta", _ => e };
+
+    // Opción A — navegación real por deep-link a Waze / Google Maps.
+    var inv = System.Globalization.CultureInfo.InvariantCulture;
+    string Coord(decimal? lat, decimal? lng) => $"{lat.GetValueOrDefault().ToString(inv)},{lng.GetValueOrDefault().ToString(inv)}";
+    string WazeUrl(decimal? lat, decimal? lng) => $"https://waze.com/ul?ll={lat.GetValueOrDefault().ToString(inv)}%2C{lng.GetValueOrDefault().ToString(inv)}&navigate=yes";
+    string MapsStopUrl(decimal? lat, decimal? lng) => $"https://www.google.com/maps/dir/?api=1&destination={Coord(lat, lng)}&travelmode=driving";
+
+    var paradasNav = Model.Entregas.Where(e => e.Latitud.HasValue && e.Longitud.HasValue).ToList();
+    string? rutaCompletaUrl = null;
+    if (paradasNav.Count > 0)
+    {
+        var destino = paradasNav[paradasNav.Count - 1];
+        rutaCompletaUrl = $"https://www.google.com/maps/dir/?api=1&destination={Coord(destino.Latitud, destino.Longitud)}&travelmode=driving";
+        if (paradasNav.Count > 1)
+        {
+            var waypoints = paradasNav.Take(paradasNav.Count - 1).Select(s => Coord(s.Latitud, s.Longitud));
+            rutaCompletaUrl += "&waypoints=" + Uri.EscapeDataString(string.Join("|", waypoints));
+        }
+    }
 }
 
 @section Styles {
@@ -51,7 +70,15 @@
             <div class="admin-table-wrapper p-2">
                 <div class="d-flex justify-content-between align-items-center p-2 flex-wrap">
                     <h6 class="mb-0"><i class="fa fa-map-marked-alt mr-2 text-primary"></i>Ruta sugerida en el mapa</h6>
-                    <button type="button" id="refreshRouteBtn" class="btn btn-sm btn-outline-primary"><i class="fa fa-sync mr-1"></i>Actualizar ruta</button>
+                    <div>
+                        @if (rutaCompletaUrl != null)
+                        {
+                            <a href="@rutaCompletaUrl" target="_blank" rel="noopener" class="btn btn-sm btn-success mr-1">
+                                <i class="fas fa-directions mr-1"></i>Navegar ruta completa
+                            </a>
+                        }
+                        <button type="button" id="refreshRouteBtn" class="btn btn-sm btn-outline-primary"><i class="fa fa-sync mr-1"></i>Actualizar ruta</button>
+                    </div>
                 </div>
                 <div id="mapOfflineBanner" class="alert alert-warning m-2" style="display:none;">
                     <i class="fa fa-wifi-slash mr-1"></i>Sin conexión: se muestra la última ruta descargada. Los datos podrían no estar actualizados.
@@ -85,6 +112,23 @@
                             <span class="delivery-status-label">@TextoEntrega(d.EstadoEntrega)</span>
                         </span>
                     </div>
+
+                    @* Opción A — cómo llegar: abre la app de navegación del chofer *@
+                    @if (d.Latitud.HasValue && d.Longitud.HasValue)
+                    {
+                        <div class="delivery-nav mt-2 d-flex">
+                            <a href="@WazeUrl(d.Latitud, d.Longitud)" target="_blank" rel="noopener" class="btn btn-sm btn-info flex-fill mr-2">
+                                <i class="fab fa-waze mr-1"></i>Waze
+                            </a>
+                            <a href="@MapsStopUrl(d.Latitud, d.Longitud)" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary flex-fill">
+                                <i class="fas fa-map-marker-alt mr-1"></i>Google Maps
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted small mt-2 mb-0"><i class="fa fa-info-circle mr-1"></i>Sin coordenada: pídele a logística que ubique esta parada.</p>
+                    }
 
                     @if (editable && d.EstadoEntrega != "Entregado" && d.EstadoEntrega != "Fallido")
                     {
@@ -218,8 +262,12 @@
                 var ll = [s.lat, s.lng];
                 latlngs.push(ll);
                 var icon = L.divIcon({ className: '', html: '<div class="route-pin">' + s.seq + '</div>', iconSize: [26, 26], iconAnchor: [13, 13] });
+                var wazeUrl = 'https://waze.com/ul?ll=' + s.lat + '%2C' + s.lng + '&navigate=yes';
+                var mapsUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + s.lat + ',' + s.lng + '&travelmode=driving';
                 L.marker(ll, { icon: icon }).addTo(map)
-                    .bindPopup('<strong>#' + s.seq + ' · ' + s.cliente + '</strong><br/>' + s.dir + '<br/><em>' + s.estado + '</em>');
+                    .bindPopup('<strong>#' + s.seq + ' · ' + s.cliente + '</strong><br/>' + s.dir + '<br/><em>' + s.estado + '</em>' +
+                        '<div class="mt-2"><a href="' + wazeUrl + '" target="_blank" rel="noopener" class="btn btn-sm btn-info mr-1"><i class="fab fa-waze"></i> Waze</a>' +
+                        '<a href="' + mapsUrl + '" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary"><i class="fas fa-map-marker-alt"></i> Maps</a></div>');
             });
 
             if (latlngs.length > 1) {
@@ -260,7 +308,7 @@
                 if (clearBtn) clearBtn.addEventListener('click', function () { ctx.clearRect(0, 0, canvas.width, canvas.height); dirty = false; });
 
                 form.addEventListener('submit', function (e) {
-                    if (!dirty) { e.preventDefault(); alert('Capture la firma antes de guardar.'); return; }
+                    if (!dirty) { e.preventDefault(); if (window.S3Modal) { S3Modal.warning('Capture la firma antes de guardar.'); } else { alert('Capture la firma antes de guardar.'); } return; }
                     form.querySelector('.sig-data').value = canvas.toDataURL('image/png');
                 });
             });

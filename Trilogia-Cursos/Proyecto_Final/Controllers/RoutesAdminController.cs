@@ -226,7 +226,7 @@ namespace Proyecto_Final.Controllers
         {
             try
             {
-                var puntos = await _logistics.SequenceRouteAsync(rutaId);
+                var (puntos, sinCoord) = await _logistics.SequenceRouteAsync(rutaId);
                 if (puntos == 0)
                 {
                     TempData["ErrorMessage"] = "No hay pedidos pendientes para secuenciar en esta ruta.";
@@ -234,7 +234,14 @@ namespace Proyecto_Final.Controllers
                 else
                 {
                     await RegistrarAuditoriaAsync("Secuenciar ruta", "Rutas", $"Se secuenciaron automáticamente {puntos} punto(s) de la ruta #{rutaId}.");
-                    TempData["SuccessMessage"] = $"Ruta secuenciada automáticamente ({puntos} punto(s)). Puede reordenar manualmente antes de despachar.";
+                    if (sinCoord > 0)
+                    {
+                        TempData["ErrorMessage"] = $"{sinCoord} de {puntos} punto(s) no tienen coordenada y quedaron al final. Ubícalos en el mapa para que aparezcan en la app del chofer.";
+                    }
+                    else
+                    {
+                        TempData["SuccessMessage"] = $"Ruta secuenciada automáticamente ({puntos} punto(s)). Puede reordenar manualmente antes de despachar.";
+                    }
                 }
             }
             catch (SqlException ex) when (ex.Number >= 50000)
@@ -250,21 +257,29 @@ namespace Proyecto_Final.Controllers
         }
 
         // CU-251 E3 — Guardar el orden manual y las coordenadas.
+        // Las coordenadas se reciben como texto y se parsean con InvariantCulture:
+        // los <input type="number"> siempre envían punto decimal, independientemente
+        // de la cultura regional del servidor.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SaveSequence(int rutaId, List<int> rutaPedidoId, List<int> secuencia, List<decimal?> lat, List<decimal?> lng)
+        public async Task<IActionResult> SaveSequence(int rutaId, List<int> rutaPedidoId, List<int> secuencia, List<string?> lat, List<string?> lng)
         {
             try
             {
+                var inv = System.Globalization.CultureInfo.InvariantCulture;
+                const System.Globalization.NumberStyles styles = System.Globalization.NumberStyles.Float | System.Globalization.NumberStyles.AllowLeadingSign;
+
                 var items = new List<object>();
                 for (int i = 0; i < rutaPedidoId.Count; i++)
                 {
+                    decimal? latVal = i < lat.Count && decimal.TryParse(lat[i], styles, inv, out var la) ? la : (decimal?)null;
+                    decimal? lngVal = i < lng.Count && decimal.TryParse(lng[i], styles, inv, out var lo) ? lo : (decimal?)null;
                     items.Add(new
                     {
                         rutaPedidoId = rutaPedidoId[i],
                         secuencia = i < secuencia.Count ? secuencia[i] : i + 1,
-                        lat = i < lat.Count ? lat[i] : null,
-                        lng = i < lng.Count ? lng[i] : null
+                        lat = latVal,
+                        lng = lngVal
                     });
                 }
                 var json = System.Text.Json.JsonSerializer.Serialize(items);

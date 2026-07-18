@@ -27,7 +27,7 @@ namespace Proyecto_Final.Controllers
         [AdminAuthorize("Flota", "FLOTA_KILOMETRAJE")]
         public async Task<IActionResult> Mileage()
         {
-            await PopulateVehiclesAsync();
+            await PopulateMileageVehiclesAsync();
             var esChofer = string.Equals(HttpContext.Session.GetString("UserRole"), "Chofer", StringComparison.OrdinalIgnoreCase);
             int? choferFiltro = esChofer ? HttpContext.Session.GetInt32("UserId") : null;
             var vm = new MileageIndexViewModel
@@ -205,6 +205,13 @@ namespace Proyecto_Final.Controllers
         private async Task PopulateVehiclesAsync()
         {
             ViewBag.Vehiculos = await _logistics.GetAvailableVehiclesAsync();
+        }
+
+        // Vehículos activos con su odómetro actual (para el kilometraje).
+        private async Task PopulateMileageVehiclesAsync()
+        {
+            var vehiculos = await _logistics.GetVehiclesAsync(null);
+            ViewBag.VehiculosKm = vehiculos.Where(v => v.Activo).ToList();
         }
 
         private async Task RegistrarAuditoriaAsync(string accion, string modulo, string descripcion)

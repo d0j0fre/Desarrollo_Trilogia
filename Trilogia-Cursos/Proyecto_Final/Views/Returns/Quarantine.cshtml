@@ -66,13 +66,21 @@
                                         <td>@d.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</td>
                                         <td class="text-center">
                                             <form asp-action="Release" method="post" class="d-inline"
-                                                  onsubmit="return confirm('¿Liberar y reintegrar @d.Cantidad unidad(es) al inventario?');">
+                                                  data-s3-confirm="¿Liberar y reintegrar @d.Cantidad unidad(es) al inventario?"
+                                                  data-s3-confirm-title="Liberar de cuarentena"
+                                                  data-s3-confirm-type="warning"
+                                                  data-s3-confirm-ok="Sí, liberar"
+                                                  data-s3-confirm-cancel="Cancelar">
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="devolucionId" value="@d.DevolucionId" />
                                                 <button type="submit" class="btn btn-sm btn-outline-success mb-1"><i class="fa fa-check mr-1"></i>Liberar</button>
                                             </form>
                                             <form asp-action="Discard" method="post" class="d-inline"
-                                                  onsubmit="return confirm('¿Descartar definitivamente? No se reintegrará al inventario.');">
+                                                  data-s3-confirm="¿Descartar definitivamente? No se reintegrará al inventario."
+                                                  data-s3-confirm-title="Descartar producto"
+                                                  data-s3-confirm-type="danger"
+                                                  data-s3-confirm-ok="Sí, descartar"
+                                                  data-s3-confirm-cancel="Cancelar">
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="devolucionId" value="@d.DevolucionId" />
                                                 <button type="submit" class="btn btn-sm btn-outline-danger mb-1"><i class="fa fa-trash mr-1"></i>Descartar</button>

@@ -37,7 +37,8 @@ namespace Proyecto_Final.Services
                     Capacidad = reader.IsDBNull(3) ? 0 : reader.GetInt32(3),
                     Activo = !reader.IsDBNull(4) && reader.GetBoolean(4),
                     RutasAbiertas = reader.IsDBNull(5) ? 0 : reader.GetInt32(5),
-                    Marca = reader.IsDBNull(6) ? string.Empty : reader.GetString(6)
+                    Marca = reader.IsDBNull(6) ? string.Empty : reader.GetString(6),
+                    KilometrajeActual = reader.IsDBNull(7) ? 0 : reader.GetInt32(7)
                 });
             }
             return lista;
@@ -329,15 +330,20 @@ namespace Proyecto_Final.Services
             return destinatarios;
         }
 
-        // CU-251 E1 — Secuenciar automáticamente (vecino más cercano). Devuelve puntos secuenciados.
-        public async Task<int> SequenceRouteAsync(int rutaId)
+        // CU-251 E1 — Secuenciar automáticamente (vecino más cercano).
+        // Devuelve (puntos secuenciados, puntos sin coordenada capturada).
+        public async Task<(int Secuenciados, int SinCoordenadas)> SequenceRouteAsync(int rutaId)
         {
             await using var connection = new SqlConnection(_connectionString);
             await using var command = new SqlCommand("dbo.sp_Rutas_Secuenciar", connection) { CommandType = CommandType.StoredProcedure };
             command.Parameters.Add("@RutaId", SqlDbType.Int).Value = rutaId;
             await connection.OpenAsync();
-            var result = await command.ExecuteScalarAsync();
-            return result is int n ? n : Convert.ToInt32(result ?? 0);
+            await using var reader = await command.ExecuteReaderAsync();
+            if (await reader.ReadAsync())
+            {
+                return (reader.IsDBNull(0) ? 0 : reader.GetInt32(0), reader.IsDBNull(1) ? 0 : reader.GetInt32(1));
+            }
+            return (0, 0);
         }
 
         // CU-251 E3 — Guardar secuencia manual + coordenadas.

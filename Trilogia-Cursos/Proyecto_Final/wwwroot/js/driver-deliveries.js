@@ -139,7 +139,7 @@
 
     function showToast(message, isError) {
         var box = document.getElementById("driverToast");
-        if (!box) { alert(message); return; }
+        if (!box) { if (window.S3Modal) { S3Modal.info(message); } else { alert(message); } return; }
         box.textContent = message;
         box.className = "alert " + (isError ? "alert-danger" : "alert-success");
         box.style.display = "block";

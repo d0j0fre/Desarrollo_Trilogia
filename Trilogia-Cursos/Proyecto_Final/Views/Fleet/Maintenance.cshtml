@@ -131,7 +131,11 @@
                                             @if (o.Estado != "Completada")
                                             {
                                                 <form asp-action="CompleteMaintenance" method="post" class="d-inline"
-                                                      onsubmit="return confirm('¿Marcar la orden como completada?');">
+                                                      data-s3-confirm="¿Marcar la orden como completada?"
+                                                      data-s3-confirm-title="Completar mantenimiento"
+                                                      data-s3-confirm-type="warning"
+                                                      data-s3-confirm-ok="Sí, completar"
+                                                      data-s3-confirm-cancel="Cancelar">
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="ordenId" value="@o.OrdenMantenimientoId" />
                                                     <button type="submit" class="btn btn-sm btn-outline-success"><i class="fa fa-check"></i></button>

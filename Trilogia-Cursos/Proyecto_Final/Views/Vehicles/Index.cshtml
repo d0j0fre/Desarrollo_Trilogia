@@ -48,6 +48,7 @@
                                 <th>Marca</th>
                                 <th>Descripción</th>
                                 <th class="text-center">Capacidad</th>
+                                <th class="text-center">Odómetro</th>
                                 <th class="text-center">Rutas abiertas</th>
                                 <th class="text-center">Estado</th>
                                 <th class="text-center">Acciones</th>
@@ -56,7 +57,7 @@
                         <tbody>
                             @if (Model == null || !Model.Any())
                             {
-                                <tr><td colspan="7" class="text-center text-muted py-4">No hay vehículos registrados.</td></tr>
+                                <tr><td colspan="8" class="text-center text-muted py-4">No hay vehículos registrados.</td></tr>
                             }
                             else
                             {
@@ -67,6 +68,7 @@
                                         <td>@(string.IsNullOrWhiteSpace(v.Marca) ? "—" : v.Marca)</td>
                                         <td>@v.Descripcion</td>
                                         <td class="text-center">@v.Capacidad</td>
+                                        <td class="text-center">@v.KilometrajeActual km</td>
                                         <td class="text-center">@v.RutasAbiertas</td>
                                         <td class="text-center">
                                             <span class="admin-badge-soft @(v.Activo ? "success" : "danger")">@(v.Activo ? "Activo" : "Inactivo")</span>
@@ -74,7 +76,11 @@
                                         <td class="text-center">
                                             <a asp-action="Edit" asp-route-id="@v.VehiculoId" class="btn btn-sm btn-outline-primary mb-1"><i class="fa fa-edit"></i></a>
                                             <form asp-action="ToggleStatus" method="post" class="d-inline"
-                                                  onsubmit="return confirm('¿Cambiar el estado del vehículo?');">
+                                                  data-s3-confirm="¿Cambiar el estado del vehículo?"
+                                                  data-s3-confirm-title="Confirmar cambio de estado"
+                                                  data-s3-confirm-type="warning"
+                                                  data-s3-confirm-ok="Sí, cambiar"
+                                                  data-s3-confirm-cancel="Cancelar">
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="vehiculoId" value="@v.VehiculoId" />
                                                 <input type="hidden" name="buscar" value="@buscar" />
