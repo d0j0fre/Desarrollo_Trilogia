@@ -10,32 +10,21 @@
     <input asp-for="Nombre" class="form-control" placeholder="Ej: Nevera exhibidora 2 puertas" />
     <span asp-validation-for="Nombre" class="text-danger"></span>
 </div>
-<div class="form-row">
-    <div class="form-group col-md-6">
-        <label asp-for="Tipo" class="font-weight-bold"></label>
-        <select asp-for="Tipo" class="form-control">
-            <option value="Nevera">Nevera</option>
-            <option value="Exhibidor">Exhibidor</option>
-            <option value="Otro">Otro</option>
-        </select>
-    </div>
-    <div class="form-group col-md-6">
-        <label asp-for="Estado" class="font-weight-bold"></label>
-        <select asp-for="Estado" class="form-control">
-            <option value="Disponible">Disponible</option>
-            <option value="Prestado">Prestado</option>
-            <option value="Mantenimiento">Mantenimiento</option>
-            <option value="Baja">Baja</option>
-        </select>
-    </div>
-</div>
 <div class="form-group">
-    <label asp-for="ClientePrestamo" class="font-weight-bold">Prestado a (cliente/referencia)</label>
-    <input asp-for="ClientePrestamo" class="form-control" placeholder="Solo si está prestado" />
-    <span asp-validation-for="ClientePrestamo" class="text-danger"></span>
+    <label asp-for="Tipo" class="font-weight-bold"></label>
+    <select asp-for="Tipo" class="form-control">
+        <option value="Nevera">Nevera</option>
+        <option value="Exhibidor">Exhibidor</option>
+        <option value="Otro">Otro</option>
+    </select>
 </div>
 <div class="form-group">
     <label asp-for="Descripcion" class="font-weight-bold"></label>
     <textarea asp-for="Descripcion" class="form-control" rows="2"></textarea>
     <span asp-validation-for="Descripcion" class="text-danger"></span>
+</div>
+<div class="alert alert-light border small mb-0">
+    <i class="fa fa-info-circle text-primary mr-1"></i>
+    El <strong>estado</strong> del activo y a quién está <strong>prestado</strong> se administran desde el módulo de
+    <strong>Comodatos</strong> (asignación y devolución), no desde aquí.
 </div>

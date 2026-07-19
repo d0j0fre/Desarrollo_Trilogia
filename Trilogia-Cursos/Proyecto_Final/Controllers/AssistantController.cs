@@ -5,7 +5,9 @@ using Proyecto_Final.Services;
 namespace Proyecto_Final.Controllers
 {
     // CU-261 (métricas por lenguaje natural) y CU-263 (ayuda por módulo).
-    [SessionAuthorize("Administrador", "Gerente", "Vendedor", "Empleado")]
+    // Acceso amplio a roles operativos; los datos que ve cada rol se filtran
+    // dentro de AssistantService (p. ej. finanzas ocultas a bodega/chofer).
+    [SessionAuthorize("Administrador", "Gerente", "Vendedor", "Empleado", "Chofer", "Bodeguero", "Bodega")]
     public class AssistantController : Controller
     {
         private readonly AssistantService _assistant;

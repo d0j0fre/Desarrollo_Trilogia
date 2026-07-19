@@ -1,0 +1,124 @@
+@using Proyecto_Final.Models.Admin
+@model IEnumerable<CashSettlementListItemViewModel>
+@{
+    ViewData["Title"] = "Liquidación de cobros";
+    var estado = ViewBag.Estado as string;
+    var rutas = ViewBag.Rutas as List<RouteListItemViewModel> ?? new List<RouteListItemViewModel>();
+    var liquidadasIds = Model?.Select(x => x.RutaId).ToHashSet() ?? new HashSet<int>();
+    var pendientes = rutas.Where(r => !liquidadasIds.Contains(r.RutaId)).ToList();
+    string EstadoBadge(string e) => e switch { "Cuadrada" => "success", "Sobrante" => "info", _ => "danger" };
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header">
+                <h2 class="mb-2">Liquidación de cobros de ruta</h2>
+                <p class="mb-0">Cuadre del efectivo y los comprobantes recibidos por el chofer contra lo esperado de los pedidos entregados.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-3">
+        <div class="col-12">
+            <div class="admin-table-wrapper">
+                <div class="p-4 border-bottom"><h5 class="mb-0">Rutas pendientes de liquidar</h5></div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="thead-light">
+                            <tr><th>Código</th><th>Zona</th><th class="text-center">Estado</th><th class="text-center">Entregados</th><th class="text-center">Acción</th></tr>
+                        </thead>
+                        <tbody>
+                            @if (!pendientes.Any())
+                            {
+                                <tr><td colspan="5" class="text-center text-muted py-4">No hay rutas despachadas pendientes de liquidación financiera.</td></tr>
+                            }
+                            else
+                            {
+                                @foreach (var r in pendientes)
+                                {
+                                    <tr>
+                                        <td class="font-weight-bold">@r.Codigo</td>
+                                        <td>@r.Zona</td>
+                                        <td class="text-center"><span class="admin-badge-soft info">@r.Estado</span></td>
+                                        <td class="text-center">@r.Entregados / @r.TotalPedidos</td>
+                                        <td class="text-center">
+                                            <a asp-action="Liquidate" asp-route-rutaId="@r.RutaId" class="btn btn-sm btn-primary"><i class="fa fa-cash-register mr-1"></i>Liquidar</a>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-filter-bar">
+                <form asp-action="Index" method="get" class="form-inline">
+                    <select name="estado" class="form-control mr-2 mb-2">
+                        <option value="">Todos los resultados</option>
+                        <option value="Cuadrada" selected="@(estado == "Cuadrada")">Cuadrada</option>
+                        <option value="Faltante" selected="@(estado == "Faltante")">Faltante</option>
+                        <option value="Sobrante" selected="@(estado == "Sobrante")">Sobrante</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary mr-2 mb-2"><i class="fa fa-filter mr-2"></i>Filtrar</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary mb-2"><i class="fa fa-eraser mr-2"></i>Limpiar</a>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-12">
+            <div class="admin-table-wrapper">
+                <div class="p-4 border-bottom"><h5 class="mb-0">Liquidaciones registradas</h5></div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Ruta</th>
+                                <th class="text-right">Esperado</th>
+                                <th class="text-right">Efectivo</th>
+                                <th class="text-right">Comprobantes</th>
+                                <th class="text-right">Diferencia</th>
+                                <th class="text-center">Resultado</th>
+                                <th>Liquidó</th>
+                                <th>Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model == null || !Model.Any())
+                            {
+                                <tr><td colspan="8" class="text-center text-muted py-4">Sin liquidaciones registradas.</td></tr>
+                            }
+                            else
+                            {
+                                @foreach (var l in Model)
+                                {
+                                    <tr>
+                                        <td class="font-weight-bold">@l.RutaCodigo</td>
+                                        <td class="text-right">@((l.MontoEsperadoEfectivo + l.MontoEsperadoOtros).ToString("N2"))</td>
+                                        <td class="text-right">@l.MontoEfectivoRecibido.ToString("N2")</td>
+                                        <td class="text-right">@l.MontoComprobantes.ToString("N2")</td>
+                                        <td class="text-right">@l.Diferencia.ToString("N2")</td>
+                                        <td class="text-center"><span class="admin-badge-soft @EstadoBadge(l.Estado)">@l.Estado</span></td>
+                                        <td>@l.LiquidadoPorNombre</td>
+                                        <td>@l.FechaLiquidacion.ToString("dd/MM/yyyy HH:mm")</td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

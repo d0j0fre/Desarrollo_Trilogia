@@ -388,6 +388,94 @@ namespace Proyecto_Final.Services
             return (0, 0);
         }
 
+        // ── CU-106 Liquidación financiera de cobros de ruta ──
+        public async Task<CashSettlementPrepareViewModel?> PrepareCashSettlementAsync(int rutaId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_LiquidacionCobros_Preparar", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.Add("@RutaId", SqlDbType.Int).Value = rutaId;
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync()) return null;
+
+            var model = new CashSettlementPrepareViewModel
+            {
+                RutaId = reader.GetInt32(0),
+                RutaCodigo = reader.GetString(1),
+                EstadoRuta = reader.GetString(2),
+                Liquidada = reader.GetBoolean(3),
+                YaLiquidadaFinanciera = reader.GetInt32(4) > 0,
+                EsperadoEfectivo = reader.GetDecimal(5),
+                EsperadoOtros = reader.GetDecimal(6)
+            };
+
+            if (await reader.NextResultAsync())
+            {
+                while (await reader.ReadAsync())
+                {
+                    model.Pedidos.Add(new CashSettlementOrderLine
+                    {
+                        PedidoId = reader.GetInt32(0),
+                        Total = reader.GetDecimal(1),
+                        MetodoPago = reader.GetString(2),
+                        EstadoPago = reader.GetString(3),
+                        Cliente = reader.GetString(4)
+                    });
+                }
+            }
+            return model;
+        }
+
+        public async Task<(int LiquidacionId, string Estado, decimal Diferencia)> RegisterCashSettlementAsync(
+            CashSettlementFormViewModel model, string comprobantesJson, int usuarioId, string usuarioNombre)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_LiquidacionCobros_Registrar", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.Add("@RutaId", SqlDbType.Int).Value = model.RutaId;
+            command.Parameters.Add("@MontoEfectivoRecibido", SqlDbType.Decimal).Value = model.MontoEfectivoRecibido;
+            command.Parameters.Add("@MontoComprobantes", SqlDbType.Decimal).Value = model.MontoComprobantes;
+            command.Parameters.Add("@Observaciones", SqlDbType.NVarChar, 400).Value = string.IsNullOrWhiteSpace(model.Observaciones) ? DBNull.Value : model.Observaciones.Trim();
+            command.Parameters.Add("@ComprobantesJson", SqlDbType.NVarChar, -1).Value = string.IsNullOrWhiteSpace(comprobantesJson) ? DBNull.Value : comprobantesJson;
+            command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId > 0 ? usuarioId : DBNull.Value;
+            command.Parameters.Add("@Nombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(usuarioNombre) ? DBNull.Value : usuarioNombre.Trim();
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+            if (await reader.ReadAsync())
+            {
+                return (reader.GetInt32(0), reader.GetString(1), reader.GetDecimal(2));
+            }
+            return (0, string.Empty, 0m);
+        }
+
+        public async Task<List<CashSettlementListItemViewModel>> GetCashSettlementsAsync(string? estado)
+        {
+            var lista = new List<CashSettlementListItemViewModel>();
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_LiquidacionCobros_List", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.Add("@Estado", SqlDbType.NVarChar, 20).Value = string.IsNullOrWhiteSpace(estado) ? DBNull.Value : estado.Trim();
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                lista.Add(new CashSettlementListItemViewModel
+                {
+                    LiquidacionCobrosId = reader.GetInt32(0),
+                    RutaId = reader.GetInt32(1),
+                    RutaCodigo = reader.GetString(2),
+                    MontoEsperadoEfectivo = reader.GetDecimal(3),
+                    MontoEsperadoOtros = reader.GetDecimal(4),
+                    MontoEfectivoRecibido = reader.GetDecimal(5),
+                    MontoComprobantes = reader.GetDecimal(6),
+                    Diferencia = reader.GetDecimal(7),
+                    Estado = reader.GetString(8),
+                    LiquidadoPorNombre = reader.GetString(9),
+                    FechaLiquidacion = reader.GetDateTime(10)
+                });
+            }
+            return lista;
+        }
+
         public async Task CancelRouteAsync(int rutaId, string? motivo, int usuarioId, string usuarioNombre)
         {
             await using var connection = new SqlConnection(_connectionString);

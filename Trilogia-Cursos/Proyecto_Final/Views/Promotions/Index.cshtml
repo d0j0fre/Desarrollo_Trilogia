@@ -1,0 +1,119 @@
+@using Proyecto_Final.Models.Admin
+@model IEnumerable<PromotionListItemViewModel>
+@{
+    ViewData["Title"] = "Promociones";
+    var estado = ViewBag.Estado as string;
+    var buscar = ViewBag.Buscar as string;
+    string EstadoBadge(string e) => e switch { "Activa" => "success", "Inactiva" => "danger", _ => "warning" };
+    string TipoLabel(string t) => t == "DescuentoPorcentual" ? "Descuento %" : "Regalía por volumen";
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header d-flex justify-content-between align-items-center flex-wrap">
+                <div>
+                    <h2 class="mb-2">Promociones</h2>
+                    <p class="mb-0">Descuentos y regalías por volumen, segmentados por tipo de cliente.</p>
+                </div>
+                <div class="mt-2 mt-md-0">
+                    <a asp-action="Segments" class="btn btn-light border mr-2"><i class="fa fa-user-tag mr-2 text-primary"></i>Segmentos de cliente</a>
+                    <a asp-action="Create" class="btn btn-primary"><i class="fa fa-plus mr-2"></i>Nueva promoción</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-filter-bar">
+                <form asp-action="Index" method="get" class="form-inline">
+                    <input type="text" name="buscar" value="@buscar" class="form-control mr-2 mb-2" placeholder="Nombre o producto" />
+                    <select name="estado" class="form-control mr-2 mb-2">
+                        <option value="">Todos los estados</option>
+                        <option value="Activa" selected="@(estado == "Activa")">Activa</option>
+                        <option value="Inactiva" selected="@(estado == "Inactiva")">Inactiva</option>
+                        <option value="Vencida" selected="@(estado == "Vencida")">Vencida</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary mr-2 mb-2"><i class="fa fa-search mr-2"></i>Buscar</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary mb-2"><i class="fa fa-eraser mr-2"></i>Limpiar</a>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-12">
+            <div class="admin-table-wrapper">
+                <div class="p-4 border-bottom d-flex justify-content-between align-items-center flex-wrap">
+                    <h5 class="mb-0">Listado de promociones</h5>
+                    <span class="text-muted">Total: @(Model?.Count() ?? 0)</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Nombre</th><th>Tipo</th><th>Producto</th><th>Segmento</th>
+                                <th class="text-center">Vigencia</th><th class="text-center">Estado</th><th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model == null || !Model.Any())
+                            {
+                                <tr><td colspan="7" class="text-center text-muted py-4">No hay promociones registradas.</td></tr>
+                            }
+                            else
+                            {
+                                @foreach (var p in Model)
+                                {
+                                    <tr>
+                                        <td class="font-weight-bold">
+                                            @p.Nombre
+                                            @if (p.Vigente) { <span class="admin-badge-soft success ml-1">Vigente</span> }
+                                        </td>
+                                        <td>
+                                            @TipoLabel(p.Tipo)
+                                            <div class="text-muted small">
+                                                @if (p.Tipo == "DescuentoPorcentual") { <text>@p.PorcentajeDescuento% desde @p.CantidadMinima u.</text> }
+                                                else { <text>@p.CantidadRegalo @p.ProductoRegaloNombre por cada @p.CantidadMinima u.</text> }
+                                            </div>
+                                        </td>
+                                        <td>@p.ProductoNombre</td>
+                                        <td>@p.SegmentoCliente</td>
+                                        <td class="text-center">@p.FechaInicio.ToString("dd/MM/yy") – @p.FechaFin.ToString("dd/MM/yy")</td>
+                                        <td class="text-center"><span class="admin-badge-soft @EstadoBadge(p.Estado)">@p.Estado</span></td>
+                                        <td class="text-center">
+                                            @if (p.Estado == "Activa")
+                                            {
+                                                <a asp-action="Edit" asp-route-id="@p.PromocionId" class="btn btn-sm btn-outline-primary mr-1"><i class="fa fa-edit"></i></a>
+                                                <form asp-action="Inactivate" method="post" class="d-inline"
+                                                      data-s3-confirm="¿Inactivar la promoción '@p.Nombre'? Dejará de aplicarse en el carrito inmediatamente."
+                                                      data-s3-confirm-title="Inactivar promoción"
+                                                      data-s3-confirm-type="danger"
+                                                      data-s3-confirm-ok="Sí, inactivar"
+                                                      data-s3-confirm-cancel="Cancelar">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="promocionId" value="@p.PromocionId" />
+                                                    <input type="hidden" name="motivo" value="Inactivación manual (contingencia)" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fa fa-ban"></i></button>
+                                                </form>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">—</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

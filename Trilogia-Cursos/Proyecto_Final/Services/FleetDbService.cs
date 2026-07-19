@@ -220,31 +220,179 @@ namespace Proyecto_Final.Services
 
         public async Task CreateAssetAsync(AssetFormViewModel model)
         {
+            // Un activo nuevo siempre nace Disponible; Estado y "Prestado a" los gobierna Comodatos.
             await using var connection = new SqlConnection(_connectionString);
             await using var command = new SqlCommand("dbo.sp_Activos_Create", connection) { CommandType = CommandType.StoredProcedure };
-            AddAssetParams(command, model);
+            AddAssetInfoParams(command, model);
             await connection.OpenAsync();
             await command.ExecuteNonQueryAsync();
         }
 
         public async Task UpdateAssetAsync(AssetFormViewModel model)
         {
+            // sp_Activos_UpdateInfo NO toca Estado ni ClientePrestamo (responsabilidad de Comodatos).
             await using var connection = new SqlConnection(_connectionString);
-            await using var command = new SqlCommand("dbo.sp_Activos_Update", connection) { CommandType = CommandType.StoredProcedure };
+            await using var command = new SqlCommand("dbo.sp_Activos_UpdateInfo", connection) { CommandType = CommandType.StoredProcedure };
             command.Parameters.Add("@ActivoId", SqlDbType.Int).Value = model.ActivoId;
-            AddAssetParams(command, model);
+            AddAssetInfoParams(command, model);
             await connection.OpenAsync();
             await command.ExecuteNonQueryAsync();
         }
 
-        private static void AddAssetParams(SqlCommand command, AssetFormViewModel model)
+        public async Task DeleteAssetAsync(int activoId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Activos_Delete", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.Add("@ActivoId", SqlDbType.Int).Value = activoId;
+            await connection.OpenAsync();
+            await command.ExecuteNonQueryAsync();
+        }
+
+        public async Task<List<ComodatoHistoryItemViewModel>> GetAssetComodatoHistoryAsync(int activoId)
+        {
+            var lista = new List<ComodatoHistoryItemViewModel>();
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Comodato_HistorialPorActivo", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.Add("@ActivoId", SqlDbType.Int).Value = activoId;
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                lista.Add(new ComodatoHistoryItemViewModel
+                {
+                    ComodatoId = reader.GetInt32(0),
+                    ClienteNombre = reader.GetString(1),
+                    FechaAsignacion = reader.GetDateTime(2),
+                    FechaDevolucion = reader.IsDBNull(3) ? null : reader.GetDateTime(3),
+                    Estado = reader.GetString(4),
+                    DestinoDevolucion = reader.GetString(5),
+                    Observaciones = reader.GetString(6)
+                });
+            }
+            return lista;
+        }
+
+        private static void AddAssetInfoParams(SqlCommand command, AssetFormViewModel model)
         {
             command.Parameters.Add("@CodigoActivo", SqlDbType.NVarChar, 40).Value = model.CodigoActivo.Trim();
             command.Parameters.Add("@Nombre", SqlDbType.NVarChar, 150).Value = model.Nombre.Trim();
             command.Parameters.Add("@Tipo", SqlDbType.NVarChar, 40).Value = model.Tipo;
             command.Parameters.Add("@Descripcion", SqlDbType.NVarChar, 300).Value = string.IsNullOrWhiteSpace(model.Descripcion) ? DBNull.Value : model.Descripcion.Trim();
-            command.Parameters.Add("@Estado", SqlDbType.NVarChar, 20).Value = model.Estado;
-            command.Parameters.Add("@ClientePrestamo", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(model.ClientePrestamo) ? DBNull.Value : model.ClientePrestamo.Trim();
+        }
+
+        // ── CU-162/163/164 Comodatos ────────────────────────
+        public async Task<List<ComodatoListItemViewModel>> GetComodatosAsync(string? estado, string? buscar)
+        {
+            var lista = new List<ComodatoListItemViewModel>();
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Comodato_List", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.Add("@Estado", SqlDbType.NVarChar, 20).Value = string.IsNullOrWhiteSpace(estado) ? DBNull.Value : estado.Trim();
+            command.Parameters.Add("@Buscar", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(buscar) ? DBNull.Value : buscar.Trim();
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                lista.Add(new ComodatoListItemViewModel
+                {
+                    ComodatoId = reader.GetInt32(0),
+                    ActivoId = reader.GetInt32(1),
+                    CodigoActivo = reader.GetString(2),
+                    ActivoNombre = reader.GetString(3),
+                    ActivoTipo = reader.GetString(4),
+                    ClienteNombre = reader.GetString(5),
+                    ClienteIdentificacion = reader.GetString(6),
+                    Ubicacion = reader.GetString(7),
+                    FechaAsignacion = reader.GetDateTime(8),
+                    FechaDevolucion = reader.IsDBNull(9) ? null : reader.GetDateTime(9),
+                    Estado = reader.GetString(10),
+                    DestinoDevolucion = reader.GetString(11),
+                    DiasEnComodato = reader.GetInt32(12)
+                });
+            }
+            return lista;
+        }
+
+        // Activos disponibles para combo de asignación (reutiliza sp_Activos_List con filtro).
+        public async Task<List<AssetOptionViewModel>> GetAvailableAssetsAsync()
+        {
+            var lista = new List<AssetOptionViewModel>();
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Activos_List", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.Add("@Buscar", SqlDbType.NVarChar, 150).Value = DBNull.Value;
+            command.Parameters.Add("@Estado", SqlDbType.NVarChar, 20).Value = "Disponible";
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                lista.Add(new AssetOptionViewModel
+                {
+                    ActivoId = reader.GetInt32(0),
+                    CodigoActivo = reader.GetString(1),
+                    Nombre = reader.GetString(2),
+                    Tipo = reader.GetString(3)
+                });
+            }
+            return lista;
+        }
+
+        public async Task<int> AssignComodatoAsync(ComodatoAssignViewModel model, int usuarioId, string usuarioNombre)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Comodato_Asignar", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.Add("@ActivoId", SqlDbType.Int).Value = model.ActivoId;
+            command.Parameters.Add("@ClienteUsuarioId", SqlDbType.Int).Value = model.ClienteUsuarioId.HasValue ? model.ClienteUsuarioId.Value : DBNull.Value;
+            command.Parameters.Add("@ClienteNombre", SqlDbType.NVarChar, 150).Value = model.ClienteNombre.Trim();
+            command.Parameters.Add("@ClienteIdentificacion", SqlDbType.NVarChar, 50).Value = string.IsNullOrWhiteSpace(model.ClienteIdentificacion) ? DBNull.Value : model.ClienteIdentificacion.Trim();
+            command.Parameters.Add("@Ubicacion", SqlDbType.NVarChar, 200).Value = string.IsNullOrWhiteSpace(model.Ubicacion) ? DBNull.Value : model.Ubicacion.Trim();
+            command.Parameters.Add("@FechaAsignacion", SqlDbType.Date).Value = model.FechaAsignacion.HasValue ? model.FechaAsignacion.Value.Date : DBNull.Value;
+            command.Parameters.Add("@CondicionEntrega", SqlDbType.NVarChar, 300).Value = string.IsNullOrWhiteSpace(model.CondicionEntrega) ? DBNull.Value : model.CondicionEntrega.Trim();
+            command.Parameters.Add("@Observaciones", SqlDbType.NVarChar, 300).Value = string.IsNullOrWhiteSpace(model.Observaciones) ? DBNull.Value : model.Observaciones.Trim();
+            command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId > 0 ? usuarioId : DBNull.Value;
+            command.Parameters.Add("@Nombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(usuarioNombre) ? DBNull.Value : usuarioNombre;
+            await connection.OpenAsync();
+            var result = await command.ExecuteScalarAsync();
+            return result is int id ? id : Convert.ToInt32(result);
+        }
+
+        public async Task ReturnComodatoAsync(ComodatoReturnViewModel model, int usuarioId, string usuarioNombre)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Comodato_Devolver", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.Add("@ComodatoId", SqlDbType.Int).Value = model.ComodatoId;
+            command.Parameters.Add("@Destino", SqlDbType.NVarChar, 20).Value = model.Destino;
+            command.Parameters.Add("@CondicionDevolucion", SqlDbType.NVarChar, 300).Value = string.IsNullOrWhiteSpace(model.CondicionDevolucion) ? DBNull.Value : model.CondicionDevolucion.Trim();
+            command.Parameters.Add("@FechaDevolucion", SqlDbType.Date).Value = DBNull.Value;
+            command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId > 0 ? usuarioId : DBNull.Value;
+            command.Parameters.Add("@Nombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(usuarioNombre) ? DBNull.Value : usuarioNombre;
+            await connection.OpenAsync();
+            await command.ExecuteNonQueryAsync();
+        }
+
+        public async Task<List<ComodatoProfitabilityViewModel>> GetComodatoProfitabilityAsync()
+        {
+            var lista = new List<ComodatoProfitabilityViewModel>();
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Comodato_Rentabilidad", connection) { CommandType = CommandType.StoredProcedure };
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                lista.Add(new ComodatoProfitabilityViewModel
+                {
+                    ComodatoId = reader.GetInt32(0),
+                    CodigoActivo = reader.GetString(1),
+                    ActivoNombre = reader.GetString(2),
+                    ActivoTipo = reader.GetString(3),
+                    ClienteNombre = reader.GetString(4),
+                    ClienteUsuarioId = reader.IsDBNull(5) ? null : reader.GetInt32(5),
+                    FechaAsignacion = reader.GetDateTime(6),
+                    DiasEnComodato = reader.GetInt32(7),
+                    NumPedidos = reader.GetInt32(8),
+                    TotalComprado = reader.GetDecimal(9),
+                    UltimaCompra = reader.IsDBNull(10) ? null : reader.GetDateTime(10)
+                });
+            }
+            return lista;
         }
     }
 }

@@ -19,18 +19,21 @@ namespace Proyecto_Final.Controllers
 
         private readonly StoreDbService _storeDbService;
         private readonly EmailService _emailService;
+        private readonly PromotionsDbService _promotions;
 
         public CartController(
             StoreDbService storeDbService,
-            EmailService emailService)
+            EmailService emailService,
+            PromotionsDbService promotions)
         {
             _storeDbService = storeDbService;
             _emailService = emailService;
+            _promotions = promotions;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View(BuildCartViewModel());
+            return View(await BuildCartViewModelAsync());
         }
 
         [HttpPost]
@@ -116,7 +119,7 @@ namespace Proyecto_Final.Controllers
         }
 
         [HttpGet]
-        public IActionResult Checkout()
+        public async Task<IActionResult> Checkout()
         {
             if (!IsLoggedIn())
             {
@@ -124,7 +127,7 @@ namespace Proyecto_Final.Controllers
                 return RedirectToAction("Login", "Account", new { returnUrl = Url.Action(nameof(Checkout), "Cart") });
             }
 
-            var cart = BuildCartViewModel();
+            var cart = await BuildCartViewModelAsync();
             if (cart.Items.Count == 0)
             {
                 TempData["LoginSuccess"] = "Tu carrito está vacío.";
@@ -145,7 +148,7 @@ namespace Proyecto_Final.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Checkout(CheckoutViewModel model)
         {
-            model.Cart = BuildCartViewModel();
+            model.Cart = await BuildCartViewModelAsync();
             model.TipoEntrega = "Envío a domicilio";
 
             model.MetodoPago = string.IsNullOrWhiteSpace(model.MetodoPago)
@@ -249,12 +252,33 @@ namespace Proyecto_Final.Controllers
                     model,
                     model.Cart.Items);
 
+                // CU-173 — Aplicar promociones es "mejor esfuerzo": la venta YA está registrada,
+                // así que ninguna falla del motor de promociones puede interrumpir la compra.
+                var totalConfirmado = model.Cart.Subtotal;
+                try
+                {
+                    var aplicadas = await EvaluatePromotionsAsync(model.Cart.Items, usuarioId);
+                    if (aplicadas.Count > 0)
+                    {
+                        await _storeDbService.ApplyPromotionsToOrderAsync(
+                            pedidoId, aplicadas,
+                            usuarioId, HttpContext.Session.GetString("UserFullName") ?? "Cliente");
+                        totalConfirmado = model.Cart.Total; // descuentos aplicados con éxito
+                    }
+                }
+                catch
+                {
+                    // Si la promoción falla (p. ej. sin stock de regalía), el pedido queda a precio
+                    // normal y la compra continúa sin interrupción.
+                    totalConfirmado = model.Cart.Subtotal;
+                }
+
                 var confirmacion = new OrderConfirmationViewModel
                 {
                     PedidoId = pedidoId,
                     TipoEntrega = model.TipoEntrega,
                     DireccionEntrega = model.DireccionEntrega,
-                    Total = model.Cart.Subtotal,
+                    Total = totalConfirmado,
                     Items = model.Cart.Items
                 };
 
@@ -318,10 +342,38 @@ namespace Proyecto_Final.Controllers
 
         private bool IsLoggedIn() => !string.IsNullOrWhiteSpace(HttpContext.Session.GetString("UserEmail"));
 
-        private CartViewModel BuildCartViewModel()
+        // CU-173 — arma el carrito y aplica automáticamente las promociones vigentes.
+        private async Task<CartViewModel> BuildCartViewModelAsync()
         {
             var items = GetCartItems();
-            return new CartViewModel { Items = items };
+            var cart = new CartViewModel { Items = items };
+            if (items.Count == 0) return cart;
+
+            // Mejor esfuerzo: si el motor de promociones falla, se muestra el carrito sin promociones.
+            try
+            {
+                var usuarioId = HttpContext.Session.GetInt32("UserId") ?? 0;
+                var segmento = await _storeDbService.GetUserSegmentAsync(usuarioId);
+                var vigentes = await _promotions.GetActivePromotionsAsync(segmento);
+                var resultado = PromotionEngine.Apply(cart.Items, vigentes);
+                cart.Regalias = resultado.Gifts;
+            }
+            catch
+            {
+                foreach (var it in cart.Items) { it.MontoDescuento = 0; it.PromocionNombre = null; }
+                cart.Regalias.Clear();
+            }
+            return cart;
+        }
+
+        // Recalcula (autoritativo, servidor) las promociones aplicables para persistirlas.
+        private async Task<List<AppliedPromotion>> EvaluatePromotionsAsync(List<CartItemViewModel> items, int usuarioId)
+        {
+            if (items == null || items.Count == 0) return new List<AppliedPromotion>();
+            var segmento = await _storeDbService.GetUserSegmentAsync(usuarioId);
+            var vigentes = await _promotions.GetActivePromotionsAsync(segmento);
+            var resultado = PromotionEngine.Apply(items, vigentes);
+            return resultado.Applied;
         }
 
         private List<CartItemViewModel> GetCartItems()

@@ -59,6 +59,45 @@ namespace Proyecto_Final.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> Details(int id)
+        {
+            var activo = await _fleet.GetAssetByIdAsync(id);
+            if (activo == null)
+            {
+                TempData["ErrorMessage"] = "No se encontró el activo solicitado.";
+                return RedirectToAction(nameof(Index));
+            }
+            var model = new AssetDetailViewModel
+            {
+                Activo = activo,
+                Historial = await _fleet.GetAssetComodatoHistoryAsync(id)
+            };
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id)
+        {
+            try
+            {
+                await _fleet.DeleteAssetAsync(id);
+                await RegistrarAuditoriaAsync("Eliminar activo", "Activos", $"Se dio de baja el activo #{id}.");
+                TempData["SuccessMessage"] = "Activo eliminado (dado de baja) correctamente.";
+            }
+            catch (SqlException ex) when (ex.Number >= 50000)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al eliminar activo.");
+                TempData["ErrorMessage"] = "No fue posible eliminar el activo.";
+            }
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
             var model = await _fleet.GetAssetByIdAsync(id);

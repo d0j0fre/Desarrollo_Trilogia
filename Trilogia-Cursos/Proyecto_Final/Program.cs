@@ -28,6 +28,7 @@ builder.Services.AddScoped<LogisticsDbService>();
 builder.Services.AddScoped<ReportsDbService>();
 builder.Services.AddScoped<WarehouseDbService>();
 builder.Services.AddScoped<FleetDbService>();
+builder.Services.AddScoped<PromotionsDbService>();
 builder.Services.AddScoped<AssistantService>();
 
 // HttpClient para consumir la API de autenticación

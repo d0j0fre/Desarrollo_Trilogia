@@ -77,7 +77,19 @@
                                         <td class="text-center"><span class="admin-badge-soft @EstadoBadge(a.Estado)">@a.Estado</span></td>
                                         <td>@(string.IsNullOrWhiteSpace(a.ClientePrestamo) ? "—" : a.ClientePrestamo)</td>
                                         <td class="text-center">
-                                            <a asp-action="Edit" asp-route-id="@a.ActivoId" class="btn btn-sm btn-outline-primary"><i class="fa fa-edit"></i></a>
+                                            <div class="d-inline-flex justify-content-center" style="gap:.35rem" aria-label="Acciones del activo">
+                                                <a asp-action="Details" asp-route-id="@a.ActivoId" class="btn btn-sm btn-outline-secondary" title="Ver detalle"><i class="fa fa-eye"></i></a>
+                                                <a asp-action="Edit" asp-route-id="@a.ActivoId" class="btn btn-sm btn-outline-primary" title="Editar"><i class="fa fa-edit"></i></a>
+                                                <form asp-action="Delete" asp-route-id="@a.ActivoId" method="post" class="m-0"
+                                                      data-s3-confirm="¿Eliminar (dar de baja) el activo @a.CodigoActivo? No se podrá si está prestado."
+                                                      data-s3-confirm-title="Eliminar activo"
+                                                      data-s3-confirm-type="danger"
+                                                      data-s3-confirm-ok="Sí, eliminar"
+                                                      data-s3-confirm-cancel="Cancelar">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar"><i class="fa fa-trash-alt"></i></button>
+                                                </form>
+                                            </div>
                                         </td>
                                     </tr>
                                 }

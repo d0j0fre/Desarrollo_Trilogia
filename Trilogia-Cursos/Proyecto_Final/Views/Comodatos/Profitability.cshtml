@@ -1,0 +1,63 @@
+@using Proyecto_Final.Models.Admin
+@model IEnumerable<ComodatoProfitabilityViewModel>
+@{
+    ViewData["Title"] = "Rentabilidad de comodatos";
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header d-flex justify-content-between align-items-center flex-wrap">
+                <div>
+                    <h2 class="mb-2">Rentabilidad de equipos prestados</h2>
+                    <p class="mb-0">Inventario de comodatos activos cruzado con el historial de compras del cliente. Los menos rentables aparecen primero.</p>
+                </div>
+                <a asp-action="Index" class="btn btn-outline-secondary mt-2 mt-md-0"><i class="fa fa-arrow-left mr-2"></i>Volver</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-12">
+            <div class="admin-table-wrapper">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Activo</th><th>Cliente</th><th class="text-center">Días prestado</th>
+                                <th class="text-center">Pedidos</th><th class="text-right">Total comprado</th>
+                                <th class="text-center">Última compra</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model == null || !Model.Any())
+                            {
+                                <tr><td colspan="6" class="text-center text-muted py-4">No hay comodatos activos.</td></tr>
+                            }
+                            else
+                            {
+                                @foreach (var r in Model)
+                                {
+                                    var sinCompras = r.NumPedidos == 0;
+                                    <tr class="@(sinCompras ? "table-warning" : "")">
+                                        <td class="font-weight-bold">@r.CodigoActivo <span class="text-muted small">@r.ActivoNombre</span></td>
+                                        <td>@r.ClienteNombre</td>
+                                        <td class="text-center">@r.DiasEnComodato</td>
+                                        <td class="text-center">@r.NumPedidos</td>
+                                        <td class="text-right">@r.TotalComprado.ToString("N2")</td>
+                                        <td class="text-center">@(r.UltimaCompra.HasValue ? r.UltimaCompra.Value.ToString("dd/MM/yyyy") : "—")</td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <p class="text-muted small mt-2"><i class="fa fa-info-circle mr-1"></i>Las filas resaltadas corresponden a clientes con equipo prestado pero sin compras registradas desde la asignación.</p>
+        </div>
+    </div>
+</div>
