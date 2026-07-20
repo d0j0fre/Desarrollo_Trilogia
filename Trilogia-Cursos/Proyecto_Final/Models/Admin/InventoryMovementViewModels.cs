@@ -34,6 +34,18 @@ namespace Proyecto_Final.Models.Admin
         [StringLength(300, ErrorMessage = "El motivo no puede superar los 300 caracteres.")]
         public string? Motivo { get; set; } = string.Empty;
 
+        [Display(Name = "Esta entrada representa una compra")]
+        public bool GeneraGasto { get; set; }
+
+        [Display(Name = "Costo unitario")]
+        [Range(0.01, double.MaxValue,
+            ErrorMessage = "El costo unitario debe ser mayor que cero.")]
+        public decimal? CostoUnitario { get; set; }
+
+        [Display(Name = "Categoría del gasto")]
+        [StringLength(100, ErrorMessage = "La categoría no puede superar los 100 caracteres.")]
+        public string? CategoriaGasto { get; set; }
+
         public List<ProductAdminViewModel> ProductosDisponibles { get; set; } = new();
     }
 }

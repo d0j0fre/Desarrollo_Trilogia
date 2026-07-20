@@ -359,6 +359,67 @@ namespace Proyecto_Final.Services
                 if (nuevoStock < 0) throw new InvalidOperationException("El movimiento deja el stock en negativo.");
                 await UpdateProductStockInternalAsync(connection, (SqlTransaction)transaction, model.ProductoId, nuevoStock);
                 await CreateMovementInternalAsync(connection, (SqlTransaction)transaction, model.ProductoId, model.TipoMovimiento, model.Cantidad, stockAnterior, nuevoStock, model.Motivo, usuarioId, usuarioNombre, productoNombre);
+
+                if (model.TipoMovimiento == "Entrada" && model.GeneraGasto)
+                {
+                    if (!model.CostoUnitario.HasValue || model.CostoUnitario.Value <= 0)
+                    {
+                        throw new InvalidOperationException(
+                            "Debe indicar un costo unitario válido para registrar el gasto.");
+                    }
+
+                    decimal montoTotal = model.Cantidad * model.CostoUnitario.Value;
+
+                    const string gastoQuery = """
+        INSERT INTO dbo.Gastos
+        (
+            Fecha,
+            Concepto,
+            Categoria,
+            Monto,
+            RegistradoPorUsuarioId,
+            Observaciones
+        )
+        VALUES
+        (
+            SYSDATETIME(),
+            @Concepto,
+            @Categoria,
+            @Monto,
+            @UsuarioId,
+            @Observaciones
+        );
+        """;
+
+                    await using var gastoCommand = new SqlCommand(
+                        gastoQuery,
+                        connection,
+                        (SqlTransaction)transaction);
+
+                    gastoCommand.Parameters.Add("@Concepto", SqlDbType.NVarChar, 200).Value =
+                        $"Compra de inventario - {productoNombre}";
+
+                    gastoCommand.Parameters.Add("@Categoria", SqlDbType.NVarChar, 100).Value =
+                        string.IsNullOrWhiteSpace(model.CategoriaGasto)
+                            ? "Compra de inventario"
+                            : model.CategoriaGasto.Trim();
+
+                    gastoCommand.Parameters.Add("@Monto", SqlDbType.Decimal).Value = montoTotal;
+                    gastoCommand.Parameters["@Monto"].Precision = 18;
+                    gastoCommand.Parameters["@Monto"].Scale = 2;
+
+                    gastoCommand.Parameters.Add("@UsuarioId", SqlDbType.Int).Value =
+                        usuarioId > 0 ? usuarioId : DBNull.Value;
+
+                    gastoCommand.Parameters.Add("@Observaciones", SqlDbType.NVarChar, 500).Value =
+                        string.IsNullOrWhiteSpace(model.Motivo)
+                            ? DBNull.Value
+                            : model.Motivo.Trim();
+
+                    await gastoCommand.ExecuteNonQueryAsync();
+                }
+
+
                 await transaction.CommitAsync();
             }
             catch
@@ -1932,6 +1993,126 @@ namespace Proyecto_Final.Services
             command.Parameters.AddWithValue("@ProductoId", productoId);
             command.Parameters.AddWithValue("@NuevoStock", nuevoStock);
             await command.ExecuteNonQueryAsync();
+        }
+
+        public async Task<FinancialReportViewModel> GetFinancialReportAsync(
+            DateTime? fechaInicio,
+            DateTime? fechaFin)
+        {
+            var modelo = new FinancialReportViewModel
+            {
+                FechaInicio = fechaInicio,
+                FechaFin = fechaFin
+            };
+
+            await using var connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
+
+            const string ingresosQuery = """
+        SELECT
+            PedidoId,
+            FechaPago,
+            MetodoPago,
+            Total
+        FROM dbo.Pedidos
+        WHERE EstadoPago = N'Confirmado simulado'
+          AND (@FechaInicio IS NULL OR FechaPago >= @FechaInicio)
+          AND (@FechaFin IS NULL OR FechaPago < DATEADD(DAY, 1, @FechaFin))
+        ORDER BY FechaPago DESC;
+        """;
+
+            await using (var command = new SqlCommand(ingresosQuery, connection))
+            {
+                command.Parameters.Add("@FechaInicio", SqlDbType.DateTime2).Value =
+                    fechaInicio.HasValue
+                        ? fechaInicio.Value.Date
+                        : DBNull.Value;
+
+                command.Parameters.Add("@FechaFin", SqlDbType.DateTime2).Value =
+                    fechaFin.HasValue
+                        ? fechaFin.Value.Date
+                        : DBNull.Value;
+
+                await using var reader = await command.ExecuteReaderAsync();
+
+                while (await reader.ReadAsync())
+                {
+                    var pedidoId = reader.GetInt32(reader.GetOrdinal("PedidoId"));
+                    var monto = reader.GetDecimal(reader.GetOrdinal("Total"));
+                    var metodoPago = reader.GetString(reader.GetOrdinal("MetodoPago"));
+
+                    modelo.Movimientos.Add(new FinancialMovementViewModel
+                    {
+                        MovimientoId = pedidoId,
+                        Fecha = reader.GetDateTime(reader.GetOrdinal("FechaPago")),
+                        Tipo = "Ingreso",
+                        Descripcion = "Venta realizada",
+                        Referencia = $"Pedido #{pedidoId} - {metodoPago}",
+                        Monto = monto
+                    });
+
+                    modelo.TotalIngresos += monto;
+                }
+            }
+
+            const string egresosQuery = """
+        SELECT
+            GastoId,
+            Fecha,
+            Concepto,
+            Categoria,
+            Monto
+        FROM dbo.Gastos
+        WHERE (@FechaInicio IS NULL OR Fecha >= @FechaInicio)
+          AND (@FechaFin IS NULL OR Fecha < DATEADD(DAY, 1, @FechaFin))
+        ORDER BY Fecha DESC;
+        """;
+
+            await using (var command = new SqlCommand(egresosQuery, connection))
+            {
+                command.Parameters.Add("@FechaInicio", SqlDbType.DateTime2).Value =
+                    fechaInicio.HasValue
+                        ? fechaInicio.Value.Date
+                        : DBNull.Value;
+
+                command.Parameters.Add("@FechaFin", SqlDbType.DateTime2).Value =
+                    fechaFin.HasValue
+                        ? fechaFin.Value.Date
+                        : DBNull.Value;
+
+                await using var reader = await command.ExecuteReaderAsync();
+
+                while (await reader.ReadAsync())
+                {
+                    var gastoId = reader.GetInt32(reader.GetOrdinal("GastoId"));
+                    var monto = reader.GetDecimal(reader.GetOrdinal("Monto"));
+                    var concepto = reader.GetString(reader.GetOrdinal("Concepto"));
+
+                    var categoriaOrdinal = reader.GetOrdinal("Categoria");
+
+                    var categoria = reader.IsDBNull(categoriaOrdinal)
+                        ? "Sin categoría"
+                        : reader.GetString(categoriaOrdinal);
+
+                    modelo.Movimientos.Add(new FinancialMovementViewModel
+                    {
+                        MovimientoId = gastoId,
+                        Fecha = reader.GetDateTime(reader.GetOrdinal("Fecha")),
+                        Tipo = "Egreso",
+                        Descripcion = concepto,
+                        Referencia = $"Gasto #{gastoId} - {categoria}",
+                        Monto = monto
+                    });
+
+                    modelo.TotalEgresos += monto;
+                }
+            }
+
+            modelo.Movimientos = modelo.Movimientos
+                .OrderByDescending(x => x.Fecha)
+                .ToList();
+
+            return modelo;
         }
     }
 }
