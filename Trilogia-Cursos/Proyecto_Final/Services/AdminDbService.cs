@@ -359,6 +359,67 @@ namespace Proyecto_Final.Services
                 if (nuevoStock < 0) throw new InvalidOperationException("El movimiento deja el stock en negativo.");
                 await UpdateProductStockInternalAsync(connection, (SqlTransaction)transaction, model.ProductoId, nuevoStock);
                 await CreateMovementInternalAsync(connection, (SqlTransaction)transaction, model.ProductoId, model.TipoMovimiento, model.Cantidad, stockAnterior, nuevoStock, model.Motivo, usuarioId, usuarioNombre, productoNombre);
+
+                if (model.TipoMovimiento == "Entrada" && model.GeneraGasto)
+                {
+                    if (!model.CostoUnitario.HasValue || model.CostoUnitario.Value <= 0)
+                    {
+                        throw new InvalidOperationException(
+                            "Debe indicar un costo unitario válido para registrar el gasto.");
+                    }
+
+                    decimal montoTotal = model.Cantidad * model.CostoUnitario.Value;
+
+                    const string gastoQuery = """
+        INSERT INTO dbo.Gastos
+        (
+            Fecha,
+            Concepto,
+            Categoria,
+            Monto,
+            RegistradoPorUsuarioId,
+            Observaciones
+        )
+        VALUES
+        (
+            SYSDATETIME(),
+            @Concepto,
+            @Categoria,
+            @Monto,
+            @UsuarioId,
+            @Observaciones
+        );
+        """;
+
+                    await using var gastoCommand = new SqlCommand(
+                        gastoQuery,
+                        connection,
+                        (SqlTransaction)transaction);
+
+                    gastoCommand.Parameters.Add("@Concepto", SqlDbType.NVarChar, 200).Value =
+                        $"Compra de inventario - {productoNombre}";
+
+                    gastoCommand.Parameters.Add("@Categoria", SqlDbType.NVarChar, 100).Value =
+                        string.IsNullOrWhiteSpace(model.CategoriaGasto)
+                            ? "Compra de inventario"
+                            : model.CategoriaGasto.Trim();
+
+                    gastoCommand.Parameters.Add("@Monto", SqlDbType.Decimal).Value = montoTotal;
+                    gastoCommand.Parameters["@Monto"].Precision = 18;
+                    gastoCommand.Parameters["@Monto"].Scale = 2;
+
+                    gastoCommand.Parameters.Add("@UsuarioId", SqlDbType.Int).Value =
+                        usuarioId > 0 ? usuarioId : DBNull.Value;
+
+                    gastoCommand.Parameters.Add("@Observaciones", SqlDbType.NVarChar, 500).Value =
+                        string.IsNullOrWhiteSpace(model.Motivo)
+                            ? DBNull.Value
+                            : model.Motivo.Trim();
+
+                    await gastoCommand.ExecuteNonQueryAsync();
+                }
+
+
                 await transaction.CommitAsync();
             }
             catch
@@ -1580,16 +1641,16 @@ namespace Proyecto_Final.Services
                 await using var connection = new SqlConnection(_connectionString);
                 await using var command = new SqlCommand("dbo.sp_Seller_CreateOrder", connection);
                 command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.Add("@ClienteUsuarioId",      SqlDbType.Int).Value            = model.ClienteUsuarioId;
-                command.Parameters.Add("@VendedorUsuarioId",     SqlDbType.Int).Value            = vendedorUsuarioId;
-                command.Parameters.Add("@VendedorNombre",        SqlDbType.NVarChar, 150).Value  = string.IsNullOrWhiteSpace(vendedorNombre) ? "Vendedor" : vendedorNombre.Trim();
-                command.Parameters.Add("@TipoEntrega",           SqlDbType.NVarChar, 100).Value  = model.TipoEntrega.Trim();
-                command.Parameters.Add("@DireccionEntrega",      SqlDbType.NVarChar, 500).Value  = string.IsNullOrWhiteSpace(model.DireccionEntrega)       ? DBNull.Value : model.DireccionEntrega.Trim();
-                command.Parameters.Add("@Observaciones",         SqlDbType.NVarChar, 500).Value  = string.IsNullOrWhiteSpace(model.Observaciones)           ? DBNull.Value : model.Observaciones.Trim();
-                command.Parameters.Add("@IdentificacionCliente", SqlDbType.NVarChar, 100).Value  = string.IsNullOrWhiteSpace(model.IdentificacionCliente)   ? DBNull.Value : model.IdentificacionCliente.Trim();
-                command.Parameters.Add("@ItemsJson",             SqlDbType.NVarChar, -1).Value   = itemsJson;
-                command.Parameters.Add("@PedidoOfflineGuid",     SqlDbType.UniqueIdentifier).Value = pedidoOfflineGuid.HasValue ? pedidoOfflineGuid.Value : DBNull.Value;
-                command.Parameters.Add("@CanalPedido",           SqlDbType.NVarChar, 50).Value   = string.IsNullOrWhiteSpace(canalPedido) ? "Venta móvil" : canalPedido.Trim();
+                command.Parameters.Add("@ClienteUsuarioId", SqlDbType.Int).Value = model.ClienteUsuarioId;
+                command.Parameters.Add("@VendedorUsuarioId", SqlDbType.Int).Value = vendedorUsuarioId;
+                command.Parameters.Add("@VendedorNombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(vendedorNombre) ? "Vendedor" : vendedorNombre.Trim();
+                command.Parameters.Add("@TipoEntrega", SqlDbType.NVarChar, 100).Value = model.TipoEntrega.Trim();
+                command.Parameters.Add("@DireccionEntrega", SqlDbType.NVarChar, 500).Value = string.IsNullOrWhiteSpace(model.DireccionEntrega) ? DBNull.Value : model.DireccionEntrega.Trim();
+                command.Parameters.Add("@Observaciones", SqlDbType.NVarChar, 500).Value = string.IsNullOrWhiteSpace(model.Observaciones) ? DBNull.Value : model.Observaciones.Trim();
+                command.Parameters.Add("@IdentificacionCliente", SqlDbType.NVarChar, 100).Value = string.IsNullOrWhiteSpace(model.IdentificacionCliente) ? DBNull.Value : model.IdentificacionCliente.Trim();
+                command.Parameters.Add("@ItemsJson", SqlDbType.NVarChar, -1).Value = itemsJson;
+                command.Parameters.Add("@PedidoOfflineGuid", SqlDbType.UniqueIdentifier).Value = pedidoOfflineGuid.HasValue ? pedidoOfflineGuid.Value : DBNull.Value;
+                command.Parameters.Add("@CanalPedido", SqlDbType.NVarChar, 50).Value = string.IsNullOrWhiteSpace(canalPedido) ? "Venta móvil" : canalPedido.Trim();
 
                 await connection.OpenAsync();
                 await using var reader = await command.ExecuteReaderAsync();
@@ -1598,10 +1659,10 @@ namespace Proyecto_Final.Services
                 {
                     return new SellerOrderResultViewModel
                     {
-                        PedidoId      = reader.IsDBNull(0) ? 0             : reader.GetInt32(0),
-                        Estado        = reader.IsDBNull(1) ? string.Empty  : reader.GetString(1),
-                        FacturaId     = reader.IsDBNull(2) ? 0             : reader.GetInt32(2),
-                        NumeroFactura = reader.IsDBNull(3) ? string.Empty  : reader.GetString(3)
+                        PedidoId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                        Estado = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+                        FacturaId = reader.IsDBNull(2) ? 0 : reader.GetInt32(2),
+                        NumeroFactura = reader.IsDBNull(3) ? string.Empty : reader.GetString(3)
                     };
                 }
 
@@ -1626,15 +1687,15 @@ namespace Proyecto_Final.Services
             {
                 pedidos.Add(new RetainedOrderListItemViewModel
                 {
-                    PedidoId      = reader.IsDBNull(0) ? 0             : reader.GetInt32(0),
-                    Cliente       = reader.IsDBNull(1) ? string.Empty  : reader.GetString(1),
-                    Correo        = reader.IsDBNull(2) ? string.Empty  : reader.GetString(2),
-                    FechaPedido   = reader.IsDBNull(3) ? DateTime.MinValue : reader.GetDateTime(3),
+                    PedidoId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                    Cliente = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+                    Correo = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                    FechaPedido = reader.IsDBNull(3) ? DateTime.MinValue : reader.GetDateTime(3),
                     VendedorNombre = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
-                    Total         = reader.IsDBNull(5) ? 0             : reader.GetDecimal(5),
-                    TipoEntrega   = reader.IsDBNull(6) ? string.Empty  : reader.GetString(6),
-                    CanalPedido   = reader.IsDBNull(7) ? string.Empty  : reader.GetString(7),
-                    TotalLineas   = reader.IsDBNull(8) ? 0             : reader.GetInt32(8)
+                    Total = reader.IsDBNull(5) ? 0 : reader.GetDecimal(5),
+                    TipoEntrega = reader.IsDBNull(6) ? string.Empty : reader.GetString(6),
+                    CanalPedido = reader.IsDBNull(7) ? string.Empty : reader.GetString(7),
+                    TotalLineas = reader.IsDBNull(8) ? 0 : reader.GetInt32(8)
                 });
             }
             return pedidos;
@@ -1645,8 +1706,8 @@ namespace Proyecto_Final.Services
             await using var connection = new SqlConnection(_connectionString);
             await using var command = new SqlCommand("dbo.sp_Manager_ApproveOrder", connection);
             command.CommandType = CommandType.StoredProcedure;
-            command.Parameters.Add("@PedidoId",      SqlDbType.Int).Value           = pedidoId;
-            command.Parameters.Add("@UsuarioId",     SqlDbType.Int).Value           = usuarioId;
+            command.Parameters.Add("@PedidoId", SqlDbType.Int).Value = pedidoId;
+            command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId;
             command.Parameters.Add("@UsuarioNombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(usuarioNombre) ? "Gerente" : usuarioNombre.Trim();
 
             await connection.OpenAsync();
@@ -1656,9 +1717,9 @@ namespace Proyecto_Final.Services
             {
                 return new ManagerApproveResultViewModel
                 {
-                    PedidoId      = reader.IsDBNull(0) ? 0            : reader.GetInt32(0),
-                    Estado        = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
-                    FacturaId     = reader.IsDBNull(2) ? 0            : reader.GetInt32(2),
+                    PedidoId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                    Estado = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+                    FacturaId = reader.IsDBNull(2) ? 0 : reader.GetInt32(2),
                     NumeroFactura = reader.IsDBNull(3) ? string.Empty : reader.GetString(3)
                 };
             }
@@ -1671,10 +1732,10 @@ namespace Proyecto_Final.Services
             await using var connection = new SqlConnection(_connectionString);
             await using var command = new SqlCommand("dbo.sp_Manager_RejectOrder", connection);
             command.CommandType = CommandType.StoredProcedure;
-            command.Parameters.Add("@PedidoId",       SqlDbType.Int).Value           = pedidoId;
-            command.Parameters.Add("@MotivoRechazo",  SqlDbType.NVarChar, 500).Value = motivoRechazo.Trim();
-            command.Parameters.Add("@UsuarioId",      SqlDbType.Int).Value           = usuarioId;
-            command.Parameters.Add("@UsuarioNombre",  SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(usuarioNombre) ? "Gerente" : usuarioNombre.Trim();
+            command.Parameters.Add("@PedidoId", SqlDbType.Int).Value = pedidoId;
+            command.Parameters.Add("@MotivoRechazo", SqlDbType.NVarChar, 500).Value = motivoRechazo.Trim();
+            command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId;
+            command.Parameters.Add("@UsuarioNombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(usuarioNombre) ? "Gerente" : usuarioNombre.Trim();
 
             await connection.OpenAsync();
             await command.ExecuteNonQueryAsync();
@@ -1687,21 +1748,21 @@ namespace Proyecto_Final.Services
             await using var command = new SqlCommand("dbo.sp_Seller_GetMyOrders", connection);
             command.CommandType = CommandType.StoredProcedure;
             command.Parameters.Add("@VendedorUsuarioId", SqlDbType.Int).Value = vendedorUsuarioId;
-            command.Parameters.Add("@Top",               SqlDbType.Int).Value = top;
+            command.Parameters.Add("@Top", SqlDbType.Int).Value = top;
             await connection.OpenAsync();
             await using var reader = await command.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {
                 pedidos.Add(new SellerMyOrderViewModel
                 {
-                    PedidoId          = reader.IsDBNull(0) ? 0             : reader.GetInt32(0),
-                    Cliente           = reader.IsDBNull(1) ? string.Empty  : reader.GetString(1),
-                    FechaPedido       = reader.IsDBNull(2) ? DateTime.MinValue : reader.GetDateTime(2),
-                    Estado            = reader.IsDBNull(3) ? string.Empty  : reader.GetString(3),
-                    Total             = reader.IsDBNull(4) ? 0             : reader.GetDecimal(4),
-                    MotivoRechazo     = reader.IsDBNull(5) ? string.Empty  : reader.GetString(5),
-                    NumeroFactura     = reader.IsDBNull(6) ? string.Empty  : reader.GetString(6),
-                    FechaActualizacion = reader.IsDBNull(7) ? null         : reader.GetDateTime(7)
+                    PedidoId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
+                    Cliente = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+                    FechaPedido = reader.IsDBNull(2) ? DateTime.MinValue : reader.GetDateTime(2),
+                    Estado = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
+                    Total = reader.IsDBNull(4) ? 0 : reader.GetDecimal(4),
+                    MotivoRechazo = reader.IsDBNull(5) ? string.Empty : reader.GetString(5),
+                    NumeroFactura = reader.IsDBNull(6) ? string.Empty : reader.GetString(6),
+                    FechaActualizacion = reader.IsDBNull(7) ? null : reader.GetDateTime(7)
                 });
             }
             return pedidos;
@@ -1933,6 +1994,342 @@ namespace Proyecto_Final.Services
             command.Parameters.AddWithValue("@NuevoStock", nuevoStock);
             await command.ExecuteNonQueryAsync();
         }
+
+        public async Task<FinancialReportViewModel> GetFinancialReportAsync(
+            DateTime? fechaInicio,
+            DateTime? fechaFin)
+        {
+            var modelo = new FinancialReportViewModel
+            {
+                FechaInicio = fechaInicio,
+                FechaFin = fechaFin
+            };
+
+            await using var connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
+
+            const string ingresosQuery = """
+        SELECT
+            PedidoId,
+            FechaPago,
+            MetodoPago,
+            Total
+        FROM dbo.Pedidos
+        WHERE EstadoPago = N'Confirmado simulado'
+          AND (@FechaInicio IS NULL OR FechaPago >= @FechaInicio)
+          AND (@FechaFin IS NULL OR FechaPago < DATEADD(DAY, 1, @FechaFin))
+        ORDER BY FechaPago DESC;
+        """;
+
+            await using (var command = new SqlCommand(ingresosQuery, connection))
+            {
+                command.Parameters.Add("@FechaInicio", SqlDbType.DateTime2).Value =
+                    fechaInicio.HasValue
+                        ? fechaInicio.Value.Date
+                        : DBNull.Value;
+
+                command.Parameters.Add("@FechaFin", SqlDbType.DateTime2).Value =
+                    fechaFin.HasValue
+                        ? fechaFin.Value.Date
+                        : DBNull.Value;
+
+                await using var reader = await command.ExecuteReaderAsync();
+
+                while (await reader.ReadAsync())
+                {
+                    var pedidoId = reader.GetInt32(reader.GetOrdinal("PedidoId"));
+                    var monto = reader.GetDecimal(reader.GetOrdinal("Total"));
+                    var metodoPago = reader.GetString(reader.GetOrdinal("MetodoPago"));
+
+                    modelo.Movimientos.Add(new FinancialMovementViewModel
+                    {
+                        MovimientoId = pedidoId,
+                        Fecha = reader.GetDateTime(reader.GetOrdinal("FechaPago")),
+                        Tipo = "Ingreso",
+                        Descripcion = "Venta realizada",
+                        Referencia = $"Pedido #{pedidoId} - {metodoPago}",
+                        Monto = monto
+                    });
+
+                    modelo.TotalIngresos += monto;
+                }
+            }
+
+            const string egresosQuery = """
+        SELECT
+            GastoId,
+            Fecha,
+            Concepto,
+            Categoria,
+            Monto
+        FROM dbo.Gastos
+        WHERE (@FechaInicio IS NULL OR Fecha >= @FechaInicio)
+          AND (@FechaFin IS NULL OR Fecha < DATEADD(DAY, 1, @FechaFin))
+        ORDER BY Fecha DESC;
+        """;
+
+            await using (var command = new SqlCommand(egresosQuery, connection))
+            {
+                command.Parameters.Add("@FechaInicio", SqlDbType.DateTime2).Value =
+                    fechaInicio.HasValue
+                        ? fechaInicio.Value.Date
+                        : DBNull.Value;
+
+                command.Parameters.Add("@FechaFin", SqlDbType.DateTime2).Value =
+                    fechaFin.HasValue
+                        ? fechaFin.Value.Date
+                        : DBNull.Value;
+
+                await using var reader = await command.ExecuteReaderAsync();
+
+                while (await reader.ReadAsync())
+                {
+                    var gastoId = reader.GetInt32(reader.GetOrdinal("GastoId"));
+                    var monto = reader.GetDecimal(reader.GetOrdinal("Monto"));
+                    var concepto = reader.GetString(reader.GetOrdinal("Concepto"));
+
+                    var categoriaOrdinal = reader.GetOrdinal("Categoria");
+
+                    var categoria = reader.IsDBNull(categoriaOrdinal)
+                        ? "Sin categoría"
+                        : reader.GetString(categoriaOrdinal);
+
+                    modelo.Movimientos.Add(new FinancialMovementViewModel
+                    {
+                        MovimientoId = gastoId,
+                        Fecha = reader.GetDateTime(reader.GetOrdinal("Fecha")),
+                        Tipo = "Egreso",
+                        Descripcion = concepto,
+                        Referencia = $"Gasto #{gastoId} - {categoria}",
+                        Monto = monto
+                    });
+
+                    modelo.TotalEgresos += monto;
+                }
+            }
+
+            modelo.Movimientos = modelo.Movimientos
+                .OrderByDescending(x => x.Fecha)
+                .ToList();
+
+            return modelo;
+        }
+
+
+        public async Task<List<WarrantyRequestViewModel>> GetWarrantyRequestsAsync()
+        {
+            var warranties = new List<WarrantyRequestViewModel>();
+
+            await using var connection = new SqlConnection(_connectionString);
+
+            await using var command = new SqlCommand(
+                "dbo.sp_Admin_GetWarrantyRequests",
+                connection);
+
+            command.CommandType = CommandType.StoredProcedure;
+
+            await connection.OpenAsync();
+
+            await using var reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                warranties.Add(new WarrantyRequestViewModel
+                {
+                    GarantiaId = reader.IsDBNull(0)
+                        ? 0
+                        : reader.GetInt32(0),
+
+                    UsuarioId = reader.IsDBNull(1)
+                        ? 0
+                        : reader.GetInt32(1),
+
+                    PedidoId = reader.IsDBNull(2)
+                        ? 0
+                        : reader.GetInt32(2),
+
+                    Producto = reader.IsDBNull(3)
+                        ? string.Empty
+                        : reader.GetString(3),
+
+                    Cliente = reader.IsDBNull(4)
+                        ? string.Empty
+                        : reader.GetString(4),
+
+                    FechaSolicitud = reader.IsDBNull(5)
+                        ? DateTime.MinValue
+                        : reader.GetDateTime(5),
+
+                    Estado = reader.IsDBNull(6)
+                        ? "Pendiente"
+                        : reader.GetString(6),
+
+                    Motivo = reader.IsDBNull(7)
+                        ? string.Empty
+                        : reader.GetString(7)
+                });
+            }
+
+            return warranties;
+        }
+
+        public async Task<OrderDetailLineViewModel?> GetOrderDetailLineAsync(int pedidoDetalleId)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand(@"
+        SELECT
+            pd.PedidoDetalleId,
+            pd.PedidoId,
+            p.UsuarioId,
+            pr.Nombre AS Producto
+        FROM PedidoDetalle pd
+        INNER JOIN Pedidos p
+            ON p.PedidoId = pd.PedidoId
+        INNER JOIN Productos pr
+            ON pr.ProductoId = pd.ProductoId
+        WHERE pd.PedidoDetalleId = @PedidoDetalleId;", connection);
+
+            command.Parameters.AddWithValue("@PedidoDetalleId", pedidoDetalleId);
+
+            await connection.OpenAsync();
+
+            using var reader = await command.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync())
+            {
+                return null;
+            }
+
+            return new OrderDetailLineViewModel
+            {
+                PedidoDetalleId = reader.GetInt32(reader.GetOrdinal("PedidoDetalleId")),
+                PedidoId = reader.GetInt32(reader.GetOrdinal("PedidoId")),
+                UsuarioId = reader.GetInt32(reader.GetOrdinal("UsuarioId")),
+                Producto = reader.GetString(reader.GetOrdinal("Producto"))
+            };
+        }
+        public async Task<bool> CreateWarrantyRequestAsync(
+            int pedidoDetalleId,
+            int usuarioId,
+            string motivo,
+            string? descripcion)
+        {
+            using var connection = new SqlConnection(_connectionString);
+
+            using var command = new SqlCommand(
+                "dbo.sp_Client_CreateWarrantyRequest",
+                connection);
+
+            command.CommandType = CommandType.StoredProcedure;
+
+            command.Parameters.AddWithValue(
+                "@PedidoDetalleId",
+                pedidoDetalleId);
+
+            command.Parameters.AddWithValue(
+                "@UsuarioId",
+                usuarioId);
+
+            command.Parameters.AddWithValue(
+                "@Motivo",
+                motivo);
+
+            command.Parameters.AddWithValue(
+                "@Descripcion",
+                string.IsNullOrWhiteSpace(descripcion)
+                    ? DBNull.Value
+                    : descripcion);
+
+            await connection.OpenAsync();
+
+            var result = await command.ExecuteScalarAsync();
+
+            return result != null;
+        }
+
+        public async Task<List<ClientWarrantyListItemViewModel>>
+            GetClientWarrantyRequestsAsync(int usuarioId)
+        {
+            var solicitudes = new List<ClientWarrantyListItemViewModel>();
+
+            using var connection = new SqlConnection(_connectionString);
+
+            using var command = new SqlCommand(@"
+        SELECT
+            g.GarantiaId,
+            pd.PedidoId,
+            g.PedidoDetalleId,
+            p.Nombre AS Producto,
+            g.FechaSolicitud,
+            g.Motivo,
+            g.Descripcion,
+            g.Estado,
+            g.Telefono,
+            g.Resolucion,
+            g.FechaResolucion
+        FROM Garantias g
+        INNER JOIN PedidoDetalle pd
+            ON pd.PedidoDetalleId = g.PedidoDetalleId
+        INNER JOIN Productos p
+            ON p.ProductoId = pd.ProductoId
+        WHERE g.UsuarioId = @UsuarioId
+        ORDER BY g.FechaSolicitud DESC;",
+                connection);
+
+            command.Parameters.AddWithValue("@UsuarioId", usuarioId);
+
+            await connection.OpenAsync();
+
+            using var reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                solicitudes.Add(new ClientWarrantyListItemViewModel
+                {
+                    GarantiaId = reader.GetInt32(
+                        reader.GetOrdinal("GarantiaId")),
+
+                    PedidoId = reader.GetInt32(
+                        reader.GetOrdinal("PedidoId")),
+
+                    PedidoDetalleId = reader.GetInt32(
+                        reader.GetOrdinal("PedidoDetalleId")),
+
+                    Producto = reader.GetString(
+                        reader.GetOrdinal("Producto")),
+
+                    FechaSolicitud = reader.GetDateTime(
+                        reader.GetOrdinal("FechaSolicitud")),
+
+                    Motivo = reader.GetString(
+                        reader.GetOrdinal("Motivo")),
+
+                    Descripcion = reader.IsDBNull(
+                        reader.GetOrdinal("Descripcion"))
+                            ? null
+                            : reader.GetString(
+                                reader.GetOrdinal("Descripcion")),
+
+                    Estado = reader.GetString(
+                        reader.GetOrdinal("Estado")),
+
+                    Resolucion = reader.IsDBNull(
+                        reader.GetOrdinal("Resolucion"))
+                            ? null
+                            : reader.GetString(
+                                reader.GetOrdinal("Resolucion")),
+
+                    FechaResolucion = reader.IsDBNull(
+                        reader.GetOrdinal("FechaResolucion"))
+                            ? null
+                            : reader.GetDateTime(
+                                reader.GetOrdinal("FechaResolucion"))
+                });
+            }
+
+            return solicitudes;
+        }
+
     }
 }
 

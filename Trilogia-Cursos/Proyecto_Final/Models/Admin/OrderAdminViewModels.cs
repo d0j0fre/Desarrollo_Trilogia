@@ -45,16 +45,6 @@ namespace Proyecto_Final.Models.Admin
         };
     }
 
-    public class OrderDetailLineViewModel
-    {
-        public int PedidoDetalleId { get; set; }
-        public string Producto { get; set; } = string.Empty;
-        public int ProductoId { get; set; }
-        public int Cantidad { get; set; }
-        public decimal PrecioUnitario { get; set; }
-        public decimal Subtotal { get; set; }
-        public int StockActual { get; set; }
-    }
 
     public class GenerateInvoiceResultViewModel
     {

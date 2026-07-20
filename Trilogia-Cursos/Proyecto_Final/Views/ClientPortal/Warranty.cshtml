@@ -1,0 +1,134 @@
+@model Proyecto_Final.Models.Store.WarrantyRequestFormViewModel
+
+@{
+    ViewData["Title"] = "Solicitar garantía";
+}
+
+<div class="container py-5">
+
+    <div class="card shadow-sm">
+
+        <div class="card-header bg-warning">
+            <h4 class="mb-0">
+                <i class="fa fa-shield"></i>
+                Solicitar garantía
+            </h4>
+        </div>
+
+        <div class="card-body">
+
+            <div asp-validation-summary="ModelOnly"
+                 class="text-danger mb-3">
+            </div>
+
+            <div class="mb-4">
+                <p class="mb-1">
+                    <strong>Número de pedido:</strong>
+                    #@Model.PedidoId
+                </p>
+
+                <p class="mb-1">
+                    <strong>Producto:</strong>
+                    @Model.Producto
+                </p>
+            </div>
+
+            <form asp-controller="ClientPortal"
+                  asp-action="Warranty"
+                  method="post">
+
+                @Html.AntiForgeryToken()
+
+                <input asp-for="PedidoDetalleId"
+                       type="hidden" />
+
+                <input asp-for="PedidoId"
+                       type="hidden" />
+
+                <input asp-for="Producto"
+                       type="hidden" />
+
+                <div class="mb-3">
+
+                    <label asp-for="Motivo"
+                           class="form-label">
+                    </label>
+
+                    <select asp-for="Motivo"
+                            class="form-control">
+
+                        <option value="">
+                            Seleccione el motivo
+                        </option>
+
+                        <option value="Producto defectuoso">
+                            Producto defectuoso
+                        </option>
+
+                        <option value="Producto dañado">
+                            Producto dañado
+                        </option>
+
+                        <option value="Falla de funcionamiento">
+                            Falla de funcionamiento
+                        </option>
+
+                        <option value="Piezas faltantes">
+                            Piezas faltantes
+                        </option>
+
+                        <option value="Otro">
+                            Otro
+                        </option>
+
+                    </select>
+
+                    <span asp-validation-for="Motivo"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label asp-for="Descripcion"
+                           class="form-label">
+                    </label>
+
+                    <textarea asp-for="Descripcion"
+                              class="form-control"
+                              rows="5"
+                              placeholder="Explique el problema que presenta el producto">
+                    </textarea>
+
+                    <span asp-validation-for="Descripcion"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+                <button type="submit"
+                        class="btn btn-warning">
+
+                    <i class="fa fa-paper-plane"></i>
+                    Enviar solicitud
+                </button>
+
+                <a asp-controller="ClientPortal"
+                   asp-action="Detail"
+                   asp-route-id="@Model.PedidoId"
+                   class="btn btn-secondary">
+
+                    Cancelar
+                </a>
+
+            </form>
+
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

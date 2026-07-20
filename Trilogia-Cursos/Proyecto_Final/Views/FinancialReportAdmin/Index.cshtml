@@ -1,0 +1,112 @@
+@model Proyecto_Final.Models.Admin.FinancialReportViewModel
+
+@{
+    ViewData["Title"] = "Ingresos y egresos";
+}
+
+<div class="container mt-4">
+
+    <h2>Reporte de ingresos y egresos</h2>
+
+    <form method="get" asp-action="Index" class="row g-3 mt-2">
+
+        <div class="col-md-4">
+            <label asp-for="FechaInicio" class="form-label">
+                Fecha inicial
+            </label>
+
+            <input asp-for="FechaInicio"
+                   type="date"
+                   class="form-control" />
+        </div>
+
+        <div class="col-md-4">
+            <label asp-for="FechaFin" class="form-label">
+                Fecha final
+            </label>
+
+            <input asp-for="FechaFin"
+                   type="date"
+                   class="form-control" />
+        </div>
+
+        <div class="col-md-4 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary" style="color: #fff !important;">
+                Filtrar
+            </button>
+        </div>
+
+    </form>
+
+    <div class="row mt-4">
+
+        <div class="col-md-4">
+            <div class="card p-3">
+                <h5>Total de ingresos</h5>
+                <h3>₡@Model.TotalIngresos.ToString("N2")</h3>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card p-3">
+                <h5>Total de egresos</h5>
+                <h3>₡@Model.TotalEgresos.ToString("N2")</h3>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card p-3">
+                <h5>Balance</h5>
+                <h3>₡@Model.Balance.ToString("N2")</h3>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="mt-4">
+
+        <h4>Movimientos financieros</h4>
+
+        <table class="table table-striped mt-3">
+
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Tipo</th>
+                    <th>Descripción</th>
+                    <th>Referencia</th>
+                    <th>Monto</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                @if (Model.Movimientos.Any())
+                {
+                    foreach (var movimiento in Model.Movimientos)
+                    {
+                        <tr>
+                            <td>@movimiento.Fecha.ToString("dd/MM/yyyy")</td>
+                            <td>@movimiento.Tipo</td>
+                            <td>@movimiento.Descripcion</td>
+                            <td>@movimiento.Referencia</td>
+                            <td>₡@movimiento.Monto.ToString("N2")</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5" class="text-center">
+                            No hay movimientos registrados.
+                        </td>
+                    </tr>
+                }
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>

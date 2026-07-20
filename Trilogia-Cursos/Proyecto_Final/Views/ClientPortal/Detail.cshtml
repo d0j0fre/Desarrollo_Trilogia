@@ -72,33 +72,48 @@
                     </div>
 
                     <div class="table-responsive">
-                        <table class="table table-hover mb-0 s4-client-orders-table">
+                        <table class="table">
                             <thead>
                                 <tr>
                                     <th>Producto</th>
                                     <th>Cantidad</th>
                                     <th>Precio unitario</th>
                                     <th>Subtotal</th>
+                                    <th>Garantía</th>
                                 </tr>
                             </thead>
+
                             <tbody>
-                                @if (!Model.Lineas.Any())
+                                @foreach (var linea in Model.Lineas)
                                 {
                                     <tr>
-                                        <td colspan="4" class="text-center text-muted py-4">No hay productos registrados para este pedido.</td>
+                                        <td>@linea.Producto</td>
+                                        <td>@linea.Cantidad</td>
+                                        <td>₡@linea.PrecioUnitario.ToString("N2")</td>
+                                        <td>₡@linea.Subtotal.ToString("N2")</td>
+
+                                        <td>
+                                            @if (string.Equals(
+                                                Model.Estado,
+                                                "Entregado",
+                                                StringComparison.OrdinalIgnoreCase))
+                                            {
+                                                <a asp-controller="ClientPortal"
+                                                   asp-action="Warranty"
+                                                   asp-route-id="@linea.PedidoDetalleId"
+                                                   class="btn btn-warning btn-sm">
+                                                    <i class="fa fa-shield"></i>
+                                                    Solicitar garantía
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">
+                                                    No disponible
+                                                </span>
+                                            }
+                                        </td>
                                     </tr>
-                                }
-                                else
-                                {
-                                    @foreach (var item in Model.Lineas)
-                                    {
-                                        <tr>
-                                            <td class="font-weight-bold">@item.Producto</td>
-                                            <td>@item.Cantidad</td>
-                                            <td>&#8353;@item.PrecioUnitario.ToString("N2")</td>
-                                            <td class="font-weight-bold">&#8353;@item.Subtotal.ToString("N2")</td>
-                                        </tr>
-                                    }
                                 }
                             </tbody>
                         </table>

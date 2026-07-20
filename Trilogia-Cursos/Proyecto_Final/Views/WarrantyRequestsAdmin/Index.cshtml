@@ -1,0 +1,148 @@
+@model List<Proyecto_Final.Models.Admin.WarrantyRequestViewModel>
+
+@{
+    ViewData["Title"] = "Solicitudes de Garantía";
+}
+
+<div class="container-fluid">
+
+    <div class="card shadow-sm border-0">
+
+        <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+            <div>
+                <h3 class="mb-0">
+                    <i class="fa fa-shield-alt me-2"></i>
+                    Solicitudes de Garantía
+                </h3>
+                <small>
+                    Gestión de garantías enviadas por los clientes.
+                </small>
+            </div>
+
+            <span class="badge bg-dark fs-6" style=color:white>
+                Total: @Model.Count
+            </span>
+        </div>
+
+        <div class="card-body">
+
+            @if (!Model.Any())
+            {
+                <div class="alert alert-info text-center mb-0">
+                    <i class="fa fa-info-circle"></i>
+                    No existen solicitudes de garantía registradas.
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+
+                    <table class="table table-hover align-middle">
+
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Pedido</th>
+                                <th>Producto</th>
+                                <th>Cliente</th>
+                                <th>Fecha</th>
+                                <th>Motivo</th>
+                                <th>Estado</th>
+                                <th>Ver Cliente</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+
+                                    <td>
+                                        <strong>#@item.GarantiaId</strong>
+                                    </td>
+
+                                    <td>
+                                        #@item.PedidoId
+                                    </td>
+
+                                    <td>
+                                        @item.Producto
+                                    </td>
+
+                                    <td>
+                                        @item.Cliente
+                                    </td>
+
+
+
+                                    <td>
+                                        @item.FechaSolicitud.ToString("dd/MM/yyyy")
+                                    </td>
+
+                                    <td>
+                                        @item.Motivo
+                                    </td>
+
+                                    <td>
+
+                                        @switch (item.Estado)
+                                        {
+                                            case "Pendiente":
+                                                <span class="badge bg-warning text-dark">
+                                                    Pendiente
+                                                </span>
+                                                break;
+
+                                            case "En revisión":
+                                                <span class="badge bg-info">
+                                                    En revisión
+                                                </span>
+                                                break;
+
+                                            case "Aprobada":
+                                                <span class="badge bg-success">
+                                                    Aprobada
+                                                </span>
+                                                break;
+
+                                            case "Rechazada":
+                                                <span class="badge bg-danger">
+                                                    Rechazada
+                                                </span>
+                                                break;
+
+                                            default:
+                                                <span class="badge bg-secondary">
+                                                    @item.Estado
+                                                </span>
+                                                break;
+                                        }
+
+                                            <td>
+                                            <a asp-controller="Clients"
+                                               asp-action="Details"
+                                               asp-route-id="@item.UsuarioId"
+                                               class="btn btn-sm btn-outline-dark">
+                                                <i class="fa fa-eye mr-1"></i>
+                                                Ver cliente
+                                            </a>
+                                            </td>
+
+                                    </td>
+
+                                </tr>
+                            }
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+            }
+
+        </div>
+
+    </div>
+
+</div>

@@ -1,7 +1,10 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using System.Data;
+using System.Text.Json;
+using Microsoft.Data.SqlClient;
+using Proyecto_Final.Models.Admin;
 using Proyecto_Final.Models.Store;
 using System.Data;
-using System.Text.Json;
+
 
 namespace Proyecto_Final.Services
 {
@@ -75,6 +78,7 @@ namespace Proyecto_Final.Services
             var result = await command.ExecuteScalarAsync();
             return Convert.ToInt32(result);
         }
+
     }
 }
 

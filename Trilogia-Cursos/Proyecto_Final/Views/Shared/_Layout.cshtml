@@ -82,7 +82,7 @@
 
                         <form asp-controller="Account" asp-action="Logout" method="post" class="m-0">
                             @Html.AntiForgeryToken()
-                            <button type="submit" class="btn btn-primary logout-btn">
+                            <button type="submit" class="btn btn-primary logout-btn" style="color: #fff !important;">
                                 <i class="fa fa-sign-out-alt mr-1"></i>Cerrar sesión
                             </button>
                         </form>
@@ -135,9 +135,33 @@
 
                             @if (isClient)
                             {
-                                <a asp-controller="ClientPortal" asp-action="Index" class="nav-item nav-link">
-                                    <i class="fa fa-clipboard-list mr-1"></i>Mis pedidos
-                                </a>
+                                <div class="nav-item dropdown">
+                                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">
+                                        <i class="fa fa-user-circle mr-1"></i> Mi cuenta
+                                    </a>
+
+                                    <div class="dropdown-menu rounded-0 border-0 m-0">
+
+                                        <a asp-controller="ClientPortal"
+                                           asp-action="Index"
+                                           class="dropdown-item">
+                                            <i class="fa fa-box"></i> Mis pedidos
+                                        </a>
+
+                                        <a asp-controller="ClientPortal"
+                                           asp-action="Warranty"
+                                           class="dropdown-item">
+                                            <i class="fa fa-undo"></i> Mis garantías
+                                        </a>
+
+                                        <a asp-controller="ClientPortal"
+                                           asp-action="Statement"
+                                           class="dropdown-item">
+                                            <i class="fa fa-file-invoice"></i> Estado de cuenta
+                                        </a>
+
+                                    </div>
+                                </div>
                             }
 
                             @if (isEmployeePortalUser)
@@ -174,6 +198,8 @@
                                         <a asp-controller="OrdersAdmin" asp-action="Index" class="dropdown-item"><i class="fa fa-clipboard-list"></i> Pedidos</a>
                                         <a asp-controller="Billing" asp-action="Index" class="dropdown-item"><i class="fa fa-file-invoice-dollar"></i> Facturación</a>
                                         <a asp-controller="AccountsReceivableAdmin" asp-action="Index" class="dropdown-item"><i class="fa fa-solid fa-receipt"></i> Cuentas por Cobrar</a>
+                                        <a asp-controller="FinancialReportAdmin" asp-action="Index" class="dropdown-item"><i class="fa fa-solid fa-chart-line"></i> Ingresos y Egreso</a>
+                                        <a asp-controller="WarrantyRequestsAdmin" asp-action="Index" class="dropdown-item"><i class="fa-solid fa-shield-halved"></i> Solicitudes de Garantía</a>
                                     </div>
                                 </div>
 
@@ -252,7 +278,7 @@
                 <p class="s3-footer__text mb-3">
                     Sistema web para consulta de productos, gestion de pedidos, venta movil, inventario, facturacion y administracion general del supermercado y distribuidora.
                 </p>
-                <a asp-controller="Home" asp-action="Contact" class="btn btn-primary btn-sm">
+                <a asp-controller="Home" asp-action="Contact" class="btn btn-primary btn-sm" style="color: #fff !important;">
                     <i class="fa fa-envelope mr-1"></i>Ir a contacto
                 </a>
             </div>
@@ -312,7 +338,10 @@
         </div>
     </footer>
 
-    <a href="#" class="btn btn-primary back-to-top"><i class="fa fa-angle-double-up"></i></a>
+    <a href="#" class="btn back-to-top"
+   style="background-color: #FFD700 !important; color: white !important;">
+    <i class="fa fa-angle-double-up" style="color: white !important;"></i>
+</a>
 
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
