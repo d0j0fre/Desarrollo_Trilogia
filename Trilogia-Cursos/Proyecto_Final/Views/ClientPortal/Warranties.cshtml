@@ -1,0 +1,145 @@
+@model List<Proyecto_Final.Models.Store.ClientWarrantyListItemViewModel>
+
+@{
+    ViewData["Title"] = "Mis garantías";
+}
+
+<div class="container py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>Mis solicitudes de garantía</h2>
+
+            <p class="text-muted mb-0">
+                Consulte el estado de todas sus solicitudes de garantía.
+            </p>
+        </div>
+
+        <a asp-controller="ClientPortal"
+           asp-action="Index"
+           class="btn btn-outline-secondary">
+            <i class="fa fa-arrow-left"></i>
+            Volver a mis pedidos
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            <i class="fa fa-info-circle"></i>
+            No tiene solicitudes de garantía registradas.
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm">
+
+            <div class="card-body p-0">
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover table-bordered mb-0">
+
+                        <thead class="table-light">
+                            <tr>
+                                <th>Solicitud</th>
+                                <th>Pedido</th>
+                                <th>Producto</th>
+                                <th>Fecha</th>
+                                <th>Motivo</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            @foreach (var solicitud in Model)
+                            {
+                                <tr>
+
+                                    <td>
+                                        #@solicitud.GarantiaId
+                                    </td>
+
+                                    <td>
+                                        #@solicitud.PedidoId
+                                    </td>
+
+                                    <td>
+                                        @solicitud.Producto
+                                    </td>
+
+                                    <td>
+                                        @solicitud.FechaSolicitud.ToString("dd/MM/yyyy")
+                                    </td>
+
+                                    <td>
+                                        @solicitud.Motivo
+                                    </td>
+
+                                    <td>
+
+                                        @switch (solicitud.Estado)
+                                        {
+                                            case "Pendiente":
+                                                <span class="badge bg-warning text-dark">
+                                                    Pendiente
+                                                </span>
+                                                break;
+
+                                            case "En revisión":
+                                                <span class="badge bg-info">
+                                                    En revisión
+                                                </span>
+                                                break;
+
+                                            case "Aprobada":
+                                                <span class="badge bg-success">
+                                                    Aprobada
+                                                </span>
+                                                break;
+
+                                            case "Rechazada":
+                                                <span class="badge bg-danger">
+                                                    Rechazada
+                                                </span>
+                                                break;
+
+                                            default:
+                                                <span class="badge bg-secondary">
+                                                    @solicitud.Estado
+                                                </span>
+                                                break;
+                                        }
+
+                                    </td>
+
+                                </tr>
+                            }
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+    }
+
+</div>

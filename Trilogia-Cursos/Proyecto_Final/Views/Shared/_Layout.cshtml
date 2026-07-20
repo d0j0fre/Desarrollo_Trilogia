@@ -135,9 +135,33 @@
 
                             @if (isClient)
                             {
-                                <a asp-controller="ClientPortal" asp-action="Index" class="nav-item nav-link">
-                                    <i class="fa fa-clipboard-list mr-1"></i>Mis pedidos
-                                </a>
+                                <div class="nav-item dropdown">
+                                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">
+                                        <i class="fa fa-user-circle mr-1"></i> Mi cuenta
+                                    </a>
+
+                                    <div class="dropdown-menu rounded-0 border-0 m-0">
+
+                                        <a asp-controller="ClientPortal"
+                                           asp-action="Index"
+                                           class="dropdown-item">
+                                            <i class="fa fa-box"></i> Mis pedidos
+                                        </a>
+
+                                        <a asp-controller="ClientPortal"
+                                           asp-action="Warranty"
+                                           class="dropdown-item">
+                                            <i class="fa fa-undo"></i> Mis garantías
+                                        </a>
+
+                                        <a asp-controller="ClientPortal"
+                                           asp-action="Statement"
+                                           class="dropdown-item">
+                                            <i class="fa fa-file-invoice"></i> Estado de cuenta
+                                        </a>
+
+                                    </div>
+                                </div>
                             }
 
                             @if (isEmployeePortalUser)
@@ -175,6 +199,7 @@
                                         <a asp-controller="Billing" asp-action="Index" class="dropdown-item"><i class="fa fa-file-invoice-dollar"></i> Facturación</a>
                                         <a asp-controller="AccountsReceivableAdmin" asp-action="Index" class="dropdown-item"><i class="fa fa-solid fa-receipt"></i> Cuentas por Cobrar</a>
                                         <a asp-controller="FinancialReportAdmin" asp-action="Index" class="dropdown-item"><i class="fa fa-solid fa-chart-line"></i> Ingresos y Egreso</a>
+                                        <a asp-controller="WarrantyRequestsAdmin" asp-action="Index" class="dropdown-item"><i class="fa-solid fa-shield-halved"></i> Solicitudes de Garantía</a>
                                     </div>
                                 </div>
 

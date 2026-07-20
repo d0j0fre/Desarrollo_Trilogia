@@ -20,19 +20,27 @@ namespace Proyecto_Final.Controllers
         public async Task<IActionResult> Index()
         {
             var usuarioId = HttpContext.Session.GetInt32("UserId") ?? 0;
-            var cliente = await _adminDbService.GetClientDetailAsync(usuarioId);
+
+            var cliente = await _adminDbService
+                .GetClientDetailAsync(usuarioId);
 
             if (cliente == null)
             {
-                TempData["ErrorMessage"] = "No fue posible cargar la informacion del cliente.";
+                TempData["ErrorMessage"] =
+                    "No fue posible cargar la información del cliente.";
+
                 return RedirectToAction("Index", "Home");
             }
 
             var model = new ClientPortalIndexViewModel
             {
                 Cliente = MapClientSummary(cliente),
+
                 Credito = await TryGetCreditSummaryAsync(usuarioId),
-                Pedidos = cliente.Pedidos.Select(MapOrderListItem).ToList()
+
+                Pedidos = cliente.Pedidos
+                    .Select(MapOrderListItem)
+                    .ToList()
             };
 
             return View(model);
@@ -42,26 +50,34 @@ namespace Proyecto_Final.Controllers
         public async Task<IActionResult> Statement()
         {
             var usuarioId = HttpContext.Session.GetInt32("UserId") ?? 0;
-            var cliente = await _adminDbService.GetClientDetailAsync(usuarioId);
+
+            var cliente = await _adminDbService
+                .GetClientDetailAsync(usuarioId);
 
             if (cliente == null)
             {
-                TempData["ErrorMessage"] = "No fue posible cargar el estado de cuenta.";
+                TempData["ErrorMessage"] =
+                    "No fue posible cargar el estado de cuenta.";
+
                 return RedirectToAction(nameof(Index));
             }
 
             var model = new ClientPortalStatementViewModel
             {
                 Cliente = MapClientSummary(cliente),
+
                 Credito = await TryGetCreditSummaryAsync(usuarioId),
-                Pedidos = cliente.Pedidos.Select(MapOrderListItem).ToList()
+
+                Pedidos = cliente.Pedidos
+                    .Select(MapOrderListItem)
+                    .ToList()
             };
 
-            // Deja registro de auditoria de cada descarga del estado de cuenta.
             await RegistrarAuditoriaAsync(
                 "Descargar estado de cuenta",
                 "Portal cliente",
-                $"El cliente {model.Cliente.NombreCompleto} descargo su estado de cuenta.");
+                $"El cliente {model.Cliente.NombreCompleto} descargó su estado de cuenta."
+            );
 
             return View(model);
         }
@@ -71,34 +87,46 @@ namespace Proyecto_Final.Controllers
         {
             if (id <= 0)
             {
-                TempData["ErrorMessage"] = "No fue posible cargar el pedido solicitado.";
+                TempData["ErrorMessage"] =
+                    "No fue posible cargar el pedido solicitado.";
+
                 return RedirectToAction(nameof(Index));
             }
 
-            var usuarioId = HttpContext.Session.GetInt32("UserId") ?? 0;
-            var pedido = await _adminDbService.GetOrderDetailAsync(id);
+            var usuarioId =
+                HttpContext.Session.GetInt32("UserId") ?? 0;
+
+            var pedido = await _adminDbService
+                .GetOrderDetailAsync(id);
 
             if (pedido == null || pedido.UsuarioId != usuarioId)
             {
-                TempData["ErrorMessage"] = "No fue posible cargar el pedido solicitado.";
+                TempData["ErrorMessage"] =
+                    "No fue posible cargar el pedido solicitado.";
+
                 return RedirectToAction(nameof(Index));
             }
 
-            var hasInvoice = await _adminDbService.OrderHasInvoiceAsync(id);
+            var hasInvoice = await _adminDbService
+                .OrderHasInvoiceAsync(id);
+
             return View(MapOrderDetail(pedido, hasInvoice));
         }
 
         [HttpGet]
-        [SessionAuthorize("Cliente")]
         public async Task<IActionResult> Invoice(int id)
         {
             if (id <= 0)
             {
-                TempData["ErrorMessage"] = "No fue posible cargar el comprobante solicitado.";
+                TempData["ErrorMessage"] =
+                    "No fue posible cargar el comprobante solicitado.";
+
                 return RedirectToAction(nameof(Index));
             }
 
-            var usuarioId = HttpContext.Session.GetInt32("UserId") ?? 0;
+            var usuarioId =
+                HttpContext.Session.GetInt32("UserId") ?? 0;
+
             if (usuarioId <= 0)
             {
                 return RedirectToAction("Login", "Account");
@@ -106,10 +134,14 @@ namespace Proyecto_Final.Controllers
 
             try
             {
-                var comprobante = await _adminDbService.GetClientInvoiceByOrderAsync(id, usuarioId);
+                var comprobante = await _adminDbService
+                    .GetClientInvoiceByOrderAsync(id, usuarioId);
+
                 if (comprobante == null)
                 {
-                    TempData["ErrorMessage"] = "No fue posible cargar el comprobante solicitado.";
+                    TempData["ErrorMessage"] =
+                        "No fue posible cargar el comprobante solicitado.";
+
                     return RedirectToAction(nameof(Index));
                 }
 
@@ -117,23 +149,28 @@ namespace Proyecto_Final.Controllers
             }
             catch (Exception)
             {
-                TempData["ErrorMessage"] = "No fue posible cargar el comprobante en este momento. Intente nuevamente.";
+                TempData["ErrorMessage"] =
+                    "No fue posible cargar el comprobante en este momento. Intente nuevamente.";
+
                 return RedirectToAction(nameof(Index));
             }
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [SessionAuthorize("Cliente")]
         public async Task<IActionResult> Cancel(int id)
         {
             if (id <= 0)
             {
-                TempData["ErrorMessage"] = "No fue posible cancelar el pedido solicitado.";
+                TempData["ErrorMessage"] =
+                    "No fue posible cancelar el pedido solicitado.";
+
                 return RedirectToAction(nameof(Index));
             }
 
-            var usuarioId = HttpContext.Session.GetInt32("UserId") ?? 0;
+            var usuarioId =
+                HttpContext.Session.GetInt32("UserId") ?? 0;
+
             if (usuarioId <= 0)
             {
                 return RedirectToAction("Login", "Account");
@@ -141,34 +178,204 @@ namespace Proyecto_Final.Controllers
 
             try
             {
-                var cancelled = await _adminDbService.CancelClientPendingOrderAsync(id, usuarioId);
+                var cancelled = await _adminDbService
+                    .CancelClientPendingOrderAsync(id, usuarioId);
 
                 if (!cancelled)
                 {
-                    TempData["ErrorMessage"] = "No fue posible cancelar el pedido solicitado.";
-                    return RedirectToAction(nameof(Detail), new { id });
+                    TempData["ErrorMessage"] =
+                        "No fue posible cancelar el pedido solicitado.";
+
+                    return RedirectToAction(
+                        nameof(Detail),
+                        new { id }
+                    );
                 }
 
                 await RegistrarAuditoriaAsync(
                     "Cancelar pedido",
                     "Portal cliente",
-                    $"El cliente cancelo el pedido #{id} desde el portal.");
+                    $"El cliente canceló el pedido #{id} desde el portal."
+                );
 
-                TempData["SuccessMessage"] = "Pedido cancelado correctamente.";
+                TempData["SuccessMessage"] =
+                    "Pedido cancelado correctamente.";
             }
             catch (Exception)
             {
-                TempData["ErrorMessage"] = "No fue posible cancelar el pedido en este momento. Intente nuevamente.";
+                TempData["ErrorMessage"] =
+                    "No fue posible cancelar el pedido en este momento. Intente nuevamente.";
             }
 
-            return RedirectToAction(nameof(Detail), new { id });
+            return RedirectToAction(
+                nameof(Detail),
+                new { id }
+            );
         }
 
-        private async Task<ClientPortalCreditSummaryViewModel?> TryGetCreditSummaryAsync(int usuarioId)
+        // Abre el formulario para solicitar una garantía.
+        [HttpGet]
+        public async Task<IActionResult> Warranty(int id)
+        {
+            if (id <= 0)
+            {
+                TempData["ErrorMessage"] =
+                    "No fue posible cargar el producto solicitado.";
+
+                return RedirectToAction(nameof(Index));
+            }
+
+            var usuarioId =
+                HttpContext.Session.GetInt32("UserId") ?? 0;
+
+            if (usuarioId <= 0)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            var detalle = await _adminDbService
+                .GetOrderDetailLineAsync(id);
+
+            if (detalle == null ||
+                detalle.UsuarioId != usuarioId)
+            {
+                TempData["ErrorMessage"] =
+                    "No fue posible cargar el producto solicitado.";
+
+                return RedirectToAction(nameof(Index));
+            }
+
+            var model = new WarrantyRequestFormViewModel
+            {
+                PedidoDetalleId = detalle.PedidoDetalleId,
+                PedidoId = detalle.PedidoId,
+                Producto = detalle.Producto
+            };
+
+            return View(model);
+        }
+
+        // Guarda la solicitud de garantía.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Warranty(
+            WarrantyRequestFormViewModel model)
+        {
+            var usuarioId =
+                HttpContext.Session.GetInt32("UserId") ?? 0;
+
+            if (usuarioId <= 0)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            /*
+             * Se consulta nuevamente el detalle para evitar que
+             * el cliente modifique el PedidoDetalleId desde el HTML.
+             */
+            var detalle = await _adminDbService
+                .GetOrderDetailLineAsync(model.PedidoDetalleId);
+
+            if (detalle == null ||
+                detalle.UsuarioId != usuarioId)
+            {
+                TempData["ErrorMessage"] =
+                    "El producto seleccionado no pertenece a su cuenta.";
+
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Usamos los datos reales de la base de datos.
+            model.PedidoDetalleId = detalle.PedidoDetalleId;
+            model.PedidoId = detalle.PedidoId;
+            model.Producto = detalle.Producto;
+
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            try
+            {
+                var creado = await _adminDbService
+                    .CreateWarrantyRequestAsync(
+                        model.PedidoDetalleId,
+                        usuarioId,
+                        model.Motivo,
+                        model.Descripcion
+                    );
+
+                if (!creado)
+                {
+                    ModelState.AddModelError(
+                        string.Empty,
+                        "No fue posible registrar la solicitud de garantía."
+                    );
+
+                    return View(model);
+                }
+
+                await RegistrarAuditoriaAsync(
+                    "Solicitar garantía",
+                    "Portal cliente",
+                    $"El cliente solicitó una garantía para el producto {model.Producto}."
+                );
+
+                TempData["SuccessMessage"] =
+                    "Solicitud de garantía registrada correctamente.";
+
+                return RedirectToAction(
+                    nameof(Detail),
+                    new { id = model.PedidoId }
+                );
+            }
+            catch (Exception)
+            {
+                ModelState.AddModelError(
+                    string.Empty,
+                    "No fue posible registrar la solicitud de garantía en este momento."
+                );
+
+                return View(model);
+            }
+        }
+
+        // Muestra las garantías solicitadas por el cliente.
+        [HttpGet]
+        public async Task<IActionResult> Warranties()
+        {
+            var usuarioId =
+                HttpContext.Session.GetInt32("UserId") ?? 0;
+
+            if (usuarioId <= 0)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            try
+            {
+                var solicitudes = await _adminDbService
+                    .GetClientWarrantyRequestsAsync(usuarioId);
+
+                return View(solicitudes);
+            }
+            catch (Exception)
+            {
+                TempData["ErrorMessage"] =
+                    "No fue posible cargar las solicitudes de garantía.";
+
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        private async Task<ClientPortalCreditSummaryViewModel?>
+            TryGetCreditSummaryAsync(int usuarioId)
         {
             try
             {
-                var credito = await _adminDbService.GetClientCreditDetailAsync(usuarioId);
+                var credito = await _adminDbService
+                    .GetClientCreditDetailAsync(usuarioId);
+
                 if (credito == null)
                 {
                     return null;
@@ -190,7 +397,8 @@ namespace Proyecto_Final.Controllers
             }
         }
 
-        private static ClientPortalSummaryViewModel MapClientSummary(ClientDetailViewModel cliente)
+        private static ClientPortalSummaryViewModel
+            MapClientSummary(ClientDetailViewModel cliente)
         {
             return new ClientPortalSummaryViewModel
             {
@@ -207,7 +415,8 @@ namespace Proyecto_Final.Controllers
             };
         }
 
-        private static ClientPortalOrderListItemViewModel MapOrderListItem(ClientOrderSummaryViewModel pedido)
+        private static ClientPortalOrderListItemViewModel
+            MapOrderListItem(ClientOrderSummaryViewModel pedido)
         {
             return new ClientPortalOrderListItemViewModel
             {
@@ -221,7 +430,10 @@ namespace Proyecto_Final.Controllers
             };
         }
 
-        private async Task RegistrarAuditoriaAsync(string accion, string modulo, string descripcion)
+        private async Task RegistrarAuditoriaAsync(
+            string accion,
+            string modulo,
+            string descripcion)
         {
             await _adminDbService.CreateAuditLogAsync(
                 HttpContext.Session.GetInt32("UserId"),
@@ -231,13 +443,25 @@ namespace Proyecto_Final.Controllers
                 accion,
                 modulo,
                 descripcion,
-                HttpContext.Connection.RemoteIpAddress?.ToString(),
-                Request.Headers.UserAgent.ToString());
+                HttpContext.Connection
+                    .RemoteIpAddress?
+                    .ToString(),
+                Request.Headers.UserAgent.ToString()
+            );
         }
 
-        private static ClientPortalOrderDetailViewModel MapOrderDetail(OrderDetailViewModel pedido, bool hasInvoice)
+        private static ClientPortalOrderDetailViewModel
+            MapOrderDetail(
+                OrderDetailViewModel pedido,
+                bool hasInvoice)
         {
-            var canCancel = string.Equals(pedido.Estado, "Pendiente", StringComparison.OrdinalIgnoreCase) && !hasInvoice;
+            var canCancel =
+                string.Equals(
+                    pedido.Estado,
+                    "Pendiente",
+                    StringComparison.OrdinalIgnoreCase
+                )
+                && !hasInvoice;
 
             return new ClientPortalOrderDetailViewModel
             {
@@ -250,16 +474,24 @@ namespace Proyecto_Final.Controllers
                 Observaciones = pedido.Observaciones,
                 HasInvoice = hasInvoice,
                 CanCancel = canCancel,
+
                 CancelStatusMessage = canCancel
                     ? "Puede cancelar este pedido mientras permanezca pendiente y sin factura asociada."
-                    : "Este pedido no permite cancelacion desde el portal.",
-                Lineas = pedido.Detalles.Select(linea => new ClientPortalOrderLineViewModel
-                {
-                    Producto = linea.Producto,
-                    Cantidad = linea.Cantidad,
-                    PrecioUnitario = linea.PrecioUnitario,
-                    Subtotal = linea.Subtotal
-                }).ToList()
+                    : "Este pedido no permite cancelación desde el portal.",
+
+                Lineas = pedido.Detalles
+                    .Select(linea =>
+                        new ClientPortalOrderLineViewModel
+                        {
+                            PedidoDetalleId =
+                                linea.PedidoDetalleId,
+
+                            Producto = linea.Producto,
+                            Cantidad = linea.Cantidad,
+                            PrecioUnitario = linea.PrecioUnitario,
+                            Subtotal = linea.Subtotal
+                        })
+                    .ToList()
             };
         }
     }

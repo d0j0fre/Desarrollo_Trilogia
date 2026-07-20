@@ -92,7 +92,8 @@
                         <tbody>
                             @foreach (var item in Model.Pedido.Detalles)
                             {
-                                var stockOk = item.StockActual >= item.Cantidad;
+                                var stockOk = item.
+                                StockActual >= item.Cantidad;
                                 <tr class="@(stockOk ? "" : "table-danger")">
                                     <td>@item.Producto</td>
                                     <td class="text-center">@item.Cantidad</td>
