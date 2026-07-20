@@ -223,16 +223,37 @@
                     @foreach (var item in Model.Cart.Items)
                     {
                         <div class="s4-checkout-summary-row">
-                            <span>@item.Nombre <small>x @item.Cantidad</small></span>
-                            <strong>₡@item.Subtotal.ToString("N2")</strong>
+                            <span>@item.Nombre <small>x @item.Cantidad</small>
+                                @if (item.MontoDescuento > 0)
+                                {
+                                    <small class="text-success d-block"><i class="fa fa-tags mr-1"></i>@item.PromocionNombre</small>
+                                }
+                            </span>
+                            <strong>₡@item.SubtotalConDescuento.ToString("N2")</strong>
+                        </div>
+                    }
+                    @foreach (var regalo in Model.Cart.Regalias)
+                    {
+                        <div class="s4-checkout-summary-row">
+                            <span>@regalo.Nombre <small>x @regalo.Cantidad</small>
+                                <small class="text-success d-block"><i class="fa fa-gift mr-1"></i>Regalía — @regalo.PromocionNombre</small>
+                            </span>
+                            <strong class="text-success">GRATIS</strong>
                         </div>
                     }
                 </div>
 
                 <div class="s4-checkout-summary-total">
+                    @if (Model.Cart.DescuentoTotal > 0)
+                    {
+                        <div class="s4-checkout-summary-row text-success">
+                            <span>Descuento por promociones</span>
+                            <strong>-₡@Model.Cart.DescuentoTotal.ToString("N2")</strong>
+                        </div>
+                    }
                     <div class="s4-checkout-summary-row">
                         <span>Total</span>
-                        <strong>₡@Model.Cart.Subtotal.ToString("N2")</strong>
+                        <strong>₡@Model.Cart.Total.ToString("N2")</strong>
                     </div>
                 </div>
 

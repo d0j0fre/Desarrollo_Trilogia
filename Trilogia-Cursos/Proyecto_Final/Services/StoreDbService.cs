@@ -75,6 +75,50 @@ namespace Proyecto_Final.Services
             var result = await command.ExecuteScalarAsync();
             return Convert.ToInt32(result);
         }
+
+        // CU-173 — segmento del cliente (para elegir promociones aplicables).
+        public async Task<string> GetUserSegmentAsync(int usuarioId)
+        {
+            if (usuarioId <= 0) return "Minorista";
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Cliente_GetSegmento", connection)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+            command.Parameters.AddWithValue("@UsuarioId", usuarioId);
+            await connection.OpenAsync();
+            var result = await command.ExecuteScalarAsync();
+            return result is string s && !string.IsNullOrWhiteSpace(s) ? s : "Minorista";
+        }
+
+        // CU-173 — persiste las promociones aplicadas sobre un pedido recién creado.
+        public async Task ApplyPromotionsToOrderAsync(int pedidoId, IReadOnlyCollection<AppliedPromotion> aplicaciones, int usuarioId, string usuarioNombre)
+        {
+            if (aplicaciones is null || aplicaciones.Count == 0) return;
+
+            var payload = aplicaciones.Select(a => new
+            {
+                a.PromocionId,
+                a.ProductoId,
+                a.TipoBeneficio,
+                a.MontoDescontado,
+                a.UnidadesRegalo,
+                a.ProductoRegaloId
+            });
+            var json = JsonSerializer.Serialize(payload);
+
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Promociones_AplicarAPedido", connection)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+            command.Parameters.Add("@PedidoId", SqlDbType.Int).Value = pedidoId;
+            command.Parameters.Add("@AplicacionesJson", SqlDbType.NVarChar, -1).Value = json;
+            command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId > 0 ? usuarioId : DBNull.Value;
+            command.Parameters.Add("@Nombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(usuarioNombre) ? DBNull.Value : usuarioNombre;
+            await connection.OpenAsync();
+            await command.ExecuteNonQueryAsync();
+        }
     }
 }
 

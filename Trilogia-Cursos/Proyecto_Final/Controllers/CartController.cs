@@ -18,15 +18,22 @@ namespace Proyecto_Final.Controllers
         };
 
         private readonly StoreDbService _storeDbService;
+        private readonly EmailService _emailService;
+        private readonly PromotionsDbService _promotions;
 
-        public CartController(StoreDbService storeDbService)
+        public CartController(
+            StoreDbService storeDbService,
+            EmailService emailService,
+            PromotionsDbService promotions)
         {
             _storeDbService = storeDbService;
+            _emailService = emailService;
+            _promotions = promotions;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View(BuildCartViewModel());
+            return View(await BuildCartViewModelAsync());
         }
 
         [HttpPost]
@@ -112,7 +119,7 @@ namespace Proyecto_Final.Controllers
         }
 
         [HttpGet]
-        public IActionResult Checkout()
+        public async Task<IActionResult> Checkout()
         {
             if (!IsLoggedIn())
             {
@@ -120,7 +127,7 @@ namespace Proyecto_Final.Controllers
                 return RedirectToAction("Login", "Account", new { returnUrl = Url.Action(nameof(Checkout), "Cart") });
             }
 
-            var cart = BuildCartViewModel();
+            var cart = await BuildCartViewModelAsync();
             if (cart.Items.Count == 0)
             {
                 TempData["LoginSuccess"] = "Tu carrito está vacío.";
@@ -141,19 +148,29 @@ namespace Proyecto_Final.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Checkout(CheckoutViewModel model)
         {
-            model.Cart = BuildCartViewModel();
+            model.Cart = await BuildCartViewModelAsync();
             model.TipoEntrega = "Envío a domicilio";
+
             model.MetodoPago = string.IsNullOrWhiteSpace(model.MetodoPago)
                 ? "Efectivo contra entrega"
                 : model.MetodoPago.Trim();
+
             model.ReferenciaPago = string.IsNullOrWhiteSpace(model.ReferenciaPago)
                 ? null
                 : model.ReferenciaPago.Trim();
 
             if (!IsLoggedIn())
             {
-                TempData["LoginSuccess"] = "Debes iniciar sesión para finalizar la compra.";
-                return RedirectToAction("Login", "Account", new { returnUrl = Url.Action(nameof(Checkout), "Cart") });
+                TempData["LoginSuccess"] =
+                    "Debes iniciar sesión para finalizar la compra.";
+
+                return RedirectToAction(
+                    "Login",
+                    "Account",
+                    new
+                    {
+                        returnUrl = Url.Action(nameof(Checkout), "Cart")
+                    });
             }
 
             if (model.Cart.Items.Count == 0)
@@ -163,48 +180,152 @@ namespace Proyecto_Final.Controllers
             }
 
             if (string.IsNullOrWhiteSpace(model.Provincia))
-                ModelState.AddModelError(nameof(model.Provincia), "La provincia es obligatoria.");
-            if (string.IsNullOrWhiteSpace(model.Canton))
-                ModelState.AddModelError(nameof(model.Canton), "El cantón es obligatorio.");
-            if (string.IsNullOrWhiteSpace(model.Distrito))
-                ModelState.AddModelError(nameof(model.Distrito), "El distrito es obligatorio.");
-            if (string.IsNullOrWhiteSpace(model.DireccionDetalle))
-                ModelState.AddModelError(nameof(model.DireccionDetalle), "La dirección es obligatoria.");
-            if (string.IsNullOrWhiteSpace(model.Identificacion))
-                ModelState.AddModelError(nameof(model.Identificacion), "La identificación es obligatoria.");
-            if (!PaymentMethods.Contains(model.MetodoPago))
-                ModelState.AddModelError(nameof(model.MetodoPago), "Seleccione un método de pago válido.");
+            {
+                ModelState.AddModelError(
+                    nameof(model.Provincia),
+                    "La provincia es obligatoria.");
+            }
 
-            model.DireccionEntrega = $"{model.Pais}, {model.Provincia}, {model.Canton}, {model.Distrito}. {model.DireccionDetalle}";
+            if (string.IsNullOrWhiteSpace(model.Canton))
+            {
+                ModelState.AddModelError(
+                    nameof(model.Canton),
+                    "El cantón es obligatorio.");
+            }
+
+            if (string.IsNullOrWhiteSpace(model.Distrito))
+            {
+                ModelState.AddModelError(
+                    nameof(model.Distrito),
+                    "El distrito es obligatorio.");
+            }
+
+            if (string.IsNullOrWhiteSpace(model.DireccionDetalle))
+            {
+                ModelState.AddModelError(
+                    nameof(model.DireccionDetalle),
+                    "La dirección es obligatoria.");
+            }
+
+            if (string.IsNullOrWhiteSpace(model.Identificacion))
+            {
+                ModelState.AddModelError(
+                    nameof(model.Identificacion),
+                    "La identificación es obligatoria.");
+            }
+
+            if (!PaymentMethods.Contains(model.MetodoPago))
+            {
+                ModelState.AddModelError(
+                    nameof(model.MetodoPago),
+                    "Seleccione un método de pago válido.");
+            }
+
+            model.CorreoElectronico =
+                string.IsNullOrWhiteSpace(model.CorreoElectronico)
+                    ? HttpContext.Session.GetString("UserEmail")
+                    : model.CorreoElectronico.Trim();
+
+            if (string.IsNullOrWhiteSpace(model.CorreoElectronico))
+            {
+                ModelState.AddModelError(
+                    nameof(model.CorreoElectronico),
+                    "No se encontró un correo electrónico para enviar el comprobante.");
+            }
+
+            model.DireccionEntrega =
+                $"{model.Pais}, {model.Provincia}, {model.Canton}, " +
+                $"{model.Distrito}. {model.DireccionDetalle}";
 
             if (!ModelState.IsValid)
+            {
                 return View(model);
+            }
 
             try
             {
-                var pedidoId = await _storeDbService.CreateOrderAsync(HttpContext.Session.GetInt32("UserId") ?? 0, model, model.Cart.Items);
-                HttpContext.Session.Remove(CartSessionKey);
+                var usuarioId =
+                    HttpContext.Session.GetInt32("UserId") ?? 0;
 
-                TempData["OrderConfirmation"] = JsonSerializer.Serialize(new OrderConfirmationViewModel
+                var pedidoId = await _storeDbService.CreateOrderAsync(
+                    usuarioId,
+                    model,
+                    model.Cart.Items);
+
+                // CU-173 — Aplicar promociones es "mejor esfuerzo": la venta YA está registrada,
+                // así que ninguna falla del motor de promociones puede interrumpir la compra.
+                var totalConfirmado = model.Cart.Subtotal;
+                try
+                {
+                    var aplicadas = await EvaluatePromotionsAsync(model.Cart.Items, usuarioId);
+                    if (aplicadas.Count > 0)
+                    {
+                        await _storeDbService.ApplyPromotionsToOrderAsync(
+                            pedidoId, aplicadas,
+                            usuarioId, HttpContext.Session.GetString("UserFullName") ?? "Cliente");
+                        totalConfirmado = model.Cart.Total; // descuentos aplicados con éxito
+                    }
+                }
+                catch
+                {
+                    // Si la promoción falla (p. ej. sin stock de regalía), el pedido queda a precio
+                    // normal y la compra continúa sin interrupción.
+                    totalConfirmado = model.Cart.Subtotal;
+                }
+
+                var confirmacion = new OrderConfirmationViewModel
                 {
                     PedidoId = pedidoId,
                     TipoEntrega = model.TipoEntrega,
                     DireccionEntrega = model.DireccionEntrega,
-                    Total = model.Cart.Subtotal,
+                    Total = totalConfirmado,
                     Items = model.Cart.Items
-                });
+                };
 
-                TempData["LoginSuccess"] = $"Pedido #{pedidoId} creado correctamente.";
+                var destinatario =
+                    model.CorreoElectronico
+                    ?? HttpContext.Session.GetString("UserEmail")
+                    ?? string.Empty;
+
+                var cliente =
+                    HttpContext.Session.GetString("UserFullName")
+                    ?? "Cliente";
+
+                _emailService.SendOrderReceipt(
+                    destinatario,
+                    cliente,
+                    pedidoId,
+                    model,
+                    model.Cart.Items);
+
+                HttpContext.Session.Remove(CartSessionKey);
+
+                TempData["OrderConfirmation"] =
+                    JsonSerializer.Serialize(confirmacion);
+
+                TempData["LoginSuccess"] =
+                    $"Pedido #{pedidoId} creado correctamente.";
+
                 return RedirectToAction(nameof(Confirmation));
             }
-            catch (SqlException ex) when (ex.Message.Contains("stock", StringComparison.OrdinalIgnoreCase))
+            catch (SqlException ex)
+                when (ex.Message.Contains(
+                    "stock",
+                    StringComparison.OrdinalIgnoreCase))
             {
-                ModelState.AddModelError(string.Empty, "No hay stock suficiente para completar el pedido. Revise el carrito e intente nuevamente.");
+                ModelState.AddModelError(
+                    string.Empty,
+                    "No hay stock suficiente para completar el pedido. " +
+                    "Revise el carrito e intente nuevamente.");
+
                 return View(model);
             }
             catch (Exception)
             {
-                ModelState.AddModelError(string.Empty, "No se pudo completar el pedido. Intente nuevamente.");
+                ModelState.AddModelError(
+                    string.Empty,
+                    "No se pudo completar el pedido. Intente nuevamente.");
+
                 return View(model);
             }
         }
@@ -221,10 +342,38 @@ namespace Proyecto_Final.Controllers
 
         private bool IsLoggedIn() => !string.IsNullOrWhiteSpace(HttpContext.Session.GetString("UserEmail"));
 
-        private CartViewModel BuildCartViewModel()
+        // CU-173 — arma el carrito y aplica automáticamente las promociones vigentes.
+        private async Task<CartViewModel> BuildCartViewModelAsync()
         {
             var items = GetCartItems();
-            return new CartViewModel { Items = items };
+            var cart = new CartViewModel { Items = items };
+            if (items.Count == 0) return cart;
+
+            // Mejor esfuerzo: si el motor de promociones falla, se muestra el carrito sin promociones.
+            try
+            {
+                var usuarioId = HttpContext.Session.GetInt32("UserId") ?? 0;
+                var segmento = await _storeDbService.GetUserSegmentAsync(usuarioId);
+                var vigentes = await _promotions.GetActivePromotionsAsync(segmento);
+                var resultado = PromotionEngine.Apply(cart.Items, vigentes);
+                cart.Regalias = resultado.Gifts;
+            }
+            catch
+            {
+                foreach (var it in cart.Items) { it.MontoDescuento = 0; it.PromocionNombre = null; }
+                cart.Regalias.Clear();
+            }
+            return cart;
+        }
+
+        // Recalcula (autoritativo, servidor) las promociones aplicables para persistirlas.
+        private async Task<List<AppliedPromotion>> EvaluatePromotionsAsync(List<CartItemViewModel> items, int usuarioId)
+        {
+            if (items == null || items.Count == 0) return new List<AppliedPromotion>();
+            var segmento = await _storeDbService.GetUserSegmentAsync(usuarioId);
+            var vigentes = await _promotions.GetActivePromotionsAsync(segmento);
+            var resultado = PromotionEngine.Apply(items, vigentes);
+            return resultado.Applied;
         }
 
         private List<CartItemViewModel> GetCartItems()

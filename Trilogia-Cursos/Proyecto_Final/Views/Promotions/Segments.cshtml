@@ -1,0 +1,78 @@
+@using Proyecto_Final.Models.Admin
+@model IEnumerable<ClientSegmentViewModel>
+@{
+    ViewData["Title"] = "Segmentos de cliente";
+    var buscar = ViewBag.Buscar as string;
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header d-flex justify-content-between align-items-center flex-wrap">
+                <div>
+                    <h2 class="mb-2">Segmentos de cliente</h2>
+                    <p class="mb-0">Marca a cada cliente como minorista o mayorista para dirigir las promociones segmentadas.</p>
+                </div>
+                <a asp-action="Index" class="btn btn-outline-secondary mt-2 mt-md-0"><i class="fa fa-arrow-left mr-2"></i>Volver a promociones</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-filter-bar">
+                <form asp-action="Segments" method="get" class="form-inline">
+                    <input type="text" name="buscar" value="@buscar" class="form-control mr-2 mb-2" placeholder="Nombre o correo" />
+                    <button type="submit" class="btn btn-primary mr-2 mb-2"><i class="fa fa-search mr-2"></i>Buscar</button>
+                    <a asp-action="Segments" class="btn btn-outline-secondary mb-2"><i class="fa fa-eraser mr-2"></i>Limpiar</a>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-12">
+            <div class="admin-table-wrapper">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="thead-light">
+                            <tr><th>Cliente</th><th>Correo</th><th class="text-center">Segmento actual</th><th class="text-center">Cambiar a</th></tr>
+                        </thead>
+                        <tbody>
+                            @if (Model == null || !Model.Any())
+                            {
+                                <tr><td colspan="4" class="text-center text-muted py-4">No hay clientes registrados.</td></tr>
+                            }
+                            else
+                            {
+                                @foreach (var c in Model)
+                                {
+                                    var destino = c.SegmentoCliente == "Mayorista" ? "Minorista" : "Mayorista";
+                                    <tr>
+                                        <td class="font-weight-bold">@c.NombreCompleto</td>
+                                        <td>@c.Correo</td>
+                                        <td class="text-center">
+                                            <span class="admin-badge-soft @(c.SegmentoCliente == "Mayorista" ? "info" : "success")">@c.SegmentoCliente</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <form asp-action="SetSegment" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="usuarioId" value="@c.UsuarioId" />
+                                                <input type="hidden" name="segmento" value="@destino" />
+                                                <button type="submit" class="btn btn-sm btn-outline-primary"><i class="fa fa-exchange-alt mr-1"></i>@destino</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

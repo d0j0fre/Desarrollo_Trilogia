@@ -33,6 +33,60 @@ namespace Proyecto_Final.Services
                 notaInferior: "Este mensaje fue generado automaticamente por el sistema de Licorera La Bodega.");
         }
 
+        public static string BuildInvoiceEmail(string nombreCliente, string numeroFactura, int pedidoId, DateTime fechaFactura, decimal total)
+        {
+            var nombreSeguro = Encode(nombreCliente, "Cliente");
+            var numeroSeguro = Encode(numeroFactura, "N/A");
+
+            var contenido = $@"
+                <p style='margin:0 0 16px;color:#374151;font-size:15px;line-height:1.7;'>
+                    Hola <strong>{nombreSeguro}</strong>, tu compra fue procesada correctamente y adjuntamos el resumen de tu comprobante.
+                </p>
+
+                <table role='presentation' width='100%' cellspacing='0' cellpadding='0' style='border-collapse:collapse;margin:0 0 20px;'>
+                    <tr>
+                        <td style='padding:12px 14px;background:#fbfaf7;border:1px solid #ebe6dc;border-radius:14px;'>
+                            <p style='margin:0 0 6px;color:#6b7280;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;'>Numero de comprobante</p>
+                            <p style='margin:0;color:#111827;font-size:15px;font-weight:700;'>{numeroSeguro}</p>
+                        </td>
+                    </tr>
+                </table>
+
+                <table role='presentation' width='100%' cellspacing='0' cellpadding='0' style='border-collapse:collapse;margin:0 0 20px;'>
+                    <tr>
+                        <td style='padding:12px 14px;background:#fbfaf7;border:1px solid #ebe6dc;border-radius:14px;'>
+                            <p style='margin:0 0 6px;color:#6b7280;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;'>Pedido asociado</p>
+                            <p style='margin:0;color:#111827;font-size:15px;font-weight:700;'>#{pedidoId}</p>
+                        </td>
+                    </tr>
+                </table>
+
+                <table role='presentation' width='100%' cellspacing='0' cellpadding='0' style='border-collapse:collapse;margin:0 0 20px;'>
+                    <tr>
+                        <td style='padding:12px 14px;background:#fbfaf7;border:1px solid #ebe6dc;border-radius:14px;'>
+                            <p style='margin:0 0 6px;color:#6b7280;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;'>Fecha</p>
+                            <p style='margin:0;color:#111827;font-size:15px;font-weight:700;'>{fechaFactura:dd/MM/yyyy HH:mm}</p>
+                        </td>
+                    </tr>
+                </table>
+
+                <div style='padding:16px 18px;background:#ffffff;border:1px solid #ebe6dc;border-radius:16px;text-align:center;'>
+                    <p style='margin:0 0 6px;color:#6b7280;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;'>Total facturado</p>
+                    <p style='margin:0;color:#111827;font-size:22px;font-weight:800;'>&#8353;{total:N2}</p>
+                </div>
+
+                <p style='margin:18px 0 0;color:#6b7280;font-size:13px;line-height:1.6;'>
+                    Puedes consultar el detalle completo de tu comprobante desde el portal del cliente, en la seccion Mis pedidos.
+                </p>";
+
+            return BuildBaseTemplate(
+                titulo: "Comprobante de compra",
+                subtitulo: "Confirmacion de facturacion",
+                badge: "Facturacion",
+                contenido: contenido,
+                notaInferior: "Este mensaje fue generado automaticamente por el sistema de Licorera La Bodega.");
+        }
+
         public static string BuildContactNotificationEmail(string nombre, string correo, string asunto, string mensaje)
         {
             var nombreSeguro = Encode(nombre, "No indicado");

@@ -24,6 +24,12 @@ builder.Services.AddScoped<EmployeesDbService>();
 builder.Services.AddScoped<StoreDbService>();
 builder.Services.AddScoped<AccountDbService>();
 builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<LogisticsDbService>();
+builder.Services.AddScoped<ReportsDbService>();
+builder.Services.AddScoped<WarehouseDbService>();
+builder.Services.AddScoped<FleetDbService>();
+builder.Services.AddScoped<PromotionsDbService>();
+builder.Services.AddScoped<AssistantService>();
 
 // HttpClient para consumir la API de autenticación
 builder.Services.AddHttpClient<AccountApiService>(client =>
@@ -34,8 +40,9 @@ builder.Services.AddHttpClient<AccountApiService>(client =>
     {
         throw new InvalidOperationException("No se encontró la configuración ApiSettings:BaseUrl en appsettings.json.");
     }
-
+    Console.WriteLine(baseUrl);
     client.BaseAddress = new Uri(baseUrl);
+    //client.BaseAddress = new Uri(baseUrl);
 });
 
 var app = builder.Build();

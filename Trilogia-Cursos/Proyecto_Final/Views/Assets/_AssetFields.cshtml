@@ -1,0 +1,30 @@
+@model Proyecto_Final.Models.Admin.AssetFormViewModel
+
+<div class="form-group">
+    <label asp-for="CodigoActivo" class="font-weight-bold">Código de activo (placa)</label>
+    <input asp-for="CodigoActivo" class="form-control" placeholder="Ej: ACT-0001" />
+    <span asp-validation-for="CodigoActivo" class="text-danger"></span>
+</div>
+<div class="form-group">
+    <label asp-for="Nombre" class="font-weight-bold"></label>
+    <input asp-for="Nombre" class="form-control" placeholder="Ej: Nevera exhibidora 2 puertas" />
+    <span asp-validation-for="Nombre" class="text-danger"></span>
+</div>
+<div class="form-group">
+    <label asp-for="Tipo" class="font-weight-bold"></label>
+    <select asp-for="Tipo" class="form-control">
+        <option value="Nevera">Nevera</option>
+        <option value="Exhibidor">Exhibidor</option>
+        <option value="Otro">Otro</option>
+    </select>
+</div>
+<div class="form-group">
+    <label asp-for="Descripcion" class="font-weight-bold"></label>
+    <textarea asp-for="Descripcion" class="form-control" rows="2"></textarea>
+    <span asp-validation-for="Descripcion" class="text-danger"></span>
+</div>
+<div class="alert alert-light border small mb-0">
+    <i class="fa fa-info-circle text-primary mr-1"></i>
+    El <strong>estado</strong> del activo y a quién está <strong>prestado</strong> se administran desde el módulo de
+    <strong>Comodatos</strong> (asignación y devolución), no desde aquí.
+</div>

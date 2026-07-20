@@ -1,0 +1,58 @@
+@model Proyecto_Final.Models.Admin.VehicleFormViewModel
+@{
+    ViewData["Title"] = "Nuevo vehículo";
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5">
+        <div class="col-lg-6 offset-lg-3">
+            <div class="admin-page-header">
+                <h2 class="mb-2">Nuevo vehículo</h2>
+                <p class="mb-0">Registra un vehículo para las rutas de reparto.</p>
+            </div>
+
+            <div class="admin-table-wrapper p-4">
+                <form asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="All" class="text-danger"></div>
+
+                    <div class="form-group">
+                        <label asp-for="Placa" class="font-weight-bold"></label>
+                        <input asp-for="Placa" class="form-control" placeholder="Ej: CRJ-004" />
+                        <span asp-validation-for="Placa" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Marca" class="font-weight-bold"></label>
+                        <input asp-for="Marca" class="form-control" placeholder="Ej: Toyota, Isuzu, Nissan" />
+                        <span asp-validation-for="Marca" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Descripcion" class="font-weight-bold"></label>
+                        <input asp-for="Descripcion" class="form-control" placeholder="Modelo / uso (ej: Panel de reparto GAM)" />
+                        <span asp-validation-for="Descripcion" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Capacidad" class="font-weight-bold">Capacidad (unidades/cajas)</label>
+                        <input asp-for="Capacidad" class="form-control" type="number" min="0" />
+                        <span asp-validation-for="Capacidad" class="text-danger"></span>
+                    </div>
+                    <div class="form-group form-check">
+                        <input asp-for="Activo" class="form-check-input" />
+                        <label asp-for="Activo" class="form-check-label">Activo</label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary"><i class="fa fa-save mr-2"></i>Guardar</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

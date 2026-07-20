@@ -1,0 +1,130 @@
+@model Proyecto_Final.Models.Admin.ManagementDashboardViewModel
+@{
+    ViewData["Title"] = "Tablero gerencial";
+    var maxSerie = Model.Serie.Any() ? Model.Serie.Max(s => s.Total) : 0m;
+    string Activo(string r) => Model.Rango == r ? "btn-primary" : "btn-outline-primary";
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+    <style>
+        .kpi-card { border-radius: 12px; border: 1px solid #eee; }
+        .kpi-value { font-size: 1.8rem; font-weight: 700; }
+        .kpi-icon { font-size: 1.6rem; opacity: .35; }
+        .serie-bar { background: linear-gradient(180deg, #6f42c1, #b98cff); border-radius: 4px 4px 0 0; min-height: 2px; }
+    </style>
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header d-flex justify-content-between align-items-center flex-wrap">
+                <div>
+                    <h2 class="mb-2">Tablero gerencial</h2>
+                    <p class="mb-0">Indicadores clave del negocio para el período seleccionado.</p>
+                </div>
+                <div class="text-muted mt-2 mt-md-0">
+                    <i class="fa fa-calendar mr-1"></i>@Model.Desde.ToString("dd/MM/yyyy") – @Model.Hasta.ToString("dd/MM/yyyy")
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 mb-3">
+        <div class="col-12">
+            <div class="admin-filter-bar d-flex flex-wrap align-items-end justify-content-between">
+                <div class="btn-group mb-2" role="group">
+                    <a asp-action="Index" asp-route-rango="hoy" class="btn @Activo("hoy")">Hoy</a>
+                    <a asp-action="Index" asp-route-rango="semana" class="btn @Activo("semana")">Semana</a>
+                    <a asp-action="Index" asp-route-rango="mes" class="btn @Activo("mes")">Mes</a>
+                </div>
+                <form asp-action="Index" method="get" class="form-inline mb-2">
+                    <label class="mr-2 font-weight-bold">Rango personalizado:</label>
+                    <input type="date" name="desde" value="@Model.Desde.ToString("yyyy-MM-dd")" class="form-control form-control-sm mr-2" />
+                    <input type="date" name="hasta" value="@Model.Hasta.ToString("yyyy-MM-dd")" class="form-control form-control-sm mr-2" />
+                    <button type="submit" class="btn btn-sm btn-primary">Aplicar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    @if (!Model.HayDatos)
+    {
+        <div class="row px-xl-5">
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <i class="fa fa-info-circle mr-2"></i>Aún no hay transacciones registradas para el período seleccionado.
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="row px-xl-5">
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="admin-table-wrapper kpi-card p-4 h-100">
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Ventas del período</span>
+                    <i class="fa fa-cash-register kpi-icon text-success"></i>
+                </div>
+                <div class="kpi-value text-success">₡@Model.VentasPeriodo.ToString("N2")</div>
+                <small class="text-muted">@Model.FacturasPeriodo factura(s) · ticket ₡@Model.TicketPromedio.ToString("N2")</small>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="admin-table-wrapper kpi-card p-4 h-100">
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Stock bajo</span>
+                    <i class="fa fa-box-open kpi-icon text-warning"></i>
+                </div>
+                <div class="kpi-value text-warning">@Model.StockBajo</div>
+                <small class="text-muted">@Model.ProductosAgotados producto(s) agotado(s)</small>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="admin-table-wrapper kpi-card p-4 h-100">
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Pedidos en ruta</span>
+                    <i class="fa fa-truck kpi-icon text-dark"></i>
+                </div>
+                <div class="kpi-value">@Model.PedidosEnRuta</div>
+                <small class="text-muted">Entregas actualmente en reparto</small>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="admin-table-wrapper kpi-card p-4 h-100">
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Cobros pendientes</span>
+                    <i class="fa fa-file-invoice-dollar kpi-icon text-danger"></i>
+                </div>
+                <div class="kpi-value text-danger">₡@Model.CobrosPendientes.ToString("N2")</div>
+                <small class="text-muted">Saldo por cobrar a clientes</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-12">
+            <div class="admin-table-wrapper p-4">
+                <h5 class="mb-3">Ventas facturadas por día</h5>
+                @if (!Model.Serie.Any())
+                {
+                    <p class="text-muted mb-0">No hay ventas facturadas en el período.</p>
+                }
+                else
+                {
+                    <div class="d-flex align-items-end" style="height: 200px; gap: 10px; overflow-x: auto;">
+                        @foreach (var s in Model.Serie)
+                        {
+                            var alturaPct = maxSerie > 0 ? (int)(s.Total / maxSerie * 170) + 2 : 2;
+                            <div class="text-center" style="min-width: 46px;">
+                                <div class="serie-bar mx-auto" style="height:@(alturaPct)px; width: 28px;"
+                                     title="@s.Dia.ToString("dd/MM/yyyy"): ₡@s.Total.ToString("N2")"></div>
+                                <small class="text-muted d-block mt-1">@s.Dia.ToString("dd/MM")</small>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
