@@ -1,0 +1,127 @@
+@model Proyecto_Final.Models.Admin.ReclamoFormViewModel
+@{
+    ViewData["Title"] = "Nuevo reclamo";
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+                <div>
+                    <h2 class="mb-2">Registrar reclamo</h2>
+                    <p>Documente la inconformidad del cliente para darle seguimiento.</p>
+                </div>
+                <a asp-controller="Reclamos" asp-action="Index" class="btn btn-outline-secondary mt-3 mt-md-0">
+                    <i class="fa fa-arrow-left mr-1"></i>Volver
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-lg-8">
+            <div class="admin-card">
+                <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                <form asp-controller="Reclamos" asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <div class="form-group">
+                        <label asp-for="UsuarioId"></label>
+                        <select asp-for="UsuarioId" id="UsuarioId" class="form-control">
+                            <option value="">— Seleccione un cliente —</option>
+                            @foreach (var c in Model.Clientes)
+                            {
+                                <option value="@c.UsuarioId" selected="@(Model.UsuarioId == c.UsuarioId)">@c.NombreCompleto (@c.Correo)</option>
+                            }
+                        </select>
+                        <span asp-validation-for="UsuarioId" class="text-danger"></span>
+                        <small class="form-text text-muted">Solo se listan clientes activos del sistema.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="FacturaId"></label>
+                        <select asp-for="FacturaId" id="FacturaId" class="form-control">
+                            <option value="">— Sin factura asociada —</option>
+                            @foreach (var f in Model.Facturas)
+                            {
+                                <option value="@f.FacturaId" selected="@(Model.FacturaId == f.FacturaId)">@f.NumeroFactura · @f.FechaFactura.ToString("dd/MM/yyyy") · ₡@f.Total.ToString("N2")</option>
+                            }
+                        </select>
+                        <small class="form-text text-muted">Opcional: enlaza el reclamo con una factura del cliente.</small>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label asp-for="Categoria"></label>
+                            <select asp-for="Categoria" class="form-control">
+                                <option value="Producto">Producto</option>
+                                <option value="Entrega">Entrega</option>
+                                <option value="Facturación">Facturación</option>
+                                <option value="Servicio">Servicio</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                            <span asp-validation-for="Categoria" class="text-danger"></span>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label asp-for="Prioridad"></label>
+                            <select asp-for="Prioridad" class="form-control">
+                                <option value="Baja">Baja</option>
+                                <option value="Media">Media</option>
+                                <option value="Alta">Alta</option>
+                            </select>
+                            <span asp-validation-for="Prioridad" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Asunto"></label>
+                        <input asp-for="Asunto" class="form-control" maxlength="150" placeholder="Resumen breve del reclamo" />
+                        <span asp-validation-for="Asunto" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Descripcion"></label>
+                        <textarea asp-for="Descripcion" class="form-control" rows="6" maxlength="1000" placeholder="Detalle de la inconformidad reportada por el cliente."></textarea>
+                        <span asp-validation-for="Descripcion" class="text-danger"></span>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary py-2 px-4">
+                        <i class="fa fa-save mr-1"></i>Registrar reclamo
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Carga dinámica de facturas del cliente seleccionado (CU-191).
+        (function () {
+            var cliente = document.getElementById('UsuarioId');
+            var facturas = document.getElementById('FacturaId');
+            if (!cliente || !facturas) return;
+            cliente.addEventListener('change', function () {
+                var id = cliente.value;
+                facturas.innerHTML = '<option value="">— Sin factura asociada —</option>';
+                if (!id) return;
+                fetch('@Url.Action("InvoicesByClient", "Reclamos")?usuarioId=' + encodeURIComponent(id))
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        data.forEach(function (f) {
+                            var opt = document.createElement('option');
+                            opt.value = f.facturaId;
+                            opt.textContent = f.texto;
+                            facturas.appendChild(opt);
+                        });
+                    })
+                    .catch(function () { /* silencioso: la factura es opcional */ });
+            });
+        })();
+    </script>
+}

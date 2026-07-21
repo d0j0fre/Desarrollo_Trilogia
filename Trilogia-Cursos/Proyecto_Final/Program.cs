@@ -24,6 +24,15 @@ builder.Services.AddScoped<EmployeesDbService>();
 builder.Services.AddScoped<StoreDbService>();
 builder.Services.AddScoped<AccountDbService>();
 builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<LogisticsDbService>();
+builder.Services.AddScoped<ReportsDbService>();
+builder.Services.AddScoped<WarehouseDbService>();
+builder.Services.AddScoped<FleetDbService>();
+builder.Services.AddScoped<PromotionsDbService>();
+builder.Services.AddScoped<ReclamosDbService>();
+builder.Services.AddScoped<KpiDbService>();
+builder.Services.AddScoped<ExpensesDbService>();
+builder.Services.AddScoped<AssistantService>();
 
 // HttpClient para consumir la API de autenticación
 builder.Services.AddHttpClient<AccountApiService>(client =>

@@ -1,0 +1,101 @@
+@model IEnumerable<Proyecto_Final.Models.Admin.VehicleListItemViewModel>
+@{
+    ViewData["Title"] = "Vehículos";
+    var buscar = ViewBag.Buscar as string;
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header d-flex justify-content-between align-items-center flex-wrap">
+                <div>
+                    <h2 class="mb-2">Flota de vehículos</h2>
+                    <p class="mb-0">Administra los vehículos disponibles para las rutas de reparto.</p>
+                </div>
+                <a asp-action="Create" class="btn btn-primary mt-2 mt-md-0"><i class="fa fa-plus mr-2"></i>Nuevo vehículo</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-filter-bar">
+                <form asp-action="Index" method="get" class="form-inline">
+                    <input type="text" name="buscar" value="@buscar" class="form-control mr-2 mb-2" placeholder="Placa o descripción" />
+                    <button type="submit" class="btn btn-primary mr-2 mb-2"><i class="fa fa-search mr-2"></i>Buscar</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary mb-2"><i class="fa fa-eraser mr-2"></i>Limpiar</a>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-12">
+            <div class="admin-table-wrapper">
+                <div class="p-4 border-bottom d-flex justify-content-between align-items-center flex-wrap">
+                    <h5 class="mb-0">Listado de vehículos</h5>
+                    <span class="text-muted">Total: @(Model?.Count() ?? 0)</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Placa</th>
+                                <th>Marca</th>
+                                <th>Descripción</th>
+                                <th class="text-center">Capacidad</th>
+                                <th class="text-center">Odómetro</th>
+                                <th class="text-center">Rutas abiertas</th>
+                                <th class="text-center">Estado</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model == null || !Model.Any())
+                            {
+                                <tr><td colspan="8" class="text-center text-muted py-4">No hay vehículos registrados.</td></tr>
+                            }
+                            else
+                            {
+                                @foreach (var v in Model)
+                                {
+                                    <tr>
+                                        <td class="font-weight-bold">@v.Placa</td>
+                                        <td>@(string.IsNullOrWhiteSpace(v.Marca) ? "—" : v.Marca)</td>
+                                        <td>@v.Descripcion</td>
+                                        <td class="text-center">@v.Capacidad</td>
+                                        <td class="text-center">@v.KilometrajeActual km</td>
+                                        <td class="text-center">@v.RutasAbiertas</td>
+                                        <td class="text-center">
+                                            <span class="admin-badge-soft @(v.Activo ? "success" : "danger")">@(v.Activo ? "Activo" : "Inactivo")</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <a asp-action="Edit" asp-route-id="@v.VehiculoId" class="btn btn-sm btn-outline-primary mb-1"><i class="fa fa-edit"></i></a>
+                                            <form asp-action="ToggleStatus" method="post" class="d-inline"
+                                                  data-s3-confirm="¿Cambiar el estado del vehículo?"
+                                                  data-s3-confirm-title="Confirmar cambio de estado"
+                                                  data-s3-confirm-type="warning"
+                                                  data-s3-confirm-ok="Sí, cambiar"
+                                                  data-s3-confirm-cancel="Cancelar">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="vehiculoId" value="@v.VehiculoId" />
+                                                <input type="hidden" name="buscar" value="@buscar" />
+                                                <button type="submit" class="btn btn-sm btn-outline-@(v.Activo ? "danger" : "success") mb-1">
+                                                    <i class="fa fa-@(v.Activo ? "ban" : "check")"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

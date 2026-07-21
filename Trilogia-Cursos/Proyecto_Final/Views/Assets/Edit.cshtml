@@ -1,0 +1,33 @@
+@model Proyecto_Final.Models.Admin.AssetFormViewModel
+@{
+    ViewData["Title"] = "Editar activo";
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5">
+        <div class="col-lg-6 offset-lg-3">
+            <div class="admin-page-header">
+                <h2 class="mb-2">Editar activo</h2>
+                <p class="mb-0">Actualiza los datos y el estado de préstamo del activo.</p>
+            </div>
+            <div class="admin-table-wrapper p-4">
+                <form asp-action="Edit" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="ActivoId" />
+                    <div asp-validation-summary="All" class="text-danger"></div>
+                    <partial name="_AssetFields" model="Model" />
+                    <button type="submit" class="btn btn-primary"><i class="fa fa-save mr-2"></i>Guardar cambios</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

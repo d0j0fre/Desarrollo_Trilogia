@@ -1,0 +1,127 @@
+@model Proyecto_Final.Models.Admin.ReturnsIndexViewModel
+@{
+    ViewData["Title"] = "Devoluciones";
+    var productos = ViewBag.Productos as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem> ?? new();
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header">
+                <h2 class="mb-2">Devoluciones de productos</h2>
+                <p class="mb-0">Registra la mercadería devuelta. Todo producto devuelto pasa a <strong>cuarentena</strong> antes de reintegrarse.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-lg-4 mb-4">
+            <div class="admin-table-wrapper p-4">
+                <h5 class="mb-3">Registrar devolución</h5>
+                <form asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="All" class="text-danger"></div>
+
+                    <div class="form-group">
+                        <label class="font-weight-bold">Producto</label>
+                        <select asp-for="Nueva.ProductoId" class="form-control" asp-items="productos">
+                            <option value="">-- Seleccione un producto --</option>
+                        </select>
+                        <span asp-validation-for="Nueva.ProductoId" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Cantidad</label>
+                        <input asp-for="Nueva.Cantidad" class="form-control" type="number" min="1" />
+                        <span asp-validation-for="Nueva.Cantidad" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Pedido asociado (opcional)</label>
+                        <input asp-for="Nueva.PedidoId" class="form-control" type="number" min="1" placeholder="N.º de pedido" />
+                        <span asp-validation-for="Nueva.PedidoId" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Cliente / referencia (opcional)</label>
+                        <input asp-for="Nueva.ClienteInfo" class="form-control" placeholder="Nombre o referencia" />
+                        <span asp-validation-for="Nueva.ClienteInfo" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Motivo</label>
+                        <textarea asp-for="Nueva.Motivo" class="form-control" rows="2" placeholder="Ej: producto dañado, error de despacho"></textarea>
+                        <span asp-validation-for="Nueva.Motivo" class="text-danger"></span>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block"><i class="fa fa-undo mr-2"></i>Registrar devolución</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="admin-filter-bar mb-3">
+                <form asp-action="Index" method="get" class="form-inline">
+                    <input type="text" name="buscar" value="@Model.Buscar" class="form-control mr-2 mb-2" placeholder="Producto, motivo o cliente" />
+                    <select name="estado" class="form-control mr-2 mb-2">
+                        <option value="">Todos los estados</option>
+                        <option value="EnCuarentena" selected="@(Model.Estado == "EnCuarentena")">En cuarentena</option>
+                        <option value="Reintegrada" selected="@(Model.Estado == "Reintegrada")">Reintegrada</option>
+                        <option value="Descartada" selected="@(Model.Estado == "Descartada")">Descartada</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary mr-2 mb-2"><i class="fa fa-search mr-2"></i>Buscar</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary mb-2"><i class="fa fa-eraser mr-2"></i>Limpiar</a>
+                </form>
+            </div>
+
+            <div class="admin-table-wrapper">
+                <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Historial de devoluciones</h5>
+                    <span class="text-muted">Total: @Model.Devoluciones.Count</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Producto</th>
+                                <th class="text-center">Cant.</th>
+                                <th>Motivo</th>
+                                <th class="text-center">Estado</th>
+                                <th>Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!Model.Devoluciones.Any())
+                            {
+                                <tr><td colspan="5" class="text-center text-muted py-4">No hay devoluciones registradas.</td></tr>
+                            }
+                            else
+                            {
+                                @foreach (var d in Model.Devoluciones)
+                                {
+                                    var badge = d.Estado switch
+                                    {
+                                        "Reintegrada" => "success",
+                                        "Descartada" => "danger",
+                                        _ => "warning"
+                                    };
+                                    var label = d.Estado == "EnCuarentena" ? "En cuarentena" : d.Estado;
+                                    <tr>
+                                        <td class="font-weight-bold">@d.ProductoNombre</td>
+                                        <td class="text-center">@d.Cantidad</td>
+                                        <td>@d.Motivo</td>
+                                        <td class="text-center"><span class="admin-badge-soft @badge">@label</span></td>
+                                        <td>@d.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

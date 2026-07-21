@@ -1,0 +1,118 @@
+@model Proyecto_Final.Models.Admin.ReclamoFilterViewModel
+@{
+    ViewData["Title"] = "Reclamos de clientes";
+    string EstadoClase(string e) => e == "Abierto" ? "warning" : e == "EnProceso" ? "info" : "dark";
+    string EstadoTexto(string e) => e == "EnProceso" ? "En proceso" : e;
+    string PrioridadClase(string p) => p == "Alta" ? "danger" : p == "Media" ? "warning" : "success";
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+                <div>
+                    <h2 class="mb-2">Reclamos de clientes</h2>
+                    <p>Registro y seguimiento de las inconformidades reportadas por los clientes.</p>
+                </div>
+                <a asp-controller="Reclamos" asp-action="Create" class="btn btn-primary mt-3 mt-md-0">
+                    <i class="fa fa-plus mr-1"></i>Nuevo reclamo
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-3">
+        <div class="col-12">
+            <div class="admin-card">
+                <form asp-controller="Reclamos" asp-action="Index" method="get">
+                    <div class="form-row align-items-end">
+                        <div class="form-group col-md-4">
+                            <label>Estado</label>
+                            <select name="estado" class="form-control">
+                                <option value="">Todos</option>
+                                <option value="Abierto" selected="@(Model.Estado == "Abierto")">Abierto</option>
+                                <option value="EnProceso" selected="@(Model.Estado == "EnProceso")">En proceso</option>
+                                <option value="Cerrado" selected="@(Model.Estado == "Cerrado")">Cerrado</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>Buscar</label>
+                            <input type="text" name="buscar" value="@Model.Buscar" class="form-control" placeholder="Cliente, correo, asunto o descripción" />
+                        </div>
+                        <div class="form-group col-md-2">
+                            <button type="submit" class="btn btn-primary btn-block">
+                                <i class="fa fa-search mr-1"></i>Buscar
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-12">
+            <div class="admin-table-wrapper">
+                <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Reclamos registrados</h5>
+                    <span class="badge badge-dark">@Model.Reclamos.Count registro(s)</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Fecha</th>
+                                <th>Cliente</th>
+                                <th>Asunto</th>
+                                <th>Categoría</th>
+                                <th>Prioridad</th>
+                                <th>Factura</th>
+                                <th>Estado</th>
+                                <th class="text-right">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Reclamos == null || !Model.Reclamos.Any())
+                            {
+                                <tr>
+                                    <td colspan="9" class="text-center text-muted py-4">
+                                        No hay reclamos registrados con los filtros seleccionados.
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var item in Model.Reclamos)
+                                {
+                                    <tr>
+                                        <td>#@item.ReclamoId</td>
+                                        <td>@item.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td>
+                                            <div>@item.ClienteNombre</div>
+                                            <small class="text-muted">@item.ClienteCorreo</small>
+                                        </td>
+                                        <td>@item.Asunto</td>
+                                        <td>@item.Categoria</td>
+                                        <td><span class="admin-badge-soft @PrioridadClase(item.Prioridad)">@item.Prioridad</span></td>
+                                        <td>@(string.IsNullOrWhiteSpace(item.NumeroFactura) ? "—" : item.NumeroFactura)</td>
+                                        <td><span class="admin-badge-soft @EstadoClase(item.Estado)">@EstadoTexto(item.Estado)</span></td>
+                                        <td class="text-right">
+                                            <a asp-controller="Reclamos" asp-action="Details" asp-route-id="@item.ReclamoId" class="btn btn-sm btn-primary">
+                                                <i class="fa fa-eye mr-1"></i>Ver
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

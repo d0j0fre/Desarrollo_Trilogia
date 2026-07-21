@@ -1,0 +1,144 @@
+@model Proyecto_Final.Models.Admin.MetasIndexViewModel
+@{
+    ViewData["Title"] = "Metas de ventas";
+    var meses = new[] { "", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre" };
+    string CumpClase(decimal p) => p >= 100 ? "success" : p >= 70 ? "warning" : "danger";
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+    <style>
+        .prog { height: 8px; background: #eee; border-radius: 6px; overflow: hidden; }
+        .prog > span { display: block; height: 100%; border-radius: 6px; }
+    </style>
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+                <div>
+                    <h2 class="mb-2">Metas de ventas</h2>
+                    <p>Defina las metas mensuales de ingresos por vendedor (CU-211).</p>
+                </div>
+                <a asp-controller="Kpis" asp-action="Report" asp-route-anio="@Model.Anio" asp-route-mes="@Model.Mes" class="btn btn-outline-primary mt-3 mt-md-0">
+                    <i class="fa fa-chart-line mr-1"></i>Ver reporte de KPIs
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-3">
+        <div class="col-12">
+            <div class="admin-card">
+                <form asp-controller="Kpis" asp-action="Index" method="get" class="form-row align-items-end">
+                    <div class="form-group col-md-4">
+                        <label>Año</label>
+                        <input type="number" name="anio" value="@Model.Anio" min="2000" max="2100" class="form-control" />
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label>Mes</label>
+                        <select name="mes" class="form-control">
+                            @for (int i = 1; i <= 12; i++)
+                            {
+                                <option value="@i" selected="@(Model.Mes == i)">@meses[i]</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <button type="submit" class="btn btn-primary btn-block"><i class="fa fa-filter mr-1"></i>Ver período</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-lg-4 pb-3">
+            <div class="admin-card h-100">
+                <h5 class="mb-3">Definir meta</h5>
+                <form asp-controller="Kpis" asp-action="Save" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="Anio" value="@Model.Anio" />
+                    <input type="hidden" name="Mes" value="@Model.Mes" />
+
+                    <div class="form-group">
+                        <label>Vendedor</label>
+                        <select name="VendedorUsuarioId" class="form-control" required>
+                            <option value="">— Seleccione —</option>
+                            @foreach (var v in Model.Vendedores)
+                            {
+                                <option value="@v.UsuarioId">@v.NombreCompleto</option>
+                            }
+                        </select>
+                        @if (!Model.Vendedores.Any())
+                        {
+                            <small class="form-text text-danger">No hay usuarios con perfil "Vendedor" registrados.</small>
+                        }
+                    </div>
+
+                    <div class="form-group">
+                        <label>Meta de ingresos (₡)</label>
+                        <input type="number" name="MontoMeta" step="0.01" min="0.01" class="form-control" required placeholder="Ej. 1500000" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Observaciones</label>
+                        <textarea name="Observaciones" class="form-control" rows="3" maxlength="300" placeholder="Opcional"></textarea>
+                    </div>
+
+                    <p class="text-muted small mb-3">Período: <strong>@meses[Model.Mes] @Model.Anio</strong>. Si ya existe una meta para ese vendedor en el período, se actualizará.</p>
+
+                    <button type="submit" class="btn btn-primary btn-block py-2"><i class="fa fa-save mr-1"></i>Guardar meta</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-8 pb-3">
+            <div class="admin-table-wrapper h-100">
+                <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Metas de @meses[Model.Mes] @Model.Anio</h5>
+                    <span class="badge badge-dark">@Model.Metas.Count vendedor(es)</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Vendedor</th>
+                                <th class="text-right">Meta</th>
+                                <th class="text-right">Ventas reales</th>
+                                <th style="min-width:160px;">Cumplimiento</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!Model.Metas.Any())
+                            {
+                                <tr><td colspan="4" class="text-center text-muted py-4">No hay metas definidas para este período.</td></tr>
+                            }
+                            else
+                            {
+                                @foreach (var m in Model.Metas)
+                                {
+                                    var pct = m.PorcentajeCumplimiento;
+                                    var clase = CumpClase(pct);
+                                    var ancho = (int)Math.Min(pct, 100);
+                                    <tr>
+                                        <td>@m.VendedorNombre</td>
+                                        <td class="text-right">₡@m.MontoMeta.ToString("N2")</td>
+                                        <td class="text-right">₡@m.VentasReales.ToString("N2")</td>
+                                        <td>
+                                            <div class="d-flex justify-content-between">
+                                                <span class="admin-badge-soft @clase">@pct.ToString("N1")%</span>
+                                            </div>
+                                            <div class="prog mt-1"><span class="bg-@clase" style="width:@(ancho)%"></span></div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

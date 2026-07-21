@@ -1,0 +1,82 @@
+@using Proyecto_Final.Models.Admin
+@model ComodatoAssignViewModel
+@{
+    ViewData["Title"] = "Asignar comodato";
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5">
+        <div class="col-lg-8 offset-lg-2">
+            <div class="admin-page-header">
+                <h2 class="mb-2">Asignar comodato</h2>
+                <p class="mb-0">Registra el préstamo de un equipo disponible a un cliente.</p>
+            </div>
+            <div class="admin-table-wrapper p-4">
+                <form asp-action="Assign" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="All" class="text-danger mb-2"></div>
+
+                    <div class="form-group">
+                        <label asp-for="ActivoId"></label>
+                        <select asp-for="ActivoId" class="form-control">
+                            <option value="">— Seleccione un activo disponible —</option>
+                            @foreach (var a in Model.ActivosDisponibles)
+                            {
+                                <option value="@a.ActivoId">@a.CodigoActivo — @a.Nombre (@a.Tipo)</option>
+                            }
+                        </select>
+                        <span asp-validation-for="ActivoId" class="text-danger"></span>
+                        @if (!Model.ActivosDisponibles.Any())
+                        {
+                            <small class="text-muted d-block mt-1">No hay activos en estado "Disponible". Registre o libere uno en el módulo de Activos.</small>
+                        }
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label asp-for="ClienteNombre"></label>
+                            <input asp-for="ClienteNombre" class="form-control" />
+                            <span asp-validation-for="ClienteNombre" class="text-danger"></span>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label asp-for="ClienteIdentificacion"></label>
+                            <input asp-for="ClienteIdentificacion" class="form-control" />
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-md-8">
+                            <label asp-for="Ubicacion"></label>
+                            <input asp-for="Ubicacion" class="form-control" placeholder="Dirección o local donde queda el equipo" />
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label asp-for="FechaAsignacion"></label>
+                            <input asp-for="FechaAsignacion" type="date" class="form-control" />
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="CondicionEntrega"></label>
+                        <input asp-for="CondicionEntrega" class="form-control" placeholder="Estado del equipo al entregarlo" />
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Observaciones"></label>
+                        <textarea asp-for="Observaciones" class="form-control" rows="2"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" disabled="@(!Model.ActivosDisponibles.Any())"><i class="fa fa-save mr-2"></i>Registrar comodato</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

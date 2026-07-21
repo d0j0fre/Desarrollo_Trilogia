@@ -1,0 +1,44 @@
+@using Proyecto_Final.Models.Admin
+@model PromotionFormViewModel
+@{
+    ViewData["Title"] = "Nueva promoción";
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5">
+        <div class="col-lg-8 offset-lg-2">
+            <div class="admin-page-header">
+                <h2 class="mb-2">Nueva promoción</h2>
+                <p class="mb-0">Configura un descuento porcentual o una regalía por volumen sobre un producto estratégico.</p>
+            </div>
+            <div class="admin-table-wrapper p-4">
+                <form asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+                    <partial name="_PromotionFields" model="Model" />
+                    <button type="submit" class="btn btn-primary"><i class="fa fa-save mr-2"></i>Guardar</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            var tipo = document.getElementById('promoTipo');
+            function toggle() {
+                var esDescuento = tipo.value === 'DescuentoPorcentual';
+                document.querySelectorAll('.promo-descuento').forEach(function (e) { e.style.display = esDescuento ? '' : 'none'; });
+                document.querySelectorAll('.promo-regalia').forEach(function (e) { e.style.display = esDescuento ? 'none' : ''; });
+            }
+            if (tipo) { tipo.addEventListener('change', toggle); toggle(); }
+        })();
+    </script>
+}

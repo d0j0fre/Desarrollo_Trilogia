@@ -1,0 +1,143 @@
+@model Proyecto_Final.Models.Admin.AccountsViewModel
+@{
+    ViewData["Title"] = "Cuentas presupuestarias";
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+                <div>
+                    <h2 class="mb-2">Cuentas presupuestarias</h2>
+                    <p>Cuentas que agrupan los gastos operativos y definen el presupuesto mensual (CU-222).</p>
+                </div>
+                <a asp-controller="Expenses" asp-action="Index" class="btn btn-outline-secondary mt-3 mt-md-0">
+                    <i class="fa fa-arrow-left mr-1"></i>Volver a gastos
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-lg-4 pb-3">
+            <div class="admin-card h-100" id="form-cuenta">
+                <h5 class="mb-3" id="form-title">Nueva cuenta</h5>
+                <form asp-controller="Expenses" asp-action="SaveAccount" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="CuentaId" id="CuentaId" value="0" />
+                    <div class="form-group">
+                        <label>Código</label>
+                        <input type="text" name="Codigo" id="Codigo" class="form-control" maxlength="20" required placeholder="Ej. LOG" />
+                    </div>
+                    <div class="form-group">
+                        <label>Nombre</label>
+                        <input type="text" name="Nombre" id="Nombre" class="form-control" maxlength="120" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Descripción</label>
+                        <textarea name="Descripcion" id="Descripcion" class="form-control" rows="2" maxlength="300"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Presupuesto mensual (₡)</label>
+                        <input type="number" name="PresupuestoMensual" id="PresupuestoMensual" step="0.01" min="0" class="form-control" value="0" required />
+                    </div>
+                    <div class="form-group form-check">
+                        <input type="checkbox" name="Activo" id="Activo" value="true" class="form-check-input" checked />
+                        <input type="hidden" name="Activo" value="false" />
+                        <label class="form-check-label" for="Activo">Cuenta activa</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block py-2"><i class="fa fa-save mr-1"></i>Guardar cuenta</button>
+                    <button type="button" class="btn btn-link btn-block" id="btn-reset">Limpiar / nueva</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-8 pb-3">
+            <div class="admin-table-wrapper h-100">
+                <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Cuentas registradas</h5>
+                    <span class="badge badge-dark">@Model.Cuentas.Count cuenta(s)</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Código</th>
+                                <th>Nombre</th>
+                                <th class="text-right">Presupuesto</th>
+                                <th class="text-center">Estado</th>
+                                <th class="text-right">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!Model.Cuentas.Any())
+                            {
+                                <tr><td colspan="5" class="text-center text-muted py-4">No hay cuentas presupuestarias registradas.</td></tr>
+                            }
+                            else
+                            {
+                                @foreach (var c in Model.Cuentas)
+                                {
+                                    <tr>
+                                        <td><strong>@c.Codigo</strong></td>
+                                        <td>
+                                            @c.Nombre
+                                            @if (!string.IsNullOrWhiteSpace(c.Descripcion))
+                                            {
+                                                <small class="text-muted d-block">@c.Descripcion</small>
+                                            }
+                                        </td>
+                                        <td class="text-right">₡@c.PresupuestoMensual.ToString("N2")</td>
+                                        <td class="text-center">
+                                            <span class="admin-badge-soft @(c.Activo ? "success" : "secondary")">@(c.Activo ? "Activa" : "Inactiva")</span>
+                                        </td>
+                                        <td class="text-right">
+                                            <button type="button" class="btn btn-sm btn-outline-primary btn-editar"
+                                                    data-id="@c.CuentaId" data-codigo="@c.Codigo" data-nombre="@c.Nombre"
+                                                    data-descripcion="@c.Descripcion" data-presupuesto="@c.PresupuestoMensual.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                                    data-activo="@(c.Activo ? "true" : "false")">
+                                                <i class="fa fa-edit mr-1"></i>Editar
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            function setVal(id, v) { var e = document.getElementById(id); if (e) e.value = v; }
+            document.querySelectorAll('.btn-editar').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    setVal('CuentaId', btn.dataset.id);
+                    setVal('Codigo', btn.dataset.codigo);
+                    setVal('Nombre', btn.dataset.nombre);
+                    setVal('Descripcion', btn.dataset.descripcion || '');
+                    setVal('PresupuestoMensual', btn.dataset.presupuesto);
+                    var act = document.getElementById('Activo');
+                    if (act) act.checked = btn.dataset.activo === 'true';
+                    document.getElementById('form-title').textContent = 'Editar cuenta #' + btn.dataset.id;
+                    document.getElementById('form-cuenta').scrollIntoView({ behavior: 'smooth' });
+                });
+            });
+            var reset = document.getElementById('btn-reset');
+            if (reset) reset.addEventListener('click', function () {
+                setVal('CuentaId', '0'); setVal('Codigo', ''); setVal('Nombre', '');
+                setVal('Descripcion', ''); setVal('PresupuestoMensual', '0');
+                var act = document.getElementById('Activo'); if (act) act.checked = true;
+                document.getElementById('form-title').textContent = 'Nueva cuenta';
+            });
+        })();
+    </script>
+}

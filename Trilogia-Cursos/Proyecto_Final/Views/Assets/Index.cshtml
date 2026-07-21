@@ -1,0 +1,103 @@
+@model IEnumerable<Proyecto_Final.Models.Admin.AssetListItemViewModel>
+@{
+    ViewData["Title"] = "Activos";
+    var buscar = ViewBag.Buscar as string;
+    var estado = ViewBag.Estado as string;
+    string EstadoBadge(string e) => e switch { "Disponible" => "success", "Prestado" => "info", "Mantenimiento" => "warning", _ => "danger" };
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header d-flex justify-content-between align-items-center flex-wrap">
+                <div>
+                    <h2 class="mb-2">Activos de la empresa</h2>
+                    <p class="mb-0">Neveras, exhibidores y demás equipos con su código de activo, disponibles para préstamo.</p>
+                </div>
+                <a asp-action="Create" class="btn btn-primary mt-2 mt-md-0"><i class="fa fa-plus mr-2"></i>Nuevo activo</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-filter-bar">
+                <form asp-action="Index" method="get" class="form-inline">
+                    <input type="text" name="buscar" value="@buscar" class="form-control mr-2 mb-2" placeholder="Código, nombre o cliente" />
+                    <select name="estado" class="form-control mr-2 mb-2">
+                        <option value="">Todos los estados</option>
+                        <option value="Disponible" selected="@(estado == "Disponible")">Disponible</option>
+                        <option value="Prestado" selected="@(estado == "Prestado")">Prestado</option>
+                        <option value="Mantenimiento" selected="@(estado == "Mantenimiento")">Mantenimiento</option>
+                        <option value="Baja" selected="@(estado == "Baja")">Baja</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary mr-2 mb-2"><i class="fa fa-search mr-2"></i>Buscar</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary mb-2"><i class="fa fa-eraser mr-2"></i>Limpiar</a>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-12">
+            <div class="admin-table-wrapper">
+                <div class="p-4 border-bottom d-flex justify-content-between align-items-center flex-wrap">
+                    <h5 class="mb-0">Inventario de activos</h5>
+                    <span class="text-muted">Total: @(Model?.Count() ?? 0)</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Código</th>
+                                <th>Nombre</th>
+                                <th>Tipo</th>
+                                <th class="text-center">Estado</th>
+                                <th>Prestado a</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model == null || !Model.Any())
+                            {
+                                <tr><td colspan="6" class="text-center text-muted py-4">No hay activos registrados.</td></tr>
+                            }
+                            else
+                            {
+                                @foreach (var a in Model)
+                                {
+                                    <tr>
+                                        <td class="font-weight-bold">@a.CodigoActivo</td>
+                                        <td>@a.Nombre</td>
+                                        <td>@a.Tipo</td>
+                                        <td class="text-center"><span class="admin-badge-soft @EstadoBadge(a.Estado)">@a.Estado</span></td>
+                                        <td>@(string.IsNullOrWhiteSpace(a.ClientePrestamo) ? "—" : a.ClientePrestamo)</td>
+                                        <td class="text-center">
+                                            <div class="d-inline-flex justify-content-center" style="gap:.35rem" aria-label="Acciones del activo">
+                                                <a asp-action="Details" asp-route-id="@a.ActivoId" class="btn btn-sm btn-outline-secondary" title="Ver detalle"><i class="fa fa-eye"></i></a>
+                                                <a asp-action="Edit" asp-route-id="@a.ActivoId" class="btn btn-sm btn-outline-primary" title="Editar"><i class="fa fa-edit"></i></a>
+                                                <form asp-action="Delete" asp-route-id="@a.ActivoId" method="post" class="m-0"
+                                                      data-s3-confirm="¿Eliminar (dar de baja) el activo @a.CodigoActivo? No se podrá si está prestado."
+                                                      data-s3-confirm-title="Eliminar activo"
+                                                      data-s3-confirm-type="danger"
+                                                      data-s3-confirm-ok="Sí, eliminar"
+                                                      data-s3-confirm-cancel="Cancelar">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar"><i class="fa fa-trash-alt"></i></button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

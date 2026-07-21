@@ -1,0 +1,141 @@
+@model Proyecto_Final.Models.Admin.ReclamoDetailViewModel
+@{
+    ViewData["Title"] = "Detalle de reclamo";
+    string EstadoClase(string e) => e == "Abierto" ? "warning" : e == "EnProceso" ? "info" : "dark";
+    string EstadoTexto(string e) => e == "EnProceso" ? "En proceso" : e;
+    string PrioridadClase(string p) => p == "Alta" ? "danger" : p == "Media" ? "warning" : "success";
+    var cerrado = Model.Estado == "Cerrado";
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+                <div>
+                    <h2 class="mb-2">Reclamo #@Model.ReclamoId</h2>
+                    <p>Detalle y seguimiento de la inconformidad del cliente.</p>
+                </div>
+                <a asp-controller="Reclamos" asp-action="Index" class="btn btn-outline-secondary mt-3 mt-md-0">
+                    <i class="fa fa-arrow-left mr-1"></i>Volver
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-lg-7 pb-3">
+            <div class="admin-card h-100">
+                <div class="d-flex justify-content-between align-items-start mb-4">
+                    <div>
+                        <h4 class="mb-1">@Model.Asunto</h4>
+                        <p class="text-muted mb-0">Registrado el @Model.FechaRegistro.ToString("dd/MM/yyyy HH:mm")@(string.IsNullOrWhiteSpace(Model.RegistradoPorNombre) ? "" : $" por {Model.RegistradoPorNombre}")</p>
+                    </div>
+                    <span class="admin-badge-soft @EstadoClase(Model.Estado)">@EstadoTexto(Model.Estado)</span>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <h6 class="text-muted">Cliente</h6>
+                        <p class="mb-0">@Model.ClienteNombre</p>
+                        <small class="text-muted">@Model.ClienteCorreo@(string.IsNullOrWhiteSpace(Model.ClienteTelefono) ? "" : $" · {Model.ClienteTelefono}")</small>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <h6 class="text-muted">Categoría</h6>
+                        <p class="mb-0">@Model.Categoria</p>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <h6 class="text-muted">Prioridad</h6>
+                        <span class="admin-badge-soft @PrioridadClase(Model.Prioridad)">@Model.Prioridad</span>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(Model.NumeroFactura))
+                {
+                    <div class="mb-3">
+                        <h6 class="text-muted">Factura relacionada</h6>
+                        <p class="mb-0">@Model.NumeroFactura · @(Model.FechaFactura?.ToString("dd/MM/yyyy")) · ₡@(Model.FacturaTotal?.ToString("N2"))</p>
+                    </div>
+                }
+
+                <div class="mb-3">
+                    <h6 class="text-muted">Descripción</h6>
+                    <div class="p-3 bg-light rounded border">@Model.Descripcion</div>
+                </div>
+
+                @if (cerrado)
+                {
+                    <div class="alert alert-success mb-0">
+                        <h6 class="mb-2"><i class="fa fa-check-circle mr-1"></i>Resolución documentada</h6>
+                        <p class="mb-2">@Model.ResolucionDescripcion</p>
+                        <small>
+                            Cerrado el @(Model.FechaCierre?.ToString("dd/MM/yyyy HH:mm"))@(string.IsNullOrWhiteSpace(Model.CerradoPorNombre) ? "" : $" por {Model.CerradoPorNombre}")
+                        </small>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="col-lg-5 pb-3">
+            <div class="admin-card h-100">
+                <h4 class="mb-4">Seguimiento del caso</h4>
+
+                @if (cerrado)
+                {
+                    <div class="alert alert-secondary mb-0">
+                        <i class="fa fa-lock mr-1"></i>Este reclamo está cerrado y no admite más cambios de estado.
+                    </div>
+                }
+                else
+                {
+                    <form asp-controller="Reclamos" asp-action="UpdateStatus" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="ReclamoId" value="@Model.ReclamoId" />
+
+                        <div class="form-group">
+                            <label>Estado</label>
+                            <select name="Estado" id="EstadoSelect" class="form-control">
+                                <option value="Abierto" selected="@(Model.Estado == "Abierto")">Abierto</option>
+                                <option value="EnProceso" selected="@(Model.Estado == "EnProceso")">En proceso</option>
+                                <option value="Cerrado">Cerrado</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Resolución <span id="ResolucionReq" class="text-danger d-none">*</span></label>
+                            <textarea name="Resolucion" id="ResolucionTxt" class="form-control" rows="6" maxlength="1000"
+                                      placeholder="Describa cómo se resolvió la inconformidad. Obligatorio para cerrar el reclamo."></textarea>
+                            <small class="form-text text-muted">Para cerrar el reclamo debe documentar la resolución (CU-192).</small>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block py-2">
+                            <i class="fa fa-save mr-1"></i>Guardar cambios
+                        </button>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Marca la resolución como obligatoria en la UI cuando se elige "Cerrado" (CU-192).
+        (function () {
+            var estado = document.getElementById('EstadoSelect');
+            var req = document.getElementById('ResolucionReq');
+            var txt = document.getElementById('ResolucionTxt');
+            if (!estado || !req) return;
+            function sync() {
+                var cerrando = estado.value === 'Cerrado';
+                req.classList.toggle('d-none', !cerrando);
+                if (txt) txt.required = cerrando;
+            }
+            estado.addEventListener('change', sync);
+            sync();
+        })();
+    </script>
+}

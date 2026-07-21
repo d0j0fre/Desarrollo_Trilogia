@@ -1,0 +1,32 @@
+@model Proyecto_Final.Models.Admin.AssetFormViewModel
+@{
+    ViewData["Title"] = "Nuevo activo";
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5">
+        <div class="col-lg-6 offset-lg-3">
+            <div class="admin-page-header">
+                <h2 class="mb-2">Nuevo activo</h2>
+                <p class="mb-0">Registra un equipo de la empresa con su código de activo.</p>
+            </div>
+            <div class="admin-table-wrapper p-4">
+                <form asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="All" class="text-danger"></div>
+                    <partial name="_AssetFields" model="Model" />
+                    <button type="submit" class="btn btn-primary"><i class="fa fa-save mr-2"></i>Guardar</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

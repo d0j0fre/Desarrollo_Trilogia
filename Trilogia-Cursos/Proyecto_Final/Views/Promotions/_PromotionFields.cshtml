@@ -1,0 +1,97 @@
+@using Proyecto_Final.Models.Admin
+@model PromotionFormViewModel
+
+<div class="form-group">
+    <label asp-for="Nombre"></label>
+    <input asp-for="Nombre" class="form-control" />
+    <span asp-validation-for="Nombre" class="text-danger"></span>
+</div>
+
+<div class="form-group">
+    <label asp-for="Descripcion"></label>
+    <input asp-for="Descripcion" class="form-control" />
+</div>
+
+<div class="form-row">
+    <div class="form-group col-md-6">
+        <label asp-for="Tipo"></label>
+        <select asp-for="Tipo" class="form-control" id="promoTipo">
+            <option value="DescuentoPorcentual">Descuento porcentual</option>
+            <option value="RegaliaPorVolumen">Regalía por volumen</option>
+        </select>
+    </div>
+    <div class="form-group col-md-6">
+        <label asp-for="SegmentoCliente"></label>
+        <select asp-for="SegmentoCliente" class="form-control">
+            <option value="Todos">Todos los clientes</option>
+            <option value="Mayorista">Solo mayoristas</option>
+            <option value="Minorista">Solo minoristas</option>
+        </select>
+    </div>
+</div>
+
+<div class="form-row">
+    <div class="form-group col-md-8">
+        <label asp-for="ProductoId"></label>
+        <select asp-for="ProductoId" class="form-control">
+            <option value="">— Seleccione el producto estratégico —</option>
+            @foreach (var p in Model.Productos)
+            {
+                <option value="@p.ProductoId">@p.Nombre (@p.Precio.ToString("N2"))</option>
+            }
+        </select>
+        <span asp-validation-for="ProductoId" class="text-danger"></span>
+    </div>
+    <div class="form-group col-md-4">
+        <label asp-for="CantidadMinima"></label>
+        <input asp-for="CantidadMinima" type="number" min="1" class="form-control" />
+        <span asp-validation-for="CantidadMinima" class="text-danger"></span>
+    </div>
+</div>
+
+<div class="promo-descuento">
+    <div class="form-group">
+        <label asp-for="PorcentajeDescuento"></label>
+        <input asp-for="PorcentajeDescuento" type="number" step="0.01" min="0" max="100" class="form-control" />
+        <span asp-validation-for="PorcentajeDescuento" class="text-danger"></span>
+        <small class="text-muted">Se aplica solo a la línea del producto estratégico.</small>
+    </div>
+</div>
+
+<div class="promo-regalia">
+    <div class="form-row">
+        <div class="form-group col-md-8">
+            <label asp-for="ProductoRegaloId"></label>
+            <select asp-for="ProductoRegaloId" class="form-control">
+                <option value="">— Producto de regalía —</option>
+                @foreach (var p in Model.Productos)
+                {
+                    <option value="@p.ProductoId">@p.Nombre</option>
+                }
+            </select>
+            <span asp-validation-for="ProductoRegaloId" class="text-danger"></span>
+        </div>
+        <div class="form-group col-md-4">
+            <label asp-for="CantidadRegalo"></label>
+            <input asp-for="CantidadRegalo" type="number" min="1" class="form-control" />
+            <span asp-validation-for="CantidadRegalo" class="text-danger"></span>
+        </div>
+    </div>
+</div>
+
+<div class="form-row">
+    <div class="form-group col-md-4">
+        <label asp-for="FechaInicio"></label>
+        <input asp-for="FechaInicio" type="date" class="form-control" />
+        <span asp-validation-for="FechaInicio" class="text-danger"></span>
+    </div>
+    <div class="form-group col-md-4">
+        <label asp-for="FechaFin"></label>
+        <input asp-for="FechaFin" type="date" class="form-control" />
+        <span asp-validation-for="FechaFin" class="text-danger"></span>
+    </div>
+    <div class="form-group col-md-4">
+        <label asp-for="Prioridad"></label>
+        <input asp-for="Prioridad" type="number" min="0" class="form-control" />
+    </div>
+</div>

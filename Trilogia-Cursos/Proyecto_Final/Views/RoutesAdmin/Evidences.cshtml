@@ -1,0 +1,99 @@
+@model Proyecto_Final.Models.Admin.RouteEvidencesViewModel
+@{
+    ViewData["Title"] = $"Evidencias ruta {Model.Cabecera.Codigo}";
+    var c = Model.Cabecera;
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header d-flex justify-content-between align-items-center flex-wrap">
+                <div>
+                    <h2 class="mb-2">Evidencias de la ruta @c.Codigo</h2>
+                    <p class="mb-0">Zona: <strong>@c.Zona</strong> · Chofer: <strong>@c.Chofer</strong></p>
+                </div>
+                <a asp-action="Detail" asp-route-id="@c.RutaId" class="btn btn-outline-secondary mt-2 mt-md-0"><i class="fa fa-arrow-left mr-2"></i>Volver a la ruta</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 mb-4">
+        <div class="col-12">
+            <div class="admin-table-wrapper">
+                <div class="p-4 border-bottom"><h5 class="mb-0">Resumen por pedido</h5></div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th># Pedido</th>
+                                <th>Cliente</th>
+                                <th>Entrega</th>
+                                <th class="text-center">Evidencias</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var s in Model.Resumen)
+                            {
+                                <tr>
+                                    <td class="font-weight-bold">#@s.PedidoId</td>
+                                    <td>@s.Cliente</td>
+                                    <td>@s.EstadoEntrega</td>
+                                    <td class="text-center">
+                                        @if (s.SinEvidencia)
+                                        {
+                                            <span class="admin-badge-soft warning">Sin evidencia</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="admin-badge-soft success">@s.TotalEvidencias adjunta(s)</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-12">
+            <div class="admin-table-wrapper p-4">
+                <h5 class="mb-3">Archivos de evidencia</h5>
+                @if (!Model.Evidencias.Any())
+                {
+                    <p class="text-muted mb-0">Aún no se han registrado evidencias para esta ruta.</p>
+                }
+                else
+                {
+                    <div class="row">
+                        @foreach (var e in Model.Evidencias)
+                        {
+                            <div class="col-md-3 col-sm-6 mb-4">
+                                <div class="card h-100">
+                                    <a href="@e.ArchivoUrl" target="_blank" rel="noopener">
+                                        <img src="@e.ArchivoUrl" class="card-img-top" alt="Evidencia pedido @e.PedidoId"
+                                             style="height:160px; object-fit:cover; background:#f4f4f4;" />
+                                    </a>
+                                    <div class="card-body p-2">
+                                        <p class="mb-1"><strong>Pedido #@e.PedidoId</strong> · @e.TipoEvidencia</p>
+                                        <p class="mb-1 small text-muted">@e.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</p>
+                                        @if (!string.IsNullOrWhiteSpace(e.Observaciones))
+                                        {
+                                            <p class="mb-0 small">@e.Observaciones</p>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
