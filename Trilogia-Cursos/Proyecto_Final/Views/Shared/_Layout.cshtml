@@ -27,11 +27,11 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
     <link href="~/lib/animate/animate.min.css" rel="stylesheet">
     <link href="~/lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet">
-    <link href="~/css/style.css" rel="stylesheet">
-    <link href="~/css/custom-theme.css" rel="stylesheet">
-    <link href="~/css/ui-modern-2027.css" rel="stylesheet">
-    <link href="~/css/sprint3-ui-polish.css" rel="stylesheet">
-    <link href="~/css/sprint3-modal.css" rel="stylesheet">
+    <link href="~/css/style.css" rel="stylesheet" asp-append-version="true">
+    <link href="~/css/custom-theme.css" rel="stylesheet" asp-append-version="true">
+    <link href="~/css/ui-modern-2027.css" rel="stylesheet" asp-append-version="true">
+    <link href="~/css/sprint3-ui-polish.css" rel="stylesheet" asp-append-version="true">
+    <link href="~/css/sprint3-modal.css" rel="stylesheet" asp-append-version="true">
     <link rel="stylesheet" href="~/css/sprint4-frontend-polish.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/brand-system.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/brand-overrides.css" asp-append-version="true" />
@@ -134,6 +134,139 @@
                     <div class="collapse navbar-collapse justify-content-end" id="navbarCollapse">
                         <div class="navbar-nav ml-lg-auto py-0 main-nav-clean main-nav-2027">
                             <a asp-controller="Home" asp-action="Index" class="nav-item nav-link"><i class="fa fa-home mr-1"></i>Inicio</a>
+
+                            @if (isAdmin)
+                            {
+                                <div class="nav-item dropdown admin-nav-dropdown admin-accordion-dropdown">
+                                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" data-display="static" aria-haspopup="true" aria-expanded="false">
+                                        <i class="fa fa-th-large mr-1"></i>Administración
+                                    </a>
+                                    <div class="dropdown-menu admin-acc-menu border-0 m-0" aria-label="Administración">
+                                        <div class="admin-acc__head">
+                                            <span class="admin-acc__eyebrow">Panel</span>
+                                            <span class="admin-acc__title">Administración</span>
+                                            <span class="admin-acc__meta">8 áreas · 33 módulos</span>
+                                        </div>
+                                        <div class="admin-acc__scroll">
+
+                                            <details class="acc-sec">
+                                                <summary class="acc-sec__head">
+                                                    <span class="acc-sec__icon"><i class="fa fa-boxes"></i></span>
+                                                    <span class="acc-sec__label">Inventario</span>
+                                                    <i class="fa fa-chevron-down acc-sec__chev"></i>
+                                                </summary>
+                                                <div class="acc-sec__list">
+                                                    <a asp-controller="Inventory" asp-action="Index" class="acc-item"><i class="fa fa-boxes"></i><span>Inventario</span></a>
+                                                    <a asp-controller="Inventory" asp-action="Movements" class="acc-item"><i class="fa fa-exchange-alt"></i><span>Movimientos</span></a>
+                                                    <a asp-controller="Returns" asp-action="Index" class="acc-item"><i class="fa fa-undo"></i><span>Devoluciones</span></a>
+                                                    <a asp-controller="Returns" asp-action="Quarantine" class="acc-item"><i class="fa fa-biohazard"></i><span>Cuarentena</span></a>
+                                                    <a asp-controller="Assets" asp-action="Index" class="acc-item"><i class="fa fa-snowflake"></i><span>Activos</span></a>
+                                                </div>
+                                            </details>
+
+                                            <details class="acc-sec">
+                                                <summary class="acc-sec__head">
+                                                    <span class="acc-sec__icon"><i class="fa fa-shopping-bag"></i></span>
+                                                    <span class="acc-sec__label">Ventas y Pedidos</span>
+                                                    <i class="fa fa-chevron-down acc-sec__chev"></i>
+                                                </summary>
+                                                <div class="acc-sec__list">
+                                                    <a asp-controller="OrdersAdmin" asp-action="Index" class="acc-item"><i class="fa fa-clipboard-list"></i><span>Pedidos</span></a>
+                                                    <a asp-controller="Billing" asp-action="Index" class="acc-item"><i class="fa fa-file-invoice-dollar"></i><span>Facturación</span></a>
+                                                    <a asp-controller="AccountsReceivableAdmin" asp-action="Index" class="acc-item"><i class="fa fa-receipt"></i><span>Cuentas por Cobrar</span></a>
+                                                    <a asp-controller="Promotions" asp-action="Index" class="acc-item"><i class="fa fa-tags"></i><span>Promociones</span></a>
+                                                    <a asp-controller="WarrantyRequestsAdmin" asp-action="Index" class="acc-item"><i class="fa fa-shield-alt"></i><span>Solicitudes de Garantía</span></a>
+                                                </div>
+                                            </details>
+
+                                            <details class="acc-sec">
+                                                <summary class="acc-sec__head">
+                                                    <span class="acc-sec__icon"><i class="fa fa-truck"></i></span>
+                                                    <span class="acc-sec__label">Logística y Flota</span>
+                                                    <i class="fa fa-chevron-down acc-sec__chev"></i>
+                                                </summary>
+                                                <div class="acc-sec__list">
+                                                    <a asp-controller="RoutesAdmin" asp-action="Index" class="acc-item"><i class="fa fa-route"></i><span>Rutas y Entregas</span></a>
+                                                    <a asp-controller="Vehicles" asp-action="Index" class="acc-item"><i class="fa fa-truck"></i><span>Vehículos</span></a>
+                                                    <a asp-controller="Fleet" asp-action="Mileage" class="acc-item"><i class="fa fa-tachometer-alt"></i><span>Kilometraje</span></a>
+                                                    <a asp-controller="Fleet" asp-action="Maintenance" class="acc-item"><i class="fa fa-wrench"></i><span>Mantenimiento</span></a>
+                                                    <a asp-controller="Fleet" asp-action="Alerts" class="acc-item"><i class="fa fa-bell"></i><span>Alertas de flota</span></a>
+                                                    <a asp-controller="Comodatos" asp-action="Index" class="acc-item"><i class="fa fa-handshake"></i><span>Comodatos</span></a>
+                                                </div>
+                                            </details>
+
+                                            <details class="acc-sec">
+                                                <summary class="acc-sec__head">
+                                                    <span class="acc-sec__icon"><i class="fa fa-coins"></i></span>
+                                                    <span class="acc-sec__label">Finanzas</span>
+                                                    <i class="fa fa-chevron-down acc-sec__chev"></i>
+                                                </summary>
+                                                <div class="acc-sec__list">
+                                                    <a asp-controller="Finance" asp-action="Index" class="acc-item"><i class="fa fa-cash-register"></i><span>Liquidación de cobros</span></a>
+                                                    <a asp-controller="Expenses" asp-action="Index" class="acc-item"><i class="fa fa-receipt"></i><span>Gastos operativos</span></a>
+                                                    <a asp-controller="Expenses" asp-action="Accounts" class="acc-item"><i class="fa fa-wallet"></i><span>Cuentas presupuestarias</span></a>
+                                                    <a asp-controller="FinancialReportAdmin" asp-action="Index" class="acc-item"><i class="fa fa-chart-line"></i><span>Ingresos y Egresos</span></a>
+                                                </div>
+                                            </details>
+
+                                            <details class="acc-sec">
+                                                <summary class="acc-sec__head">
+                                                    <span class="acc-sec__icon"><i class="fa fa-chart-line"></i></span>
+                                                    <span class="acc-sec__label">Reportes y Gerencia</span>
+                                                    <i class="fa fa-chevron-down acc-sec__chev"></i>
+                                                </summary>
+                                                <div class="acc-sec__list">
+                                                    <a asp-controller="Admin" asp-action="Index" class="acc-item"><i class="fa fa-tachometer-alt"></i><span>Dashboard</span></a>
+                                                    <a asp-controller="ManagementDashboard" asp-action="Index" class="acc-item"><i class="fa fa-chart-line"></i><span>Tablero gerencial</span></a>
+                                                    <a asp-controller="Kpis" asp-action="Index" class="acc-item"><i class="fa fa-bullseye"></i><span>Metas de ventas</span></a>
+                                                    <a asp-controller="Kpis" asp-action="Report" class="acc-item"><i class="fa fa-chart-bar"></i><span>Reporte de KPIs</span></a>
+                                                </div>
+                                            </details>
+
+                                            <details class="acc-sec">
+                                                <summary class="acc-sec__head">
+                                                    <span class="acc-sec__icon"><i class="fa fa-users"></i></span>
+                                                    <span class="acc-sec__label">Clientes</span>
+                                                    <i class="fa fa-chevron-down acc-sec__chev"></i>
+                                                </summary>
+                                                <div class="acc-sec__list">
+                                                    <a asp-controller="Clients" asp-action="Index" class="acc-item"><i class="fa fa-users"></i><span>Clientes</span></a>
+                                                    <a asp-controller="Credits" asp-action="Index" class="acc-item"><i class="fa fa-credit-card"></i><span>Créditos</span></a>
+                                                    <a asp-controller="Reclamos" asp-action="Index" class="acc-item"><i class="fa fa-exclamation-circle"></i><span>Reclamos</span></a>
+                                                    <a asp-controller="Consultations" asp-action="Index" class="acc-item"><i class="fa fa-comments"></i><span>Consultas</span></a>
+                                                </div>
+                                            </details>
+
+                                            <details class="acc-sec">
+                                                <summary class="acc-sec__head">
+                                                    <span class="acc-sec__icon"><i class="fa fa-user-tie"></i></span>
+                                                    <span class="acc-sec__label">Personal</span>
+                                                    <i class="fa fa-chevron-down acc-sec__chev"></i>
+                                                </summary>
+                                                <div class="acc-sec__list">
+                                                    <a asp-controller="Employees" asp-action="Index" class="acc-item"><i class="fa fa-id-badge"></i><span>Empleados</span></a>
+                                                    <a asp-controller="Employees" asp-action="LeaveRequests" class="acc-item"><i class="fa fa-calendar-check"></i><span>Solicitudes (licencias)</span></a>
+                                                </div>
+                                            </details>
+
+                                            <details class="acc-sec">
+                                                <summary class="acc-sec__head">
+                                                    <span class="acc-sec__icon"><i class="fa fa-shield-alt"></i></span>
+                                                    <span class="acc-sec__label">Seguridad</span>
+                                                    <i class="fa fa-chevron-down acc-sec__chev"></i>
+                                                </summary>
+                                                <div class="acc-sec__list">
+                                                    <a asp-controller="Roles" asp-action="Index" class="acc-item"><i class="fa fa-user-shield"></i><span>Roles</span></a>
+                                                    <a asp-controller="Permissions" asp-action="Index" class="acc-item"><i class="fa fa-key"></i><span>Permisos</span></a>
+                                                    <a asp-controller="Audit" asp-action="Index" class="acc-item"><i class="fa fa-history"></i><span>Auditoría</span></a>
+                                                </div>
+                                            </details>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+
                             <a asp-controller="Home" asp-action="Shop" class="nav-item nav-link"><i class="fa fa-store mr-1"></i>Tienda</a>
                             <a asp-controller="Cart" asp-action="Index" class="nav-item nav-link"><i class="fa fa-shopping-cart mr-1"></i>Carrito</a>
 
@@ -219,74 +352,6 @@
                                 <a asp-controller="Finance" asp-action="Index" class="nav-item nav-link nav-highlight">
                                     <i class="fa fa-cash-register mr-1"></i>Liquidación de cobros
                                 </a>
-                            }
-
-                            @if (isAdmin)
-                            {
-                                <div class="nav-item dropdown admin-nav-dropdown">
-                                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">
-                                        <i class="fa fa-th-large mr-1"></i>Operación
-                                    </a>
-                                    <div class="dropdown-menu admin-dropdown-menu rounded-0 border-0 m-0">
-                                        <a asp-controller="Admin" asp-action="Index" class="dropdown-item"><i class="fa fa-chart-line"></i> Dashboard</a>
-                                        <a asp-controller="Inventory" asp-action="Index" class="dropdown-item"><i class="fa fa-boxes"></i> Inventario</a>
-                                        <a asp-controller="Inventory" asp-action="Movements" class="dropdown-item"><i class="fa fa-exchange-alt"></i> Movimientos</a>
-                                        <a asp-controller="Returns" asp-action="Index" class="dropdown-item"><i class="fa fa-undo"></i> Devoluciones</a>
-                                        <a asp-controller="Returns" asp-action="Quarantine" class="dropdown-item"><i class="fa fa-biohazard"></i> Cuarentena</a>
-                                        <a asp-controller="OrdersAdmin" asp-action="Index" class="dropdown-item"><i class="fa fa-clipboard-list"></i> Pedidos</a>
-                                        <a asp-controller="Billing" asp-action="Index" class="dropdown-item"><i class="fa fa-file-invoice-dollar"></i> Facturación</a>
-                                        <a asp-controller="AccountsReceivableAdmin" asp-action="Index" class="dropdown-item"><i class="fa fa-solid fa-receipt"></i> Cuentas por Cobrar</a>
-                                        <a asp-controller="RoutesAdmin" asp-action="Index" class="dropdown-item"><i class="fa fa-route"></i> Rutas y Entregas</a>
-                                        <a asp-controller="Finance" asp-action="Index" class="dropdown-item"><i class="fa fa-cash-register"></i> Liquidación de cobros</a>
-                                        <a asp-controller="Vehicles" asp-action="Index" class="dropdown-item"><i class="fa fa-truck"></i> Vehículos</a>
-                                        <a asp-controller="Fleet" asp-action="Mileage" class="dropdown-item"><i class="fa fa-tachometer-alt"></i> Kilometraje</a>
-                                        <a asp-controller="Fleet" asp-action="Maintenance" class="dropdown-item"><i class="fa fa-wrench"></i> Mantenimiento</a>
-                                        <a asp-controller="Fleet" asp-action="Alerts" class="dropdown-item"><i class="fa fa-bell"></i> Alertas de flota</a>
-                                        <a asp-controller="Assets" asp-action="Index" class="dropdown-item"><i class="fa fa-snowflake"></i> Activos</a>
-                                        <a asp-controller="Comodatos" asp-action="Index" class="dropdown-item"><i class="fa fa-handshake"></i> Comodatos</a>
-                                        <a asp-controller="Promotions" asp-action="Index" class="dropdown-item"><i class="fa fa-tags"></i> Promociones</a>
-                                        <a asp-controller="Expenses" asp-action="Index" class="dropdown-item"><i class="fa fa-receipt"></i> Gastos operativos</a>
-                                        <a asp-controller="Expenses" asp-action="Accounts" class="dropdown-item"><i class="fa fa-wallet"></i> Cuentas presupuestarias</a>
-                                        <a asp-controller="Kpis" asp-action="Index" class="dropdown-item"><i class="fa fa-bullseye"></i> Metas de ventas</a>
-                                        <a asp-controller="Kpis" asp-action="Report" class="dropdown-item"><i class="fa fa-chart-bar"></i> Reporte de KPIs</a>
-                                        <a asp-controller="ManagementDashboard" asp-action="Index" class="dropdown-item"><i class="fa fa-chart-line"></i> Tablero gerencial</a>
-                                        <a asp-controller="FinancialReportAdmin" asp-action="Index" class="dropdown-item"><i class="fa fa-solid fa-chart-line"></i> Ingresos y Egreso</a>
-                                        <a asp-controller="WarrantyRequestsAdmin" asp-action="Index" class="dropdown-item"><i class="fa-solid fa-shield-halved"></i> Solicitudes de Garantía</a>
-                                    </div>
-                                </div>
-
-                                <div class="nav-item dropdown admin-nav-dropdown">
-                                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">
-                                        <i class="fa fa-users-cog mr-1"></i>Clientes
-                                    </a>
-                                    <div class="dropdown-menu admin-dropdown-menu rounded-0 border-0 m-0">
-                                        <a asp-controller="Clients" asp-action="Index" class="dropdown-item"><i class="fa fa-users"></i> Clientes</a>
-                                        <a asp-controller="Credits" asp-action="Index" class="dropdown-item"><i class="fa fa-credit-card"></i> Créditos</a>
-                                        <a asp-controller="Reclamos" asp-action="Index" class="dropdown-item"><i class="fa fa-exclamation-circle"></i> Reclamos</a>
-                                        <a asp-controller="Consultations" asp-action="Index" class="dropdown-item"><i class="fa fa-comments"></i> Consultas</a>
-                                        <a asp-controller="Audit" asp-action="Index" class="dropdown-item"><i class="fa fa-history"></i> Auditoría</a>
-                                    </div>
-                                </div>
-
-                                <div class="nav-item dropdown admin-nav-dropdown">
-                                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">
-                                        <i class="fa fa-user-tie mr-1"></i>Personal
-                                    </a>
-                                    <div class="dropdown-menu admin-dropdown-menu rounded-0 border-0 m-0">
-                                        <a asp-controller="Employees" asp-action="Index" class="dropdown-item"><i class="fa fa-id-badge"></i> Empleados</a>
-                                        <a asp-controller="Employees" asp-action="LeaveRequests" class="dropdown-item"><i class="fa fa-calendar-check"></i> Solicitudes</a>
-                                    </div>
-                                </div>
-
-                                <div class="nav-item dropdown admin-nav-dropdown">
-                                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">
-                                        <i class="fa fa-shield-alt mr-1"></i>Seguridad
-                                    </a>
-                                    <div class="dropdown-menu admin-dropdown-menu rounded-0 border-0 m-0">
-                                        <a asp-controller="Roles" asp-action="Index" class="dropdown-item"><i class="fa fa-user-shield"></i> Roles</a>
-                                        <a asp-controller="Permissions" asp-action="Index" class="dropdown-item"><i class="fa fa-key"></i> Permisos</a>
-                                    </div>
-                                </div>
                             }
 
                             @if (!isLoggedIn)
@@ -400,8 +465,46 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
     <script src="~/lib/easing/easing.min.js"></script>
     <script src="~/lib/owlcarousel/owl.carousel.min.js"></script>
-    <script src="~/js/main.js"></script>
-    <script src="~/js/sprint3-modal.js"></script>
+    <script src="~/js/main.js" asp-append-version="true"></script>
+    <script src="~/js/sprint3-modal.js" asp-append-version="true"></script>
+
+    <script>
+        // Acordeón del menú de Administración:
+        // - mantiene abierto el dropdown mientras se interactúa con el acordeón
+        // - solo una sección abierta a la vez
+        // - al cerrar el menú, se colapsan todas las secciones (reabre mostrando solo las 8 áreas)
+        (function () {
+            var dropdown = document.querySelector('.admin-accordion-dropdown');
+            if (!dropdown) return;
+
+            var menu = dropdown.querySelector('.admin-acc-menu');
+            if (!menu) return;
+
+            var sections = menu.querySelectorAll('details.acc-sec');
+
+            // Evita que Bootstrap cierre el dropdown al pulsar una cabecera de sección.
+            // Los enlaces de módulo (navegación real) sí dejan cerrar el menú.
+            menu.addEventListener('click', function (e) {
+                if (e.target.closest('a.acc-item')) return;
+                e.stopPropagation();
+            });
+
+            // Comportamiento de acordeón: al abrir una sección se cierran las demás.
+            sections.forEach(function (sec) {
+                sec.addEventListener('toggle', function () {
+                    if (!sec.open) return;
+                    sections.forEach(function (other) {
+                        if (other !== sec) other.open = false;
+                    });
+                });
+            });
+
+            // Al cerrarse el dropdown, colapsa todo para reabrir en limpio.
+            $(dropdown).on('hidden.bs.dropdown', function () {
+                sections.forEach(function (sec) { sec.open = false; });
+            });
+        })();
+    </script>
 
     @RenderSection("Scripts", required: false)
 </body>

@@ -2,16 +2,19 @@
     "use strict";
     
     // Dropdown on mouse hover
+    // El menú de Administración (acordeón) se excluye: debe abrirse por clic,
+    // no por hover, para que al desplegar un apartado no se cierre solo.
     $(document).ready(function () {
         function toggleNavbarMethod() {
+            var $hoverDropdowns = $('.navbar .dropdown').not('.admin-accordion-dropdown');
             if ($(window).width() > 992) {
-                $('.navbar .dropdown').on('mouseover', function () {
+                $hoverDropdowns.on('mouseover', function () {
                     $('.dropdown-toggle', this).trigger('click');
                 }).on('mouseout', function () {
                     $('.dropdown-toggle', this).trigger('click').blur();
                 });
             } else {
-                $('.navbar .dropdown').off('mouseover').off('mouseout');
+                $hoverDropdowns.off('mouseover').off('mouseout');
             }
         }
         toggleNavbarMethod();
