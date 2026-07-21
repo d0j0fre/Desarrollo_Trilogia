@@ -1,7 +1,9 @@
-﻿using Microsoft.Data.SqlClient;
-using Proyecto_Final.Models.Store;
-using System.Data;
+﻿using System.Data;
 using System.Text.Json;
+using Microsoft.Data.SqlClient;
+using Proyecto_Final.Models.Admin;
+using Proyecto_Final.Models.Store;
+
 
 namespace Proyecto_Final.Services
 {
@@ -119,6 +121,7 @@ namespace Proyecto_Final.Services
             await connection.OpenAsync();
             await command.ExecuteNonQueryAsync();
         }
+
     }
 }
 
