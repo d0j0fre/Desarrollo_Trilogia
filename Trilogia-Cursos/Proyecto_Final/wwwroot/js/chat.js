@@ -253,10 +253,6 @@ document.addEventListener("DOMContentLoaded", function () {
             </button>
         `;
     }
-    // ↑ Antes faltaba esta llave de cierre. Sin ella, la función
-    // configurarBuscadorDepartamentos quedaba anidada DENTRO de
-    // crearDepartamentoChat y no existía en el scope donde se llama
-    // (mostrarPantallaDepartamentos) -> ReferenceError.
 
     function configurarBuscadorDepartamentos() {
 
@@ -320,6 +316,55 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     chatWindow.addEventListener("click", async function (event) {
+
+        const sendDepartmentButton =
+            event.target.closest("#sendDepartmentMessage");
+
+        if (sendDepartmentButton) {
+
+            const input =
+                document.getElementById("chatDepartmentMessageInput");
+
+            const messagesContainer =
+                document.getElementById("chatDepartmentMessages");
+
+            if (!input || !messagesContainer) {
+                return;
+            }
+
+            const perfilId =
+                Number(messagesContainer.dataset.profileId);
+
+            const contenido =
+                input.value.trim();
+
+            if (!perfilId || !contenido) {
+                input.focus();
+                return;
+            }
+
+            sendDepartmentButton.disabled = true;
+            input.disabled = true;
+
+            const enviado = await enviarMensajeDepartamento(
+                perfilId,
+                contenido
+            );
+
+            if (enviado) {
+                input.value = "";
+
+                await cargarMensajesDepartamento(
+                    perfilId
+                );
+            }
+
+            sendDepartmentButton.disabled = false;
+            input.disabled = false;
+            input.focus();
+
+            return;
+        }
 
         const departamentoButton =
             event.target.closest(".chat-department-item");
@@ -396,10 +441,81 @@ document.addEventListener("DOMContentLoaded", function () {
             event.target.closest("#sendChatMessage");
 
         if (sendButton) {
-            // Aquí dejas el código que ya tienes
-            // para enviar mensajes privados.
+
+            const input =
+                document.getElementById("chatMessageInput");
+
+            if (!input || !conversacionActualId) {
+                return;
+            }
+
+            const contenido = input.value.trim();
+
+            if (!contenido) {
+                input.focus();
+                return;
+            }
+
+            sendButton.disabled = true;
+            input.disabled = true;
+
+            const enviado = await enviarMensaje(
+                conversacionActualId,
+                contenido
+            );
+
+            if (enviado) {
+                input.value = "";
+            }
+
+            sendButton.disabled = false;
+            input.disabled = false;
+            input.focus();
+
+            return;
         }
     });
+
+    async function enviarMensajeDepartamento(
+        perfilId,
+        contenido
+    ) {
+        const body = new URLSearchParams();
+
+        body.append("profileId", perfilId);
+        body.append("content", contenido);
+
+        try {
+            const response = await fetch(
+                "/Chat/SendDepartmentMessage",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type":
+                            "application/x-www-form-urlencoded"
+                    },
+                    body: body
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(
+                    data.message ||
+                    "No fue posible enviar el mensaje al departamento."
+                );
+            }
+
+            return true;
+        }
+        catch (error) {
+            console.error(error);
+            alert(error.message);
+
+            return false;
+        }
+    }
 
     chatWindow.addEventListener(
         "keydown",
@@ -412,9 +528,23 @@ document.addEventListener("DOMContentLoaded", function () {
                 event.preventDefault();
 
                 const sendButton =
-                    document.getElementById(
-                        "sendChatMessage"
-                    );
+                    document.getElementById("sendChatMessage");
+
+                if (sendButton && !sendButton.disabled) {
+                    sendButton.click();
+                }
+
+                return;
+            }
+
+            if (
+                event.key === "Enter" &&
+                event.target.id === "chatDepartmentMessageInput"
+            ) {
+                event.preventDefault();
+
+                const sendButton =
+                    document.getElementById("sendDepartmentMessage");
 
                 if (sendButton && !sendButton.disabled) {
                     sendButton.click();
@@ -1117,6 +1247,80 @@ document.addEventListener("DOMContentLoaded", function () {
             .replaceAll(">", "&gt;");
     }
 
+    async function cargarMensajesDepartamento(perfilId) {
+
+        const contenedor =
+            document.getElementById(
+                "chatDepartmentMessages"
+            );
+
+        if (!contenedor) {
+            return;
+        }
+
+        try {
+            const response = await fetch(
+                `/Chat/GetDepartmentMessages?profileId=${encodeURIComponent(
+                    perfilId
+                )}`
+            );
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(
+                    data.message ||
+                    "No fue posible cargar los mensajes."
+                );
+            }
+
+            contenedor.innerHTML = "";
+
+            const mensajes = data.messages || [];
+
+            if (mensajes.length === 0) {
+                contenedor.innerHTML = `
+                    <div class="chat-empty-conversation">
+                        <i class="fa fa-users"></i>
+
+                        <span>
+                            Aún no hay mensajes en este departamento.
+                        </span>
+                    </div>
+                `;
+
+                return;
+            }
+
+            mensajes.forEach(function (mensaje) {
+
+                const esMio =
+                    Number(mensaje.remitenteId) ===
+                    Number(data.currentUserId);
+
+                contenedor.insertAdjacentHTML(
+                    "beforeend",
+                    crearMensajeHtml(
+                        mensaje,
+                        esMio
+                    )
+                );
+            });
+
+            contenedor.scrollTop =
+                contenedor.scrollHeight;
+        }
+        catch (error) {
+            console.error(error);
+
+            contenedor.innerHTML = `
+                <div class="chat-loading">
+                    ${escaparHtml(error.message)}
+                </div>
+            `;
+        }
+    }
+
     // Antes esta función estaba FUERA del DOMContentLoaded, por lo que
     // no tenía acceso a escaparHtml, modoChatActual ni conexionChat.
     // Ahora vive dentro del mismo closure que el resto del chat.
@@ -1188,6 +1392,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
             </div>
         `;
+        await cargarMensajesDepartamento(perfilId);
+
+        const input =
+            document.getElementById(
+                "chatDepartmentMessageInput"
+            );
+
+        if (input) {
+            input.focus();
+        }
     }
 
 });

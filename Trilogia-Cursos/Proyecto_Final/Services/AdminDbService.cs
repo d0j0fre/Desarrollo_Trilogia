@@ -2564,6 +2564,139 @@ namespace Proyecto_Final.Services
             return departamentos;
         }
 
+        public async Task<ChatDepartmentMessageViewModel?>
+            SendDepartmentMessageAsync(
+                int perfilId,
+                int remitenteId,
+                string contenido)
+        {
+            using var connection =
+                new SqlConnection(_connectionString);
+
+            using var command = new SqlCommand(
+                "sp_Chat_SendDepartmentMessage",
+                connection
+            );
+
+            command.CommandType =
+                CommandType.StoredProcedure;
+
+            command.Parameters.Add(
+                "@PerfilId",
+                SqlDbType.Int
+            ).Value = perfilId;
+
+            command.Parameters.Add(
+                "@RemitenteId",
+                SqlDbType.Int
+            ).Value = remitenteId;
+
+            command.Parameters.Add(
+                "@Contenido",
+                SqlDbType.NVarChar,
+                1000
+            ).Value = contenido;
+
+            await connection.OpenAsync();
+
+            using var reader =
+                await command.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync())
+            {
+                return null;
+            }
+
+            return new ChatDepartmentMessageViewModel
+            {
+                MensajeId = reader.GetInt32(
+                    reader.GetOrdinal("MensajeId")
+                ),
+
+                PerfilId = reader.GetInt32(
+                    reader.GetOrdinal("PerfilId")
+                ),
+
+                RemitenteId = reader.GetInt32(
+                    reader.GetOrdinal("RemitenteId")
+                ),
+
+                Contenido = reader.GetString(
+                    reader.GetOrdinal("Contenido")
+                ),
+
+                FechaEnvio = reader.GetDateTime(
+                    reader.GetOrdinal("FechaEnvio")
+                ),
+
+                RemitenteNombre = reader.GetString(
+                    reader.GetOrdinal("RemitenteNombre")
+                )
+            };
+        }
+
+        public async Task<List<ChatDepartmentMessageViewModel>>
+            GetDepartmentMessagesAsync(int perfilId)
+        {
+            var mensajes =
+                new List<ChatDepartmentMessageViewModel>();
+
+            using var connection =
+                new SqlConnection(_connectionString);
+
+            using var command = new SqlCommand(
+                "sp_Chat_GetDepartmentMessages",
+                connection
+            );
+
+            command.CommandType =
+                CommandType.StoredProcedure;
+
+            command.Parameters.Add(
+                "@PerfilId",
+                SqlDbType.Int
+            ).Value = perfilId;
+
+            await connection.OpenAsync();
+
+            using var reader =
+                await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                mensajes.Add(
+                    new ChatDepartmentMessageViewModel
+                    {
+                        MensajeId = reader.GetInt32(
+                            reader.GetOrdinal("MensajeId")
+                        ),
+
+                        PerfilId = reader.GetInt32(
+                            reader.GetOrdinal("PerfilId")
+                        ),
+
+                        RemitenteId = reader.GetInt32(
+                            reader.GetOrdinal("RemitenteId")
+                        ),
+
+                        Contenido = reader.GetString(
+                            reader.GetOrdinal("Contenido")
+                        ),
+
+                        FechaEnvio = reader.GetDateTime(
+                            reader.GetOrdinal("FechaEnvio")
+                        ),
+
+                        RemitenteNombre = reader.GetString(
+                            reader.GetOrdinal("RemitenteNombre")
+                        )
+                    }
+                );
+            }
+
+            return mensajes;
+        }
+
     }
 }
 

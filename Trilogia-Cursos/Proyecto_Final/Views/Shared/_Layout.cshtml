@@ -302,21 +302,27 @@
                                 </div>
                             }
 
-                            @{
-                                var puedeUsarChat =
-                                    User.IsInRole("Administrador") ||
-                                    User.IsInRole("Empleado") ||
-                                    User.IsInRole("Supervisor") ||
-                                    User.IsInRole("Bodeguero") ||
-                                    User.IsInRole("Chofer") ||
-                                    User.IsInRole("Cajero") ||
-                                    User.IsInRole("Compras") ||
-                                    User.IsInRole("Crédito y Cobro") ||
-                                    User.IsInRole("Facturador") ||
-                                    User.IsInRole("Soporte") ||
-                                    User.IsInRole("Vendedor") ||
-                                    User.IsInRole("Auditor Interno");
-                            }
+                                @{
+                                    var chatRoles = new[]
+                                    {
+                                        "Administrador",
+                                        "Auditor Interno",
+                                        "Bodeguero",
+                                        "Cajero",
+                                        "Chofer",
+                                        "Compras",
+                                        "Crédito y Cobro",
+                                        "Empleado",
+                                        "Facturador",
+                                        "Soporte",
+                                        "Supervisor",
+                                        "Vendedor"
+                                    };
+
+                                    var puedeUsarChat =
+                                        !string.IsNullOrWhiteSpace(userRole) &&
+                                        chatRoles.Contains(userRole, StringComparer.OrdinalIgnoreCase);
+                                }
 
                             @if (puedeUsarChat)
                             {
@@ -331,20 +337,24 @@
 
                                     </a>
 
-                                    <div class="dropdown-menu admin-dropdown-menu rounded-0 border-0 m-0">
+                                    <div class="dropdown-menu dropdown-menu-right admin-dropdown-menu rounded-0 border-0 m-0">
 
                                         <button type="button"
                                                 id="btnPrivateChat"
                                                 class="dropdown-item">
+
                                             <i class="fa fa-user"></i>
                                             Chats privados
+
                                         </button>
 
                                         <button type="button"
                                                 id="btnDepartmentChat"
                                                 class="dropdown-item">
+
                                             <i class="fa fa-users"></i>
                                             Departamentos
+
                                         </button>
 
                                     </div>
