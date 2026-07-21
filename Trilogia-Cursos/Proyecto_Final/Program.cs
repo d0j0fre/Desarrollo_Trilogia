@@ -1,10 +1,12 @@
 using Proyecto_Final.Middleware;
 using Proyecto_Final.Services;
+using Proyecto_Final.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // MVC
 builder.Services.AddControllersWithViews();
+builder.Services.AddSignalR();
 
 // Session
 builder.Services.AddDistributedMemoryCache();
@@ -71,5 +73,7 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.MapHub<ChatHub>("/chatHub");
 
 app.Run();

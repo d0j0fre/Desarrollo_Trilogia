@@ -1,7 +1,8 @@
+using System.Data;
 using Microsoft.Data.SqlClient;
 using Proyecto_Final.Models.Admin;
+using Proyecto_Final.Models.Chat;
 using Proyecto_Final.Models.Store;
-using System.Data;
 
 namespace Proyecto_Final.Services
 {
@@ -2328,6 +2329,239 @@ namespace Proyecto_Final.Services
             }
 
             return solicitudes;
+        }
+
+        public async Task<List<ChatUserViewModel>> GetChatUsersAsync(
+            int usuarioIdActual)
+        {
+            var usuarios = new List<ChatUserViewModel>();
+
+            using var connection = new SqlConnection(_connectionString);
+
+            using var command = new SqlCommand(
+                "sp_Chat_GetUsers",
+                connection
+            );
+
+            command.CommandType = CommandType.StoredProcedure;
+
+            command.Parameters.Add(
+                "@UsuarioIdActual",
+                SqlDbType.Int
+            ).Value = usuarioIdActual;
+
+            await connection.OpenAsync();
+
+            using var reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                usuarios.Add(new ChatUserViewModel
+                {
+                    UsuarioId = reader.GetInt32(
+                        reader.GetOrdinal("UsuarioId")
+                    ),
+
+                    NombreCompleto = reader.GetString(
+                        reader.GetOrdinal("NombreCompleto")
+                    ),
+
+                    Correo = reader.GetString(
+                        reader.GetOrdinal("Correo")
+                    )
+                });
+            }
+
+            return usuarios;
+        }
+
+
+        public async Task<int> GetOrCreateChatConversationAsync(
+            int usuarioActualId,
+            int otroUsuarioId)
+        {
+            using var connection = new SqlConnection(_connectionString);
+
+            using var command = new SqlCommand(
+                "sp_Chat_GetOrCreateConversation",
+                connection
+            );
+
+            command.CommandType = CommandType.StoredProcedure;
+
+            command.Parameters.Add(
+                "@UsuarioActualId",
+                SqlDbType.Int
+            ).Value = usuarioActualId;
+
+            command.Parameters.Add(
+                "@OtroUsuarioId",
+                SqlDbType.Int
+            ).Value = otroUsuarioId;
+
+            await connection.OpenAsync();
+
+            var result = await command.ExecuteScalarAsync();
+
+            return Convert.ToInt32(result);
+        }
+
+        public async Task<ChatMessageViewModel?> SendChatMessageAsync(
+            int conversacionId,
+            int remitenteId,
+            string contenido)
+        {
+            using var connection = new SqlConnection(_connectionString);
+
+            using var command = new SqlCommand(
+                "sp_Chat_SendMessage",
+                connection
+            );
+
+            command.CommandType = CommandType.StoredProcedure;
+
+            command.Parameters.Add(
+                "@ConversacionId",
+                SqlDbType.Int
+            ).Value = conversacionId;
+
+            command.Parameters.Add(
+                "@RemitenteId",
+                SqlDbType.Int
+            ).Value = remitenteId;
+
+            command.Parameters.Add(
+                "@Contenido",
+                SqlDbType.NVarChar,
+                1000
+            ).Value = contenido;
+
+            await connection.OpenAsync();
+
+            using var reader = await command.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync())
+            {
+                return null;
+            }
+
+            return new ChatMessageViewModel
+            {
+                MensajeId = reader.GetInt32(
+                    reader.GetOrdinal("MensajeId")
+                ),
+
+                ConversacionId = reader.GetInt32(
+                    reader.GetOrdinal("ConversacionId")
+                ),
+
+                RemitenteId = reader.GetInt32(
+                    reader.GetOrdinal("RemitenteId")
+                ),
+
+                Contenido = reader.GetString(
+                    reader.GetOrdinal("Contenido")
+                ),
+
+                FechaEnvio = reader.GetDateTime(
+                    reader.GetOrdinal("FechaEnvio")
+                ),
+
+                Leido = reader.GetBoolean(
+                    reader.GetOrdinal("Leido")
+                )
+            };
+        }
+
+        public async Task<List<ChatMessageViewModel>> GetChatMessagesAsync(
+            int conversacionId,
+            int usuarioId)
+        {
+            var mensajes = new List<ChatMessageViewModel>();
+
+            using var connection = new SqlConnection(_connectionString);
+
+            using var command = new SqlCommand(
+                "sp_Chat_GetMessages",
+                connection
+            );
+
+            command.CommandType = CommandType.StoredProcedure;
+
+            command.Parameters.Add(
+                "@ConversacionId",
+                SqlDbType.Int
+            ).Value = conversacionId;
+
+            command.Parameters.Add(
+                "@UsuarioId",
+                SqlDbType.Int
+            ).Value = usuarioId;
+
+            await connection.OpenAsync();
+
+            using var reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                mensajes.Add(new ChatMessageViewModel
+                {
+                    MensajeId = reader.GetInt32(
+                        reader.GetOrdinal("MensajeId")
+                    ),
+
+                    ConversacionId = reader.GetInt32(
+                        reader.GetOrdinal("ConversacionId")
+                    ),
+
+                    RemitenteId = reader.GetInt32(
+                        reader.GetOrdinal("RemitenteId")
+                    ),
+
+                    Contenido = reader.GetString(
+                        reader.GetOrdinal("Contenido")
+                    ),
+
+                    FechaEnvio = reader.GetDateTime(
+                        reader.GetOrdinal("FechaEnvio")
+                    ),
+
+                    Leido = reader.GetBoolean(
+                        reader.GetOrdinal("Leido")
+                    )
+                });
+            }
+
+            return mensajes;
+        }
+        public async Task<List<ChatDepartmentViewModel>> GetChatDepartmentsAsync()
+        {
+            var departamentos = new List<ChatDepartmentViewModel>();
+
+            await using var connection = new SqlConnection(_connectionString);
+
+            using var command = new SqlCommand(
+                "sp_Chat_GetDepartments",
+                connection);
+
+            command.CommandType = CommandType.StoredProcedure;
+
+            await connection.OpenAsync();
+
+            using var reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                departamentos.Add(new ChatDepartmentViewModel
+                {
+                    PerfilId = Convert.ToInt32(reader["PerfilId"]),
+                    Nombre = reader["Nombre"]?.ToString() ?? "",
+                    Descripcion = reader["Descripcion"]?.ToString(),
+                    TotalUsuarios = Convert.ToInt32(reader["TotalUsuarios"])
+                });
+            }
+
+            return departamentos;
         }
 
     }
