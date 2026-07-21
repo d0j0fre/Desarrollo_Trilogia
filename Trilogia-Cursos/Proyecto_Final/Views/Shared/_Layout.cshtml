@@ -169,6 +169,9 @@
                                 <a asp-controller="ManagementDashboard" asp-action="Index" class="nav-item nav-link nav-highlight">
                                     <i class="fa fa-chart-line mr-1"></i>Tablero
                                 </a>
+                                <a asp-controller="Kpis" asp-action="Report" class="nav-item nav-link nav-highlight">
+                                    <i class="fa fa-chart-bar mr-1"></i>KPIs
+                                </a>
                                 <a asp-controller="Assistant" asp-action="Index" class="nav-item nav-link nav-highlight">
                                     <i class="fa fa-robot mr-1"></i>Asistente
                                 </a>
@@ -218,6 +221,10 @@
                                         <a asp-controller="Assets" asp-action="Index" class="dropdown-item"><i class="fa fa-snowflake"></i> Activos</a>
                                         <a asp-controller="Comodatos" asp-action="Index" class="dropdown-item"><i class="fa fa-handshake"></i> Comodatos</a>
                                         <a asp-controller="Promotions" asp-action="Index" class="dropdown-item"><i class="fa fa-tags"></i> Promociones</a>
+                                        <a asp-controller="Expenses" asp-action="Index" class="dropdown-item"><i class="fa fa-receipt"></i> Gastos operativos</a>
+                                        <a asp-controller="Expenses" asp-action="Accounts" class="dropdown-item"><i class="fa fa-wallet"></i> Cuentas presupuestarias</a>
+                                        <a asp-controller="Kpis" asp-action="Index" class="dropdown-item"><i class="fa fa-bullseye"></i> Metas de ventas</a>
+                                        <a asp-controller="Kpis" asp-action="Report" class="dropdown-item"><i class="fa fa-chart-bar"></i> Reporte de KPIs</a>
                                         <a asp-controller="ManagementDashboard" asp-action="Index" class="dropdown-item"><i class="fa fa-chart-line"></i> Tablero gerencial</a>
                                     </div>
                                 </div>
@@ -229,6 +236,7 @@
                                     <div class="dropdown-menu admin-dropdown-menu rounded-0 border-0 m-0">
                                         <a asp-controller="Clients" asp-action="Index" class="dropdown-item"><i class="fa fa-users"></i> Clientes</a>
                                         <a asp-controller="Credits" asp-action="Index" class="dropdown-item"><i class="fa fa-credit-card"></i> Créditos</a>
+                                        <a asp-controller="Reclamos" asp-action="Index" class="dropdown-item"><i class="fa fa-exclamation-circle"></i> Reclamos</a>
                                         <a asp-controller="Consultations" asp-action="Index" class="dropdown-item"><i class="fa fa-comments"></i> Consultas</a>
                                         <a asp-controller="Audit" asp-action="Index" class="dropdown-item"><i class="fa fa-history"></i> Auditoría</a>
                                     </div>
