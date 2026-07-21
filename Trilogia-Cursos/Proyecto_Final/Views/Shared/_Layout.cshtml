@@ -35,6 +35,7 @@
     <link rel="stylesheet" href="~/css/sprint4-frontend-polish.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/brand-system.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/brand-overrides.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/chat.css" asp-append-version="true" />
 
     @RenderSection("Styles", required: false)
 </head>
@@ -301,6 +302,56 @@
                                 </div>
                             }
 
+                            @{
+                                var puedeUsarChat =
+                                    User.IsInRole("Administrador") ||
+                                    User.IsInRole("Empleado") ||
+                                    User.IsInRole("Supervisor") ||
+                                    User.IsInRole("Bodeguero") ||
+                                    User.IsInRole("Chofer") ||
+                                    User.IsInRole("Cajero") ||
+                                    User.IsInRole("Compras") ||
+                                    User.IsInRole("Crédito y Cobro") ||
+                                    User.IsInRole("Facturador") ||
+                                    User.IsInRole("Soporte") ||
+                                    User.IsInRole("Vendedor") ||
+                                    User.IsInRole("Auditor Interno");
+                            }
+
+                            @if (puedeUsarChat)
+                            {
+                                <div class="nav-item dropdown admin-nav-dropdown">
+
+                                    <a href="#"
+                                       class="nav-link dropdown-toggle"
+                                       data-toggle="dropdown">
+
+                                        <i class="fa fa-comments mr-1"></i>
+                                        Chat
+
+                                    </a>
+
+                                    <div class="dropdown-menu admin-dropdown-menu rounded-0 border-0 m-0">
+
+                                        <button type="button"
+                                                id="btnPrivateChat"
+                                                class="dropdown-item">
+                                            <i class="fa fa-user"></i>
+                                            Chats privados
+                                        </button>
+
+                                        <button type="button"
+                                                id="btnDepartmentChat"
+                                                class="dropdown-item">
+                                            <i class="fa fa-users"></i>
+                                            Departamentos
+                                        </button>
+
+                                    </div>
+
+                                </div>
+                            }
+
                             @if (isEmployeePortalUser)
                             {
                                 <a asp-controller="EmployeePortal" asp-action="Index" class="nav-item nav-link nav-highlight">
@@ -461,6 +512,43 @@
     <i class="fa fa-angle-double-up" style="color: white !important;"></i>
 </a>
 
+@* Chat *@
+<div id="chatWindow" class="chat-window">
+
+    <div class="chat-header">
+        <span>
+            <i class="fa fa-comments"></i>
+            Chat
+        </span>
+
+        <button type="button" id="closeChat">
+            <i class="fa fa-times"></i>
+        </button>
+    </div>
+
+    <div class="chat-body">
+
+        <div class="chat-search">
+            <i class="fa fa-search"></i>
+
+            <input type="text"
+                   id="chatUserSearch"
+                   placeholder="Buscar usuario..."
+                   autocomplete="off">
+        </div>
+
+        <div id="chatUsersList" class="chat-users-list">
+            <div class="chat-loading">
+                Abre el chat para cargar los usuarios.
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
     <script src="~/lib/easing/easing.min.js"></script>
@@ -507,5 +595,8 @@
     </script>
 
     @RenderSection("Scripts", required: false)
+
+    <script asp-append-version="true" src="~/js/chat.js"></script>
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
 </body>
 </html>
