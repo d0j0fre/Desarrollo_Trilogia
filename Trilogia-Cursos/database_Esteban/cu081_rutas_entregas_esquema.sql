@@ -17,8 +17,7 @@
 --
 -- Prerrequisito: esquema base (Fase1/Fase2) ya aplicado.
 -- ============================================================
-
-USE DistribuidoraJJ_DB;
+-- Ejecute este script sobre la base de datos seleccionada por el operador.
 GO
 
 SET NOCOUNT ON;

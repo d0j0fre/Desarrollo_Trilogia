@@ -11,7 +11,7 @@
 --   • Cada gasto "afecta" el presupuesto de su cuenta vía el
 --     resumen presupuestario (presupuesto vs gastado vs disponible).
 -- ============================================================
-USE DistribuidoraJJ_DB_DEV;
+-- Ejecute este script sobre la base de datos seleccionada por el operador.
 GO
 SET NOCOUNT ON;
 GO

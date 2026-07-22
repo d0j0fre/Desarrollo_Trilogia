@@ -14,8 +14,7 @@
 --
 -- Prerrequisito: cu081 (esquema) y cu082 (SPs) ya aplicados.
 -- ============================================================
-
-USE DistribuidoraJJ_DB_DEV;
+-- Ejecute este script sobre la base de datos seleccionada por el operador.
 GO
 
 SET NOCOUNT ON;

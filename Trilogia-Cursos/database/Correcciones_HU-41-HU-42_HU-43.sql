@@ -1,20 +1,20 @@
 -- ==========================================
--- CU-041: GestiÛn de Roles (Perfiles)
+-- CU-041: Gesti√≥n de Roles (Perfiles)
 -- ==========================================
--- La tabla dbo.Perfiles y su relaciÛn con dbo.Usuarios ya existen.
--- No se requiere DDL adicional para esta historia, solo la lÛgica en C#.
+-- La tabla dbo.Perfiles y su relaci√≥n con dbo.Usuarios ya existen.
+-- No se requiere DDL adicional para esta historia, solo la l√≥gica en C#.
 
 
 -- ==========================================
--- CU-042: Control de Acceso a MÛdulos
+-- CU-042: Control de Acceso a M√≥dulos
 -- ==========================================
--- 1. Creamos el cat·logo de los mÛdulos del sistema
+-- 1. Creamos el cat√°logo de los m√≥dulos del sistema
 CREATE TABLE dbo.Modulos (
     ModuloId INT IDENTITY(1,1) PRIMARY KEY,
     NombreModulo NVARCHAR(100) NOT NULL UNIQUE -- Ej: 'Inventario', 'Facturacion', 'Admin'
 );
 
--- 2. Creamos la tabla intermedia para relacionar Perfiles con MÛdulos
+-- 2. Creamos la tabla intermedia para relacionar Perfiles con M√≥dulos
 CREATE TABLE dbo.PermisosPerfil (
     PerfilId INT NOT NULL,
     ModuloId INT NOT NULL,
@@ -25,25 +25,25 @@ CREATE TABLE dbo.PermisosPerfil (
 
 
 -- ==========================================
--- CU-043: Registro de AuditorÌa y Trazabilidad
+-- CU-043: Registro de Auditor√≠a y Trazabilidad
 -- ==========================================
--- Creamos la bit·cora de acciones
+-- Creamos la bit√°cora de acciones
 CREATE TABLE dbo.HistorialAuditoria (
     AuditoriaId INT IDENTITY(1,1) PRIMARY KEY,
     UsuarioId INT NOT NULL, 
     Accion NVARCHAR(100) NOT NULL, -- Ej: 'LOGIN', 'CREAR_PERFIL', 'ELIMINAR_PRODUCTO'
     Modulo NVARCHAR(50) NOT NULL,  -- Ej: 'Seguridad', 'Inventario'
-    Detalles NVARCHAR(MAX),        -- JSON o texto con el detalle de quÈ cambiÛ
+    Detalles NVARCHAR(MAX),        -- JSON o texto con el detalle de qu√© cambi√≥
     FechaHora DATETIME DEFAULT GETDATE(),
     CONSTRAINT FK_HistorialAuditoria_Usuarios FOREIGN KEY (UsuarioId) REFERENCES dbo.Usuarios(UsuarioId)
 );
 
--- 1. Registrar los mÛdulos del sistema (los mismos nombres que pusiste en los [AdminAuthorize])
+-- 1. Registrar los m√≥dulos del sistema (los mismos nombres que pusiste en los [AdminAuthorize])
 INSERT INTO dbo.Modulos (NombreModulo) 
 VALUES ('Admin'), ('Facturacion'), ('Inventario'), ('Pedidos'), ('Seguridad');
 
 -- 2. Asignarle todos los permisos al perfil de Administrador.
 -- OJO: Estoy asumiendo que tu perfil de Administrador en la tabla dbo.Perfiles tiene el PerfilId = 1.
--- Si tu ID de administrador es otro, cambia el '1' por el n˙mero correcto.
+-- Si tu ID de administrador es otro, cambia el '1' por el n√∫mero correcto.
 INSERT INTO dbo.PermisosPerfil (PerfilId, ModuloId)
 SELECT 1, ModuloId FROM dbo.Modulos;

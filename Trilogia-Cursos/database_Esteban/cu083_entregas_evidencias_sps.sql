@@ -10,8 +10,7 @@
 -- CREATE OR ALTER — idempotente. No modifica SPs existentes.
 -- Prerrequisito: cu081 y cu082 aplicados.
 -- ============================================================
-
-USE DistribuidoraJJ_DB;
+-- Ejecute este script sobre la base de datos seleccionada por el operador.
 GO
 
 /* =========================================================

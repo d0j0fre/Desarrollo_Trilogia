@@ -11,7 +11,7 @@
 --
 -- Prerrequisitos: cu081 (Rutas/RutaPedidos), cu141 (liquidación logística).
 -- ============================================================
-USE DistribuidoraJJ_DB_DEV;
+-- Ejecute este script sobre la base de datos seleccionada por el operador.
 GO
 SET NOCOUNT ON;
 GO
