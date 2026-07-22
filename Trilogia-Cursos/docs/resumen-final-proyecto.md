@@ -40,6 +40,6 @@ Dependen del ledger `0001_create_schema_migration_history.sql` y del esquema bas
 
 1. Revocar/rotar la credencial SMTP expuesta y actualizar configuración segura.
 2. Coordinar, si se aprueba, la reescritura del historial y reclonado de colaboradores.
-3. Configurar la protección de `main` con los checks reales.
+3. Mantener la protección activa de `main` y revisar sus contextos si cambia el workflow.
 4. Ejecutar 0001–0006 y QA funcional/negativo en SQL Server.
 5. Desplegar a Azure y repetir smoke tests; la validación Azure antigua es histórica.

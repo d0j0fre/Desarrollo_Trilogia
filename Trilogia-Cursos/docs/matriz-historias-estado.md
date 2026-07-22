@@ -5,11 +5,11 @@ Estado al 22 de julio de 2026. “Pendiente entorno” significa que existe cód
 | CU | Issue | Estado | Evidencia principal | Verificación / pendiente |
 |---|---:|---|---|---|
 | 081 | #28 | Implementada; pendiente entorno | `RoutesAdminController`, `cu081_rutas_entregas_esquema.sql` | Build/SQL; QA de rutas |
-| 101 | #36 | Duplicada de CU-081 | Mismo flujo que CU-081 | Confirmar/cerrar como duplicada manualmente |
+| 101 | #36 | Cerrada como duplicada de CU-081 | Mismo flujo que CU-081 | Cierre `duplicate` registrado en GitHub |
 | 082 | #29 | Implementada; pendiente entorno | `DriverDeliveriesController`, `cu082_entregas_estado_offline_sps.sql` | Build/SQL; QA chofer/offline |
-| 102 | #37 | Duplicada de CU-082 | Mismo flujo que CU-082 | Confirmar/cerrar como duplicada manualmente |
+| 102 | #37 | Cerrada como duplicada de CU-082 | Mismo flujo que CU-082 | Cierre `duplicate` registrado en GitHub |
 | 083 | #30 | Reforzada; pendiente entorno | `EvidenceStorageService`, `DeliveryEvidenceController`, migración 0004 | Tests de archivos; QA SQL/almacenamiento |
-| 103 | #38 | Duplicada de CU-083 | Mismo flujo que CU-083 | Confirmar/cerrar como duplicada manualmente |
+| 103 | #38 | Cerrada como duplicada de CU-083 | Mismo flujo que CU-083 | Cierre `duplicate` registrado en GitHub |
 | 105 | #40 | Implementada; pendiente entorno | `ReturnsController`, `cu141_142_105_devoluciones_cuarentena_liquidacion.sql` | Build/SQL; QA liquidación |
 | 106 | #41 | Implementada; pendiente entorno | `FinanceController`, `cu106_liquidacion_financiera.sql` | Build/SQL; QA financiera |
 | 131 | #50 | Implementada; pendiente entorno | `ManagementDashboardController`, `cu131_reportes_dashboard_gerencial.sql` | Build/SQL; QA dashboard |

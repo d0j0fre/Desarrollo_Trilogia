@@ -2,9 +2,9 @@
 
 ## Estado
 
-El workflow define los checks estables `security-scan`, `sql-validation`, `build`, `tests` y `final-gate`. La protección no se configuró automáticamente porque GitHub CLI no está disponible en el entorno de saneamiento y el conector activo no expone reglas de protección de rama.
+La protección se configuró el 22 de julio de 2026 después de que el PR #112 confirmara los nombres reales y aprobara los checks `security-scan`, `sql-validation`, `build`, `tests` y `final-gate`.
 
-Aplicar esta política únicamente después de que los cinco nombres hayan aparecido al menos una vez en un Pull Request.
+La consulta de verificación devolvió los cinco contextos requeridos, `strict: true`, administradores sujetos a la regla, una aprobación, conversaciones resueltas y force-push/eliminación deshabilitados.
 
 ## Política requerida
 
@@ -15,7 +15,7 @@ Aplicar esta política únicamente después de que los cinco nombres hayan apare
 - Checks requeridos y actualizados con `main`.
 - Force-push y eliminación de rama deshabilitados.
 
-## Comando con GitHub CLI
+## Comando de reproducción con GitHub CLI
 
 Autenticarse con una cuenta administradora y ejecutar desde una terminal Bash:
 

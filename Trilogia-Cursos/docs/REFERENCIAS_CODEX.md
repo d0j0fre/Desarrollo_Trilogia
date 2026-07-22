@@ -10,7 +10,7 @@ Este es el índice operativo vigente. El código y el último `origin/main` prev
 - CI separa secretos, SQL, build y tests; `final-gate` consolida el resultado.
 - Las migraciones incrementales vigentes son 0001–0006. Las 0002–0006 están validadas sintácticamente, pero no se han aplicado como parte de esta rama.
 - Chat, evidencia privada, checkout/promociones y garantías requieren aplicar migraciones y efectuar QA de entorno antes de declararlos operativos.
-- La protección de `main` está documentada en `docs/configuracion-proteccion-main.md`; no se presume activada.
+- La protección de `main` está activa y documentada en `docs/configuracion-proteccion-main.md`.
 - Las validaciones Azure documentadas anteriormente son evidencia histórica y no validan esta rama.
 
 ## Índice por tema
