@@ -13,8 +13,7 @@
 -- CREATE OR ALTER — idempotente.
 -- Prerrequisito: cu081/cu082 aplicados (para "pedidos en ruta").
 -- ============================================================
-
-USE DistribuidoraJJ_DB;
+-- Ejecute este script sobre la base de datos seleccionada por el operador.
 GO
 
 /* =========================================================

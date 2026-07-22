@@ -1,15 +1,15 @@
 -- ============================================================
--- FASE 3 ó BLOQUE 2/3
--- MÛdulos: Vendedor, Gerente, Tienda/Cliente,
---          Clientes, CrÈditos, Consultas
--- CREATE OR ALTER ó idempotente.
+-- FASE 3 ‚Äî BLOQUE 2/3
+-- M√≥dulos: Vendedor, Gerente, Tienda/Cliente,
+--          Clientes, Cr√©ditos, Consultas
+-- CREATE OR ALTER ‚Äî idempotente.
 -- ============================================================
 
 USE DistribuidoraJJ_DB;
 GO
 
 -- ===========================================================
--- M”DULO: PEDIDOS (VENDEDOR / SELLER)
+-- M√ìDULO: PEDIDOS (VENDEDOR / SELLER)
 -- ===========================================================
 
 CREATE OR ALTER PROCEDURE dbo.sp_Seller_GetClientsForOrder
@@ -96,14 +96,14 @@ BEGIN
              PedidoOfflineGuid, InventarioDescontado)
         VALUES
             (@UsuarioClienteId, @VendedorUsuarioId, @VendedorNombre,
-             N'Pendiente', N'Venta mÛvil offline',
+             N'Pendiente', N'Venta m√≥vil offline',
              @TipoEntrega, @DireccionEntrega, @Observaciones, @Total,
              @IdentificacionCliente, @MetodoPago, N'Pendiente',
              @PedidoOfflineGuid, 0);
 
         DECLARE @PedidoId INT = SCOPE_IDENTITY();
 
-        -- Insertar lÌneas de detalle
+        -- Insertar l√≠neas de detalle
         INSERT INTO dbo.PedidoDetalle (PedidoId, ProductoId, Cantidad, PrecioUnitario)
         SELECT
             @PedidoId,
@@ -137,7 +137,7 @@ BEGIN
             pd.Cantidad,
             pr.Stock + pd.Cantidad,
             pr.Stock,
-            N'Venta mÛvil offline ó pedido #' + CAST(@PedidoId AS NVARCHAR),
+            N'Venta m√≥vil offline ‚Äî pedido #' + CAST(@PedidoId AS NVARCHAR),
             @VendedorNombre
         FROM dbo.PedidoDetalle pd
         INNER JOIN dbo.Productos pr ON pr.ProductoId = pd.ProductoId
@@ -180,7 +180,7 @@ END
 GO
 
 -- ===========================================================
--- M”DULO: PEDIDOS (GERENTE / MANAGER)
+-- M√ìDULO: PEDIDOS (GERENTE / MANAGER)
 -- ===========================================================
 
 CREATE OR ALTER PROCEDURE dbo.sp_Manager_GetRetainedOrders
@@ -220,7 +220,7 @@ BEGIN
     WHERE PedidoId = @PedidoId AND Estado = N'Retenido';
 
     IF @@ROWCOUNT = 0
-        RAISERROR(N'El pedido no est· en estado Retenido o no existe.', 16, 1);
+        RAISERROR(N'El pedido no est√° en estado Retenido o no existe.', 16, 1);
     ELSE
         SELECT 1 AS Exito;
 END
@@ -243,7 +243,7 @@ BEGIN
 
         IF @InvDesc IS NULL
         BEGIN
-            RAISERROR(N'El pedido no est· en estado Retenido o no existe.', 16, 1);
+            RAISERROR(N'El pedido no est√° en estado Retenido o no existe.', 16, 1);
             ROLLBACK; RETURN;
         END
 
@@ -260,7 +260,7 @@ BEGIN
             SELECT
                 pd.ProductoId, @UsuarioId, pr.Nombre, N'Entrada',
                 pd.Cantidad, pr.Stock - pd.Cantidad, pr.Stock,
-                N'RestauraciÛn por rechazo de pedido #' + CAST(@PedidoId AS NVARCHAR),
+                N'Restauraci√≥n por rechazo de pedido #' + CAST(@PedidoId AS NVARCHAR),
                 @UsuarioNombre
             FROM dbo.PedidoDetalle pd
             INNER JOIN dbo.Productos pr ON pr.ProductoId = pd.ProductoId
@@ -283,7 +283,7 @@ END
 GO
 
 -- ===========================================================
--- M”DULO: TIENDA EN LÕNEA (STORE / PORTAL CLIENTE)
+-- M√ìDULO: TIENDA EN L√çNEA (STORE / PORTAL CLIENTE)
 -- ===========================================================
 
 CREATE OR ALTER PROCEDURE dbo.sp_Store_GetProducts
@@ -362,7 +362,7 @@ BEGIN
             (UsuarioId, Estado, CanalPedido, TipoEntrega, DireccionEntrega,
              Total, MetodoPago, EstadoPago, ReferenciaPago, FechaPago, InventarioDescontado)
         VALUES
-            (@UsuarioId, N'Pendiente', N'Tienda en lÌnea',
+            (@UsuarioId, N'Pendiente', N'Tienda en l√≠nea',
              @TipoEntrega, @DireccionEntrega,
              @Total, @MetodoPago, N'Confirmado simulado', @ReferenciaPago,
              SYSDATETIME(), 0);
@@ -508,7 +508,7 @@ END
 GO
 
 -- ===========================================================
--- M”DULO: CLIENTES
+-- M√ìDULO: CLIENTES
 -- ===========================================================
 
 CREATE OR ALTER PROCEDURE dbo.sp_Admin_GetClients
@@ -559,14 +559,14 @@ BEGIN
         u.Telefono, u.Direccion, u.Activo, u.FechaRegistro
     FROM dbo.Usuarios u WHERE u.UsuarioId = @UsuarioId;
 
-    -- ⁄ltimos 10 pedidos
+    -- √öltimos 10 pedidos
     SELECT TOP 10
         p.PedidoId, p.FechaPedido, p.Estado, p.Total, p.CanalPedido
     FROM dbo.Pedidos p
     WHERE p.UsuarioId = @UsuarioId
     ORDER BY p.FechaPedido DESC;
 
-    -- CrÈdito asignado
+    -- Cr√©dito asignado
     SELECT cc.LimiteCredito, cc.CreditoActivo, cc.CreditoBloqueado, cc.MotivoBloqueo
     FROM dbo.ClienteCreditos cc
     WHERE cc.UsuarioId = @UsuarioId;
@@ -584,7 +584,7 @@ BEGIN
     SET NOCOUNT ON;
     IF EXISTS (SELECT 1 FROM dbo.Usuarios WHERE Correo = @Correo)
     BEGIN
-        RAISERROR(N'El correo ya est· registrado.', 16, 1);
+        RAISERROR(N'El correo ya est√° registrado.', 16, 1);
         RETURN;
     END
 
@@ -636,7 +636,7 @@ END
 GO
 
 -- ===========================================================
--- M”DULO: CR…DITOS
+-- M√ìDULO: CR√âDITOS
 -- ===========================================================
 
 CREATE OR ALTER PROCEDURE dbo.sp_Admin_GetClientCredits
@@ -680,7 +680,7 @@ CREATE OR ALTER PROCEDURE dbo.sp_Admin_GetClientCreditDetail
 AS
 BEGIN
     SET NOCOUNT ON;
-    -- Cabecera de crÈdito
+    -- Cabecera de cr√©dito
     SELECT
         cc.ClienteCreditoId, cc.UsuarioId,
         u.NombreCompleto, u.Correo,
@@ -748,7 +748,7 @@ END
 GO
 
 -- ===========================================================
--- M”DULO: CONSULTAS
+-- M√ìDULO: CONSULTAS
 -- ===========================================================
 
 CREATE OR ALTER PROCEDURE dbo.sp_Admin_CreateConsultation
@@ -817,5 +817,5 @@ BEGIN
 END
 GO
 
-PRINT '?? FASE 3 ó Bloque 2/3 OK (Vendedor, Gerente, Tienda, Clientes, CrÈditos, Consultas)';
+PRINT '?? FASE 3 ‚Äî Bloque 2/3 OK (Vendedor, Gerente, Tienda, Clientes, Cr√©ditos, Consultas)';
 GO

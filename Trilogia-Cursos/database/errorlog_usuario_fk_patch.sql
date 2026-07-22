@@ -33,9 +33,9 @@ BEGIN
     FOREIGN KEY (UsuarioId)
     REFERENCES dbo.Usuarios(UsuarioId);
 
-    PRINT 'Llave for·nea FK_ErrorLog_Usuarios creada correctamente.';
+    PRINT 'Llave for√°nea FK_ErrorLog_Usuarios creada correctamente.';
 END
 ELSE
 BEGIN
-    PRINT 'La llave for·nea FK_ErrorLog_Usuarios ya existe.';
+    PRINT 'La llave for√°nea FK_ErrorLog_Usuarios ya existe.';
 END;

@@ -12,7 +12,7 @@
 --     existentes mediante FK; NO altera ninguna de esas tablas.
 --   • Sigue el ciclo de vida del módulo de Consultas ya existente.
 -- ============================================================
-USE DistribuidoraJJ_DB_DEV;
+-- Ejecute este script sobre la base de datos seleccionada por el operador.
 GO
 SET NOCOUNT ON;
 GO

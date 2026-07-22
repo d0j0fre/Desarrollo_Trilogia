@@ -34,8 +34,8 @@ obj/
 !.env.example
 secrets.json
 **/secrets.json
-appsettings.Local.json
-appsettings.*.Local.json
+**/appsettings.Local.json
+**/appsettings.*.Local.json
 *.local.json
 credentials.json
 credentials*.json
@@ -45,3 +45,7 @@ credentials*.json
 
 # Codex operational prompts
 Trilogia-Cursos/docs/prompt_codex_*.md
+
+# Private application data and delivery evidence
+**/wwwroot/uploads/evidencias/
+**/App_Data/

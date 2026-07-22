@@ -5,8 +5,7 @@
 -- La versión de Fase3_3-3 esperaba (@UsuarioId, @Codigo),
 -- lo que causa "parameter '@UsuarioId' was not supplied".
 -- ============================================================
-
-USE DistribuidoraJJ_DB;
+-- Ejecute este script sobre la base de datos seleccionada por el operador.
 GO
 
 CREATE OR ALTER PROCEDURE dbo.sp_Admin_HasPermissionByCode

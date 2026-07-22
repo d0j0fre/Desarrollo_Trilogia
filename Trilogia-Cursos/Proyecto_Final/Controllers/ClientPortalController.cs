@@ -10,10 +10,12 @@ namespace Proyecto_Final.Controllers
     public class ClientPortalController : Controller
     {
         private readonly AdminDbService _adminDbService;
+        private readonly ILogger<ClientPortalController> _logger;
 
-        public ClientPortalController(AdminDbService adminDbService)
+        public ClientPortalController(AdminDbService adminDbService, ILogger<ClientPortalController> logger)
         {
             _adminDbService = adminDbService;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -147,8 +149,9 @@ namespace Proyecto_Final.Controllers
 
                 return View(comprobante);
             }
-            catch (Exception)
+            catch (Exception exception)
             {
+                _logger.LogError(exception, "No se pudo cargar el comprobante del portal del cliente.");
                 TempData["ErrorMessage"] =
                     "No fue posible cargar el comprobante en este momento. Intente nuevamente.";
 
@@ -201,8 +204,9 @@ namespace Proyecto_Final.Controllers
                 TempData["SuccessMessage"] =
                     "Pedido cancelado correctamente.";
             }
-            catch (Exception)
+            catch (Exception exception)
             {
+                _logger.LogWarning(exception, "No se pudo cancelar un pedido desde el portal del cliente.");
                 TempData["ErrorMessage"] =
                     "No fue posible cancelar el pedido en este momento. Intente nuevamente.";
             }
@@ -329,8 +333,9 @@ namespace Proyecto_Final.Controllers
                     new { id = model.PedidoId }
                 );
             }
-            catch (Exception)
+            catch (Exception exception)
             {
+                _logger.LogWarning(exception, "No se pudo crear la solicitud de garantía del usuario {UserId}.", usuarioId);
                 ModelState.AddModelError(
                     string.Empty,
                     "No fue posible registrar la solicitud de garantía en este momento."
@@ -359,8 +364,9 @@ namespace Proyecto_Final.Controllers
 
                 return View(solicitudes);
             }
-            catch (Exception)
+            catch (Exception exception)
             {
+                _logger.LogError(exception, "No se pudieron cargar las garantías del usuario {UserId}.", usuarioId);
                 TempData["ErrorMessage"] =
                     "No fue posible cargar las solicitudes de garantía.";
 

@@ -4,8 +4,7 @@
 -- Separado de sp_Admin_GetOrderHeader (que ya solo devuelve cabecera).
 -- Prerequisito: cu098 aplicado.
 -- ============================================================
-
-USE DistribuidoraJJ_DB;
+-- Ejecute este script sobre la base de datos seleccionada por el operador.
 GO
 
 CREATE OR ALTER PROCEDURE dbo.sp_Admin_GetOrderDetailLines

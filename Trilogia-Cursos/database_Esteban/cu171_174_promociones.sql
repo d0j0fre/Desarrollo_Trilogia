@@ -14,7 +14,7 @@
 --     el checkout actual.
 --   • Reutiliza dbo.Productos, dbo.Usuarios, dbo.Pedidos, dbo.PedidoDetalle.
 -- ============================================================
-USE DistribuidoraJJ_DB_DEV;
+-- Ejecute este script sobre la base de datos seleccionada por el operador.
 GO
 SET NOCOUNT ON;
 GO

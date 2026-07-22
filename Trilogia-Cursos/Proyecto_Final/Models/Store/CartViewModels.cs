@@ -114,4 +114,11 @@ namespace Proyecto_Final.Models.Store
         public decimal Total { get; set; }
         public List<CartItemViewModel> Items { get; set; } = new();
     }
+
+    public sealed class OrderCreationResult
+    {
+        public int PedidoId { get; set; }
+        public decimal Total { get; set; }
+        public List<CartItemViewModel> Gifts { get; set; } = new();
+    }
 }

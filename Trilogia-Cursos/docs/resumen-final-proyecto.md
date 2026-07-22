@@ -1,214 +1,45 @@
-# Resumen final del proyecto
+# Resumen de estabilización e integración
 
-## Estado final de la rama
+## Estado
 
-Rama de trabajo:
+La rama `codex/p0-saneamiento-integracion-total-20260722`, basada en el último `origin/main`, sanea la configuración, recupera CI y refuerza flujos críticos. Compila sin errores ni advertencias, aprueba 33 pruebas y valida sintácticamente los 70 scripts SQL descubiertos.
 
-- `feature/qa-seguridad-arquitectura`
+El trabajo está **listo para revisión con acciones externas pendientes**. No se han aplicado migraciones ni ejecutado smoke tests de navegador/Azure sobre esta versión.
 
-Objetivo de la rama:
+## Cambios principales
 
-- Reforzar seguridad.
-- Migrar flujos criticos a procedimientos almacenados.
-- Corregir reportes de facturacion.
-- Fortalecer autorizacion administrativa.
-- Agregar API publica de productos/categorias.
-- Documentar autenticacion API futura.
-- Agregar pago simulado academico en checkout.
-- Descontar inventario al crear pedido y restaurarlo en cancelaciones pendientes.
-- Pulir visualmente Login y Registro sin cambiar logica de autenticacion.
-- Reducir warnings de nullability.
-- Preparar QA final para Pull Request hacia `main`.
+- Eliminación de secretos/configuraciones reales del árbol actual, escáner reforzado y procedimiento de incidente/historial.
+- CI en trabajos independientes: `security-scan`, `sql-validation`, `build`, `tests` y `final-gate`.
+- Autorización, pertenencia de recurso, antiforgery, rate limiting, mensajes genéricos y logging estructurado en flujos sensibles.
+- Chat separado en servicios, SignalR con pertenencia validada, departamentos reales, historial paginado y búsqueda autorizada paginada.
+- Evidencias privadas fuera de `wwwroot`, firma mágica, escritura por etapas/atómica y descarga controlada.
+- Checkout/promociones/inventario consolidados en una transacción SQL autoritativa.
+- Flujo de garantías funcional con validación de pedido propio, control de duplicados y administración auditada.
+- Precisión decimal explícita y CSP incremental en modo Report-Only.
+- Inventario SQL, orden de migraciones y matriz de historias actualizados.
 
-## Commits principales de la rama
+## Migraciones nuevas
 
-Commits destacados:
+1. `0002_chat_private_security.sql`
+2. `0003_chat_departments_and_search.sql`
+3. `0004_private_delivery_evidence.sql`
+4. `0005_atomic_checkout_promotions.sql`
+5. `0006_warranty_workflow.sql`
 
-- `cd9009a refactor(db): migrar comprobantes a procedimientos`
-- `2124e3a fix(pedidos): proteger estados de pedidos facturados`
-- `e2667fd fix(facturacion): usar reportes agregados desde procedimientos`
-- `bbeda13 fix(seguridad): ocultar mensajes tecnicos en controladores`
-- `73ca2c1 fix(seguridad): exigir UserId en autorizacion admin`
-- `ada8054 fix(seguridad): validar firma real de imagenes`
-- `29dcda6 fix(seguridad): agregar antiforgery en vistas legacy`
-- `3384769 feat(seguridad): preparar permisos granulares por accion`
-- `5cae901 fix(seguridad): aplicar permisos granulares a acciones criticas`
-- `8b84b47 fix(seguridad): proteger generacion de facturas`
-- `21ad2ff feat(api): agregar endpoints publicos de productos`
-- `f1aef59 docs(api): documentar endpoints publicos`
-- `ec08062 docs(api): diagnosticar autenticacion futura`
-- `ceb4678 chore: reducir advertencias de nullability`
+Dependen del ledger `0001_create_schema_migration_history.sql` y del esquema base. Se validaron con ScriptDom; deben probarse primero en una base desechable, luego aplicarse con BACPAC y registro del SHA-256 real.
 
-## Scripts SQL que deben ejecutarse en SSMS
+## Límites conocidos
 
-Ejecutar en la base `DistribuidoraJJ_DB` antes de QA funcional completo:
+- La búsqueda de chat usa `LIKE` parametrizado e índices de fecha/origen; no usa Full-Text Search.
+- CSP es Report-Only para observar dependencias antes de forzarla.
+- Evidencia legada permanece `Legacy` y no se sirve hasta migrarla/verificarla.
+- El asistente es un **Asistente conversacional basado en reglas e interpretación de intenciones**. CU-262 (cross-selling en tiempo real) no está implementada.
+- Quedan métodos históricos de chat en `AdminDbService`, pero el flujo vigente ya no depende de ellos; su retiro puede hacerse en una refactorización posterior con base desplegada.
 
-1. `database/cu090_admin_facturar_pedido.sql`
-2. `database/cu091_migracion_pedidos_facturacion_sp.sql`
-3. `database/cu092_admin_estado_pedido_seguro.sql`
-4. `database/cu093_admin_reportes_facturacion_sp.sql`
-5. `database/cu094_permisos_granulares_acciones.sql`
-6. `database/cu095_facturacion_generar_permiso.sql`
-7. `database/cu096_corregir_mojibake_productos.sql`
-8. `database/cu097_pago_simulado_inventario_checkout.sql`
+## Acciones externas
 
-Notas:
-
-- Ejecutar en orden numerico.
-- Revisar mensajes de SSMS.
-- No ejecutar sobre otra base sin confirmar.
-- No modificar scripts manualmente antes de probar.
-- Si no se ejecuta `database/cu090_admin_facturar_pedido.sql`, la generacion de facturas puede fallar porque falta `dbo.sp_Admin_GenerateInvoiceFromOrder`.
-
-## Build final esperado
-
-Comando:
-
-```powershell
-dotnet build Trilogia-Cursos\Proyecto_Final.slnx
-```
-
-Resultado esperado:
-
-- 0 errores.
-- 0 warnings.
-
-## Modulos fortalecidos
-
-### Pedidos y facturacion
-
-- Validacion de factura asociada por procedimiento almacenado.
-- Comprobante cliente por `PedidoId` y `UsuarioId`.
-- Estados de pedidos facturados protegidos.
-- Reportes de facturacion corregidos con procedimientos agregados.
-- Generacion de factura protegida con permiso granular.
-- Correccion controlada de mojibake en productos y nombres copiados a detalle de factura.
-- Pago simulado academico registrado en pedidos sin pasarela real ni datos sensibles.
-- Facturacion conserva la regla de no descontar inventario para evitar doble descuento.
-- Vista de facturacion ajustada para mostrar la tabla de facturas y la accion `Ver` sin cortes en escritorio y pantalla mediana.
-
-### Seguridad y autorizacion
-
-- Mensajes visibles mas seguros.
-- `AdminAuthorizeAttribute` exige `UserId` valido.
-- Permisos granulares por codigo exacto.
-- Acciones criticas protegidas.
-- Antiforgery reforzado en vistas legacy.
-- Login y Registro conservan formularios, rutas y validaciones, con presentacion visual mas limpia y equilibrada.
-
-### Inventario
-
-- Validacion de firma real para imagenes.
-- Mantiene validaciones previas de tamano, extension y content-type.
-- Stock descontado al crear pedido desde checkout.
-- Prevencion de stock negativo en el procedimiento de creacion de pedido.
-- Movimiento de inventario registrado por salida de pedido.
-- Restauracion de stock al cancelar pedido pendiente no facturado desde cliente o admin.
-
-### API
-
-- Endpoints publicos de productos/categorias.
-- Documentacion de endpoints actuales.
-- Diagnostico de autenticacion API futura.
-- Recomendacion de no exponer endpoints protegidos sin JWT o mecanismo equivalente.
-- El API publico queda cerrado para el alcance actual: autenticacion basica existente, productos publicos, categorias publicas, destacados publicos, validaciones de parametros, documentacion de endpoints y pruebas manuales API documentadas.
-- JWT y endpoints protegidos quedan documentados como mejora futura.
-
-### Calidad tecnica
-
-- Warnings conocidos de nullability corregidos.
-- Build final esperado con 0 errores y 0 warnings.
-
-## Mejoras futuras de mantenibilidad
-
-- Separar `AdminDbService` en servicios especializados.
-- Migrar SQL inline residual de `AccountDbService` y algunos metodos administrativos a procedimientos almacenados.
-- Migrar gradualmente `ViewBag` y `TempData` a ViewModels.
-- Agregar paginacion real en listados grandes.
-- Consolidar CSS acumulado por sprints.
-- Mantener vistas legacy de `Security` solo como compatibilidad o retirarlas en una fase futura.
-- Implementar JWT antes de exponer endpoints protegidos del API.
-
-## Pruebas manuales pendientes
-
-Cliente:
-
-- Login cliente.
-- Tienda y detalle de producto.
-- Carrito y checkout.
-- Pago simulado en checkout.
-- Rebaja de inventario al finalizar pedido.
-- Mis pedidos.
-- Detalle de pedido.
-- Comprobante.
-- Cancelacion de pedido pendiente si aplica.
-- Mi Perfil.
-
-Admin:
-
-- Login admin.
-- Dashboard.
-- Inventario.
-- Pedidos admin.
-- Cambio de estado.
-- Generacion de factura.
-- Cancelacion administrativa de pedido pendiente con restauracion de stock.
-- Facturacion.
-- Reportes.
-- Clientes.
-- Creditos.
-- Consultas.
-- Empleados.
-- Roles.
-- Permisos.
-- Auditoria.
-
-Empleado/vendedor:
-
-- Login si existen credenciales.
-- Portal empleado.
-- Pedidos vendedor.
-- Accesos permitidos y bloqueados.
-
-API:
-
-- Auth endpoints.
-- Productos publicos.
-- Categorias.
-- Producto inexistente con `404`.
-- Parametros invalidos de productos con `400`.
-- Destacados con `take` invalido y limite maximo de 24.
-- Producto `Ron Añejo` visible correctamente en tienda, checkout y API.
-- Producto `Ron Añejo` visible correctamente en factura/Billing si aplica.
-- Pedido con pago simulado visible en detalle administrativo.
-- Facturacion posterior no descuenta inventario nuevamente.
-
-Tecnico:
-
-- Build final.
-- Git status limpio o solo archivos locales no aprobados.
-- Appsettings sin cambios.
-- Sin `bin/`, `obj/`, `.vs/`, ZIPs ni generados.
-- Sin errores de consola principales.
-- Impresion de comprobante/factura.
-
-## Archivos que no deben subirse
-
-- `appsettings.json` si contiene cambios locales.
-- `appsettings.Development.json` si contiene cambios locales.
-- `bin/`
-- `obj/`
-- `.vs/`
-- ZIPs
-- archivos generados
-- documentos locales no aprobados
-
-## Recomendacion final
-
-Cuando QA final este completado y el estado de Git este limpio, abrir Pull Request:
-
-```text
-feature/qa-seguridad-arquitectura -> main
-```
-
-No hacer merge directo a `main` sin revision.
+1. Revocar/rotar la credencial SMTP expuesta y actualizar configuración segura.
+2. Coordinar, si se aprueba, la reescritura del historial y reclonado de colaboradores.
+3. Mantener la protección activa de `main` y revisar sus contextos si cambia el workflow.
+4. Ejecutar 0001–0006 y QA funcional/negativo en SQL Server.
+5. Desplegar a Azure y repetir smoke tests; la validación Azure antigua es histórica.

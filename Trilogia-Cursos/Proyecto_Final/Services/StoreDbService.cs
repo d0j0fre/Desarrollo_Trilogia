@@ -43,39 +43,65 @@ namespace Proyecto_Final.Services
             };
         }
 
-        public async Task<int> CreateOrderAsync(int usuarioId, CheckoutViewModel checkout, IReadOnlyCollection<CartItemViewModel> items)
+        public async Task<OrderCreationResult> CreateOrderWithPromotionsAsync(
+            int usuarioId,
+            CheckoutViewModel checkout,
+            IReadOnlyCollection<CartItemViewModel> items)
         {
-            if (items.Count == 0)
-                throw new InvalidOperationException("El carrito está vacío.");
+            if (items.Count == 0) throw new InvalidOperationException("El carrito está vacío.");
 
-            var itemsPayload = items.Select(item => new
+            var itemsJson = JsonSerializer.Serialize(items.Select(item => new
             {
                 productoId = item.ProductoId,
                 cantidad = item.Cantidad
-            });
-
-            var itemsJson = JsonSerializer.Serialize(itemsPayload);
+            }));
 
             await using var connection = new SqlConnection(_connectionString);
-            await using var command = new SqlCommand("dbo.sp_Store_CreateOrder", connection)
+            await using var command = new SqlCommand("dbo.sp_Store_CreateOrderWithPromotions", connection)
             {
                 CommandType = CommandType.StoredProcedure
             };
-
-            command.Parameters.AddWithValue("@UsuarioId", usuarioId);
-            command.Parameters.AddWithValue("@TipoEntrega", checkout.TipoEntrega);
-            command.Parameters.AddWithValue("@DireccionEntrega", (object?)checkout.DireccionEntrega?.Trim() ?? DBNull.Value);
-            command.Parameters.AddWithValue("@Observaciones", (object?)checkout.Observaciones?.Trim() ?? DBNull.Value);
-            command.Parameters.AddWithValue("@IdentificacionCliente", (object?)checkout.Identificacion?.Trim() ?? DBNull.Value);
-            command.Parameters.AddWithValue("@ItemsJson", itemsJson);
+            command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId;
+            command.Parameters.Add("@TipoEntrega", SqlDbType.NVarChar, 100).Value = checkout.TipoEntrega;
+            command.Parameters.Add("@DireccionEntrega", SqlDbType.NVarChar, 500).Value =
+                string.IsNullOrWhiteSpace(checkout.DireccionEntrega) ? DBNull.Value : checkout.DireccionEntrega.Trim();
+            command.Parameters.Add("@Observaciones", SqlDbType.NVarChar, 500).Value =
+                string.IsNullOrWhiteSpace(checkout.Observaciones) ? DBNull.Value : checkout.Observaciones.Trim();
+            command.Parameters.Add("@IdentificacionCliente", SqlDbType.NVarChar, 100).Value =
+                string.IsNullOrWhiteSpace(checkout.Identificacion) ? DBNull.Value : checkout.Identificacion.Trim();
+            command.Parameters.Add("@ItemsJson", SqlDbType.NVarChar, -1).Value = itemsJson;
             command.Parameters.Add("@MetodoPago", SqlDbType.NVarChar, 40).Value = checkout.MetodoPago.Trim();
-            command.Parameters.Add("@ReferenciaPago", SqlDbType.NVarChar, 80).Value = string.IsNullOrWhiteSpace(checkout.ReferenciaPago)
-                ? DBNull.Value
-                : checkout.ReferenciaPago.Trim();
+            command.Parameters.Add("@ReferenciaPago", SqlDbType.NVarChar, 80).Value =
+                string.IsNullOrWhiteSpace(checkout.ReferenciaPago) ? DBNull.Value : checkout.ReferenciaPago.Trim();
 
             await connection.OpenAsync();
-            var result = await command.ExecuteScalarAsync();
-            return Convert.ToInt32(result);
+            await using var reader = await command.ExecuteReaderAsync();
+            if (!await reader.ReadAsync())
+                throw new InvalidOperationException("La base de datos no devolvió el pedido creado.");
+
+            var result = new OrderCreationResult
+            {
+                PedidoId = reader.GetInt32(0),
+                Total = reader.GetDecimal(1)
+            };
+
+            if (await reader.NextResultAsync())
+            {
+                while (await reader.ReadAsync())
+                {
+                    result.Gifts.Add(new CartItemViewModel
+                    {
+                        ProductoId = reader.GetInt32(0),
+                        Nombre = reader.GetString(1),
+                        Cantidad = reader.GetInt32(2),
+                        Precio = 0m,
+                        EsRegalo = true,
+                        PromocionNombre = reader.GetString(3)
+                    });
+                }
+            }
+
+            return result;
         }
 
         // CU-173 — segmento del cliente (para elegir promociones aplicables).
@@ -91,35 +117,6 @@ namespace Proyecto_Final.Services
             await connection.OpenAsync();
             var result = await command.ExecuteScalarAsync();
             return result is string s && !string.IsNullOrWhiteSpace(s) ? s : "Minorista";
-        }
-
-        // CU-173 — persiste las promociones aplicadas sobre un pedido recién creado.
-        public async Task ApplyPromotionsToOrderAsync(int pedidoId, IReadOnlyCollection<AppliedPromotion> aplicaciones, int usuarioId, string usuarioNombre)
-        {
-            if (aplicaciones is null || aplicaciones.Count == 0) return;
-
-            var payload = aplicaciones.Select(a => new
-            {
-                a.PromocionId,
-                a.ProductoId,
-                a.TipoBeneficio,
-                a.MontoDescontado,
-                a.UnidadesRegalo,
-                a.ProductoRegaloId
-            });
-            var json = JsonSerializer.Serialize(payload);
-
-            await using var connection = new SqlConnection(_connectionString);
-            await using var command = new SqlCommand("dbo.sp_Promociones_AplicarAPedido", connection)
-            {
-                CommandType = CommandType.StoredProcedure
-            };
-            command.Parameters.Add("@PedidoId", SqlDbType.Int).Value = pedidoId;
-            command.Parameters.Add("@AplicacionesJson", SqlDbType.NVarChar, -1).Value = json;
-            command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId > 0 ? usuarioId : DBNull.Value;
-            command.Parameters.Add("@Nombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(usuarioNombre) ? DBNull.Value : usuarioNombre;
-            await connection.OpenAsync();
-            await command.ExecuteNonQueryAsync();
         }
 
     }

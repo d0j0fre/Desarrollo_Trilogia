@@ -1,225 +1,43 @@
 # Resumen de mejoras de seguridad y arquitectura
 
-## Objetivo
+## Configuración y suministro
 
-Este documento resume las mejoras aplicadas en la rama `feature/qa-seguridad-arquitectura` para reforzar seguridad, base de datos, permisos, reportes, API y calidad tecnica del proyecto.
+- Cuatro `appsettings` sanitizados y `.gitignore` reforzado.
+- Escaneo de secretos sobre archivos rastreados, incluidos JSON, Markdown, SQL, YAML y JavaScript.
+- Incidente SMTP y procedimiento seguro de `git filter-repo` documentados; rotación y reescritura permanecen externas.
+- CI con permisos `contents: read` y resultados independientes antes de `final-gate`.
 
-## Mejoras aplicadas
+## Autorización y superficie web
 
-### Migracion de consultas SQL directas a procedimientos almacenados
+- Roles/permisos y pertenencia de recurso reforzados en controladores sensibles.
+- Antiforgery en operaciones de sesión que modifican estado.
+- Rate limiting por IP o usuario en login, recuperación, chat, búsqueda, asistente y evidencias.
+- Errores técnicos registrados con `ILogger`; respuestas al usuario son genéricas.
+- Cookies seguras en producción, `Cache-Control: no-store` en módulos sensibles y CSP Report-Only incremental.
 
-Se migraron consultas directas relacionadas con comprobantes y validacion de facturas hacia procedimientos almacenados dedicados.
+## Chat
 
-Mejoras principales:
+- `ChatDbService` y `ChatAuthorizationService` separan persistencia y autorización de la administración general.
+- Conversaciones normalizadas impiden pares duplicados.
+- API, SignalR y procedimientos validan pertenencia antes de leer, escribir o unirse a grupos.
+- Departamentos, miembros, permiso de publicar, administración y auditoría son entidades separadas.
+- Historial y búsqueda autorizada tienen paginación; la interfaz escapa contenido mediante `textContent`.
+- Búsqueda `LIKE` parametrizada: compatible, pero menos escalable que Full-Text Search.
 
-- Validacion de factura por pedido mediante procedimiento.
-- Obtencion de comprobante cliente por `PedidoId` y `UsuarioId`.
-- Obtencion de lineas de comprobante cliente con validacion de propietario.
-- Eliminacion de SQL directo en esos flujos.
+## Archivos de evidencia
 
-Script relacionado:
+- Almacenamiento configurable fuera de `wwwroot`.
+- Validación de extensión, MIME, tamaño y firma JPEG/PNG/WEBP.
+- Claves GUID, defensa contra path traversal, staging y movimiento atómico.
+- Descarga solo por ID/metadatos autorizados, con MIME, `nosniff` y `no-store`.
 
-- `database/cu091_migracion_pedidos_facturacion_sp.sql`
+## Integridad comercial
 
-### Proteccion de estados de pedidos facturados
+- Checkout revalida productos del servidor y SQL decide precio, stock, segmento, vigencia, prioridad y regalía.
+- Pedido, promociones e inventario se confirman/revierten en una transacción.
+- Garantías validan detalle entregado y propietario, evitan solicitudes abiertas duplicadas y auditan la resolución.
+- Precisión y escala decimal explícitas en módulos financieros/operativos revisados.
 
-Se reforzo el procedimiento de cambio de estado de pedidos admin para evitar inconsistencias entre pedidos y facturas.
+## Estado de verificación
 
-Reglas reforzadas:
-
-- No cambiar pedido facturado a `Cancelado`.
-- No regresar pedido facturado a estados previos.
-- Mantener pedido facturado consistente como `Entregado`.
-- Bloquear transiciones invalidas desde `Cancelado`.
-
-Script relacionado:
-
-- `database/cu092_admin_estado_pedido_seguro.sql`
-
-### Correccion de reportes de facturacion
-
-El reporte administrativo de facturacion ahora usa procedimientos agregados reales para:
-
-- Productos mas vendidos.
-- Ventas por mes.
-
-Esto evita calculos debiles basados solo en las ultimas facturas consultadas.
-
-Script relacionado:
-
-- `database/cu093_admin_reportes_facturacion_sp.sql`
-
-### Mensajes genericos en errores visibles
-
-Se reemplazo exposicion directa de `ex.Message` en controladores MVC sensibles por mensajes genericos para usuario final.
-
-Beneficio:
-
-- Evita filtrar nombres de procedimientos.
-- Evita filtrar errores SQL.
-- Evita filtrar rutas internas o detalles tecnicos.
-
-### AdminAuthorize reforzado con UserId
-
-`AdminAuthorizeAttribute` fue reforzado para exigir:
-
-- `UserId` valido en sesion.
-- `UserEmail` no vacio.
-- `UserRole` valido.
-
-Se mantiene:
-
-- Bypass del rol `Administrador`.
-- Validacion por modulo.
-- Validacion de permisos existentes.
-
-### Validacion real de firma de imagenes
-
-La carga de imagenes en inventario valida magic bytes basicos para:
-
-- JPG/JPEG.
-- PNG.
-- WEBP.
-
-Se mantiene:
-
-- Tamano maximo existente.
-- Extensiones permitidas.
-- Content-types permitidos.
-- Nombre final con GUID.
-
-### Antiforgery en vistas legacy
-
-Se agrego `@Html.AntiForgeryToken()` en formularios legacy de `Views/Security` como defensa en profundidad.
-
-Archivos relacionados:
-
-- `Views/Security/CrearRol.cshtml`
-- `Views/Security/EditarRol.cshtml`
-- `Views/Security/Permisos.cshtml`
-
-### Permisos granulares por accion
-
-Se agrego infraestructura para validar permisos administrativos por codigo exacto.
-
-Componentes:
-
-- Procedimiento `sp_Admin_HasPermissionByCode`.
-- Metodo `TienePermisoCodigoPorRolAsync`.
-- Soporte opcional en `AdminAuthorizeAttribute`.
-
-Script relacionado:
-
-- `database/cu094_permisos_granulares_acciones.sql`
-
-### Acciones criticas protegidas con permisos exactos
-
-Se aplicaron permisos granulares a acciones criticas:
-
-- Cambiar estado de pedido: `PEDIDOS_CAMBIAR_ESTADO`.
-- Crear/editar/activar/inactivar rol: `ROLES_CREAR_EDITAR`.
-- Asignar permisos: `PERMISOS_ASIGNAR`.
-
-### Proteccion de generacion de facturas
-
-Se creo el permiso `FACTURACION_GENERAR` y se protegio la accion administrativa de generar factura desde pedido.
-
-Script relacionado:
-
-- `database/cu090_admin_facturar_pedido.sql`
-- `database/cu095_facturacion_generar_permiso.sql`
-
-Nota:
-
-- `database/cu090_admin_facturar_pedido.sql` crea `dbo.sp_Admin_GenerateInvoiceFromOrder`; debe ejecutarse antes de probar generacion de facturas desde pedidos.
-
-### Correccion controlada de mojibake en productos
-
-Se agrego un script especifico para corregir nombres y descripciones de productos afectados por texto mal codificado, incluyendo nombres copiados en detalles historicos de factura cuando aplique.
-
-Script relacionado:
-
-- `database/cu096_corregir_mojibake_productos.sql`
-
-### Pago simulado e inventario en checkout
-
-Se agrego flujo academico de pago simulado al checkout sin pasarelas reales ni almacenamiento de datos sensibles.
-
-Reglas aplicadas:
-
-- El pedido guarda metodo, estado, referencia opcional y fecha de pago simulado.
-- No se guardan numeros reales de tarjeta, CVV ni datos bancarios.
-- El inventario se descuenta una sola vez al crear el pedido.
-- El descuento valida stock disponible en SQL para evitar stock negativo.
-- Se registra movimiento de inventario por salida de pedido.
-- La cancelacion de pedido pendiente no facturado restaura stock una sola vez.
-- La generacion de factura no descuenta inventario nuevamente.
-
-Script relacionado:
-
-- `database/cu097_pago_simulado_inventario_checkout.sql`
-
-### API publica de productos y categorias
-
-Se agregaron endpoints publicos de solo lectura:
-
-- `GET /api/products`
-- `GET /api/products?categoria=`
-- `GET /api/products?buscar=`
-- `GET /api/products/{id}`
-- `GET /api/products/categories`
-- `GET /api/products/featured?take=`
-
-Los endpoints usan servicio propio del API y procedimientos almacenados existentes.
-
-### Documentacion de autenticacion API futura
-
-Se documento que el API actual:
-
-- No emite JWT.
-- No emite token de autorizacion.
-- No debe exponer endpoints protegidos todavia.
-
-Recomendacion documentada:
-
-- Mantener productos/categorias como publicos.
-- Implementar JWT solo en fase futura aprobada.
-- Mantener compatible la respuesta actual del login para no romper MVC.
-
-Documento relacionado:
-
-- `docs/api-auth-futura.md`
-
-### Warnings/nullability en 0
-
-Se corrigieron warnings conocidos de nullability en modelos y vistas MVC mediante inicializaciones seguras y validaciones null-safe minimas.
-
-Resultado esperado:
-
-- Build con 0 errores.
-- Build con 0 warnings.
-
-## Archivos sensibles no modificados
-
-No se deben incluir cambios en:
-
-- `appsettings.json`
-- `appsettings.Development.json`
-- secretos
-- cadenas de conexion
-- `bin/`
-- `obj/`
-- `.vs/`
-- ZIPs
-- archivos generados
-
-## Resultado de seguridad esperado
-
-El proyecto queda mas consistente para revision final:
-
-- Menos SQL directo en flujos criticos.
-- Menor exposicion de errores tecnicos.
-- Mejor control de permisos administrativos.
-- Mejor validacion de archivos subidos.
-- Mejor documentacion de riesgos API.
-- Build limpio esperado.
+La solución compila con 0 errores/0 advertencias, 33 pruebas automatizadas aprueban y 70 archivos SQL pasan ScriptDom. Las migraciones y pruebas de navegador/Azure permanecen pendientes de entorno.

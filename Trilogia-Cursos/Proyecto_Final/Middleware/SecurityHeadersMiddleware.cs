@@ -20,6 +20,14 @@ namespace Proyecto_Final.Middleware
                 SetHeaderIfMissing(headers, "Referrer-Policy", "strict-origin-when-cross-origin");
                 SetHeaderIfMissing(headers, "X-XSS-Protection", "0");
                 SetHeaderIfMissing(headers, "Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+                SetHeaderIfMissing(
+                    headers,
+                    "Content-Security-Policy-Report-Only",
+                    "default-src 'self'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; " +
+                    "img-src 'self' data: blob: https://*.tile.openstreetmap.org; " +
+                    "style-src 'self' 'unsafe-inline' https://unpkg.com https://stackpath.bootstrapcdn.com; " +
+                    "script-src 'self' 'unsafe-inline' https://code.jquery.com https://stackpath.bootstrapcdn.com https://unpkg.com; " +
+                    "connect-src 'self' ws: wss:; font-src 'self' data:");
 
                 if (IsSensitivePath(context.Request.Path))
                 {
@@ -64,7 +72,17 @@ namespace Proyecto_Final.Middleware
                 || path.StartsWithSegments("/Returns")
                 || path.StartsWithSegments("/Fleet")
                 || path.StartsWithSegments("/Assets")
-                || path.StartsWithSegments("/Assistant");
+                || path.StartsWithSegments("/Assistant")
+                || path.StartsWithSegments("/Chat")
+                || path.StartsWithSegments("/Promotions")
+                || path.StartsWithSegments("/Comodatos")
+                || path.StartsWithSegments("/Expenses")
+                || path.StartsWithSegments("/Finance")
+                || path.StartsWithSegments("/Kpis")
+                || path.StartsWithSegments("/Reclamos")
+                || path.StartsWithSegments("/WarrantyRequestsAdmin")
+                || path.StartsWithSegments("/FinancialReportAdmin")
+                || path.StartsWithSegments("/DeliveryEvidence");
         }
     }
 }

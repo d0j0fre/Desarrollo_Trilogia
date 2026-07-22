@@ -18,8 +18,7 @@
 -- Prerrequisito: Fase1/Fase2 (Productos, Pedidos, PedidoDetalle,
 --                MovimientosInventario) y cu081 (Rutas/RutaPedidos).
 -- ============================================================
-
-USE DistribuidoraJJ_DB_DEV;
+-- Ejecute este script sobre la base de datos seleccionada por el operador.
 GO
 SET NOCOUNT ON;
 GO

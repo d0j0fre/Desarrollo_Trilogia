@@ -1,5 +1,5 @@
 -- ============================================================
--- FASE 3: STORED PROCEDURES ó DistribuidoraJJ_DB
+-- FASE 3: STORED PROCEDURES ‚Äî DistribuidoraJJ_DB
 -- Usa CREATE OR ALTER (SQL Server 2016+). Idempotente.
 -- Prerequisito: Fases 1 y 2 ejecutadas sin errores.
 -- ============================================================
@@ -8,7 +8,7 @@ USE DistribuidoraJJ_DB;
 GO
 
 -- ===========================================================
--- M”DULO: AUTENTICACI”N
+-- M√ìDULO: AUTENTICACI√ìN
 -- ===========================================================
 
 CREATE OR ALTER PROCEDURE dbo.sp_Auth_ValidateUser
@@ -43,7 +43,7 @@ BEGIN
     SET NOCOUNT ON;
     IF EXISTS (SELECT 1 FROM dbo.Usuarios WHERE Correo = @Correo)
     BEGIN
-        RAISERROR(N'El correo ya est· registrado.', 16, 1);
+        RAISERROR(N'El correo ya est√° registrado.', 16, 1);
         RETURN;
     END
 
@@ -79,7 +79,7 @@ BEGIN
         WHERE UsuarioId = @UsuarioId AND Contrasena = @ContrasenaActual
     )
     BEGIN
-        RAISERROR(N'ContraseÒa actual incorrecta.', 16, 1);
+        RAISERROR(N'Contrase√±a actual incorrecta.', 16, 1);
         RETURN;
     END
     UPDATE dbo.Usuarios
@@ -143,7 +143,7 @@ BEGIN
 
     IF @UsuarioId IS NULL
     BEGIN
-        RAISERROR(N'Token inv·lido o expirado.', 16, 1);
+        RAISERROR(N'Token inv√°lido o expirado.', 16, 1);
         RETURN;
     END
     UPDATE dbo.Usuarios
@@ -157,7 +157,7 @@ END
 GO
 
 -- ===========================================================
--- M”DULO: DASHBOARD
+-- M√ìDULO: DASHBOARD
 -- ===========================================================
 
 CREATE OR ALTER PROCEDURE dbo.sp_Admin_DashboardSummary
@@ -265,7 +265,7 @@ END
 GO
 
 -- ===========================================================
--- M”DULO: CATEGORÕAS
+-- M√ìDULO: CATEGOR√çAS
 -- ===========================================================
 
 CREATE OR ALTER PROCEDURE dbo.sp_Admin_GetCategories
@@ -289,7 +289,7 @@ BEGIN
     SET NOCOUNT ON;
     IF EXISTS (SELECT 1 FROM dbo.Categorias WHERE Nombre = @Nombre)
     BEGIN
-        RAISERROR(N'Ya existe una categorÌa con ese nombre.', 16, 1);
+        RAISERROR(N'Ya existe una categor√≠a con ese nombre.', 16, 1);
         RETURN;
     END
     INSERT INTO dbo.Categorias (Nombre) VALUES (@Nombre);
@@ -305,7 +305,7 @@ BEGIN
     SET NOCOUNT ON;
     IF EXISTS (SELECT 1 FROM dbo.Categorias WHERE Nombre = @Nombre AND CategoriaId <> @CategoriaId)
     BEGIN
-        RAISERROR(N'Ya existe otra categorÌa con ese nombre.', 16, 1);
+        RAISERROR(N'Ya existe otra categor√≠a con ese nombre.', 16, 1);
         RETURN;
     END
     UPDATE dbo.Categorias SET Nombre = @Nombre WHERE CategoriaId = @CategoriaId;
@@ -323,7 +323,7 @@ END
 GO
 
 -- ===========================================================
--- M”DULO: PRODUCTOS
+-- M√ìDULO: PRODUCTOS
 -- ===========================================================
 
 CREATE OR ALTER PROCEDURE dbo.sp_Admin_GetProducts
@@ -452,7 +452,7 @@ END
 GO
 
 -- ===========================================================
--- M”DULO: INVENTARIO
+-- M√ìDULO: INVENTARIO
 -- ===========================================================
 
 CREATE OR ALTER PROCEDURE dbo.sp_Admin_AdjustStock
@@ -521,7 +521,7 @@ END
 GO
 
 -- ===========================================================
--- M”DULO: PEDIDOS (ADMIN)
+-- M√ìDULO: PEDIDOS (ADMIN)
 -- ===========================================================
 
 CREATE OR ALTER PROCEDURE dbo.sp_Admin_GetOrders
@@ -605,7 +605,7 @@ BEGIN
                 (ProductoId, UsuarioId, ProductoNombre, TipoMovimiento, Cantidad, StockAnterior, StockNuevo, Motivo, UsuarioNombre)
             SELECT pd.ProductoId, @UsuarioId, pr.Nombre, N'Entrada', pd.Cantidad,
                    pr.Stock - pd.Cantidad, pr.Stock,
-                   N'RestauraciÛn por ' + @NuevoEstado + ' de pedido #' + CAST(@PedidoId AS NVARCHAR),
+                   N'Restauraci√≥n por ' + @NuevoEstado + ' de pedido #' + CAST(@PedidoId AS NVARCHAR),
                    @UsuarioNombre
             FROM dbo.PedidoDetalle pd
             INNER JOIN dbo.Productos pr ON pr.ProductoId = pd.ProductoId
@@ -655,7 +655,7 @@ BEGIN
         DECLARE @Estado NVARCHAR(30);
         SELECT @Estado = Estado FROM dbo.Pedidos WHERE PedidoId = @PedidoId;
         IF @Estado NOT IN (N'Aprobado', N'EnProceso', N'Entregado', N'Liberado')
-        BEGIN RAISERROR(N'Estado del pedido no permite facturaciÛn.', 16, 1); ROLLBACK; RETURN; END
+        BEGIN RAISERROR(N'Estado del pedido no permite facturaci√≥n.', 16, 1); ROLLBACK; RETURN; END
 
         DECLARE @ClienteNombre NVARCHAR(150), @ClienteCorreo NVARCHAR(150), @TotalPedido DECIMAL(18,2);
         SELECT @ClienteNombre = u.NombreCompleto, @ClienteCorreo = u.Correo, @TotalPedido = p.Total
@@ -739,5 +739,5 @@ BEGIN
 END
 GO
 
-PRINT '?? Bloque 1/3 de Fase 3 OK (Auth, Dashboard, CategorÌas, Productos, Inventario, Pedidos Admin, Facturas)';
+PRINT '?? Bloque 1/3 de Fase 3 OK (Auth, Dashboard, Categor√≠as, Productos, Inventario, Pedidos Admin, Facturas)';
 GO

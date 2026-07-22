@@ -7,37 +7,84 @@ on:
     branches: [main, Danny]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
-  validate:
+  security-scan:
+    name: security-scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scan all tracked text files for secrets
+        shell: pwsh
+        run: ./Trilogia-Cursos/scripts/security/Test-RepositorySecrets.ps1
+
+  sql-validation:
+    name: sql-validation
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 9.0.x
-      - name: Scan tracked files for secrets
-        shell: pwsh
-        run: ./Trilogia-Cursos/scripts/security/Test-RepositorySecrets.ps1
       - name: Restore SQL syntax validator
         run: dotnet restore ./Trilogia-Cursos/tools/SqlSyntaxValidator/SqlSyntaxValidator.csproj
-      - name: Validate sanitized SQL scripts
+      - name: Validate every tracked T-SQL script recursively
         run: >
           dotnet run
           --project ./Trilogia-Cursos/tools/SqlSyntaxValidator/SqlSyntaxValidator.csproj
+          --configuration Release
           --no-restore
           --
-          ./Trilogia-Cursos/database/00_todo_en_uno.sql
-          ./Trilogia-Cursos/database/DistribuidoraJJ_DB.sql
-          ./Trilogia-Cursos/database/seed_datos_demo_costa_rica.sql
-          ./Trilogia-Cursos/database/seed_empleados_demo_costa_rica.sql
-          ./Trilogia-Cursos/database/sp_Store_GetProducts.sql
-          ./Trilogia-Cursos/database/security/p0_audit_demo_accounts.sql
-          ./Trilogia-Cursos/database/migrations/0001_create_schema_migration_history.sql
-          ./Trilogia-Cursos/database/security/p1_collaborator_access_template.sql
-          ./Trilogia-Cursos/database/verify/p1_verify_collaboration_access.sql
-          ./Trilogia-Cursos/database_Esteban/Fase3_3-3.sql
-          ./Trilogia-Cursos/database_Esteban/Fase4.sql
+          ./Trilogia-Cursos/database
+          ./Trilogia-Cursos/database_Esteban
+
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
       - name: Restore solution
         run: dotnet restore ./Trilogia-Cursos/Proyecto_Final.slnx
-      - name: Build solution
+      - name: Build Release
         run: dotnet build ./Trilogia-Cursos/Proyecto_Final.slnx --configuration Release --no-restore
+
+  tests:
+    name: tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - name: Restore solution
+        run: dotnet restore ./Trilogia-Cursos/Proyecto_Final.slnx
+      - name: Build test dependencies
+        run: dotnet build ./Trilogia-Cursos/Proyecto_Final.slnx --configuration Release --no-restore
+      - name: Run all tests
+        run: dotnet test ./Trilogia-Cursos/Proyecto_Final.slnx --configuration Release --no-build
+
+  final-gate:
+    name: final-gate
+    if: always()
+    needs: [security-scan, sql-validation, build, tests]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every validation job to pass
+        shell: bash
+        env:
+          SECURITY_RESULT: ${{ needs.security-scan.result }}
+          SQL_RESULT: ${{ needs.sql-validation.result }}
+          BUILD_RESULT: ${{ needs.build.result }}
+          TESTS_RESULT: ${{ needs.tests.result }}
+        run: |
+          printf 'security-scan=%s\nsql-validation=%s\nbuild=%s\ntests=%s\n' \
+            "$SECURITY_RESULT" "$SQL_RESULT" "$BUILD_RESULT" "$TESTS_RESULT"
+          test "$SECURITY_RESULT" = success
+          test "$SQL_RESULT" = success
+          test "$BUILD_RESULT" = success
+          test "$TESTS_RESULT" = success

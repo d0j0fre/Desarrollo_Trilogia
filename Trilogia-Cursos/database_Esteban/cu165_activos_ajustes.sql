@@ -10,7 +10,7 @@
 -- 100 % ADITIVO e IDEMPOTENTE. No altera tablas ni SPs previos.
 -- Prerrequisito: cu152_153_154_161 (dbo.Activos) y cu162_163_164 (Comodatos).
 -- ============================================================
-USE DistribuidoraJJ_DB_DEV;
+-- Ejecute este script sobre la base de datos seleccionada por el operador.
 GO
 SET NOCOUNT ON;
 GO

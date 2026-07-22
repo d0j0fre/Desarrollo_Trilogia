@@ -15,7 +15,7 @@
 --
 -- Prerrequisito: cu152_153_154_161 (dbo.Activos) aplicado.
 -- ============================================================
-USE DistribuidoraJJ_DB_DEV;
+-- Ejecute este script sobre la base de datos seleccionada por el operador.
 GO
 SET NOCOUNT ON;
 GO

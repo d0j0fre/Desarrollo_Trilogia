@@ -57,7 +57,8 @@ namespace Proyecto_Final.Controllers
             }
             catch (SqlException ex) when (ex.Number >= 50000)
             {
-                TempData["ErrorMessage"] = ex.Message;
+                _logger.LogWarning(ex, "La base de datos rechazó una operación de negocio.");
+                TempData["ErrorMessage"] = "No fue posible completar la operación solicitada.";
             }
             catch (Exception ex)
             {
@@ -79,7 +80,8 @@ namespace Proyecto_Final.Controllers
             }
             catch (SqlException ex) when (ex.Number >= 50000)
             {
-                TempData["ErrorMessage"] = ex.Message;
+                _logger.LogWarning(ex, "La base de datos rechazó una operación de negocio.");
+                TempData["ErrorMessage"] = "No fue posible completar la operación solicitada.";
             }
             catch (Exception ex)
             {
@@ -126,7 +128,8 @@ namespace Proyecto_Final.Controllers
             }
             catch (SqlException ex) when (ex.Number >= 50000)
             {
-                TempData["ErrorMessage"] = ex.Message;
+                _logger.LogWarning(ex, "La base de datos rechazó una operación de negocio.");
+                TempData["ErrorMessage"] = "No fue posible completar la operación solicitada.";
             }
             catch (Exception ex)
             {
@@ -149,7 +152,8 @@ namespace Proyecto_Final.Controllers
             }
             catch (SqlException ex) when (ex.Number >= 50000)
             {
-                TempData["ErrorMessage"] = ex.Message;
+                _logger.LogWarning(ex, "La base de datos rechazó una operación de negocio.");
+                TempData["ErrorMessage"] = "No fue posible completar la operación solicitada.";
             }
             catch (Exception ex)
             {
@@ -192,7 +196,8 @@ namespace Proyecto_Final.Controllers
             }
             catch (SqlException ex) when (ex.Number >= 50000)
             {
-                TempData["ErrorMessage"] = ex.Message;
+                _logger.LogWarning(ex, "La base de datos rechazó una operación de negocio.");
+                TempData["ErrorMessage"] = "No fue posible completar la operación solicitada.";
             }
             catch (Exception ex)
             {

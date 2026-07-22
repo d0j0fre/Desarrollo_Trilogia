@@ -13,8 +13,7 @@
 --
 -- Prerrequisito: cu081 (Vehiculos) aplicado.
 -- ============================================================
-
-USE DistribuidoraJJ_DB_DEV;
+-- Ejecute este script sobre la base de datos seleccionada por el operador.
 GO
 SET NOCOUNT ON;
 GO
