@@ -40,5 +40,8 @@ namespace Proyecto_Final.Models.Admin
 
         [Display(Name = "Fecha de resolución")]
         public DateTime? FechaResolucion { get; set; }
+
+        [StringLength(1000)]
+        public string? ResolucionNueva { get; set; }
     }
 }

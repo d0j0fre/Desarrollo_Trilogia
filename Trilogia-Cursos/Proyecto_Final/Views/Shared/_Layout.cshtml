@@ -314,6 +314,7 @@
                                         "Crédito y Cobro",
                                         "Empleado",
                                         "Facturador",
+                                        "Gerente",
                                         "Soporte",
                                         "Supervisor",
                                         "Vendedor"
@@ -356,6 +357,14 @@
                                             Departamentos
 
                                         </button>
+
+                                        @if (isAdmin)
+                                        {
+                                            <a asp-controller="Chat" asp-action="Index" class="dropdown-item">
+                                                <i class="fa fa-cog"></i>
+                                                Administrar departamentos
+                                            </a>
+                                        }
 
                                     </div>
 
@@ -523,6 +532,12 @@
 </a>
 
 @* Chat *@
+@if (puedeUsarChat)
+{
+    <form id="chatAntiforgery" class="d-none" aria-hidden="true">
+        @Html.AntiForgeryToken()
+    </form>
+}
 <div id="chatWindow" class="chat-window">
 
     <div class="chat-header">
@@ -556,8 +571,6 @@
     </div>
 
 </div>
-
-<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
 
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
@@ -606,7 +619,7 @@
 
     @RenderSection("Scripts", required: false)
 
-    <script asp-append-version="true" src="~/js/chat.js"></script>
     <script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
+    <script asp-append-version="true" src="~/js/chat.js"></script>
 </body>
 </html>

@@ -20,15 +20,18 @@ namespace Proyecto_Final.Controllers
         private readonly StoreDbService _storeDbService;
         private readonly EmailService _emailService;
         private readonly PromotionsDbService _promotions;
+        private readonly ILogger<CartController> _logger;
 
         public CartController(
             StoreDbService storeDbService,
             EmailService emailService,
-            PromotionsDbService promotions)
+            PromotionsDbService promotions,
+            ILogger<CartController> logger)
         {
             _storeDbService = storeDbService;
             _emailService = emailService;
             _promotions = promotions;
+            _logger = logger;
         }
 
         public async Task<IActionResult> Index()
@@ -247,39 +250,20 @@ namespace Proyecto_Final.Controllers
                 var usuarioId =
                     HttpContext.Session.GetInt32("UserId") ?? 0;
 
-                var pedidoId = await _storeDbService.CreateOrderAsync(
+                var order = await _storeDbService.CreateOrderWithPromotionsAsync(
                     usuarioId,
                     model,
                     model.Cart.Items);
 
-                // CU-173 — Aplicar promociones es "mejor esfuerzo": la venta YA está registrada,
-                // así que ninguna falla del motor de promociones puede interrumpir la compra.
-                var totalConfirmado = model.Cart.Subtotal;
-                try
-                {
-                    var aplicadas = await EvaluatePromotionsAsync(model.Cart.Items, usuarioId);
-                    if (aplicadas.Count > 0)
-                    {
-                        await _storeDbService.ApplyPromotionsToOrderAsync(
-                            pedidoId, aplicadas,
-                            usuarioId, HttpContext.Session.GetString("UserFullName") ?? "Cliente");
-                        totalConfirmado = model.Cart.Total; // descuentos aplicados con éxito
-                    }
-                }
-                catch
-                {
-                    // Si la promoción falla (p. ej. sin stock de regalía), el pedido queda a precio
-                    // normal y la compra continúa sin interrupción.
-                    totalConfirmado = model.Cart.Subtotal;
-                }
+                var confirmedItems = model.Cart.Items.Concat(order.Gifts).ToList();
 
                 var confirmacion = new OrderConfirmationViewModel
                 {
-                    PedidoId = pedidoId,
+                    PedidoId = order.PedidoId,
                     TipoEntrega = model.TipoEntrega,
                     DireccionEntrega = model.DireccionEntrega,
-                    Total = totalConfirmado,
-                    Items = model.Cart.Items
+                    Total = order.Total,
+                    Items = confirmedItems
                 };
 
                 var destinatario =
@@ -294,9 +278,9 @@ namespace Proyecto_Final.Controllers
                 _emailService.SendOrderReceipt(
                     destinatario,
                     cliente,
-                    pedidoId,
+                    order.PedidoId,
                     model,
-                    model.Cart.Items);
+                    confirmedItems);
 
                 HttpContext.Session.Remove(CartSessionKey);
 
@@ -304,7 +288,7 @@ namespace Proyecto_Final.Controllers
                     JsonSerializer.Serialize(confirmacion);
 
                 TempData["LoginSuccess"] =
-                    $"Pedido #{pedidoId} creado correctamente.";
+                    $"Pedido #{order.PedidoId} creado correctamente.";
 
                 return RedirectToAction(nameof(Confirmation));
             }
@@ -313,6 +297,7 @@ namespace Proyecto_Final.Controllers
                     "stock",
                     StringComparison.OrdinalIgnoreCase))
             {
+                _logger.LogWarning(ex, "El checkout fue rechazado por falta de inventario para el usuario {UserId}.", HttpContext.Session.GetInt32("UserId"));
                 ModelState.AddModelError(
                     string.Empty,
                     "No hay stock suficiente para completar el pedido. " +
@@ -320,8 +305,9 @@ namespace Proyecto_Final.Controllers
 
                 return View(model);
             }
-            catch (Exception)
+            catch (Exception exception)
             {
+                _logger.LogError(exception, "No se pudo completar el checkout del usuario {UserId}.", HttpContext.Session.GetInt32("UserId"));
                 ModelState.AddModelError(
                     string.Empty,
                     "No se pudo completar el pedido. Intente nuevamente.");
@@ -345,7 +331,8 @@ namespace Proyecto_Final.Controllers
         // CU-173 — arma el carrito y aplica automáticamente las promociones vigentes.
         private async Task<CartViewModel> BuildCartViewModelAsync()
         {
-            var items = GetCartItems();
+            var items = await RefreshCartItemsAsync(GetCartItems());
+            SaveCartItems(items);
             var cart = new CartViewModel { Items = items };
             if (items.Count == 0) return cart;
 
@@ -358,22 +345,35 @@ namespace Proyecto_Final.Controllers
                 var resultado = PromotionEngine.Apply(cart.Items, vigentes);
                 cart.Regalias = resultado.Gifts;
             }
-            catch
+            catch (Exception exception)
             {
+                _logger.LogWarning(exception, "No fue posible calcular las promociones para presentar el carrito.");
                 foreach (var it in cart.Items) { it.MontoDescuento = 0; it.PromocionNombre = null; }
                 cart.Regalias.Clear();
             }
             return cart;
         }
 
-        // Recalcula (autoritativo, servidor) las promociones aplicables para persistirlas.
-        private async Task<List<AppliedPromotion>> EvaluatePromotionsAsync(List<CartItemViewModel> items, int usuarioId)
+        private async Task<List<CartItemViewModel>> RefreshCartItemsAsync(List<CartItemViewModel> items)
         {
-            if (items == null || items.Count == 0) return new List<AppliedPromotion>();
-            var segmento = await _storeDbService.GetUserSegmentAsync(usuarioId);
-            var vigentes = await _promotions.GetActivePromotionsAsync(segmento);
-            var resultado = PromotionEngine.Apply(items, vigentes);
-            return resultado.Applied;
+            var refreshed = new List<CartItemViewModel>();
+            foreach (var item in items.Where(item => item.ProductoId > 0 && item.Cantidad > 0))
+            {
+                var product = await _storeDbService.GetStoreProductByIdAsync(item.ProductoId);
+                if (product is null || product.Stock <= 0) continue;
+                refreshed.Add(new CartItemViewModel
+                {
+                    ProductoId = product.ProductoId,
+                    Nombre = product.Nombre,
+                    Categoria = product.Categoria,
+                    Descripcion = product.Descripcion,
+                    Precio = product.Precio,
+                    StockDisponible = product.Stock,
+                    Cantidad = Math.Min(item.Cantidad, product.Stock),
+                    ImagenUrl = product.ImagenUrl
+                });
+            }
+            return refreshed;
         }
 
         private List<CartItemViewModel> GetCartItems()

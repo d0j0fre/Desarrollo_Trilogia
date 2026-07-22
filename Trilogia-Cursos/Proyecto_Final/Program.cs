@@ -1,12 +1,86 @@
+using Microsoft.AspNetCore.RateLimiting;
 using Proyecto_Final.Middleware;
 using Proyecto_Final.Services;
 using Proyecto_Final.Hubs;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // MVC
 builder.Services.AddControllersWithViews();
 builder.Services.AddSignalR();
+builder.Services.AddAntiforgery(options => options.HeaderName = "X-CSRF-TOKEN");
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.AddPolicy("authentication", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+
+    options.AddPolicy("password-recovery", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(15),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+
+    options.AddPolicy("chat-send", httpContext =>
+        RateLimitPartition.GetTokenBucketLimiter(
+            GetUserPartition(httpContext),
+            _ => new TokenBucketRateLimiterOptions
+            {
+                TokenLimit = 30,
+                TokensPerPeriod = 30,
+                ReplenishmentPeriod = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+
+    options.AddPolicy("chat-search", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            GetUserPartition(httpContext),
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 20,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+
+    options.AddPolicy("assistant", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            GetUserPartition(httpContext),
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 20,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+
+    options.AddPolicy("evidence-upload", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            GetUserPartition(httpContext),
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(10),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+});
 
 // Session
 builder.Services.AddDistributedMemoryCache();
@@ -17,7 +91,9 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
     options.Cookie.SameSite = SameSiteMode.Lax;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
+        ? CookieSecurePolicy.SameAsRequest
+        : CookieSecurePolicy.Always;
 });
 
 // Servicios propios
@@ -35,6 +111,9 @@ builder.Services.AddScoped<ReclamosDbService>();
 builder.Services.AddScoped<KpiDbService>();
 builder.Services.AddScoped<ExpensesDbService>();
 builder.Services.AddScoped<AssistantService>();
+builder.Services.AddScoped<IChatDbService, ChatDbService>();
+builder.Services.AddScoped<IChatAuthorizationService, ChatAuthorizationService>();
+builder.Services.AddSingleton<IEvidenceStorageService, FileEvidenceStorageService>();
 
 // HttpClient para consumir la API de autenticación
 builder.Services.AddHttpClient<AccountApiService>(client =>
@@ -45,9 +124,7 @@ builder.Services.AddHttpClient<AccountApiService>(client =>
     {
         throw new InvalidOperationException("No se encontró la configuración ApiSettings:BaseUrl en appsettings.json.");
     }
-    Console.WriteLine(baseUrl);
     client.BaseAddress = new Uri(baseUrl);
-    //client.BaseAddress = new Uri(baseUrl);
 });
 
 var app = builder.Build();
@@ -67,6 +144,7 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.UseSession();
+app.UseRateLimiter();
 
 app.UseAuthorization();
 
@@ -77,3 +155,11 @@ app.MapControllerRoute(
 app.MapHub<ChatHub>("/chatHub");
 
 app.Run();
+
+static string GetUserPartition(HttpContext httpContext)
+{
+    var userId = httpContext.Session.GetInt32("UserId");
+    return userId.HasValue && userId.Value > 0
+        ? $"user:{userId.Value}"
+        : $"ip:{httpContext.Connection.RemoteIpAddress}";
+}

@@ -100,6 +100,9 @@ namespace Proyecto_Final.Models.Admin
         public int ProductoRegaloStock { get; set; }
         public int? CantidadRegalo { get; set; }
         public int Prioridad { get; set; }
+        public string SegmentoCliente { get; set; } = "Todos";
+        public DateTime FechaInicio { get; set; } = DateTime.MinValue;
+        public DateTime FechaFin { get; set; } = DateTime.MaxValue;
     }
 
     // CU-172 — Segmento de cliente.

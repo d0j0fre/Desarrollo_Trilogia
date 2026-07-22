@@ -100,7 +100,8 @@ namespace Proyecto_Final.Controllers
             }
             catch (SqlException ex) when (ex.Number >= 50000)
             {
-                ModelState.AddModelError(string.Empty, ex.Message);
+                _logger.LogWarning(ex, "La base de datos rechazó una operación de negocio.");
+                ModelState.AddModelError(string.Empty, "No fue posible completar la operación solicitada.");
                 ViewBag.Prepare = prep;
                 return View(model);
             }

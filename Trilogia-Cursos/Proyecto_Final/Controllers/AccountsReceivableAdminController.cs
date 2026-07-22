@@ -9,10 +9,14 @@ namespace Proyecto_Final.Controllers
     public class AccountsReceivableAdminController : Controller
     {
         private readonly AdminDbService _adminDbService;
+        private readonly ILogger<AccountsReceivableAdminController> _logger;
 
-        public AccountsReceivableAdminController(AdminDbService adminDbService)
+        public AccountsReceivableAdminController(
+            AdminDbService adminDbService,
+            ILogger<AccountsReceivableAdminController> logger)
         {
             _adminDbService = adminDbService;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -30,8 +34,9 @@ namespace Proyecto_Final.Controllers
 
                 return View(cuentas);
             }
-            catch (Exception)
+            catch (Exception exception)
             {
+                _logger.LogError(exception, "No se pudieron cargar las cuentas por cobrar.");
                 TempData["ErrorMessage"] =
                     "No fue posible cargar las cuentas por cobrar.";
 
@@ -65,8 +70,9 @@ namespace Proyecto_Final.Controllers
 
                 return View(cuenta);
             }
-            catch (Exception)
+            catch (Exception exception)
             {
+                _logger.LogError(exception, "No se pudo cargar la cuenta por cobrar {UserId}.", id);
                 TempData["ErrorMessage"] =
                     "No fue posible cargar el detalle de la cuenta.";
 
@@ -107,7 +113,8 @@ namespace Proyecto_Final.Controllers
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = ex.Message;
+                _logger.LogWarning(ex, "No se pudo actualizar la configuración de crédito del usuario {UserId}.", settingsForm.UsuarioId);
+                TempData["ErrorMessage"] = "No fue posible completar la operación solicitada.";
             }
 
             return RedirectToAction(
@@ -148,7 +155,8 @@ namespace Proyecto_Final.Controllers
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = ex.Message;
+                _logger.LogWarning(ex, "No se pudo registrar el movimiento de crédito del usuario {UserId}.", movementForm.UsuarioId);
+                TempData["ErrorMessage"] = "No fue posible completar la operación solicitada.";
             }
 
             return RedirectToAction(

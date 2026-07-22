@@ -67,6 +67,8 @@ namespace Proyecto_Final.Services
             command.Parameters.Add("@Nombre", SqlDbType.NVarChar, 120).Value = model.Nombre.Trim();
             command.Parameters.Add("@Descripcion", SqlDbType.NVarChar, 300).Value = string.IsNullOrWhiteSpace(model.Descripcion) ? DBNull.Value : model.Descripcion.Trim();
             command.Parameters.Add("@PresupuestoMensual", SqlDbType.Decimal).Value = model.PresupuestoMensual;
+            command.Parameters["@PresupuestoMensual"].Precision = 18;
+            command.Parameters["@PresupuestoMensual"].Scale = 2;
             command.Parameters.Add("@Activo", SqlDbType.Bit).Value = model.Activo;
             await connection.OpenAsync();
             await command.ExecuteNonQueryAsync();
@@ -80,6 +82,8 @@ namespace Proyecto_Final.Services
             command.Parameters.Add("@CuentaId", SqlDbType.Int).Value = model.CuentaId;
             command.Parameters.Add("@Fecha", SqlDbType.Date).Value = model.Fecha.Date;
             command.Parameters.Add("@Monto", SqlDbType.Decimal).Value = model.Monto;
+            command.Parameters["@Monto"].Precision = 18;
+            command.Parameters["@Monto"].Scale = 2;
             command.Parameters.Add("@Concepto", SqlDbType.NVarChar, 200).Value = model.Concepto.Trim();
             command.Parameters.Add("@Proveedor", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(model.Proveedor) ? DBNull.Value : model.Proveedor.Trim();
             command.Parameters.Add("@Comprobante", SqlDbType.NVarChar, 60).Value = string.IsNullOrWhiteSpace(model.Comprobante) ? DBNull.Value : model.Comprobante.Trim();

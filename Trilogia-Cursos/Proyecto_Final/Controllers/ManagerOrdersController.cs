@@ -9,10 +9,12 @@ namespace Proyecto_Final.Controllers
     public class ManagerOrdersController : Controller
     {
         private readonly AdminDbService _adminDbService;
+        private readonly ILogger<ManagerOrdersController> _logger;
 
-        public ManagerOrdersController(AdminDbService adminDbService)
+        public ManagerOrdersController(AdminDbService adminDbService, ILogger<ManagerOrdersController> logger)
         {
             _adminDbService = adminDbService;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -77,7 +79,8 @@ namespace Proyecto_Final.Controllers
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = ex.Message.Contains("50") ? ex.Message : "No fue posible aprobar el pedido en este momento.";
+                _logger.LogWarning(ex, "No se pudo aprobar el pedido retenido {OrderId}.", pedidoId);
+                TempData["ErrorMessage"] = "No fue posible aprobar el pedido en este momento.";
                 return RedirectToAction(nameof(Review), new { id = pedidoId });
             }
         }
@@ -132,7 +135,8 @@ namespace Proyecto_Final.Controllers
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = ex.Message.Contains("50") ? ex.Message : "No fue posible rechazar el pedido en este momento.";
+                _logger.LogWarning(ex, "No se pudo rechazar el pedido retenido {OrderId}.", model.PedidoId);
+                TempData["ErrorMessage"] = "No fue posible rechazar el pedido en este momento.";
                 return RedirectToAction(nameof(Review), new { id = model.PedidoId });
             }
         }

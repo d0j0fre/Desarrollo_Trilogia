@@ -15,7 +15,11 @@ namespace Proyecto_Final.Services
 
         // Muta 'items' (fija MontoDescuento/PromocionNombre por línea) y devuelve regalías + registros aplicados.
         // Regla acordada: el descuento porcentual aplica SOLO a la línea del producto estratégico.
-        public static Result Apply(List<CartItemViewModel> items, IEnumerable<ActivePromotionViewModel> promociones)
+        public static Result Apply(
+            List<CartItemViewModel> items,
+            IEnumerable<ActivePromotionViewModel> promociones,
+            string segmento = "Minorista",
+            DateTime? evaluationDate = null)
         {
             var result = new Result();
             if (items == null || items.Count == 0) return result;
@@ -23,7 +27,13 @@ namespace Proyecto_Final.Services
             // Un solo beneficio por producto (mayor prioridad primero).
             var yaPromocionados = new HashSet<int>();
 
-            foreach (var promo in promociones.OrderByDescending(p => p.Prioridad).ThenBy(p => p.PromocionId))
+            var date = (evaluationDate ?? DateTime.UtcNow).Date;
+            foreach (var promo in promociones
+                         .Where(p => p.FechaInicio.Date <= date && p.FechaFin.Date >= date)
+                         .Where(p => string.Equals(p.SegmentoCliente, "Todos", StringComparison.OrdinalIgnoreCase) ||
+                                     string.Equals(p.SegmentoCliente, segmento, StringComparison.OrdinalIgnoreCase))
+                         .OrderByDescending(p => p.Prioridad)
+                         .ThenBy(p => p.PromocionId))
             {
                 var linea = items.FirstOrDefault(i => i.ProductoId == promo.ProductoId && !i.EsRegalo);
                 if (linea is null) continue;

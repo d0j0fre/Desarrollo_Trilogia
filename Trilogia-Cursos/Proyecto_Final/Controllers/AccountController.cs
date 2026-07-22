@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Proyecto_Final.Services;
 
 namespace Proyecto_Final.Controllers
@@ -31,6 +32,7 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting("authentication")]
         public async Task<IActionResult> Login(Proyecto_Final.Models.LoginViewModel model)
         {
             if (!ModelState.IsValid)
@@ -138,6 +140,7 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting("password-recovery")]
         public async Task<IActionResult> ForgotPassword(Proyecto_Final.Models.ForgotPasswordViewModel model)
         {
             if (!ModelState.IsValid)
@@ -189,6 +192,7 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting("password-recovery")]
         public async Task<IActionResult> ResetPassword(Proyecto_Final.Models.ResetPasswordViewModel model)
         {
             if (!ModelState.IsValid)

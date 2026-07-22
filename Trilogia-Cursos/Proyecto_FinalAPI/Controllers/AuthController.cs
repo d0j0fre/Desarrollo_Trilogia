@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Proyecto_FinalAPI.Models;
 using Proyecto_FinalAPI.Services;
 
@@ -26,6 +27,7 @@ namespace Proyecto_FinalAPI.Controllers
         }
 
         [HttpPost("login")]
+        [EnableRateLimiting("authentication")]
         public async Task<IActionResult> Login([FromBody] LoginApiRequest request)
         {
             if (request == null ||
@@ -120,6 +122,7 @@ namespace Proyecto_FinalAPI.Controllers
         }
 
         [HttpPost("forgot-password")]
+        [EnableRateLimiting("password-recovery")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordApiRequest request)
         {
             const string safeRecoveryMessage = "Si la solicitud es válida, se procesará la recuperación de contraseña.";
@@ -189,6 +192,7 @@ namespace Proyecto_FinalAPI.Controllers
         }
 
         [HttpPost("reset-password")]
+        [EnableRateLimiting("password-recovery")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordApiRequest request)
         {
             if (request == null ||
