@@ -8,7 +8,8 @@ Este es el índice operativo vigente. El código y el último `origin/main` prev
 - Los cuatro `appsettings` compartidos están sanitizados; la configuración funcional no vive en Git.
 - La credencial SMTP detectada debe revocarse o rotarse fuera del repositorio. La limpieza del historial requiere coordinación y no se ejecuta automáticamente.
 - CI separa secretos, SQL, build y tests; `final-gate` consolida el resultado.
-- Las migraciones incrementales vigentes son 0001–0006. Las 0002–0006 están validadas sintácticamente, pero no se han aplicado como parte de esta rama.
+- Las migraciones incrementales vigentes son 0001–0011. Las 0002–0011 están validadas sintácticamente, pero no se han aplicado como parte de estas ramas.
+- Sprint 4 de Danny (CU-201, CU-202, CU-221, CU-222 y CU-223) está implementado en la rama apilada `codex/danny-sprint4-cu201-cu202-cu221-cu222-cu223`; falta QA de SQL Server/navegador/Azure.
 - Chat, evidencia privada, checkout/promociones y garantías requieren aplicar migraciones y efectuar QA de entorno antes de declararlos operativos.
 - La protección de `main` está activa y documentada en `docs/configuracion-proteccion-main.md`.
 - Las validaciones Azure documentadas anteriormente son evidencia histórica y no validan esta rama.
@@ -20,6 +21,7 @@ Este es el índice operativo vigente. El código y el último `origin/main` prev
 - SQL: `database/migrations/README.md`, `docs/inventario-sql-y-migraciones.md`.
 - Trazabilidad funcional: `docs/matriz-historias-estado.md`, `docs/resumen-final-proyecto.md`.
 - QA: `docs/qa-final.md`, `docs/api-pruebas-manuales.md`.
+- Sprint 4 Danny: `docs/sprint4-danny-cu201-cu202-cu221-cu222-cu223.md`.
 - Cliente/pedidos: `docs/portal-cliente-pedidos.md`.
 - API: `docs/api-endpoints.md`, `docs/api-auth-futura.md`.
 - Azure histórico: `docs/azure-despliegue-final-qa.md` y guías relacionadas.

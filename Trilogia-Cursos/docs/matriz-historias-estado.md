@@ -31,12 +31,14 @@ Estado al 22 de julio de 2026. “Pendiente entorno” significa que existe cód
 | 174 | #69 | Implementada; pendiente entorno | `PromotionsController`, `cu171_174_promociones.sql` | Build/SQL; QA inactivación |
 | 191 | #72 | Implementada; pendiente entorno | `ReclamosController`, `cu191_192_reclamos.sql` | Build/SQL; QA registro |
 | 192 | #73 | Implementada; pendiente entorno | `ReclamosController`, mismo script CU-191 | Build/SQL; QA cierre/resolución |
+| 201 | #74 | Implementada y probada; pendiente entorno | `DocumentsController`, almacenamiento privado, migración 0007 | Tests de archivos/seguridad; QA SQL/UI |
+| 202 | #75 | Implementada y probada; pendiente entorno | `DocumentAlertService`, migración 0008 | Tests de fecha/política; QA scheduler/SMTP opcional |
 | 211 | #76 | Implementada; pendiente entorno | `KpisController`, `cu211_213_metas_kpis.sql` | Build/SQL; QA metas |
 | 212 | #77 | Implementada; pendiente entorno | `KpisController`, mismo script CU-211 | Build/SQL; QA progreso |
 | 213 | #78 | Implementada; pendiente entorno | `KpisController`, mismo script CU-211 | Build/SQL; QA reporte |
-| 221 | #79 | Implementada; pendiente entorno | `FinanceController`/`ExpensesController`, `cu222_gastos_presupuesto.sql` | Build/SQL; QA presupuesto |
-| 222 | #80 | Implementada; pendiente entorno | `ExpensesController`, mismo script CU-221 | Build/SQL; QA gasto |
-| 223 | #81 | Implementada; pendiente entorno | `FinanceController`, mismo script CU-221 | Build/SQL; QA comparativa |
+| 221 | #79 | Implementada y probada; pendiente entorno | `BudgetsController`, `BudgetDbService`, migración 0009 | Reglas unitarias/SQL; QA aprobación y concurrencia |
+| 222 | #80 | Implementada y probada; pendiente entorno | `ExpensesController`, `ExpensesDbService`, migración 0010 | Tests de reglas/seguridad; QA archivos/transiciones |
+| 223 | #81 | Implementada y probada; pendiente entorno | `BudgetComparisonController`, migración 0011 | Tests de cálculo/CSV; QA SQL/UI/exportación |
 | 231 | #82 | Corregida y probada; pendiente entorno | `ChatController`, `ChatHub`, migración 0002 | Tests autorización; QA SignalR/SQL |
 | 232 | #83 | Corregida y probada; pendiente entorno | `ChatDbService`, vista admin, migración 0003 | Tests filtros; QA CRUD/SignalR |
 | 233 | #84 | Corregida y probada; pendiente entorno | `chat.js`, `sp_Chat_SearchMessages` | Paginación implementada; QA SQL/UI |
@@ -53,5 +55,6 @@ Estado al 22 de julio de 2026. “Pendiente entorno” significa que existe cód
 - Evidencias: firmas, extensión/MIME, claves seguras, traversal y ciclo stage/commit/read.
 - Promociones: prioridad, redondeo, segmento, vigencia y límite por stock de regalía.
 - Seguridad MVC: filtros de sesión/admin y antiforgery en POST críticos.
+- Sprint 4 Danny: distribución decimal, segregación, umbrales, proyección, neutralización CSV, archivos privados y atributos de seguridad.
 
-Total local: 33 pruebas aprobadas. El detalle de QA de entorno está en `docs/qa-final.md`.
+Total local: 87 pruebas aprobadas. El detalle de QA de entorno está en `docs/qa-final.md`.

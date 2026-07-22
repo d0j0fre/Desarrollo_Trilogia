@@ -2,7 +2,7 @@
 
 ## Estado
 
-La rama `codex/p0-saneamiento-integracion-total-20260722`, basada en el último `origin/main`, sanea la configuración, recupera CI y refuerza flujos críticos. Compila sin errores ni advertencias, aprueba 33 pruebas y valida sintácticamente los 70 scripts SQL descubiertos.
+La rama base `codex/p0-saneamiento-integracion-total-20260722` sanea la configuración y recupera CI. Encima, `codex/danny-sprint4-cu201-cu202-cu221-cu222-cu223` completa las cinco historias asignadas a Danny. El conjunto compila sin errores ni advertencias, aprueba 87 pruebas y valida sintácticamente 75 scripts SQL (876 lotes).
 
 El trabajo está **listo para revisión con acciones externas pendientes**. No se han aplicado migraciones ni ejecutado smoke tests de navegador/Azure sobre esta versión.
 
@@ -25,6 +25,11 @@ El trabajo está **listo para revisión con acciones externas pendientes**. No s
 3. `0004_private_delivery_evidence.sql`
 4. `0005_atomic_checkout_promotions.sql`
 5. `0006_warranty_workflow.sql`
+6. `0007_secure_document_management.sql`
+7. `0008_document_expiration_alerts.sql`
+8. `0009_annual_department_budgets.sql`
+9. `0010_operating_expenses_alignment.sql`
+10. `0011_budget_actual_comparison.sql`
 
 Dependen del ledger `0001_create_schema_migration_history.sql` y del esquema base. Se validaron con ScriptDom; deben probarse primero en una base desechable, luego aplicarse con BACPAC y registro del SHA-256 real.
 
@@ -41,5 +46,5 @@ Dependen del ledger `0001_create_schema_migration_history.sql` y del esquema bas
 1. Revocar/rotar la credencial SMTP expuesta y actualizar configuración segura.
 2. Coordinar, si se aprueba, la reescritura del historial y reclonado de colaboradores.
 3. Mantener la protección activa de `main` y revisar sus contextos si cambia el workflow.
-4. Ejecutar 0001–0006 y QA funcional/negativo en SQL Server.
+4. Ejecutar 0001–0011 y QA funcional/negativo en SQL Server.
 5. Desplegar a Azure y repetir smoke tests; la validación Azure antigua es histórica.

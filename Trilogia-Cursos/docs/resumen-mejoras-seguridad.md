@@ -37,7 +37,11 @@
 - Pedido, promociones e inventario se confirman/revierten en una transacción.
 - Garantías validan detalle entregado y propietario, evitan solicitudes abiertas duplicadas y auditan la resolución.
 - Precisión y escala decimal explícitas en módulos financieros/operativos revisados.
+- Documentos y comprobantes usan almacenamiento privado común: PDF/JPG/PNG, 10 MB, extensión+MIME+firma, SHA-256, GUID, staging/commit y compensación.
+- Presupuestos aprobados son inmutables; SQL impide autoaprobación y más de un aprobado activo por año/departamento.
+- Gastos tienen token idempotente, transiciones auditadas y permiso separado para exceder presupuesto.
+- Exportación CSV neutraliza prefijos de fórmula y los reportes sensibles deshabilitan caché.
 
 ## Estado de verificación
 
-La solución compila con 0 errores/0 advertencias, 33 pruebas automatizadas aprueban y 70 archivos SQL pasan ScriptDom. Las migraciones y pruebas de navegador/Azure permanecen pendientes de entorno.
+La solución compila con 0 errores/0 advertencias, 87 pruebas automatizadas aprueban y 75 archivos SQL (876 lotes) pasan ScriptDom. Las migraciones y pruebas de navegador/Azure permanecen pendientes de entorno.
