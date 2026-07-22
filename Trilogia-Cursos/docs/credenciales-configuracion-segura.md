@@ -1,77 +1,55 @@
-# Credenciales y configuracion segura
+# Credenciales y configuración segura
 
-## 1. Proposito
+## Política
 
-Esta politica mantiene secretos, cuentas demo y configuracion sensible fuera de Git. Aplica a desarrollo local, Azure, pruebas compartidas y documentacion.
+Contraseñas, connection strings, tokens, claves API, contraseñas SMTP, cookies, perfiles de publicación, BACPAC y capturas con valores sensibles nunca se versionan ni se copian a issues, PR, logs o documentación.
 
-## 2. Que se considera sensible
+Los archivos compartidos `Proyecto_Final/appsettings*.json` y `Proyecto_FinalAPI/appsettings*.json` son plantillas sanitizadas. Valores vacíos son intencionales.
 
-- Contrasenas y credenciales temporales.
-- Connection strings completas.
-- Tokens, API keys y cookies o tokens de sesion.
-- Contrasenas SMTP.
-- Publish profiles y capturas que revelen secretos.
+## Fuentes admitidas
 
-## 3. Configuracion local
+- Desarrollo: .NET User Secrets o variables de entorno.
+- Azure: App Service Configuration; Key Vault puede incorporarse posteriormente.
+- Evidencias: `EvidenceStorage__RootPath`, siempre fuera de `wwwroot`.
 
-- Usar variables de entorno para valores locales y compartidos solo por canal privado.
-- Usar .NET User Secrets cuando corresponda a desarrollo local.
-- Mantener archivos locales ignorados fuera de Git.
-- Conservar marcadores en `appsettings` versionados; nunca reemplazarlos con valores reales.
-- Usar `<smtp-user>` y `<smtp-app-password>` en cualquier plantilla SMTP.
-
-## 4. Configuracion en Azure
-
-Los valores sensibles deben residir en App Service Configuration. Azure Key Vault puede incorporarse cuando el entorno lo requiera. Nunca se versionan secretos en archivos del proyecto.
-
-## 5. Cuentas demo
-
-- No documentar contrasenas funcionales ni pares reutilizables de usuario y contrasena.
-- Crear o habilitar cuentas por un bloque aprobado.
-- Compartir acceso temporal por un canal privado.
-- Usar credenciales distintas entre local y Azure.
-- Rotar o desactivar cuentas temporales al terminar las pruebas.
-- Una contrasena expuesta en un seed publico no puede usarse en Azure.
-
-## 6. Respuesta ante exposicion
-
-1. Revocar o rotar la credencial.
-2. Identificar el alcance de la exposicion.
-3. Retirar el valor del estado actual.
-4. Verificar aplicaciones y variables de configuracion.
-5. Revisar logs y accesos relevantes.
-6. Evaluar la limpieza de historial por separado.
-7. Coordinar a todos los colaboradores antes de reescribir historial.
-
-Eliminar una credencial de un archivo no la invalida.
-
-## 7. Reglas para Codex
-
-- Nunca imprimir secretos.
-- Nunca anadir secretos a commits.
-- Usar `[SECRETO DETECTADO]` al reportar un hallazgo.
-- Detenerse ante una credencial inesperada.
-- No modificar App Service Configuration sin autorizacion explicita.
-- No ejecutar scripts de rotacion sin aprobacion.
-
-## 8. Checklist antes de un PR
-
-- Revisar `git diff` y archivos nuevos.
-- Revisar configuracion y perfiles de publicacion.
-- Revisar documentacion y SQL.
-- Ejecutar un escaneo de secretos.
-- Compilar la solucion.
-
-## 9. Escaneo automatizado
-
-Desde la raiz Git, ejecutar:
+Ejemplo local sin valores reales:
 
 ```powershell
-pwsh ./Trilogia-Cursos/scripts/security/Test-RepositorySecrets.ps1
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "<connection-string>" --project Proyecto_Final
+dotnet user-secrets set "ConfiguracionCorreo:Remitente" "<smtp-user>" --project Proyecto_Final
+dotnet user-secrets set "ConfiguracionCorreo:Contrasenna" "<smtp-app-password>" --project Proyecto_Final
 ```
 
-El escaneo revisa solo archivos rastreados, no imprime valores sensibles y falla cuando detecta una exposicion real. Los placeholders aprobados, como `<demo-password>`, `<sql-password>` y `<smtp-app-password>`, se permiten solo como ejemplos no funcionales.
+No pegar el resultado de `dotnet user-secrets list` en terminales compartidas, documentos ni comentarios.
 
-## 10. Validacion de SQL sanitizado
+## Fallo seguro
 
-El validador de `tools/SqlSyntaxValidator` usa Microsoft ScriptDom para analizar sintaxis T-SQL. No se conecta a SQL Server ni ejecuta instrucciones. Debe ejecutarse antes de publicar cambios SQL, porque una compilacion exitosa de la solucion .NET no garantiza que los archivos `.sql` sean validos.
+Una configuración obligatoria ausente debe producir un error claro sobre la clave faltante, sin revelar valores, rutas internas o credenciales. Ningún secreto se escribe con `Console.WriteLine` o logging estructurado.
+
+## Incidente SMTP 2026-07-22
+
+El árbol actual fue sanitizado y el escáner reforzado. Esto no invalida una credencial ya expuesta. El propietario debe:
+
+1. Revocar o rotar la credencial SMTP fuera de GitHub.
+2. Actualizar User Secrets/App Service Configuration por canal seguro.
+3. Revisar actividad relevante.
+4. Coordinar una posible limpieza del historial siguiendo `docs/incidente-seguridad-credencial-smtp-20260722.md`.
+
+No se hará force-push ni reescritura de historial sin coordinación con todos los colaboradores.
+
+## Cuentas de QA
+
+- Crear cuentas temporales por entorno y compartirlas solo por canal privado.
+- No reutilizar semillas públicas ni credenciales locales en Azure.
+- Rotar o desactivar las cuentas al finalizar.
+- No almacenar contraseñas de prueba en el repositorio.
+
+## Control antes de un PR
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/security/Test-RepositorySecrets.ps1
+git diff --check
+git status --short
+```
+
+El escáner revisa archivos rastreados y omite placeholders inequívocamente no funcionales. La revisión debe incluir JSON, YAML, Markdown, SQL, JavaScript y perfiles de publicación.

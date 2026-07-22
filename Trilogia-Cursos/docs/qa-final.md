@@ -1,206 +1,82 @@
-# QA final del proyecto
+# QA final de la rama de saneamiento
 
-## Objetivo
+## Resultado automatizado local
 
-Este documento deja el checklist de pruebas finales para validar la rama `feature/qa-seguridad-arquitectura` antes de abrir Pull Request hacia `main`.
+Ejecutado el 22 de julio de 2026:
 
-## Estado tecnico esperado
+- Escaneo de secretos: aprobado.
+- Restauración .NET: aprobada.
+- Build Release: 0 errores y 0 advertencias.
+- Tests: 33 aprobados, 0 fallidos, 0 omitidos.
+- SQL: 70 archivos y 821 lotes analizados con ScriptDom, 0 errores.
+- `git diff --check`: aprobado.
 
-- Build de solucion completa: `dotnet build Trilogia-Cursos\Proyecto_Final.slnx`.
-- Resultado esperado: 0 errores.
-- Resultado esperado: 0 warnings.
-- `appsettings.json` y `appsettings.Development.json` sin cambios.
-- Sin `bin/`, `obj/`, `.vs/`, ZIPs ni archivos generados pendientes.
-- Scripts SQL nuevos ejecutados en SSMS antes de pruebas funcionales completas.
+Estos resultados no ejecutan migraciones ni sustituyen las pruebas con SQL Server, SignalR, navegador o Azure.
 
-## Checklist cliente
+## Preparación obligatoria de entorno
 
-- [ ] Login cliente.
-- [ ] Login visualmente limpio en escritorio, pantalla mediana y movil.
-- [ ] Login invalido muestra error sin romper el diseño.
-- [ ] Link de recuperar contrasena visible.
-- [ ] Home.
-- [ ] Tienda.
-- [ ] Detalle producto.
-- [ ] Carrito.
-- [ ] Checkout.
-- [ ] Checkout con pago simulado academico.
-- [ ] Confirmacion de compra.
-- [ ] Mis pedidos.
-- [ ] Detalle pedido.
-- [ ] Cancelacion de pedido pendiente, si aplica.
-- [ ] Comprobante.
-- [ ] Mi Perfil.
-- [ ] Logout.
+- [ ] Crear BACPAC verificable de la base objetivo.
+- [ ] Aplicar 0001–0006, en orden, con un único ejecutor y registrar SHA-256 real.
+- [ ] Configurar `ConnectionStrings__DefaultConnection`.
+- [ ] Configurar correo solo después de rotar la credencial expuesta.
+- [ ] Configurar `EvidenceStorage__RootPath` en almacenamiento persistente fuera de `wwwroot`.
+- [ ] Confirmar permisos `CHAT_DEPARTAMENTOS_GESTIONAR`, garantías y módulos operativos.
 
-## Checklist admin
+## Seguridad y autorización
 
-- [ ] Login admin.
-- [ ] Login admin correcto desde la pantalla rediseñada.
-- [ ] Dashboard.
-- [ ] Inventario.
-- [ ] Pedidos admin.
-- [ ] Cambio de estado de pedido.
-- [ ] Generacion de factura desde pedido.
-- [ ] Facturacion.
-- [ ] Detalle factura.
-- [ ] Tabla de facturas: boton `Ver` visible completo en escritorio y pantalla mediana.
-- [ ] Reporte de productos mas vendidos.
-- [ ] Reporte de ventas por mes.
-- [ ] Inventario descuenta stock al crear pedido desde checkout.
-- [ ] Inventario no vuelve a descontar stock al generar factura.
-- [ ] Clientes.
-- [ ] Creditos.
-- [ ] Consultas.
-- [ ] Empleados.
-- [ ] Roles.
-- [ ] Permisos.
-- [ ] Auditoria.
-- [ ] Logout.
+- [ ] Usuario anónimo no accede a chat, evidencias, portal cliente ni administración.
+- [ ] Cliente no puede consultar pedido, garantía o evidencia ajenos alterando IDs.
+- [ ] Chofer solo ve rutas/evidencias asignadas.
+- [ ] Usuario no puede leer/enviar/unirse por SignalR a conversaciones o departamentos ajenos.
+- [ ] Administrador sin permiso exacto no gestiona departamentos, garantías ni otros módulos.
+- [ ] POST sin token antiforgery es rechazado.
+- [ ] Errores visibles no contienen SQL, stack trace, rutas o nombres internos.
+- [ ] Rate limits de login, recuperación, chat, búsqueda, asistente y evidencias responden de forma controlada.
 
-## Checklist registro
+## Chat CU-231/CU-232/CU-233
 
-- [ ] Abrir Registro.
-- [ ] Registro visualmente consistente con Login.
-- [ ] Registro vacio muestra validaciones.
-- [ ] Checkbox de terminos sigue funcionando.
-- [ ] Registro con datos validos funciona.
-- [ ] Link hacia Login funciona.
-- [ ] Responsive en pantalla mediana y movil.
+- [ ] Abrir/reutilizar conversación sin duplicados y enviar/recibir por SignalR.
+- [ ] Reconectar SignalR y reingresar solo a grupos autorizados.
+- [ ] Cargar páginas anteriores del historial.
+- [ ] Crear/editar/activar departamento; añadir/retirar miembros y configurar publicación.
+- [ ] Buscar palabra/frase en conversación actual y en todo el historial autorizado.
+- [ ] Paginar resultados y abrir su conversación/departamento.
+- [ ] Confirmar que contenido se renderiza como texto, no HTML.
 
-## Checklist empleado y vendedor
+## Evidencia de entrega
 
-- [ ] Login empleado/vendedor si existen credenciales en la base local.
-- [ ] Portal empleado.
-- [ ] Pedidos vendedor.
-- [ ] Accesos permitidos.
-- [ ] Accesos bloqueados.
-- [ ] Logout.
+- [ ] JPEG, PNG y WEBP válidos se guardan fuera de `wwwroot` con nombre GUID.
+- [ ] Extensión, MIME o firma discordantes son rechazados; máximo 5 MB.
+- [ ] Fallo de base o movimiento final no deja registro `Ready` ni archivo huérfano.
+- [ ] Endpoint autorizado devuelve MIME correcto, `nosniff` y `Cache-Control: no-store`.
+- [ ] Ruta manipulada/path traversal no accede a otros archivos.
+- [ ] Evidencias legadas no se sirven hasta migrarlas y verificarlas.
 
-## Checklist API
+## Checkout, promociones e inventario
 
-- [ ] `POST /api/auth/login`.
-- [ ] `POST /api/auth/register`.
-- [ ] `POST /api/auth/forgot-password`.
-- [ ] `POST /api/auth/reset-password`.
-- [ ] `GET /api/products`.
-- [ ] `GET /api/products?categoria=`.
-- [ ] `GET /api/products?buscar=`.
-- [ ] `GET /api/products/{id}` con producto existente.
-- [ ] `GET /api/products/{id}` con producto inexistente y respuesta `404`.
-- [ ] `GET /api/products/0` debe devolver `400`.
-- [ ] `GET /api/products/-1` debe devolver `400`.
-- [ ] `GET /api/products/categories`.
-- [ ] `GET /api/products/featured?take=`.
-- [ ] `GET /api/products/featured?take=0` debe devolver `400`.
-- [ ] `GET /api/products/featured?take=-1` debe devolver `400`.
-- [ ] `GET /api/products/featured?take=100` debe devolver `200` con maximo 24 resultados.
+- [ ] Carrito manipulado usa precio/producto/stock vigente del servidor.
+- [ ] Dos compras concurrentes no generan stock negativo.
+- [ ] Pedido, descuento, regalía y stock se confirman o revierten juntos.
+- [ ] Segmento, vigencia, prioridad y stock de regalía seleccionan la promoción correcta.
+- [ ] Cancelar pedido pendiente restaura stock una sola vez; facturar no vuelve a descontarlo.
+- [ ] Confirmación y correo muestran total/regalías retornados por SQL.
 
-## Checklist datos y mojibake
+## Garantías y otros módulos
 
-- [ ] Confirmar que Tienda muestra `Ron Añejo`.
-- [ ] Confirmar que Checkout muestra `Ron Añejo`.
-- [ ] Confirmar que API `/api/products` muestra `Ron Añejo`.
-- [ ] Confirmar que Billing/Factura muestra `Ron Añejo` si aplica.
+- [ ] Cliente solo crea garantía para detalle propio entregado y no duplica una abierta.
+- [ ] Administrador autorizado lista, cambia estado, registra resolución y deja auditoría.
+- [ ] Probar rutas/entregas, liquidaciones, reportes, devoluciones, flotilla, activos, comodatos, reclamos, KPIs y gastos con roles permitidos y denegados.
+- [ ] Confirmar **Asistente conversacional basado en reglas e interpretación de intenciones** y sus límites; CU-262 no debe declararse implementada.
 
-## Checklist pago simulado e inventario
+## Regresión general
 
-- [ ] Producto con stock 15: comprar 10 unidades y confirmar stock final 5.
-- [ ] Intentar comprar mas unidades que el stock disponible y confirmar rechazo con mensaje claro.
-- [ ] Confirmar que el stock no cambia cuando el pedido falla por stock insuficiente.
-- [ ] Crear pedido con `Efectivo contra entrega`.
-- [ ] Crear pedido con `SINPE Movil simulado` y referencia opcional.
-- [ ] Crear pedido con `Tarjeta demo` sin ingresar numero real de tarjeta ni CVV.
-- [ ] Crear pedido con `Transferencia simulada` y referencia opcional.
-- [ ] Confirmar que el admin puede ver metodo, estado, referencia y fecha de pago en detalle de pedido.
-- [ ] Crear pedido pendiente con inventario descontado, cancelarlo como cliente y confirmar que el stock se restaura.
-- [ ] Crear pedido pendiente con inventario descontado, cancelarlo como admin y confirmar que el stock se restaura.
-- [ ] Generar factura de un pedido con inventario descontado y confirmar que el stock no se descuenta otra vez.
-- [ ] Confirmar que la factura aparece en reportes de facturacion.
+- [ ] Login, registro, recuperación y logout.
+- [ ] Tienda, carrito, checkout, pedidos, comprobante y cancelación.
+- [ ] Inventario, facturación, clientes, créditos, empleados, roles, permisos y auditoría.
+- [ ] API auth/productos y respuestas 400/404 documentadas.
+- [ ] Sin 404 de scripts, errores de consola ni mojibake visible.
+- [ ] Responsive e impresión de comprobante/factura.
 
-## Checklist tecnico
+## Azure
 
-- [ ] Build solucion completa.
-- [ ] Confirmar 0 errores.
-- [ ] Confirmar 0 warnings.
-- [ ] Confirmar `appsettings` sin cambios.
-- [ ] Confirmar sin `bin/`, `obj/`, `.vs`, ZIPs ni archivos generados pendientes.
-- [ ] Confirmar scripts SQL pendientes/ejecutados.
-- [ ] Confirmar que no hay errores de consola principales.
-- [ ] Confirmar que no hay 404 de scripts principales.
-- [ ] Confirmar que comprobante cliente imprime correctamente.
-- [ ] Confirmar que factura admin imprime correctamente.
-- [ ] Revisar que no haya textos con caracteres dañados tipo `Ã`, `Â`, `estÃ¡`, `opciÃ³n` o `contraseÃ±a` en pantallas principales.
-
-## QA Azure publicado
-
-Detalle completo: `docs/azure-despliegue-final-qa.md`.
-
-URLs:
-
-- API: `https://api-trilogia-cursos-dev-cr01-haefhbgrd8dvcvc5.centralus-01.azurewebsites.net/`
-- MVC: `https://web-trilogia-cursos-dev-cr01-bbeyeedbfjejcgau.centralus-01.azurewebsites.net/`
-- Swagger: `https://api-trilogia-cursos-dev-cr01-haefhbgrd8dvcvc5.centralus-01.azurewebsites.net/swagger`
-- Healthcheck: `https://api-trilogia-cursos-dev-cr01-haefhbgrd8dvcvc5.centralus-01.azurewebsites.net/health`
-- Productos API: `https://api-trilogia-cursos-dev-cr01-haefhbgrd8dvcvc5.centralus-01.azurewebsites.net/api/productos`
-
-Pruebas aprobadas:
-
-- [x] Azure SQL DEV online.
-- [x] SSMS conecta a `DistribuidoraJJ_DB_DEV`.
-- [x] Stored Procedures principales validados.
-- [x] API local contra Azure SQL DEV.
-- [x] MVC local contra Azure SQL DEV.
-- [x] API Azure `/health`.
-- [x] API Azure `/swagger`.
-- [x] API Azure `/api/productos`.
-- [x] MVC Azure Home.
-- [x] MVC Azure Login.
-- [x] Login admin.
-- [x] Login cliente.
-- [x] Login vendedor/empleado.
-- [x] Admin.
-- [x] Shop.
-
-Pruebas recomendadas pendientes:
-
-- [ ] Checkout completo en Azure.
-- [ ] Carrito completo en Azure.
-- [ ] Facturacion completa en Azure.
-- [ ] Inventario completo en Azure.
-- [ ] Subida de imagenes en Azure.
-- [ ] Recuperacion de contrasena / SMTP real.
-- [ ] Pruebas con companeros desde otras IPs.
-
-## Scripts SQL a validar en SSMS
-
-Estos scripts deben ejecutarse en la base `DistribuidoraJJ_DB` antes de pruebas funcionales completas:
-
-- `database/cu090_admin_facturar_pedido.sql`
-- `database/cu091_migracion_pedidos_facturacion_sp.sql`
-- `database/cu092_admin_estado_pedido_seguro.sql`
-- `database/cu093_admin_reportes_facturacion_sp.sql`
-- `database/cu094_permisos_granulares_acciones.sql`
-- `database/cu095_facturacion_generar_permiso.sql`
-- `database/cu096_corregir_mojibake_productos.sql`
-- `database/cu097_pago_simulado_inventario_checkout.sql`
-
-## Pruebas negativas recomendadas
-
-- [ ] Intentar ver comprobante de otro cliente.
-- [ ] Intentar cancelar pedido facturado.
-- [ ] Intentar facturar pedido cancelado.
-- [ ] Intentar duplicar factura de un pedido.
-- [ ] Intentar entrar a rutas admin sin sesion.
-- [ ] Intentar entrar a rutas admin con rol no autorizado.
-- [ ] Intentar subir imagen con extension valida pero contenido invalido.
-- [ ] Intentar usar endpoint protegido futuro sin token, si se implementa despues.
-
-## Resultado esperado de cierre
-
-- Build: 0 errores, 0 warnings.
-- Rama lista para PR.
-- Sin archivos sensibles modificados.
-- Sin archivos generados incluidos.
-- Scripts SQL documentados.
-- Pruebas manuales principales completadas o marcadas como pendientes.
+La evidencia en `docs/azure-despliegue-final-qa.md` corresponde a una versión anterior. Repetir smoke tests de MVC, API, SQL, checkout, chat, evidencias, garantías y SMTP después de desplegar esta rama; no marcarla validada por herencia.
