@@ -1,0 +1,41 @@
+﻿@model Proyecto_Final.Models.Admin.ComboDetailViewModel
+@{
+    ViewData["Title"] = "Detalle del combo";
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <a asp-action="Index" class="btn btn-link px-0 mb-2"><i class="fa fa-arrow-left mr-1"></i>Volver a combos</a>
+            <h2 class="mb-1">@Model.Nombre</h2>
+            <p class="text-muted mb-0">@Model.Descripcion</p>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 mt-4">
+        <div class="col-md-4">
+            <p><strong>Precio:</strong> @Model.Precio.ToString("C0")</p>
+            <p><strong>Estado:</strong> @(Model.Activo ? "Activo" : "Inactivo")</p>
+            <p><strong>Creado por:</strong> @Model.RegistradoPorNombre</p>
+            <p><strong>Fecha:</strong> @Model.FechaCreacion.ToString("dd/MM/yyyy")</p>
+        </div>
+        <div class="col-md-8">
+            <h5>Productos que componen el combo</h5>
+            <table class="table table-sm">
+                <thead>
+                    <tr><th>Producto</th><th>Cantidad requerida</th><th>Stock disponible</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var linea in Model.Componentes)
+                    {
+                        <tr>
+                            <td>@linea.ProductoNombre</td>
+                            <td>@linea.Cantidad</td>
+                            <td>@linea.StockDisponible</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

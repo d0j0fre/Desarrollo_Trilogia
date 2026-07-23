@@ -326,6 +326,65 @@ namespace Proyecto_Final.Controllers
             return View(model);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> TransformStock()
+        {
+            var productos = await _adminDbService.GetActiveProductsForSelectAsync();
+            ViewBag.Productos = productos.Select(p => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+            {
+                Value = p.ProductoId.ToString(),
+                Text = $"{p.Nombre} (Stock actual: {p.Stock})"
+            }).ToList();
+            return View(new StockTransformationFormViewModel());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> TransformStock(StockTransformationFormViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                var productos = await _adminDbService.GetActiveProductsForSelectAsync();
+                ViewBag.Productos = productos.Select(p => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+                {
+                    Value = p.ProductoId.ToString(),
+                    Text = $"{p.Nombre} (Stock actual: {p.Stock})"
+                }).ToList();
+                return View(model);
+            }
+
+            try
+            {
+                var usuarioId = HttpContext.Session.GetInt32("UserId") ?? 0;
+                var usuarioNombre = HttpContext.Session.GetString("UserFullName") ?? "Administrador";
+                await _adminDbService.RegisterStockTransformationAsync(model, usuarioId, usuarioNombre);
+
+                await RegistrarAuditoriaAsync(
+                    "Transformacion",
+                    "Inventario",
+                    $"Se transformó stock del producto #{model.ProductoOrigenId} ({model.CantidadOrigen}u) al producto #{model.ProductoDestinoId} ({model.CantidadDestino}u).");
+
+                TempData["SuccessMessage"] = "Transformación registrada correctamente.";
+                return RedirectToAction(nameof(Movements));
+            }
+            catch (InvalidOperationException ex)
+            {
+                ModelState.AddModelError(string.Empty, ex.Message);
+            }
+            catch (Exception)
+            {
+                ModelState.AddModelError(string.Empty, "Ocurrió un error al registrar la transformación. Intente nuevamente.");
+            }
+
+            var productosRetry = await _adminDbService.GetActiveProductsForSelectAsync();
+            ViewBag.Productos = productosRetry.Select(p => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem
+            {
+                Value = p.ProductoId.ToString(),
+                Text = $"{p.Nombre} (Stock actual: {p.Stock})"
+            }).ToList();
+            return View(model);
+        }
+
         private async Task RegistrarAuditoriaAsync(string accion, string modulo, string descripcion)
         {
             await _adminDbService.CreateAuditLogAsync(
