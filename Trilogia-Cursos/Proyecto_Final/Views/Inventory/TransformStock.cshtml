@@ -1,0 +1,72 @@
+﻿@model Proyecto_Final.Models.Admin.StockTransformationFormViewModel
+@{
+    ViewData["Title"] = "Transformar producto";
+    var productos = ViewBag.Productos as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem> ?? new();
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header">
+                <h2 class="mb-2">Transformar producto</h2>
+                <p class="mb-0">Convierte stock de una presentación a otra (ej. de Caja de 12u a Unidades).</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 mt-4">
+        <div class="col-lg-6">
+            <div class="kpi-card p-4" style="border:1px solid #eee;border-radius:12px;">
+                <form asp-action="TransformStock" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="form-group">
+                        <label asp-for="ProductoOrigenId"></label>
+                        <select asp-for="ProductoOrigenId" asp-items="productos" class="form-control">
+                            <option value="">-- Seleccione el producto de origen --</option>
+                        </select>
+                        <span asp-validation-for="ProductoOrigenId" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="CantidadOrigen"></label>
+                        <input asp-for="CantidadOrigen" type="number" min="1" class="form-control" />
+                        <span asp-validation-for="CantidadOrigen" class="text-danger"></span>
+                    </div>
+
+                    <hr />
+
+                    <div class="form-group">
+                        <label asp-for="ProductoDestinoId"></label>
+                        <select asp-for="ProductoDestinoId" asp-items="productos" class="form-control">
+                            <option value="">-- Seleccione el producto de destino --</option>
+                        </select>
+                        <span asp-validation-for="ProductoDestinoId" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="CantidadDestino"></label>
+                        <input asp-for="CantidadDestino" type="number" min="1" class="form-control" />
+                        <span asp-validation-for="CantidadDestino" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Motivo"></label>
+                        <textarea asp-for="Motivo" class="form-control" rows="2"></textarea>
+                        <span asp-validation-for="Motivo" class="text-danger"></span>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a asp-action="Movements" class="btn btn-outline-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-primary">Transformar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
