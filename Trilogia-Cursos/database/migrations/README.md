@@ -48,7 +48,7 @@ Cada migracion debe indicar su estrategia de rollback antes de ejecutarse. Los c
 
 Los scripts no incluyen `USE`: el ejecutor debe seleccionar explícitamente la base antes de iniciar. Los hashes escritos por 0002–0011 son hashes de manifiesto para identificar versión; la evidencia de despliegue debe registrar además el SHA-256 real del archivo y actualizar el ledger si corresponde.
 
-0007–0011 no se ejecutaron al preparar esta rama. Antes de aplicarlas se requiere BACPAC verificado, revisión del PR, un ejecutor designado y QA posterior. `database_Esteban/cu222_gastos_presupuesto.sql` es sólo referencia histórica: 0010 incorpora de forma aditiva los datos legados si la tabla ya existe.
+Al 23 de julio de 2026, Azure DEV registra 0007–0011 como aplicadas y se verificaron sus objetos, columnas principales, índices, constraints y permisos. No deben volver a ejecutarse en esa base. Esta evidencia no demuestra que 0002–0006 estén aplicadas ni convierte el ledger histórico en una secuencia completa. Antes de cualquier corrección se requiere BACPAC, ejecutor único, script incremental nuevo y QA posterior. `database_Esteban/cu222_gastos_presupuesto.sql` es sólo referencia histórica.
 
 ## Evidencia privada legada
 

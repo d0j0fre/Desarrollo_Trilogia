@@ -2,7 +2,7 @@
 
 ## Estado verificable
 
-Las cinco historias están implementadas en una rama apilada sobre el PR #112. Build, pruebas automatizadas y sintaxis SQL pasan localmente. No se aplicaron migraciones ni se ejecutó QA con SQL Server, navegador, scheduler, SMTP o Azure; los issues permanecen abiertos mientras el PR sea draft y falte esa evidencia.
+Las cinco historias están implementadas en una rama apilada sobre el PR #112. Build, pruebas automatizadas y sintaxis SQL pasan. Las migraciones 0007–0011 aparecen aplicadas en Azure DEV y sus objetos, columnas principales, índices, constraints y permisos fueron verificados independientemente el 23 de julio de 2026. Falta completar el login con una contraseña de prueba autorizada y ejecutar el QA funcional autenticado; los issues permanecen abiertos.
 
 ## Arquitectura entregada
 
@@ -16,8 +16,8 @@ Las cinco historias están implementadas en una rama apilada sobre el PR #112. B
 
 1. Revisar y aprobar el PR apilado y confirmar que PR #112 sigue como base.
 2. Crear y verificar BACPAC de la base objetivo.
-3. Designar un único ejecutor y aplicar 0007, 0008, 0009, 0010 y 0011, después de 0001–0006.
-4. Registrar SHA-256 real, ejecutor, ambiente y resultado en `SchemaMigrationHistory`.
+3. No volver a ejecutar 0007–0011 en Azure DEV. Revisar la evidencia existente del ejecutor y confirmar backup/rollback.
+4. Verificar por separado las dependencias 0002–0006; no registrarlas como aplicadas sin objetos reales.
 5. Configurar `PrivateStorage__RootPath` fuera de `wwwroot`, con persistencia y backup.
 6. Mantener correo deshabilitado hasta validar SMTP; la alerta interna funciona sin correo.
 7. Ejecutar el bloque Sprint 4 de `docs/qa-final.md`; adjuntar evidencia a los issues #74, #75, #79, #80 y #81.

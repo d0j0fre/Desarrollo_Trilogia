@@ -1,5 +1,17 @@
 # QA final de la rama de saneamiento
 
+## Diagnóstico Azure y autenticación — 23 de julio de 2026
+
+- Azure efectivo: servidor DEV y base `DistribuidoraJJ_DB_DEV` confirmados sin exponer la connection string.
+- Administradores: dos cuentas activas con perfil `Administrador`; no se seleccionaron contraseñas.
+- `sp_Auth_ValidateUser`: firma y seis columnas compatibles; ejecutable con la credencial almacenada.
+- Causa del `401`: la credencial presentada no coincide con el valor que continúa almacenado; el restablecimiento citado no quedó comprobado en esta cuenta/base.
+- Correcciones: parámetros tipados, contraseña sin `Trim()`, mapeo por nombres y logging seguro.
+- Migraciones 0007–0011: ledger y objetos reales verificados; 55 columnas obligatorias sin faltantes, constraints confiables y permisos Administrador completos.
+- Almacenamiento: `documents` y `expense-receipts`, cada uno con `staging/files`, creados y escribibles fuera de `wwwroot` al propagar la configuración al proceso.
+- Navegador: login carga, credencial inválida muestra mensaje genérico y las cinco rutas redirigen a login sin sesión.
+- Login válido y flujos autenticados: pendientes de contraseña de prueba definida fuera del repositorio.
+
 ## Resultado automatizado local
 
 Ejecutado el 22 de julio de 2026:
@@ -7,7 +19,7 @@ Ejecutado el 22 de julio de 2026:
 - Escaneo de secretos: aprobado.
 - Restauración .NET: aprobada.
 - Build Release: 0 errores y 0 advertencias.
-- Tests: 87 aprobados, 0 fallidos, 0 omitidos.
+- Tests de la entrega original: 87 aprobados. Después del diagnóstico de autenticación: 92 aprobados, 0 fallidos, 0 omitidos.
 - SQL: 75 archivos y 876 lotes analizados con ScriptDom, 0 errores.
 - `git diff --check`: aprobado.
 
@@ -16,7 +28,7 @@ Estos resultados no ejecutan migraciones ni sustituyen las pruebas con SQL Serve
 ## Preparación obligatoria de entorno
 
 - [ ] Crear BACPAC verificable de la base objetivo.
-- [ ] Aplicar 0001–0011, en orden, con un único ejecutor y registrar SHA-256 real.
+- [ ] No repetir 0007–0011 en Azure DEV; verificar por separado 0002–0006 antes de cualquier aplicación.
 - [ ] Configurar `ConnectionStrings__DefaultConnection`.
 - [ ] Configurar correo solo después de rotar la credencial expuesta.
 - [ ] Configurar `EvidenceStorage__RootPath` en almacenamiento persistente fuera de `wwwroot`.
@@ -38,7 +50,7 @@ Estos resultados no ejecutan migraciones ni sustituyen las pruebas con SQL Serve
 
 ## QA Sprint 4 — Danny — CU-201, CU-202, CU-221, CU-222 y CU-223
 
-Precondiciones: migraciones 0001–0011 aplicadas en una base desechable o DEV autorizado, `PrivateStorage__RootPath` persistente fuera de `wwwroot` y perfiles con/sin cada permiso. Usar datos genéricos, nunca documentos reales.
+Precondiciones: 0007–0011 verificadas en DEV, dependencias históricas auditadas, `PrivateStorage__RootPath` persistente fuera de `wwwroot`, una credencial de prueba autorizada y perfiles con/sin cada permiso. Usar datos genéricos, nunca documentos reales.
 
 | Bloque | Rol requerido | Resultado esperado | Resultado obtenido | Evidencia pendiente | Estado |
 |---|---|---|---|---|---|

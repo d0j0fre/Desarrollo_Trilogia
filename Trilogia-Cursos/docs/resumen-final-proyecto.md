@@ -2,9 +2,9 @@
 
 ## Estado
 
-La rama base `codex/p0-saneamiento-integracion-total-20260722` sanea la configuración y recupera CI. Encima, `codex/danny-sprint4-cu201-cu202-cu221-cu222-cu223` completa las cinco historias asignadas a Danny. El conjunto compila sin errores ni advertencias, aprueba 87 pruebas y valida sintácticamente 75 scripts SQL (876 lotes).
+La rama base `codex/p0-saneamiento-integracion-total-20260722` sanea la configuración y recupera CI. Encima, `codex/danny-sprint4-cu201-cu202-cu221-cu222-cu223` completa las cinco historias asignadas a Danny. El conjunto compila sin errores ni advertencias, aprueba 92 pruebas y valida sintácticamente los scripts SQL recursivos.
 
-El trabajo está **listo para revisión con acciones externas pendientes**. No se han aplicado migraciones ni ejecutado smoke tests de navegador/Azure sobre esta versión.
+El trabajo está **pendiente de QA autenticado**. Las migraciones 0007–0011 y sus objetos se verificaron en Azure DEV; falta confirmar una contraseña de prueba autorizada y ejecutar los flujos funcionales en navegador.
 
 ## Cambios principales
 
@@ -48,3 +48,12 @@ Dependen del ledger `0001_create_schema_migration_history.sql` y del esquema bas
 3. Mantener la protección activa de `main` y revisar sus contextos si cambia el workflow.
 4. Ejecutar 0001–0011 y QA funcional/negativo en SQL Server.
 5. Desplegar a Azure y repetir smoke tests; la validación Azure antigua es histórica.
+## Diagnóstico Sprint 4 y autenticación Azure — 23 de julio de 2026
+
+- El API y MVC apuntan a Azure DEV y a la base `DistribuidoraJJ_DB_DEV`; el MVC consume el API local esperado.
+- La cuenta administrativa informada existe, está activa y tiene perfil Administrador.
+- `sp_Auth_ValidateUser` tiene la firma y resultado esperados. El `401` observado corresponde a una credencial que no coincide con el valor directo almacenado; no se cambió la contraseña.
+- Se corrigieron transformación de contraseña, tipos SQL inferidos, lectura posicional y logging silencioso.
+- Azure contiene 38 credenciales directas, ninguna con hash reconocible y sin columna `ContrasenaHash`; se documentó una migración gradual basada en restablecimiento, no una conversión improvisada.
+- 0007–0011 y sus objetos/permisos Sprint 4 fueron verificados en Azure. El QA funcional autenticado sigue pendiente.
+- Detalle reproducible: `docs/diagnostico-login-azure-sprint4-20260724.md`.

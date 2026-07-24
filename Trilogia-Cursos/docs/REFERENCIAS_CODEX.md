@@ -2,14 +2,15 @@
 
 Este es el índice operativo vigente. El código y el último `origin/main` prevalecen sobre notas históricas.
 
-## Estado al 22 de julio de 2026
+## Estado al 23 de julio de 2026
 
 - Rama de integración: `codex/p0-saneamiento-integracion-total-20260722`, basada en el último `origin/main`.
 - Los cuatro `appsettings` compartidos están sanitizados; la configuración funcional no vive en Git.
 - La credencial SMTP detectada debe revocarse o rotarse fuera del repositorio. La limpieza del historial requiere coordinación y no se ejecuta automáticamente.
 - CI separa secretos, SQL, build y tests; `final-gate` consolida el resultado.
-- Las migraciones incrementales vigentes son 0001–0011. Las 0002–0011 están validadas sintácticamente, pero no se han aplicado como parte de estas ramas.
-- Sprint 4 de Danny (CU-201, CU-202, CU-221, CU-222 y CU-223) está implementado en la rama apilada `codex/danny-sprint4-cu201-cu202-cu221-cu222-cu223`; falta QA de SQL Server/navegador/Azure.
+- Las migraciones incrementales vigentes son 0001–0011. En Azure DEV se verificaron 0007–0011 como aplicadas; esto no demuestra que 0002–0006 se hayan ejecutado ni que el historial completo sea consecutivo.
+- Sprint 4 de Danny está implementado y sus objetos/permisos 0007–0011 fueron verificados en Azure. Falta login con una contraseña de prueba autorizada y QA funcional autenticado.
+- El diagnóstico de autenticación está en `docs/diagnostico-login-azure-sprint4-20260724.md`: cuenta y procedimiento son correctos; la credencial presentada no coincide con el valor directo almacenado y no se modificaron contraseñas.
 - Chat, evidencia privada, checkout/promociones y garantías requieren aplicar migraciones y efectuar QA de entorno antes de declararlos operativos.
 - La protección de `main` está activa y documentada en `docs/configuracion-proteccion-main.md`.
 - Las validaciones Azure documentadas anteriormente son evidencia histórica y no validan esta rama.
