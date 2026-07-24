@@ -136,6 +136,19 @@
                         <div class="navbar-nav ml-lg-auto py-0 main-nav-clean main-nav-2027">
                             <a asp-controller="Home" asp-action="Index" class="nav-item nav-link"><i class="fa fa-home mr-1"></i>Inicio</a>
 
+                            @if (!isAdmin && (isGerente || isCajero))
+                            {
+                                <div class="nav-item dropdown">
+                                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown"><i class="fa fa-coins mr-1"></i>Finanzas</a>
+                                    <div class="dropdown-menu border-0 rounded-0 m-0">
+                                        <a asp-controller="Budgets" asp-action="Index" class="dropdown-item">Presupuestos anuales</a>
+                                        <a asp-controller="Expenses" asp-action="Index" class="dropdown-item">Gastos operativos</a>
+                                        <a asp-controller="BudgetComparison" asp-action="Index" class="dropdown-item">Presupuesto vs. real</a>
+                                        @if (isGerente) { <a asp-controller="Documents" asp-action="Alerts" class="dropdown-item"><i class="fa fa-bell text-warning mr-1"></i>Alertas documentales</a> }
+                                    </div>
+                                </div>
+                            }
+
                             @if (isAdmin)
                             {
                                 <div class="nav-item dropdown admin-nav-dropdown admin-accordion-dropdown">
@@ -204,8 +217,9 @@
                                                 </summary>
                                                 <div class="acc-sec__list">
                                                     <a asp-controller="Finance" asp-action="Index" class="acc-item"><i class="fa fa-cash-register"></i><span>Liquidación de cobros</span></a>
+                                                    <a asp-controller="Budgets" asp-action="Index" class="acc-item"><i class="fa fa-wallet"></i><span>Presupuestos anuales</span></a>
                                                     <a asp-controller="Expenses" asp-action="Index" class="acc-item"><i class="fa fa-receipt"></i><span>Gastos operativos</span></a>
-                                                    <a asp-controller="Expenses" asp-action="Accounts" class="acc-item"><i class="fa fa-wallet"></i><span>Cuentas presupuestarias</span></a>
+                                                    <a asp-controller="BudgetComparison" asp-action="Index" class="acc-item"><i class="fa fa-chart-bar"></i><span>Presupuesto vs. real</span></a>
                                                     <a asp-controller="FinancialReportAdmin" asp-action="Index" class="acc-item"><i class="fa fa-chart-line"></i><span>Ingresos y Egresos</span></a>
                                                 </div>
                                             </details>
@@ -259,6 +273,8 @@
                                                 <div class="acc-sec__list">
                                                     <a asp-controller="Roles" asp-action="Index" class="acc-item"><i class="fa fa-user-shield"></i><span>Roles</span></a>
                                                     <a asp-controller="Permissions" asp-action="Index" class="acc-item"><i class="fa fa-key"></i><span>Permisos</span></a>
+                                                    <a asp-controller="Documents" asp-action="Index" class="acc-item"><i class="fa fa-folder-open"></i><span>Documentos digitales</span></a>
+                                                    <a asp-controller="Documents" asp-action="Alerts" class="acc-item"><i class="fa fa-bell"></i><span>Alertas documentales</span></a>
                                                     <a asp-controller="Audit" asp-action="Index" class="acc-item"><i class="fa fa-history"></i><span>Auditoría</span></a>
                                                 </div>
                                             </details>

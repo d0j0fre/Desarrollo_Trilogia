@@ -1,0 +1,5 @@
+@model Proyecto_Final.Models.Admin.DocumentFormViewModel
+@{ ViewData["Title"] = "Editar documento"; }
+<div class="container py-4"><div class="d-flex justify-content-between align-items-center mb-3"><h2>Editar metadatos</h2><a asp-action="Details" asp-route-id="@Model.DocumentId" class="btn btn-outline-secondary">Volver</a></div>
+<div class="card shadow-sm"><div class="card-body"><form asp-action="Edit" method="post">@Html.AntiForgeryToken()<partial name="_Form" model="Model" /><button class="btn btn-primary">Guardar cambios</button></form></div></div></div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

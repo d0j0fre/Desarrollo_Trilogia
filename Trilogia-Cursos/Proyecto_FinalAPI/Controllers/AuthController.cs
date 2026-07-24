@@ -9,13 +9,13 @@ namespace Proyecto_FinalAPI.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
-        private readonly AccountApiDbService _accountApiDbService;
+        private readonly IAccountApiDbService _accountApiDbService;
         private readonly EmailService _emailService;
         private readonly LoginAttemptLimiter _loginAttemptLimiter;
         private readonly PasswordRecoveryAttemptLimiter _passwordRecoveryAttemptLimiter;
 
         public AuthController(
-            AccountApiDbService accountApiDbService,
+            IAccountApiDbService accountApiDbService,
             EmailService emailService,
             LoginAttemptLimiter loginAttemptLimiter,
             PasswordRecoveryAttemptLimiter passwordRecoveryAttemptLimiter)
