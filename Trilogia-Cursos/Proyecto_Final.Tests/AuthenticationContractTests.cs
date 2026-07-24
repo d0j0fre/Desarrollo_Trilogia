@@ -61,7 +61,7 @@ public sealed class AuthenticationContractTests
     [Fact]
     public async Task Login_ForwardsPasswordUnchangedAndReturnsAdministrator()
     {
-        const string password = " value with spaces ";
+        const string credentialInput = " value with spaces ";
         string? forwardedPassword = null;
         var database = new Mock<IAccountApiDbService>();
         database
@@ -83,14 +83,14 @@ public sealed class AuthenticationContractTests
         var result = await controller.Login(new LoginApiRequest
         {
             Email = "admin@example.com",
-            Password = password
+            Password = credentialInput
         });
 
         var ok = Assert.IsType<OkObjectResult>(result);
         var response = Assert.IsType<Proyecto_FinalAPI.Controllers.AuthResult>(ok.Value);
         Assert.True(response.Success);
         Assert.Equal("Administrador", response.Role);
-        Assert.Equal(password, forwardedPassword);
+        Assert.Equal(credentialInput, forwardedPassword);
     }
 
     [Fact]
@@ -104,11 +104,12 @@ public sealed class AuthenticationContractTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((ApiUser?)null);
         var controller = CreateController(database.Object);
+        const string invalidCredential = "invalid";
 
         var result = await controller.Login(new LoginApiRequest
         {
             Email = "unknown@example.com",
-            Password = "invalid"
+            Password = invalidCredential
         });
 
         var unauthorized = Assert.IsType<UnauthorizedObjectResult>(result);
