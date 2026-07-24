@@ -180,6 +180,9 @@ builder.Services.AddHttpClient<AccountApiService>(client =>
 
 var app = builder.Build();
 
+// Valida la ruta y crea la estructura privada al iniciar, no en la primera carga.
+_ = app.Services.GetRequiredService<IPrivateFileStorageService>();
+
 // Pipeline
 if (!app.Environment.IsDevelopment())
 {
