@@ -430,62 +430,31 @@ namespace Proyecto_Final.Services
             }
         }
 
-        // CU-182 — Transformación de producto: descuenta stock del origen y lo suma al destino en una sola transacción.
+        // CU-182 — Transformación de producto: delega toda la lógica al SP atómico
+        // (evita condición de carrera entre transformaciones simultáneas del mismo producto).
         public async Task RegisterStockTransformationAsync(StockTransformationFormViewModel model, int usuarioId, string usuarioNombre)
         {
-            if (model.ProductoOrigenId == model.ProductoDestinoId)
-                throw new InvalidOperationException("El producto de origen y destino deben ser diferentes.");
+            StockTransformationValidator.Validate(model);
 
             await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_TransformStock", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.AddWithValue("@ProductoOrigenId", model.ProductoOrigenId);
+            command.Parameters.AddWithValue("@CantidadOrigen", model.CantidadOrigen);
+            command.Parameters.AddWithValue("@ProductoDestinoId", model.ProductoDestinoId);
+            command.Parameters.AddWithValue("@CantidadDestino", model.CantidadDestino);
+            command.Parameters.AddWithValue("@Motivo", string.IsNullOrWhiteSpace(model.Motivo) ? DBNull.Value : model.Motivo.Trim());
+            command.Parameters.AddWithValue("@UsuarioId", usuarioId);
+            command.Parameters.AddWithValue("@UsuarioNombre", usuarioNombre);
+
             await connection.OpenAsync();
-            await using var transaction = await connection.BeginTransactionAsync();
             try
             {
-                // Descontar del producto origen (ej. Caja de 12u).
-                string origenNombre;
-                int origenStockAnterior;
-                await using (var selectCommand = new SqlCommand("dbo.sp_Admin_GetActiveProductForMovement", connection, (SqlTransaction)transaction))
-                {
-                    selectCommand.CommandType = CommandType.StoredProcedure;
-                    selectCommand.Parameters.AddWithValue("@ProductoId", model.ProductoOrigenId);
-                    await using var reader = await selectCommand.ExecuteReaderAsync();
-                    if (!await reader.ReadAsync()) throw new InvalidOperationException("El producto de origen no existe o está inactivo.");
-                    origenNombre = reader.IsDBNull(0) ? "Producto" : reader.GetString(0);
-                    origenStockAnterior = reader.IsDBNull(1) ? 0 : reader.GetInt32(1);
-                }
-
-                int origenStockNuevo = origenStockAnterior - model.CantidadOrigen;
-                if (origenStockNuevo < 0) throw new InvalidOperationException("No hay suficiente stock del producto de origen para transformar.");
-
-                await UpdateProductStockInternalAsync(connection, (SqlTransaction)transaction, model.ProductoOrigenId, origenStockNuevo);
-
-                // Sumar al producto destino (ej. Unidad).
-                string destinoNombre;
-                int destinoStockAnterior;
-                await using (var selectCommand = new SqlCommand("dbo.sp_Admin_GetActiveProductForMovement", connection, (SqlTransaction)transaction))
-                {
-                    selectCommand.CommandType = CommandType.StoredProcedure;
-                    selectCommand.Parameters.AddWithValue("@ProductoId", model.ProductoDestinoId);
-                    await using var reader = await selectCommand.ExecuteReaderAsync();
-                    if (!await reader.ReadAsync()) throw new InvalidOperationException("El producto de destino no existe o está inactivo.");
-                    destinoNombre = reader.IsDBNull(0) ? "Producto" : reader.GetString(0);
-                    destinoStockAnterior = reader.IsDBNull(1) ? 0 : reader.GetInt32(1);
-                }
-
-                int destinoStockNuevo = destinoStockAnterior + model.CantidadDestino;
-                await UpdateProductStockInternalAsync(connection, (SqlTransaction)transaction, model.ProductoDestinoId, destinoStockNuevo);
-
-                var motivoBase = string.IsNullOrWhiteSpace(model.Motivo) ? "Transformación de producto" : model.Motivo!.Trim();
-
-                await CreateMovementInternalAsync(connection, (SqlTransaction)transaction, model.ProductoOrigenId, "TransformacionSalida", model.CantidadOrigen, origenStockAnterior, origenStockNuevo, $"{motivoBase} (hacia {destinoNombre})", usuarioId, usuarioNombre, origenNombre);
-                await CreateMovementInternalAsync(connection, (SqlTransaction)transaction, model.ProductoDestinoId, "TransformacionEntrada", model.CantidadDestino, destinoStockAnterior, destinoStockNuevo, $"{motivoBase} (desde {origenNombre})", usuarioId, usuarioNombre, destinoNombre);
-
-                await transaction.CommitAsync();
+                await command.ExecuteNonQueryAsync();
             }
-            catch
+            catch (SqlException ex)
             {
-                await transaction.RollbackAsync();
-                throw;
+                // El SP usa RAISERROR con severidad 16 para errores de negocio (stock insuficiente, producto inválido, etc.).
+                throw new InvalidOperationException(ex.Message);
             }
         }
 
@@ -553,9 +522,7 @@ namespace Proyecto_Final.Services
         // CU-181 — Crea el combo y sus líneas de componentes en una sola transacción.
         public async Task<int> CreateComboAsync(ComboFormViewModel model, int usuarioId, string usuarioNombre)
         {
-            var seleccionados = model.Productos.Where(p => p.Seleccionado && p.Cantidad > 0).ToList();
-            if (seleccionados.Count == 0)
-                throw new InvalidOperationException("Debe seleccionar al menos un producto para armar el combo.");
+            var seleccionados = ComboValidator.GetSelectedProducts(model);
 
             await using var connection = new SqlConnection(_connectionString);
             await connection.OpenAsync();

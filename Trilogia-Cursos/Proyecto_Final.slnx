@@ -1,4 +1,5 @@
 <Solution>
+  <Project Path="Proyecto_Final.Tests/Proyecto_Final.Tests.csproj" Id="ef612154-9dcb-45a5-816e-81eac7ed8062" />
   <Project Path="Proyecto_Final/Proyecto_Final.csproj" />
   <Project Path="Proyecto_FinalAPI/Proyecto_FinalAPI.csproj" />
 </Solution>
