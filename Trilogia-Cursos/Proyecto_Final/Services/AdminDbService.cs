@@ -430,6 +430,183 @@ namespace Proyecto_Final.Services
             }
         }
 
+        // CU-182 — Transformación de producto: descuenta stock del origen y lo suma al destino en una sola transacción.
+        public async Task RegisterStockTransformationAsync(StockTransformationFormViewModel model, int usuarioId, string usuarioNombre)
+        {
+            if (model.ProductoOrigenId == model.ProductoDestinoId)
+                throw new InvalidOperationException("El producto de origen y destino deben ser diferentes.");
+
+            await using var connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
+            await using var transaction = await connection.BeginTransactionAsync();
+            try
+            {
+                // Descontar del producto origen (ej. Caja de 12u).
+                string origenNombre;
+                int origenStockAnterior;
+                await using (var selectCommand = new SqlCommand("dbo.sp_Admin_GetActiveProductForMovement", connection, (SqlTransaction)transaction))
+                {
+                    selectCommand.CommandType = CommandType.StoredProcedure;
+                    selectCommand.Parameters.AddWithValue("@ProductoId", model.ProductoOrigenId);
+                    await using var reader = await selectCommand.ExecuteReaderAsync();
+                    if (!await reader.ReadAsync()) throw new InvalidOperationException("El producto de origen no existe o está inactivo.");
+                    origenNombre = reader.IsDBNull(0) ? "Producto" : reader.GetString(0);
+                    origenStockAnterior = reader.IsDBNull(1) ? 0 : reader.GetInt32(1);
+                }
+
+                int origenStockNuevo = origenStockAnterior - model.CantidadOrigen;
+                if (origenStockNuevo < 0) throw new InvalidOperationException("No hay suficiente stock del producto de origen para transformar.");
+
+                await UpdateProductStockInternalAsync(connection, (SqlTransaction)transaction, model.ProductoOrigenId, origenStockNuevo);
+
+                // Sumar al producto destino (ej. Unidad).
+                string destinoNombre;
+                int destinoStockAnterior;
+                await using (var selectCommand = new SqlCommand("dbo.sp_Admin_GetActiveProductForMovement", connection, (SqlTransaction)transaction))
+                {
+                    selectCommand.CommandType = CommandType.StoredProcedure;
+                    selectCommand.Parameters.AddWithValue("@ProductoId", model.ProductoDestinoId);
+                    await using var reader = await selectCommand.ExecuteReaderAsync();
+                    if (!await reader.ReadAsync()) throw new InvalidOperationException("El producto de destino no existe o está inactivo.");
+                    destinoNombre = reader.IsDBNull(0) ? "Producto" : reader.GetString(0);
+                    destinoStockAnterior = reader.IsDBNull(1) ? 0 : reader.GetInt32(1);
+                }
+
+                int destinoStockNuevo = destinoStockAnterior + model.CantidadDestino;
+                await UpdateProductStockInternalAsync(connection, (SqlTransaction)transaction, model.ProductoDestinoId, destinoStockNuevo);
+
+                var motivoBase = string.IsNullOrWhiteSpace(model.Motivo) ? "Transformación de producto" : model.Motivo!.Trim();
+
+                await CreateMovementInternalAsync(connection, (SqlTransaction)transaction, model.ProductoOrigenId, "TransformacionSalida", model.CantidadOrigen, origenStockAnterior, origenStockNuevo, $"{motivoBase} (hacia {destinoNombre})", usuarioId, usuarioNombre, origenNombre);
+                await CreateMovementInternalAsync(connection, (SqlTransaction)transaction, model.ProductoDestinoId, "TransformacionEntrada", model.CantidadDestino, destinoStockAnterior, destinoStockNuevo, $"{motivoBase} (desde {origenNombre})", usuarioId, usuarioNombre, destinoNombre);
+
+                await transaction.CommitAsync();
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+
+        // CU-181 — Lista todos los combos con su disponibilidad calculada.
+        public async Task<List<ComboListItemViewModel>> GetCombosAsync()
+        {
+            var combos = new List<ComboListItemViewModel>();
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_GetCombos", connection) { CommandType = CommandType.StoredProcedure };
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                combos.Add(new ComboListItemViewModel
+                {
+                    ComboId = reader.GetInt32(0),
+                    Nombre = reader.GetString(1),
+                    Descripcion = reader.IsDBNull(2) ? null : reader.GetString(2),
+                    Precio = reader.GetDecimal(3),
+                    Activo = reader.GetBoolean(4),
+                    FechaCreacion = reader.GetDateTime(5),
+                    RegistradoPorNombre = reader.GetString(6),
+                    CantidadProductos = reader.GetInt32(7),
+                    StockDisponibleCombo = reader.IsDBNull(8) ? 0 : reader.GetInt32(8)
+                });
+            }
+            return combos;
+        }
+
+        // CU-181 — Detalle de un combo: encabezado + sus productos componentes.
+        public async Task<ComboDetailViewModel?> GetComboDetailAsync(int comboId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_GetComboDetail", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.AddWithValue("@ComboId", comboId);
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync()) return null;
+            var model = new ComboDetailViewModel
+            {
+                ComboId = reader.GetInt32(0),
+                Nombre = reader.GetString(1),
+                Descripcion = reader.IsDBNull(2) ? null : reader.GetString(2),
+                Precio = reader.GetDecimal(3),
+                Activo = reader.GetBoolean(4),
+                RegistradoPorNombre = reader.GetString(5),
+                FechaCreacion = reader.GetDateTime(6)
+            };
+
+            await reader.NextResultAsync();
+            while (await reader.ReadAsync())
+            {
+                model.Componentes.Add(new ComboDetailLineViewModel
+                {
+                    ProductoId = reader.GetInt32(1),
+                    ProductoNombre = reader.GetString(2),
+                    Cantidad = reader.GetInt32(3),
+                    StockDisponible = reader.GetInt32(4)
+                });
+            }
+            return model;
+        }
+
+        // CU-181 — Crea el combo y sus líneas de componentes en una sola transacción.
+        public async Task<int> CreateComboAsync(ComboFormViewModel model, int usuarioId, string usuarioNombre)
+        {
+            var seleccionados = model.Productos.Where(p => p.Seleccionado && p.Cantidad > 0).ToList();
+            if (seleccionados.Count == 0)
+                throw new InvalidOperationException("Debe seleccionar al menos un producto para armar el combo.");
+
+            await using var connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
+            await using var transaction = await connection.BeginTransactionAsync();
+            try
+            {
+                int nuevoComboId;
+                await using (var command = new SqlCommand("dbo.sp_Admin_CreateCombo", connection, (SqlTransaction)transaction))
+                {
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.Parameters.AddWithValue("@Nombre", model.Nombre.Trim());
+                    command.Parameters.AddWithValue("@Descripcion", string.IsNullOrWhiteSpace(model.Descripcion) ? DBNull.Value : model.Descripcion.Trim());
+                    command.Parameters.AddWithValue("@Precio", model.Precio);
+                    command.Parameters.AddWithValue("@RegistradoPorUsuarioId", usuarioId);
+                    command.Parameters.AddWithValue("@RegistradoPorNombre", usuarioNombre);
+                    var outputParam = new SqlParameter("@NuevoComboId", SqlDbType.Int) { Direction = ParameterDirection.Output };
+                    command.Parameters.Add(outputParam);
+                    await command.ExecuteNonQueryAsync();
+                    nuevoComboId = (int)outputParam.Value;
+                }
+
+                foreach (var producto in seleccionados)
+                {
+                    await using var detailCommand = new SqlCommand("dbo.sp_Admin_AddComboDetail", connection, (SqlTransaction)transaction);
+                    detailCommand.CommandType = CommandType.StoredProcedure;
+                    detailCommand.Parameters.AddWithValue("@ComboId", nuevoComboId);
+                    detailCommand.Parameters.AddWithValue("@ProductoId", producto.ProductoId);
+                    detailCommand.Parameters.AddWithValue("@Cantidad", producto.Cantidad);
+                    await detailCommand.ExecuteNonQueryAsync();
+                }
+
+                await transaction.CommitAsync();
+                return nuevoComboId;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+
+        // CU-181 — Activa/desactiva un combo (no lo borra, para conservar el histórico).
+        public async Task ToggleComboStatusAsync(int comboId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_ToggleComboStatus", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.AddWithValue("@ComboId", comboId);
+            await connection.OpenAsync();
+            await command.ExecuteNonQueryAsync();
+        }
+
         public async Task<List<OrderAdminListItemViewModel>> GetOrdersAsync(string? estado)
         {
             var pedidos = new List<OrderAdminListItemViewModel>();

@@ -1,0 +1,75 @@
+﻿@model Proyecto_Final.Models.Admin.ComboFormViewModel
+@{
+    ViewData["Title"] = "Nuevo combo";
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <h2 class="mb-2">Nuevo combo</h2>
+            <p class="mb-0">Selecciona los productos y la cantidad de cada uno que compone el paquete.</p>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 mt-4">
+        <div class="col-lg-8">
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="form-group">
+                    <label asp-for="Nombre"></label>
+                    <input asp-for="Nombre" class="form-control" />
+                    <span asp-validation-for="Nombre" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Descripcion"></label>
+                    <textarea asp-for="Descripcion" class="form-control" rows="2"></textarea>
+                    <span asp-validation-for="Descripcion" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Precio"></label>
+                    <input asp-for="Precio" type="number" step="0.01" min="0.01" class="form-control" />
+                    <span asp-validation-for="Precio" class="text-danger"></span>
+                </div>
+
+                <hr />
+                <h5>Productos del combo</h5>
+                <table class="table table-sm">
+                    <thead>
+                        <tr><th></th><th>Producto</th><th>Stock actual</th><th>Cantidad en el combo</th></tr>
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < Model.Productos.Count; i++)
+                        {
+                            <tr>
+                                <td>
+                                    <input type="hidden" asp-for="Productos[i].ProductoId" />
+                                    <input type="hidden" asp-for="Productos[i].Nombre" />
+                                    <input type="hidden" asp-for="Productos[i].StockActual" />
+                                    <input type="checkbox" asp-for="Productos[i].Seleccionado" />
+                                </td>
+                                <td>@Model.Productos[i].Nombre</td>
+                                <td>@Model.Productos[i].StockActual</td>
+                                <td style="width:120px;">
+                                    <input asp-for="Productos[i].Cantidad" type="number" min="1" class="form-control form-control-sm" />
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">Crear combo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
