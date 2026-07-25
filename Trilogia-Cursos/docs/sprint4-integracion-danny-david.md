@@ -1,0 +1,129 @@
+# Integración Sprint 4 — Danny y David
+
+## Alcance y trazabilidad
+
+La rama `codex/integracion-sprint4-danny-david-final` parte de
+`codex/p0-saneamiento-integracion-total-20260722`, porque el PR #112 continúa
+abierto. La integración conserva los trece commits de Danny y los dos commits
+de David mediante merges explícitos. Antes de integrar se crearon las
+referencias locales `backup/pre-integracion-danny`,
+`backup/pre-integracion-david` y `backup/pre-integracion-final`.
+
+Los únicos conflictos estuvieron en `Proyecto_Final/appsettings.json` y
+`Proyecto_Final/appsettings.Development.json`. Se conservaron las plantillas
+sanitizadas que incluyen almacenamiento privado y alertas documentales; la
+versión entrante solo aportaba una plantilla comentada y perdía esas secciones.
+No se incorporaron credenciales ni valores operativos.
+
+## Auditoría inicial — 25 de julio de 2026
+
+### Evidencia automatizada de partida
+
+- `dotnet restore Proyecto_Final.slnx`: aprobado.
+- `dotnet build Proyecto_Final.slnx --configuration Release --no-restore`:
+  aprobado, 0 errores y 0 advertencias.
+- `dotnet test Proyecto_Final.Tests/Proyecto_Final.Tests.csproj
+  --configuration Release --no-build`: 92 aprobadas, 0 fallidas.
+- Escaneo de secretos: aprobado; 639 archivos rastreados, 608 archivos de
+  texto y 12 placeholders o valores vacíos permitidos.
+- ScriptDom: 75 archivos y 876 lotes analizados, 0 errores de sintaxis.
+
+Esta evidencia solo confirma el baseline integrado. No demuestra ejecución
+SQL, concurrencia, login ni funcionamiento de las historias nuevas.
+
+### Hallazgos de Danny — CU-201, CU-202, CU-221, CU-222 y CU-223
+
+- La arquitectura funcional ya separa documentos, alertas, presupuestos,
+  gastos y comparativa en controladores y servicios específicos.
+- Las rutas sensibles tienen permisos granulares y los POST tienen
+  antiforgery. Los archivos y comprobantes usan almacenamiento privado.
+- Las migraciones 0007–0011 están documentadas como aplicadas y verificadas en
+  Azure DEV; no se volverán a ejecutar.
+- El QA autenticado sigue pendiente por falta de una credencial de prueba
+  válida autorizada. No se modificará ninguna contraseña para resolverlo.
+- Las vistas son funcionales pero demasiado compactas, con jerarquía visual,
+  accesibilidad, responsive y confirmaciones insuficientes. Presupuestos y
+  gastos no tienen todavía todas las rutas GET dedicadas solicitadas para
+  crear/editar. La comparativa contiene estilos inline y la impresión no usa
+  un estilo reutilizable.
+- La validación del dominio existente cubre distribución anual, separación de
+  aprobación, umbrales, archivos, presupuesto cero y CSV, pero requiere más
+  pruebas de rutas, anulaciones e idempotencia.
+
+### Hallazgos de David — CU-181, CU-182, CU-241, CU-242 y CU-243
+
+- El código agregado compila, pero ocho procedimientos llamados desde C# no
+  tienen definición en ningún script del repositorio:
+  `sp_Admin_GetCombos`, `sp_Admin_GetComboDetail`,
+  `sp_Admin_CreateCombo`, `sp_Admin_AddComboDetail`,
+  `sp_Admin_ToggleComboStatus`, `sp_Admin_GetPurchaseSuggestions`,
+  `sp_Admin_GetSlowMovingProducts` y
+  `sp_Admin_GetSeasonalSalesTrend`.
+- Tampoco existe el procedimiento atómico requerido para transformación. La
+  implementación actual lee stock en C#, calcula y actualiza después dentro de
+  una transacción, sin bloqueo determinista, protección de overflow ni una
+  referencia común entre los dos movimientos.
+- Combos solo existe como administración. No se publica en tienda, no entra al
+  carrito, no se procesa en checkout, no conserva snapshots de pedido/factura
+  y no descuenta componentes.
+- La creación confía en una lista de productos enviada por el navegador, usa
+  `AddWithValue` y puede aceptar IDs repetidos o manipulados. El controlador
+  muestra mensajes de dominio internos y no registra errores con `ILogger`.
+- Combos y transformación solo usan el permiso genérico `Inventario`; no
+  existen permisos `COMBOS_VER`, `COMBOS_GESTIONAR`,
+  `INVENTARIO_TRANSFORMAR` ni `INVENTARIO_INTELIGENCIA_VER`.
+- Las sugerencias no exponen ventana, cobertura, stock mínimo ni datos
+  insuficientes. Los estancados no exponen última venta, antigüedad ni nivel de
+  riesgo. La tendencia mezcla todos los años, no garantiza doce meses y usa
+  `Substring(0, 3)` sin validar longitud.
+- Las vistas de David incluyen CSS y estilos inline, no tienen filtros de
+  período y carecen de estados accesibles y confirmaciones consistentes.
+- No hay pruebas automatizadas para combos, checkout de combos,
+  transformación, concurrencia, fórmulas de inteligencia ni permisos nuevos.
+
+### Estado SQL y Azure DEV
+
+Después de integrar, 0012 es el siguiente número libre en el repositorio. La
+nueva migración deberá crear los objetos de combos, snapshots de pedido,
+transformaciones e inteligencia, además de permisos, índices, checks, claves
+foráneas y contratos compatibles con C#.
+
+La variable de entorno disponible fue validada sin imprimir su valor: apunta
+al servidor DEV autorizado y a `DistribuidoraJJ_DB_DEV`. El primer intento de
+lectura de metadatos devolvió temporalmente que la base no estaba disponible.
+No se consultaron filas, no se ejecutó SQL y no se alteró Azure. Antes de una
+aplicación serán obligatorios: ledger, confirmación de 0007–0011, ausencia de
+0012, objetos reales, BACPAC o respaldo verificable y ejecutor único.
+
+## Arquitectura objetivo
+
+- Servicios separados para combos, transformación e inteligencia; C# usa
+  parámetros tipados, nombres de columna, cancellation tokens y mensajes
+  públicos genéricos.
+- SQL es la autoridad para precios, componentes, disponibilidad, stock,
+  totales y transiciones. Las filas de productos se bloquean por `ProductoId`.
+- El carrito distingue producto y combo por una clave tipada. El checkout
+  envía solo identidad, tipo y cantidad; SQL recalcula todo y usa un token
+  idempotente por intento.
+- Pedido y factura conservan el nombre, precio y componentes del combo tal como
+  se vendió, aunque el catálogo cambie después.
+- Inteligencia usa pedidos válidos, ventanas explícitas y doce meses completos,
+  con nulos tratados como cero.
+- La UI reutiliza un único archivo `sprint4-admin.css`, variables de marca,
+  componentes accesibles, responsive, estados vacíos y confirmaciones.
+
+## Despliegue y rollback preliminar
+
+La migración 0012 será aditiva, transaccional y registrada en
+`SchemaMigrationHistory`. Su rollback documentado no borrará datos como paso
+ordinario: primero se retirarán rutas dependientes y, si fuese necesario, se
+aplicará una migración compensatoria. La restauración de BACPAC será el último
+recurso y requiere aprobación expresa.
+
+## Limitaciones reales abiertas
+
+- Azure DEV no estuvo disponible durante el primer intento de auditoría.
+- No existe todavía credencial autorizada para QA autenticado de navegador.
+- La implementación, pruebas de concurrencia, migración 0012 y QA completo se
+  desarrollan después de esta auditoría; no se consideran terminados en este
+  punto.
