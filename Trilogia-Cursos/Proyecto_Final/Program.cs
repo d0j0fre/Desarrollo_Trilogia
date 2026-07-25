@@ -80,6 +80,50 @@ builder.Services.AddRateLimiter(options =>
                 QueueLimit = 0,
                 AutoReplenishment = true
             }));
+
+    options.AddPolicy("private-file-upload", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            GetUserPartition(httpContext),
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 12,
+                Window = TimeSpan.FromMinutes(10),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+
+    options.AddPolicy("document-alert-generation", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            GetUserPartition(httpContext),
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 3,
+                Window = TimeSpan.FromMinutes(10),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+
+    options.AddPolicy("finance-write", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            GetUserPartition(httpContext),
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 30,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+
+    options.AddPolicy("sensitive-read", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            GetUserPartition(httpContext),
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 60,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
 });
 
 // Session
@@ -110,10 +154,17 @@ builder.Services.AddScoped<PromotionsDbService>();
 builder.Services.AddScoped<ReclamosDbService>();
 builder.Services.AddScoped<KpiDbService>();
 builder.Services.AddScoped<ExpensesDbService>();
+builder.Services.AddScoped<BudgetDbService>();
+builder.Services.AddScoped<BudgetComparisonDbService>();
+builder.Services.AddScoped<IDocumentManagementDbService, DocumentManagementDbService>();
+builder.Services.AddScoped<IDocumentAlertService, DocumentAlertService>();
+builder.Services.AddScoped<IDocumentAlertEmailSender, SmtpDocumentAlertEmailSender>();
 builder.Services.AddScoped<AssistantService>();
 builder.Services.AddScoped<IChatDbService, ChatDbService>();
 builder.Services.AddScoped<IChatAuthorizationService, ChatAuthorizationService>();
 builder.Services.AddSingleton<IEvidenceStorageService, FileEvidenceStorageService>();
+builder.Services.AddSingleton<IPrivateFileStorageService, PrivateFileStorageService>();
+builder.Services.AddSingleton(TimeProvider.System);
 
 // HttpClient para consumir la API de autenticación
 builder.Services.AddHttpClient<AccountApiService>(client =>
@@ -128,6 +179,9 @@ builder.Services.AddHttpClient<AccountApiService>(client =>
 });
 
 var app = builder.Build();
+
+// Valida la ruta y crea la estructura privada al iniciar, no en la primera carga.
+_ = app.Services.GetRequiredService<IPrivateFileStorageService>();
 
 // Pipeline
 if (!app.Environment.IsDevelopment())

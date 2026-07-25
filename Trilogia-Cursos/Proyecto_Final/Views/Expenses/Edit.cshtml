@@ -1,0 +1,4 @@
+@model Proyecto_Final.Models.Admin.OperatingExpenseFormViewModel
+@{ ViewData["Title"] = "Editar gasto"; }
+<div class="container py-4"><div class="d-flex justify-content-between mb-3"><h2>Editar gasto registrado</h2><a asp-action="Details" asp-route-id="@Model.ExpenseId" class="btn btn-outline-secondary">Volver</a></div><div class="card"><div class="card-body"><form asp-action="Edit" method="post" enctype="multipart/form-data">@Html.AntiForgeryToken()<partial name="_OperatingForm" model="Model"/><button class="btn btn-primary">Guardar cambios</button></form></div></div></div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

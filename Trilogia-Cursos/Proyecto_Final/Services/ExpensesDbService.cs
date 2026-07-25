@@ -5,7 +5,7 @@ using System.Data;
 namespace Proyecto_Final.Services
 {
     // CU-222 — Acceso a datos de gastos operativos y cuentas presupuestarias.
-    public class ExpensesDbService
+    public partial class ExpensesDbService
     {
         private readonly string _connectionString;
 

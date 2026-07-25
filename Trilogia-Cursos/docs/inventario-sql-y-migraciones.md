@@ -7,7 +7,7 @@
 - `database_Esteban/`: material histórico y de referencia; no debe ejecutarse en DEV compartido.
 - `tools/SqlSyntaxValidator/`: validación recursiva UTF-8 y de sintaxis T-SQL con ScriptDom.
 
-Al 22 de julio de 2026 se validan 70 archivos SQL y 821 lotes. Todos los `cu*.sql` de `database_Esteban/` quedaron sin un `USE` fijo; esto no cambia su condición de archivos históricos no autorizados para despliegue.
+Al 22 de julio de 2026 se validan 75 archivos SQL y 876 lotes. Todos los `cu*.sql` de `database_Esteban/` quedaron sin un `USE` fijo; esto no cambia su condición de archivos históricos no autorizados para despliegue.
 
 ## Baselines y scripts destructivos
 
@@ -15,7 +15,7 @@ Al 22 de julio de 2026 se validan 70 archivos SQL y 821 lotes. Todos los `cu*.sq
 
 ## Evolución vigente
 
-Las migraciones 0001–0006 cubren ledger, chat seguro, departamentos de chat, evidencia privada, checkout/promociones atómicos y garantías. Deben aplicarse en orden, con BACPAC verificado, un único ejecutor, ventana controlada y evidencia posterior.
+Las migraciones 0001–0011 cubren ledger, chat seguro, evidencia privada, checkout/promociones, garantías y los cinco módulos de Sprint 4 de Danny. 0007–0011 agregan documentos/versiones, alertas, presupuestos anuales, alineación aditiva de gastos y comparación presupuesto-real. Deben aplicarse en orden, con BACPAC verificado, un único ejecutor, ventana controlada y evidencia posterior.
 
 ## Reglas de autoría
 
