@@ -29,7 +29,7 @@
                 </div>
                 <div class="s3-confirmation-fact">
                     <span>Productos</span>
-                    <strong>@Model.Items.Sum(x => x.Cantidad)</strong>
+                    <strong>@(Model.Items.Sum(x => x.Cantidad) + Model.Combos.Sum(x => x.Cantidad))</strong>
                 </div>
                 <div class="s3-confirmation-fact">
                     <span>Total</span>
@@ -61,6 +61,16 @@
                             <span class="d-block">Cantidad: @item.Cantidad · @item.Categoria</span>
                         </div>
                         <strong>₡@item.Subtotal.ToString("N2")</strong>
+                    </div>
+                }
+                @foreach (var combo in Model.Combos)
+                {
+                    <div class="s3-confirmation-product">
+                        <div>
+                            <strong>@combo.Nombre</strong>
+                            <span class="d-block">Cantidad: @combo.Cantidad · Combo</span>
+                        </div>
+                        <strong>₡@combo.Subtotal.ToString("N2")</strong>
                     </div>
                 }
             </div>

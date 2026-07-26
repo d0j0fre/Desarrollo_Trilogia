@@ -232,6 +232,16 @@
                             <strong>₡@item.SubtotalConDescuento.ToString("N2")</strong>
                         </div>
                     }
+                    @foreach (var combo in Model.Cart.Combos)
+                    {
+                        <div class="s4-checkout-summary-row">
+                            <span>
+                                @combo.Nombre <small>x @combo.Cantidad</small>
+                                <small class="text-muted d-block"><i class="fa fa-box-open mr-1"></i>Combo</small>
+                            </span>
+                            <strong>₡@combo.Subtotal.ToString("N2")</strong>
+                        </div>
+                    }
                     @foreach (var regalo in Model.Cart.Regalias)
                     {
                         <div class="s4-checkout-summary-row">

@@ -1,3 +1,4 @@
+using Proyecto_Final.Models.Admin;
 using System.ComponentModel.DataAnnotations;
 
 namespace Proyecto_Final.Models.Store
@@ -24,8 +25,11 @@ namespace Proyecto_Final.Models.Store
     public class CartViewModel
     {
         public List<CartItemViewModel> Items { get; set; } = new();
-        public int TotalItems => Items.Sum(x => x.Cantidad);
-        public decimal Subtotal => Items.Sum(x => x.Subtotal);
+        public List<CartComboItemViewModel> Combos { get; set; } = new();
+
+        public int TotalItems => Items.Sum(x => x.Cantidad) + Combos.Sum(x => x.Cantidad);
+        public decimal Subtotal => Items.Sum(x => x.Subtotal) + Combos.Sum(x => x.Subtotal);
+        public bool EstaVacio => Items.Count == 0 && Combos.Count == 0;
 
         // CU-173 — resultado del motor de promociones.
         public List<CartItemViewModel> Regalias { get; set; } = new();
@@ -113,5 +117,6 @@ namespace Proyecto_Final.Models.Store
         public string? DireccionEntrega { get; set; }
         public decimal Total { get; set; }
         public List<CartItemViewModel> Items { get; set; } = new();
+        public List<CartComboItemViewModel> Combos { get; set; } = new();
     }
 }

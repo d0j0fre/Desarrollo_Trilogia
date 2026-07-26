@@ -430,6 +430,150 @@ namespace Proyecto_Final.Services
             }
         }
 
+        // CU-182 — Transformación de producto: delega toda la lógica al SP atómico
+        // (evita condición de carrera entre transformaciones simultáneas del mismo producto).
+        public async Task RegisterStockTransformationAsync(StockTransformationFormViewModel model, int usuarioId, string usuarioNombre)
+        {
+            StockTransformationValidator.Validate(model);
+
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_TransformStock", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.AddWithValue("@ProductoOrigenId", model.ProductoOrigenId);
+            command.Parameters.AddWithValue("@CantidadOrigen", model.CantidadOrigen);
+            command.Parameters.AddWithValue("@ProductoDestinoId", model.ProductoDestinoId);
+            command.Parameters.AddWithValue("@CantidadDestino", model.CantidadDestino);
+            command.Parameters.AddWithValue("@Motivo", string.IsNullOrWhiteSpace(model.Motivo) ? DBNull.Value : model.Motivo.Trim());
+            command.Parameters.AddWithValue("@UsuarioId", usuarioId);
+            command.Parameters.AddWithValue("@UsuarioNombre", usuarioNombre);
+
+            await connection.OpenAsync();
+            try
+            {
+                await command.ExecuteNonQueryAsync();
+            }
+            catch (SqlException ex)
+            {
+                // El SP usa RAISERROR con severidad 16 para errores de negocio (stock insuficiente, producto inválido, etc.).
+                throw new InvalidOperationException(ex.Message);
+            }
+        }
+
+        // CU-181 — Lista todos los combos con su disponibilidad calculada.
+        public async Task<List<ComboListItemViewModel>> GetCombosAsync()
+        {
+            var combos = new List<ComboListItemViewModel>();
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_GetCombos", connection) { CommandType = CommandType.StoredProcedure };
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                combos.Add(new ComboListItemViewModel
+                {
+                    ComboId = reader.GetInt32(0),
+                    Nombre = reader.GetString(1),
+                    Descripcion = reader.IsDBNull(2) ? null : reader.GetString(2),
+                    Precio = reader.GetDecimal(3),
+                    Activo = reader.GetBoolean(4),
+                    FechaCreacion = reader.GetDateTime(5),
+                    RegistradoPorNombre = reader.GetString(6),
+                    CantidadProductos = reader.GetInt32(7),
+                    StockDisponibleCombo = reader.IsDBNull(8) ? 0 : reader.GetInt32(8)
+                });
+            }
+            return combos;
+        }
+
+        // CU-181 — Detalle de un combo: encabezado + sus productos componentes.
+        public async Task<ComboDetailViewModel?> GetComboDetailAsync(int comboId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_GetComboDetail", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.AddWithValue("@ComboId", comboId);
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync()) return null;
+            var model = new ComboDetailViewModel
+            {
+                ComboId = reader.GetInt32(0),
+                Nombre = reader.GetString(1),
+                Descripcion = reader.IsDBNull(2) ? null : reader.GetString(2),
+                Precio = reader.GetDecimal(3),
+                Activo = reader.GetBoolean(4),
+                RegistradoPorNombre = reader.GetString(5),
+                FechaCreacion = reader.GetDateTime(6)
+            };
+
+            await reader.NextResultAsync();
+            while (await reader.ReadAsync())
+            {
+                model.Componentes.Add(new ComboDetailLineViewModel
+                {
+                    ProductoId = reader.GetInt32(1),
+                    ProductoNombre = reader.GetString(2),
+                    Cantidad = reader.GetInt32(3),
+                    StockDisponible = reader.GetInt32(4)
+                });
+            }
+            return model;
+        }
+
+        // CU-181 — Crea el combo y sus líneas de componentes en una sola transacción.
+        public async Task<int> CreateComboAsync(ComboFormViewModel model, int usuarioId, string usuarioNombre)
+        {
+            var seleccionados = ComboValidator.GetSelectedProducts(model);
+
+            await using var connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
+            await using var transaction = await connection.BeginTransactionAsync();
+            try
+            {
+                int nuevoComboId;
+                await using (var command = new SqlCommand("dbo.sp_Admin_CreateCombo", connection, (SqlTransaction)transaction))
+                {
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.Parameters.AddWithValue("@Nombre", model.Nombre.Trim());
+                    command.Parameters.AddWithValue("@Descripcion", string.IsNullOrWhiteSpace(model.Descripcion) ? DBNull.Value : model.Descripcion.Trim());
+                    command.Parameters.AddWithValue("@Precio", model.Precio);
+                    command.Parameters.AddWithValue("@RegistradoPorUsuarioId", usuarioId);
+                    command.Parameters.AddWithValue("@RegistradoPorNombre", usuarioNombre);
+                    var outputParam = new SqlParameter("@NuevoComboId", SqlDbType.Int) { Direction = ParameterDirection.Output };
+                    command.Parameters.Add(outputParam);
+                    await command.ExecuteNonQueryAsync();
+                    nuevoComboId = (int)outputParam.Value;
+                }
+
+                foreach (var producto in seleccionados)
+                {
+                    await using var detailCommand = new SqlCommand("dbo.sp_Admin_AddComboDetail", connection, (SqlTransaction)transaction);
+                    detailCommand.CommandType = CommandType.StoredProcedure;
+                    detailCommand.Parameters.AddWithValue("@ComboId", nuevoComboId);
+                    detailCommand.Parameters.AddWithValue("@ProductoId", producto.ProductoId);
+                    detailCommand.Parameters.AddWithValue("@Cantidad", producto.Cantidad);
+                    await detailCommand.ExecuteNonQueryAsync();
+                }
+
+                await transaction.CommitAsync();
+                return nuevoComboId;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+
+        // CU-181 — Activa/desactiva un combo (no lo borra, para conservar el histórico).
+        public async Task ToggleComboStatusAsync(int comboId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_ToggleComboStatus", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.AddWithValue("@ComboId", comboId);
+            await connection.OpenAsync();
+            await command.ExecuteNonQueryAsync();
+        }
+
         public async Task<List<OrderAdminListItemViewModel>> GetOrdersAsync(string? estado)
         {
             var pedidos = new List<OrderAdminListItemViewModel>();

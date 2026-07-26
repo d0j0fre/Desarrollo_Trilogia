@@ -48,4 +48,30 @@ namespace Proyecto_Final.Models.Admin
 
         public List<ProductAdminViewModel> ProductosDisponibles { get; set; } = new();
     }
+
+    // CU-182 — Transforma stock de un producto "origen" (ej. caja) a un producto "destino" (ej. unidad).
+    public class StockTransformationFormViewModel
+    {
+        [Display(Name = "Producto origen")]
+        [Range(1, int.MaxValue, ErrorMessage = "Debes seleccionar el producto de origen.")]
+        public int ProductoOrigenId { get; set; }
+
+        [Display(Name = "Cantidad a descontar del origen")]
+        [Range(1, int.MaxValue, ErrorMessage = "La cantidad de origen debe ser mayor que cero.")]
+        public int CantidadOrigen { get; set; } = 1;
+
+        [Display(Name = "Producto destino")]
+        [Range(1, int.MaxValue, ErrorMessage = "Debes seleccionar el producto de destino.")]
+        public int ProductoDestinoId { get; set; }
+
+        [Display(Name = "Cantidad a sumar al destino")]
+        [Range(1, int.MaxValue, ErrorMessage = "La cantidad de destino debe ser mayor que cero.")]
+        public int CantidadDestino { get; set; } = 1;
+
+        [Display(Name = "Motivo")]
+        [StringLength(300, ErrorMessage = "El motivo no puede superar los 300 caracteres.")]
+        public string? Motivo { get; set; } = string.Empty;
+
+        public List<ProductAdminViewModel> ProductosDisponibles { get; set; } = new();
+    }
 }

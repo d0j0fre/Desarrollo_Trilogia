@@ -1,0 +1,129 @@
+﻿@model Proyecto_Final.Models.Admin.InventoryIntelligenceViewModel
+@{
+    ViewData["Title"] = "Inteligencia de inventario";
+    // CU-243 — Altura de barras del gráfico según el mes con más ventas.
+    var maxMes = Model.TendenciaEstacional.Any() ? Model.TendenciaEstacional.Max(m => m.TotalVendido) : 0m;
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+    <style>
+        .kpi-card { border-radius: 12px; border: 1px solid #eee; }
+        .seasonal-bar { background: linear-gradient(180deg, #6f42c1, #b98cff); border-radius: 4px 4px 0 0; min-height: 2px; }
+        .badge-suggest { background-color: #198754; }
+        .badge-slow { background-color: #dc3545; }
+    </style>
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header">
+                <h2 class="mb-2">Inteligencia de inventario</h2>
+                <p class="mb-0">Sugerencias de compra, alertas de estancamiento y tendencia estacional basadas en el histórico de ventas.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- CU-241 — Sugerencia de compra -->
+    <div class="row px-xl-5 mt-4">
+        <div class="col-12">
+            <div class="kpi-card p-3">
+                <h4><i class="fa fa-boxes mr-2"></i>Sugerencia de compra</h4>
+                <p class="text-muted">Cantidad recomendada a pedir según el promedio de ventas de los últimos 3 meses.</p>
+                @if (!Model.SugerenciasCompra.Any())
+                {
+                    <p class="text-muted mb-0">No hay productos que requieran reabastecimiento por ahora.</p>
+                }
+                else
+                {
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th>Stock actual</th>
+                                <th>Promedio mensual</th>
+                                <th>Cantidad sugerida</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.SugerenciasCompra)
+                            {
+                                <tr>
+                                    <td>@item.Nombre</td>
+                                    <td>@item.StockActual</td>
+                                    <td>@item.PromedioVentaMensual.ToString("N1")</td>
+                                    <td><span class="badge badge-suggest">@item.CantidadSugerida</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- CU-242 — Alertas de estancamiento -->
+    <div class="row px-xl-5 mt-4">
+        <div class="col-12">
+            <div class="kpi-card p-3">
+                <h4><i class="fa fa-exclamation-triangle mr-2"></i>Productos estancados</h4>
+                <p class="text-muted">Productos con stock disponible que no han tenido ventas en los últimos 2 meses.</p>
+                @if (!Model.ProductosEstancados.Any())
+                {
+                    <p class="text-muted mb-0">No hay productos estancados actualmente.</p>
+                }
+                else
+                {
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th>Stock</th>
+                                <th>Vendido (2 meses)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.ProductosEstancados)
+                            {
+                                <tr>
+                                    <td>@item.Nombre</td>
+                                    <td><span class="badge badge-slow">@item.Stock</span></td>
+                                    <td>@item.VendidoUltimosMeses</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- CU-243 — Tendencia estacional -->
+    <div class="row px-xl-5 mt-4 mb-5">
+        <div class="col-12">
+            <div class="kpi-card p-3">
+                <h4><i class="fa fa-chart-bar mr-2"></i>Tendencia estacional</h4>
+                <p class="text-muted">Total histórico vendido agrupado por mes del año, para planificar temporadas altas.</p>
+                @if (!Model.TendenciaEstacional.Any())
+                {
+                    <p class="text-muted mb-0">Aún no hay suficiente histórico de facturación para mostrar tendencias.</p>
+                }
+                else
+                {
+                    <div class="d-flex align-items-end justify-content-between" style="height: 200px;">
+                        @foreach (var punto in Model.TendenciaEstacional)
+                        {
+                            var alturaPct = maxMes > 0 ? (int)(punto.TotalVendido / maxMes * 170) + 2 : 2;
+                            <div class="text-center" style="width: 100%;">
+                                <div class="seasonal-bar mx-auto" style="height:@(alturaPct)px; width: 28px;"
+                                     title="@punto.NombreMes: @punto.TotalVendido.ToString("C0")"></div>
+                                <small class="d-block mt-1">@punto.NombreMes.Substring(0, 3)</small>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

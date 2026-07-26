@@ -66,5 +66,64 @@ namespace Proyecto_Final.Services
 
             return model;
         }
+
+        // CU-241/242/243 — Trae los 3 reportes de inteligencia en una sola llamada.
+        public async Task<InventoryIntelligenceViewModel> GetInventoryIntelligenceAsync()
+        {
+            var model = new InventoryIntelligenceViewModel();
+
+            await using var connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
+
+            // CU-241 — Sugerencia de compra según promedio de ventas de los últimos 3 meses.
+            await using (var command = new SqlCommand("dbo.sp_Admin_GetPurchaseSuggestions", connection) { CommandType = CommandType.StoredProcedure })
+            {
+                await using var reader = await command.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    model.SugerenciasCompra.Add(new PurchaseSuggestionItem
+                    {
+                        ProductoId = reader.GetInt32(0),
+                        Nombre = reader.GetString(1),
+                        StockActual = reader.GetInt32(2),
+                        PromedioVentaMensual = reader.IsDBNull(3) ? 0 : reader.GetDecimal(3),
+                        CantidadSugerida = reader.IsDBNull(4) ? 0 : reader.GetInt32(4)
+                    });
+                }
+            }
+
+            // CU-242 — Productos con stock que no ha rotado en los últimos 2 meses.
+            await using (var command = new SqlCommand("dbo.sp_Admin_GetSlowMovingProducts", connection) { CommandType = CommandType.StoredProcedure })
+            {
+                await using var reader = await command.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    model.ProductosEstancados.Add(new SlowMovingProductItem
+                    {
+                        ProductoId = reader.GetInt32(0),
+                        Nombre = reader.GetString(1),
+                        Stock = reader.GetInt32(2),
+                        VendidoUltimosMeses = reader.IsDBNull(3) ? 0 : reader.GetInt32(3)
+                    });
+                }
+            }
+
+            // CU-243 — Total vendido agrupado por mes del año (todas las fechas históricas).
+            await using (var command = new SqlCommand("dbo.sp_Admin_GetSeasonalSalesTrend", connection) { CommandType = CommandType.StoredProcedure })
+            {
+                await using var reader = await command.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    model.TendenciaEstacional.Add(new SeasonalTrendPoint
+                    {
+                        NumeroMes = reader.GetInt32(0),
+                        NombreMes = reader.GetString(1),
+                        TotalVendido = reader.IsDBNull(2) ? 0 : reader.GetDecimal(2)
+                    });
+                }
+            }
+
+            return model;
+        }
     }
 }

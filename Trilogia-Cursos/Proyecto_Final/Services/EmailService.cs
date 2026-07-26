@@ -1,7 +1,8 @@
-﻿using System.Net;
+﻿using Proyecto_Final.Models.Admin;
+using Proyecto_Final.Models.Store;
+using System.Net;
 using System.Net.Mail;
 using System.Text;
-using Proyecto_Final.Models.Store;
 
 namespace Proyecto_Final.Services
 {
@@ -52,8 +53,11 @@ namespace Proyecto_Final.Services
             string cliente,
             int pedidoId,
             CheckoutViewModel checkout,
-            List<CartItemViewModel> items)
+            List<CartItemViewModel> items,
+            List<CartComboItemViewModel>? combos = null)
         {
+            combos ??= new List<CartComboItemViewModel>();
+
             var rutaPlantilla = Path.Combine(
                 Directory.GetCurrentDirectory(),
                 "EmailTemplates",
@@ -82,7 +86,21 @@ namespace Proyecto_Final.Services
 """);
             }
 
-            decimal subtotal = items.Sum(x => x.Precio * x.Cantidad);
+            // CU-181 — Los combos se listan igual que un producto, marcados con "(Combo)" para que el cliente
+            // entienda por qué el precio de esa línea no coincide con el de sus productos por separado.
+            foreach (var combo in combos)
+            {
+                productos.Append($"""
+<tr style="border-bottom:1px solid #eeeeee">
+    <td class="product" style="padding:14px">{combo.Nombre} (Combo)</td>
+    <td class="qty" align="center" style="padding:14px">{combo.Cantidad}</td>
+    <td class="price" align="right" style="padding:14px">₡{combo.Precio:N2}</td>
+    <td class="subtotal" align="right" style="padding:14px">₡{combo.Subtotal:N2}</td>
+</tr>
+""");
+            }
+
+            decimal subtotal = items.Sum(x => x.Precio * x.Cantidad) + combos.Sum(x => x.Subtotal);
             decimal envio = 0;
             decimal total = subtotal + envio;
 

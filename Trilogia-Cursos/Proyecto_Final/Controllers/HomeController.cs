@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Proyecto_Final.Models.Admin;
 using Proyecto_Final.Models.Store;
 using Proyecto_Final.Services;
 
@@ -32,6 +33,9 @@ namespace Proyecto_Final.Controllers
         {
             var categorias = await _adminDbService.GetStoreCategoriesAsync();
             var productos = await _adminDbService.GetStoreProductsAsync(categoria, buscar);
+            var combos = string.IsNullOrWhiteSpace(categoria) && string.IsNullOrWhiteSpace(buscar)
+                ? await _storeDbService.GetActiveStoreCombosAsync()
+                : new List<StoreComboViewModel>();
 
             var model = new ShopViewModel
             {
@@ -39,6 +43,7 @@ namespace Proyecto_Final.Controllers
                 Buscar = buscar,
                 Categorias = categorias,
                 Productos = productos,
+                Combos = combos,
                 Titulo = string.IsNullOrWhiteSpace(categoria) ? "Tienda" : $"Tienda - {categoria}"
             };
 

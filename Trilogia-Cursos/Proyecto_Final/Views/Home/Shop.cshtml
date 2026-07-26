@@ -108,6 +108,57 @@
                 }
             </div>
 
+            @if (Model.Combos.Any())
+            {
+                <div class="s3-shop-toolbar" style="margin-top:0.5rem;">
+                    <div><span>Combos promocionales</span></div>
+                </div>
+                <div class="s3-product-grid" style="margin-bottom:2rem;">
+                    @foreach (var combo in Model.Combos)
+                    {
+                        var comboAgotado = combo.StockDisponibleCombo <= 0;
+                        <article class="s3-product-card">
+                            <div class="s3-product-card__image">
+                                <img src="@Url.Content("~/img/whisky-premium.webp")" alt="@combo.Nombre" />
+                            </div>
+                            <div class="s3-product-card__body">
+                                <div class="s3-product-card__topline">
+                                    <span class="s3-product-card__category"><i class="fa fa-box-open mr-1"></i>Combo</span>
+                                    <small class="s3-stock-dot @(comboAgotado ? "out" : "ok")"></small>
+                                </div>
+                                <h3>@combo.Nombre</h3>
+                                <p>@(string.IsNullOrWhiteSpace(combo.Descripcion) ? "Paquete promocional de productos." : combo.Descripcion)</p>
+                                <div class="s3-product-card__footer">
+                                    <div>
+                                        <strong>₡@combo.Precio.ToString("N0")</strong>
+                                        <small class="s3-stock-badge @(comboAgotado ? "out" : "ok")">
+                                            @(comboAgotado ? "Agotado" : "Disponible") · Combos disponibles: @combo.StockDisponibleCombo
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="s3-product-card__actions">
+                                    @if (!comboAgotado)
+                                    {
+                                        <form asp-controller="Cart" asp-action="AddCombo" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="comboId" value="@combo.ComboId" />
+                                            <input type="hidden" name="cantidad" value="1" />
+                                            <button type="submit" class="btn btn-primary btn-sm">
+                                                <i class="fa fa-shopping-cart mr-1"></i>Agregar combo
+                                            </button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <button type="button" class="btn btn-secondary btn-sm" disabled>Agotado</button>
+                                    }
+                                </div>
+                            </div>
+                        </article>
+                    }
+                </div>
+            }
+
             @if (Model.Productos == null || Model.Productos.Count == 0)
             {
                 <div class="s3-empty-state s3-empty-state--shop">
