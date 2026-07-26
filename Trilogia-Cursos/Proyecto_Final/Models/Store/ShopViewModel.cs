@@ -1,4 +1,6 @@
-﻿namespace Proyecto_Final.Models.Store
+﻿using Proyecto_Final.Models.Admin;
+
+namespace Proyecto_Final.Models.Store
 {
     public class ShopViewModel
     {
@@ -7,5 +9,6 @@
         public string Titulo { get; set; } = "Tienda";
         public List<StoreProductViewModel> Productos { get; set; } = new();
         public List<string> Categorias { get; set; } = new();
+        public List<StoreComboViewModel> Combos { get; set; } = new();
     }
 }

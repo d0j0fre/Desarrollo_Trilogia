@@ -43,9 +43,52 @@ namespace Proyecto_Final.Services
             };
         }
 
-        public async Task<int> CreateOrderAsync(int usuarioId, CheckoutViewModel checkout, IReadOnlyCollection<CartItemViewModel> items)
+        // CU-181 — Combos activos para mostrar en el catálogo.
+        public async Task<List<StoreComboViewModel>> GetActiveStoreCombosAsync()
         {
-            if (items.Count == 0)
+            var combos = new List<StoreComboViewModel>();
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Store_GetActiveCombos", connection) { CommandType = CommandType.StoredProcedure };
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                combos.Add(new StoreComboViewModel
+                {
+                    ComboId = reader.GetInt32(0),
+                    Nombre = reader.GetString(1),
+                    Descripcion = reader.IsDBNull(2) ? null : reader.GetString(2),
+                    Precio = reader.GetDecimal(3),
+                    StockDisponibleCombo = reader.IsDBNull(4) ? 0 : reader.GetInt32(4)
+                });
+            }
+            return combos;
+        }
+
+        // CU-181 — Un combo puntual, para validar disponibilidad al agregarlo al carrito.
+        public async Task<StoreComboViewModel?> GetComboForCartAsync(int comboId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Store_GetComboForCart", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.AddWithValue("@ComboId", comboId);
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+            if (!await reader.ReadAsync()) return null;
+
+            return new StoreComboViewModel
+            {
+                ComboId = reader.GetInt32(0),
+                Nombre = reader.GetString(1),
+                Descripcion = reader.IsDBNull(2) ? null : reader.GetString(2),
+                Precio = reader.GetDecimal(3),
+                StockDisponibleCombo = reader.IsDBNull(5) ? 0 : reader.GetInt32(5)
+            };
+        }
+
+        public async Task<int> CreateOrderAsync(int usuarioId, CheckoutViewModel checkout, IReadOnlyCollection<CartItemViewModel> items, IReadOnlyCollection<CartComboItemViewModel>? combos = null)
+        {
+            combos ??= Array.Empty<CartComboItemViewModel>();
+            if (items.Count == 0 && combos.Count == 0)
                 throw new InvalidOperationException("El carrito está vacío.");
 
             var itemsPayload = items.Select(item => new
@@ -53,8 +96,14 @@ namespace Proyecto_Final.Services
                 productoId = item.ProductoId,
                 cantidad = item.Cantidad
             });
-
             var itemsJson = JsonSerializer.Serialize(itemsPayload);
+
+            var combosPayload = combos.Select(combo => new
+            {
+                comboId = combo.ComboId,
+                cantidad = combo.Cantidad
+            });
+            var combosJson = JsonSerializer.Serialize(combosPayload);
 
             await using var connection = new SqlConnection(_connectionString);
             await using var command = new SqlCommand("dbo.sp_Store_CreateOrder", connection)
@@ -67,7 +116,8 @@ namespace Proyecto_Final.Services
             command.Parameters.AddWithValue("@DireccionEntrega", (object?)checkout.DireccionEntrega?.Trim() ?? DBNull.Value);
             command.Parameters.AddWithValue("@Observaciones", (object?)checkout.Observaciones?.Trim() ?? DBNull.Value);
             command.Parameters.AddWithValue("@IdentificacionCliente", (object?)checkout.Identificacion?.Trim() ?? DBNull.Value);
-            command.Parameters.AddWithValue("@ItemsJson", itemsJson);
+            command.Parameters.AddWithValue("@ItemsJson", items.Count > 0 ? itemsJson : DBNull.Value);
+            command.Parameters.AddWithValue("@CombosJson", combos.Count > 0 ? combosJson : DBNull.Value);
             command.Parameters.Add("@MetodoPago", SqlDbType.NVarChar, 40).Value = checkout.MetodoPago.Trim();
             command.Parameters.Add("@ReferenciaPago", SqlDbType.NVarChar, 80).Value = string.IsNullOrWhiteSpace(checkout.ReferenciaPago)
                 ? DBNull.Value

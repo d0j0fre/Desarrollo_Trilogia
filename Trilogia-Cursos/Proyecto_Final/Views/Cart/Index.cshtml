@@ -17,7 +17,7 @@
         </div>
     </div>
 
-    @if (Model.Items.Count == 0)
+    @if (Model.EstaVacio)
     {
         <div class="s3-cart-empty">
             <div>
@@ -124,6 +124,63 @@
                     </article>
                 }
 
+                @foreach (var combo in Model.Combos)
+                {
+                    <article class="s3-cart-item">
+                        <div class="s3-cart-item__image">
+                            <img src="@Url.Content("~/img/whisky-premium.webp")" alt="@combo.Nombre" />
+                        </div>
+
+                        <div class="s3-cart-item__info">
+                            <span class="s3-cart-item__category"><i class="fa fa-box-open mr-1"></i>Combo</span>
+                            <h3 class="s3-cart-item__name">@combo.Nombre</h3>
+                            <div class="s3-cart-item__price">₡@combo.Precio.ToString("N2")</div>
+                        </div>
+
+                        <div class="s3-cart-qty">
+                            <small class="text-muted font-weight-bold">Cantidad</small>
+                            <div class="s3-cart-qty__buttons">
+                                <form asp-action="UpdateCombo" method="post" class="s3-cart-qty__form">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="comboId" value="@combo.ComboId" />
+                                    <input type="hidden" name="cantidad" value="@(combo.Cantidad - 1)" />
+                                    <button class="btn btn-outline-secondary btn-sm" type="submit" disabled="@(combo.Cantidad <= 1)" aria-label="Disminuir cantidad">
+                                        <i class="fa fa-minus"></i>
+                                    </button>
+                                </form>
+                                <span class="mx-2">@combo.Cantidad</span>
+                                <form asp-action="UpdateCombo" method="post" class="s3-cart-qty__form">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="comboId" value="@combo.ComboId" />
+                                    <input type="hidden" name="cantidad" value="@(combo.Cantidad + 1)" />
+                                    <button class="btn btn-outline-secondary btn-sm" type="submit" aria-label="Aumentar cantidad">
+                                        <i class="fa fa-plus"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="s3-cart-item__subtotal">
+                            <div>
+                                <span>Subtotal</span>
+                                <strong>₡@combo.Subtotal.ToString("N2")</strong>
+                            </div>
+                            <form asp-action="RemoveCombo" method="post" class="s3-cart-remove-form"
+                                  data-s3-confirm="¿Desea quitar este combo del carrito?"
+                                  data-s3-confirm-title="Quitar combo"
+                                  data-s3-confirm-type="warning"
+                                  data-s3-confirm-ok="Quitar"
+                                  data-s3-confirm-cancel="Cancelar">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="comboId" value="@combo.ComboId" />
+                                <button class="btn btn-outline-danger btn-sm" type="submit">
+                                    <i class="fa fa-trash-alt mr-1"></i>Quitar
+                                </button>
+                            </form>
+                        </div>
+                    </article>
+                }
+
                 @if (Model.Regalias.Any())
                 {
                     foreach (var regalo in Model.Regalias)
@@ -156,7 +213,7 @@
                     </div>
                     <div class="s3-cart-summary__row">
                         <span>Líneas del pedido</span>
-                        <strong>@Model.Items.Count</strong>
+                        <strong>@(Model.Items.Count + Model.Combos.Count)</strong>
                     </div>
                     @if (Model.TienePromociones)
                     {

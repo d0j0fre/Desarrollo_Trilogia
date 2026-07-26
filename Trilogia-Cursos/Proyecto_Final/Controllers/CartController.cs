@@ -1,8 +1,9 @@
-﻿using System.Text.Json;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
+using Proyecto_Final.Models.Admin;
 using Proyecto_Final.Models.Store;
 using Proyecto_Final.Services;
+using System.Text.Json;
 
 namespace Proyecto_Final.Controllers
 {
@@ -118,6 +119,79 @@ namespace Proyecto_Final.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [HttpPost]
+        public async Task<IActionResult> AddCombo(int comboId, int cantidad = 1)
+        {
+            var combo = await _storeDbService.GetComboForCartAsync(comboId);
+            if (combo is null || combo.StockDisponibleCombo <= 0)
+            {
+                TempData["LoginSuccess"] = "Ese combo ya no está disponible.";
+                return RedirectToAction("Shop", "Home");
+            }
+
+            var combos = GetCartCombos();
+            var existente = combos.FirstOrDefault(c => c.ComboId == comboId);
+            var cantidadDeseada = (existente?.Cantidad ?? 0) + cantidad;
+
+            if (cantidadDeseada > combo.StockDisponibleCombo)
+                cantidadDeseada = combo.StockDisponibleCombo;
+
+            if (existente is not null)
+            {
+                existente.Cantidad = cantidadDeseada;
+            }
+            else
+            {
+                combos.Add(new CartComboItemViewModel
+                {
+                    ComboId = combo.ComboId,
+                    Nombre = combo.Nombre,
+                    Precio = combo.Precio,
+                    Cantidad = cantidadDeseada
+                });
+            }
+
+            SaveCartCombos(combos);
+            TempData["LoginSuccess"] = $"\"{combo.Nombre}\" agregado al carrito.";
+            return RedirectToAction("Shop", "Home");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateCombo(int comboId, int cantidad)
+        {
+            var combos = GetCartCombos();
+            var existente = combos.FirstOrDefault(c => c.ComboId == comboId);
+            if (existente is null) return RedirectToAction(nameof(Index));
+
+            if (cantidad <= 0)
+            {
+                combos.Remove(existente);
+            }
+            else
+            {
+                var combo = await _storeDbService.GetComboForCartAsync(comboId);
+                existente.Cantidad = combo is not null && cantidad > combo.StockDisponibleCombo
+                    ? combo.StockDisponibleCombo
+                    : cantidad;
+            }
+
+            SaveCartCombos(combos);
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        public IActionResult RemoveCombo(int comboId)
+        {
+            var combos = GetCartCombos();
+            var existente = combos.FirstOrDefault(c => c.ComboId == comboId);
+            if (existente is not null)
+            {
+                combos.Remove(existente);
+                SaveCartCombos(combos);
+            }
+            return RedirectToAction(nameof(Index));
+        }
+
         [HttpGet]
         public async Task<IActionResult> Checkout()
         {
@@ -128,7 +202,7 @@ namespace Proyecto_Final.Controllers
             }
 
             var cart = await BuildCartViewModelAsync();
-            if (cart.Items.Count == 0)
+            if (cart.EstaVacio)
             {
                 TempData["LoginSuccess"] = "Tu carrito está vacío.";
                 return RedirectToAction(nameof(Index));
@@ -173,7 +247,7 @@ namespace Proyecto_Final.Controllers
                     });
             }
 
-            if (model.Cart.Items.Count == 0)
+            if (model.Cart.EstaVacio)
             {
                 TempData["LoginSuccess"] = "Tu carrito está vacío.";
                 return RedirectToAction(nameof(Index));
@@ -250,7 +324,8 @@ namespace Proyecto_Final.Controllers
                 var pedidoId = await _storeDbService.CreateOrderAsync(
                     usuarioId,
                     model,
-                    model.Cart.Items);
+                    model.Cart.Items,
+                    model.Cart.Combos);
 
                 // CU-173 — Aplicar promociones es "mejor esfuerzo": la venta YA está registrada,
                 // así que ninguna falla del motor de promociones puede interrumpir la compra.
@@ -279,7 +354,8 @@ namespace Proyecto_Final.Controllers
                     TipoEntrega = model.TipoEntrega,
                     DireccionEntrega = model.DireccionEntrega,
                     Total = totalConfirmado,
-                    Items = model.Cart.Items
+                    Items = model.Cart.Items,
+                    Combos = model.Cart.Combos
                 };
 
                 var destinatario =
@@ -296,9 +372,11 @@ namespace Proyecto_Final.Controllers
                     cliente,
                     pedidoId,
                     model,
-                    model.Cart.Items);
+                    model.Cart.Items,
+                    model.Cart.Combos);
 
                 HttpContext.Session.Remove(CartSessionKey);
+                HttpContext.Session.Remove(CartCombosSessionKey);
 
                 TempData["OrderConfirmation"] =
                     JsonSerializer.Serialize(confirmacion);
@@ -346,7 +424,7 @@ namespace Proyecto_Final.Controllers
         private async Task<CartViewModel> BuildCartViewModelAsync()
         {
             var items = GetCartItems();
-            var cart = new CartViewModel { Items = items };
+            var cart = new CartViewModel { Items = items, Combos = GetCartCombos() };
             if (items.Count == 0) return cart;
 
             // Mejor esfuerzo: si el motor de promociones falla, se muestra el carrito sin promociones.
@@ -364,6 +442,20 @@ namespace Proyecto_Final.Controllers
                 cart.Regalias.Clear();
             }
             return cart;
+        }
+
+        private const string CartCombosSessionKey = "CartCombos";
+
+        private List<CartComboItemViewModel> GetCartCombos()
+        {
+            var json = HttpContext.Session.GetString(CartCombosSessionKey);
+            if (string.IsNullOrEmpty(json)) return new List<CartComboItemViewModel>();
+            return JsonSerializer.Deserialize<List<CartComboItemViewModel>>(json) ?? new List<CartComboItemViewModel>();
+        }
+
+        private void SaveCartCombos(List<CartComboItemViewModel> combos)
+        {
+            HttpContext.Session.SetString(CartCombosSessionKey, JsonSerializer.Serialize(combos));
         }
 
         // Recalcula (autoritativo, servidor) las promociones aplicables para persistirlas.

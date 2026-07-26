@@ -59,6 +59,26 @@ namespace Proyecto_Final.Models.Admin
         public List<ComboProductSelectionViewModel> Productos { get; set; } = new();
     }
 
+    // CU-181 — Combo tal como se muestra en el catálogo de la tienda / carrito (vista pública).
+    public class StoreComboViewModel
+    {
+        public int ComboId { get; set; }
+        public string Nombre { get; set; } = string.Empty;
+        public string? Descripcion { get; set; }
+        public decimal Precio { get; set; }
+        public int StockDisponibleCombo { get; set; }
+    }
+
+    // CU-181 — Línea de combo dentro del carrito (sesión).
+    public class CartComboItemViewModel
+    {
+        public int ComboId { get; set; }
+        public string Nombre { get; set; } = string.Empty;
+        public decimal Precio { get; set; }
+        public int Cantidad { get; set; }
+        public decimal Subtotal => Precio * Cantidad;
+    }
+
     public class ComboProductSelectionViewModel
     {
         public int ProductoId { get; set; }
