@@ -45,6 +45,22 @@ public sealed class DocumentsController : Controller
     }
 
     [HttpGet]
+    public async Task<IActionResult> Detail(int id)
+    {
+        var model = await _documents.GetDetailsAsync(id, _alerts.CurrentBusinessDate(), _alerts.DefaultWarningDays);
+        return model is null ? NotFound() : View("Details", model);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> History(int id)
+    {
+        var model = await _documents.GetDetailsAsync(id, _alerts.CurrentBusinessDate(), _alerts.DefaultWarningDays);
+        if (model is null) return NotFound();
+        ViewData["FocusHistory"] = true;
+        return View("Details", model);
+    }
+
+    [HttpGet]
     [AdminAuthorize("Documentos", "DOCUMENTOS_GESTIONAR")]
     public async Task<IActionResult> Create()
     {

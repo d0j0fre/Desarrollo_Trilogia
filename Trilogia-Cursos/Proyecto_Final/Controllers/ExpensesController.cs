@@ -39,6 +39,25 @@ public sealed class ExpensesController : Controller
         return model is null ? NotFound() : View(model);
     }
 
+    [HttpGet]
+    public async Task<IActionResult> Detail(int id)
+    {
+        var model = await _expenses.GetOperatingDetailsAsync(id);
+        return model is null ? NotFound() : View("Details", model);
+    }
+
+    [HttpGet]
+    [AdminAuthorize("Gastos", "GASTOS_REGISTRAR")]
+    public async Task<IActionResult> Create()
+    {
+        await LoadOptionsAsync();
+        return View(new OperatingExpenseFormViewModel
+        {
+            ExpenseDate = DateTime.Today,
+            OperationToken = Guid.NewGuid()
+        });
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     [EnableRateLimiting("private-file-upload")]
@@ -46,7 +65,7 @@ public sealed class ExpensesController : Controller
     public async Task<IActionResult> Create(OperatingExpenseFormViewModel model, CancellationToken cancellationToken)
     {
         ValidateExpense(model);
-        if (!ModelState.IsValid) { TempData["ErrorMessage"] = "Revise los datos del gasto."; return RedirectToAction(nameof(Index)); }
+        if (!ModelState.IsValid) { await LoadOptionsAsync(); return View(model); }
         StagedPrivateFile? staged = null;
         var expenseId = 0;
         var committed = false;
@@ -81,7 +100,8 @@ public sealed class ExpensesController : Controller
             else await _storage.DeleteStageAsync(staged);
         }
         if (staged is not null && expenseId > 0 && !ready) await TryClearPendingReceiptAsync(expenseId);
-        return RedirectToAction(nameof(Index));
+        await LoadOptionsAsync();
+        return View(model);
     }
 
     [HttpGet]

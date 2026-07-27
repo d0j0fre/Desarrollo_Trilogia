@@ -23,5 +23,11 @@
 </div>
 @if (Model.DocumentId == 0)
 {
-    <div class="form-group"><label asp-for="File">Archivo privado (PDF, JPG o PNG; máx. 10 MB)</label><input asp-for="File" type="file" class="form-control-file" accept=".pdf,.jpg,.jpeg,.png" required /><span asp-validation-for="File" class="text-danger"></span></div>
+    <div class="form-group s4-file-zone">
+        <label asp-for="File">Archivo privado</label>
+        <input asp-for="File" type="file" class="form-control-file" accept=".pdf,.jpg,.jpeg,.png" required data-file-label="document-file-name" />
+        <span id="document-file-name" class="s4-file-note" aria-live="polite">Ningún archivo seleccionado</span>
+        <small class="s4-file-note">Formatos permitidos: PDF, JPG y PNG. Tamaño máximo: 10 MB. El archivo se almacena fuera de wwwroot.</small>
+        <span asp-validation-for="File" class="text-danger"></span>
+    </div>
 }

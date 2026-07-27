@@ -1,7 +1,112 @@
 @model Proyecto_Final.Models.Admin.DocumentAlertsIndexViewModel
-@{ ViewData["Title"] = "Alertas documentales"; }
-<div class="container-fluid py-4 px-xl-5"><div class="d-flex justify-content-between align-items-center mb-3"><div><h2>Alertas de vencimiento</h2><p class="text-muted">Fecha de negocio: Costa Rica. Generación idempotente (CU-202).</p></div><div><a asp-action="Index" class="btn btn-outline-secondary">Documentos</a> <form asp-action="GenerateAlerts" method="post" class="d-inline">@Html.AntiForgeryToken()<button class="btn btn-warning"><i class="fa fa-sync"></i> Generar ahora</button></form></div></div>
-@if (TempData["SuccessMessage"] is string success) { <div class="alert alert-success">@success</div> } @if (TempData["ErrorMessage"] is string error) { <div class="alert alert-danger">@error</div> }
-<div class="row mb-3"><div class="col-md-3"><div class="card p-3"><small>Activas</small><strong class="h3">@Model.ActiveCount</strong></div></div><div class="col-md-3"><div class="card p-3"><small>Vencidas</small><strong class="h3 text-danger">@Model.ExpiredCount</strong></div></div></div>
-<div class="card mb-3"><div class="card-body"><form method="get" class="form-row"><div class="col-md-3"><select name="Status" class="form-control"><option value="">Todos los estados</option><option>Activa</option><option>Atendida</option></select></div><div class="col-md-3"><select name="DepartmentId" class="form-control"><option value="">Todos los departamentos</option>@foreach(var d in Model.Departments){<option value="@d.Id">@d.Name</option>}</select></div><div class="col-md-3"><input type="number" name="MaxDays" class="form-control" min="0" max="365" placeholder="Máximo de días"/></div><div class="col-md-2"><button class="btn btn-dark btn-block">Filtrar</button></div></form></div></div>
-<div class="card"><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>Documento</th><th>Responsable</th><th>Vence</th><th>Días</th><th>Estado</th><th></th></tr></thead><tbody>@if(!Model.Alerts.Items.Any()){<tr><td colspan="6" class="text-center py-4 text-muted">No hay alertas.</td></tr>}@foreach(var a in Model.Alerts.Items){<tr><td><a asp-action="Details" asp-route-id="@a.DocumentId">@a.DocumentTitle</a><small class="d-block text-muted">@a.TypeName · @(a.DepartmentName ?? "General")</small></td><td>@a.ResponsibleName</td><td>@a.ExpirationDate.ToString("dd/MM/yyyy")</td><td class="font-weight-bold @(a.DaysRemaining < 0 ? "text-danger" : "")">@a.DaysRemaining</td><td>@a.Status · @a.ExpirationStatus</td><td>@if(a.Status == "Activa"){<form asp-action="MarkAlertHandled" method="post">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@a.AlertId"/><button class="btn btn-sm btn-outline-success">Atendida</button></form>}</td></tr>}</tbody></table></div><div class="card-footer d-flex justify-content-between"><span>@Model.Alerts.Total alerta(s)</span><span>@if(Model.Alerts.Page>1){<a asp-route-Page="@(Model.Alerts.Page-1)" asp-route-Status="@Model.Filter.Status" asp-route-DepartmentId="@Model.Filter.DepartmentId" asp-route-MaxDays="@Model.Filter.MaxDays" class="btn btn-sm btn-outline-secondary">Anterior</a>} @if(Model.Alerts.Page<Model.Alerts.TotalPages){<a asp-route-Page="@(Model.Alerts.Page+1)" asp-route-Status="@Model.Filter.Status" asp-route-DepartmentId="@Model.Filter.DepartmentId" asp-route-MaxDays="@Model.Filter.MaxDays" class="btn btn-sm btn-outline-secondary">Siguiente</a>}</span></div></div></div>
+@{
+    ViewData["Title"] = "Alertas documentales";
+    var groups = new[]
+    {
+        new { Key = "expired", Title = "Vencidas", Description = "Requieren atención inmediata", Items = Model.Alerts.Items.Where(item => item.DaysRemaining < 0).ToList() },
+        new { Key = "today", Title = "Vencen hoy", Description = "Prioridad del día", Items = Model.Alerts.Items.Where(item => item.DaysRemaining == 0).ToList() },
+        new { Key = "seven", Title = "Próximos 7 días", Description = "Atender esta semana", Items = Model.Alerts.Items.Where(item => item.DaysRemaining is >= 1 and <= 7).ToList() },
+        new { Key = "fifteen", Title = "Entre 8 y 15 días", Description = "Planificar renovación", Items = Model.Alerts.Items.Where(item => item.DaysRemaining is >= 8 and <= 15).ToList() },
+        new { Key = "thirty", Title = "Entre 16 y 30 días", Description = "Seguimiento preventivo", Items = Model.Alerts.Items.Where(item => item.DaysRemaining is >= 16 and <= 30).ToList() }
+    };
+    string PriorityClass(int days) => days < 0 ? "danger" : days <= 7 ? "warning" : "info";
+}
+
+<div class="container-fluid py-4 px-xl-5 s4-admin-page">
+    <header class="d-flex flex-wrap justify-content-between align-items-start mb-4">
+        <div class="s4-page-header">
+            <span class="s4-eyebrow"><i class="fa fa-bell"></i> CU-202</span>
+            <h2>Alertas de vencimiento</h2>
+            <p class="text-muted mb-0">Agrupadas por prioridad con fecha de negocio de Costa Rica.</p>
+        </div>
+        <div class="d-flex flex-wrap">
+            <a asp-action="Index" class="btn btn-outline-secondary mr-2 mb-2">Documentos</a>
+            <form asp-action="GenerateAlerts" method="post" class="mb-2">
+                @Html.AntiForgeryToken()
+                <button class="btn btn-warning" type="submit"><i class="fa fa-sync mr-1"></i>Generar sin duplicar</button>
+            </form>
+        </div>
+    </header>
+
+    @if (TempData["SuccessMessage"] is string success) { <div class="alert alert-success" role="status">@success</div> }
+    @if (TempData["ErrorMessage"] is string error) { <div class="alert alert-danger" role="alert">@error</div> }
+
+    <div class="s4-kpi-grid mb-4">
+        <article class="s4-kpi s4-kpi--warning"><span class="s4-kpi__label">Alertas activas</span><strong class="s4-kpi__value">@Model.ActiveCount</strong></article>
+        <article class="s4-kpi s4-kpi--danger"><span class="s4-kpi__label">Documentos vencidos</span><strong class="s4-kpi__value">@Model.ExpiredCount</strong></article>
+        <article class="s4-kpi"><span class="s4-kpi__label">En esta página</span><strong class="s4-kpi__value">@Model.Alerts.Items.Count</strong></article>
+    </div>
+
+    <section class="card mb-4" aria-labelledby="alert-filter-title">
+        <div class="card-header" id="alert-filter-title">Filtrar alertas</div>
+        <div class="card-body">
+            <form method="get" class="s4-filters">
+                <div class="s4-filter">
+                    <label asp-for="Filter.Status">Estado</label>
+                    <select asp-for="Filter.Status" name="Status" class="form-control"><option value="">Todos</option><option>Activa</option><option>Atendida</option></select>
+                </div>
+                <div class="s4-filter--wide">
+                    <label asp-for="Filter.DepartmentId">Departamento</label>
+                    <select asp-for="Filter.DepartmentId" name="DepartmentId" class="form-control"><option value="">Todos</option>@foreach (var department in Model.Departments) { <option value="@department.Id">@department.Name</option> }</select>
+                </div>
+                <div class="s4-filter">
+                    <label asp-for="Filter.MaxDays">Horizonte máximo</label>
+                    <input asp-for="Filter.MaxDays" name="MaxDays" type="number" min="0" max="365" class="form-control" placeholder="30 días" />
+                </div>
+                <div class="s4-filter--action"><button class="btn btn-dark btn-block" type="submit">Aplicar</button></div>
+            </form>
+        </div>
+    </section>
+
+    @if (!Model.Alerts.Items.Any())
+    {
+        <div class="card"><div class="s4-empty"><i class="fa fa-check-circle"></i><h3>Sin alertas para estos filtros</h3><p class="mb-0">No hay vencimientos que requieran acción en el período seleccionado.</p></div></div>
+    }
+    else
+    {
+        @foreach (var group in groups.Where(group => group.Items.Any()))
+        {
+            <section class="card s4-alert-group" aria-labelledby="group-@group.Key">
+                <div class="card-header s4-alert-group__title">
+                    <div><strong id="group-@group.Key">@group.Title</strong><small class="d-block text-muted">@group.Description</small></div>
+                    <span class="badge badge-@(group.Key == "expired" ? "danger" : group.Key == "today" || group.Key == "seven" ? "warning" : "info")">@group.Items.Count</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead><tr><th>Documento</th><th>Responsable</th><th>Vencimiento</th><th>Prioridad</th><th>Estado</th><th><span class="sr-only">Acción</span></th></tr></thead>
+                        <tbody>
+                        @foreach (var alert in group.Items)
+                        {
+                            <tr>
+                                <td><a asp-action="Detail" asp-route-id="@alert.DocumentId"><strong>@alert.DocumentTitle</strong></a><small class="d-block text-muted">@alert.TypeName · @(alert.DepartmentName ?? "General")</small></td>
+                                <td>@alert.ResponsibleName</td>
+                                <td>@alert.ExpirationDate.ToString("dd/MM/yyyy")</td>
+                                <td><span class="badge badge-@PriorityClass(alert.DaysRemaining)">@(alert.DaysRemaining < 0 ? $"{Math.Abs(alert.DaysRemaining)} días vencido" : alert.DaysRemaining == 0 ? "Hoy" : $"{alert.DaysRemaining} días")</span></td>
+                                <td>@alert.Status <small class="d-block text-muted">@alert.ExpirationStatus</small></td>
+                                <td>
+                                    @if (alert.Status == "Activa")
+                                    {
+                                        <form asp-action="MarkAlertHandled" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@alert.AlertId" />
+                                            <button class="btn btn-sm btn-outline-success" type="submit"><i class="fa fa-check mr-1"></i>Atender</button>
+                                        </form>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        }
+    }
+
+    <nav class="d-flex justify-content-between align-items-center mt-3" aria-label="Paginación de alertas">
+        <span class="text-muted">@Model.Alerts.Total alerta(s)</span>
+        <div>
+            @if (Model.Alerts.Page > 1) { <a asp-route-Page="@(Model.Alerts.Page - 1)" asp-route-Status="@Model.Filter.Status" asp-route-DepartmentId="@Model.Filter.DepartmentId" asp-route-MaxDays="@Model.Filter.MaxDays" class="btn btn-sm btn-outline-secondary">Anterior</a> }
+            @if (Model.Alerts.Page < Model.Alerts.TotalPages) { <a asp-route-Page="@(Model.Alerts.Page + 1)" asp-route-Status="@Model.Filter.Status" asp-route-DepartmentId="@Model.Filter.DepartmentId" asp-route-MaxDays="@Model.Filter.MaxDays" class="btn btn-sm btn-outline-secondary">Siguiente</a> }
+        </div>
+    </nav>
+</div>

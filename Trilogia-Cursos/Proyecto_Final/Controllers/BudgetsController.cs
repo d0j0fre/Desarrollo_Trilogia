@@ -35,13 +35,28 @@ public sealed class BudgetsController : Controller
         return model is null ? NotFound() : View(model);
     }
 
+    [HttpGet]
+    public async Task<IActionResult> Detail(int id)
+    {
+        var model = await _budgets.GetDetailsAsync(id);
+        return model is null ? NotFound() : View("Details", model);
+    }
+
+    [HttpGet]
+    [AdminAuthorize("Presupuestos", "PRESUPUESTOS_GESTIONAR")]
+    public async Task<IActionResult> Create(int? year)
+    {
+        await LoadOptionsAsync();
+        return View(new BudgetCreateViewModel { Year = year ?? DateTime.Today.Year });
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     [EnableRateLimiting("finance-write")]
     [AdminAuthorize("Presupuestos", "PRESUPUESTOS_GESTIONAR")]
     public async Task<IActionResult> Create(BudgetCreateViewModel model)
     {
-        if (!ModelState.IsValid) { TempData["ErrorMessage"] = "Revise los datos del presupuesto."; return RedirectToAction(nameof(Index), new { year = model.Year }); }
+        if (!ModelState.IsValid) { await LoadOptionsAsync(); return View(model); }
         try
         {
             var id = await _budgets.CreateAsync(model, UserId(), UserName());
@@ -49,7 +64,44 @@ public sealed class BudgetsController : Controller
             TempData["SuccessMessage"] = "Presupuesto anual creado en borrador.";
             return RedirectToAction(nameof(Details), new { id });
         }
-        catch (Exception exception) { Handle(exception, "crear el presupuesto"); return RedirectToAction(nameof(Index), new { year = model.Year }); }
+        catch (Exception exception) { Handle(exception, "crear el presupuesto"); await LoadOptionsAsync(); return View(model); }
+    }
+
+    [HttpGet]
+    [AdminAuthorize("Presupuestos", "PRESUPUESTOS_GESTIONAR")]
+    public async Task<IActionResult> Edit(int id)
+    {
+        var details = await _budgets.GetDetailsAsync(id);
+        if (details is null) return NotFound();
+        if (!details.CanEdit)
+        {
+            TempData["ErrorMessage"] = "El presupuesto ya no admite edición.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+        return View(new BudgetHeaderEditViewModel
+        {
+            BudgetId = details.Budget.BudgetId,
+            Year = details.Budget.Year,
+            AnnualAmount = details.Budget.AnnualAmount,
+            Notes = details.Budget.Notes
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [EnableRateLimiting("finance-write")]
+    [AdminAuthorize("Presupuestos", "PRESUPUESTOS_GESTIONAR")]
+    public async Task<IActionResult> Edit(BudgetHeaderEditViewModel model)
+    {
+        if (!ModelState.IsValid) return View(model);
+        try
+        {
+            await _budgets.UpdateDraftAsync(model, UserId(), UserName());
+            await AuditAsync("EDITAR_PRESUPUESTO", $"Presupuesto #{model.BudgetId}, año {model.Year}, monto {model.AnnualAmount:N2}.");
+            TempData["SuccessMessage"] = "Encabezado actualizado; verifique la distribución mensual.";
+            return RedirectToAction(nameof(Details), new { id = model.BudgetId });
+        }
+        catch (Exception exception) { Handle(exception, "actualizar el presupuesto"); return View(model); }
     }
 
     [HttpPost]
@@ -156,6 +208,12 @@ public sealed class BudgetsController : Controller
 
     private int UserId() => HttpContext.Session.GetInt32("UserId") ?? 0;
     private string UserName() => HttpContext.Session.GetString("UserFullName") ?? "Usuario";
+    private async Task LoadOptionsAsync()
+    {
+        var options = await _budgets.GetOptionsAsync();
+        ViewBag.Departments = options.Departments;
+        ViewBag.Categories = options.Categories;
+    }
     private Task AuditAsync(string action, string detail) => _admin.CreateAuditLogAsync(UserId(), UserName(), HttpContext.Session.GetString("UserEmail"),
         HttpContext.Session.GetString("UserRole"), action, "Presupuestos", detail, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString());
     private void Handle(Exception exception, string operation)
