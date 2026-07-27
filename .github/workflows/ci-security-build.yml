@@ -2,9 +2,9 @@ name: CI Security Build
 
 on:
   push:
-    branches: [main, Danny]
+    branches: [main, Danny, "codex/p0-saneamiento-integracion-total-20260722"]
   pull_request:
-    branches: [main, Danny]
+    branches: [main, Danny, "codex/p0-saneamiento-integracion-total-20260722"]
   workflow_dispatch:
 
 permissions:
