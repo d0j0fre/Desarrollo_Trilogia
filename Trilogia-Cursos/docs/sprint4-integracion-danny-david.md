@@ -127,3 +127,17 @@ recurso y requiere aprobación expresa.
 - La implementación, pruebas de concurrencia, migración 0012 y QA completo se
   desarrollan después de esta auditoría; no se consideran terminados en este
   punto.
+
+## Evidencia final de integracion - 27 de julio de 2026
+
+- `dotnet build Proyecto_Final.slnx -c Release --no-restore`: aprobado, sin errores ni advertencias.
+- `dotnet test Proyecto_Final.slnx -c Release --no-restore`: 110 aprobadas, 0 fallidas.
+- ScriptDom: los 54 archivos SQL y 509 lotes del directorio `database/` son validos.
+- La instancia LocalDB aislada `TrilogiaSprint4Clean` se reconstruyo desde una base nueva, aplico 0001-0011 y la version final de 0012. La unica adaptacion fue la fixture local conocida de 0004; no se modifico ningun script historico ni Azure DEV.
+- La verificacion de solo lectura de 0012 aprobo. La prueba funcional con rollback aprobo checkout mixto, reintento idempotente, snapshots de factura, cancelacion/restauracion de componentes, transformacion atomica y tendencia de doce meses. El caso de token con carga distinta devolvio 54609. Dos sesiones concurrentes contra una sola unidad dieron exactamente un checkout exitoso, un 54615 y stock final cero.
+
+## Pendientes antes de aplicar Azure DEV
+
+- No se aplico 0012 en Azure DEV. Falta reconfirmar metadatos y dependencias 0002-0006, crear y verificar un BACPAC, designar ejecutor unico y ejecutar la verificacion posterior.
+- El QA de navegador autenticado sigue pendiente de una credencial de prueba autorizada; no se cambio ni se infirio ninguna contrasena.
+- El reintento final de metadatos Azure DEV fue rechazado o no estuvo disponible. No se ejecuto SQL de cambio, no se exporto BACPAC y 0012 permanece pendiente de aplicacion controlada.
