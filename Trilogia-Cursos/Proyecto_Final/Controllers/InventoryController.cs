@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Proyecto_Final.Filters;
 using Proyecto_Final.Models.Admin;
 using Proyecto_Final.Services;
@@ -19,11 +20,19 @@ namespace Proyecto_Final.Controllers
 
         private readonly AdminDbService _adminDbService;
         private readonly IWebHostEnvironment _environment;
+        private readonly IInventoryTransformationService _transformations;
+        private readonly ILogger<InventoryController> _logger;
 
-        public InventoryController(AdminDbService adminDbService, IWebHostEnvironment environment)
+        public InventoryController(
+            AdminDbService adminDbService,
+            IWebHostEnvironment environment,
+            IInventoryTransformationService transformations,
+            ILogger<InventoryController> logger)
         {
             _adminDbService = adminDbService;
             _environment = environment;
+            _transformations = transformations;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -327,6 +336,7 @@ namespace Proyecto_Final.Controllers
         }
 
         [HttpGet]
+        [AdminAuthorize("Inventario", "INVENTARIO_TRANSFORMAR")]
         public async Task<IActionResult> TransformStock()
         {
             var productos = await _adminDbService.GetActiveProductsForSelectAsync();
@@ -340,6 +350,7 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AdminAuthorize("Inventario", "INVENTARIO_TRANSFORMAR")]
         public async Task<IActionResult> TransformStock(StockTransformationFormViewModel model)
         {
             if (!ModelState.IsValid)
@@ -357,22 +368,26 @@ namespace Proyecto_Final.Controllers
             {
                 var usuarioId = HttpContext.Session.GetInt32("UserId") ?? 0;
                 var usuarioNombre = HttpContext.Session.GetString("UserFullName") ?? "Administrador";
-                await _adminDbService.RegisterStockTransformationAsync(model, usuarioId, usuarioNombre);
-
-                await RegistrarAuditoriaAsync(
-                    "Transformacion",
-                    "Inventario",
-                    $"Se transformó stock del producto #{model.ProductoOrigenId} ({model.CantidadOrigen}u) al producto #{model.ProductoDestinoId} ({model.CantidadDestino}u).");
-
-                TempData["SuccessMessage"] = "Transformación registrada correctamente.";
+                var result = await _transformations.TransformAsync(model, usuarioId, usuarioNombre, HttpContext.RequestAborted);
+                TempData["SuccessMessage"] = $"Transformación registrada correctamente. Referencia {result.Reference:N}.";
                 return RedirectToAction(nameof(Movements));
             }
-            catch (InvalidOperationException ex)
+            catch (SqlException exception)
             {
-                ModelState.AddModelError(string.Empty, ex.Message);
+                _logger.LogWarning(
+                    exception,
+                    "La transformación de inventario fue rechazada para el usuario {UserId}. Código SQL {SqlNumber}.",
+                    HttpContext.Session.GetInt32("UserId"),
+                    exception.Number);
+                ModelState.AddModelError(
+                    string.Empty,
+                    exception.Number == 54405
+                        ? "No hay stock suficiente en el producto de origen."
+                        : "No fue posible completar la transformación. Revise los datos.");
             }
-            catch (Exception)
+            catch (Exception exception)
             {
+                _logger.LogError(exception, "Error inesperado al transformar inventario para el usuario {UserId}.", HttpContext.Session.GetInt32("UserId"));
                 ModelState.AddModelError(string.Empty, "Ocurrió un error al registrar la transformación. Intente nuevamente.");
             }
 

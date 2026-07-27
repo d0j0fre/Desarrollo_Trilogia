@@ -495,7 +495,8 @@ namespace Proyecto_Final.Controllers
                             Producto = linea.Producto,
                             Cantidad = linea.Cantidad,
                             PrecioUnitario = linea.PrecioUnitario,
-                            Subtotal = linea.Subtotal
+                            Subtotal = linea.Subtotal,
+                            IsCombo = linea.IsCombo
                         })
                     .ToList()
             };

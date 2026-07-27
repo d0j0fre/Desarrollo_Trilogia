@@ -93,7 +93,7 @@
                                         <td>₡@linea.Subtotal.ToString("N2")</td>
 
                                         <td>
-                                            @if (string.Equals(
+                                            @if (!linea.IsCombo && string.Equals(
                                                 Model.Estado,
                                                 "Entregado",
                                                 StringComparison.OrdinalIgnoreCase))

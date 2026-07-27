@@ -1,25 +1,43 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Proyecto_Final.Filters;
+using Proyecto_Final.Models.Admin;
 using Proyecto_Final.Services;
 
-namespace Proyecto_Final.Controllers
-{
-    // CU-241/242/243 — Reportes de inteligencia de inventario. Mismo permiso que el tablero gerencial porque pertenecen al mismo módulo de Reportes.
-    [AdminAuthorize("Reportes", "REPORTES_DASHBOARD")]
-    public class InventoryIntelligenceController : Controller
-    {
-        private readonly ReportsDbService _reports;
+namespace Proyecto_Final.Controllers;
 
-        public InventoryIntelligenceController(ReportsDbService reports)
+[AdminAuthorize("Inventario", "INVENTARIO_INTELIGENCIA_VER")]
+public sealed class InventoryIntelligenceController : Controller
+{
+    private readonly IInventoryIntelligenceService _intelligence;
+    private readonly ILogger<InventoryIntelligenceController> _logger;
+
+    public InventoryIntelligenceController(
+        IInventoryIntelligenceService intelligence,
+        ILogger<InventoryIntelligenceController> logger)
+    {
+        _intelligence = intelligence;
+        _logger = logger;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Index(
+        [FromQuery] InventoryIntelligenceFilterViewModel filter,
+        CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
         {
-            _reports = reports;
+            return View(new InventoryIntelligenceViewModel { Filter = filter });
         }
 
-        [HttpGet]
-        public async Task<IActionResult> Index()
+        try
         {
-            var model = await _reports.GetInventoryIntelligenceAsync();
-            return View(model);
+            return View(await _intelligence.GetAsync(filter, cancellationToken));
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "No fue posible consultar inteligencia de inventario.");
+            ModelState.AddModelError(string.Empty, "No fue posible cargar los indicadores en este momento.");
+            return View(new InventoryIntelligenceViewModel { Filter = filter });
         }
     }
 }

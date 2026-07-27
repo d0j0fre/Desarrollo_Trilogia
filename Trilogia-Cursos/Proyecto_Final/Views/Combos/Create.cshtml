@@ -3,7 +3,7 @@
     ViewData["Title"] = "Nuevo combo";
 }
 
-<div class="container-fluid pt-4 backoffice-page">
+<div class="container-fluid py-4 backoffice-page s4-admin-page">
     <div class="row px-xl-5">
         <div class="col-12">
             <h2 class="mb-2">Nuevo combo</h2>
@@ -53,7 +53,7 @@
                                 </td>
                                 <td>@Model.Productos[i].Nombre</td>
                                 <td>@Model.Productos[i].StockActual</td>
-                                <td style="width:120px;">
+                                <td class="s4-component-width">
                                     <input asp-for="Productos[i].Cantidad" type="number" min="1" class="form-control form-control-sm" />
                                 </td>
                             </tr>

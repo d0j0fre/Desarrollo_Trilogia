@@ -2,9 +2,17 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Proyecto_Final.Models.Store
 {
+    public static class CartItemTypes
+    {
+        public const string Product = "Producto";
+        public const string Combo = "Combo";
+    }
+
     public class CartItemViewModel
     {
+        public string ItemType { get; set; } = CartItemTypes.Product;
         public int ProductoId { get; set; }
+        public int? ComboId { get; set; }
         public string Nombre { get; set; } = string.Empty;
         public string Categoria { get; set; } = string.Empty;
         public string? Descripcion { get; set; }
@@ -19,6 +27,9 @@ namespace Proyecto_Final.Models.Store
         public bool EsRegalo { get; set; }
         public string? PromocionNombre { get; set; }
         public decimal SubtotalConDescuento => Subtotal - MontoDescuento;
+        public string CartKey => ItemType == CartItemTypes.Combo
+            ? $"combo:{ComboId.GetValueOrDefault()}"
+            : $"product:{ProductoId}";
     }
 
     public class CartViewModel
@@ -47,6 +58,8 @@ namespace Proyecto_Final.Models.Store
 
     public class CheckoutViewModel
     {
+        public Guid OperationToken { get; set; } = Guid.NewGuid();
+
         [Display(Name = "Tipo de entrega")]
         public string TipoEntrega { get; set; } = "Envío a domicilio";
 
@@ -119,6 +132,7 @@ namespace Proyecto_Final.Models.Store
     {
         public int PedidoId { get; set; }
         public decimal Total { get; set; }
+        public List<CartItemViewModel> Items { get; set; } = new();
         public List<CartItemViewModel> Gifts { get; set; } = new();
     }
 }

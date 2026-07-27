@@ -1,73 +1,59 @@
-﻿@model List<Proyecto_Final.Models.Admin.ComboListItemViewModel>
+@model IReadOnlyList<Proyecto_Final.Models.Admin.ComboListItemViewModel>
 @{
     ViewData["Title"] = "Combos";
+    var active = Model.Count(item => item.Activo);
+    var available = Model.Count(item => item.Activo && item.StockDisponibleCombo > 0);
 }
 
-<div class="container-fluid pt-4 backoffice-page">
-    <div class="row px-xl-5">
-        <div class="col-12 d-flex justify-content-between align-items-center">
-            <div class="admin-page-header">
-                <h2 class="mb-2">Combos</h2>
-                <p class="mb-0">Paquetes de productos que se venden juntos a un precio promocional.</p>
-            </div>
-            <a asp-action="Create" class="btn btn-primary"><i class="fa fa-plus mr-1"></i>Nuevo combo</a>
+<div class="container-fluid py-4 px-xl-5 backoffice-page s4-admin-page">
+    <header class="d-flex flex-wrap justify-content-between align-items-start mb-4">
+        <div class="s4-page-header">
+            <span class="s4-eyebrow"><i class="fa fa-box-open"></i> CU-181</span>
+            <h2>Combos comerciales</h2>
+            <p class="text-muted mb-0">Ofertas vendibles con disponibilidad calculada desde sus componentes.</p>
         </div>
+        <a asp-action="Create" class="btn btn-primary"><i class="fa fa-plus mr-1"></i>Nuevo combo</a>
+    </header>
+
+    @if (TempData["SuccessMessage"] is string success) { <div class="alert alert-success" role="status">@success</div> }
+    @if (TempData["ErrorMessage"] is string error) { <div class="alert alert-danger" role="alert">@error</div> }
+
+    <div class="s4-kpi-grid mb-4">
+        <article class="s4-kpi"><span class="s4-kpi__label">Total</span><strong class="s4-kpi__value">@Model.Count</strong></article>
+        <article class="s4-kpi s4-kpi--success"><span class="s4-kpi__label">Activos</span><strong class="s4-kpi__value">@active</strong></article>
+        <article class="s4-kpi s4-kpi--warning"><span class="s4-kpi__label">Vendibles hoy</span><strong class="s4-kpi__value">@available</strong></article>
     </div>
 
-    @if (TempData["SuccessMessage"] != null)
-    {
-        <div class="row px-xl-5 mt-3"><div class="col-12"><div class="alert alert-success">@TempData["SuccessMessage"]</div></div></div>
-    }
-
-    <div class="row px-xl-5 mt-4">
-        <div class="col-12">
-            @if (!Model.Any())
-            {
-                <p class="text-muted">Aún no se han creado combos.</p>
-            }
-            else
-            {
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Nombre</th>
-                            <th>Precio</th>
-                            <th>Productos</th>
-                            <th>Disponibles hoy</th>
-                            <th>Estado</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var combo in Model)
-                        {
-                            <tr>
-                                <td><a asp-action="Detail" asp-route-id="@combo.ComboId">@combo.Nombre</a></td>
-                                <td>@combo.Precio.ToString("C0")</td>
-                                <td>@combo.CantidadProductos</td>
-                                <td>
-                                    <span class="badge @(combo.StockDisponibleCombo > 0 ? "badge-success" : "badge-danger")">
-                                        @combo.StockDisponibleCombo
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="badge @(combo.Activo ? "badge-success" : "badge-secondary")">
-                                        @(combo.Activo ? "Activo" : "Inactivo")
-                                    </span>
-                                </td>
-                                <td>
-                                    <form asp-action="ToggleStatus" asp-route-id="@combo.ComboId" method="post" class="d-inline">
-                                        @Html.AntiForgeryToken()
-                                        <button type="submit" class="btn btn-sm btn-outline-secondary">
-                                            @(combo.Activo ? "Desactivar" : "Activar")
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            }
-        </div>
-    </div>
+    <section class="card" aria-labelledby="combo-list-title">
+        <div class="card-header" id="combo-list-title">Catálogo de combos</div>
+        @if (!Model.Any())
+        {
+            <div class="s4-empty"><i class="fa fa-box-open"></i><h3>Aún no hay combos</h3><p>Defina una oferta con al menos un componente y cantidad positiva.</p><a asp-action="Create" class="btn btn-primary">Crear primer combo</a></div>
+        }
+        else
+        {
+            <div class="table-responsive"><table class="table table-hover">
+                <thead><tr><th>Combo</th><th>Precio</th><th>Componentes</th><th>Disponibles</th><th>Estado</th><th><span class="sr-only">Acciones</span></th></tr></thead>
+                <tbody>
+                @foreach (var combo in Model)
+                {
+                    <tr>
+                        <td><a asp-action="Detail" asp-route-id="@combo.ComboId"><strong>@combo.Nombre</strong></a><small class="d-block text-muted">Creado @combo.FechaCreacionUtc.ToLocalTime().ToString("dd/MM/yyyy") por @combo.RegistradoPorNombre</small></td>
+                        <td>₡@combo.Precio.ToString("N2")</td>
+                        <td>@combo.CantidadProductos</td>
+                        <td><span class="badge badge-@(combo.StockDisponibleCombo > 0 ? "success" : "danger")">@combo.StockDisponibleCombo @(combo.StockDisponibleCombo == 1 ? "unidad" : "unidades")</span></td>
+                        <td><span class="badge badge-@(combo.Activo ? "success" : "secondary")"><i class="fa fa-@(combo.Activo ? "check" : "pause")"></i>@(combo.Activo ? "Activo" : "Inactivo")</span></td>
+                        <td class="text-right">
+                            <a asp-action="Detail" asp-route-id="@combo.ComboId" class="btn btn-sm btn-outline-primary mr-1">Detalle</a>
+                            <form asp-action="ToggleStatus" asp-route-id="@combo.ComboId" method="post" class="d-inline" data-confirm="¿Confirma que desea @(combo.Activo ? "inactivar" : "activar") el combo @combo.Nombre?">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-outline-secondary">@(combo.Activo ? "Inactivar" : "Activar")</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table></div>
+        }
+    </section>
 </div>

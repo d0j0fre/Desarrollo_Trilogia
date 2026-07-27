@@ -4,7 +4,7 @@
     var productos = ViewBag.Productos as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem> ?? new();
 }
 
-<div class="container-fluid pt-4 backoffice-page">
+<div class="container-fluid py-4 backoffice-page s4-admin-page">
     <div class="row px-xl-5">
         <div class="col-12">
             <div class="admin-page-header">
@@ -16,7 +16,7 @@
 
     <div class="row px-xl-5 mt-4">
         <div class="col-lg-6">
-            <div class="kpi-card p-4" style="border:1px solid #eee;border-radius:12px;">
+            <div class="kpi-card p-4">
                 <form asp-action="TransformStock" method="post">
                     @Html.AntiForgeryToken()
                     <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>

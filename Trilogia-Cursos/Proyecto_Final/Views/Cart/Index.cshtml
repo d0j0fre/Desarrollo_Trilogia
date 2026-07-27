@@ -65,8 +65,10 @@
 
                             <div class="s3-cart-qty__buttons">
                                 <form asp-action="Update" method="post" class="s3-cart-qty__form">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="productoId" value="@item.ProductoId" />
+                                     @Html.AntiForgeryToken()
+                                     <input type="hidden" name="productoId" value="@item.ProductoId" />
+                                     <input type="hidden" name="comboId" value="@item.ComboId" />
+                                     <input type="hidden" name="itemType" value="@item.ItemType" />
                                     <input type="hidden" name="cantidad" value="@(item.Cantidad - 1)" />
                                     <button class="btn btn-outline-secondary btn-sm" type="submit" disabled="@(!puedeDisminuir)" aria-label="Disminuir cantidad">
                                         <i class="fa fa-minus"></i>
@@ -74,8 +76,10 @@
                                 </form>
 
                                 <form asp-action="Update" method="post" class="s3-cart-qty__input-form">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="productoId" value="@item.ProductoId" />
+                                     @Html.AntiForgeryToken()
+                                     <input type="hidden" name="productoId" value="@item.ProductoId" />
+                                     <input type="hidden" name="comboId" value="@item.ComboId" />
+                                     <input type="hidden" name="itemType" value="@item.ItemType" />
                                     <input type="number" name="cantidad" value="@item.Cantidad" min="1" max="@item.StockDisponible" class="form-control form-control-sm s3-cart-qty__input" />
                                     <button class="btn btn-primary btn-sm" type="submit">
                                         <i class="fa fa-sync-alt mr-1"></i>Actualizar
@@ -83,8 +87,10 @@
                                 </form>
 
                                 <form asp-action="Update" method="post" class="s3-cart-qty__form">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="productoId" value="@item.ProductoId" />
+                                     @Html.AntiForgeryToken()
+                                     <input type="hidden" name="productoId" value="@item.ProductoId" />
+                                     <input type="hidden" name="comboId" value="@item.ComboId" />
+                                     <input type="hidden" name="itemType" value="@item.ItemType" />
                                     <input type="hidden" name="cantidad" value="@(item.Cantidad + 1)" />
                                     <button class="btn btn-outline-secondary btn-sm" type="submit" disabled="@(!puedeAumentar)" aria-label="Aumentar cantidad">
                                         <i class="fa fa-plus"></i>
@@ -98,7 +104,7 @@
                                 <span>Subtotal</span>
                                 @if (item.MontoDescuento > 0)
                                 {
-                                    <strong class="text-muted" style="text-decoration:line-through">₡@item.Subtotal.ToString("N2")</strong>
+                                    <strong class="text-muted s4-price-before">₡@item.Subtotal.ToString("N2")</strong>
                                     <strong class="text-success d-block">₡@item.SubtotalConDescuento.ToString("N2")</strong>
                                     <span class="badge badge-success"><i class="fa fa-tags mr-1"></i>@item.PromocionNombre</span>
                                 }
@@ -109,13 +115,15 @@
                             </div>
 
                             <form asp-action="Remove" method="post" class="s3-cart-remove-form"
-                                  data-s3-confirm="¿Desea quitar este producto del carrito?"
-                                  data-s3-confirm-title="Quitar producto"
+                                  data-s3-confirm="¿Desea quitar esta oferta del carrito?"
+                                  data-s3-confirm-title="Quitar del carrito"
                                   data-s3-confirm-type="warning"
                                   data-s3-confirm-ok="Quitar"
                                   data-s3-confirm-cancel="Cancelar">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="productoId" value="@item.ProductoId" />
+                                 @Html.AntiForgeryToken()
+                                 <input type="hidden" name="productoId" value="@item.ProductoId" />
+                                 <input type="hidden" name="comboId" value="@item.ComboId" />
+                                 <input type="hidden" name="itemType" value="@item.ItemType" />
                                 <button class="btn btn-outline-danger btn-sm" type="submit">
                                     <i class="fa fa-trash-alt mr-1"></i>Quitar
                                 </button>

@@ -1,102 +1,127 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Proyecto_Final.Filters;
 using Proyecto_Final.Models.Admin;
 using Proyecto_Final.Services;
 
-namespace Proyecto_Final.Controllers
+namespace Proyecto_Final.Controllers;
+
+[AdminAuthorize("Inventario", "COMBOS_VER")]
+public sealed class CombosController : Controller
 {
-    // CU-181 — Combos: agrupar productos para venderlos como paquete promocional.
-    [AdminAuthorize("Inventario")]
-    public class CombosController : Controller
+    private readonly IComboDbService _combos;
+    private readonly AdminDbService _adminDbService;
+    private readonly ILogger<CombosController> _logger;
+
+    public CombosController(
+        IComboDbService combos,
+        AdminDbService adminDbService,
+        ILogger<CombosController> logger)
     {
-        private readonly AdminDbService _adminDbService;
-
-        public CombosController(AdminDbService adminDbService)
-        {
-            _adminDbService = adminDbService;
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> Index()
-        {
-            var combos = await _adminDbService.GetCombosAsync();
-            return View(combos);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> Detail(int id)
-        {
-            var combo = await _adminDbService.GetComboDetailAsync(id);
-            if (combo is null) return NotFound();
-            return View(combo);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> Create()
-        {
-            var model = new ComboFormViewModel
-            {
-                Productos = await GetProductSelectionListAsync()
-            };
-            return View(model);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(ComboFormViewModel model)
-        {
-            if (!ModelState.IsValid)
-            {
-                model.Productos = await GetProductSelectionListAsync(model.Productos);
-                return View(model);
-            }
-
-            try
-            {
-                var usuarioId = HttpContext.Session.GetInt32("UserId") ?? 0;
-                var usuarioNombre = HttpContext.Session.GetString("UserFullName") ?? "Administrador";
-                var nuevoComboId = await _adminDbService.CreateComboAsync(model, usuarioId, usuarioNombre);
-                TempData["SuccessMessage"] = "Combo creado correctamente.";
-                return RedirectToAction(nameof(Detail), new { id = nuevoComboId });
-            }
-            catch (InvalidOperationException ex)
-            {
-                ModelState.AddModelError(string.Empty, ex.Message);
-            }
-            catch (Exception)
-            {
-                ModelState.AddModelError(string.Empty, "Ocurrió un error al crear el combo. Intente nuevamente.");
-            }
-
-            model.Productos = await GetProductSelectionListAsync(model.Productos);
-            return View(model);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ToggleStatus(int id)
-        {
-            await _adminDbService.ToggleComboStatusAsync(id);
-            TempData["SuccessMessage"] = "Estado del combo actualizado.";
-            return RedirectToAction(nameof(Index));
-        }
-
-        // Arma la lista de productos disponibles, conservando lo ya marcado si el formulario se recarga por un error.
-        private async Task<List<ComboProductSelectionViewModel>> GetProductSelectionListAsync(List<ComboProductSelectionViewModel>? previo = null)
-        {
-            var productos = await _adminDbService.GetActiveProductsForSelectAsync();
-            return productos.Select(p =>
-            {
-                var anterior = previo?.FirstOrDefault(x => x.ProductoId == p.ProductoId);
-                return new ComboProductSelectionViewModel
-                {
-                    ProductoId = p.ProductoId,
-                    Nombre = p.Nombre,
-                    StockActual = p.Stock,
-                    Seleccionado = anterior?.Seleccionado ?? false,
-                    Cantidad = anterior?.Cantidad ?? 1
-                };
-            }).ToList();
-        }
+        _combos = combos;
+        _adminDbService = adminDbService;
+        _logger = logger;
     }
+
+    [HttpGet]
+    public async Task<IActionResult> Index(CancellationToken cancellationToken)
+    {
+        return View(await _combos.GetAdminCombosAsync(cancellationToken));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Detail(int id, CancellationToken cancellationToken)
+    {
+        var combo = await _combos.GetDetailAsync(id, cancellationToken);
+        return combo is null ? NotFound() : View(combo);
+    }
+
+    [HttpGet]
+    [AdminAuthorize("Inventario", "COMBOS_GESTIONAR")]
+    public async Task<IActionResult> Create(CancellationToken cancellationToken)
+    {
+        return View(new ComboFormViewModel
+        {
+            Productos = await GetProductSelectionListAsync(null, cancellationToken)
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [AdminAuthorize("Inventario", "COMBOS_GESTIONAR")]
+    public async Task<IActionResult> Create(ComboFormViewModel model, CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
+        {
+            model.Productos = await GetProductSelectionListAsync(model.Productos, cancellationToken);
+            return View(model);
+        }
+
+        try
+        {
+            var comboId = await _combos.CreateAsync(model, UserId(), UserName(), cancellationToken);
+            TempData["SuccessMessage"] = "Combo creado correctamente y disponible para la tienda.";
+            return RedirectToAction(nameof(Detail), new { id = comboId });
+        }
+        catch (ArgumentException exception)
+        {
+            _logger.LogWarning(exception, "Se rechazó un combo inválido solicitado por el usuario {UserId}.", UserId());
+            ModelState.AddModelError(nameof(model.Productos), "Revise los componentes seleccionados.");
+        }
+        catch (SqlException exception)
+        {
+            _logger.LogWarning(exception, "La base rechazó la creación de combo para el usuario {UserId}.", UserId());
+            ModelState.AddModelError(string.Empty, "No fue posible crear el combo con los datos indicados.");
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "Error inesperado al crear un combo para el usuario {UserId}.", UserId());
+            ModelState.AddModelError(string.Empty, "Ocurrió un error al crear el combo. Intente nuevamente.");
+        }
+
+        model.Productos = await GetProductSelectionListAsync(model.Productos, cancellationToken);
+        return View(model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [AdminAuthorize("Inventario", "COMBOS_GESTIONAR")]
+    public async Task<IActionResult> ToggleStatus(int id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _combos.ToggleStatusAsync(id, UserId(), UserName(), cancellationToken);
+            TempData["SuccessMessage"] = "Estado del combo actualizado.";
+        }
+        catch (SqlException exception)
+        {
+            _logger.LogWarning(exception, "La base rechazó el cambio de estado del combo {ComboId}.", id);
+            TempData["ErrorMessage"] = "No fue posible cambiar el estado del combo.";
+        }
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    private async Task<List<ComboProductSelectionViewModel>> GetProductSelectionListAsync(
+        IReadOnlyCollection<ComboProductSelectionViewModel>? previous,
+        CancellationToken cancellationToken)
+    {
+        var products = await _adminDbService.GetActiveProductsForSelectAsync();
+        cancellationToken.ThrowIfCancellationRequested();
+        return products.Select(product =>
+        {
+            var prior = previous?.FirstOrDefault(item => item.ProductoId == product.ProductoId);
+            return new ComboProductSelectionViewModel
+            {
+                ProductoId = product.ProductoId,
+                Nombre = product.Nombre,
+                StockActual = product.Stock,
+                Seleccionado = prior?.Seleccionado ?? false,
+                Cantidad = prior?.Cantidad > 0 ? prior.Cantidad : 1
+            };
+        }).ToList();
+    }
+
+    private int UserId() => HttpContext.Session.GetInt32("UserId")!.Value;
+    private string UserName() => HttpContext.Session.GetString("UserFullName") ?? "Administrador";
 }

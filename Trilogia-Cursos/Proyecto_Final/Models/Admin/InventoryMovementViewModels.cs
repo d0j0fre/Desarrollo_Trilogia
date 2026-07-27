@@ -50,7 +50,7 @@ namespace Proyecto_Final.Models.Admin
     }
 
     // CU-182 — Transforma stock de un producto "origen" (ej. caja) a un producto "destino" (ej. unidad).
-    public class StockTransformationFormViewModel
+    public class StockTransformationFormViewModel : IValidatableObject
     {
         [Display(Name = "Producto origen")]
         [Range(1, int.MaxValue, ErrorMessage = "Debes seleccionar el producto de origen.")]
@@ -73,5 +73,28 @@ namespace Proyecto_Final.Models.Admin
         public string? Motivo { get; set; } = string.Empty;
 
         public List<ProductAdminViewModel> ProductosDisponibles { get; set; } = new();
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (ProductoOrigenId > 0 && ProductoOrigenId == ProductoDestinoId)
+            {
+                yield return new ValidationResult(
+                    "El producto de origen y destino deben ser diferentes.",
+                    new[] { nameof(ProductoDestinoId) });
+            }
+        }
+    }
+
+    public sealed class StockTransformationResultViewModel
+    {
+        public Guid Reference { get; set; }
+        public int SourceProductId { get; set; }
+        public string SourceProductName { get; set; } = string.Empty;
+        public int SourceStockBefore { get; set; }
+        public int SourceStockAfter { get; set; }
+        public int DestinationProductId { get; set; }
+        public string DestinationProductName { get; set; } = string.Empty;
+        public int DestinationStockBefore { get; set; }
+        public int DestinationStockAfter { get; set; }
     }
 }
