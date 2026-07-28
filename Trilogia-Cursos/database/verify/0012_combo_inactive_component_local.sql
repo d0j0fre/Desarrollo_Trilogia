@@ -19,7 +19,18 @@ BEGIN TRY
     BEGIN TRANSACTION;
 
     DECLARE @ComboId INT;
-    DECLARE @CatalogoAntes TABLE
+    DECLARE @DetallePublicoAntes TABLE
+    (
+        ComboId INT,
+        Nombre NVARCHAR(150),
+        Descripcion NVARCHAR(500),
+        Precio DECIMAL(18,2),
+        CantidadProductos INT,
+        StockDisponibleCombo INT,
+        ComponentesValidos BIT,
+        ComponentesResumen NVARCHAR(MAX)
+    );
+    DECLARE @DetallePublicoInactivo TABLE
     (
         ComboId INT,
         Nombre NVARCHAR(150),
@@ -65,16 +76,17 @@ BEGIN TRY
         @UsuarioNombre = N'QA Local',
         @NuevoComboId = @ComboId OUTPUT;
 
-    INSERT INTO @CatalogoAntes EXEC dbo.sp_Store_GetComboById @ComboId = @ComboId;
-    IF NOT EXISTS (SELECT 1 FROM @CatalogoAntes WHERE StockDisponibleCombo = 10 AND ComponentesValidos = 1)
+    INSERT INTO @DetallePublicoAntes EXEC dbo.sp_Store_GetComboById @ComboId = @ComboId;
+    IF NOT EXISTS (SELECT 1 FROM @DetallePublicoAntes WHERE StockDisponibleCombo = 10 AND ComponentesValidos = 1)
         THROW 54741, N'El combo activo no quedó disponible antes de inactivar un componente.', 1;
 
     UPDATE dbo.Productos SET Activo = 0 WHERE ProductoId = 2;
+    INSERT INTO @DetallePublicoInactivo EXEC dbo.sp_Store_GetComboById @ComboId = @ComboId;
     INSERT INTO @CatalogoInactivo EXEC dbo.sp_Store_GetActiveCombos;
     INSERT INTO @AdminInactivo EXEC dbo.sp_Admin_GetCombos;
 
-    IF EXISTS (SELECT 1 FROM @CatalogoInactivo WHERE ComboId = @ComboId)
-       OR EXISTS (SELECT 1 FROM @CatalogoAntes WHERE ComboId = @ComboId AND StockDisponibleCombo <= 0)
+    IF EXISTS (SELECT 1 FROM @DetallePublicoInactivo)
+       OR EXISTS (SELECT 1 FROM @CatalogoInactivo WHERE ComboId = @ComboId)
        OR NOT EXISTS
           (
               SELECT 1
@@ -84,6 +96,28 @@ BEGIN TRY
                 AND EstadoDisponibilidad = N'Componente inactivo o faltante'
           )
         THROW 54742, N'Un componente inactivo dejó el combo visible o disponible.', 1;
+
+    UPDATE dbo.Productos SET Activo = 1 WHERE ProductoId = 2;
+    DECLARE @CatalogoReactivado TABLE
+    (
+        ComboId INT,
+        Nombre NVARCHAR(150),
+        Descripcion NVARCHAR(500),
+        Precio DECIMAL(18,2),
+        CantidadProductos INT,
+        StockDisponibleCombo INT,
+        ComponentesValidos BIT,
+        ComponentesResumen NVARCHAR(MAX)
+    );
+    INSERT INTO @CatalogoReactivado EXEC dbo.sp_Store_GetComboById @ComboId = @ComboId;
+    IF NOT EXISTS (SELECT 1 FROM @CatalogoReactivado WHERE StockDisponibleCombo = 10 AND ComponentesValidos = 1)
+        THROW 54745, N'El combo no volvió a estar disponible al reactivar el componente.', 1;
+
+    UPDATE dbo.Productos SET Stock = 0 WHERE ProductoId = 2;
+    DELETE FROM @CatalogoReactivado;
+    INSERT INTO @CatalogoReactivado EXEC dbo.sp_Store_GetComboById @ComboId = @ComboId;
+    IF EXISTS (SELECT 1 FROM @CatalogoReactivado)
+        THROW 54746, N'El detalle público devolvió un combo con componente sin stock.', 1;
 
     ROLLBACK TRANSACTION;
 
@@ -126,40 +160,6 @@ BEGIN TRY
     IF (SELECT Stock FROM dbo.Productos WHERE ProductoId = 1) <> @StockOriginalProducto1
        OR (SELECT Stock FROM dbo.Productos WHERE ProductoId = 2) <> @StockOriginalProducto2
         THROW 54744, N'El checkout rechazado alteró el inventario.', 1;
-
-    BEGIN TRANSACTION;
-    DECLARE @ComboReactivadoId INT;
-    DECLARE @CatalogoReactivado TABLE
-    (
-        ComboId INT,
-        Nombre NVARCHAR(150),
-        Descripcion NVARCHAR(500),
-        Precio DECIMAL(18,2),
-        CantidadProductos INT,
-        StockDisponibleCombo INT,
-        ComponentesValidos BIT,
-        ComponentesResumen NVARCHAR(MAX)
-    );
-    UPDATE dbo.Productos SET Activo = 1, Stock = 20 WHERE ProductoId IN (1, 2);
-    EXEC dbo.sp_Admin_CreateCombo
-        @Nombre = N'QA componente reactivado 0012',
-        @Descripcion = N'El combo vuelve a venderse con ambos componentes activos.',
-        @Precio = 1200.00,
-        @ComponentesJson = N'[{"productoId":1,"cantidad":2},{"productoId":2,"cantidad":1}]',
-        @UsuarioId = @AdministradorId,
-        @UsuarioNombre = N'QA Local',
-        @NuevoComboId = @ComboReactivadoId OUTPUT;
-    INSERT INTO @CatalogoReactivado EXEC dbo.sp_Store_GetComboById @ComboId = @ComboReactivadoId;
-    IF NOT EXISTS (SELECT 1 FROM @CatalogoReactivado WHERE StockDisponibleCombo = 10 AND ComponentesValidos = 1)
-        THROW 54745, N'El combo no volvió a estar disponible al reactivar el componente.', 1;
-
-    UPDATE dbo.Productos SET Stock = 0 WHERE ProductoId = 2;
-    DELETE FROM @CatalogoReactivado;
-    INSERT INTO @CatalogoReactivado EXEC dbo.sp_Store_GetActiveCombos;
-    IF EXISTS (SELECT 1 FROM @CatalogoReactivado WHERE ComboId = @ComboReactivadoId)
-        THROW 54746, N'Un combo con componente sin stock aparece disponible.', 1;
-
-    ROLLBACK TRANSACTION;
     SELECT N'0012 inactive-component local test passed; all writes rolled back.' AS Resultado;
 END TRY
 BEGIN CATCH
