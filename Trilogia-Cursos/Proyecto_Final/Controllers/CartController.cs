@@ -358,12 +358,24 @@ namespace Proyecto_Final.Controllers
                     HttpContext.Session.GetString("UserFullName")
                     ?? "Cliente";
 
-                _emailService.SendOrderReceipt(
-                    destinatario,
-                    cliente,
-                    order.PedidoId,
-                    model,
-                    confirmedItems);
+                try
+                {
+                    _emailService.SendOrderReceipt(
+                        destinatario,
+                        cliente,
+                        order.PedidoId,
+                        model,
+                        confirmedItems,
+                        order.Total,
+                        confirmedItems.Sum(item => item.MontoDescuento));
+                }
+                catch (Exception exception)
+                {
+                    // El pedido ya fue confirmado de forma atómica en SQL. SMTP es un efecto
+                    // secundario y no debe convertir una compra confirmada en un aparente fallo.
+                    _logger.LogWarning(exception, "No fue posible enviar el comprobante del pedido {PedidoId}.", order.PedidoId);
+                    TempData["ErrorMessage"] = "El pedido fue confirmado, pero no fue posible enviar el comprobante por correo.";
+                }
 
                 HttpContext.Session.Remove(CartSessionKey);
 

@@ -3,6 +3,8 @@ using System.Net.Mail;
 using System.Text;
 using Proyecto_Final.Models.Store;
 
+using System.Globalization;
+
 namespace Proyecto_Final.Services
 {
     public class EmailService
@@ -52,7 +54,9 @@ namespace Proyecto_Final.Services
             string cliente,
             int pedidoId,
             CheckoutViewModel checkout,
-            List<CartItemViewModel> items)
+            IReadOnlyCollection<CartItemViewModel> items,
+            decimal totalConfirmado,
+            decimal descuentoTotal)
         {
             var rutaPlantilla = Path.Combine(
                 Directory.GetCurrentDirectory(),
@@ -66,43 +70,94 @@ namespace Proyecto_Final.Services
                     rutaPlantilla);
             }
 
-            var html = File.ReadAllText(rutaPlantilla);
-
-            var productos = new StringBuilder();
-
-            foreach (var item in items)
-            {
-                productos.Append($"""
-<tr style="border-bottom:1px solid #eeeeee">
-    <td class="product" style="padding:14px">{item.Nombre}</td>
-    <td class="qty" align="center" style="padding:14px">{item.Cantidad}</td>
-    <td class="price" align="right" style="padding:14px">₡{item.Precio:N2}</td>
-    <td class="subtotal" align="right" style="padding:14px">₡{(item.Precio * item.Cantidad):N2}</td>
-</tr>
-""");
-            }
-
-            decimal subtotal = items.Sum(x => x.Precio * x.Cantidad);
-            decimal envio = 0;
-            decimal total = subtotal + envio;
-
-            html = html
-                .Replace("{{CLIENTE}}", cliente)
-                .Replace("{{PEDIDO}}", "#" + pedidoId)
-                .Replace("{{FECHA}}", DateTime.Now.ToString("dd/MM/yyyy HH:mm"))
-                .Replace("{{METODO_PAGO}}", checkout.MetodoPago)
-                .Replace("{{TIPO_ENTREGA}}", checkout.TipoEntrega)
-                .Replace("{{DIRECCION}}", checkout.DireccionEntrega)
-                .Replace("{{PRODUCTOS}}", productos.ToString())
-                .Replace("{{SUBTOTAL}}", $"₡{subtotal:N2}")
-                .Replace("{{ENVIO}}", $"₡{envio:N2}")
-                .Replace("{{TOTAL}}", $"₡{total:N2}")
-                .Replace("{{LINK_PEDIDO}}", "#");
+            var html = OrderReceiptHtmlBuilder.Build(
+                File.ReadAllText(rutaPlantilla),
+                cliente,
+                pedidoId,
+                checkout,
+                items,
+                totalConfirmado,
+                descuentoTotal,
+                DateTime.Now);
 
             SendEmail(
                 destinatario,
                 $"Confirmación del pedido #{pedidoId}",
                 html);
         }
+    }
+
+    public static class OrderReceiptHtmlBuilder
+    {
+        private static readonly CultureInfo CostaRicaCulture = CultureInfo.GetCultureInfo("es-CR");
+
+        public static string Build(
+            string template,
+            string cliente,
+            int pedidoId,
+            CheckoutViewModel checkout,
+            IEnumerable<CartItemViewModel> items,
+            decimal totalConfirmado,
+            decimal descuentoTotal,
+            DateTime fecha)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(template);
+            ArgumentNullException.ThrowIfNull(checkout);
+            ArgumentNullException.ThrowIfNull(items);
+            if (pedidoId <= 0 || totalConfirmado < 0 || descuentoTotal < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(totalConfirmado), "Los importes confirmados del pedido no son válidos.");
+            }
+
+            var orderItems = items.ToList();
+            var products = new StringBuilder();
+            foreach (var item in orderItems)
+            {
+                var lineDiscount = item.EsRegalo ? 0m : item.MontoDescuento;
+                var lineTotal = item.EsRegalo ? 0m : item.SubtotalConDescuento;
+                var displayedUnitPrice = item.EsRegalo || item.Cantidad <= 0
+                    ? 0m
+                    : item.Subtotal / item.Cantidad;
+                var giftPromotion = string.IsNullOrWhiteSpace(item.PromocionNombre)
+                    ? string.Empty
+                    : $" · {item.PromocionNombre}";
+                var description = item.EsRegalo
+                    ? $"Regalo{giftPromotion}"
+                    : lineDiscount > 0 ? $"Descuento: -{FormatCurrency(lineDiscount)}" : string.Empty;
+                var name = item.ItemType == CartItemTypes.Combo ? $"Combo: {item.Nombre}" : item.Nombre;
+
+                products.Append($"""
+<tr style="border-bottom:1px solid #eeeeee">
+    <td class="product" style="padding:14px">{Encode(name)}{(string.IsNullOrEmpty(description) ? string.Empty : $"<br/><small>{Encode(description)}</small>")}</td>
+    <td class="qty" align="center" style="padding:14px">{item.Cantidad}</td>
+    <td class="price" align="right" style="padding:14px">{FormatCurrency(displayedUnitPrice)}</td>
+    <td class="subtotal" align="right" style="padding:14px">{FormatCurrency(lineTotal)}</td>
+</tr>
+""");
+            }
+
+            var subtotal = orderItems.Where(item => !item.EsRegalo).Sum(item => item.Subtotal);
+            var discountSummary = descuentoTotal > 0
+                ? $"<tr><td>Descuentos</td><td align=\"right\">-{FormatCurrency(descuentoTotal)}</td></tr>"
+                : string.Empty;
+
+            return template
+                .Replace("{{CLIENTE}}", Encode(cliente))
+                .Replace("{{PEDIDO}}", Encode("#" + pedidoId))
+                .Replace("{{FECHA}}", Encode(fecha.ToString("dd/MM/yyyy HH:mm", CostaRicaCulture)))
+                .Replace("{{METODO_PAGO}}", Encode(checkout.MetodoPago))
+                .Replace("{{TIPO_ENTREGA}}", Encode(checkout.TipoEntrega))
+                .Replace("{{DIRECCION}}", Encode(checkout.DireccionEntrega))
+                .Replace("{{PRODUCTOS}}", products.ToString())
+                .Replace("{{SUBTOTAL}}", FormatCurrency(subtotal))
+                .Replace("{{DESCUENTO}}", discountSummary)
+                .Replace("{{ENVIO}}", FormatCurrency(0m))
+                .Replace("{{TOTAL}}", FormatCurrency(totalConfirmado))
+                .Replace("{{LINK_PEDIDO}}", "#");
+        }
+
+        public static string FormatCurrency(decimal value) => $"₡{value.ToString("N2", CostaRicaCulture)}";
+
+        private static string Encode(string? value) => WebUtility.HtmlEncode(value ?? string.Empty);
     }
 }

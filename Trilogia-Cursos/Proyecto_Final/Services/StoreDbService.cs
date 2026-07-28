@@ -97,6 +97,9 @@ public sealed class StoreDbService
                 var productOrdinal = reader.GetOrdinal("ProductoId");
                 var comboOrdinal = reader.GetOrdinal("ComboId");
                 var imageOrdinal = reader.GetOrdinal("ImagenUrl");
+                var price = reader.GetDecimal(reader.GetOrdinal("PrecioUnitario"));
+                var quantity = reader.GetInt32(reader.GetOrdinal("Cantidad"));
+                var discount = reader.GetDecimal(reader.GetOrdinal("MontoDescuento"));
                 result.Items.Add(new CartItemViewModel
                 {
                     ItemType = reader.GetString(reader.GetOrdinal("TipoItem")),
@@ -105,10 +108,11 @@ public sealed class StoreDbService
                     Nombre = reader.GetString(reader.GetOrdinal("Nombre")),
                     Categoria = reader.GetString(reader.GetOrdinal("Categoria")),
                     Descripcion = ReadNullableString(reader, "Descripcion"),
-                    Precio = reader.GetDecimal(reader.GetOrdinal("PrecioUnitario")),
-                    Cantidad = reader.GetInt32(reader.GetOrdinal("Cantidad")),
+                    Precio = price,
+                    Cantidad = quantity,
                     ImagenUrl = reader.IsDBNull(imageOrdinal) ? "~/img/OFER-Combo.webp" : reader.GetString(imageOrdinal),
-                    MontoDescuento = reader.GetDecimal(reader.GetOrdinal("MontoDescuento"))
+                    MontoDescuento = discount,
+                    SubtotalAntesDescuento = price * quantity + discount
                 });
             }
         }
