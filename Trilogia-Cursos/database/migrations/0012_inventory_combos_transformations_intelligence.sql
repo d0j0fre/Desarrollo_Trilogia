@@ -63,15 +63,28 @@ BEGIN
         Activo BIT NOT NULL CONSTRAINT DF_Combos_Activo DEFAULT (1),
         RegistradoPorUsuarioId INT NOT NULL,
         RegistradoPorNombre NVARCHAR(150) NOT NULL,
-        FechaCreacionUtc DATETIME2(0) NOT NULL CONSTRAINT DF_Combos_FechaCreacionUtc DEFAULT SYSUTCDATETIME(),
+        FechaCreacionUtc DATETIME2(7) NOT NULL CONSTRAINT DF_Combos_FechaCreacionUtc DEFAULT SYSUTCDATETIME(),
         ActualizadoPorUsuarioId INT NOT NULL,
         ActualizadoPorNombre NVARCHAR(150) NOT NULL,
-        FechaActualizacionUtc DATETIME2(0) NOT NULL CONSTRAINT DF_Combos_FechaActualizacionUtc DEFAULT SYSUTCDATETIME(),
+        FechaActualizacionUtc DATETIME2(7) NOT NULL CONSTRAINT DF_Combos_FechaActualizacionUtc DEFAULT SYSUTCDATETIME(),
         CONSTRAINT CK_Combos_Precio CHECK (Precio > 0),
         CONSTRAINT FK_Combos_RegistradoPor FOREIGN KEY (RegistradoPorUsuarioId) REFERENCES dbo.Usuarios(UsuarioId),
         CONSTRAINT FK_Combos_ActualizadoPor FOREIGN KEY (ActualizadoPorUsuarioId) REFERENCES dbo.Usuarios(UsuarioId)
     );
 END;
+
+IF COL_LENGTH(N'dbo.Combos', N'FechaCreacionUtc') IS NULL
+   AND COL_LENGTH(N'dbo.Combos', N'FechaCreacion') IS NOT NULL
+BEGIN
+    EXEC sys.sp_rename N'dbo.Combos.FechaCreacion', N'FechaCreacionUtc', N'COLUMN';
+END;
+
+IF COL_LENGTH(N'dbo.Combos', N'ActualizadoPorUsuarioId') IS NULL
+    ALTER TABLE dbo.Combos ADD ActualizadoPorUsuarioId INT NULL;
+IF COL_LENGTH(N'dbo.Combos', N'ActualizadoPorNombre') IS NULL
+    ALTER TABLE dbo.Combos ADD ActualizadoPorNombre NVARCHAR(150) NULL;
+IF COL_LENGTH(N'dbo.Combos', N'FechaActualizacionUtc') IS NULL
+    ALTER TABLE dbo.Combos ADD FechaActualizacionUtc DATETIME2(7) NULL;
 
 IF OBJECT_ID(N'dbo.ComboDetalle', N'U') IS NULL
 BEGIN
@@ -100,13 +113,24 @@ BEGIN
         Cantidad INT NOT NULL,
         PrecioUnitario DECIMAL(18,2) NOT NULL,
         Subtotal AS CONVERT(DECIMAL(18,2), Cantidad * PrecioUnitario) PERSISTED,
-        FechaCreacionUtc DATETIME2(0) NOT NULL CONSTRAINT DF_PedidoCombos_FechaCreacionUtc DEFAULT SYSUTCDATETIME(),
+        FechaCreacionUtc DATETIME2(7) NOT NULL CONSTRAINT DF_PedidoCombos_FechaCreacionUtc DEFAULT SYSUTCDATETIME(),
         CONSTRAINT CK_PedidoCombos_Cantidad CHECK (Cantidad > 0),
         CONSTRAINT CK_PedidoCombos_Precio CHECK (PrecioUnitario > 0),
         CONSTRAINT FK_PedidoCombos_Pedido FOREIGN KEY (PedidoId) REFERENCES dbo.Pedidos(PedidoId),
         CONSTRAINT FK_PedidoCombos_Combo FOREIGN KEY (ComboId) REFERENCES dbo.Combos(ComboId)
     );
 END;
+
+IF COL_LENGTH(N'dbo.PedidoCombos', N'ComboNombreSnapshot') IS NULL
+   AND COL_LENGTH(N'dbo.PedidoCombos', N'ComboNombre') IS NOT NULL
+BEGIN
+    EXEC sys.sp_rename N'dbo.PedidoCombos.ComboNombre', N'ComboNombreSnapshot', N'COLUMN';
+END;
+
+IF COL_LENGTH(N'dbo.PedidoCombos', N'ComboDescripcionSnapshot') IS NULL
+    ALTER TABLE dbo.PedidoCombos ADD ComboDescripcionSnapshot NVARCHAR(500) NULL;
+IF COL_LENGTH(N'dbo.PedidoCombos', N'FechaCreacionUtc') IS NULL
+    ALTER TABLE dbo.PedidoCombos ADD FechaCreacionUtc DATETIME2(7) NULL;
 
 IF OBJECT_ID(N'dbo.PedidoComboDetalle', N'U') IS NULL
 BEGIN
@@ -198,10 +222,403 @@ BEGIN
     );
 END;
 
+IF COL_LENGTH(N'dbo.PedidoDetalle', N'PedidoComboId') IS NULL
+BEGIN
+    ALTER TABLE dbo.PedidoDetalle
+    ADD PedidoComboId INT NULL;
+END;
+
 IF COL_LENGTH(N'dbo.PedidoDetalle', N'ProductoNombreSnapshot') IS NULL
 BEGIN
     ALTER TABLE dbo.PedidoDetalle
     ADD ProductoNombreSnapshot NVARCHAR(150) NULL;
+END;
+GO
+
+IF COL_LENGTH(N'dbo.Combos', N'ComboId') IS NULL
+   OR COL_LENGTH(N'dbo.Combos', N'Nombre') IS NULL
+   OR COL_LENGTH(N'dbo.Combos', N'Descripcion') IS NULL
+   OR COL_LENGTH(N'dbo.Combos', N'Precio') IS NULL
+   OR COL_LENGTH(N'dbo.Combos', N'Activo') IS NULL
+   OR COL_LENGTH(N'dbo.Combos', N'RegistradoPorUsuarioId') IS NULL
+   OR COL_LENGTH(N'dbo.Combos', N'RegistradoPorNombre') IS NULL
+   OR COL_LENGTH(N'dbo.Combos', N'FechaCreacionUtc') IS NULL
+   OR COL_LENGTH(N'dbo.Combos', N'ActualizadoPorUsuarioId') IS NULL
+   OR COL_LENGTH(N'dbo.Combos', N'ActualizadoPorNombre') IS NULL
+   OR COL_LENGTH(N'dbo.Combos', N'FechaActualizacionUtc') IS NULL
+   OR COL_LENGTH(N'dbo.ComboDetalle', N'ComboDetalleId') IS NULL
+   OR COL_LENGTH(N'dbo.ComboDetalle', N'ComboId') IS NULL
+   OR COL_LENGTH(N'dbo.ComboDetalle', N'ProductoId') IS NULL
+   OR COL_LENGTH(N'dbo.ComboDetalle', N'Cantidad') IS NULL
+   OR COL_LENGTH(N'dbo.PedidoCombos', N'PedidoComboId') IS NULL
+   OR COL_LENGTH(N'dbo.PedidoCombos', N'PedidoId') IS NULL
+   OR COL_LENGTH(N'dbo.PedidoCombos', N'ComboId') IS NULL
+   OR COL_LENGTH(N'dbo.PedidoCombos', N'ComboNombreSnapshot') IS NULL
+   OR COL_LENGTH(N'dbo.PedidoCombos', N'ComboDescripcionSnapshot') IS NULL
+   OR COL_LENGTH(N'dbo.PedidoCombos', N'Cantidad') IS NULL
+   OR COL_LENGTH(N'dbo.PedidoCombos', N'PrecioUnitario') IS NULL
+   OR COL_LENGTH(N'dbo.PedidoCombos', N'FechaCreacionUtc') IS NULL
+   OR COL_LENGTH(N'dbo.PedidoDetalle', N'PedidoComboId') IS NULL
+    THROW 54504, N'Existe un objeto parcial o incompatible de la migración 0012.', 1;
+GO
+
+/*
+  Reconciliación del esquema legado de combos. Cada validación precede a la
+  restricción correspondiente; los datos ambiguos provocan THROW y rollback.
+*/
+UPDATE dbo.Combos
+SET ActualizadoPorUsuarioId = RegistradoPorUsuarioId
+WHERE ActualizadoPorUsuarioId IS NULL;
+
+UPDATE dbo.Combos
+SET ActualizadoPorNombre = RegistradoPorNombre
+WHERE ActualizadoPorNombre IS NULL;
+
+UPDATE dbo.Combos
+SET FechaActualizacionUtc = FechaCreacionUtc
+WHERE FechaActualizacionUtc IS NULL;
+
+ALTER TABLE dbo.Combos ALTER COLUMN Descripcion NVARCHAR(500) NULL;
+
+IF EXISTS
+(
+    SELECT 1
+    FROM dbo.Combos combo
+    LEFT JOIN dbo.Usuarios registeredUser
+        ON registeredUser.UsuarioId = combo.RegistradoPorUsuarioId
+    LEFT JOIN dbo.Usuarios updatedUser
+        ON updatedUser.UsuarioId = combo.ActualizadoPorUsuarioId
+    WHERE combo.Precio <= 0
+       OR combo.Nombre IS NULL
+       OR combo.RegistradoPorNombre IS NULL
+       OR combo.FechaCreacionUtc IS NULL
+       OR combo.ActualizadoPorUsuarioId IS NULL
+       OR combo.ActualizadoPorNombre IS NULL
+       OR combo.FechaActualizacionUtc IS NULL
+       OR registeredUser.UsuarioId IS NULL
+       OR updatedUser.UsuarioId IS NULL
+)
+    THROW 54505, N'Los combos legados contienen datos inválidos o referencias huérfanas.', 1;
+
+ALTER TABLE dbo.Combos ALTER COLUMN ActualizadoPorUsuarioId INT NOT NULL;
+ALTER TABLE dbo.Combos ALTER COLUMN ActualizadoPorNombre NVARCHAR(150) NOT NULL;
+ALTER TABLE dbo.Combos ALTER COLUMN FechaActualizacionUtc DATETIME2(7) NOT NULL;
+
+DECLARE @DefaultConstraint SYSNAME;
+DECLARE @DropDefaultSql NVARCHAR(776);
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.default_constraints
+    WHERE parent_object_id = OBJECT_ID(N'dbo.Combos')
+      AND name = N'DF_Combos_Activo'
+)
+BEGIN
+    SELECT @DefaultConstraint = constraintObject.name
+    FROM sys.default_constraints constraintObject
+    INNER JOIN sys.columns columnObject
+        ON columnObject.object_id = constraintObject.parent_object_id
+       AND columnObject.column_id = constraintObject.parent_column_id
+    WHERE constraintObject.parent_object_id = OBJECT_ID(N'dbo.Combos')
+      AND columnObject.name = N'Activo';
+
+    IF @DefaultConstraint IS NOT NULL
+    BEGIN
+        SET @DropDefaultSql =
+            N'ALTER TABLE dbo.Combos DROP CONSTRAINT ' + QUOTENAME(@DefaultConstraint) + N';';
+        EXEC sys.sp_executesql @DropDefaultSql;
+    END;
+
+    ALTER TABLE dbo.Combos
+    ADD CONSTRAINT DF_Combos_Activo DEFAULT (1) FOR Activo;
+END;
+
+SET @DefaultConstraint = NULL;
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.default_constraints
+    WHERE parent_object_id = OBJECT_ID(N'dbo.Combos')
+      AND name = N'DF_Combos_FechaCreacionUtc'
+)
+BEGIN
+    SELECT @DefaultConstraint = constraintObject.name
+    FROM sys.default_constraints constraintObject
+    INNER JOIN sys.columns columnObject
+        ON columnObject.object_id = constraintObject.parent_object_id
+       AND columnObject.column_id = constraintObject.parent_column_id
+    WHERE constraintObject.parent_object_id = OBJECT_ID(N'dbo.Combos')
+      AND columnObject.name = N'FechaCreacionUtc';
+
+    IF @DefaultConstraint IS NOT NULL
+    BEGIN
+        SET @DropDefaultSql =
+            N'ALTER TABLE dbo.Combos DROP CONSTRAINT ' + QUOTENAME(@DefaultConstraint) + N';';
+        EXEC sys.sp_executesql @DropDefaultSql;
+    END;
+
+    ALTER TABLE dbo.Combos
+    ADD CONSTRAINT DF_Combos_FechaCreacionUtc DEFAULT SYSUTCDATETIME() FOR FechaCreacionUtc;
+END;
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.default_constraints
+    WHERE parent_object_id = OBJECT_ID(N'dbo.Combos')
+      AND name = N'DF_Combos_FechaActualizacionUtc'
+)
+BEGIN
+    ALTER TABLE dbo.Combos
+    ADD CONSTRAINT DF_Combos_FechaActualizacionUtc DEFAULT SYSUTCDATETIME() FOR FechaActualizacionUtc;
+END;
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.check_constraints
+    WHERE parent_object_id = OBJECT_ID(N'dbo.Combos')
+      AND name = N'CK_Combos_Precio'
+)
+BEGIN
+    ALTER TABLE dbo.Combos WITH CHECK
+    ADD CONSTRAINT CK_Combos_Precio CHECK (Precio > 0);
+END;
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.foreign_key_columns foreignKeyColumn
+    WHERE foreignKeyColumn.parent_object_id = OBJECT_ID(N'dbo.Combos')
+      AND foreignKeyColumn.parent_column_id = COLUMNPROPERTY
+          (OBJECT_ID(N'dbo.Combos'), N'RegistradoPorUsuarioId', N'ColumnId')
+      AND foreignKeyColumn.referenced_object_id = OBJECT_ID(N'dbo.Usuarios')
+      AND foreignKeyColumn.referenced_column_id = COLUMNPROPERTY
+          (OBJECT_ID(N'dbo.Usuarios'), N'UsuarioId', N'ColumnId')
+)
+BEGIN
+    ALTER TABLE dbo.Combos WITH CHECK
+    ADD CONSTRAINT FK_Combos_RegistradoPor
+        FOREIGN KEY (RegistradoPorUsuarioId) REFERENCES dbo.Usuarios(UsuarioId);
+END;
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.foreign_key_columns foreignKeyColumn
+    WHERE foreignKeyColumn.parent_object_id = OBJECT_ID(N'dbo.Combos')
+      AND foreignKeyColumn.parent_column_id = COLUMNPROPERTY
+          (OBJECT_ID(N'dbo.Combos'), N'ActualizadoPorUsuarioId', N'ColumnId')
+      AND foreignKeyColumn.referenced_object_id = OBJECT_ID(N'dbo.Usuarios')
+      AND foreignKeyColumn.referenced_column_id = COLUMNPROPERTY
+          (OBJECT_ID(N'dbo.Usuarios'), N'UsuarioId', N'ColumnId')
+)
+BEGIN
+    ALTER TABLE dbo.Combos WITH CHECK
+    ADD CONSTRAINT FK_Combos_ActualizadoPor
+        FOREIGN KEY (ActualizadoPorUsuarioId) REFERENCES dbo.Usuarios(UsuarioId);
+END;
+GO
+
+IF EXISTS
+(
+    SELECT 1
+    FROM dbo.ComboDetalle detail
+    LEFT JOIN dbo.Combos combo ON combo.ComboId = detail.ComboId
+    LEFT JOIN dbo.Productos product ON product.ProductoId = detail.ProductoId
+    WHERE detail.Cantidad <= 0
+       OR combo.ComboId IS NULL
+       OR product.ProductoId IS NULL
+)
+    THROW 54506, N'ComboDetalle contiene cantidades inválidas o referencias huérfanas.', 1;
+
+IF EXISTS
+(
+    SELECT ComboId, ProductoId
+    FROM dbo.ComboDetalle
+    GROUP BY ComboId, ProductoId
+    HAVING COUNT(*) > 1
+)
+    THROW 54507, N'ComboDetalle contiene productos duplicados dentro de un combo.', 1;
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.indexes
+    WHERE object_id = OBJECT_ID(N'dbo.ComboDetalle')
+      AND name = N'UQ_ComboDetalle_ComboProducto'
+)
+BEGIN
+    ALTER TABLE dbo.ComboDetalle
+    ADD CONSTRAINT UQ_ComboDetalle_ComboProducto UNIQUE (ComboId, ProductoId);
+END;
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.check_constraints
+    WHERE parent_object_id = OBJECT_ID(N'dbo.ComboDetalle')
+      AND name = N'CK_ComboDetalle_Cantidad'
+)
+BEGIN
+    ALTER TABLE dbo.ComboDetalle WITH CHECK
+    ADD CONSTRAINT CK_ComboDetalle_Cantidad CHECK (Cantidad > 0);
+END;
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.foreign_key_columns foreignKeyColumn
+    WHERE foreignKeyColumn.parent_object_id = OBJECT_ID(N'dbo.ComboDetalle')
+      AND foreignKeyColumn.parent_column_id = COLUMNPROPERTY
+          (OBJECT_ID(N'dbo.ComboDetalle'), N'ComboId', N'ColumnId')
+      AND foreignKeyColumn.referenced_object_id = OBJECT_ID(N'dbo.Combos')
+)
+BEGIN
+    ALTER TABLE dbo.ComboDetalle WITH CHECK
+    ADD CONSTRAINT FK_ComboDetalle_Combo
+        FOREIGN KEY (ComboId) REFERENCES dbo.Combos(ComboId);
+END;
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.foreign_key_columns foreignKeyColumn
+    WHERE foreignKeyColumn.parent_object_id = OBJECT_ID(N'dbo.ComboDetalle')
+      AND foreignKeyColumn.parent_column_id = COLUMNPROPERTY
+          (OBJECT_ID(N'dbo.ComboDetalle'), N'ProductoId', N'ColumnId')
+      AND foreignKeyColumn.referenced_object_id = OBJECT_ID(N'dbo.Productos')
+)
+BEGIN
+    ALTER TABLE dbo.ComboDetalle WITH CHECK
+    ADD CONSTRAINT FK_ComboDetalle_Producto
+        FOREIGN KEY (ProductoId) REFERENCES dbo.Productos(ProductoId);
+END;
+GO
+
+IF COL_LENGTH(N'dbo.PedidoCombos', N'ComboNombre') IS NOT NULL
+BEGIN
+    EXEC
+    (
+        N'IF EXISTS
+          (
+              SELECT 1
+              FROM dbo.PedidoCombos
+              WHERE ComboNombreSnapshot IS NOT NULL
+                AND ComboNombre IS NOT NULL
+                AND ComboNombreSnapshot <> ComboNombre
+          )
+              THROW 54508, N''PedidoCombos contiene nombres legado y canónico contradictorios.'', 1;
+
+          UPDATE dbo.PedidoCombos
+          SET ComboNombreSnapshot = ComboNombre
+          WHERE ComboNombreSnapshot IS NULL;
+
+          ALTER TABLE dbo.PedidoCombos
+          ALTER COLUMN ComboNombre NVARCHAR(150) NULL;'
+    );
+END;
+
+UPDATE comboOrder
+SET ComboDescripcionSnapshot = combo.Descripcion
+FROM dbo.PedidoCombos comboOrder
+INNER JOIN dbo.Combos combo ON combo.ComboId = comboOrder.ComboId
+WHERE comboOrder.ComboDescripcionSnapshot IS NULL;
+
+UPDATE comboOrder
+SET FechaCreacionUtc = orders.FechaPedido
+FROM dbo.PedidoCombos comboOrder
+INNER JOIN dbo.Pedidos orders ON orders.PedidoId = comboOrder.PedidoId
+WHERE comboOrder.FechaCreacionUtc IS NULL;
+
+IF EXISTS
+(
+    SELECT 1
+    FROM dbo.PedidoCombos comboOrder
+    LEFT JOIN dbo.Pedidos orders ON orders.PedidoId = comboOrder.PedidoId
+    LEFT JOIN dbo.Combos combo ON combo.ComboId = comboOrder.ComboId
+    WHERE comboOrder.ComboNombreSnapshot IS NULL
+       OR comboOrder.Cantidad <= 0
+       OR comboOrder.PrecioUnitario <= 0
+       OR comboOrder.FechaCreacionUtc IS NULL
+       OR orders.PedidoId IS NULL
+       OR combo.ComboId IS NULL
+)
+    THROW 54509, N'PedidoCombos contiene datos inválidos o referencias huérfanas.', 1;
+
+ALTER TABLE dbo.PedidoCombos ALTER COLUMN ComboNombreSnapshot NVARCHAR(150) NOT NULL;
+ALTER TABLE dbo.PedidoCombos ALTER COLUMN FechaCreacionUtc DATETIME2(7) NOT NULL;
+
+IF COL_LENGTH(N'dbo.PedidoCombos', N'Subtotal') IS NULL
+BEGIN
+    ALTER TABLE dbo.PedidoCombos
+    ADD Subtotal AS CONVERT(DECIMAL(18,2), Cantidad * PrecioUnitario) PERSISTED;
+END;
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.default_constraints
+    WHERE parent_object_id = OBJECT_ID(N'dbo.PedidoCombos')
+      AND name = N'DF_PedidoCombos_FechaCreacionUtc'
+)
+BEGIN
+    ALTER TABLE dbo.PedidoCombos
+    ADD CONSTRAINT DF_PedidoCombos_FechaCreacionUtc DEFAULT SYSUTCDATETIME() FOR FechaCreacionUtc;
+END;
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.check_constraints
+    WHERE parent_object_id = OBJECT_ID(N'dbo.PedidoCombos')
+      AND name = N'CK_PedidoCombos_Cantidad'
+)
+BEGIN
+    ALTER TABLE dbo.PedidoCombos WITH CHECK
+    ADD CONSTRAINT CK_PedidoCombos_Cantidad CHECK (Cantidad > 0);
+END;
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.check_constraints
+    WHERE parent_object_id = OBJECT_ID(N'dbo.PedidoCombos')
+      AND name = N'CK_PedidoCombos_Precio'
+)
+BEGIN
+    ALTER TABLE dbo.PedidoCombos WITH CHECK
+    ADD CONSTRAINT CK_PedidoCombos_Precio CHECK (PrecioUnitario > 0);
+END;
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.foreign_key_columns foreignKeyColumn
+    WHERE foreignKeyColumn.parent_object_id = OBJECT_ID(N'dbo.PedidoCombos')
+      AND foreignKeyColumn.parent_column_id = COLUMNPROPERTY
+          (OBJECT_ID(N'dbo.PedidoCombos'), N'PedidoId', N'ColumnId')
+      AND foreignKeyColumn.referenced_object_id = OBJECT_ID(N'dbo.Pedidos')
+)
+BEGIN
+    ALTER TABLE dbo.PedidoCombos WITH CHECK
+    ADD CONSTRAINT FK_PedidoCombos_Pedido
+        FOREIGN KEY (PedidoId) REFERENCES dbo.Pedidos(PedidoId);
+END;
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.foreign_key_columns foreignKeyColumn
+    WHERE foreignKeyColumn.parent_object_id = OBJECT_ID(N'dbo.PedidoCombos')
+      AND foreignKeyColumn.parent_column_id = COLUMNPROPERTY
+          (OBJECT_ID(N'dbo.PedidoCombos'), N'ComboId', N'ColumnId')
+      AND foreignKeyColumn.referenced_object_id = OBJECT_ID(N'dbo.Combos')
+)
+BEGIN
+    ALTER TABLE dbo.PedidoCombos WITH CHECK
+    ADD CONSTRAINT FK_PedidoCombos_Combo
+        FOREIGN KEY (ComboId) REFERENCES dbo.Combos(ComboId);
 END;
 GO
 
@@ -219,14 +636,271 @@ BEGIN
 END;
 GO
 
+IF EXISTS
+(
+    SELECT 1
+    FROM sys.columns
+    WHERE object_id = OBJECT_ID(N'dbo.PedidoDetalle')
+      AND name = N'PedidoComboId'
+      AND is_nullable = 0
+)
+BEGIN
+    ALTER TABLE dbo.PedidoDetalle
+    ALTER COLUMN PedidoComboId INT NULL;
+END;
+
+IF EXISTS
+(
+    SELECT 1
+    FROM dbo.PedidoDetalle detail
+    LEFT JOIN dbo.PedidoCombos comboOrder ON comboOrder.PedidoComboId = detail.PedidoComboId
+    WHERE detail.PedidoComboId IS NOT NULL
+      AND (comboOrder.PedidoComboId IS NULL OR comboOrder.PedidoId <> detail.PedidoId)
+)
+    THROW 54517, N'PedidoDetalle contiene una relación de combo huérfana o asociada a otro pedido.', 1;
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.foreign_key_columns foreignKeyColumn
+    WHERE foreignKeyColumn.parent_object_id = OBJECT_ID(N'dbo.PedidoDetalle')
+      AND foreignKeyColumn.parent_column_id = COLUMNPROPERTY
+          (OBJECT_ID(N'dbo.PedidoDetalle'), N'PedidoComboId', N'ColumnId')
+      AND foreignKeyColumn.referenced_object_id = OBJECT_ID(N'dbo.PedidoCombos')
+      AND foreignKeyColumn.referenced_column_id = COLUMNPROPERTY
+          (OBJECT_ID(N'dbo.PedidoCombos'), N'PedidoComboId', N'ColumnId')
+)
+BEGIN
+    ALTER TABLE dbo.PedidoDetalle WITH CHECK
+    ADD CONSTRAINT FK_PedidoDetalle_PedidoCombo
+        FOREIGN KEY (PedidoComboId) REFERENCES dbo.PedidoCombos(PedidoComboId);
+END;
+GO
+
+IF EXISTS
+(
+    SELECT 1
+    FROM dbo.PedidoDetalle detail
+    WHERE detail.PedidoComboId IS NOT NULL
+      AND detail.Cantidad <= 0
+)
+    THROW 54518, N'Los componentes históricos de combo contienen cantidades no positivas.', 1;
+
+IF EXISTS
+(
+    SELECT detail.PedidoComboId, detail.ProductoId
+    FROM dbo.PedidoDetalle detail
+    WHERE detail.PedidoComboId IS NOT NULL
+    GROUP BY detail.PedidoComboId, detail.ProductoId
+    HAVING COUNT(DISTINCT NULLIF(LTRIM(RTRIM(detail.ProductoNombreSnapshot)), N'')) > 1
+)
+    THROW 54519, N'Los componentes históricos de combo contienen snapshots de producto contradictorios.', 1;
+
+IF EXISTS
+(
+    SELECT detail.PedidoComboId, detail.ProductoId
+    FROM dbo.PedidoDetalle detail
+    INNER JOIN dbo.PedidoCombos comboOrder
+        ON comboOrder.PedidoComboId = detail.PedidoComboId
+    WHERE detail.PedidoComboId IS NOT NULL
+    GROUP BY detail.PedidoComboId, detail.ProductoId, comboOrder.Cantidad
+    HAVING SUM(CONVERT(BIGINT, detail.Cantidad)) % comboOrder.Cantidad <> 0
+        OR SUM(CONVERT(BIGINT, detail.Cantidad)) / comboOrder.Cantidad <= 0
+        OR SUM(CONVERT(BIGINT, detail.Cantidad)) > 2147483647
+)
+    THROW 54524, N'No es posible reconstruir cantidades enteras de los componentes históricos de combo.', 1;
+
+IF EXISTS
+(
+    SELECT 1
+    FROM dbo.PedidoCombos comboOrder
+    WHERE NOT EXISTS
+          (
+              SELECT 1
+              FROM dbo.PedidoComboDetalle component
+              WHERE component.PedidoComboId = comboOrder.PedidoComboId
+          )
+      AND NOT EXISTS
+          (
+              SELECT 1
+              FROM dbo.PedidoDetalle detail
+              WHERE detail.PedidoComboId = comboOrder.PedidoComboId
+          )
+)
+    THROW 54525, N'Existe un PedidoCombo sin componentes canónicos ni detalle histórico reconstruible.', 1;
+
+IF EXISTS
+(
+    SELECT component.PedidoComboId, component.ProductoId
+    FROM dbo.PedidoComboDetalle component
+    GROUP BY component.PedidoComboId, component.ProductoId
+    HAVING COUNT(*) > 1
+)
+    THROW 54526, N'PedidoComboDetalle contiene componentes duplicados.', 1;
+
+IF EXISTS
+(
+    SELECT 1
+    FROM dbo.PedidoComboDetalle component
+    LEFT JOIN dbo.PedidoCombos comboOrder ON comboOrder.PedidoComboId = component.PedidoComboId
+    LEFT JOIN dbo.Productos product ON product.ProductoId = component.ProductoId
+    WHERE component.CantidadPorCombo <= 0
+       OR component.CantidadTotal <= 0
+       OR component.ProductoNombreSnapshot IS NULL
+       OR comboOrder.PedidoComboId IS NULL
+       OR product.ProductoId IS NULL
+       OR CONVERT(BIGINT, component.CantidadPorCombo) * comboOrder.Cantidad <> component.CantidadTotal
+)
+    THROW 54527, N'PedidoComboDetalle contiene datos incompatibles con el pedido de combo.', 1;
+
+IF EXISTS
+(
+    SELECT 1
+    FROM
+    (
+        SELECT detail.PedidoComboId,
+               detail.ProductoId,
+               COALESCE
+               (
+                   MAX(NULLIF(LTRIM(RTRIM(detail.ProductoNombreSnapshot)), N'')),
+                   MAX(product.Nombre)
+               ) AS ProductoNombreSnapshot,
+               CONVERT(INT, SUM(CONVERT(BIGINT, detail.Cantidad)) / comboOrder.Cantidad) AS CantidadPorCombo,
+               CONVERT(INT, SUM(CONVERT(BIGINT, detail.Cantidad))) AS CantidadTotal
+        FROM dbo.PedidoDetalle detail
+        INNER JOIN dbo.PedidoCombos comboOrder
+            ON comboOrder.PedidoComboId = detail.PedidoComboId
+        INNER JOIN dbo.Productos product ON product.ProductoId = detail.ProductoId
+        WHERE detail.PedidoComboId IS NOT NULL
+        GROUP BY detail.PedidoComboId, detail.ProductoId, comboOrder.Cantidad
+    ) derived
+    INNER JOIN dbo.PedidoComboDetalle component
+        ON component.PedidoComboId = derived.PedidoComboId
+       AND component.ProductoId = derived.ProductoId
+    WHERE component.CantidadPorCombo <> derived.CantidadPorCombo
+       OR component.CantidadTotal <> derived.CantidadTotal
+       OR component.ProductoNombreSnapshot <> derived.ProductoNombreSnapshot
+)
+    THROW 54528, N'PedidoComboDetalle contradice el detalle histórico disponible.', 1;
+
+;WITH DerivedComponents AS
+(
+    SELECT detail.PedidoComboId,
+           detail.ProductoId,
+           COALESCE
+           (
+               MAX(NULLIF(LTRIM(RTRIM(detail.ProductoNombreSnapshot)), N'')),
+               MAX(product.Nombre)
+           ) AS ProductoNombreSnapshot,
+           CONVERT(INT, SUM(CONVERT(BIGINT, detail.Cantidad)) / comboOrder.Cantidad) AS CantidadPorCombo,
+           CONVERT(INT, SUM(CONVERT(BIGINT, detail.Cantidad))) AS CantidadTotal
+    FROM dbo.PedidoDetalle detail
+    INNER JOIN dbo.PedidoCombos comboOrder
+        ON comboOrder.PedidoComboId = detail.PedidoComboId
+    INNER JOIN dbo.Productos product ON product.ProductoId = detail.ProductoId
+    WHERE detail.PedidoComboId IS NOT NULL
+    GROUP BY detail.PedidoComboId, detail.ProductoId, comboOrder.Cantidad
+)
+INSERT INTO dbo.PedidoComboDetalle
+    (PedidoComboId, ProductoId, ProductoNombreSnapshot, CantidadPorCombo, CantidadTotal)
+SELECT derived.PedidoComboId,
+       derived.ProductoId,
+       derived.ProductoNombreSnapshot,
+       derived.CantidadPorCombo,
+       derived.CantidadTotal
+FROM DerivedComponents derived
+WHERE NOT EXISTS
+(
+    SELECT 1
+    FROM dbo.PedidoComboDetalle component
+    WHERE component.PedidoComboId = derived.PedidoComboId
+      AND component.ProductoId = derived.ProductoId
+);
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.indexes
+    WHERE object_id = OBJECT_ID(N'dbo.PedidoComboDetalle')
+      AND name = N'UQ_PedidoComboDetalle_ComboProducto'
+)
+BEGIN
+    ALTER TABLE dbo.PedidoComboDetalle
+    ADD CONSTRAINT UQ_PedidoComboDetalle_ComboProducto UNIQUE (PedidoComboId, ProductoId);
+END;
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.check_constraints
+    WHERE parent_object_id = OBJECT_ID(N'dbo.PedidoComboDetalle')
+      AND name = N'CK_PedidoComboDetalle_Cantidades'
+)
+BEGIN
+    ALTER TABLE dbo.PedidoComboDetalle WITH CHECK
+    ADD CONSTRAINT CK_PedidoComboDetalle_Cantidades
+        CHECK (CantidadPorCombo > 0 AND CantidadTotal > 0);
+END;
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.foreign_key_columns foreignKeyColumn
+    WHERE foreignKeyColumn.parent_object_id = OBJECT_ID(N'dbo.PedidoComboDetalle')
+      AND foreignKeyColumn.parent_column_id = COLUMNPROPERTY
+          (OBJECT_ID(N'dbo.PedidoComboDetalle'), N'PedidoComboId', N'ColumnId')
+      AND foreignKeyColumn.referenced_object_id = OBJECT_ID(N'dbo.PedidoCombos')
+)
+BEGIN
+    ALTER TABLE dbo.PedidoComboDetalle WITH CHECK
+    ADD CONSTRAINT FK_PedidoComboDetalle_PedidoCombo
+        FOREIGN KEY (PedidoComboId) REFERENCES dbo.PedidoCombos(PedidoComboId);
+END;
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.foreign_key_columns foreignKeyColumn
+    WHERE foreignKeyColumn.parent_object_id = OBJECT_ID(N'dbo.PedidoComboDetalle')
+      AND foreignKeyColumn.parent_column_id = COLUMNPROPERTY
+          (OBJECT_ID(N'dbo.PedidoComboDetalle'), N'ProductoId', N'ColumnId')
+      AND foreignKeyColumn.referenced_object_id = OBJECT_ID(N'dbo.Productos')
+)
+BEGIN
+    ALTER TABLE dbo.PedidoComboDetalle WITH CHECK
+    ADD CONSTRAINT FK_PedidoComboDetalle_Producto
+        FOREIGN KEY (ProductoId) REFERENCES dbo.Productos(ProductoId);
+END;
+GO
+
+IF EXISTS
+(
+    SELECT 1
+    FROM dbo.FacturaCombos invoiceCombo
+    LEFT JOIN dbo.Facturas invoice ON invoice.FacturaId = invoiceCombo.FacturaId
+    LEFT JOIN dbo.PedidoCombos comboOrder ON comboOrder.PedidoComboId = invoiceCombo.PedidoComboId
+    WHERE invoiceCombo.Cantidad <= 0
+       OR invoiceCombo.PrecioUnitario <= 0
+       OR invoiceCombo.ComboNombreSnapshot IS NULL
+       OR invoice.FacturaId IS NULL
+       OR comboOrder.PedidoComboId IS NULL
+       OR invoice.PedidoId <> comboOrder.PedidoId
+)
+    THROW 54529, N'FacturaCombos contiene datos inválidos o referencias incompatibles.', 1;
+
 IF COL_LENGTH(N'dbo.Combos', N'FechaActualizacionUtc') IS NULL
    OR COL_LENGTH(N'dbo.ComboDetalle', N'Cantidad') IS NULL
    OR COL_LENGTH(N'dbo.PedidoCombos', N'ComboNombreSnapshot') IS NULL
+   OR COL_LENGTH(N'dbo.PedidoCombos', N'ComboDescripcionSnapshot') IS NULL
+   OR COL_LENGTH(N'dbo.PedidoCombos', N'Subtotal') IS NULL
+   OR COL_LENGTH(N'dbo.PedidoCombos', N'FechaCreacionUtc') IS NULL
    OR COL_LENGTH(N'dbo.PedidoComboDetalle', N'CantidadTotal') IS NULL
+   OR COL_LENGTH(N'dbo.FacturaCombos', N'PedidoComboId') IS NULL
    OR COL_LENGTH(N'dbo.CheckoutOperaciones', N'SolicitudHash') IS NULL
    OR COL_LENGTH(N'dbo.InventarioTransformaciones', N'ReferenciaTransformacion') IS NULL
    OR COL_LENGTH(N'dbo.PedidoDetalle', N'ProductoNombreSnapshot') IS NULL
    OR COL_LENGTH(N'dbo.PedidoDetalle', N'EsRegalo') IS NULL
+   OR COL_LENGTH(N'dbo.PedidoDetalle', N'PedidoComboId') IS NULL
     THROW 54504, N'Existe un objeto parcial o incompatible de la migración 0012.', 1;
 
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'dbo.Combos') AND name = N'IX_Combos_Activo_Nombre')
@@ -241,6 +915,188 @@ IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'dbo.Inven
     CREATE INDEX IX_InventarioTransformaciones_Productos_Fecha ON dbo.InventarioTransformaciones(ProductoOrigenId, ProductoDestinoId, FechaCreacionUtc DESC);
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'dbo.InventarioOperacionAuditoria') AND name = N'IX_InventarioOperacionAuditoria_Modulo_Fecha')
     CREATE INDEX IX_InventarioOperacionAuditoria_Modulo_Fecha ON dbo.InventarioOperacionAuditoria(Modulo, FechaCreacionUtc DESC);
+
+IF COL_LENGTH(N'dbo.PedidoComboDetalle', N'PedidoComboDetalleId') IS NULL
+   OR COL_LENGTH(N'dbo.PedidoComboDetalle', N'PedidoComboId') IS NULL
+   OR COL_LENGTH(N'dbo.PedidoComboDetalle', N'ProductoId') IS NULL
+   OR COL_LENGTH(N'dbo.PedidoComboDetalle', N'ProductoNombreSnapshot') IS NULL
+   OR COL_LENGTH(N'dbo.PedidoComboDetalle', N'CantidadPorCombo') IS NULL
+   OR COL_LENGTH(N'dbo.FacturaCombos', N'FacturaComboId') IS NULL
+   OR COL_LENGTH(N'dbo.FacturaCombos', N'FacturaId') IS NULL
+   OR COL_LENGTH(N'dbo.FacturaCombos', N'ComboNombreSnapshot') IS NULL
+   OR COL_LENGTH(N'dbo.FacturaCombos', N'Cantidad') IS NULL
+   OR COL_LENGTH(N'dbo.FacturaCombos', N'PrecioUnitario') IS NULL
+   OR COL_LENGTH(N'dbo.FacturaCombos', N'Subtotal') IS NULL
+   OR COL_LENGTH(N'dbo.CheckoutOperaciones', N'CheckoutOperacionId') IS NULL
+   OR COL_LENGTH(N'dbo.CheckoutOperaciones', N'UsuarioId') IS NULL
+   OR COL_LENGTH(N'dbo.CheckoutOperaciones', N'TokenOperacion') IS NULL
+   OR COL_LENGTH(N'dbo.CheckoutOperaciones', N'PedidoId') IS NULL
+   OR COL_LENGTH(N'dbo.CheckoutOperaciones', N'FechaCreacionUtc') IS NULL
+   OR COL_LENGTH(N'dbo.InventarioTransformaciones', N'InventarioTransformacionId') IS NULL
+   OR COL_LENGTH(N'dbo.InventarioTransformaciones', N'ProductoOrigenId') IS NULL
+   OR COL_LENGTH(N'dbo.InventarioTransformaciones', N'CantidadOrigen') IS NULL
+   OR COL_LENGTH(N'dbo.InventarioTransformaciones', N'ProductoDestinoId') IS NULL
+   OR COL_LENGTH(N'dbo.InventarioTransformaciones', N'CantidadDestino') IS NULL
+   OR COL_LENGTH(N'dbo.InventarioTransformaciones', N'UsuarioId') IS NULL
+   OR COL_LENGTH(N'dbo.InventarioTransformaciones', N'UsuarioNombre') IS NULL
+   OR COL_LENGTH(N'dbo.InventarioTransformaciones', N'Motivo') IS NULL
+   OR COL_LENGTH(N'dbo.InventarioTransformaciones', N'FechaCreacionUtc') IS NULL
+   OR COL_LENGTH(N'dbo.InventarioOperacionAuditoria', N'AuditoriaId') IS NULL
+   OR COL_LENGTH(N'dbo.InventarioOperacionAuditoria', N'Modulo') IS NULL
+   OR COL_LENGTH(N'dbo.InventarioOperacionAuditoria', N'EntidadId') IS NULL
+   OR COL_LENGTH(N'dbo.InventarioOperacionAuditoria', N'Accion') IS NULL
+   OR COL_LENGTH(N'dbo.InventarioOperacionAuditoria', N'UsuarioId') IS NULL
+   OR COL_LENGTH(N'dbo.InventarioOperacionAuditoria', N'UsuarioNombre') IS NULL
+   OR COL_LENGTH(N'dbo.InventarioOperacionAuditoria', N'Detalle') IS NULL
+   OR COL_LENGTH(N'dbo.InventarioOperacionAuditoria', N'FechaCreacionUtc') IS NULL
+    THROW 54504, N'Existe un objeto parcial o incompatible de la migración 0012.', 1;
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.computed_columns
+    WHERE object_id = OBJECT_ID(N'dbo.PedidoCombos')
+      AND name = N'Subtotal'
+      AND is_persisted = 1
+)
+   OR NOT EXISTS
+      (
+          SELECT 1
+          FROM sys.computed_columns
+          WHERE object_id = OBJECT_ID(N'dbo.FacturaCombos')
+            AND name = N'Subtotal'
+            AND is_persisted = 1
+      )
+    THROW 54504, N'Los subtotales canónicos deben ser columnas computadas persistidas.', 1;
+
+DECLARE @RequiredConstraint TABLE
+(
+    ConstraintName SYSNAME NOT NULL,
+    ConstraintType CHAR(2) NOT NULL
+);
+
+INSERT INTO @RequiredConstraint (ConstraintName, ConstraintType)
+VALUES
+    (N'dbo.DF_Combos_Activo', N'D'),
+    (N'dbo.DF_Combos_FechaCreacionUtc', N'D'),
+    (N'dbo.DF_Combos_FechaActualizacionUtc', N'D'),
+    (N'dbo.CK_Combos_Precio', N'C'),
+    (N'dbo.UQ_ComboDetalle_ComboProducto', N'UQ'),
+    (N'dbo.CK_ComboDetalle_Cantidad', N'C'),
+    (N'dbo.DF_PedidoCombos_FechaCreacionUtc', N'D'),
+    (N'dbo.CK_PedidoCombos_Cantidad', N'C'),
+    (N'dbo.CK_PedidoCombos_Precio', N'C'),
+    (N'dbo.UQ_PedidoComboDetalle_ComboProducto', N'UQ'),
+    (N'dbo.CK_PedidoComboDetalle_Cantidades', N'C'),
+    (N'dbo.UQ_FacturaCombos_PedidoCombo', N'UQ'),
+    (N'dbo.CK_FacturaCombos_Cantidad', N'C'),
+    (N'dbo.CK_FacturaCombos_Precio', N'C'),
+    (N'dbo.UQ_CheckoutOperaciones_UsuarioToken', N'UQ'),
+    (N'dbo.DF_CheckoutOperaciones_FechaCreacionUtc', N'D'),
+    (N'dbo.UQ_InventarioTransformaciones_Referencia', N'UQ'),
+    (N'dbo.CK_InventarioTransformaciones_Productos', N'C'),
+    (N'dbo.CK_InventarioTransformaciones_Cantidades', N'C'),
+    (N'dbo.DF_InventarioTransformaciones_FechaCreacionUtc', N'D'),
+    (N'dbo.DF_InventarioOperacionAuditoria_FechaCreacionUtc', N'D'),
+    (N'dbo.DF_PedidoDetalle_EsRegalo', N'D');
+
+IF EXISTS
+(
+    SELECT 1
+    FROM @RequiredConstraint requiredConstraint
+    WHERE OBJECT_ID(requiredConstraint.ConstraintName, requiredConstraint.ConstraintType) IS NULL
+)
+    THROW 54504, N'Falta una restricción requerida de la migración 0012.', 1;
+
+DECLARE @RequiredPrimaryKey TABLE
+(
+    TableName SYSNAME NOT NULL,
+    ColumnName SYSNAME NOT NULL
+);
+
+INSERT INTO @RequiredPrimaryKey (TableName, ColumnName)
+VALUES
+    (N'Combos', N'ComboId'),
+    (N'ComboDetalle', N'ComboDetalleId'),
+    (N'PedidoCombos', N'PedidoComboId'),
+    (N'PedidoComboDetalle', N'PedidoComboDetalleId'),
+    (N'FacturaCombos', N'FacturaComboId'),
+    (N'CheckoutOperaciones', N'CheckoutOperacionId'),
+    (N'InventarioTransformaciones', N'InventarioTransformacionId'),
+    (N'InventarioOperacionAuditoria', N'AuditoriaId');
+
+IF EXISTS
+(
+    SELECT 1
+    FROM @RequiredPrimaryKey requiredKey
+    WHERE NOT EXISTS
+    (
+        SELECT 1
+        FROM sys.indexes primaryIndex
+        INNER JOIN sys.index_columns indexColumn
+            ON indexColumn.object_id = primaryIndex.object_id
+           AND indexColumn.index_id = primaryIndex.index_id
+        INNER JOIN sys.columns columnObject
+            ON columnObject.object_id = indexColumn.object_id
+           AND columnObject.column_id = indexColumn.column_id
+        WHERE primaryIndex.object_id = OBJECT_ID(N'dbo.' + requiredKey.TableName)
+          AND primaryIndex.is_primary_key = 1
+          AND indexColumn.key_ordinal = 1
+          AND columnObject.name = requiredKey.ColumnName
+    )
+)
+    THROW 54504, N'Falta una clave primaria requerida de la migración 0012.', 1;
+
+DECLARE @RequiredForeignKey TABLE
+(
+    ParentTable SYSNAME NOT NULL,
+    ParentColumn SYSNAME NOT NULL,
+    ReferencedTable SYSNAME NOT NULL,
+    ReferencedColumn SYSNAME NOT NULL
+);
+
+INSERT INTO @RequiredForeignKey
+    (ParentTable, ParentColumn, ReferencedTable, ReferencedColumn)
+VALUES
+    (N'Combos', N'RegistradoPorUsuarioId', N'Usuarios', N'UsuarioId'),
+    (N'Combos', N'ActualizadoPorUsuarioId', N'Usuarios', N'UsuarioId'),
+    (N'ComboDetalle', N'ComboId', N'Combos', N'ComboId'),
+    (N'ComboDetalle', N'ProductoId', N'Productos', N'ProductoId'),
+    (N'PedidoCombos', N'PedidoId', N'Pedidos', N'PedidoId'),
+    (N'PedidoCombos', N'ComboId', N'Combos', N'ComboId'),
+    (N'PedidoComboDetalle', N'PedidoComboId', N'PedidoCombos', N'PedidoComboId'),
+    (N'PedidoComboDetalle', N'ProductoId', N'Productos', N'ProductoId'),
+    (N'FacturaCombos', N'FacturaId', N'Facturas', N'FacturaId'),
+    (N'FacturaCombos', N'PedidoComboId', N'PedidoCombos', N'PedidoComboId'),
+    (N'PedidoDetalle', N'PedidoComboId', N'PedidoCombos', N'PedidoComboId'),
+    (N'CheckoutOperaciones', N'UsuarioId', N'Usuarios', N'UsuarioId'),
+    (N'CheckoutOperaciones', N'PedidoId', N'Pedidos', N'PedidoId'),
+    (N'InventarioTransformaciones', N'ProductoOrigenId', N'Productos', N'ProductoId'),
+    (N'InventarioTransformaciones', N'ProductoDestinoId', N'Productos', N'ProductoId'),
+    (N'InventarioTransformaciones', N'UsuarioId', N'Usuarios', N'UsuarioId'),
+    (N'InventarioOperacionAuditoria', N'UsuarioId', N'Usuarios', N'UsuarioId');
+
+IF EXISTS
+(
+    SELECT 1
+    FROM @RequiredForeignKey requiredKey
+    WHERE NOT EXISTS
+    (
+        SELECT 1
+        FROM sys.foreign_keys foreignKey
+        INNER JOIN sys.foreign_key_columns foreignKeyColumn
+            ON foreignKeyColumn.constraint_object_id = foreignKey.object_id
+        WHERE foreignKey.parent_object_id = OBJECT_ID(N'dbo.' + requiredKey.ParentTable)
+          AND foreignKey.referenced_object_id = OBJECT_ID(N'dbo.' + requiredKey.ReferencedTable)
+          AND foreignKeyColumn.parent_column_id = COLUMNPROPERTY
+              (OBJECT_ID(N'dbo.' + requiredKey.ParentTable), requiredKey.ParentColumn, N'ColumnId')
+          AND foreignKeyColumn.referenced_column_id = COLUMNPROPERTY
+              (OBJECT_ID(N'dbo.' + requiredKey.ReferencedTable), requiredKey.ReferencedColumn, N'ColumnId')
+          AND foreignKey.is_disabled = 0
+          AND foreignKey.is_not_trusted = 0
+    )
+)
+    THROW 54504, N'Falta una clave foránea segura de la migración 0012.', 1;
 
 MERGE dbo.Permisos AS target
 USING
@@ -718,6 +1574,7 @@ BEGIN
         FROM dbo.PedidoDetalle detail
         INNER JOIN dbo.Pedidos orders ON orders.PedidoId = detail.PedidoId
         WHERE orders.Estado NOT IN (N'Cancelado', N'Rechazado')
+          AND detail.PedidoComboId IS NULL
         UNION ALL
         SELECT component.ProductoId, component.CantidadTotal, orders.FechaPedido
         FROM dbo.PedidoComboDetalle component
@@ -771,6 +1628,7 @@ BEGIN
         FROM dbo.PedidoDetalle detail
         INNER JOIN dbo.Pedidos orders ON orders.PedidoId = detail.PedidoId
         WHERE orders.Estado NOT IN (N'Cancelado', N'Rechazado')
+          AND detail.PedidoComboId IS NULL
         UNION ALL
         SELECT component.ProductoId, component.CantidadTotal, orders.FechaPedido
         FROM dbo.PedidoComboDetalle component
@@ -834,6 +1692,7 @@ BEGIN
         INNER JOIN dbo.Pedidos orders ON orders.PedidoId = detail.PedidoId
         WHERE YEAR(orders.FechaPedido) BETWEEN @AnioInicio AND @AnioFin
           AND orders.Estado NOT IN (N'Cancelado', N'Rechazado')
+          AND detail.PedidoComboId IS NULL
         UNION ALL
         SELECT MONTH(orders.FechaPedido), combo.Subtotal, combo.Cantidad
         FROM dbo.PedidoCombos combo
@@ -906,7 +1765,9 @@ BEGIN
                detail.PedidoDetalleId AS SortId
         FROM dbo.PedidoDetalle detail
         INNER JOIN dbo.Productos product ON product.ProductoId = detail.ProductoId
-        WHERE detail.PedidoId = @PedidoId AND detail.EsRegalo = 0
+        WHERE detail.PedidoId = @PedidoId
+          AND detail.EsRegalo = 0
+          AND detail.PedidoComboId IS NULL
 
         UNION ALL
 
@@ -943,7 +1804,9 @@ BEGIN
           AND promotion.ProductoRegaloId = gift.ProductoId
         ORDER BY promotion.Prioridad DESC, promotion.PromocionId
     ) appliedPromotion
-    WHERE gift.PedidoId = @PedidoId AND gift.EsRegalo = 1
+    WHERE gift.PedidoId = @PedidoId
+      AND gift.EsRegalo = 1
+      AND gift.PedidoComboId IS NULL
     GROUP BY gift.ProductoId, product.Nombre
     ORDER BY product.Nombre, gift.ProductoId;
 END;
@@ -1458,7 +2321,9 @@ BEGIN
             WHERE TipoBeneficio = N'Descuento'
             GROUP BY ProductoId
         ) discount ON discount.ProductoId = detail.ProductoId
-        WHERE detail.PedidoId = @PedidoId AND detail.EsRegalo = 0;
+        WHERE detail.PedidoId = @PedidoId
+          AND detail.EsRegalo = 0
+          AND detail.PedidoComboId IS NULL;
 
         UPDATE product
         SET product.Stock = product.Stock - CONVERT(INT, requirement.CantidadCarrito + requirement.CantidadRegalo)
@@ -1494,7 +2359,9 @@ BEGIN
         UPDATE dbo.Pedidos
         SET Total =
             ISNULL((SELECT SUM(detail.Cantidad * detail.PrecioUnitario)
-                    FROM dbo.PedidoDetalle detail WHERE detail.PedidoId = @PedidoId), 0)
+                    FROM dbo.PedidoDetalle detail
+                    WHERE detail.PedidoId = @PedidoId
+                      AND detail.PedidoComboId IS NULL), 0)
             + ISNULL((SELECT SUM(combo.Cantidad * combo.PrecioUnitario)
                       FROM dbo.PedidoCombos combo WHERE combo.PedidoId = @PedidoId), 0),
             InventarioDescontado = 1,
@@ -1534,7 +2401,9 @@ BEGIN
            orders.TipoEntrega,
            orders.DireccionEntrega,
            orders.Total,
-           (SELECT COUNT(*) FROM dbo.PedidoDetalle detail WHERE detail.PedidoId = orders.PedidoId)
+           (SELECT COUNT(*) FROM dbo.PedidoDetalle detail
+            WHERE detail.PedidoId = orders.PedidoId
+              AND detail.PedidoComboId IS NULL)
            + (SELECT COUNT(*) FROM dbo.PedidoCombos combo WHERE combo.PedidoId = orders.PedidoId) AS TotalLineas
     FROM dbo.Pedidos orders
     INNER JOIN dbo.Usuarios userAccount ON userAccount.UsuarioId = orders.UsuarioId
@@ -1572,6 +2441,7 @@ BEGIN
         FROM dbo.PedidoDetalle detail
         INNER JOIN dbo.Productos product ON product.ProductoId = detail.ProductoId
         WHERE detail.PedidoId = @PedidoId
+          AND detail.PedidoComboId IS NULL
 
         UNION ALL
 
@@ -1641,6 +2511,7 @@ BEGIN
         SELECT detail.ProductoId, detail.Cantidad
         FROM dbo.PedidoDetalle detail
         WHERE detail.PedidoId = @PedidoId
+          AND detail.PedidoComboId IS NULL
         UNION ALL
         SELECT component.ProductoId, component.CantidadTotal
         FROM dbo.PedidoCombos combo
@@ -1859,13 +2730,21 @@ BEGIN
             THROW 50903, N'El estado del pedido no permite facturación.', 1;
         IF EXISTS (SELECT 1 FROM dbo.Facturas WITH (UPDLOCK, HOLDLOCK) WHERE PedidoId = @PedidoId)
             THROW 50904, N'El pedido ya tiene una factura asociada.', 1;
-        IF NOT EXISTS (SELECT 1 FROM dbo.PedidoDetalle WHERE PedidoId = @PedidoId)
+        IF NOT EXISTS
+           (
+               SELECT 1
+               FROM dbo.PedidoDetalle
+               WHERE PedidoId = @PedidoId
+                 AND PedidoComboId IS NULL
+           )
            AND NOT EXISTS (SELECT 1 FROM dbo.PedidoCombos WHERE PedidoId = @PedidoId)
             THROW 50905, N'El pedido no tiene líneas para facturar.', 1;
 
         SELECT @Subtotal =
             ISNULL((SELECT SUM(detail.Cantidad * detail.PrecioUnitario)
-                    FROM dbo.PedidoDetalle detail WHERE detail.PedidoId = @PedidoId), 0)
+                    FROM dbo.PedidoDetalle detail
+                    WHERE detail.PedidoId = @PedidoId
+                      AND detail.PedidoComboId IS NULL), 0)
             + ISNULL((SELECT SUM(combo.Cantidad * combo.PrecioUnitario)
                       FROM dbo.PedidoCombos combo WHERE combo.PedidoId = @PedidoId), 0);
         SET @Impuesto = ROUND(@Subtotal * 0.13, 2);
@@ -1893,7 +2772,8 @@ BEGIN
                detail.PrecioUnitario
         FROM dbo.PedidoDetalle detail
         INNER JOIN dbo.Productos product ON product.ProductoId = detail.ProductoId
-        WHERE detail.PedidoId = @PedidoId;
+        WHERE detail.PedidoId = @PedidoId
+          AND detail.PedidoComboId IS NULL;
         INSERT INTO dbo.FacturaCombos
             (FacturaId, PedidoComboId, ComboNombreSnapshot, Cantidad, PrecioUnitario)
         SELECT @FacturaId, combo.PedidoComboId, combo.ComboNombreSnapshot, combo.Cantidad, combo.PrecioUnitario
