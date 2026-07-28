@@ -1,5 +1,7 @@
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
 
 /*
   Sprint 4 CU-181, CU-182, CU-241, CU-242 y CU-243.
@@ -286,13 +288,38 @@ BEGIN
            combo.Activo,
            combo.FechaCreacionUtc,
            combo.RegistradoPorNombre,
-           COUNT(detail.ComboDetalleId) AS CantidadProductos,
-           CONVERT(INT, COALESCE(MIN(product.Stock / NULLIF(detail.Cantidad, 0)), 0)) AS StockDisponibleCombo
+           availability.CantidadComponentes AS CantidadProductos,
+           CONVERT(INT, CASE
+               WHEN combo.Activo = 1
+                AND availability.CantidadComponentes > 0
+                AND availability.CantidadComponentesValidos = availability.CantidadComponentes
+                   THEN ISNULL(availability.StockDisponible, 0)
+               ELSE 0
+           END) AS StockDisponibleCombo,
+           CASE
+               WHEN combo.Activo = 0 THEN N'Inactivo'
+               WHEN availability.CantidadComponentes = 0 THEN N'Sin componentes'
+               WHEN availability.CantidadComponentesValidos <> availability.CantidadComponentes
+                    THEN N'Componente inactivo o faltante'
+               WHEN ISNULL(availability.StockDisponible, 0) <= 0 THEN N'Sin existencias'
+               ELSE N'Disponible'
+           END AS EstadoDisponibilidad
     FROM dbo.Combos combo
-    LEFT JOIN dbo.ComboDetalle detail ON detail.ComboId = combo.ComboId
-    LEFT JOIN dbo.Productos product ON product.ProductoId = detail.ProductoId AND product.Activo = 1
-    GROUP BY combo.ComboId, combo.Nombre, combo.Descripcion, combo.Precio, combo.Activo,
-             combo.FechaCreacionUtc, combo.RegistradoPorNombre
+    CROSS APPLY
+    (
+        SELECT COUNT(detail.ComboDetalleId) AS CantidadComponentes,
+               SUM(CASE WHEN product.ProductoId IS NOT NULL
+                             AND product.Activo = 1
+                             AND detail.Cantidad > 0 THEN 1 ELSE 0 END) AS CantidadComponentesValidos,
+               NULLIF(MIN(CASE WHEN product.ProductoId IS NOT NULL
+                                     AND product.Activo = 1
+                                     AND detail.Cantidad > 0
+                                THEN product.Stock / detail.Cantidad
+                                ELSE 2147483647 END), 2147483647) AS StockDisponible
+        FROM dbo.ComboDetalle detail
+        LEFT JOIN dbo.Productos product ON product.ProductoId = detail.ProductoId
+        WHERE detail.ComboId = combo.ComboId
+    ) availability
     ORDER BY combo.FechaCreacionUtc DESC, combo.ComboId DESC;
 END;
 GO
@@ -310,19 +337,45 @@ BEGIN
            combo.Activo,
            combo.RegistradoPorNombre,
            combo.FechaCreacionUtc,
-           CONVERT(INT, COALESCE(MIN(product.Stock / NULLIF(detail.Cantidad, 0)), 0)) AS StockDisponibleCombo
+           CONVERT(INT, CASE
+               WHEN combo.Activo = 1
+                AND availability.CantidadComponentes > 0
+                AND availability.CantidadComponentesValidos = availability.CantidadComponentes
+                   THEN ISNULL(availability.StockDisponible, 0)
+               ELSE 0
+           END) AS StockDisponibleCombo,
+           CASE
+               WHEN combo.Activo = 0 THEN N'Inactivo'
+               WHEN availability.CantidadComponentes = 0 THEN N'Sin componentes'
+               WHEN availability.CantidadComponentesValidos <> availability.CantidadComponentes
+                    THEN N'Componente inactivo o faltante'
+               WHEN ISNULL(availability.StockDisponible, 0) <= 0 THEN N'Sin existencias'
+               ELSE N'Disponible'
+           END AS EstadoDisponibilidad
     FROM dbo.Combos combo
-    LEFT JOIN dbo.ComboDetalle detail ON detail.ComboId = combo.ComboId
-    LEFT JOIN dbo.Productos product ON product.ProductoId = detail.ProductoId AND product.Activo = 1
+    CROSS APPLY
+    (
+        SELECT COUNT(detail.ComboDetalleId) AS CantidadComponentes,
+               SUM(CASE WHEN product.ProductoId IS NOT NULL
+                             AND product.Activo = 1
+                             AND detail.Cantidad > 0 THEN 1 ELSE 0 END) AS CantidadComponentesValidos,
+               NULLIF(MIN(CASE WHEN product.ProductoId IS NOT NULL
+                                     AND product.Activo = 1
+                                     AND detail.Cantidad > 0
+                                THEN product.Stock / detail.Cantidad
+                                ELSE 2147483647 END), 2147483647) AS StockDisponible
+        FROM dbo.ComboDetalle detail
+        LEFT JOIN dbo.Productos product ON product.ProductoId = detail.ProductoId
+        WHERE detail.ComboId = combo.ComboId
+    ) availability
     WHERE combo.ComboId = @ComboId
-    GROUP BY combo.ComboId, combo.Nombre, combo.Descripcion, combo.Precio, combo.Activo,
-             combo.RegistradoPorNombre, combo.FechaCreacionUtc;
 
     SELECT detail.ComboDetalleId,
            detail.ProductoId,
            product.Nombre AS ProductoNombre,
            detail.Cantidad,
-           product.Stock AS StockDisponible
+           product.Stock AS StockDisponible,
+           product.Activo AS ProductoActivo
     FROM dbo.ComboDetalle detail
     INNER JOIN dbo.Productos product ON product.ProductoId = detail.ProductoId
     WHERE detail.ComboId = @ComboId
@@ -486,16 +539,36 @@ BEGIN
            combo.Nombre,
            combo.Descripcion,
            combo.Precio,
-           COUNT(detail.ComboDetalleId) AS CantidadProductos,
-           CONVERT(INT, COALESCE(MIN(product.Stock / NULLIF(detail.Cantidad, 0)), 0)) AS StockDisponibleCombo,
+           availability.CantidadComponentes AS CantidadProductos,
+           CONVERT(INT, availability.StockDisponible) AS StockDisponibleCombo,
+           CONVERT(BIT, 1) AS ComponentesValidos,
            STRING_AGG(CONCAT(detail.Cantidad, N'× ', product.Nombre), N', ')
                WITHIN GROUP (ORDER BY product.Nombre, product.ProductoId) AS ComponentesResumen
     FROM dbo.Combos combo
+    CROSS APPLY
+    (
+        SELECT COUNT(component.ComboDetalleId) AS CantidadComponentes,
+               SUM(CASE WHEN componentProduct.ProductoId IS NOT NULL
+                             AND componentProduct.Activo = 1
+                             AND component.Cantidad > 0 THEN 1 ELSE 0 END) AS CantidadComponentesValidos,
+               NULLIF(MIN(CASE WHEN componentProduct.ProductoId IS NOT NULL
+                                     AND componentProduct.Activo = 1
+                                     AND component.Cantidad > 0
+                                THEN componentProduct.Stock / component.Cantidad
+                                ELSE 2147483647 END), 2147483647) AS StockDisponible
+        FROM dbo.ComboDetalle component
+        LEFT JOIN dbo.Productos componentProduct ON componentProduct.ProductoId = component.ProductoId
+        WHERE component.ComboId = combo.ComboId
+    ) availability
     INNER JOIN dbo.ComboDetalle detail ON detail.ComboId = combo.ComboId
-    INNER JOIN dbo.Productos product ON product.ProductoId = detail.ProductoId AND product.Activo = 1
+    INNER JOIN dbo.Productos product ON product.ProductoId = detail.ProductoId
     WHERE combo.Activo = 1
+      AND availability.CantidadComponentes > 0
+      AND availability.CantidadComponentesValidos = availability.CantidadComponentes
+      AND availability.StockDisponible > 0
       AND (@Buscar IS NULL OR combo.Nombre LIKE N'%' + @Buscar + N'%' OR combo.Descripcion LIKE N'%' + @Buscar + N'%')
-    GROUP BY combo.ComboId, combo.Nombre, combo.Descripcion, combo.Precio
+    GROUP BY combo.ComboId, combo.Nombre, combo.Descripcion, combo.Precio,
+             availability.CantidadComponentes, availability.StockDisponible
     ORDER BY combo.Nombre, combo.ComboId;
 END;
 GO
@@ -510,15 +583,36 @@ BEGIN
            combo.Nombre,
            combo.Descripcion,
            combo.Precio,
-           COUNT(detail.ComboDetalleId) AS CantidadProductos,
-           CONVERT(INT, COALESCE(MIN(product.Stock / NULLIF(detail.Cantidad, 0)), 0)) AS StockDisponibleCombo,
+           availability.CantidadComponentes AS CantidadProductos,
+           CONVERT(INT, availability.StockDisponible) AS StockDisponibleCombo,
+           CONVERT(BIT, 1) AS ComponentesValidos,
            STRING_AGG(CONCAT(detail.Cantidad, N'× ', product.Nombre), N', ')
                WITHIN GROUP (ORDER BY product.Nombre, product.ProductoId) AS ComponentesResumen
     FROM dbo.Combos combo
+    CROSS APPLY
+    (
+        SELECT COUNT(component.ComboDetalleId) AS CantidadComponentes,
+               SUM(CASE WHEN componentProduct.ProductoId IS NOT NULL
+                             AND componentProduct.Activo = 1
+                             AND component.Cantidad > 0 THEN 1 ELSE 0 END) AS CantidadComponentesValidos,
+               NULLIF(MIN(CASE WHEN componentProduct.ProductoId IS NOT NULL
+                                     AND componentProduct.Activo = 1
+                                     AND component.Cantidad > 0
+                                THEN componentProduct.Stock / component.Cantidad
+                                ELSE 2147483647 END), 2147483647) AS StockDisponible
+        FROM dbo.ComboDetalle component
+        LEFT JOIN dbo.Productos componentProduct ON componentProduct.ProductoId = component.ProductoId
+        WHERE component.ComboId = combo.ComboId
+    ) availability
     INNER JOIN dbo.ComboDetalle detail ON detail.ComboId = combo.ComboId
-    INNER JOIN dbo.Productos product ON product.ProductoId = detail.ProductoId AND product.Activo = 1
-    WHERE combo.ComboId = @ComboId AND combo.Activo = 1
-    GROUP BY combo.ComboId, combo.Nombre, combo.Descripcion, combo.Precio;
+    INNER JOIN dbo.Productos product ON product.ProductoId = detail.ProductoId
+    WHERE combo.ComboId = @ComboId
+      AND combo.Activo = 1
+      AND availability.CantidadComponentes > 0
+      AND availability.CantidadComponentesValidos = availability.CantidadComponentes
+      AND availability.StockDisponible > 0
+    GROUP BY combo.ComboId, combo.Nombre, combo.Descripcion, combo.Precio,
+             availability.CantidadComponentes, availability.StockDisponible;
 END;
 GO
 
@@ -749,8 +843,8 @@ BEGIN
     )
     SELECT months.NumeroMes,
            months.NombreMes,
-           CONVERT(DECIMAL(18,2), ISNULL(SUM(sales.Total), 0)) AS TotalVendido,
-           CONVERT(INT, ISNULL(SUM(sales.Units), 0)) AS UnidadesVendidas
+           CONVERT(DECIMAL(18,2), SUM(ISNULL(sales.Total, 0))) AS TotalVendido,
+           CONVERT(INT, SUM(ISNULL(sales.Units, 0))) AS UnidadesVendidas
     FROM Months months
     LEFT JOIN Sales sales ON sales.NumeroMes = months.NumeroMes
     GROUP BY months.NumeroMes, months.NombreMes
@@ -1021,6 +1115,25 @@ BEGIN
             WHERE NOT EXISTS (SELECT 1 FROM dbo.ComboDetalle detail WHERE detail.ComboId = cart.ComboId)
         )
             THROW 54612, N'Uno o más combos no tienen componentes.', 1;
+
+        IF EXISTS
+        (
+            SELECT 1
+            FROM @CartCombos cart
+            CROSS APPLY
+            (
+                SELECT COUNT(detail.ComboDetalleId) AS CantidadComponentes,
+                       SUM(CASE WHEN product.ProductoId IS NOT NULL
+                                     AND product.Activo = 1
+                                     AND detail.Cantidad > 0 THEN 1 ELSE 0 END) AS CantidadComponentesValidos
+                FROM dbo.ComboDetalle detail
+                LEFT JOIN dbo.Productos product ON product.ProductoId = detail.ProductoId
+                WHERE detail.ComboId = cart.ComboId
+            ) availability
+            WHERE availability.CantidadComponentes = 0
+               OR availability.CantidadComponentesValidos <> availability.CantidadComponentes
+        )
+            THROW 54612, N'Uno o más combos tienen componentes inactivos o inválidos.', 1;
 
         DECLARE @Candidates TABLE
         (
@@ -1883,6 +1996,22 @@ GO
 IF XACT_STATE() <> 1
     THROW 54590, N'La transacción de la migración 0012 no está disponible para confirmar.', 1;
 
+DECLARE @MigrationSha256 NVARCHAR(128) = N'$(MigrationSha256)';
+DECLARE @LegacyManifestSha256 CHAR(64) = CONVERT
+(
+    CHAR(64),
+    HASHBYTES('SHA2_256', N'0012_inventory_combos_transformations_intelligence_v1'),
+    2
+);
+
+IF LEN(@MigrationSha256) <> 64
+   OR @MigrationSha256 LIKE N'%[^0-9A-Fa-f]%'
+    THROW 54593, N'El SHA-256 de 0012 debe llegar expandido por sqlcmd como 64 caracteres hexadecimales.', 1;
+
+SET @MigrationSha256 = UPPER(@MigrationSha256);
+IF @MigrationSha256 = @LegacyManifestSha256
+    THROW 54594, N'El SHA-256 de 0012 no puede ser el manifiesto de versión heredado.', 1;
+
 IF NOT EXISTS (SELECT 1 FROM dbo.SchemaMigrationHistory WHERE MigrationId = N'0012_inventory_combos_transformations_intelligence')
 BEGIN
     INSERT INTO dbo.SchemaMigrationHistory
@@ -1890,7 +2019,7 @@ BEGIN
     VALUES
         (N'0012_inventory_combos_transformations_intelligence',
          N'0012_inventory_combos_transformations_intelligence.sql',
-         CONVERT(CHAR(64), HASHBYTES('SHA2_256', N'0012_inventory_combos_transformations_intelligence_v1'), 2),
+         @MigrationSha256,
          N'Applied', ORIGINAL_LOGIN(), DB_NAME(),
          N'Combos vendibles, transformación atómica e inteligencia de inventario con snapshots e idempotencia.');
 END;

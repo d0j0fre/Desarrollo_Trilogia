@@ -14,6 +14,20 @@ IF NOT EXISTS
 )
     THROW 54600, N'El ledger no confirma que 0012 esté aplicada.', 1;
 
+DECLARE @MigrationSha256 NVARCHAR(128);
+SELECT @MigrationSha256 = FileSha256
+FROM dbo.SchemaMigrationHistory
+WHERE MigrationId = N'0012_inventory_combos_transformations_intelligence'
+  AND Status = N'Applied';
+
+IF @MigrationSha256 IS NULL
+   OR LEN(@MigrationSha256) <> 64
+   OR @MigrationSha256 LIKE N'%[^0-9A-Fa-f]%'
+   OR @MigrationSha256 = N'$' + N'(MigrationSha256)'
+   OR UPPER(@MigrationSha256) = CONVERT
+      (CHAR(64), HASHBYTES('SHA2_256', N'0012_inventory_combos_transformations_intelligence_v1'), 2)
+    THROW 54606, N'El ledger de 0012 no contiene un SHA-256 real válido del archivo.', 1;
+
 DECLARE @ObjetosEsperados TABLE
 (
     ObjectName SYSNAME NOT NULL,
@@ -31,8 +45,10 @@ VALUES
     (N'dbo.InventarioTransformaciones', N'U'),
     (N'dbo.InventarioOperacionAuditoria', N'U'),
     (N'dbo.sp_Admin_GetCombos', N'P'),
+    (N'dbo.sp_Admin_GetComboDetail', N'P'),
     (N'dbo.sp_Admin_CreateCombo', N'P'),
     (N'dbo.sp_Store_GetActiveCombos', N'P'),
+    (N'dbo.sp_Store_GetComboById', N'P'),
     (N'dbo.sp_Store_CreateOrderWithPromotions', N'P'),
     (N'dbo.sp_Inventory_TransformStockAtomic', N'P'),
     (N'dbo.sp_Inventory_RestoreOrderStock', N'P'),
@@ -61,6 +77,16 @@ IF NOT EXISTS
       AND TYPE_NAME(parameter.user_type_id) = N'uniqueidentifier'
 )
     THROW 54603, N'El contrato idempotente de checkout no está disponible.', 1;
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.parameters parameter
+    WHERE parameter.object_id = OBJECT_ID(N'dbo.sp_Store_GetComboById', N'P')
+      AND parameter.name = N'@ComboId'
+      AND TYPE_NAME(parameter.user_type_id) = N'int'
+)
+    THROW 54607, N'El contrato de consulta individual de combo no está disponible.', 1;
 
 IF (SELECT COUNT(*) FROM dbo.Permisos
     WHERE Codigo IN (N'COMBOS_VER', N'COMBOS_GESTIONAR', N'INVENTARIO_TRANSFORMAR', N'INVENTARIO_INTELIGENCIA_VER')

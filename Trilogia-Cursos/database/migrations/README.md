@@ -45,10 +45,30 @@ Cada migracion debe indicar su estrategia de rollback antes de ejecutarse. Los c
 | 0009 | `0009_annual_department_budgets.sql` | Presupuestos anuales normalizados | 0007 (departamentos) |
 | 0010 | `0010_operating_expenses_alignment.sql` | Gastos operativos, comprobantes privados y estados | 0009; esquema CU-222 legado opcional |
 | 0011 | `0011_budget_actual_comparison.sql` | Comparación presupuesto versus real | 0009 y 0010 |
+| 0012 | `0012_inventory_combos_transformations_intelligence.sql` | Combos vendibles, snapshots de pedido/factura, checkout idempotente, transformación atómica, inteligencia y permisos específicos | Esquema de productos/pedidos/usuarios/facturas/permisos; 0005 para checkout/promociones; dependencias Sprint 4 verificadas cuando correspondan |
 
 Los scripts no incluyen `USE`: el ejecutor debe seleccionar explícitamente la base antes de iniciar. Los hashes escritos por 0002–0011 son hashes de manifiesto para identificar versión; la evidencia de despliegue debe registrar además el SHA-256 real del archivo y actualizar el ledger si corresponde.
 
 Al 23 de julio de 2026, Azure DEV registra 0007–0011 como aplicadas y se verificaron sus objetos, columnas principales, índices, constraints y permisos. No deben volver a ejecutarse en esa base. Esta evidencia no demuestra que 0002–0006 estén aplicadas ni convierte el ledger histórico en una secuencia completa. Antes de cualquier corrección se requiere BACPAC, ejecutor único, script incremental nuevo y QA posterior. `database_Esteban/cu222_gastos_presupuesto.sql` es sólo referencia histórica.
+
+## Ejecución controlada de 0012
+
+La migración 0012 todavía **no se ha aplicado en Azure DEV**. No debe ejecutarse
+sin BACPAC verificado, ejecutor único y verificación posterior. Tampoco deben
+ejecutarse las migraciones `0002`–`0006` del PR #114.
+
+Use el ejecutor seguro para calcular el SHA-256 real del archivo final e
+inyectarlo por `sqlcmd`:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/database/Invoke-Migration0012.ps1 -ServerInstance "<instancia>" -Database "<base>"
+```
+
+`-DryRun` solo calcula y valida el hash. El script usa `sqlcmd -b`, no recibe ni
+imprime connection strings o contraseñas y falla si la expansión de hash no es
+válida. Después debe ejecutarse
+`0012_inventory_combos_transformations_intelligence.verify.sql` en modo de solo
+lectura. El rollback continúa documentado en el archivo correspondiente.
 
 ## Evidencia privada legada
 
