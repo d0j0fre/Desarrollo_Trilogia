@@ -15,7 +15,7 @@
         <article class="s4-kpi"><span class="s4-kpi__label">Precio de venta</span><strong class="s4-kpi__value">₡@Model.Precio.ToString("N2")</strong></article>
         <article class="s4-kpi s4-kpi--@(Model.StockDisponibleCombo > 0 ? "success" : "danger")"><span class="s4-kpi__label">Disponibilidad real</span><strong class="s4-kpi__value">@Model.StockDisponibleCombo</strong></article>
         <article class="s4-kpi"><span class="s4-kpi__label">Componentes</span><strong class="s4-kpi__value">@Model.Componentes.Count</strong></article>
-        <article class="s4-kpi"><span class="s4-kpi__label">Estado</span><strong class="s4-kpi__value">@(Model.Activo ? "Activo" : "Inactivo")</strong></article>
+        <article class="s4-kpi"><span class="s4-kpi__label">Estado</span><strong class="s4-kpi__value">@Model.EstadoDisponibilidad</strong></article>
     </div>
 
     <div class="row">
@@ -23,8 +23,8 @@
             <section class="card mb-4" aria-labelledby="component-title">
                 <div class="card-header" id="component-title">Composición y cobertura</div>
                 <div class="table-responsive"><table class="table">
-                    <thead><tr><th>Producto</th><th>Requerido por combo</th><th>Stock actual</th><th>Combos posibles</th></tr></thead>
-                    <tbody>@foreach (var line in Model.Componentes) { var coverage = line.Cantidad > 0 ? line.StockDisponible / line.Cantidad : 0; <tr><td><strong>@line.ProductoNombre</strong></td><td>@line.Cantidad</td><td>@line.StockDisponible</td><td><span class="badge badge-@(coverage > 0 ? "success" : "danger")">@coverage</span></td></tr> }</tbody>
+                    <thead><tr><th>Producto</th><th>Estado</th><th>Requerido por combo</th><th>Stock actual</th><th>Combos posibles</th></tr></thead>
+                    <tbody>@foreach (var line in Model.Componentes) { var coverage = line.CombosPosibles; <tr><td><strong>@line.ProductoNombre</strong></td><td>@(line.ProductoActivo ? "Activo" : "Inactivo")</td><td>@line.Cantidad</td><td>@line.StockDisponible</td><td><span class="badge badge-@(coverage > 0 ? "success" : "danger")">@coverage</span></td></tr> }</tbody>
                 </table></div>
             </section>
         </div>

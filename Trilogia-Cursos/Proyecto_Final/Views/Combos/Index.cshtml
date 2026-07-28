@@ -2,7 +2,7 @@
 @{
     ViewData["Title"] = "Combos";
     var active = Model.Count(item => item.Activo);
-    var available = Model.Count(item => item.Activo && item.StockDisponibleCombo > 0);
+    var available = Model.Count(item => item.PuedeVenderse);
 }
 
 <div class="container-fluid py-4 px-xl-5 backoffice-page s4-admin-page">
@@ -41,8 +41,8 @@
                         <td><a asp-action="Detail" asp-route-id="@combo.ComboId"><strong>@combo.Nombre</strong></a><small class="d-block text-muted">Creado @combo.FechaCreacionUtc.ToLocalTime().ToString("dd/MM/yyyy") por @combo.RegistradoPorNombre</small></td>
                         <td>₡@combo.Precio.ToString("N2")</td>
                         <td>@combo.CantidadProductos</td>
-                        <td><span class="badge badge-@(combo.StockDisponibleCombo > 0 ? "success" : "danger")">@combo.StockDisponibleCombo @(combo.StockDisponibleCombo == 1 ? "unidad" : "unidades")</span></td>
-                        <td><span class="badge badge-@(combo.Activo ? "success" : "secondary")"><i class="fa fa-@(combo.Activo ? "check" : "pause")"></i>@(combo.Activo ? "Activo" : "Inactivo")</span></td>
+                        <td><span class="badge badge-@(combo.PuedeVenderse ? "success" : "danger")">@combo.StockDisponibleCombo @(combo.StockDisponibleCombo == 1 ? "unidad" : "unidades")</span></td>
+                        <td><span class="badge badge-@(combo.PuedeVenderse ? "success" : "secondary")">@combo.EstadoDisponibilidad</span></td>
                         <td class="text-right">
                             <a asp-action="Detail" asp-route-id="@combo.ComboId" class="btn btn-sm btn-outline-primary mr-1">Detalle</a>
                             <form asp-action="ToggleStatus" asp-route-id="@combo.ComboId" method="post" class="d-inline" data-confirm="¿Confirma que desea @(combo.Activo ? "inactivar" : "activar") el combo @combo.Nombre?">

@@ -13,7 +13,9 @@ public sealed class ComboListItemViewModel
     public string RegistradoPorNombre { get; set; } = string.Empty;
     public int CantidadProductos { get; set; }
     public int StockDisponibleCombo { get; set; }
-    public bool PuedeVenderse => Activo && CantidadProductos > 0 && StockDisponibleCombo > 0;
+    public string EstadoDisponibilidad { get; set; } = "No disponible";
+    public bool PuedeVenderse => Activo && CantidadProductos > 0 && StockDisponibleCombo > 0
+        && string.Equals(EstadoDisponibilidad, "Disponible", StringComparison.Ordinal);
 }
 
 public sealed class ComboDetailViewModel
@@ -26,6 +28,7 @@ public sealed class ComboDetailViewModel
     public string RegistradoPorNombre { get; set; } = string.Empty;
     public DateTime FechaCreacionUtc { get; set; }
     public int StockDisponibleCombo { get; set; }
+    public string EstadoDisponibilidad { get; set; } = "No disponible";
     public List<ComboDetailLineViewModel> Componentes { get; set; } = new();
 }
 
@@ -35,7 +38,8 @@ public sealed class ComboDetailLineViewModel
     public string ProductoNombre { get; set; } = string.Empty;
     public int Cantidad { get; set; }
     public int StockDisponible { get; set; }
-    public int CombosPosibles => Cantidad <= 0 ? 0 : StockDisponible / Cantidad;
+    public bool ProductoActivo { get; set; }
+    public int CombosPosibles => !ProductoActivo || Cantidad <= 0 ? 0 : StockDisponible / Cantidad;
 }
 
 public sealed class ComboFormViewModel : IValidatableObject
@@ -104,5 +108,6 @@ public sealed class StoreComboViewModel
     public int CantidadProductos { get; set; }
     public string ComponentesResumen { get; set; } = string.Empty;
     public string ImagenUrl { get; set; } = "~/img/OFER-Combo.webp";
-    public bool Disponible => StockDisponible > 0 && CantidadProductos > 0;
+    public bool ComponentesValidos { get; set; } = true;
+    public bool Disponible => ComponentesValidos && StockDisponible > 0 && CantidadProductos > 0;
 }
