@@ -26,6 +26,13 @@ Este es el índice operativo vigente. El código y el último `origin/main` prev
   el alcance CI recursivo `database` + `database_Esteban` se reportan por separado.
 - `database/00_todo_en_uno.sql` no tiene diferencia con la base de PR #115 y
   nunca se ejecutó durante la integración.
+- El ejecutor de 0012 distingue `Entra` (`sqlcmd -G`) de `Windows`
+  (`sqlcmd -E`), transmite `MigrationSha256=<SHA-256>` como una sola variable y
+  no acepta contraseñas. Su prueba sin conexión está en
+  `scripts/database/Test-InvokeMigration0012.ps1`.
+- La evidencia LocalDB de 0012 incluye la consulta directa de detalle público
+  de un combo antes/después de inactivar, reactivar y dejar el componente sin
+  stock. Azure DEV sigue sin modificaciones; BACPAC y QA autenticado pendientes.
 
 ## Índice por tema
 

@@ -137,8 +137,13 @@ Precondiciones: 0007–0011 verificadas en DEV, dependencias históricas auditad
   cero, escapa HTML y una falla SMTP no revierte un pedido confirmado.
 - LocalDB debe ejecutar también
   `database/verify/0012_combo_inactive_component_local.sql`; valida componente
-  inactivo, exclusión pública, administración en cero, rechazo de checkout,
+  inactivo, la llamada directa a `sp_Store_GetComboById` antes y después de la
+  inactivación, exclusión pública, administración en cero, rechazo de checkout,
   inventario intacto, reactivación y stock cero. Cada escritura se revierte.
+- El ejecutor 0012 se prueba sin conexión con
+  `scripts/database/Test-InvokeMigration0012.ps1`: Entra construye `-G`,
+  Windows construye `-E`, el hash llega como `MigrationSha256=<SHA-256>` y
+  `DryRun` no ejecuta `sqlcmd`.
 - El hash de 0012 se calcula con
   `scripts/database/Invoke-Migration0012.ps1 -DryRun`; la migración y su
   `verify.sql` rechazan hashes no expandidos o de manifiesto.

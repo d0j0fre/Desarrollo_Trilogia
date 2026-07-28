@@ -64,9 +64,17 @@ inyectarlo por `sqlcmd`:
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/database/Invoke-Migration0012.ps1 -ServerInstance "<instancia>" -Database "<base>"
 ```
 
-`-DryRun` solo calcula y valida el hash. El script usa `sqlcmd -b`, no recibe ni
-imprime connection strings o contraseñas y falla si la expansión de hash no es
-válida. Después debe ejecutarse
+El modo predeterminado es `-AuthenticationMode Entra` y agrega `sqlcmd -G` para
+usuarios individuales de Microsoft Entra. Para LocalDB se usa
+`-AuthenticationMode Windows`, que agrega `sqlcmd -E`. El ejecutor no acepta
+contraseñas, no usa `-P` y transmite el hash únicamente como una variable
+SQLCMD: `-v "MigrationSha256=<SHA-256>"`.
+
+`-DryRun` solo calcula y valida el hash, informa la ruta y el modo seleccionado
+sin abrir conexión. El script usa `sqlcmd -b`, no recibe ni imprime connection
+strings o contraseñas y falla si la expansión de hash no es válida. La prueba
+sin conexión `scripts/database/Test-InvokeMigration0012.ps1` cubre los modos
+Entra/Windows, la variable SQLCMD y las protecciones del ejecutor. Después debe ejecutarse
 `0012_inventory_combos_transformations_intelligence.verify.sql` en modo de solo
 lectura. El rollback continúa documentado en el archivo correspondiente.
 

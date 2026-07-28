@@ -184,6 +184,26 @@ recurso y requiere aprobación expresa.
 - La verificacion de solo lectura de 0012 aprobo. La prueba funcional con rollback aprobo checkout mixto, reintento idempotente, snapshots de factura, cancelacion/restauracion de componentes, transformacion atomica y tendencia de doce meses. El caso de token con carga distinta devolvio 54609. Dos sesiones concurrentes contra una sola unidad dieron exactamente un checkout exitoso, un 54615 y stock final cero.
 - El smoke publico aislado aprobo `Home/Shop`, detalle de combo y agregado al carrito. No hubo alertas de error ni entradas `error` o `warning` en la consola del navegador.
 
+### Cierre técnico acotado — autenticación y detalle público
+
+- `Invoke-Migration0012.ps1` acepta `-AuthenticationMode Entra` (predeterminado,
+  `sqlcmd -G`) y `-AuthenticationMode Windows` (`sqlcmd -E`). No admite
+  contraseñas ni `-P`; la única variable transmitida es
+  `MigrationSha256=<SHA-256>` como un argumento SQLCMD indivisible.
+- `Test-InvokeMigration0012.ps1` aprobó sin conexión los dos modos, la ausencia
+  de autenticaciones simultáneas, la variable única, las entradas inválidas y
+  `DryRun` sin invocar `sqlcmd`. La compatibilidad del formato SQLCMD se confirmó
+  en LocalDB.
+- La prueba LocalDB de componente inactivo ahora ejecuta directamente
+  `sp_Store_GetComboById` antes de inactivar, tras inactivar, tras reactivar y
+  con stock cero; mantiene la comprobación de catálogo, administración,
+  checkout manipulado e inventario intacto. Todas las escrituras revierten.
+- Al cierre: build Release sin errores ni advertencias, 117/117 pruebas .NET,
+  ScriptDom focalizado 55/510, ScriptDom CI 82/909 y escaneo de secretos
+  aprobado (660 archivos rastreados, 629 de texto y 12 placeholders admitidos).
+- 0012 permanece sin aplicar en Azure DEV; BACPAC, ejecutor único y QA
+  autenticado continúan pendientes. El PR #115 se mantiene en Draft.
+
 ## Pendientes antes de aplicar Azure DEV
 
 - No se aplico 0012 en Azure DEV. Falta reconfirmar metadatos y dependencias 0002-0006, crear y verificar un BACPAC, designar ejecutor unico y ejecutar la verificacion posterior.
