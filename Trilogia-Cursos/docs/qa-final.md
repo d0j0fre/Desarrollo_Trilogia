@@ -125,6 +125,27 @@ Precondiciones: 0007–0011 verificadas en DEV, dependencias históricas auditad
 - [ ] Sin 404 de scripts, errores de consola ni mojibake visible.
 - [ ] Responsive e impresión de comprobante/factura.
 
+## Corrección final PR #115 — evidencia local
+
+- El combo con componente inactivo se excluye de tienda y detalle público; la
+  consulta administrativa indica el estado textual y disponibilidad cero.
+- El carrito refresca desde el catálogo autoritativo y descarta combos que ya
+  no son vendibles. `AddCombo` mantiene antiforgery y el checkout vuelve a
+  validar los componentes para rechazar solicitudes manipuladas.
+- El comprobante se genera sin SMTP real mediante `OrderReceiptHtmlBuilder`.
+  Recibe el total confirmado por SQL, presenta descuentos, combos y regalos en
+  cero, escapa HTML y una falla SMTP no revierte un pedido confirmado.
+- LocalDB debe ejecutar también
+  `database/verify/0012_combo_inactive_component_local.sql`; valida componente
+  inactivo, exclusión pública, administración en cero, rechazo de checkout,
+  inventario intacto, reactivación y stock cero. Cada escritura se revierte.
+- El hash de 0012 se calcula con
+  `scripts/database/Invoke-Migration0012.ps1 -DryRun`; la migración y su
+  `verify.sql` rechazan hashes no expandidos o de manifiesto.
+- El smoke público aislado de `Home/Shop`, detalle de combo y agregado al
+  carrito respondió correctamente, sin alertas ni entradas `error` o `warning`
+  en la consola del navegador.
+
 ## Azure
 
 La evidencia en `docs/azure-despliegue-final-qa.md` corresponde a una versión anterior. Repetir smoke tests de MVC, API, SQL, checkout, chat, evidencias, garantías y SMTP después de desplegar esta rama; no marcarla validada por herencia.

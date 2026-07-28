@@ -9,6 +9,9 @@ de David mediante merges explícitos. Antes de integrar se crearon las
 referencias locales `backup/pre-integracion-danny`,
 `backup/pre-integracion-david` y `backup/pre-integracion-final`.
 
+Los tres commits posteriores de David se auditaron individualmente antes de
+decidir no incorporarlos por estar supersedidos por esta implementación.
+
 Los únicos conflictos estuvieron en `Proyecto_Final/appsettings.json` y
 `Proyecto_Final/appsettings.Development.json`. Se conservaron las plantillas
 sanitizadas que incluyen almacenamiento privado y alertas documentales; la
@@ -95,6 +98,50 @@ No se consultaron filas, no se ejecutó SQL y no se alteró Azure. Antes de una
 aplicación serán obligatorios: ledger, confirmación de 0007–0011, ausencia de
 0012, objetos reales, BACPAC o respaldo verificable y ejecutor único.
 
+## Corrección final del PR #115 — 27 de julio de 2026
+
+### Trazabilidad de David
+
+Se preservaron mediante merge explícito los dos commits iniciales disponibles al
+momento de iniciar la integración. Los tres commits posteriores de David fueron
+revisados individualmente. Su funcionalidad fue sustituida, integrada o
+reforzada por la implementación consolidada del PR #115, manteniendo la
+atribución funcional de CU-181, CU-182, CU-241, CU-242 y CU-243 a David.
+
+- `acb464f`: no se incorpora; sus migraciones 0002–0004 no son incrementales
+  en esta línea y fueron sustituidas por la migración oficial 0012.
+- `1801d0b`: no se incorpora; incluye una transformación menos completa,
+  pruebas aisladas y assets de prueba bajo `wwwroot`. 0012 conserva bloqueo
+  determinista, control de overflow, auditoría y pruebas integradas.
+- `de108ff`: no se incorpora; catálogo, carrito, checkout, snapshots y correo
+  están cubiertos y reforzados por 0012, `ComboDbService`, `CartController` y
+  las pruebas de integración. No se agregan sus imágenes de prueba.
+
+### Correcciones verificables
+
+- Un combo es vendible solo si está activo, tiene componentes y todos existen,
+  están activos, tienen cantidad positiva y stock suficiente. Las consultas de
+  tienda excluyen el combo inválido; administración lo muestra con stock cero y
+  un estado textual, y el carrito lo elimina al refrescarse.
+- El checkout vuelve a validar esos componentes bajo bloqueo y rechaza una
+  solicitud manipulada sin alterar el inventario.
+- El comprobante usa el total confirmado por SQL, refleja descuentos, combos y
+  regalos, escapa los textos HTML y no revierte un pedido ya confirmado si SMTP
+  falla.
+- La migración recibe `$(MigrationSha256)` desde `sqlcmd`; el ejecutor
+  `scripts/database/Invoke-Migration0012.ps1` calcula el SHA-256 real del
+  archivo, lo valida y no imprime secretos. El hash no se hardcodea dentro de
+  la migración ni se obtiene de una cadena de versión.
+- `database/00_todo_en_uno.sql` fue comparado contra la rama base: no tiene
+  diferencia en este PR, no se ejecutó y el cambio mencionado en un resumen
+  local fue descartado antes de commitear.
+
+### Métricas SQL separadas
+
+- Validación local focalizada de `database/`: 55 archivos y 510 lotes.
+- Validación CI recursiva de `database` y `database_Esteban`: 82 archivos y
+  909 lotes al cierre local de esta corrección.
+
 ## Arquitectura objetivo
 
 - Servicios separados para combos, transformación e inteligencia; C# usa
@@ -131,10 +178,11 @@ recurso y requiere aprobación expresa.
 ## Evidencia final de integracion - 27 de julio de 2026
 
 - `dotnet build Proyecto_Final.slnx -c Release --no-restore`: aprobado, sin errores ni advertencias.
-- `dotnet test Proyecto_Final.slnx -c Release --no-restore`: 110 aprobadas, 0 fallidas.
-- ScriptDom: los 54 archivos SQL y 509 lotes del directorio `database/` son validos.
+- `dotnet test Proyecto_Final.slnx -c Release --no-restore`: 117 aprobadas, 0 fallidas.
+- ScriptDom: los 55 archivos SQL y 510 lotes del directorio `database/` son validos.
 - La instancia LocalDB aislada `TrilogiaSprint4Clean` se reconstruyo desde una base nueva, aplico 0001-0011 y la version final de 0012. La unica adaptacion fue la fixture local conocida de 0004; no se modifico ningun script historico ni Azure DEV.
 - La verificacion de solo lectura de 0012 aprobo. La prueba funcional con rollback aprobo checkout mixto, reintento idempotente, snapshots de factura, cancelacion/restauracion de componentes, transformacion atomica y tendencia de doce meses. El caso de token con carga distinta devolvio 54609. Dos sesiones concurrentes contra una sola unidad dieron exactamente un checkout exitoso, un 54615 y stock final cero.
+- El smoke publico aislado aprobo `Home/Shop`, detalle de combo y agregado al carrito. No hubo alertas de error ni entradas `error` o `warning` en la consola del navegador.
 
 ## Pendientes antes de aplicar Azure DEV
 

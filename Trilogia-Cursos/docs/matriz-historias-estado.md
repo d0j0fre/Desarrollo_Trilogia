@@ -29,6 +29,11 @@ Estado al 23 de julio de 2026. Para CU-201/202/221/222/223, “pendiente entorno
 | 172 | #67 | Reforzada; pendiente entorno | Segmento en `PromotionEngine`/0005 | Test de segmento; QA SQL |
 | 173 | #68 | Reforzada; pendiente entorno | `CartController`, `StoreDbService`, migración 0005 | Tests de promociones; QA concurrencia |
 | 174 | #69 | Implementada; pendiente entorno | `PromotionsController`, `cu171_174_promociones.sql` | Build/SQL; QA inactivación |
+| 181 | PR #114/#115 | Integrada; pendiente Azure/QA | `ComboDbService`, `CartController`, migración 0012 | Combos vendibles, snapshots, componente inactivo y QA público local |
+| 182 | PR #114/#115 | Integrada; pendiente Azure/QA | `InventoryTransformationDbService`, migración 0012 | Transformación atómica, locks y concurrencia LocalDB |
+| 241 | PR #114/#115 | Integrada; pendiente Azure/QA | `InventoryIntelligenceDbService`, migración 0012 | Sugerencias con cobertura y datos insuficientes |
+| 242 | PR #114/#115 | Integrada; pendiente Azure/QA | `InventoryIntelligenceDbService`, migración 0012 | Productos de baja rotación y riesgo |
+| 243 | PR #114/#115 | Integrada; pendiente Azure/QA | `InventoryIntelligenceDbService`, migración 0012 | Tendencia de doce meses y datos cero |
 | 191 | #72 | Implementada; pendiente entorno | `ReclamosController`, `cu191_192_reclamos.sql` | Build/SQL; QA registro |
 | 192 | #73 | Implementada; pendiente entorno | `ReclamosController`, mismo script CU-191 | Build/SQL; QA cierre/resolución |
 | 201 | #74 | Implementada; DB verificada, QA autenticado pendiente | `DocumentsController`, almacenamiento privado, migración 0007 | Objetos/permisos Azure verificados; falta flujo UI |
@@ -57,4 +62,7 @@ Estado al 23 de julio de 2026. Para CU-201/202/221/222/223, “pendiente entorno
 - Seguridad MVC: filtros de sesión/admin y antiforgery en POST críticos.
 - Sprint 4 Danny: distribución decimal, segregación, umbrales, proyección, neutralización CSV, archivos privados y atributos de seguridad.
 
-Total local: 87 pruebas aprobadas. El detalle de QA de entorno está en `docs/qa-final.md`.
+- Sprint 4 David integrado: contratos de combo activo, carrito, checkout atómico,
+  hash de migración, correo autoritativo, descuentos y regalos.
+
+Total local actualizado en PR #115: 117 pruebas aprobadas. El detalle de QA de entorno está en `docs/qa-final.md`.

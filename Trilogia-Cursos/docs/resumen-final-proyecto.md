@@ -33,6 +33,23 @@ El trabajo está **pendiente de QA autenticado**. Las migraciones 0007–0011 y 
 
 Dependen del ledger `0001_create_schema_migration_history.sql` y del esquema base. Se validaron con ScriptDom; deben probarse primero en una base desechable, luego aplicarse con BACPAC y registro del SHA-256 real.
 
+## Integración Sprint 4 y corrección del PR #115
+
+- La migración incremental `0012_inventory_combos_transformations_intelligence.sql`
+  concentra combos vendibles, snapshots de pedido/factura, checkout idempotente,
+  transformación atómica, inteligencia y permisos. Su SHA-256 real se calcula
+  al ejecutar `scripts/database/Invoke-Migration0012.ps1`; 0012 no se ha
+  aplicado en Azure DEV.
+- Tienda y carrito excluyen combos con un componente faltante, inactivo o sin
+  stock. El checkout repite la validación autoritativa y no descuenta inventario
+  cuando recibe una petición manipulada.
+- Los comprobantes reciben explícitamente `order.Total` confirmado por SQL;
+  muestran descuentos, combos y regalos sin recalcular el total final y sin
+  permitir que un fallo SMTP revierta el pedido.
+- Se preservaron los dos commits iniciales de David por merge. Sus tres commits
+  posteriores fueron revisados y sustituidos por la implementación consolidada;
+  no se incorporaron las migraciones 0002–0006 ni assets de prueba.
+
 ## Límites conocidos
 
 - La búsqueda de chat usa `LIKE` parametrizado e índices de fecha/origen; no usa Full-Text Search.

@@ -15,6 +15,18 @@ Este es el índice operativo vigente. El código y el último `origin/main` prev
 - La protección de `main` está activa y documentada en `docs/configuracion-proteccion-main.md`.
 - Las validaciones Azure documentadas anteriormente son evidencia histórica y no validan esta rama.
 
+## Corrección PR #115 — 27 de julio de 2026
+
+- La ruta de integración sigue siendo `codex/integracion-sprint4-danny-david-final`
+  en Draft. Las correcciones de combos, correo y hash se documentan en
+  `docs/sprint4-integracion-danny-david.md`.
+- 0012 no está aplicada en Azure DEV. Su ejecución exige BACPAC, ejecutor único,
+  `scripts/database/Invoke-Migration0012.ps1` y el verify de solo lectura.
+- Las métricas SQL no son intercambiables: el alcance focalizado `database/` y
+  el alcance CI recursivo `database` + `database_Esteban` se reportan por separado.
+- `database/00_todo_en_uno.sql` no tiene diferencia con la base de PR #115 y
+  nunca se ejecutó durante la integración.
+
 ## Índice por tema
 
 - Seguridad y configuración: `docs/credenciales-configuracion-segura.md`, `SECURITY.md`, `docs/incidente-seguridad-credencial-smtp-20260722.md`.
