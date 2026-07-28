@@ -82,6 +82,15 @@ public sealed class Sprint4ControllerSecurityTests
             action.GetCustomAttributes(typeof(ValidateAntiForgeryTokenAttribute), true)));
     }
 
+    [Fact]
+    public void AddCombo_RequiresAntiforgery()
+    {
+        var action = typeof(CartController).GetMethods().Single(candidate =>
+            candidate.Name == "AddCombo" && candidate.GetCustomAttributes(typeof(HttpPostAttribute), true).Any());
+
+        Assert.NotEmpty(action.GetCustomAttributes(typeof(ValidateAntiForgeryTokenAttribute), true));
+    }
+
     private static void AssertPermission(IEnumerable<object> attributes, string expected)
     {
         var attribute = Assert.IsType<AdminAuthorizeAttribute>(Assert.Single(attributes));

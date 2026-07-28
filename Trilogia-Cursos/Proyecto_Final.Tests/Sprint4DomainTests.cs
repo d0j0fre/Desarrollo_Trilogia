@@ -113,6 +113,32 @@ public sealed class Sprint4DomainTests
     }
 
     [Fact]
+    public void StoreCombo_InactiveOrMissingComponent_IsNotAvailable()
+    {
+        var combo = new StoreComboViewModel
+        {
+            StockDisponible = 10,
+            CantidadProductos = 2,
+            ComponentesValidos = false
+        };
+
+        Assert.False(combo.Disponible);
+    }
+
+    [Fact]
+    public void CartRefreshPolicy_RemovesAComboThatIsNoLongerSellable()
+    {
+        var refreshedCombo = new StoreComboViewModel
+        {
+            StockDisponible = 0,
+            CantidadProductos = 2,
+            ComponentesValidos = true
+        };
+
+        Assert.False(refreshedCombo.Disponible);
+    }
+
+    [Fact]
     public void StockTransformation_RejectsSameSourceAndDestination()
     {
         var model = new StockTransformationFormViewModel
