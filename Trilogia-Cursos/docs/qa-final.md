@@ -27,7 +27,8 @@ Estos resultados no ejecutan migraciones ni sustituyen las pruebas con SQL Serve
 
 ## Preparación obligatoria de entorno
 
-- [ ] Crear BACPAC verificable de la base objetivo.
+- [x] Crear y verificar el BACPAC previo de Azure DEV sin versionarlo ni publicar
+  su ruta o hash completo.
 - [ ] No repetir 0007–0011 en Azure DEV; verificar por separado 0002–0006 antes de cualquier aplicación.
 - [ ] Configurar `ConnectionStrings__DefaultConnection`.
 - [ ] Configurar correo solo después de rotar la credencial expuesta.
@@ -150,6 +151,28 @@ Precondiciones: 0007–0011 verificadas en DEV, dependencias históricas auditad
 - El smoke público aislado de `Home/Shop`, detalle de combo y agregado al
   carrito respondió correctamente, sin alertas ni entradas `error` o `warning`
   en la consola del navegador.
+
+## Reconciliación legada de 0012 — 28 de julio de 2026
+
+- El BACPAC previo se importó en una nueva base LocalDB desechable con
+  autenticación integrada; la restauración original y Azure DEV no se
+  modificaron.
+- 0012 conservó 1 combo, 3 `ComboDetalle`, 4 `PedidoCombos`, 153
+  `PedidoDetalle`, todas sus claves y los agregados de pedidos, facturas e
+  inventario.
+- `PedidoComboDetalle` se reconstruyó en 12 filas, exactamente una por
+  `PedidoComboId + ProductoId`, con cantidades enteras y sin duplicados.
+- `FacturaCombos` permaneció vacía para facturas históricas; solo los flujos
+  posteriores a 0012 generan snapshots de combo.
+- El verify oficial, la comparación legada, checkout mixto, reintento,
+  facturación, cancelación/restauración, transformación, componente inactivo,
+  conflicto 54609 y segunda ejecución rechazada aprobaron.
+- Dos sesiones concurrentes sobre una unidad produjeron un éxito, un 54615 y
+  stock final cero. `DBCC CHECKDB` aprobó en las copias de reconciliación,
+  concurrencia y ruta limpia.
+- Gate local final: build Release sin errores ni advertencias; 117/117 pruebas
+  .NET; ScriptDom focalizado 56 archivos/517 lotes; ScriptDom equivalente a CI
+  83 archivos/916 lotes; escaneo de secretos aprobado.
 
 ## Azure
 

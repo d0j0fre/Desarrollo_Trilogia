@@ -138,9 +138,9 @@ atribución funcional de CU-181, CU-182, CU-241, CU-242 y CU-243 a David.
 
 ### Métricas SQL separadas
 
-- Validación local focalizada de `database/`: 55 archivos y 510 lotes.
-- Validación CI recursiva de `database` y `database_Esteban`: 82 archivos y
-  909 lotes al cierre local de esta corrección.
+- Validación local focalizada de `database/`: 56 archivos y 517 lotes.
+- Validación CI recursiva de `database` y `database_Esteban`: 83 archivos y
+  916 lotes al cierre local de esta corrección.
 
 ## Arquitectura objetivo
 
@@ -179,7 +179,7 @@ recurso y requiere aprobación expresa.
 
 - `dotnet build Proyecto_Final.slnx -c Release --no-restore`: aprobado, sin errores ni advertencias.
 - `dotnet test Proyecto_Final.slnx -c Release --no-restore`: 117 aprobadas, 0 fallidas.
-- ScriptDom: los 55 archivos SQL y 510 lotes del directorio `database/` son validos.
+- ScriptDom: los 56 archivos SQL y 517 lotes del directorio `database/` son válidos.
 - La instancia LocalDB aislada `TrilogiaSprint4Clean` se reconstruyo desde una base nueva, aplico 0001-0011 y la version final de 0012. La unica adaptacion fue la fixture local conocida de 0004; no se modifico ningun script historico ni Azure DEV.
 - La verificacion de solo lectura de 0012 aprobo. La prueba funcional con rollback aprobo checkout mixto, reintento idempotente, snapshots de factura, cancelacion/restauracion de componentes, transformacion atomica y tendencia de doce meses. El caso de token con carga distinta devolvio 54609. Dos sesiones concurrentes contra una sola unidad dieron exactamente un checkout exitoso, un 54615 y stock final cero.
 - El smoke publico aislado aprobo `Home/Shop`, detalle de combo y agregado al carrito. No hubo alertas de error ni entradas `error` o `warning` en la consola del navegador.
@@ -199,13 +199,46 @@ recurso y requiere aprobación expresa.
   con stock cero; mantiene la comprobación de catálogo, administración,
   checkout manipulado e inventario intacto. Todas las escrituras revierten.
 - Al cierre: build Release sin errores ni advertencias, 117/117 pruebas .NET,
-  ScriptDom focalizado 55/510, ScriptDom CI 82/909 y escaneo de secretos
-  aprobado (660 archivos rastreados, 629 de texto y 12 placeholders admitidos).
-- 0012 permanece sin aplicar en Azure DEV; BACPAC, ejecutor único y QA
+  ScriptDom focalizado 56/517, ScriptDom CI 83/916 y escaneo de secretos
+  aprobado (661 archivos rastreados, 630 de texto y 12 placeholders admitidos).
+- 0012 permanece sin aplicar en Azure DEV; el BACPAC previo ya fue exportado,
+  importado y verificado localmente. El ejecutor único de Azure y el QA
   autenticado continúan pendientes. El PR #115 se mantiene en Draft.
+
+## Reconciliación del esquema legado real — 28 de julio de 2026
+
+- El BACPAC previo de Azure DEV se verificó e importó en una nueva base LocalDB
+  desechable. La base restaurada original se conservó sin cambios y
+  `DBCC CHECKDB` aprobó.
+- El esquema contenía las tablas legadas `Combos`, `ComboDetalle` y
+  `PedidoCombos`, además de `PedidoDetalle.PedidoComboId`; todavía no contenía
+  `FacturaCombos`, `PedidoComboDetalle`, `CheckoutOperaciones` ni las tablas de
+  transformación y auditoría de 0012.
+- La migración renombra `FechaCreacion` y `ComboNombre` hacia sus nombres
+  canónicos, conserva las claves existentes, completa auditoría y fechas,
+  valida cantidades/referencias y crea restricciones confiables dentro de la
+  misma transacción.
+- Se conservaron exactamente 1 combo, 3 componentes de catálogo, 4
+  `PedidoCombos` y 153 `PedidoDetalle`. Los pedidos, facturas, totales e
+  inventario mantuvieron sus agregados previos.
+- Los componentes históricos se reconstruyeron en 12 filas de
+  `PedidoComboDetalle`, sin duplicados ni cantidades fraccionarias.
+  `FacturaCombos` quedó vacío para facturas anteriores a 0012, evitando doble
+  contabilización.
+- Pedidos, comprobantes, inteligencia, facturación y restauración filtran
+  `PedidoDetalle.PedidoComboId IS NULL` para productos sueltos y usan
+  `PedidoComboDetalle` como fuente canónica de componentes.
+- La ruta limpia y la actualización legada aprobaron el verify oficial,
+  pruebas funcionales, componente inactivo, idempotencia, concurrencia y
+  `DBCC CHECKDB`. Azure DEV no recibió consultas ni cambios durante esta
+  reconciliación.
 
 ## Pendientes antes de aplicar Azure DEV
 
-- No se aplico 0012 en Azure DEV. Falta reconfirmar metadatos y dependencias 0002-0006, crear y verificar un BACPAC, designar ejecutor unico y ejecutar la verificacion posterior.
+- No se aplicó 0012 en Azure DEV. El BACPAC previo ya está verificado; falta
+  designar ejecutor único, reconfirmar metadatos/dependencias y ejecutar la
+  aplicación y verificación posterior durante una ventana controlada.
 - El QA de navegador autenticado sigue pendiente de una credencial de prueba autorizada; no se cambio ni se infirio ninguna contrasena.
-- El reintento final de metadatos Azure DEV fue rechazado o no estuvo disponible. No se ejecuto SQL de cambio, no se exporto BACPAC y 0012 permanece pendiente de aplicacion controlada.
+- El BACPAC previo se exportó y verificó fuera del repositorio; su importación
+  LocalDB y `DBCC CHECKDB` aprobaron. No se ejecutó SQL contra Azure DEV y 0012
+  permanece pendiente de aplicación controlada.

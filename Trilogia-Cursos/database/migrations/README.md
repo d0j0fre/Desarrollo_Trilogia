@@ -78,6 +78,26 @@ Entra/Windows, la variable SQLCMD y las protecciones del ejecutor. Después debe
 `0012_inventory_combos_transformations_intelligence.verify.sql` en modo de solo
 lectura. El rollback continúa documentado en el archivo correspondiente.
 
+### Compatibilidad legada validada localmente
+
+La versión final de 0012 acepta tanto una instalación sin tablas de combos como
+el esquema legado confirmado en el BACPAC previo de Azure DEV. La reconciliación
+renombra columnas legadas, conserva claves y datos, rellena las columnas
+canónicas, valida antes de crear restricciones y reconstruye
+`PedidoComboDetalle` únicamente desde `PedidoDetalle.PedidoComboId`. Cualquier
+cantidad no divisible, referencia huérfana, duplicado o snapshot contradictorio
+produce `THROW` y rollback.
+
+Los componentes legados dejan de contarse como productos sueltos en pedidos,
+checkout, inteligencia, restauración y facturación. `FacturaCombos` no recibe
+backfill de facturas antiguas para evitar doble contabilización; se usa para
+facturas generadas después de 0012.
+
+`database/verify/0012_legacy_reconciliation_local.sql` es una prueba en dos
+fases exclusiva de LocalDB desechable: antes de 0012 captura evidencia agregada
+sin datos personales y después compara conteos, claves, totales, inventario y
+la reconstrucción, además de ejecutar `DBCC CHECKDB`.
+
 ## Evidencia privada legada
 
 Los registros anteriores a 0004 conservan `StorageStatus = Legacy` y no se sirven desde la aplicación. Antes de retirar cualquier carpeta pública histórica, un operador debe copiar cada archivo a `EvidenceStorage:RootPath`, asignar una clave generada, verificar la firma binaria y marcar el registro como `Ready`. No se debe marcar como listo un archivo inexistente o no validado.

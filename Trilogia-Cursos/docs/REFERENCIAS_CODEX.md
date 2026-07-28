@@ -20,7 +20,9 @@ Este es el índice operativo vigente. El código y el último `origin/main` prev
 - La ruta de integración sigue siendo `codex/integracion-sprint4-danny-david-final`
   en Draft. Las correcciones de combos, correo y hash se documentan en
   `docs/sprint4-integracion-danny-david.md`.
-- 0012 no está aplicada en Azure DEV. Su ejecución exige BACPAC, ejecutor único,
+- 0012 no está aplicada en Azure DEV. El BACPAC previo fue exportado, su hash
+  fue comprobado y una importación aislada aprobó `DBCC CHECKDB`; la ejecución
+  futura en Azure todavía exige ejecutor único,
   `scripts/database/Invoke-Migration0012.ps1` y el verify de solo lectura.
 - Las métricas SQL no son intercambiables: el alcance focalizado `database/` y
   el alcance CI recursivo `database` + `database_Esteban` se reportan por separado.
@@ -30,9 +32,12 @@ Este es el índice operativo vigente. El código y el último `origin/main` prev
   (`sqlcmd -E`), transmite `MigrationSha256=<SHA-256>` como una sola variable y
   no acepta contraseñas. Su prueba sin conexión está en
   `scripts/database/Test-InvokeMigration0012.ps1`.
-- La evidencia LocalDB de 0012 incluye la consulta directa de detalle público
-  de un combo antes/después de inactivar, reactivar y dejar el componente sin
-  stock. Azure DEV sigue sin modificaciones; BACPAC y QA autenticado pendientes.
+- La evidencia LocalDB de 0012 cubre instalación limpia y reconciliación del
+  esquema legado real: conserva 1 combo, 3 componentes, 4 líneas históricas de
+  combo y 153 detalles de pedido; reconstruye 12 componentes canónicos y evita
+  doble conteo. También incluye el detalle público antes/después de inactivar,
+  reactivar y agotar un componente. Azure DEV sigue sin modificaciones; la
+  aplicación de 0012 y el QA autenticado allí permanecen pendientes.
 
 ## Índice por tema
 
