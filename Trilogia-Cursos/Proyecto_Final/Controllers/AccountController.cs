@@ -8,11 +8,16 @@ namespace Proyecto_Final.Controllers
     {
         private readonly AccountApiService _accountApiService;
         private readonly AdminDbService _adminDbService;
+        private readonly ILogger<AccountController> _logger;
 
-        public AccountController(AccountApiService accountApiService, AdminDbService adminDbService)
+        public AccountController(
+            AccountApiService accountApiService,
+            AdminDbService adminDbService,
+            ILogger<AccountController> logger)
         {
             _accountApiService = accountApiService;
             _adminDbService = adminDbService;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -67,8 +72,9 @@ namespace Proyecto_Final.Controllers
                 TempData["LoginSuccess"] = $"Bienvenido, {response.FullName}.";
                 return RedirectToAction("Index", "Home");
             }
-            catch (Exception)
+            catch (Exception exception)
             {
+                _logger.LogError(exception, "Falló el inicio de sesión mediante el API de autenticación.");
                 ModelState.AddModelError(string.Empty, "No fue posible iniciar sesión en este momento. Intentá nuevamente.");
                 return View(model);
             }

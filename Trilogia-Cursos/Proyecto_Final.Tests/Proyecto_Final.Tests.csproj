@@ -17,5 +17,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Proyecto_Final\Proyecto_Final.csproj" />
+    <ProjectReference Include="..\Proyecto_FinalAPI\Proyecto_FinalAPI.csproj" />
   </ItemGroup>
 </Project>

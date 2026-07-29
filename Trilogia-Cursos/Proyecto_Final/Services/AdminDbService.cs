@@ -1085,7 +1085,8 @@ namespace Proyecto_Final.Services
                         Cantidad = reader.IsDBNull(3) ? 0 : reader.GetInt32(3),
                         PrecioUnitario = reader.IsDBNull(4) ? 0 : reader.GetDecimal(4),
                         Subtotal = reader.IsDBNull(5) ? 0 : reader.GetDecimal(5),
-                        StockActual = reader.IsDBNull(6) ? 0 : reader.GetInt32(6)
+                        StockActual = reader.IsDBNull(6) ? 0 : reader.GetInt32(6),
+                        IsCombo = reader.FieldCount > 7 && !reader.IsDBNull(7) && reader.GetBoolean(7)
                     });
                 }
             }

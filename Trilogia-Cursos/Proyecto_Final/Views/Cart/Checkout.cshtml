@@ -19,6 +19,7 @@
         <div class="s4-checkout-grid">
             <form asp-action="Checkout" method="post" id="checkoutForm" class="s4-checkout-card">
                 @Html.AntiForgeryToken()
+                <input asp-for="OperationToken" type="hidden" />
                 <input type="hidden" id="savedProvincia" value="@(Model.Provincia ?? string.Empty)" />
                 <input type="hidden" id="savedCanton" value="@(Model.Canton ?? string.Empty)" />
                 <input type="hidden" id="savedDistrito" value="@(Model.Distrito ?? string.Empty)" />

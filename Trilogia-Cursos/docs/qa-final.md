@@ -1,5 +1,17 @@
 # QA final de la rama de saneamiento
 
+## Diagnóstico Azure y autenticación — 23 de julio de 2026
+
+- Azure efectivo: servidor DEV y base `DistribuidoraJJ_DB_DEV` confirmados sin exponer la connection string.
+- Administradores: dos cuentas activas con perfil `Administrador`; no se seleccionaron contraseñas.
+- `sp_Auth_ValidateUser`: firma y seis columnas compatibles; ejecutable con la credencial almacenada.
+- Causa del `401`: la credencial presentada no coincide con el valor que continúa almacenado; el restablecimiento citado no quedó comprobado en esta cuenta/base.
+- Correcciones: parámetros tipados, contraseña sin `Trim()`, mapeo por nombres y logging seguro.
+- Migraciones 0007–0011: ledger y objetos reales verificados; 55 columnas obligatorias sin faltantes, constraints confiables y permisos Administrador completos.
+- Almacenamiento: `documents` y `expense-receipts`, cada uno con `staging/files`, creados y escribibles fuera de `wwwroot` al propagar la configuración al proceso.
+- Navegador: login carga, credencial inválida muestra mensaje genérico y las cinco rutas redirigen a login sin sesión.
+- Login válido y flujos autenticados: pendientes de contraseña de prueba definida fuera del repositorio.
+
 ## Resultado automatizado local
 
 Ejecutado el 22 de julio de 2026:
@@ -7,19 +19,22 @@ Ejecutado el 22 de julio de 2026:
 - Escaneo de secretos: aprobado.
 - Restauración .NET: aprobada.
 - Build Release: 0 errores y 0 advertencias.
-- Tests: 33 aprobados, 0 fallidos, 0 omitidos.
-- SQL: 70 archivos y 821 lotes analizados con ScriptDom, 0 errores.
+- Tests de la entrega original: 87 aprobados. Después del diagnóstico de autenticación: 92 aprobados, 0 fallidos, 0 omitidos.
+- SQL: 75 archivos y 876 lotes analizados con ScriptDom, 0 errores.
 - `git diff --check`: aprobado.
 
 Estos resultados no ejecutan migraciones ni sustituyen las pruebas con SQL Server, SignalR, navegador o Azure.
 
 ## Preparación obligatoria de entorno
 
-- [ ] Crear BACPAC verificable de la base objetivo.
-- [ ] Aplicar 0001–0006, en orden, con un único ejecutor y registrar SHA-256 real.
+- [x] Crear y verificar el BACPAC previo de Azure DEV sin versionarlo ni publicar
+  su ruta o hash completo.
+- [ ] No repetir 0007–0011 en Azure DEV; verificar por separado 0002–0006 antes de cualquier aplicación.
 - [ ] Configurar `ConnectionStrings__DefaultConnection`.
 - [ ] Configurar correo solo después de rotar la credencial expuesta.
 - [ ] Configurar `EvidenceStorage__RootPath` en almacenamiento persistente fuera de `wwwroot`.
+- [ ] Configurar `PrivateStorage__RootPath` en almacenamiento persistente fuera de `wwwroot` y con backup.
+- [ ] Mantener `DocumentAlerts__EmailEnabled=false` hasta validar SMTP; luego habilitarlo por configuración segura.
 - [ ] Confirmar permisos `CHAT_DEPARTAMENTOS_GESTIONAR`, garantías y módulos operativos.
 
 ## Seguridad y autorización
@@ -32,6 +47,40 @@ Estos resultados no ejecutan migraciones ni sustituyen las pruebas con SQL Serve
 - [ ] POST sin token antiforgery es rechazado.
 - [ ] Errores visibles no contienen SQL, stack trace, rutas o nombres internos.
 - [ ] Rate limits de login, recuperación, chat, búsqueda, asistente y evidencias responden de forma controlada.
+- [ ] Rate limits de cargas privadas, escritura financiera y generación de alertas responden 429 sin alterar datos.
+
+## QA Sprint 4 — Danny — CU-201, CU-202, CU-221, CU-222 y CU-223
+
+Precondiciones: 0007–0011 verificadas en DEV, dependencias históricas auditadas, `PrivateStorage__RootPath` persistente fuera de `wwwroot`, una credencial de prueba autorizada y perfiles con/sin cada permiso. Usar datos genéricos, nunca documentos reales.
+
+| Bloque | Rol requerido | Resultado esperado | Resultado obtenido | Evidencia pendiente | Estado |
+|---|---|---|---|---|---|
+| Documentos/alertas | Administrador o perfil con permisos `DOCUMENTOS_*` | Flujo positivo y denegaciones seguras | No ejecutado en entorno | Capturas, filas SQL, logs sin secretos | Pendiente entorno |
+| Presupuestos | Creador y aprobador distintos con permisos `PRESUPUESTOS_*` | Totales exactos, locks y estados válidos | No ejecutado en entorno | Consultas, concurrencia y auditoría | Pendiente entorno |
+| Gastos/comparativa | Perfiles con permisos `GASTOS_*` y `PRESUPUESTOS_COMPARAR` | Idempotencia, afectación y reportes consistentes | No ejecutado en entorno | IDs, consultas, CSV y capturas | Pendiente entorno |
+
+### Flujo documental CU-201/CU-202
+
+- [ ] Crear PDF/JPG/PNG válidos; rechazar extensión, MIME o firma discordante y archivos mayores a 10 MB.
+- [ ] Confirmar que ningún documento/comprobante queda bajo `wwwroot` y que path traversal no funciona.
+- [ ] Editar metadatos, reemplazar archivo, descargar versiones anteriores y ejecutar borrado lógico/reactivación.
+- [ ] Simular fallo entre staging, commit y `Ready`; no debe quedar registro listo ni archivo huérfano.
+- [ ] Generar umbrales 30/15/7/1/0 con fecha de negocio Costa Rica dos veces; la segunda ejecución no duplica.
+- [ ] Marcar alerta atendida y comprobar indicador/listado. Verificar que fallo SMTP no revierte alertas internas ni expone detalle.
+- [ ] Probar permisos `DOCUMENTOS_VER`, `DOCUMENTOS_GESTIONAR`, `DOCUMENTOS_ALERTAS_GENERAR` y `DOCUMENTOS_ALERTAS_ATENDER` con permitidos/denegados.
+
+### Flujo financiero CU-221/CU-222/CU-223
+
+- [ ] Crear presupuesto anual y comprobar 12 meses, suma decimal exacta y ajuste de centavos en diciembre.
+- [ ] Presentar sólo cuando el detalle suma el total; impedir editar aprobado, autoaprobar y duplicar aprobado activo por año/departamento.
+- [ ] Rechazar con motivo, cerrar aprobado y copiar a un año sin presupuesto activo.
+- [ ] Registrar gasto dos veces con el mismo token: debe devolverse el mismo `GastoId` sin duplicar.
+- [ ] Validar subtotal+impuesto del servidor, comprobante privado y transiciones Registrado/Aprobado/Rechazado/Pagado/Anulado.
+- [ ] Validar alertas 80/90/100; exceso requiere `GASTOS_EXCEDER_PRESUPUESTO`; registrador no autoaprueba.
+- [ ] Confirmar que aprobados+pagados forman real, registrados quedan pendientes y anulados se excluyen.
+- [ ] Comparar anual/mensual/departamento/categoría, drill-down, departamentos sin presupuesto, categorías excedidas y proyección `acumulado / meses transcurridos * 12`.
+- [ ] Abrir vista de impresión y CSV en Excel/LibreOffice; celdas con `=`, `+`, `-` o `@` deben quedar neutralizadas.
+- [ ] Ejecutar dos aprobaciones concurrentes y dos gastos concurrentes para verificar locks, unicidad e idempotencia.
 
 ## Chat CU-231/CU-232/CU-233
 
@@ -76,6 +125,54 @@ Estos resultados no ejecutan migraciones ni sustituyen las pruebas con SQL Serve
 - [ ] API auth/productos y respuestas 400/404 documentadas.
 - [ ] Sin 404 de scripts, errores de consola ni mojibake visible.
 - [ ] Responsive e impresión de comprobante/factura.
+
+## Corrección final PR #115 — evidencia local
+
+- El combo con componente inactivo se excluye de tienda y detalle público; la
+  consulta administrativa indica el estado textual y disponibilidad cero.
+- El carrito refresca desde el catálogo autoritativo y descarta combos que ya
+  no son vendibles. `AddCombo` mantiene antiforgery y el checkout vuelve a
+  validar los componentes para rechazar solicitudes manipuladas.
+- El comprobante se genera sin SMTP real mediante `OrderReceiptHtmlBuilder`.
+  Recibe el total confirmado por SQL, presenta descuentos, combos y regalos en
+  cero, escapa HTML y una falla SMTP no revierte un pedido confirmado.
+- LocalDB debe ejecutar también
+  `database/verify/0012_combo_inactive_component_local.sql`; valida componente
+  inactivo, la llamada directa a `sp_Store_GetComboById` antes y después de la
+  inactivación, exclusión pública, administración en cero, rechazo de checkout,
+  inventario intacto, reactivación y stock cero. Cada escritura se revierte.
+- El ejecutor 0012 se prueba sin conexión con
+  `scripts/database/Test-InvokeMigration0012.ps1`: Entra construye `-G`,
+  Windows construye `-E`, el hash llega como `MigrationSha256=<SHA-256>` y
+  `DryRun` no ejecuta `sqlcmd`.
+- El hash de 0012 se calcula con
+  `scripts/database/Invoke-Migration0012.ps1 -DryRun`; la migración y su
+  `verify.sql` rechazan hashes no expandidos o de manifiesto.
+- El smoke público aislado de `Home/Shop`, detalle de combo y agregado al
+  carrito respondió correctamente, sin alertas ni entradas `error` o `warning`
+  en la consola del navegador.
+
+## Reconciliación legada de 0012 — 28 de julio de 2026
+
+- El BACPAC previo se importó en una nueva base LocalDB desechable con
+  autenticación integrada; la restauración original y Azure DEV no se
+  modificaron.
+- 0012 conservó 1 combo, 3 `ComboDetalle`, 4 `PedidoCombos`, 153
+  `PedidoDetalle`, todas sus claves y los agregados de pedidos, facturas e
+  inventario.
+- `PedidoComboDetalle` se reconstruyó en 12 filas, exactamente una por
+  `PedidoComboId + ProductoId`, con cantidades enteras y sin duplicados.
+- `FacturaCombos` permaneció vacía para facturas históricas; solo los flujos
+  posteriores a 0012 generan snapshots de combo.
+- El verify oficial, la comparación legada, checkout mixto, reintento,
+  facturación, cancelación/restauración, transformación, componente inactivo,
+  conflicto 54609 y segunda ejecución rechazada aprobaron.
+- Dos sesiones concurrentes sobre una unidad produjeron un éxito, un 54615 y
+  stock final cero. `DBCC CHECKDB` aprobó en las copias de reconciliación,
+  concurrencia y ruta limpia.
+- Gate local final: build Release sin errores ni advertencias; 117/117 pruebas
+  .NET; ScriptDom focalizado 56 archivos/517 lotes; ScriptDom equivalente a CI
+  83 archivos/916 lotes; escaneo de secretos aprobado.
 
 ## Azure
 

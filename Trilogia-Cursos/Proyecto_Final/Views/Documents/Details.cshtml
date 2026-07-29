@@ -1,0 +1,104 @@
+@model Proyecto_Final.Models.Admin.DocumentDetailsViewModel
+@{
+    ViewData["Title"] = Model.Document.Title;
+    var focusHistory = ViewData["FocusHistory"] as bool? == true;
+    var expirationClass = Model.Document.ExpirationStatus == "Vencido" ? "danger" : Model.Document.ExpirationStatus == "Por vencer" ? "warning" : "success";
+}
+
+<div class="container py-4 s4-admin-page">
+    <header class="d-flex flex-wrap justify-content-between align-items-start mb-4">
+        <div class="s4-page-header">
+            <span class="s4-eyebrow"><i class="fa fa-file-alt"></i> @Model.Document.TypeName</span>
+            <h2>@Model.Document.Title</h2>
+            <p class="text-muted mb-0">@(Model.Document.DepartmentName ?? "General") · referencia @(Model.Document.ReferenceNumber ?? "no indicada")</p>
+        </div>
+        <div class="d-flex flex-wrap">
+            <a asp-action="Index" class="btn btn-outline-secondary mr-2 mb-2">Volver</a>
+            <a asp-action="History" asp-route-id="@Model.Document.DocumentId" class="btn btn-outline-dark mr-2 mb-2">Historial</a>
+            <a asp-action="Edit" asp-route-id="@Model.Document.DocumentId" class="btn btn-outline-primary mb-2"><i class="fa fa-pen mr-1"></i>Editar</a>
+        </div>
+    </header>
+
+    @if (TempData["SuccessMessage"] is string success) { <div class="alert alert-success" role="status">@success</div> }
+    @if (TempData["ErrorMessage"] is string error) { <div class="alert alert-danger" role="alert">@error</div> }
+
+    <div class="row">
+        <div class="col-lg-7">
+            <section class="card mb-4" aria-labelledby="document-summary-title">
+                <div class="card-header" id="document-summary-title">Resumen del documento</div>
+                <div class="card-body">
+                    <div class="d-flex flex-wrap mb-3">
+                        <span class="badge badge-@(Model.Document.Active ? "success" : "secondary") mr-2 mb-2">@(Model.Document.Active ? Model.Document.Status : "Inactivo")</span>
+                        <span class="badge badge-@expirationClass mb-2">@Model.Document.ExpirationStatus</span>
+                    </div>
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Emisión</dt><dd class="col-sm-8">@(Model.Document.IssueDate?.ToString("dd/MM/yyyy") ?? "No indicada")</dd>
+                        <dt class="col-sm-4">Vencimiento</dt><dd class="col-sm-8">@(Model.Document.DoesNotExpire ? "No vence" : Model.Document.ExpirationDate?.ToString("dd/MM/yyyy"))</dd>
+                        <dt class="col-sm-4">Descripción</dt><dd class="col-sm-8">@(Model.Description ?? "Sin descripción")</dd>
+                        <dt class="col-sm-4">Archivo actual</dt><dd class="col-sm-8">@Model.OriginalName <small class="d-block text-muted">@((Model.SizeBytes / 1024m).ToString("N1")) KB · @Model.MimeType</small></dd>
+                        <dt class="col-sm-4">Integridad</dt><dd class="col-sm-8"><code class="text-break">@Model.Sha256</code></dd>
+                    </dl>
+                    <a asp-action="Download" asp-route-id="@Model.Document.DocumentId" class="btn btn-primary mt-3"><i class="fa fa-lock mr-1"></i>Descarga autorizada</a>
+                </div>
+            </section>
+        </div>
+        <div class="col-lg-5">
+            <section class="card mb-4" aria-labelledby="replace-title">
+                <div class="card-header" id="replace-title">Publicar nueva versión</div>
+                <div class="card-body">
+                    <form asp-action="ReplaceFile" method="post" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Document.DocumentId" />
+                        <div class="s4-file-zone mb-3">
+                            <label for="replacement-file">Archivo PDF, JPG o PNG</label>
+                            <input id="replacement-file" type="file" name="file" accept=".pdf,.jpg,.jpeg,.png" class="form-control-file" required data-file-label="replacement-file-name" />
+                            <span id="replacement-file-name" class="s4-file-note" aria-live="polite">Ningún archivo seleccionado</span>
+                            <small class="s4-file-note">Máximo 10 MB; la versión anterior permanece en el historial.</small>
+                        </div>
+                        <button class="btn btn-warning btn-block" type="submit"><i class="fa fa-code-branch mr-1"></i>Guardar nueva versión</button>
+                    </form>
+                </div>
+            </section>
+            <section class="card s4-danger-zone" aria-labelledby="document-status-title">
+                <div class="card-header" id="document-status-title">Estado operativo</div>
+                <div class="card-body">
+                    <p class="text-muted">La desactivación es lógica y conserva todas las versiones.</p>
+                    <form asp-action="SetActive" method="post" data-confirm="@(Model.Document.Active ? "¿Confirma que desea inactivar este documento? Su historial se conservará." : "¿Confirma que desea reactivar este documento?")">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Document.DocumentId" />
+                        <input type="hidden" name="active" value="@(!Model.Document.Active ? "true" : "false")" />
+                        <button class="btn btn-outline-danger btn-block" type="submit">@(Model.Document.Active ? "Inactivar documento" : "Reactivar documento")</button>
+                    </form>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <section id="history" class="card" tabindex="@(focusHistory ? "-1" : null)" aria-labelledby="history-title">
+        <div class="card-header" id="history-title">Historial de versiones</div>
+        <div class="card-body">
+            @if (!Model.Versions.Any())
+            {
+                <div class="s4-empty"><i class="fa fa-history"></i><p class="mb-0">Aún no existen versiones registradas.</p></div>
+            }
+            else
+            {
+                <ol class="s4-timeline">
+                    @foreach (var version in Model.Versions.OrderByDescending(item => item.Version))
+                    {
+                        <li class="s4-timeline__item">
+                            <div class="d-flex flex-wrap justify-content-between align-items-start">
+                                <div>
+                                    <strong>Versión @version.Version · @version.OriginalName</strong>
+                                    <small class="d-block text-muted">@version.CreatedUtc.ToString("dd/MM/yyyy HH:mm") UTC · @version.CreatedByName · @((version.SizeBytes / 1024m).ToString("N1")) KB</small>
+                                    <code class="d-block text-break mt-1">@version.Sha256</code>
+                                </div>
+                                <div><span class="badge badge-light mr-2">@version.StorageStatus</span><a asp-action="Download" asp-route-id="@Model.Document.DocumentId" asp-route-versionId="@version.VersionId" class="btn btn-sm btn-outline-primary">Descargar</a></div>
+                            </div>
+                        </li>
+                    }
+                </ol>
+            }
+        </div>
+    </section>
+</div>

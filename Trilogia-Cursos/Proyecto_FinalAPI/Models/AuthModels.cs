@@ -39,7 +39,6 @@ namespace Proyecto_FinalAPI.Models
         public int UsuarioId { get; set; }
         public string NombreCompleto { get; set; } = string.Empty;
         public string Correo { get; set; } = string.Empty;
-        public string Contrasena { get; set; } = string.Empty;
         public string PerfilNombre { get; set; } = string.Empty;
         public bool Activo { get; set; }
     }

@@ -1,0 +1,57 @@
+@model Proyecto_Final.Models.Admin.StoreComboViewModel
+@{
+    ViewData["Title"] = Model.Nombre;
+}
+
+@section Styles {
+    <link href="~/css/sprint3-storefront-polish.css" rel="stylesheet" asp-append-version="true" />
+}
+
+<main class="s3-storefront-page s4-combo-store-detail">
+    <nav aria-label="Migas de pan" class="s4-breadcrumb">
+        <a asp-controller="Home" asp-action="Shop">Tienda</a>
+        <i class="fa fa-angle-right" aria-hidden="true"></i>
+        <span aria-current="page">@Model.Nombre</span>
+    </nav>
+
+    <section class="s4-combo-store-card">
+        <div class="s4-combo-store-card__visual">
+            <span class="s4-combo-store-card__pill"><i class="fa fa-box-open"></i> Combo</span>
+            <img src="@Url.Content(Model.ImagenUrl)" alt="Combo @Model.Nombre" />
+        </div>
+        <div class="s4-combo-store-card__content">
+            <span class="s3-home-eyebrow">Oferta armada por el comercio</span>
+            <h1>@Model.Nombre</h1>
+            <p>@Model.Descripcion</p>
+
+            <div class="s4-combo-store-facts">
+                <div><span>Componentes</span><strong>@Model.CantidadProductos</strong></div>
+                <div><span>Disponibles</span><strong>@Model.StockDisponible</strong></div>
+                <div><span>Precio</span><strong>₡@Model.Precio.ToString("N2")</strong></div>
+            </div>
+
+            <div class="s4-combo-components-summary">
+                <i class="fa fa-layer-group" aria-hidden="true"></i>
+                <div>
+                    <strong>Contenido del combo</strong>
+                    <span>@(string.IsNullOrWhiteSpace(Model.ComponentesResumen) ? "Componentes definidos por Supermercado Mayoreo." : Model.ComponentesResumen)</span>
+                </div>
+            </div>
+
+            @if (Model.Disponible)
+            {
+                <form asp-controller="Cart" asp-action="AddCombo" method="post" class="s4-combo-store-actions">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="comboId" value="@Model.ComboId" />
+                    <label for="comboQuantity">Cantidad</label>
+                    <input id="comboQuantity" type="number" name="cantidad" value="1" min="1" max="@Model.StockDisponible" class="form-control" />
+                    <button type="submit" class="btn btn-primary"><i class="fa fa-shopping-cart mr-1"></i>Agregar combo</button>
+                </form>
+            }
+            else
+            {
+                <div class="alert alert-warning" role="status">Este combo no tiene disponibilidad suficiente.</div>
+            }
+        </div>
+    </section>
+</main>

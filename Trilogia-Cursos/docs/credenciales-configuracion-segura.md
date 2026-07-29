@@ -11,6 +11,8 @@ Los archivos compartidos `Proyecto_Final/appsettings*.json` y `Proyecto_FinalAPI
 - Desarrollo: .NET User Secrets o variables de entorno.
 - Azure: App Service Configuration; Key Vault puede incorporarse posteriormente.
 - Evidencias: `EvidenceStorage__RootPath`, siempre fuera de `wwwroot`.
+- Documentos y comprobantes: `PrivateStorage__RootPath`, persistente y siempre fuera de `wwwroot`.
+- Correo de alertas: `DocumentAlerts__EmailEnabled=false` hasta completar SMTP; los umbrales no son secretos.
 
 Ejemplo local sin valores reales:
 
