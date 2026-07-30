@@ -1,0 +1,71 @@
+﻿@model Proyecto_Final.Models.Admin.PriceHistoryViewModel
+@{
+    ViewData["Title"] = "Histórico de precios";
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <h2 class="mb-2">Histórico de precios por producto</h2>
+            <p>Compará cuánto se ha pagado a cada proveedor por un mismo producto (CU-104).</p>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 mt-3">
+        <div class="col-lg-5">
+            <form asp-action="Index" method="get" class="form-inline">
+                <select name="productoId" class="form-control mr-2" style="min-width:280px;" onchange="this.form.submit()">
+                    <option value="">-- Seleccione un producto --</option>
+                    @foreach (var p in Model.ProductosDisponibles)
+                    {
+                        <option value="@p.ProductoId" selected="@(p.ProductoId == Model.ProductoId)">@p.Nombre</option>
+                    }
+                </select>
+                <button type="submit" class="btn btn-primary">Consultar</button>
+            </form>
+        </div>
+    </div>
+
+    @if (Model.ProductoId > 0)
+    {
+        <div class="row px-xl-5 mt-4">
+            <div class="col-12">
+                <h5>@Model.ProductoNombre</h5>
+                @if (!Model.Historial.Any())
+                {
+                    <p class="text-muted">Este producto todavía no tiene compras registradas.</p>
+                }
+                else
+                {
+                    var mejorPrecio = Model.Historial.Min(h => h.PrecioUnitario);
+                    <table class="table table-sm table-hover">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Proveedor</th>
+                                <th class="text-right">Precio pagado</th>
+                                <th>Orden</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var h in Model.Historial)
+                            {
+                                <tr class="@(h.PrecioUnitario == mejorPrecio ? "table-success" : "")">
+                                    <td>@h.FechaCreacion.ToString("dd/MM/yyyy")</td>
+                                    <td>@h.ProveedorNombre</td>
+                                    <td class="text-right">₡@h.PrecioUnitario.ToString("N2")</td>
+                                    <td>
+                                        <a asp-controller="PurchaseOrders" asp-action="Detail" asp-route-id="@h.OrdenCompraId">#@h.OrdenCompraId</a>
+                                    </td>
+                                    <td>@h.Estado</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                    <p class="text-muted"><span class="badge badge-success">&nbsp;</span> Precio más bajo pagado hasta ahora.</p>
+                }
+            </div>
+        </div>
+    }
+</div>
