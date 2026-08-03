@@ -1,0 +1,44 @@
+@model Proyecto_Final.Models.Admin.DeliveryBoardViewModel
+@{
+    ViewData["Title"] = "Tablero de entregas";
+}
+
+<div class="container-fluid pt-4 backoffice-page" data-snapshot-url="@Url.Action("Snapshot", "DeliveryBoard")">
+    <div class="row px-xl-5"><div class="col-12 d-flex justify-content-between align-items-start"><div><h2>Tablero de entregas</h2><p>Estado operativo actualizado automáticamente cada 15 segundos (CU-084).</p></div><small id="board-updated" class="text-muted">Actualizado: @Model.GeneradoUtc.ToLocalTime().ToString("HH:mm:ss")</small></div></div>
+    <div class="row px-xl-5 mb-4">
+        <div class="col-md-3"><div class="card"><div class="card-body"><small>Rutas activas</small><h3 id="active-routes">@Model.RutasActivas</h3></div></div></div>
+        <div class="col-md-3"><div class="card"><div class="card-body"><small>Pendientes</small><h3 id="pending-deliveries">@Model.EntregasPendientes</h3></div></div></div>
+        <div class="col-md-3"><div class="card"><div class="card-body"><small>Entregadas</small><h3 id="completed-deliveries">@Model.EntregasCompletadas</h3></div></div></div>
+        <div class="col-md-3"><div class="card"><div class="card-body"><small>Fallidas</small><h3 id="failed-deliveries">@Model.EntregasFallidas</h3></div></div></div>
+    </div>
+    <div class="row px-xl-5 pb-5"><div class="col-12 admin-table-wrapper"><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>Ruta</th><th>Zona</th><th>Chofer / vehículo</th><th>Estado</th><th>Progreso</th><th></th></tr></thead><tbody id="delivery-board-body">
+    @foreach (var route in Model.Rutas)
+    {
+        <tr><td><strong>@route.Codigo</strong></td><td>@route.Zona</td><td>@route.Chofer<small class="d-block text-muted">@route.VehiculoPlaca</small></td><td>@route.Estado</td><td><span class="text-success">@route.Entregados entregadas</span> · <span class="text-danger">@route.Fallidos fallidas</span> · @route.Pendientes pendientes</td><td><a asp-controller="RoutesAdmin" asp-action="Detail" asp-route-id="@route.RutaId" class="btn btn-sm btn-outline-primary">Ver ruta</a></td></tr>
+    }
+    </tbody></table></div></div></div>
+</div>
+
+@section Scripts {
+<script>
+    (() => {
+        const root = document.querySelector('[data-snapshot-url]');
+        const body = document.getElementById('delivery-board-body');
+        const setText = (id, value) => { const node = document.getElementById(id); if (node) node.textContent = value; };
+        const escapeHtml = value => { const node = document.createElement('span'); node.textContent = value ?? ''; return node.innerHTML; };
+        async function refresh() {
+            if (document.hidden) return;
+            try {
+                const response = await fetch(root.dataset.snapshotUrl, { credentials: 'same-origin', headers: { 'Accept': 'application/json' }, cache: 'no-store' });
+                if (!response.ok) return;
+                const data = await response.json();
+                setText('active-routes', data.rutasActivas); setText('pending-deliveries', data.entregasPendientes);
+                setText('completed-deliveries', data.entregasCompletadas); setText('failed-deliveries', data.entregasFallidas);
+                setText('board-updated', `Actualizado: ${new Date(data.generadoUtc).toLocaleTimeString('es-CR')}`);
+                body.innerHTML = data.rutas.map(route => `<tr><td><strong>${escapeHtml(route.codigo)}</strong></td><td>${escapeHtml(route.zona)}</td><td>${escapeHtml(route.chofer)}<small class="d-block text-muted">${escapeHtml(route.vehiculoPlaca)}</small></td><td>${escapeHtml(route.estado)}</td><td><span class="text-success">${route.entregados} entregadas</span> · <span class="text-danger">${route.fallidos} fallidas</span> · ${route.pendientes} pendientes</td><td><a class="btn btn-sm btn-outline-primary" href="/RoutesAdmin/Detail/${route.rutaId}">Ver ruta</a></td></tr>`).join('');
+            } catch { /* El siguiente ciclo reintenta; no se altera el estado mostrado. */ }
+        }
+        window.setInterval(refresh, 15000);
+    })();
+</script>
+}

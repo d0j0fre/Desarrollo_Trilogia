@@ -67,5 +67,130 @@ namespace Proyecto_Final.Services
             return model;
         }
 
+        public async Task<DetailedSalesReportViewModel> GetSalesReportAsync(
+            SalesReportFilterViewModel filter,
+            CancellationToken cancellationToken = default)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Reportes_VentasDetallado", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.Add("@Desde", SqlDbType.Date).Value = filter.Desde.Date;
+            command.Parameters.Add("@Hasta", SqlDbType.Date).Value = filter.Hasta.Date;
+            command.Parameters.Add("@Agrupacion", SqlDbType.NVarChar, 20).Value = filter.Agrupacion;
+            command.Parameters.Add("@Categoria", SqlDbType.NVarChar, 100).Value = string.IsNullOrWhiteSpace(filter.Categoria) ? DBNull.Value : filter.Categoria.Trim();
+            await connection.OpenAsync(cancellationToken);
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+
+            decimal total = 0, average = 0;
+            int invoices = 0, orders = 0;
+            if (await reader.ReadAsync(cancellationToken))
+            {
+                total = reader.GetDecimal(reader.GetOrdinal("TotalVentas"));
+                invoices = reader.GetInt32(reader.GetOrdinal("Facturas"));
+                orders = reader.GetInt32(reader.GetOrdinal("Pedidos"));
+                average = reader.GetDecimal(reader.GetOrdinal("TicketPromedio"));
+            }
+
+            var rows = new List<SalesReportRowViewModel>();
+            if (await reader.NextResultAsync(cancellationToken))
+            {
+                while (await reader.ReadAsync(cancellationToken))
+                {
+                    rows.Add(new SalesReportRowViewModel
+                    {
+                        Clave = reader.GetString(reader.GetOrdinal("GrupoClave")),
+                        Etiqueta = reader.GetString(reader.GetOrdinal("GrupoNombre")),
+                        Fecha = NullableDate(reader, "FechaGrupo"),
+                        Categoria = NullableString(reader, "Categoria"),
+                        TotalVentas = reader.GetDecimal(reader.GetOrdinal("TotalVentas")),
+                        Facturas = reader.GetInt32(reader.GetOrdinal("Facturas")),
+                        Pedidos = reader.GetInt32(reader.GetOrdinal("Pedidos")),
+                        TicketPromedio = reader.GetDecimal(reader.GetOrdinal("TicketPromedio")),
+                        Unidades = reader.GetInt32(reader.GetOrdinal("Unidades"))
+                    });
+                }
+            }
+
+            var categories = new List<string>();
+            if (await reader.NextResultAsync(cancellationToken))
+            {
+                while (await reader.ReadAsync(cancellationToken)) categories.Add(reader.GetString(0));
+            }
+
+            return new DetailedSalesReportViewModel
+            {
+                Filtro = filter,
+                TotalVentas = total,
+                Facturas = invoices,
+                Pedidos = orders,
+                TicketPromedio = average,
+                Filas = rows,
+                Categorias = categories
+            };
+        }
+
+        public async Task<SellerPerformanceViewModel> GetSellerPerformanceAsync(
+            SellerPerformanceFilterViewModel filter,
+            CancellationToken cancellationToken = default)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Reportes_DesempenoVendedores", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.Add("@Desde", SqlDbType.Date).Value = filter.Desde.Date;
+            command.Parameters.Add("@Hasta", SqlDbType.Date).Value = filter.Hasta.Date;
+            command.Parameters.Add("@VendedorUsuarioId", SqlDbType.Int).Value = filter.VendedorUsuarioId.HasValue ? filter.VendedorUsuarioId.Value : DBNull.Value;
+            command.Parameters.Add("@Orden", SqlDbType.NVarChar, 30).Value = filter.Orden;
+            await connection.OpenAsync(cancellationToken);
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+            var rows = new List<SellerPerformanceRowViewModel>();
+            while (await reader.ReadAsync(cancellationToken))
+            {
+                rows.Add(new SellerPerformanceRowViewModel
+                {
+                    VendedorUsuarioId = reader.GetInt32(reader.GetOrdinal("VendedorUsuarioId")),
+                    VendedorNombre = reader.GetString(reader.GetOrdinal("VendedorNombre")),
+                    Ventas = reader.GetDecimal(reader.GetOrdinal("Ventas")),
+                    Pedidos = reader.GetInt32(reader.GetOrdinal("Pedidos")),
+                    Facturas = reader.GetInt32(reader.GetOrdinal("Facturas")),
+                    TicketPromedio = reader.GetDecimal(reader.GetOrdinal("TicketPromedio")),
+                    ClientesAtendidos = reader.GetInt32(reader.GetOrdinal("ClientesAtendidos")),
+                    Meta = NullableDecimal(reader, "Meta"),
+                    CumplimientoPorcentual = NullableDecimal(reader, "CumplimientoPorcentual")
+                });
+            }
+
+            var sellers = new List<VendedorOptionViewModel>();
+            if (await reader.NextResultAsync(cancellationToken))
+            {
+                while (await reader.ReadAsync(cancellationToken))
+                {
+                    sellers.Add(new VendedorOptionViewModel
+                    {
+                        UsuarioId = reader.GetInt32(reader.GetOrdinal("UsuarioId")),
+                        NombreCompleto = reader.GetString(reader.GetOrdinal("NombreCompleto")),
+                        Correo = reader.IsDBNull(reader.GetOrdinal("Correo")) ? string.Empty : reader.GetString(reader.GetOrdinal("Correo"))
+                    });
+                }
+            }
+
+            return new SellerPerformanceViewModel { Filtro = filter, Filas = rows, Vendedores = sellers };
+        }
+
+        private static string? NullableString(SqlDataReader reader, string name)
+        {
+            var ordinal = reader.GetOrdinal(name);
+            return reader.IsDBNull(ordinal) ? null : reader.GetString(ordinal);
+        }
+
+        private static DateTime? NullableDate(SqlDataReader reader, string name)
+        {
+            var ordinal = reader.GetOrdinal(name);
+            return reader.IsDBNull(ordinal) ? null : reader.GetDateTime(ordinal);
+        }
+
+        private static decimal? NullableDecimal(SqlDataReader reader, string name)
+        {
+            var ordinal = reader.GetOrdinal(name);
+            return reader.IsDBNull(ordinal) ? null : reader.GetDecimal(ordinal);
+        }
+
     }
 }
