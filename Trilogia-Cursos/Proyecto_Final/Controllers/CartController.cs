@@ -21,6 +21,7 @@ namespace Proyecto_Final.Controllers
         private readonly EmailService _emailService;
         private readonly PromotionsDbService _promotions;
         private readonly IComboDbService _combos;
+        private readonly ICrossSellService _crossSell;
         private readonly ILogger<CartController> _logger;
 
         public CartController(
@@ -28,12 +29,14 @@ namespace Proyecto_Final.Controllers
             EmailService emailService,
             PromotionsDbService promotions,
             IComboDbService combos,
+            ICrossSellService crossSell,
             ILogger<CartController> logger)
         {
             _storeDbService = storeDbService;
             _emailService = emailService;
             _promotions = promotions;
             _combos = combos;
+            _crossSell = crossSell;
             _logger = logger;
         }
 
@@ -445,6 +448,21 @@ namespace Proyecto_Final.Controllers
                 _logger.LogWarning(exception, "No fue posible calcular las promociones para presentar el carrito.");
                 foreach (var it in cart.Items) { it.MontoDescuento = 0; it.PromocionNombre = null; }
                 cart.Regalias.Clear();
+            }
+
+            try
+            {
+                var productIds = cart.Items
+                    .Where(item => item.ItemType == CartItemTypes.Product && item.ProductoId > 0)
+                    .Select(item => item.ProductoId)
+                    .ToHashSet();
+                cart.Recomendaciones = await _crossSell.GetSuggestionsAsync(
+                    HttpContext.Session.GetInt32("UserId"), productIds, HttpContext.RequestAborted);
+            }
+            catch (Exception exception)
+            {
+                _logger.LogWarning(exception, "No fue posible calcular recomendaciones de venta cruzada.");
+                cart.Recomendaciones = [];
             }
             return cart;
         }

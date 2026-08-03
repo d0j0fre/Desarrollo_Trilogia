@@ -43,6 +43,7 @@ namespace Proyecto_Final.Models.Store
 
         // CU-173 — resultado del motor de promociones.
         public List<CartItemViewModel> Regalias { get; set; } = new();
+        public IReadOnlyList<CrossSellSuggestion> Recomendaciones { get; set; } = [];
         public decimal DescuentoTotal => Items.Sum(x => x.MontoDescuento);
         public decimal Total => Subtotal - DescuentoTotal;
         public bool TienePromociones => DescuentoTotal > 0 || Regalias.Count > 0;

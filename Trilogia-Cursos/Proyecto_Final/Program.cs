@@ -159,6 +159,8 @@ builder.Services.AddScoped<BudgetComparisonDbService>();
 builder.Services.AddScoped<IComboDbService, ComboDbService>();
 builder.Services.AddScoped<IInventoryTransformationService, InventoryTransformationDbService>();
 builder.Services.AddScoped<IInventoryIntelligenceService, InventoryIntelligenceDbService>();
+builder.Services.AddScoped<IPurchasingService, PurchasingDbService>();
+builder.Services.AddScoped<ICrossSellService, CrossSellDbService>();
 builder.Services.AddScoped<IDocumentManagementDbService, DocumentManagementDbService>();
 builder.Services.AddScoped<IDocumentAlertService, DocumentAlertService>();
 builder.Services.AddScoped<IDocumentAlertEmailSender, SmtpDocumentAlertEmailSender>();
@@ -167,6 +169,7 @@ builder.Services.AddScoped<IChatDbService, ChatDbService>();
 builder.Services.AddScoped<IChatAuthorizationService, ChatAuthorizationService>();
 builder.Services.AddSingleton<IEvidenceStorageService, FileEvidenceStorageService>();
 builder.Services.AddSingleton<IPrivateFileStorageService, PrivateFileStorageService>();
+builder.Services.AddSingleton<IProductImageStorageService, ProductImageStorageService>();
 builder.Services.AddSingleton(TimeProvider.System);
 
 // HttpClient para consumir la API de autenticación

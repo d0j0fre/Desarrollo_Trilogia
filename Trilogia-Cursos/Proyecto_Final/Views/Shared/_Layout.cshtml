@@ -60,6 +60,7 @@
         var isCajero = isLoggedIn && (
             string.Equals(userRole, "Cajero", StringComparison.OrdinalIgnoreCase)
             || string.Equals(userRole, "Financiero", StringComparison.OrdinalIgnoreCase));
+        var isPurchasing = isLoggedIn && string.Equals(userRole, "Compras", StringComparison.OrdinalIgnoreCase);
         var categoriasLayout = await AdminDbService.GetStoreCategoriesAsync();
     }
 
@@ -145,7 +146,20 @@
                                         <a asp-controller="Budgets" asp-action="Index" class="dropdown-item">Presupuestos anuales</a>
                                         <a asp-controller="Expenses" asp-action="Index" class="dropdown-item">Gastos operativos</a>
                                         <a asp-controller="BudgetComparison" asp-action="Index" class="dropdown-item">Presupuesto vs. real</a>
+                                        @if (isGerente) { <a asp-controller="DeliveryBoard" asp-action="Index" class="dropdown-item">Tablero de entregas</a> }
                                         @if (isGerente) { <a asp-controller="Documents" asp-action="Alerts" class="dropdown-item"><i class="fa fa-bell text-warning mr-1"></i>Alertas documentales</a> }
+                                    </div>
+                                </div>
+                            }
+
+                            @if (!isAdmin && isPurchasing)
+                            {
+                                <div class="nav-item dropdown">
+                                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown"><i class="fa fa-shopping-cart mr-1"></i>Compras</a>
+                                    <div class="dropdown-menu border-0 rounded-0 m-0">
+                                        <a asp-controller="Suppliers" asp-action="Index" class="dropdown-item">Proveedores</a>
+                                        <a asp-controller="PurchaseOrders" asp-action="Index" class="dropdown-item">Órdenes de compra</a>
+                                        <a asp-controller="PriceHistory" asp-action="Index" class="dropdown-item">Histórico de precios</a>
                                     </div>
                                 </div>
                             }
@@ -204,6 +218,7 @@
                                                 </summary>
                                                 <div class="acc-sec__list">
                                                     <a asp-controller="RoutesAdmin" asp-action="Index" class="acc-item"><i class="fa fa-route"></i><span>Rutas y Entregas</span></a>
+                                                    <a asp-controller="DeliveryBoard" asp-action="Index" class="acc-item"><i class="fa fa-th-large"></i><span>Tablero de entregas</span></a>
                                                     <a asp-controller="Vehicles" asp-action="Index" class="acc-item"><i class="fa fa-truck"></i><span>Vehículos</span></a>
                                                     <a asp-controller="Fleet" asp-action="Mileage" class="acc-item"><i class="fa fa-tachometer-alt"></i><span>Kilometraje</span></a>
                                                     <a asp-controller="Fleet" asp-action="Maintenance" class="acc-item"><i class="fa fa-wrench"></i><span>Mantenimiento</span></a>
@@ -224,6 +239,9 @@
                                                     <a asp-controller="Expenses" asp-action="Index" class="acc-item"><i class="fa fa-receipt"></i><span>Gastos operativos</span></a>
                                                     <a asp-controller="BudgetComparison" asp-action="Index" class="acc-item"><i class="fa fa-chart-bar"></i><span>Presupuesto vs. real</span></a>
                                                     <a asp-controller="FinancialReportAdmin" asp-action="Index" class="acc-item"><i class="fa fa-chart-line"></i><span>Ingresos y Egresos</span></a>
+                                                    <a asp-controller="Suppliers" asp-action="Index" class="acc-item"><i class="fa fa-address-book"></i><span>Proveedores</span></a>
+                                                    <a asp-controller="PurchaseOrders" asp-action="Index" class="acc-item"><i class="fa fa-shopping-cart"></i><span>Órdenes de compra</span></a>
+                                                    <a asp-controller="PriceHistory" asp-action="Index" class="acc-item"><i class="fa fa-chart-area"></i><span>Histórico de precios</span></a>
                                                 </div>
                                             </details>
 
@@ -236,6 +254,8 @@
                                                 <div class="acc-sec__list">
                                                     <a asp-controller="Admin" asp-action="Index" class="acc-item"><i class="fa fa-tachometer-alt"></i><span>Dashboard</span></a>
                                                     <a asp-controller="ManagementDashboard" asp-action="Index" class="acc-item"><i class="fa fa-chart-line"></i><span>Tablero gerencial</span></a>
+                                                    <a asp-controller="SalesReports" asp-action="Index" class="acc-item"><i class="fa fa-file-alt"></i><span>Reporte de ventas</span></a>
+                                                    <a asp-controller="SellerPerformance" asp-action="Index" class="acc-item"><i class="fa fa-user-chart"></i><span>Desempeño de vendedores</span></a>
                                                     <a asp-controller="Kpis" asp-action="Index" class="acc-item"><i class="fa fa-bullseye"></i><span>Metas de ventas</span></a>
                                                     <a asp-controller="Kpis" asp-action="Report" class="acc-item"><i class="fa fa-chart-bar"></i><span>Reporte de KPIs</span></a>
                                                     <a asp-controller="InventoryIntelligence" asp-action="Index" class="acc-item"><i class="fa fa-brain"></i><span>Inteligencia de inventario</span></a>
@@ -415,6 +435,12 @@
                                 </a>
                                 <a asp-controller="ManagementDashboard" asp-action="Index" class="nav-item nav-link nav-highlight">
                                     <i class="fa fa-chart-line mr-1"></i>Tablero
+                                </a>
+                                <a asp-controller="SalesReports" asp-action="Index" class="nav-item nav-link nav-highlight">
+                                    <i class="fa fa-file-alt mr-1"></i>Ventas
+                                </a>
+                                <a asp-controller="SellerPerformance" asp-action="Index" class="nav-item nav-link nav-highlight">
+                                    <i class="fa fa-users mr-1"></i>Vendedores
                                 </a>
                                 <a asp-controller="Kpis" asp-action="Report" class="nav-item nav-link nav-highlight">
                                     <i class="fa fa-chart-bar mr-1"></i>KPIs

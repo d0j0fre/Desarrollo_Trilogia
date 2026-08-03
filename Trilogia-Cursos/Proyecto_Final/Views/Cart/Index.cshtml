@@ -12,6 +12,7 @@
                 Verificá cantidades, stock disponible y subtotal antes de finalizar la compra.
             </p>
         </div>
+
         <div class="s3-cart-hero__icon">
             <i class="fa fa-shopping-basket"></i>
         </div>
@@ -46,7 +47,7 @@
 
                     <article class="s3-cart-item">
                         <div class="s3-cart-item__image">
-                            <img src="@imagen" alt="@item.Nombre" />
+                            <img src="@imagen" alt="Producto @item.Nombre en el carrito" loading="lazy" width="120" height="120" />
                         </div>
 
                         <div class="s3-cart-item__info">
@@ -138,7 +139,7 @@
                     {
                         <article class="s3-cart-item">
                             <div class="s3-cart-item__image">
-                                <img src="@Url.Content("~/img/whisky-premium.webp")" alt="@regalo.Nombre" />
+                                <img src="@Url.Content("~/img/whisky-premium.webp")" alt="Producto de regalo @regalo.Nombre" loading="lazy" width="120" height="120" />
                             </div>
                             <div class="s3-cart-item__info">
                                 <span class="s3-cart-item__category"><span class="badge badge-success"><i class="fa fa-gift mr-1"></i>Regalía</span></span>
@@ -208,5 +209,37 @@
                 </div>
             </aside>
         </div>
+    }
+
+    @if (Model.Recomendaciones.Count > 0)
+    {
+        <section class="mt-4" aria-labelledby="cross-sell-title">
+            <h3 id="cross-sell-title">También podría interesarte</h3>
+            <p class="text-muted">Sugerencias explicables; ningún producto se agrega automáticamente.</p>
+            <div class="row">
+                @foreach (var suggestion in Model.Recomendaciones)
+                {
+                    var suggestionImage = string.IsNullOrWhiteSpace(suggestion.ImagenUrl) ? Url.Content("~/img/whisky-premium.webp") : Url.Content(suggestion.ImagenUrl);
+                    <div class="col-md-6 mb-3">
+                        <article class="card h-100 p-3">
+                            <div class="d-flex">
+                                <img src="@suggestionImage" alt="Producto recomendado @suggestion.Nombre" loading="lazy" width="96" height="96" style="object-fit:cover;aspect-ratio:1/1" />
+                                <div class="ml-3">
+                                    <h4 class="h6">@suggestion.Nombre</h4>
+                                    <strong>₡@suggestion.Precio.ToString("N2")</strong>
+                                    <p class="small text-muted mb-2">@suggestion.Explanation</p>
+                                    <form asp-controller="Cart" asp-action="Add" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="productoId" value="@suggestion.ProductoId" />
+                                        <input type="hidden" name="cantidad" value="1" />
+                                        <button class="btn btn-outline-primary btn-sm" type="submit">Agregar al carrito</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+                }
+            </div>
+        </section>
     }
 </div>

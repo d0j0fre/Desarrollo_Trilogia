@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
+using Microsoft.AspNetCore.RateLimiting;
 using Proyecto_Final.Filters;
 using Proyecto_Final.Models.Admin;
 using Proyecto_Final.Services;
@@ -9,28 +10,19 @@ namespace Proyecto_Final.Controllers
     [AdminAuthorize("Inventario")]
     public class InventoryController : Controller
     {
-        private const long MaxProductImageBytes = 2 * 1024 * 1024;
-        private static readonly IReadOnlyDictionary<string, string[]> PermittedImageContentTypes = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
-        {
-            [".jpg"] = new[] { "image/jpeg" },
-            [".jpeg"] = new[] { "image/jpeg" },
-            [".png"] = new[] { "image/png" },
-            [".webp"] = new[] { "image/webp" }
-        };
-
         private readonly AdminDbService _adminDbService;
-        private readonly IWebHostEnvironment _environment;
+        private readonly IProductImageStorageService _images;
         private readonly IInventoryTransformationService _transformations;
         private readonly ILogger<InventoryController> _logger;
 
         public InventoryController(
             AdminDbService adminDbService,
-            IWebHostEnvironment environment,
+            IProductImageStorageService images,
             IInventoryTransformationService transformations,
             ILogger<InventoryController> logger)
         {
             _adminDbService = adminDbService;
-            _environment = environment;
+            _images = images;
             _transformations = transformations;
             _logger = logger;
         }
@@ -56,6 +48,7 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting("private-file-upload")]
         public async Task<IActionResult> Create(ProductFormViewModel model)
         {
             ViewBag.Categorias = await _adminDbService.GetStoreCategoriesAsync();
@@ -64,17 +57,23 @@ namespace Proyecto_Final.Controllers
             var usuarioId = HttpContext.Session.GetInt32("UserId") ?? 0;
             var usuarioNombre = HttpContext.Session.GetString("UserFullName") ?? "Administrador";
 
+            StagedProductImage? staged = null;
             try
             {
-                model.ImagenUrl = await SaveProductImageAsync(model.ImagenArchivo, model.ImagenUrl);
+                staged = await _images.StageAsync(model.ImagenArchivo, HttpContext.RequestAborted);
+                model.ImagenUrl = staged?.PublicUrl;
+                await _adminDbService.CreateProductAsync(model, usuarioId, usuarioNombre);
             }
             catch (ProductImageValidationException ex)
             {
                 ModelState.AddModelError(nameof(model.ImagenArchivo), ex.UserMessage);
                 return View(model);
             }
-
-            await _adminDbService.CreateProductAsync(model, usuarioId, usuarioNombre);
+            catch
+            {
+                await _images.DeleteAsync(staged?.PublicUrl);
+                throw;
+            }
 
             await RegistrarAuditoriaAsync(
                 "Crear",
@@ -96,6 +95,7 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting("private-file-upload")]
         public async Task<IActionResult> Edit(ProductFormViewModel model)
         {
             ViewBag.Categorias = await _adminDbService.GetStoreCategoriesAsync();
@@ -104,17 +104,29 @@ namespace Proyecto_Final.Controllers
             var usuarioId = HttpContext.Session.GetInt32("UserId") ?? 0;
             var usuarioNombre = HttpContext.Session.GetString("UserFullName") ?? "Administrador";
 
+            var current = await _adminDbService.GetProductByIdAsync(model.ProductoId);
+            if (current is null) return NotFound();
+
+            StagedProductImage? staged = null;
             try
             {
-                model.ImagenUrl = await SaveProductImageAsync(model.ImagenArchivo, model.ImagenUrl);
+                staged = await _images.StageAsync(model.ImagenArchivo, HttpContext.RequestAborted);
+                model.ImagenUrl = staged?.PublicUrl ?? current.ImagenUrl;
+                await _adminDbService.UpdateProductAsync(model, usuarioId, usuarioNombre);
             }
             catch (ProductImageValidationException ex)
             {
+                model.ImagenUrl = current.ImagenUrl;
                 ModelState.AddModelError(nameof(model.ImagenArchivo), ex.UserMessage);
                 return View(model);
             }
+            catch
+            {
+                await _images.DeleteAsync(staged?.PublicUrl);
+                throw;
+            }
 
-            await _adminDbService.UpdateProductAsync(model, usuarioId, usuarioNombre);
+            if (staged is not null) await _images.DeleteAsync(current.ImagenUrl);
 
             await RegistrarAuditoriaAsync(
                 "Editar",
@@ -188,85 +200,6 @@ namespace Proyecto_Final.Controllers
             }
 
             return RedirectToAction(nameof(Index), new { filtro });
-        }
-
-        private async Task<string?> SaveProductImageAsync(IFormFile? archivo, string? currentImageUrl)
-        {
-            if (archivo == null || archivo.Length == 0) return string.IsNullOrWhiteSpace(currentImageUrl) ? currentImageUrl : currentImageUrl.Trim();
-
-            if (archivo.Length > MaxProductImageBytes)
-            {
-                throw new ProductImageValidationException("La imagen supera el tamano maximo permitido de 2 MB.");
-            }
-
-            var extension = Path.GetExtension(archivo.FileName).ToLowerInvariant();
-            if (string.IsNullOrWhiteSpace(extension) || !PermittedImageContentTypes.TryGetValue(extension, out var allowedContentTypes))
-            {
-                throw new ProductImageValidationException("La imagen debe estar en formato JPG, JPEG, PNG o WEBP.");
-            }
-
-            if (string.IsNullOrWhiteSpace(archivo.ContentType) || !allowedContentTypes.Contains(archivo.ContentType, StringComparer.OrdinalIgnoreCase))
-            {
-                throw new ProductImageValidationException("El tipo de archivo de la imagen no es valido.");
-            }
-
-            if (!await IsValidImageSignatureAsync(archivo, extension))
-            {
-                throw new ProductImageValidationException("El contenido del archivo no coincide con una imagen valida.");
-            }
-
-            var uploadsRoot = Path.Combine(_environment.WebRootPath, "uploads", "productos");
-            Directory.CreateDirectory(uploadsRoot);
-            var fileName = $"producto-{Guid.NewGuid():N}{extension}";
-            var filePath = Path.Combine(uploadsRoot, fileName);
-            await using var stream = new FileStream(filePath, FileMode.Create);
-            await archivo.CopyToAsync(stream);
-            return $"~/uploads/productos/{fileName}";
-        }
-
-        private static async Task<bool> IsValidImageSignatureAsync(IFormFile archivo, string extension)
-        {
-            await using var stream = archivo.OpenReadStream();
-            var header = new byte[12];
-            var bytesRead = await stream.ReadAsync(header.AsMemory(0, header.Length));
-
-            return extension switch
-            {
-                ".jpg" or ".jpeg" => bytesRead >= 3
-                    && header[0] == 0xFF
-                    && header[1] == 0xD8
-                    && header[2] == 0xFF,
-                ".png" => bytesRead >= 8
-                    && header[0] == 0x89
-                    && header[1] == 0x50
-                    && header[2] == 0x4E
-                    && header[3] == 0x47
-                    && header[4] == 0x0D
-                    && header[5] == 0x0A
-                    && header[6] == 0x1A
-                    && header[7] == 0x0A,
-                ".webp" => bytesRead >= 12
-                    && header[0] == 0x52
-                    && header[1] == 0x49
-                    && header[2] == 0x46
-                    && header[3] == 0x46
-                    && header[8] == 0x57
-                    && header[9] == 0x45
-                    && header[10] == 0x42
-                    && header[11] == 0x50,
-                _ => false
-            };
-        }
-
-        private sealed class ProductImageValidationException : Exception
-        {
-            public ProductImageValidationException(string userMessage)
-                : base(userMessage)
-            {
-                UserMessage = userMessage;
-            }
-
-            public string UserMessage { get; }
         }
 
         [HttpGet]
