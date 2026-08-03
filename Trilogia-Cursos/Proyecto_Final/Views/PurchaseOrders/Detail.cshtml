@@ -1,0 +1,40 @@
+@model Proyecto_Final.Models.Admin.PurchaseOrderDetailViewModel
+@using Proyecto_Final.Models.Admin
+@{
+    ViewData["Title"] = $"Orden #{Model.OrdenCompraId}";
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5"><div class="col-12 d-flex justify-content-between"><div><h2>Orden #@Model.OrdenCompraId</h2><p>Proveedor: <strong>@Model.ProveedorNombre</strong> · <span class="badge badge-info">@Model.Estado</span></p></div><a asp-action="Index" class="btn btn-outline-secondary align-self-start">Volver</a></div></div>
+    @if (!string.IsNullOrWhiteSpace(Model.MotivoCierre)) { <div class="row px-xl-5"><div class="col-12 alert alert-warning"><strong>Motivo de cierre:</strong> @Model.MotivoCierre</div></div> }
+    <div class="row px-xl-5"><div class="col-12 table-responsive">
+        <table class="table table-hover"><thead><tr><th>Producto</th><th>Ordenado</th><th>Recibido</th><th>Pendiente</th><th>Precio</th><th>Recepción</th></tr></thead><tbody>
+        @foreach (var line in Model.Lineas)
+        {
+            <tr><td>@line.ProductoNombre</td><td>@line.CantidadOrdenada</td><td>@line.CantidadRecibida</td><td>@line.Pendiente</td><td>₡@line.PrecioUnitario.ToString("N2")</td><td>
+            @if (Model.PermiteRecepcion && line.Pendiente > 0)
+            {
+                <form asp-action="Receive" method="post" class="form-inline">
+                    @Html.AntiForgeryToken()<input type="hidden" name="OrdenCompraId" value="@Model.OrdenCompraId" /><input type="hidden" name="DetalleOrdenCompraId" value="@line.DetalleOrdenCompraId" /><input type="hidden" name="TokenOperacion" value="@Guid.NewGuid()" />
+                    <input type="number" name="CantidadRecibidaAhora" min="1" max="@line.Pendiente" value="@line.Pendiente" class="form-control form-control-sm mr-2" style="width:85px" /><button class="btn btn-sm btn-success">Recibir</button>
+                </form>
+            }
+            else { <span class="text-muted">No disponible</span> }
+            </td></tr>
+        }
+        </tbody></table>
+    </div></div>
+    @if (Model.PermiteCerrarConDiscrepancia || Model.PermiteCancelar)
+    {
+        <div class="row px-xl-5 pb-5"><div class="col-md-6">
+            <div class="card"><div class="card-body"><h5>Finalizar sin recibir todo</h5><p class="text-muted">El motivo queda auditado. Las unidades faltantes no ingresan al inventario.</p>
+                <form asp-action="@(Model.PermiteCancelar ? "Cancel" : "CloseWithDiscrepancy")" method="post">
+                    @Html.AntiForgeryToken()<input type="hidden" name="OrdenCompraId" value="@Model.OrdenCompraId" /><input type="hidden" name="TokenOperacion" value="@Guid.NewGuid()" />
+                    <textarea name="Motivo" minlength="10" maxlength="500" required class="form-control mb-2" placeholder="Explique el motivo"></textarea>
+                    @if (Model.PermiteCancelar) { <button class="btn btn-outline-danger">Cancelar orden sin recepciones</button> }
+                    else { <button class="btn btn-warning">Cerrar con discrepancia</button> }
+                </form>
+            </div></div>
+        </div></div>
+    }
+</div>

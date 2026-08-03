@@ -1,0 +1,52 @@
+@model IReadOnlyList<Proyecto_Final.Models.Admin.PurchaseOrderListItemViewModel>
+@using Proyecto_Final.Models.Admin
+@{
+    ViewData["Title"] = "Órdenes de compra";
+    var suppliers = ViewBag.Proveedores as IReadOnlyList<SupplierListItemViewModel> ?? [];
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5 align-items-center">
+        <div class="col-md-7"><h2>Órdenes de compra</h2><p>Recepción parcial, total y cierre documentado (CU-102/CU-103).</p></div>
+        <div class="col-md-5 text-md-right">
+            <a asp-action="Suggestions" class="btn btn-outline-primary">Sugerencias</a>
+            <a asp-action="Create" class="btn btn-primary">Nueva orden</a>
+        </div>
+    </div>
+    <div class="row px-xl-5 pb-5">
+        <div class="col-12 admin-table-wrapper">
+            <form method="get" class="p-3 form-inline border-bottom">
+                <select name="estado" class="form-control mr-2">
+                    <option value="">Todos los estados</option>
+                    @foreach (var state in new[] { PurchaseOrderStatus.Pending, PurchaseOrderStatus.PartiallyReceived, PurchaseOrderStatus.Received, PurchaseOrderStatus.ClosedWithDiscrepancy, PurchaseOrderStatus.Cancelled })
+                    { <option value="@state" selected="@(ViewBag.Estado == state)">@state</option> }
+                </select>
+                <select name="proveedorId" class="form-control mr-2">
+                    <option value="">Todos los proveedores</option>
+                    @foreach (var supplier in suppliers)
+                    { <option value="@supplier.ProveedorId" selected="@(ViewBag.ProveedorId == supplier.ProveedorId)">@supplier.Nombre</option> }
+                </select>
+                <button class="btn btn-outline-primary">Filtrar</button>
+            </form>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead><tr><th>#</th><th>Proveedor</th><th>Estado</th><th>Monto</th><th>Recibido</th><th>Fecha</th><th></th></tr></thead>
+                    <tbody>
+                    @if (!Model.Any()) { <tr><td colspan="7" class="text-center text-muted py-4">No hay órdenes.</td></tr> }
+                    @foreach (var order in Model)
+                    {
+                        var color = order.Estado switch { PurchaseOrderStatus.Received => "success", PurchaseOrderStatus.PartiallyReceived => "warning", PurchaseOrderStatus.ClosedWithDiscrepancy => "danger", PurchaseOrderStatus.Cancelled => "secondary", _ => "info" };
+                        <tr>
+                            <td>@order.OrdenCompraId</td><td>@order.ProveedorNombre</td>
+                            <td><span class="badge badge-@color">@order.Estado</span></td>
+                            <td>₡@order.MontoTotal.ToString("N2")</td><td>@order.TotalRecibido / @order.TotalOrdenado</td>
+                            <td>@order.FechaCreacionUtc.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                            <td><a asp-action="Detail" asp-route-id="@order.OrdenCompraId" class="btn btn-sm btn-outline-primary">Ver</a></td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

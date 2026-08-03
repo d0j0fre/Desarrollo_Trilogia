@@ -1,0 +1,68 @@
+@model Proyecto_Final.Models.Admin.PurchaseOrderFormViewModel
+@{
+    var fromSuggestions = ViewData["FromSuggestions"] as bool? == true;
+    ViewData["Title"] = fromSuggestions ? "Sugerencias de compra" : "Nueva orden de compra";
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5"><div class="col-12">
+        <h2>@ViewData["Title"]</h2>
+        <p>@(fromSuggestions ? "Revise cantidades sugeridas y defina precios; ninguna compra se crea automáticamente." : "Seleccione proveedor, productos, cantidades y precios de compra.")</p>
+    </div></div>
+    <div class="row px-xl-5 pb-5"><div class="col-12">
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+            <input asp-for="TokenOperacion" type="hidden" />
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+            <div class="form-row">
+                <div class="form-group col-md-5"><label asp-for="ProveedorId">Proveedor activo</label><select asp-for="ProveedorId" class="form-control"><option value="">Seleccione</option>@foreach (var supplier in Model.Proveedores) { <option value="@supplier.ProveedorId">@supplier.Nombre</option> }</select><span asp-validation-for="ProveedorId" class="text-danger"></span></div>
+                <div class="form-group col-md-7"><label asp-for="Notas"></label><input asp-for="Notas" class="form-control" /></div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover">
+                    <thead><tr><th></th><th>Producto</th><th>Stock</th><th>Promedio mensual</th><th>Cantidad</th><th>Precio compra</th><th>Último precio</th><th>Subtotal</th></tr></thead>
+                    <tbody>
+                    @for (var index = 0; index < Model.Productos.Count; index++)
+                    {
+                        <tr class="purchase-line">
+                            <td><input asp-for="Productos[index].ProductoId" type="hidden" /><input asp-for="Productos[index].Nombre" type="hidden" /><input asp-for="Productos[index].StockActual" type="hidden" /><input asp-for="Productos[index].PromedioVentaMensual" type="hidden" /><input asp-for="Productos[index].DatosInsuficientes" type="hidden" /><input asp-for="Productos[index].Seleccionado" class="select-product" /></td>
+                            <td>@Model.Productos[index].Nombre @if (Model.Productos[index].DatosInsuficientes) { <small class="d-block text-muted">Datos históricos insuficientes</small> }</td>
+                            <td>@Model.Productos[index].StockActual</td><td>@Model.Productos[index].PromedioVentaMensual.ToString("N1")</td>
+                            <td><input asp-for="Productos[index].Cantidad" type="number" min="1" class="form-control form-control-sm quantity" style="width:90px" /></td>
+                            <td><input asp-for="Productos[index].PrecioUnitario" type="number" min="0.01" step="0.01" class="form-control form-control-sm price" data-last="@(Model.Productos[index].UltimoPrecioPagado?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "")" style="width:130px" /><small class="price-warning text-danger"></small></td>
+                            <td>@(Model.Productos[index].UltimoPrecioPagado.HasValue ? $"₡{Model.Productos[index].UltimoPrecioPagado:N2}" : "—")</td><td class="line-total">₡0.00</td>
+                        </tr>
+                    }
+                    </tbody>
+                    <tfoot><tr><th colspan="7" class="text-right">Total</th><th id="order-total">₡0.00</th></tr></tfoot>
+                </table>
+            </div>
+            <div class="d-flex justify-content-between"><a asp-action="Index" class="btn btn-outline-secondary">Volver</a><button type="submit" class="btn btn-primary">Crear orden</button></div>
+        </form>
+    </div></div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (() => {
+            const money = value => `₡${value.toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            function recalculate() {
+                let total = 0;
+                document.querySelectorAll('.purchase-line').forEach(row => {
+                    const selected = row.querySelector('.select-product').checked;
+                    const quantity = Number(row.querySelector('.quantity').value) || 0;
+                    const priceInput = row.querySelector('.price');
+                    const price = Number(priceInput.value) || 0;
+                    const subtotal = selected ? quantity * price : 0;
+                    row.querySelector('.line-total').textContent = money(subtotal); total += subtotal;
+                    const previous = Number(priceInput.dataset.last);
+                    const variation = previous > 0 ? ((price - previous) / previous) * 100 : 0;
+                    row.querySelector('.price-warning').textContent = selected && Math.abs(variation) > 15 ? `${variation.toFixed(1)}% vs. último precio` : '';
+                });
+                document.getElementById('order-total').textContent = money(total);
+            }
+            document.querySelectorAll('.purchase-line input').forEach(input => input.addEventListener('input', recalculate)); recalculate();
+        })();
+    </script>
+}
