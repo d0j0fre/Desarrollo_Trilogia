@@ -1,0 +1,181 @@
+﻿@model Proyecto_Final.Models.Admin.SuppliersIndexViewModel
+@{
+    ViewData["Title"] = "Proveedores";
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+                <div>
+                    <h2 class="mb-2">Proveedores</h2>
+                    <p>Administración de proveedores de Distribuidora JJ (CU-101).</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-lg-4 pb-3">
+            <div class="admin-card h-100" id="form-proveedor">
+                <h5 class="mb-3" id="form-title">Nuevo proveedor</h5>
+                <form asp-controller="Suppliers" asp-action="Save" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="ProveedorId" id="ProveedorId" value="0" />
+                    <div class="form-group">
+                        <label>Nombre</label>
+                        <input type="text" name="Nombre" id="Nombre" class="form-control" maxlength="150" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Contacto</label>
+                        <input type="text" name="Contacto" id="Contacto" class="form-control" maxlength="150" />
+                    </div>
+                    <div class="form-group">
+                        <label>Teléfono</label>
+                        <input type="text" name="Telefono" id="Telefono" class="form-control" maxlength="30" />
+                    </div>
+                    <div class="form-group">
+                        <label>Correo electrónico</label>
+                        <input type="email" name="Email" id="Email" class="form-control" maxlength="150" />
+                    </div>
+                    <div class="form-group form-check">
+                        <input type="checkbox" name="Activo" id="Activo" value="true" class="form-check-input" checked />
+                        <input type="hidden" name="Activo" value="false" />
+                        <label class="form-check-label" for="Activo">Proveedor activo</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block py-2"><i class="fa fa-save mr-1"></i>Guardar proveedor</button>
+                    <button type="button" class="btn btn-link btn-block" id="btn-reset">Limpiar / nuevo</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-8 pb-3">
+            <div class="admin-table-wrapper h-100">
+                <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Proveedores registrados</h5>
+                    <span class="badge badge-dark">@Model.Proveedores.Count proveedor(es)</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Contacto</th>
+                                <th>Teléfono / Correo</th>
+                                <th class="text-center">Estado</th>
+                                <th class="text-right">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!Model.Proveedores.Any())
+                            {
+                                <tr><td colspan="5" class="text-center text-muted py-4">No hay proveedores registrados.</td></tr>
+                            }
+                            else
+                            {
+                                @foreach (var p in Model.Proveedores)
+                                {
+                                    <tr>
+                                        <td><strong>@p.Nombre</strong></td>
+                                        <td>@p.Contacto</td>
+                                        <td>
+                                            @p.Telefono
+                                            @if (!string.IsNullOrWhiteSpace(p.Email))
+                                            {
+                                                <small class="text-muted d-block">@p.Email</small>
+                                            }
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="admin-badge-soft @(p.Activo ? "success" : "secondary")">@(p.Activo ? "Activo" : "Inactivo")</span>
+                                        </td>
+                                        <td class="text-right">
+                                            <button type="button" class="btn btn-sm btn-outline-primary btn-editar"
+                                                    data-id="@p.ProveedorId" data-nombre="@p.Nombre" data-contacto="@p.Contacto"
+                                                    data-telefono="@p.Telefono" data-email="@p.Email"
+                                                    data-activo="@(p.Activo ? "true" : "false")">
+                                                <i class="fa fa-edit mr-1"></i>Editar
+                                            </button>
+                                            @if (p.Activo)
+                                            {
+                                                <button type="button" class="btn btn-sm btn-outline-danger btn-desactivar"
+                                                        data-id="@p.ProveedorId" data-nombre="@p.Nombre"
+                                                        data-toggle="modal" data-target="#modalDesactivar">
+                                                    <i class="fa fa-ban"></i>
+                                                </button>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación para desactivar (reemplaza el confirm() nativo) -->
+<div class="modal fade" id="modalDesactivar" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Desactivar proveedor</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+                ¿Seguro que querés desactivar a <strong id="modalDesactivarNombre"></strong>? Podrá reactivarse más adelante editando sus datos.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <form asp-controller="Suppliers" asp-action="Deactivate" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="proveedorId" id="modalDesactivarId" value="0" />
+                    <button type="submit" class="btn btn-danger">Sí, desactivar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function() {
+            function setVal(id, v) { var e = document.getElementById(id); if (e) e.value = v || ''; }
+
+            document.querySelectorAll('.btn-editar').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    setVal('ProveedorId', btn.dataset.id);
+                    setVal('Nombre', btn.dataset.nombre);
+                    setVal('Contacto', btn.dataset.contacto);
+                    setVal('Telefono', btn.dataset.telefono);
+                    setVal('Email', btn.dataset.email);
+                    var act = document.getElementById('Activo');
+                    if (act) act.checked = btn.dataset.activo === 'true';
+                    document.getElementById('form-title').textContent = 'Editar proveedor #' + btn.dataset.id;
+                    document.getElementById('form-proveedor').scrollIntoView({ behavior: 'smooth' });
+                });
+            });
+
+            var reset = document.getElementById('btn-reset');
+            if (reset) reset.addEventListener('click', function() {
+                setVal('ProveedorId', '0'); setVal('Nombre', ''); setVal('Contacto', '');
+                setVal('Telefono', ''); setVal('Email', '');
+                var act = document.getElementById('Activo'); if (act) act.checked = true;
+                document.getElementById('form-title').textContent = 'Nuevo proveedor';
+            });
+
+            document.querySelectorAll('.btn-desactivar').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    setVal('modalDesactivarId', btn.dataset.id);
+                    var nombreEl = document.getElementById('modalDesactivarNombre');
+                    if (nombreEl) nombreEl.textContent = btn.dataset.nombre || '';
+                });
+            });
+        })();
+    </script>
+}

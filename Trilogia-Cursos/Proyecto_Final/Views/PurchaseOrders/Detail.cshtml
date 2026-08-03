@@ -1,0 +1,73 @@
+﻿@model Proyecto_Final.Models.Admin.PurchaseOrderDetailViewModel
+@{
+    ViewData["Title"] = $"Orden de compra #{Model.OrdenCompraId}";
+    var badge = Model.Estado switch
+    {
+        "Recibida" => "success",
+        "RecibidaParcial" => "warning",
+        "ConDiscrepancia" => "danger",
+        _ => "secondary"
+    };
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="mb-1">Orden de compra #@Model.OrdenCompraId</h2>
+                <p class="mb-0">Proveedor: <strong>@Model.ProveedorNombre</strong> · Estado: <span class="admin-badge-soft @badge">@Model.Estado</span></p>
+            </div>
+            <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Notas))
+    {
+        <div class="row px-xl-5 mt-2"><div class="col-12"><em>@Model.Notas</em></div></div>
+    }
+
+    <div class="row px-xl-5 mt-4">
+        <div class="col-12">
+            <table class="table table-sm table-hover">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th class="text-center">Ordenado</th>
+                        <th class="text-center">Recibido</th>
+                        <th class="text-center">Pendiente</th>
+                        <th class="text-right">Precio unitario</th>
+                        <th style="width:220px;">Registrar recepción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var l in Model.Lineas)
+                    {
+                        <tr>
+                            <td>@l.ProductoNombre</td>
+                            <td class="text-center">@l.CantidadOrdenada</td>
+                            <td class="text-center">@l.CantidadRecibida</td>
+                            <td class="text-center">@l.Pendiente</td>
+                            <td class="text-right">₡@l.PrecioUnitario.ToString("N2")</td>
+                            <td>
+                                @if (l.Pendiente > 0)
+                                {
+                                    <form asp-controller="PurchaseOrders" asp-action="Receive" method="post" class="form-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="ordenCompraId" value="@Model.OrdenCompraId" />
+                                        <input type="hidden" name="detalleOrdenCompraId" value="@l.DetalleOrdenCompraId" />
+                                        <input type="number" name="cantidadRecibidaAhora" min="1" max="@l.Pendiente" value="@l.Pendiente" class="form-control form-control-sm mr-2" style="width:80px;" />
+                                        <button type="submit" class="btn btn-sm btn-success">Recibir</button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Completo</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

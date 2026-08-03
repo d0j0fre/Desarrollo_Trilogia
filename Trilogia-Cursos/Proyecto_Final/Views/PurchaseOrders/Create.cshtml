@@ -1,0 +1,166 @@
+﻿@model Proyecto_Final.Models.Admin.PurchaseOrderFormViewModel
+@{
+    ViewData["Title"] = "Nueva orden de compra";
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <h2 class="mb-2">Nueva orden de compra</h2>
+            <p class="mb-0">Elegí el proveedor y los productos a ordenar, con cantidad y precio unitario.</p>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 mt-4">
+        <div class="col-lg-10">
+            <form asp-action="Create" method="post" id="form-orden-compra">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="form-group">
+                    <label asp-for="ProveedorId">Proveedor</label>
+                    <select asp-for="ProveedorId" class="form-control">
+                        <option value="">-- Seleccione un proveedor --</option>
+                        @foreach (var p in Model.Proveedores)
+                        {
+                            <option value="@p.ProveedorId">@p.Nombre</option>
+                        }
+                    </select>
+                    <span asp-validation-for="ProveedorId" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Notas">Notas (opcional)</label>
+                    <textarea asp-for="Notas" class="form-control" rows="2"></textarea>
+                </div>
+
+                <hr />
+                <h5>Productos a ordenar</h5>
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Producto</th>
+                            <th>Stock actual</th>
+                            <th>Promedio venta mensual</th>
+                            <th>Precio unitario en tienda</th>
+                            <th>Cantidad</th>
+                            <th>Precio unitario de compra</th>
+                            <th class="text-right">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < Model.Productos.Count; i++)
+                        {
+                            var yaSeleccionado = Model.Productos[i].Seleccionado;
+                            <tr class="fila-producto">
+                                <td>
+                                    <input type="hidden" asp-for="Productos[i].ProductoId" />
+                                    <input type="hidden" asp-for="Productos[i].Nombre" />
+                                    <input type="hidden" asp-for="Productos[i].StockActual" />
+                                    <input type="checkbox" asp-for="Productos[i].Seleccionado" class="chk-producto" />
+                                </td>
+                                <td>@Model.Productos[i].Nombre</td>
+                                <td>@Model.Productos[i].StockActual</td>
+                                <td>@Model.Productos[i].PromedioVentaMensual.ToString("N1")</td>
+                                <td class="text-muted">₡@Model.Productos[i].PrecioTienda.ToString("N2")</td>
+                                <td style="width:110px;">
+                                    <input asp-for="Productos[i].Cantidad" type="number" min="1" class="form-control form-control-sm input-cantidad" disabled="@(!yaSeleccionado)" />
+                                </td>
+                                <td style="width:150px;">
+                                    <input asp-for="Productos[i].PrecioUnitario" type="number" step="0.01" min="0.01" class="form-control form-control-sm input-precio"
+                                           data-ultimo-precio="@(Model.Productos[i].UltimoPrecioPagado?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "")"
+                                           disabled="@(!yaSeleccionado)" />
+                                    @if (Model.Productos[i].UltimoPrecioPagado.HasValue)
+                                    {
+                                        <small class="text-muted d-block">Últ. pagado: ₡@Model.Productos[i].UltimoPrecioPagado!.Value.ToString("N2")</small>
+                                    }
+                                </td>
+                                <td class="text-right subtotal-linea">₡0.00</td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="6" class="text-right"><strong>Total de la orden</strong></td>
+                            <td class="text-right"><strong id="total-orden">₡0.00</strong></td>
+                        </tr>
+                    </tfoot>
+                </table>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">Crear orden</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function() {
+            function formatoColones(valor) {
+                return '₡' + valor.toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+
+            function chequearVariacionPrecio(fila) {
+                var input = fila.querySelector('.input-precio');
+                var ultimo = parseFloat(input.dataset.ultimoPrecio);
+                var actual = parseFloat(input.value) || 0;
+                var avisoExistente = fila.querySelector('.aviso-variacion-precio');
+
+                if (!isNaN(ultimo) && ultimo > 0 && actual > ultimo * 1.15) {
+                    input.classList.add('is-invalid');
+                    if (!avisoExistente) {
+                        var aviso = document.createElement('small');
+                        aviso.className = 'aviso-variacion-precio text-danger d-block font-weight-bold';
+                        aviso.textContent = '⚠ Más de 15% sobre el último pagado (₡' + ultimo.toFixed(2) + ')';
+                        input.insertAdjacentElement('afterend', aviso);
+                    }
+                } else {
+                    input.classList.remove('is-invalid');
+                    if (avisoExistente) avisoExistente.remove();
+                }
+            }
+
+            function recalcularFila(fila) {
+                var cantidad = parseFloat(fila.querySelector('.input-cantidad').value) || 0;
+                var precio = parseFloat(fila.querySelector('.input-precio').value) || 0;
+                var subtotal = cantidad * precio;
+                fila.querySelector('.subtotal-linea').textContent = formatoColones(subtotal);
+                chequearVariacionPrecio(fila);
+                return subtotal;
+            }
+
+            function recalcularTotal() {
+                var total = 0;
+                document.querySelectorAll('.fila-producto').forEach(function(fila) {
+                    var chk = fila.querySelector('.chk-producto');
+                    total += chk.checked ? recalcularFila(fila) : 0;
+                    if (!chk.checked) fila.querySelector('.subtotal-linea').textContent = formatoColones(0);
+                });
+                document.getElementById('total-orden').textContent = formatoColones(total);
+            }
+
+            document.querySelectorAll('.fila-producto').forEach(function(fila) {
+                var chk = fila.querySelector('.chk-producto');
+                var cantidad = fila.querySelector('.input-cantidad');
+                var precio = fila.querySelector('.input-precio');
+
+                function actualizarEstado() {
+                    cantidad.disabled = !chk.checked;
+                    precio.disabled = !chk.checked;
+                    recalcularTotal();
+                }
+
+                chk.addEventListener('change', actualizarEstado);
+                cantidad.addEventListener('input', recalcularTotal);
+                precio.addEventListener('input', recalcularTotal);
+            });
+
+            recalcularTotal();
+        })();
+    </script>
+}
