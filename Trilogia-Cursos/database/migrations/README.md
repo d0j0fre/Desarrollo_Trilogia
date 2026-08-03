@@ -46,6 +46,10 @@ Cada migracion debe indicar su estrategia de rollback antes de ejecutarse. Los c
 | 0010 | `0010_operating_expenses_alignment.sql` | Gastos operativos, comprobantes privados y estados | 0009; esquema CU-222 legado opcional |
 | 0011 | `0011_budget_actual_comparison.sql` | Comparación presupuesto versus real | 0009 y 0010 |
 | 0012 | `0012_inventory_combos_transformations_intelligence.sql` | Combos vendibles, snapshots de pedido/factura, checkout idempotente, transformación atómica, inteligencia y permisos específicos | Esquema de productos/pedidos/usuarios/facturas/permisos; 0005 para checkout/promociones; dependencias Sprint 4 verificadas cuando correspondan |
+| 0013 | `0013_purchasing_suppliers_orders.sql` | Proveedores, órdenes, recepción parcial/total, discrepancias, sugerencias e histórico de precios | 0012 y esquema base de productos/inventario/permisos |
+| 0014 | `0014_delivery_board_permission.sql` | Permiso exacto del tablero agregado de entregas | Perfiles y permisos |
+| 0015 | `0015_sales_and_seller_reports.sql` | Reportes de ventas y desempeño de vendedores | Facturas, pedidos, productos, usuarios, perfiles y permisos |
+| 0016 | `0016_cross_sell_recommendations.sql` | Recomendaciones explicables por co-compra con fallback | Pedidos, detalle de pedido y productos |
 
 Los scripts no incluyen `USE`: el ejecutor debe seleccionar explícitamente la base antes de iniciar. Los hashes escritos por 0002–0011 son hashes de manifiesto para identificar versión; la evidencia de despliegue debe registrar además el SHA-256 real del archivo y actualizar el ledger si corresponde.
 
@@ -97,6 +101,12 @@ facturas generadas después de 0012.
 fases exclusiva de LocalDB desechable: antes de 0012 captura evidencia agregada
 sin datos personales y después compara conteos, claves, totales, inventario y
 la reconstrucción, además de ejecutar `DBCC CHECKDB`.
+
+## Migraciones 0013–0016
+
+Estas migraciones no reutilizan los números 0007–0012 del prototipo de compras del PR #116. Cada archivo recibe el SHA-256 real mediante `sqlcmd -v "MigrationSha256=<SHA-256>"`, cuenta con `verify.sql` y rollback documentado, y rechaza una segunda aplicación registrada.
+
+La ruta 0013 se validó en LocalDB desde esquema mínimo y desde la variante legada de compras; su prueba funcional cubre reintentos, recepción parcial, sobre-recepción, cierre con discrepancia, inventario y auditoría transaccional. La secuencia 0013–0016 también se ejecutó en una base LocalDB desechable, incluyendo la invocación vacía de los procedimientos de reportes y venta cruzada. En Azure DEV siguen pendientes BACPAC, ejecutor único, aplicación ordenada y QA autenticado.
 
 ## Evidencia privada legada
 

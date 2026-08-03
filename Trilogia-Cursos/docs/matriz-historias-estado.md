@@ -1,15 +1,15 @@
 # Matriz de historias, implementación y verificación
 
-Estado al 23 de julio de 2026. Para CU-201/202/221/222/223, “pendiente entorno” significa que el esquema 0007–0011 ya fue verificado en Azure, pero falta login autorizado y flujo real en navegador. No se cerraron issues con ese estado.
+Estado al 3 de agosto de 2026. Para CU-201/202/221/222/223, “pendiente entorno” significa que el esquema 0007–0011 ya fue verificado en Azure, pero falta login autorizado y flujo real en navegador. No se cerraron issues automáticamente.
 
 | CU | Issue | Estado | Evidencia principal | Verificación / pendiente |
 |---|---:|---|---|---|
 | 081 | #28 | Implementada; pendiente entorno | `RoutesAdminController`, `cu081_rutas_entregas_esquema.sql` | Build/SQL; QA de rutas |
-| 101 | #36 | Cerrada como duplicada de CU-081 | Mismo flujo que CU-081 | Cierre `duplicate` registrado en GitHub |
+| 101 | #36 | En QA; issue cerrada con comentario de duplicado incorrecto | `SuppliersController`, `PurchasingDbService`, vistas de proveedores | Migración 0013 y pruebas locales; corregir trazabilidad de GitHub |
 | 082 | #29 | Implementada; pendiente entorno | `DriverDeliveriesController`, `cu082_entregas_estado_offline_sps.sql` | Build/SQL; QA chofer/offline |
-| 102 | #37 | Cerrada como duplicada de CU-082 | Mismo flujo que CU-082 | Cierre `duplicate` registrado en GitHub |
+| 102 | #37 | En QA; issue cerrada con comentario de duplicado incorrecto | `PurchaseOrdersController`, recepción parcial/total y discrepancias | 0013 validada en esquema limpio/legado; falta QA Azure/UI |
 | 083 | #30 | Reforzada; pendiente entorno | `EvidenceStorageService`, `DeliveryEvidenceController`, migración 0004 | Tests de archivos; QA SQL/almacenamiento |
-| 103 | #38 | Cerrada como duplicada de CU-083 | Mismo flujo que CU-083 | Cierre `duplicate` registrado en GitHub |
+| 103 | #38 | En QA; issue cerrada con comentario de duplicado incorrecto | Sugerencias en `PurchaseOrdersController`/`PurchasingDbService` | Pruebas y SQL locales; falta QA con datos productivos anonimizados |
 | 105 | #40 | Implementada; pendiente entorno | `ReturnsController`, `cu141_142_105_devoluciones_cuarentena_liquidacion.sql` | Build/SQL; QA liquidación |
 | 106 | #41 | Implementada; pendiente entorno | `FinanceController`, `cu106_liquidacion_financiera.sql` | Build/SQL; QA financiera |
 | 131 | #50 | Implementada; pendiente entorno | `ManagementDashboardController`, `cu131_reportes_dashboard_gerencial.sql` | Build/SQL; QA dashboard |
@@ -51,7 +51,7 @@ Estado al 23 de julio de 2026. Para CU-201/202/221/222/223, “pendiente entorno
 | 252 | #89 | Implementada; pendiente entorno | Vistas/servicio de rutas, mismo script CU-251 | Build/SQL; QA mapa móvil |
 | 253 | #90 | Implementada; pendiente entorno | `RoutesAdminController`, mismo script CU-251 | Build/SQL; QA recálculo |
 | 261 | #91 | Implementada; pendiente entorno | `AssistantController`, `cu261_263_asistente.sql` | Asistente por reglas; QA intenciones |
-| 262 | #92 | No implementada | No existe cross-selling en tiempo real basado en contexto de venta | Requiere diseño y alcance nuevo |
+| 262 | #92 | En QA | `CrossSellDbService`, `CrossSellPolicy`, recomendaciones en carrito, migración 0016 | Pruebas de soporte/fallback/exclusiones y SQL local; falta QA Azure/UI |
 | 263 | #93 | Implementada; pendiente entorno | `AssistantController`, `cu261_263_asistente.sql` | Build/SQL; QA ayuda por módulo |
 
 ## Cobertura automatizada de esta rama
@@ -66,3 +66,29 @@ Estado al 23 de julio de 2026. Para CU-201/202/221/222/223, “pendiente entorno
   hash de migración, correo autoritativo, descuentos y regalos.
 
 Total local actualizado en PR #115: 117 pruebas aprobadas. El detalle de QA de entorno está en `docs/qa-final.md`.
+
+## Cierre integral — matriz de decisión persistente
+
+| CU | Issue | Estado GitHub | Evidencia en código | Evidencia SQL | Pruebas | QA | Brecha | Acción |
+|---|---:|---|---|---|---|---|---|---|
+| 012 | #2 / #3 | #2 abierta; #3 cerrada | Funcionalidad histórica presente | Esquema histórico | Regresión general | Pendiente entorno | Duplicidad de issue | Conservar una canónica y enlazar la otra con evidencia |
+| 084 | #31 | Abierta | `DeliveryBoardController`, vista con sondeo autorizado | 0014 | Contrato de permiso/endpoint | Local automatizado | Navegador y datos reales | Mantener En QA hasta smoke autenticado |
+| 101 | #36 | Cerrada | Proveedores extremo a extremo | 0013 | Políticas/permisos | LocalDB limpio y legado | Comentario de duplicado erróneo | Reabrir o corregir cierre y enlazar este PR |
+| 102 | #37 | Cerrada | Órdenes, recepción, cancelación y discrepancia | 0013 | Idempotencia y contratos | LocalDB funcional | Falta Azure/UI | Corregir cierre y ejecutar plan manual |
+| 103 | #38 | Cerrada | Reabastecimiento con datos insuficientes | 0013 | Contratos | LocalDB funcional | Falta Azure/UI | Corregir cierre y enlazar evidencia |
+| 104 | #39 | Cerrada | Histórico y variación absoluta de precio | 0013 | Umbral del 15 % | LocalDB funcional | Falta Azure/UI | Confirmar etiqueta Completada tras QA |
+| 111 | #42 | Abierta | Expediente, puesto, departamento, salario, historial y estado en módulo existente | `cu080_empleados_gestion_patch.sql` histórico | Regresión existente | No ejecutado en esta rama | Falta migración incremental canónica y auditoría transaccional demostrada | Implementada sin QA; no cerrar todavía |
+| 112 | #43 | Abierta | Sin flujo vertical de jornada | Sin migración | Sin pruebas | No iniciada | Alcance completo pendiente | Mantener No iniciada |
+| 113 | #44 | Abierta | Sin planilla extremo a extremo | Sin migración | Sin pruebas | No iniciada | Reglas y catálogos legales requieren validación del responsable | Mantener No iniciada |
+| 114 | #45 | Abierta | Sin boleta privada extremo a extremo | Sin migración | Sin pruebas | No iniciada | Depende de CU-113 | Mantener No iniciada |
+| 132 | #51 | Abierta | `SalesReportsController`, impresión y CSV | 0015 | Filtros, permisos, métricas y contrato | SQL local | Falta navegador/Azure | Mantener En QA |
+| 134 | #53 | Abierta | `SellerPerformanceController`, metas opcionales | 0015 | Filtros, permisos y CSV | SQL local | Falta navegador/Azure | Mantener En QA |
+| 262 | #92 | Abierta | Co-compra explicable y fallback en carrito | 0016 | Datos suficientes/insuficientes, stock, repetidos y sin historial | SQL local | Falta navegador/Azure | Mantener En QA |
+
+### Cambios recomendados en GitHub Issues
+
+- #2/#3: declarar explícitamente cuál issue de CU-012 queda canónica y enlazar la otra como duplicada, sin conservar dos estados contradictorios.
+- #36, #37 y #38: retirar la afirmación de que CU-101/102/103 duplican CU-081/082/083; son proveedores, compras y abastecimiento. Enlazar migración 0013, pruebas y este PR.
+- #39: enlazar CU-104 con el histórico de precios de 0013 y exigir QA antes de confirmar “Completada”.
+- #31, #51, #53 y #92: cambiar a “En QA” cuando este PR sea aceptado; cerrar solo tras evidencia autenticada.
+- #42: “Implementada sin QA”; #43–#45: “No iniciada”. No cerrarlas por compilación ni por código histórico parcial.

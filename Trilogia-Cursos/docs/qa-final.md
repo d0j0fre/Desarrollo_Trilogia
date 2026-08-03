@@ -177,3 +177,24 @@ Precondiciones: 0007–0011 verificadas en DEV, dependencias históricas auditad
 ## Azure
 
 La evidencia en `docs/azure-despliegue-final-qa.md` corresponde a una versión anterior. Repetir smoke tests de MVC, API, SQL, checkout, chat, evidencias, garantías y SMTP después de desplegar esta rama; no marcarla validada por herencia.
+
+## Cierre integral CU-084, CU-101–104, CU-132, CU-134, CU-262 e imágenes — 3 de agosto de 2026
+
+Evidencia local ejecutada:
+
+- Build Release completo: 0 errores y 0 advertencias.
+- Suite completa: 158 aprobadas, 0 fallidas y 0 omitidas (41 pruebas nuevas sobre la base de 117).
+- ScriptDom recursivo equivalente a CI: 94 archivos, 951 lotes, 0 errores.
+- LocalDB: 0013 validada desde esquema mínimo y legado; prueba funcional de recepción parcial, reintento, exceso, discrepancia, inventario y auditoría aprobada.
+- LocalDB: secuencia 0013–0016, `verify.sql` e invocaciones vacías de ambos reportes y venta cruzada aprobadas en base desechable.
+
+QA manual pendiente antes de marcar Completada:
+
+- [ ] Aplicar 0013–0016 en orden tras BACPAC, con SHA-256 real y ejecutor único; no volver a aplicar migraciones registradas.
+- [ ] Probar perfiles con y sin cada permiso exacto, antiforgery y rate limits.
+- [ ] Recibir parcialmente una orden, reintentar el mismo token, rechazar exceso y cerrar discrepancia; contrastar stock y auditoría.
+- [ ] Abrir tablero de entregas con dos sesiones y confirmar actualización sin datos de cliente.
+- [ ] Comparar reportes diario/mensual/categoría y vendedores con SQL fuente; abrir impresión y CSV en Excel/LibreOffice.
+- [ ] Verificar carrito con historial suficiente, insuficiente, cliente nuevo, producto agotado y producto ya incluido; nunca debe autoagregar ni modificar precios.
+- [ ] Cargar JPG/JPEG/PNG/WEBP válidos e inválidos, superar 2 MB, simular fallo DB y reemplazar imagen; confirmar ausencia de huérfanos y traversal.
+- [ ] Revisar tienda, detalle, carrito e inventario en móvil/escritorio: fallback, alt, lazy loading y dimensiones sin salto de layout.

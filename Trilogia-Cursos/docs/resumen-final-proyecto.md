@@ -55,7 +55,7 @@ Dependen del ledger `0001_create_schema_migration_history.sql` y del esquema bas
 - La búsqueda de chat usa `LIKE` parametrizado e índices de fecha/origen; no usa Full-Text Search.
 - CSP es Report-Only para observar dependencias antes de forzarla.
 - Evidencia legada permanece `Legacy` y no se sirve hasta migrarla/verificarla.
-- El asistente es un **Asistente conversacional basado en reglas e interpretación de intenciones**. CU-262 (cross-selling en tiempo real) no está implementada.
+- El asistente continúa basado en reglas; CU-262 ahora se presenta de forma independiente en el carrito mediante co-compra y fallback explicable, sin IA externa ni cambios automáticos de precio/cantidad.
 - Quedan métodos históricos de chat en `AdminDbService`, pero el flujo vigente ya no depende de ellos; su retiro puede hacerse en una refactorización posterior con base desplegada.
 
 ## Acciones externas
@@ -65,6 +65,16 @@ Dependen del ledger `0001_create_schema_migration_history.sql` y del esquema bas
 3. Mantener la protección activa de `main` y revisar sus contextos si cambia el workflow.
 4. Ejecutar 0001–0011 y QA funcional/negativo en SQL Server.
 5. Desplegar a Azure y repetir smoke tests; la validación Azure antigua es histórica.
+
+## Consolidación de cierre — 3 de agosto de 2026
+
+- El trabajo funcional de CU-101–104 se portó manualmente a la migración nueva 0013; no se fusionó `sprint4-David-segundatarea` ni se reutilizaron sus números 0007–0012.
+- 0013 refuerza recepción parcial/total, discrepancia explícita, cancelación, unicidad, locks, reintentos, inventario y auditoría dentro de la transacción.
+- CU-084 agrega tablero agregado con permiso exacto y sondeo periódico sin aceptar IDs de recursos del cliente.
+- CU-132/CU-134 agregan reportes independientes con filtros, datos vacíos, impresión y CSV neutralizado.
+- CU-262 agrega recomendaciones de venta cruzada limitadas y explicables con mínimo de soporte y fallback.
+- La carga de imágenes se aisló en un servicio probado: GUID, tamaño, extensión/MIME/firma, ruta administrada, compensación ante fallo y reemplazo seguro; las vistas principales incluyen fallback, alt, lazy loading y dimensiones.
+- CU-111 conserva evidencia histórica parcial; CU-112–114 no se declaran terminadas y permanecen documentadas como trabajo posterior.
 ## Diagnóstico Sprint 4 y autenticación Azure — 23 de julio de 2026
 
 - El API y MVC apuntan a Azure DEV y a la base `DistribuidoraJJ_DB_DEV`; el MVC consume el API local esperado.
