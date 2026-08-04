@@ -1,6 +1,6 @@
-# Plan de ejecución después de Puerta A
+# Ejecución autorizada después de Puerta A
 
-Este plan no está autorizado hasta recibir exactamente `APROBADO PUERTA A`.
+Puerta A fue aprobada y el plan se ejecutó localmente. Permanece prohibido publicar hasta recibir exactamente `APROBADO PUERTA B`.
 
 ## Rama y checkpoint
 
@@ -30,7 +30,7 @@ Antes de crear la rama se volverán a verificar árbol limpio y SHA remoto de #1
 
 ## Migraciones previstas
 
-El máximo canónico actual es 0016. Tras inventariar nuevamente todas las ramas, los candidatos son 0017 para CU-111, 0018 para CU-112, 0019 para CU-113 y 0020 para CU-114. No son números definitivos hasta confirmar el inventario al iniciar la fase.
+El inventario se confirmó sin colisiones: 0017 corresponde a CU-111, 0018 a CU-112, 0019 a CU-113 y 0020 a CU-114.
 
 Cada migración tendrá `.sql`, `.verify.sql`, `.rollback.md`, SHA, ledger, transacción y contrato explícito de segunda ejecución.
 
@@ -51,7 +51,7 @@ Antes de cada commit: `git status --short`, `git diff --stat`, `git diff --name-
 - Conservar #2 como CU-012 canónica y enlazar #3 como duplicada.
 - Corregir/reabrir #36-#38; revisar #39 como En QA.
 - Marcar #31, #51, #53 y #92 En QA.
-- #42 Implementada sin QA; #43-#45 No iniciada.
+- #42-#45: proponer `En QA`; la implementación local existe, pero las migraciones y el QA de entorno están pendientes.
 - Proponer las etiquetas `estado: en-qa`, `estado: implementada-sin-qa`, `estado: no-iniciada` sin crearlas todavía.
 
 No se usarán referencias `Closes` mientras falte QA. No se cerrarán #112, #114 o #116 antes de confirmar cobertura y aprobación de #117 o su sucesor.

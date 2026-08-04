@@ -20,7 +20,7 @@ Fecha de corte: 2026-08-03, zona `America/Costa_Rica`.
 - CU-107 a CU-110: no especificado.
 - Estimaciones canónicas: no especificadas. Se usa peso igual por historia.
 - #36, #37 y #38 fueron cerradas con una relación de duplicado falsa respecto de CU-081/082/083.
-- CU-111 es parcial; CU-112, CU-113 y CU-114 no tienen flujo vertical verificable.
+- En la base de #117, CU-111 era parcial y CU-112–114 no tenían flujo vertical verificable. La rama local posterior a Puerta A implementa los cuatro; permanecen pendientes de migración y QA de entorno.
 - #117 contiene cuatro commits exclusivos sobre #112 y es la base técnica más completa.
 - Los tips de PR #114 y #116 no son ancestros Git de #117. La intención de #114 fue integrada y endurecida mediante #115; la de #116 fue sustituida por los cuatro commits exclusivos de #117.
 - Las migraciones 0007-0012 de #116 colisionan con la numeración canónica y no deben portarse.
@@ -37,10 +37,10 @@ Fecha de corte: 2026-08-03, zona `America/Costa_Rica`.
 | SQL ScriptDom | 94 archivos, 951 lotes, 0 errores |
 | Secretos | 706 archivos revisados; 675 de texto; aprobado |
 | `git diff --check` | Correcto |
-| Cobertura de líneas | no especificado |
-| Cobertura de ramas | no especificado |
+| Cobertura de líneas en la rama local | 5,80% (895/15.407) |
+| Cobertura de ramas en la rama local | 3,92% (417/10.631) |
 
-`coverlet.collector` no está referenciado. Su incorporación mínima se propone para la fase posterior a Puerta A.
+`coverlet.collector` quedó incorporado. El porcentaje global es bajo y se reporta sin maquillarlo; las políticas críticas nuevas tienen cobertura focalizada entre 87,8% y 100% de líneas.
 
 ## Porcentajes
 
@@ -52,11 +52,12 @@ Fórmula por historia: `10 criterios + 35 funcional + 25 pruebas + 15 DB/segurid
 | Cabeza actual de #117 | 5.165 / 9.200 | 56,14% |
 | Proyección después de automatización aprobada | 5.860 / 9.200 | 63,70% |
 | Proyección después de QA humano/Azure | 6.519 / 9.200 | 70,86% |
+| Rama local después de Puerta A | 5.497 / 9.200 | 59,75% |
 
 Las proyecciones no son evidencia ejecutada ni autorizan 100%. Intervalo de sensibilidad actual de #117: 48%-64%, no estadístico. Confianza global: media-baja.
 
 ## Decisión recomendada
 
-Tras recibir exactamente `APROBADO PUERTA A`, crear una rama apilada desde el SHA verificado de #117 y completar, en este orden: cobertura/harness, CU-111, CU-112, CU-113 configurable, CU-114 privada, ciclo de imágenes, paradigmas y QA. No hacer push ni mutaciones de GitHub antes de `APROBADO PUERTA B`.
+La ejecución local autorizada por `APROBADO PUERTA A` se realizó en `codex/cierre-rrhh-backlog-20260804`, apilada sobre el SHA verificado de #117. Antes de publicar se requiere `APROBADO PUERTA B`.
 
-Durante esta fase solo se crearon archivos locales en `docs/auditoria/`. No se modificó GitHub ni código productivo.
+No se modificó GitHub, Azure ni SQL compartido. Se implementaron CU-111–114, migraciones incrementales 0017–0020, ciclo privado de imágenes, harness LocalDB y cobertura. La suite local aprobó 189 pruebas; ScriptDom y validaciones finales se registran en `docs/qa-final.md`.

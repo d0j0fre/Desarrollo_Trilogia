@@ -198,3 +198,30 @@ QA manual pendiente antes de marcar Completada:
 - [ ] Verificar carrito con historial suficiente, insuficiente, cliente nuevo, producto agotado y producto ya incluido; nunca debe autoagregar ni modificar precios.
 - [ ] Cargar JPG/JPEG/PNG/WEBP válidos e inválidos, superar 2 MB, simular fallo DB y reemplazar imagen; confirmar ausencia de huérfanos y traversal.
 - [ ] Revisar tienda, detalle, carrito e inventario en móvil/escritorio: fallback, alt, lazy loading y dimensiones sin salto de layout.
+
+## Puerta A — cierre local RRHH, planilla e imágenes — 4 de agosto de 2026
+
+Evidencia ejecutada en `codex/cierre-rrhh-backlog-20260804`, basada exactamente en `107bce2b9fe5e509ca221ae67da4bf008f33e274`:
+
+- PR #117 continúa abierta, mergeable y sin cambio de cabeza; sus cinco checks remotos permanecen aprobados.
+- CU-111–114 tienen flujo vertical local, permisos exactos, antiforgery, contratos de servicio, pruebas y migraciones incrementales 0017–0020.
+- Las reglas de planilla no incluyen tasas legales inventadas: factor, valor, fuente y vigencia son configuración obligatoria; el cálculo conserva snapshot y huella.
+- La boleta se deriva del snapshot, exige propietario o permiso, no se guarda en `wwwroot` y el correo contiene solo un enlace HTTPS autenticado.
+- Las imágenes nuevas usan `ProductImages:StoragePath` fuera de `wwwroot`; reemplazo, retiro y eliminación limpian el archivo sin invalidar un commit de datos si falla el filesystem.
+- Harness LocalDB 0013–0016 aprobado: `verify.sql`, compra funcional, hash inválido sin residuos, segunda aplicación rechazada, rollback documentado, invocaciones vacías, ledger y `DBCC CHECKDB WITH PHYSICAL_ONLY`.
+- Suite completa con cobertura: 189 aprobadas, 0 fallidas, 0 omitidas.
+- Cobertura global: 895/15.407 líneas (5,80%) y 417/10.631 ramas (3,92%); se documenta como brecha real.
+- ScriptDom: 103 archivos, 982 lotes y 0 errores.
+- Escaneo de secretos: 755 archivos rastreados, 724 archivos de texto y 12 placeholders/vacíos aprobados; 0 hallazgos.
+- Build Release final: 0 errores y 0 advertencias.
+
+Pendiente humano/entorno:
+
+- [ ] Configurar `PaySlips:PublicBaseUrl` con HTTPS y credenciales SMTP mediante secretos de entorno.
+- [ ] Validar factores, fuentes y reglas de planilla con la persona responsable; no precargar valores por inferencia.
+- [ ] Tomar BACPAC, designar ejecutor y aplicar 0017–0020 en orden con SHA real; ejecutar cada `verify.sql`.
+- [ ] Probar con sesiones separadas calculador/aprobador/pagador, propietario/no propietario y permisos denegados.
+- [ ] Probar SMTP real controlado y confirmar que un fallo no modifica una planilla pagada.
+- [ ] Configurar y respaldar el volumen de imágenes; inventariar/migrar archivos legados antes de retirar la ruta anterior.
+- [ ] Ejecutar smoke de navegador, responsive, accesibilidad y ausencia de errores de consola.
+- [ ] Ejecutar QA y migraciones en Azure DEV solo después de autorización y backup.
