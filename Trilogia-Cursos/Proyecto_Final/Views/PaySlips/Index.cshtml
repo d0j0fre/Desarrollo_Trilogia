@@ -1,0 +1,6 @@
+@model IReadOnlyList<Proyecto_Final.Models.Admin.PaySlipListItemViewModel>
+@{ ViewData["Title"]="Boletas de pago"; }
+<div class="container py-4"><h2>Boletas de pago</h2><p>El correo contiene únicamente un enlace HTTPS al portal privado; el desglose no se adjunta ni se publica.</p>
+<table class="table table-striped"><thead><tr><th>Periodo</th><th>Empleado</th><th>Bruto</th><th>Deducciones</th><th>Neto</th><th>Estado</th><th>Último envío</th><th></th></tr></thead><tbody>
+@foreach(var item in Model){<tr><td>@item.Periodo</td><td>@item.Empleado</td><td>@item.TotalBruto</td><td>@item.TotalDeducciones</td><td>@item.TotalNeto</td><td>@item.Estado</td><td>@(item.UltimoEnvio??"Sin envío")</td><td><a asp-action="Details" asp-route-id="@item.CalculoId" class="btn btn-sm btn-outline-secondary">Ver</a> <a asp-action="Download" asp-route-id="@item.CalculoId" class="btn btn-sm btn-outline-secondary">Descargar</a><form asp-action="Send" method="post" class="d-inline"><input type="hidden" name="CalculoId" value="@item.CalculoId"/><input type="hidden" name="IdempotencyKey" value="@Guid.NewGuid()"/><button class="btn btn-sm btn-primary" disabled="@(item.Estado!="Pagada")">Notificar</button></form></td></tr>}
+</tbody></table></div>
