@@ -57,7 +57,7 @@ public sealed class HrSecurityAndRulesTests
         Assert.Equal(valid, AttendanceRules.Validate((decimal)ordinary, (decimal)overtime, (decimal)absence).Count == 0);
 
     [Fact]
-    public void EmployeeEdit_RequiresConcurrencyToken()
+    public void EmployeeCreate_DoesNotRequireConcurrencyToken()
     {
         var model = new EmployeeFormViewModel
         {
@@ -65,7 +65,7 @@ public sealed class HrSecurityAndRulesTests
             Puesto = "Pruebas", RowVersionBase64 = string.Empty
         };
         var results = new List<ValidationResult>();
-        Assert.False(Validator.TryValidateObject(model, new ValidationContext(model), results, true));
-        Assert.Contains(results, result => result.MemberNames.Contains(nameof(model.RowVersionBase64)));
+        Assert.True(Validator.TryValidateObject(model, new ValidationContext(model), results, true));
+        Assert.DoesNotContain(results, result => result.MemberNames.Contains(nameof(model.RowVersionBase64)));
     }
 }

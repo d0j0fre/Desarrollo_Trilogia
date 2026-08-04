@@ -103,7 +103,6 @@ namespace Proyecto_Final.Models.Admin
         public DateTime FechaRegistro { get; set; }
         public DateTime? FechaActualizacion { get; set; }
 
-        [Required]
         public string RowVersionBase64 { get; set; } = string.Empty;
         public List<SelectListItem> RolesDisponibles { get; set; } = new();
     }

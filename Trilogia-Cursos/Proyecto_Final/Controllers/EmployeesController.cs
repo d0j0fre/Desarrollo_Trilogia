@@ -118,6 +118,11 @@ namespace Proyecto_Final.Controllers
         [AdminAuthorize("Empleados", "EMPLEADOS_EDITAR")]
         public async Task<IActionResult> Edit(EmployeeFormViewModel model)
         {
+            if (string.IsNullOrWhiteSpace(model.RowVersionBase64))
+            {
+                ModelState.AddModelError(nameof(model.RowVersionBase64), "La versión del expediente es obligatoria para editar.");
+            }
+
             if (model.Salario < 0)
             {
                 ModelState.AddModelError(nameof(model.Salario), "El salario no puede ser negativo.");

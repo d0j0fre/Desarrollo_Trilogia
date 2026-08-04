@@ -144,6 +144,7 @@ builder.Services.AddSession(options =>
 builder.Services.AddScoped<AdminDbService>();
 builder.Services.AddScoped<IEmployeesService, EmployeesDbService>();
 builder.Services.AddScoped<IAttendanceService, AttendanceDbService>();
+builder.Services.AddScoped<IPayrollService, PayrollDbService>();
 builder.Services.AddScoped<StoreDbService>();
 builder.Services.AddScoped<AccountDbService>();
 builder.Services.AddScoped<EmailService>();
