@@ -1,0 +1,22 @@
+@model IEnumerable<Proyecto_Final.Models.Admin.AttendanceEntryViewModel>
+@{ ViewData["Title"] = "Aprobación de jornadas"; }
+<div class="container py-4">
+    <h2>Aprobación de jornadas</h2>
+    <p class="text-muted">Revise jornadas enviadas. Las tasas o reglas laborales no se calculan en este módulo.</p>
+    <table class="table table-striped">
+        <thead><tr><th>Empleado</th><th>Fecha</th><th>Ordinarias</th><th>Extra</th><th>Ausencia</th><th>Estado</th><th>Decisión</th></tr></thead>
+        <tbody>
+        @foreach (var item in Model)
+        {
+            <tr><td>@item.NombreCompleto</td><td>@item.Fecha.ToString("dd/MM/yyyy")</td><td>@item.HorasOrdinarias</td><td>@item.HorasExtra</td><td>@item.HorasAusencia</td><td>@item.Estado</td>
+                <td><form asp-action="Decide" method="post" class="form-inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="JornadaId" value="@item.JornadaId" /><input type="hidden" name="RowVersionBase64" value="@item.RowVersionBase64" />
+                    <input name="RespuestaSupervisor" maxlength="500" class="form-control form-control-sm mr-1" placeholder="Observación" />
+                    <button name="Decision" value="Aprobada" class="btn btn-success btn-sm mr-1">Aprobar</button>
+                    <button name="Decision" value="Rechazada" class="btn btn-danger btn-sm">Rechazar</button>
+                </form></td></tr>
+        }
+        </tbody>
+    </table>
+</div>

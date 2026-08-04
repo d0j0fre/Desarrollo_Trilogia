@@ -285,6 +285,9 @@
                                                 <div class="acc-sec__list">
                                                     <a asp-controller="Employees" asp-action="Index" class="acc-item"><i class="fa fa-id-badge"></i><span>Empleados</span></a>
                                                     <a asp-controller="Employees" asp-action="LeaveRequests" class="acc-item"><i class="fa fa-calendar-check"></i><span>Solicitudes (licencias)</span></a>
+                                                    <a asp-controller="Attendance" asp-action="Index" class="acc-item"><i class="fa fa-clock"></i><span>Aprobar jornadas</span></a>
+                                                    <a asp-controller="Payroll" asp-action="Index" class="acc-item"><i class="fa fa-calculator"></i><span>Planilla</span></a>
+                                                    <a asp-controller="PaySlips" asp-action="Index" class="acc-item"><i class="fa fa-file-invoice-dollar"></i><span>Boletas de pago</span></a>
                                                 </div>
                                             </details>
 
@@ -415,6 +418,12 @@
                             {
                                 <a asp-controller="EmployeePortal" asp-action="Index" class="nav-item nav-link nav-highlight">
                                     <i class="fa fa-id-badge mr-1"></i>Mi portal
+                                </a>
+                                <a asp-controller="MyAttendance" asp-action="Index" class="nav-item nav-link nav-highlight">
+                                    <i class="fa fa-clock mr-1"></i>Mis jornadas
+                                </a>
+                                <a asp-controller="MyPaySlips" asp-action="Index" class="nav-item nav-link nav-highlight">
+                                    <i class="fa fa-file-invoice-dollar mr-1"></i>Mis boletas
                                 </a>
                             }
 

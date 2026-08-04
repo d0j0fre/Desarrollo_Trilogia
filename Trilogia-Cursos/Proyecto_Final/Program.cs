@@ -142,7 +142,12 @@ builder.Services.AddSession(options =>
 
 // Servicios propios
 builder.Services.AddScoped<AdminDbService>();
-builder.Services.AddScoped<EmployeesDbService>();
+builder.Services.AddScoped<IEmployeesService, EmployeesDbService>();
+builder.Services.AddScoped<IAttendanceService, AttendanceDbService>();
+builder.Services.AddScoped<IPayrollService, PayrollDbService>();
+builder.Services.AddScoped<IPaySlipService, PaySlipDbService>();
+builder.Services.AddScoped<IPaySlipEmailSender, SmtpPaySlipEmailSender>();
+builder.Services.AddScoped<IPaySlipDeliveryCoordinator, PaySlipDeliveryCoordinator>();
 builder.Services.AddScoped<StoreDbService>();
 builder.Services.AddScoped<AccountDbService>();
 builder.Services.AddScoped<EmailService>();

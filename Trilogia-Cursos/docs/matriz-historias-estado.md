@@ -77,10 +77,10 @@ Total local actualizado en PR #115: 117 pruebas aprobadas. El detalle de QA de e
 | 102 | #37 | Cerrada | Órdenes, recepción, cancelación y discrepancia | 0013 | Idempotencia y contratos | LocalDB funcional | Falta Azure/UI | Corregir cierre y ejecutar plan manual |
 | 103 | #38 | Cerrada | Reabastecimiento con datos insuficientes | 0013 | Contratos | LocalDB funcional | Falta Azure/UI | Corregir cierre y enlazar evidencia |
 | 104 | #39 | Cerrada | Histórico y variación absoluta de precio | 0013 | Umbral del 15 % | LocalDB funcional | Falta Azure/UI | Confirmar etiqueta Completada tras QA |
-| 111 | #42 | Abierta | Expediente, puesto, departamento, salario, historial y estado en módulo existente | `cu080_empleados_gestion_patch.sql` histórico | Regresión existente | No ejecutado en esta rama | Falta migración incremental canónica y auditoría transaccional demostrada | Implementada sin QA; no cerrar todavía |
-| 112 | #43 | Abierta | Sin flujo vertical de jornada | Sin migración | Sin pruebas | No iniciada | Alcance completo pendiente | Mantener No iniciada |
-| 113 | #44 | Abierta | Sin planilla extremo a extremo | Sin migración | Sin pruebas | No iniciada | Reglas y catálogos legales requieren validación del responsable | Mantener No iniciada |
-| 114 | #45 | Abierta | Sin boleta privada extremo a extremo | Sin migración | Sin pruebas | No iniciada | Depende de CU-113 | Mantener No iniciada |
+| 111 | #42 | Abierta | Expediente, concurrencia, salario, historial y auditoría mediante `IEmployeesService` | 0017 | Seguridad y reglas focales | Automatización local | Falta aplicar migración y QA autenticado | Mantener En QA; no cerrar todavía |
+| 112 | #43 | Abierta | Jornadas propias, envío y decisión segregada | 0018 | Reglas, permisos y antiforgery | Automatización local | Falta base completa y QA de roles | Mantener En QA |
+| 113 | #44 | Abierta | Motor configurable, snapshot, huella, idempotencia y estados segregados | 0019 | Cálculo puro, configuración y permisos | Automatización local | Responsable debe validar factores, fuentes y reglas; falta QA SQL/UI | Mantener En QA |
+| 114 | #45 | Abierta | Boleta privada por propietario, descarga derivada y correo con enlace HTTPS | 0020 | Fake SMTP, idempotencia, encoding y permisos | Automatización local | Falta URL pública/SMTP seguro y QA autenticado | Mantener En QA |
 | 132 | #51 | Abierta | `SalesReportsController`, impresión y CSV | 0015 | Filtros, permisos, métricas y contrato | SQL local | Falta navegador/Azure | Mantener En QA |
 | 134 | #53 | Abierta | `SellerPerformanceController`, metas opcionales | 0015 | Filtros, permisos y CSV | SQL local | Falta navegador/Azure | Mantener En QA |
 | 262 | #92 | Abierta | Co-compra explicable y fallback en carrito | 0016 | Datos suficientes/insuficientes, stock, repetidos y sin historial | SQL local | Falta navegador/Azure | Mantener En QA |

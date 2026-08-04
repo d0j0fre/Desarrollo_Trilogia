@@ -8,10 +8,10 @@ namespace Proyecto_Final.Controllers
     [SessionAuthorize("Empleado", "Vendedor")]
     public class EmployeePortalController : Controller
     {
-        private readonly EmployeesDbService _employeesDbService;
+        private readonly IEmployeesService _employeesDbService;
         private readonly AdminDbService _adminDbService;
 
-        public EmployeePortalController(EmployeesDbService employeesDbService, AdminDbService adminDbService)
+        public EmployeePortalController(IEmployeesService employeesDbService, AdminDbService adminDbService)
         {
             _employeesDbService = employeesDbService;
             _adminDbService = adminDbService;

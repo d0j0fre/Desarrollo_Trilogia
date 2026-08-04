@@ -50,6 +50,10 @@ Cada migracion debe indicar su estrategia de rollback antes de ejecutarse. Los c
 | 0014 | `0014_delivery_board_permission.sql` | Permiso exacto del tablero agregado de entregas | Perfiles y permisos |
 | 0015 | `0015_sales_and_seller_reports.sql` | Reportes de ventas y desempeño de vendedores | Facturas, pedidos, productos, usuarios, perfiles y permisos |
 | 0016 | `0016_cross_sell_recommendations.sql` | Recomendaciones explicables por co-compra con fallback | Pedidos, detalle de pedido y productos |
+| 0017 | `0017_rrhh_employee_records.sql` | Expediente laboral, concurrencia, historial y auditoría | Empleados, usuarios, perfiles y permisos |
+| 0018 | `0018_rrhh_attendance.sql` | Jornadas propias, aprobación segregada e idempotencia | 0017 |
+| 0019 | `0019_payroll_engine.sql` | Planilla configurable, reproducible y auditada | 0018 |
+| 0020 | `0020_private_pay_slips.sql` | Boletas privadas y notificación idempotente | 0019 |
 
 Los scripts no incluyen `USE`: el ejecutor debe seleccionar explícitamente la base antes de iniciar. Los hashes escritos por 0002–0011 son hashes de manifiesto para identificar versión; la evidencia de despliegue debe registrar además el SHA-256 real del archivo y actualizar el ledger si corresponde.
 
@@ -107,6 +111,18 @@ la reconstrucción, además de ejecutar `DBCC CHECKDB`.
 Estas migraciones no reutilizan los números 0007–0012 del prototipo de compras del PR #116. Cada archivo recibe el SHA-256 real mediante `sqlcmd -v "MigrationSha256=<SHA-256>"`, cuenta con `verify.sql` y rollback documentado, y rechaza una segunda aplicación registrada.
 
 La ruta 0013 se validó en LocalDB desde esquema mínimo y desde la variante legada de compras; su prueba funcional cubre reintentos, recepción parcial, sobre-recepción, cierre con discrepancia, inventario y auditoría transaccional. La secuencia 0013–0016 también se ejecutó en una base LocalDB desechable, incluyendo la invocación vacía de los procedimientos de reportes y venta cruzada. En Azure DEV siguen pendientes BACPAC, ejecutor único, aplicación ordenada y QA autenticado.
+
+El harness reproducible crea y elimina una base cuyo nombre empieza por `TrilogiaMigrations_`, se niega a operar fuera de LocalDB y cubre hash inválido, ausencia de residuos, migraciones y verificadores en orden, flujo funcional de compras, invocaciones vacías, segunda aplicación rechazada, documentos de rollback, ledger y `DBCC CHECKDB ... WITH PHYSICAL_ONLY`:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/database/Test-Migrations0013To0016.ps1 -ServerInstance "(localdb)\MSSQLLocalDB"
+```
+
+Si la instancia estándar no está disponible, se debe pasar explícitamente otra instancia LocalDB propia. Nunca usar este harness contra Azure o SQL compartido.
+
+## Migraciones 0017–0020
+
+Estas migraciones se validaron sintácticamente con ScriptDom y tienen `verify.sql` y rollback compensatorio documentado. No fueron aplicadas a LocalDB ni Azure durante Puerta A porque requieren un esquema base completo y datos/roles de prueba coordinados. Antes de aplicarlas se exige BACPAC, ejecutor único, SHA-256 real, configuración responsable de factores/reglas y QA autenticado. No se precargan porcentajes, tasas ni fórmulas legales.
 
 ## Evidencia privada legada
 
