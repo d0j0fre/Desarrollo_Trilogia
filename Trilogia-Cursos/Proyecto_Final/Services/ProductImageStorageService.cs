@@ -1,6 +1,7 @@
 namespace Proyecto_Final.Services;
 
 public sealed record StagedProductImage(string PublicUrl, string PhysicalPath);
+public sealed record StoredProductImage(Stream Content, string ContentType);
 
 public sealed class ProductImageValidationException : Exception
 {
@@ -11,13 +12,14 @@ public sealed class ProductImageValidationException : Exception
 public interface IProductImageStorageService
 {
     Task<StagedProductImage?> StageAsync(IFormFile? file, CancellationToken cancellationToken = default);
+    Task<StoredProductImage?> OpenReadAsync(string fileName, CancellationToken cancellationToken = default);
     Task DeleteAsync(string? publicUrl, CancellationToken cancellationToken = default);
 }
 
 public sealed class ProductImageStorageService : IProductImageStorageService
 {
     public const long MaxBytes = 2 * 1024 * 1024;
-    public const string PublicPrefix = "~/uploads/productos/";
+    public const string PublicPrefix = "~/product-images/";
     private static readonly IReadOnlyDictionary<string, string> AllowedTypes =
         new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
@@ -29,9 +31,15 @@ public sealed class ProductImageStorageService : IProductImageStorageService
 
     private readonly string _root;
 
-    public ProductImageStorageService(IWebHostEnvironment environment)
+    public ProductImageStorageService(IWebHostEnvironment environment, IConfiguration configuration)
     {
-        _root = Path.GetFullPath(Path.Combine(environment.WebRootPath, "uploads", "productos"));
+        var configured = configuration["ProductImages:StoragePath"];
+        _root = Path.GetFullPath(string.IsNullOrWhiteSpace(configured)
+            ? Path.Combine(environment.ContentRootPath, "App_Data", "product-images")
+            : Path.IsPathRooted(configured) ? configured : Path.Combine(environment.ContentRootPath, configured));
+        var webRoot = Path.GetFullPath(environment.WebRootPath);
+        if (_root.Equals(webRoot, StringComparison.OrdinalIgnoreCase) || _root.StartsWith(webRoot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("ProductImages:StoragePath debe estar fuera de wwwroot.");
     }
 
     public async Task<StagedProductImage?> StageAsync(IFormFile? file, CancellationToken cancellationToken = default)
@@ -56,20 +64,35 @@ public sealed class ProductImageStorageService : IProductImageStorageService
         return new StagedProductImage($"{PublicPrefix}{fileName}", path);
     }
 
+    public Task<StoredProductImage?> OpenReadAsync(string fileName, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!IsValidManagedFileName(fileName)) return Task.FromResult<StoredProductImage?>(null);
+        var extension = Path.GetExtension(fileName);
+        if (!AllowedTypes.TryGetValue(extension, out var contentType)) return Task.FromResult<StoredProductImage?>(null);
+        var path = ResolveManagedPath(fileName);
+        if (!File.Exists(path)) return Task.FromResult<StoredProductImage?>(null);
+        return Task.FromResult<StoredProductImage?>(new(new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read), contentType));
+    }
+
     public Task DeleteAsync(string? publicUrl, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         if (string.IsNullOrWhiteSpace(publicUrl) || !publicUrl.StartsWith(PublicPrefix, StringComparison.OrdinalIgnoreCase))
             return Task.CompletedTask;
-
-        var fileName = Path.GetFileName(publicUrl[PublicPrefix.Length..]);
-        if (string.IsNullOrWhiteSpace(fileName) || !string.Equals(publicUrl, $"{PublicPrefix}{fileName}", StringComparison.OrdinalIgnoreCase))
+        var fileName = publicUrl[PublicPrefix.Length..];
+        if (!IsValidManagedFileName(fileName) || !string.Equals(publicUrl, $"{PublicPrefix}{fileName}", StringComparison.OrdinalIgnoreCase))
             return Task.CompletedTask;
-
         var path = ResolveManagedPath(fileName);
         if (File.Exists(path)) File.Delete(path);
         return Task.CompletedTask;
     }
+
+    private static bool IsValidManagedFileName(string fileName) =>
+        !string.IsNullOrWhiteSpace(fileName) &&
+        string.Equals(fileName, Path.GetFileName(fileName), StringComparison.Ordinal) &&
+        fileName.StartsWith("producto-", StringComparison.OrdinalIgnoreCase) &&
+        fileName.Length <= 80;
 
     private string ResolveManagedPath(string fileName)
     {

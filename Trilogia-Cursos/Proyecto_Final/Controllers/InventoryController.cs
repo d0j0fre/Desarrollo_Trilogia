@@ -49,6 +49,7 @@ namespace Proyecto_Final.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [EnableRateLimiting("private-file-upload")]
+        [AdminAuthorize("Inventario", "INVENTARIO_CREAR")]
         public async Task<IActionResult> Create(ProductFormViewModel model)
         {
             ViewBag.Categorias = await _adminDbService.GetStoreCategoriesAsync();
@@ -71,7 +72,7 @@ namespace Proyecto_Final.Controllers
             }
             catch
             {
-                await _images.DeleteAsync(staged?.PublicUrl);
+                await TryDeleteImageAsync(staged?.PublicUrl, "revertir una creación fallida", 0);
                 throw;
             }
 
@@ -96,6 +97,7 @@ namespace Proyecto_Final.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [EnableRateLimiting("private-file-upload")]
+        [AdminAuthorize("Inventario", "INVENTARIO_EDITAR")]
         public async Task<IActionResult> Edit(ProductFormViewModel model)
         {
             ViewBag.Categorias = await _adminDbService.GetStoreCategoriesAsync();
@@ -122,11 +124,11 @@ namespace Proyecto_Final.Controllers
             }
             catch
             {
-                await _images.DeleteAsync(staged?.PublicUrl);
+                await TryDeleteImageAsync(staged?.PublicUrl, "revertir una edición fallida", model.ProductoId);
                 throw;
             }
 
-            if (staged is not null) await _images.DeleteAsync(current.ImagenUrl);
+            if (staged is not null) await TryDeleteImageAsync(current.ImagenUrl, "reemplazar", model.ProductoId);
 
             await RegistrarAuditoriaAsync(
                 "Editar",
@@ -135,6 +137,20 @@ namespace Proyecto_Final.Controllers
 
             TempData["SuccessMessage"] = "Producto actualizado correctamente.";
             return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [AdminAuthorize("Inventario", "INVENTARIO_EDITAR")]
+        public async Task<IActionResult> RemoveImage(int productoId)
+        {
+            var current = await _adminDbService.GetProductByIdAsync(productoId);
+            if (current is null) return NotFound();
+            await _adminDbService.UpdateProductImageAsync(productoId, null);
+            await TryDeleteImageAsync(current.ImagenUrl, "retirar", productoId);
+            await RegistrarAuditoriaAsync("Editar", "Inventario", $"Se retiró la imagen administrada del producto #{productoId}.");
+            TempData["SuccessMessage"] = "Imagen retirada correctamente.";
+            return RedirectToAction(nameof(Edit), new { id = productoId });
         }
 
         [HttpPost]
@@ -181,11 +197,15 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AdminAuthorize("Inventario", "INVENTARIO_EDITAR")]
         public async Task<IActionResult> DeletePermanent(int productoId, string? filtro)
         {
             try
             {
+                var current = await _adminDbService.GetProductByIdAsync(productoId);
+                if (current is null) return NotFound();
                 var productoNombre = await _adminDbService.DeleteProductPermanentlyAsync(productoId);
+                await TryDeleteImageAsync(current.ImagenUrl, "eliminar el producto", productoId);
 
                 await RegistrarAuditoriaAsync(
                     "Eliminar",
@@ -345,6 +365,18 @@ namespace Proyecto_Final.Controllers
                 descripcion,
                 HttpContext.Connection.RemoteIpAddress?.ToString(),
                 Request.Headers.UserAgent.ToString());
+        }
+
+        private async Task TryDeleteImageAsync(string? imageUrl, string operation, int productId)
+        {
+            try
+            {
+                await _images.DeleteAsync(imageUrl, HttpContext.RequestAborted);
+            }
+            catch (Exception exception)
+            {
+                _logger.LogWarning(exception, "No se pudo limpiar la imagen administrada al {Operation} para el producto {ProductId}.", operation, productId);
+            }
         }
     }
 }

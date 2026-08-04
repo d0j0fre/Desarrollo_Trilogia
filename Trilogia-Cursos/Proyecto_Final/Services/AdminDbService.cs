@@ -262,7 +262,7 @@ namespace Proyecto_Final.Services
             }
         }
 
-        public async Task UpdateProductImageAsync(int productoId, string imageUrl)
+        public async Task UpdateProductImageAsync(int productoId, string? imageUrl)
         {
             await using var connection = new SqlConnection(_connectionString);
             await using var command = new SqlCommand("UPDATE dbo.Productos SET ImagenUrl = @ImagenUrl WHERE ProductoId = @ProductoId;", connection);

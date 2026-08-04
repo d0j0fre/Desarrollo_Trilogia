@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Moq;
 using Proyecto_Final.Services;
 
@@ -8,6 +9,7 @@ namespace Proyecto_Final.Tests;
 public sealed class ProductImageStorageTests : IDisposable
 {
     private readonly string _root = Path.Combine(Path.GetTempPath(), $"trilogia-images-{Guid.NewGuid():N}");
+    private string StorageRoot => Path.Combine(_root, "private-images");
 
     [Fact]
     public async Task StageAsync_AcceptsValidPngAndUsesGuidManagedName()
@@ -20,7 +22,11 @@ public sealed class ProductImageStorageTests : IDisposable
         Assert.StartsWith(ProductImageStorageService.PublicPrefix + "producto-", staged.PublicUrl, StringComparison.Ordinal);
         Assert.EndsWith(".png", staged.PublicUrl, StringComparison.Ordinal);
         Assert.True(File.Exists(staged.PhysicalPath));
-        Assert.StartsWith(Path.GetFullPath(_root), staged.PhysicalPath, StringComparison.OrdinalIgnoreCase);
+        Assert.StartsWith(Path.GetFullPath(StorageRoot), staged.PhysicalPath, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("wwwroot", staged.PhysicalPath, StringComparison.OrdinalIgnoreCase);
+
+        await using var opened = (await storage.OpenReadAsync(Path.GetFileName(staged.PhysicalPath)))!.Content;
+        Assert.Equal(0x89, opened.ReadByte());
     }
 
     [Theory]
@@ -45,12 +51,12 @@ public sealed class ProductImageStorageTests : IDisposable
     public async Task DeleteAsync_IgnoresExternalAndTraversalUrls()
     {
         var storage = CreateStorage();
-        Directory.CreateDirectory(_root);
-        var sentinel = Path.Combine(_root, "sentinel.txt");
+        Directory.CreateDirectory(StorageRoot);
+        var sentinel = Path.Combine(StorageRoot, "sentinel.txt");
         await File.WriteAllTextAsync(sentinel, "preservar");
 
         await storage.DeleteAsync("https://example.test/sentinel.txt");
-        await storage.DeleteAsync("~/uploads/productos/../sentinel.txt");
+        await storage.DeleteAsync("~/product-images/../sentinel.txt");
 
         Assert.True(File.Exists(sentinel));
     }
@@ -58,8 +64,13 @@ public sealed class ProductImageStorageTests : IDisposable
     private ProductImageStorageService CreateStorage()
     {
         var environment = new Mock<IWebHostEnvironment>();
-        environment.SetupGet(value => value.WebRootPath).Returns(_root);
-        return new ProductImageStorageService(environment.Object);
+        environment.SetupGet(value => value.ContentRootPath).Returns(_root);
+        environment.SetupGet(value => value.WebRootPath).Returns(Path.Combine(_root, "wwwroot"));
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["ProductImages:StoragePath"] = StorageRoot
+        }).Build();
+        return new ProductImageStorageService(environment.Object, configuration);
     }
 
     private static IFormFile FormFile(string name, string mime, byte[] bytes) =>
