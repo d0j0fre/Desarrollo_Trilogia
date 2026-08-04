@@ -225,3 +225,31 @@ Pendiente humano/entorno:
 - [ ] Configurar y respaldar el volumen de imágenes; inventariar/migrar archivos legados antes de retirar la ruta anterior.
 - [ ] Ejecutar smoke de navegador, responsive, accesibilidad y ausencia de errores de consola.
 - [ ] Ejecutar QA y migraciones en Azure DEV solo después de autorización y backup.
+
+## Ejecución controlada en Azure DEV — 4 de agosto de 2026
+
+Ejecución posterior a la autorización operativa, sobre los recursos DEV
+confirmados `rg-trilogia-cursos-dev`, `sql-trilogia-cursos-dev-cr01`,
+`DistribuidoraJJ_DB_DEV` y `sttrilogiadevcr01`. No se versionaron credenciales,
+tokens, connection strings ni datos de producción.
+
+- [x] BACPAC previo creado en el contenedor privado `bacpac`:
+  `DistribuidoraJJ_DB_DEV_pre0013-0020_20260804T000000Z.bacpac`.
+  Se validaron ZIP, `model.xml`, `origin.xml` y coincidencia de tamaño remoto
+  (221.912 bytes); SHA-256 local de verificación:
+  `1226F7A8F29B240E15A99A5276C65690BE04BAA9D9E24C5E01CD358985E3965F`.
+- [x] Ledger leído antes de cambiar el esquema: llegaba hasta 0012; no había
+  entradas para 0013–0020.
+- [x] Migraciones 0013–0020 aplicadas una a una con el SHA-256 real del archivo,
+  transacción propia, `verify.sql` inmediato y fila `Applied` coincidente en
+  `dbo.SchemaMigrationHistory`.
+- [x] `DBCC CHECKDB ... WITH PHYSICAL_ONLY` aprobado y ledger completo con ocho
+  entradas aplicadas para 0013–0020.
+- [x] Smoke público del MVC DEV y Swagger del API DEV disponibles por HTTPS.
+- [ ] El QA autenticado no se marcó aprobado: faltan usuarios de prueba
+  autorizados para comprobar roles positivos/negativos y segregación.
+- [ ] SMTP y `ProductImages` no tienen configuración de entorno en los App
+  Services. No se envió correo real, no se subió imagen real y no se agregaron
+  secretos ni settings especulativos.
+- [ ] La copia temporal local del BACPAC debe eliminarse con el procedimiento
+  seguro del operador; el respaldo remoto validado es la copia de recuperación.
