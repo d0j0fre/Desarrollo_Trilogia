@@ -5,7 +5,26 @@ using System.Data;
 
 namespace Proyecto_Final.Services
 {
-    public class EmployeesDbService
+    public interface IEmployeesService
+    {
+        Task<List<EmployeeRoleOptionViewModel>> GetEmployeeRolesAsync();
+        Task<List<SelectListItem>> GetEmployeeRoleSelectListAsync(int? selectedPerfilId = null);
+        Task<List<EmployeeListItemViewModel>> GetEmployeesAsync(string? buscar, string? estado);
+        Task<EmployeeFormViewModel?> GetEmployeeFormByIdAsync(int empleadoId);
+        Task<EmployeeDetailViewModel?> GetEmployeeDetailAsync(int empleadoId);
+        Task<int> CreateEmployeeAsync(EmployeeFormViewModel model, int? usuarioCambioId, string? usuarioCambioNombre);
+        Task UpdateEmployeeAsync(EmployeeFormViewModel model, int? usuarioCambioId, string? usuarioCambioNombre);
+        Task<bool> ToggleEmployeeStatusAsync(int empleadoId);
+        Task<int> CreateEmployeeTaskAsync(EmployeeTaskFormViewModel model, int? usuarioAsignacionId, string? usuarioAsignacionNombre);
+        Task UpdateEmployeeTaskStatusAsync(int tareaId, string estado);
+        Task<List<EmployeeLeaveRequestViewModel>> GetEmployeeLeaveRequestsAsync(string? estado, int? empleadoId = null);
+        Task UpdateEmployeeLeaveRequestStatusAsync(EmployeeLeaveRequestDecisionViewModel model, int? usuarioRespuestaId, string? usuarioRespuestaNombre);
+        Task<EmployeePortalViewModel> GetEmployeePortalAsync(int usuarioId);
+        Task<int> CreateMyLeaveRequestAsync(int usuarioId, EmployeeLeaveRequestFormViewModel model);
+        Task UpdateMyTaskStatusAsync(int usuarioId, int tareaId, string estado);
+    }
+
+    public class EmployeesDbService : IEmployeesService
     {
         private readonly string _connectionString;
 
@@ -100,6 +119,7 @@ namespace Proyecto_Final.Services
                 Activo = detail.Activo && detail.UsuarioActivo,
                 FechaRegistro = detail.FechaRegistro,
                 FechaActualizacion = detail.FechaActualizacion,
+                RowVersionBase64 = detail.RowVersionBase64,
                 RolesDisponibles = await GetEmployeeRoleSelectListAsync(detail.PerfilId)
             };
         }
@@ -137,7 +157,7 @@ namespace Proyecto_Final.Services
         public async Task UpdateEmployeeAsync(EmployeeFormViewModel model, int? usuarioCambioId, string? usuarioCambioNombre)
         {
             await using var connection = new SqlConnection(_connectionString);
-            await using var command = new SqlCommand("dbo.sp_Admin_UpdateEmployee", connection)
+            await using var command = new SqlCommand("dbo.sp_RRHH_UpdateEmployee", connection)
             {
                 CommandType = CommandType.StoredProcedure
             };
@@ -147,6 +167,7 @@ namespace Proyecto_Final.Services
             command.Parameters.Add("@MotivoCambioSalario", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.MotivoCambioSalario) ? DBNull.Value : model.MotivoCambioSalario.Trim();
             command.Parameters.Add("@UsuarioCambioId", SqlDbType.Int).Value = usuarioCambioId.HasValue && usuarioCambioId.Value > 0 ? usuarioCambioId.Value : DBNull.Value;
             command.Parameters.Add("@UsuarioCambioNombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(usuarioCambioNombre) ? DBNull.Value : usuarioCambioNombre.Trim();
+            command.Parameters.Add("@VersionFila", SqlDbType.Binary, 8).Value = Convert.FromBase64String(model.RowVersionBase64);
 
             await connection.OpenAsync();
             await command.ExecuteNonQueryAsync();
@@ -366,7 +387,10 @@ namespace Proyecto_Final.Services
                 Activo = reader.GetBoolean(14),
                 UsuarioActivo = reader.GetBoolean(15),
                 FechaRegistro = reader.GetDateTime(16),
-                FechaActualizacion = GetNullableDateTime(reader, 17)
+                FechaActualizacion = GetNullableDateTime(reader, 17),
+                RowVersionBase64 = reader.FieldCount > 18 && !reader.IsDBNull(18)
+                    ? Convert.ToBase64String((byte[])reader.GetValue(18))
+                    : string.Empty
             };
         }
 

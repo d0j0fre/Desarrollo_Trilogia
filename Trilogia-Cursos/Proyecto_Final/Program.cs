@@ -142,7 +142,8 @@ builder.Services.AddSession(options =>
 
 // Servicios propios
 builder.Services.AddScoped<AdminDbService>();
-builder.Services.AddScoped<EmployeesDbService>();
+builder.Services.AddScoped<IEmployeesService, EmployeesDbService>();
+builder.Services.AddScoped<IAttendanceService, AttendanceDbService>();
 builder.Services.AddScoped<StoreDbService>();
 builder.Services.AddScoped<AccountDbService>();
 builder.Services.AddScoped<EmailService>();

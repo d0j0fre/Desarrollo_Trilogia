@@ -102,6 +102,9 @@ namespace Proyecto_Final.Models.Admin
 
         public DateTime FechaRegistro { get; set; }
         public DateTime? FechaActualizacion { get; set; }
+
+        [Required]
+        public string RowVersionBase64 { get; set; } = string.Empty;
         public List<SelectListItem> RolesDisponibles { get; set; } = new();
     }
 
@@ -125,6 +128,7 @@ namespace Proyecto_Final.Models.Admin
         public bool UsuarioActivo { get; set; }
         public DateTime FechaRegistro { get; set; }
         public DateTime? FechaActualizacion { get; set; }
+        public string RowVersionBase64 { get; set; } = string.Empty;
         public List<EmployeeTaskViewModel> Tareas { get; set; } = new();
         public List<EmployeeLeaveRequestViewModel> Solicitudes { get; set; } = new();
         public List<EmployeeSalaryHistoryViewModel> HistorialSalarios { get; set; } = new();
