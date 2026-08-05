@@ -63,7 +63,8 @@ namespace Proyecto_Final.Models.Admin
         public int PedidoId { get; set; }
         public int? RutaId { get; set; }
         public string TipoEvidencia { get; set; } = string.Empty;
-        public string ArchivoUrl { get; set; } = string.Empty;
+        public string StorageKey { get; set; } = string.Empty;
+        public string MimeType { get; set; } = string.Empty;
         public string Observaciones { get; set; } = string.Empty;
         public string RegistradoPorNombre { get; set; } = string.Empty;
         public DateTime FechaRegistro { get; set; }
@@ -83,5 +84,14 @@ namespace Proyecto_Final.Models.Admin
         public RouteHeaderViewModel Cabecera { get; set; } = new();
         public List<RouteEvidenceSummaryViewModel> Resumen { get; set; } = new();
         public List<EvidenceItemViewModel> Evidencias { get; set; } = new();
+    }
+
+    public sealed class AuthorizedEvidenceViewModel
+    {
+        public int EvidenciaId { get; set; }
+        public int PedidoId { get; set; }
+        public string StorageKey { get; set; } = string.Empty;
+        public string MimeType { get; set; } = string.Empty;
+        public string TipoEvidencia { get; set; } = string.Empty;
     }
 }

@@ -20,15 +20,24 @@ namespace Proyecto_Final.Controllers
         private readonly StoreDbService _storeDbService;
         private readonly EmailService _emailService;
         private readonly PromotionsDbService _promotions;
+        private readonly IComboDbService _combos;
+        private readonly ICrossSellService _crossSell;
+        private readonly ILogger<CartController> _logger;
 
         public CartController(
             StoreDbService storeDbService,
             EmailService emailService,
-            PromotionsDbService promotions)
+            PromotionsDbService promotions,
+            IComboDbService combos,
+            ICrossSellService crossSell,
+            ILogger<CartController> logger)
         {
             _storeDbService = storeDbService;
             _emailService = emailService;
             _promotions = promotions;
+            _combos = combos;
+            _crossSell = crossSell;
+            _logger = logger;
         }
 
         public async Task<IActionResult> Index()
@@ -53,6 +62,7 @@ namespace Proyecto_Final.Controllers
             {
                 items.Add(new CartItemViewModel
                 {
+                    ItemType = CartItemTypes.Product,
                     ProductoId = product.ProductoId,
                     Nombre = product.Nombre,
                     Categoria = product.Categoria,
@@ -77,10 +87,59 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Update(int productoId, int cantidad)
+        public async Task<IActionResult> AddCombo(int comboId, int cantidad = 1, CancellationToken cancellationToken = default)
+        {
+            var combo = await _combos.GetStoreComboAsync(comboId, cancellationToken);
+            if (combo is null || !combo.Disponible)
+            {
+                TempData["ErrorMessage"] = "El combo no está disponible en este momento.";
+                return RedirectToAction("Shop", "Home");
+            }
+
+            var items = GetCartItems();
+            var item = items.FirstOrDefault(candidate =>
+                candidate.ItemType == CartItemTypes.Combo && candidate.ComboId == comboId);
+            if (item is null)
+            {
+                items.Add(new CartItemViewModel
+                {
+                    ItemType = CartItemTypes.Combo,
+                    ComboId = combo.ComboId,
+                    Nombre = combo.Nombre,
+                    Categoria = "Combo",
+                    Descripcion = combo.Descripcion,
+                    Precio = combo.Precio,
+                    StockDisponible = combo.StockDisponible,
+                    Cantidad = Math.Min(Math.Max(cantidad, 1), combo.StockDisponible),
+                    ImagenUrl = combo.ImagenUrl
+                });
+            }
+            else
+            {
+                item.StockDisponible = combo.StockDisponible;
+                item.Precio = combo.Precio;
+                item.Cantidad = Math.Min(item.Cantidad + Math.Max(cantidad, 1), combo.StockDisponible);
+            }
+
+            SaveCartItems(items);
+            TempData["LoginSuccess"] = $"{combo.Nombre} fue agregado al carrito.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Update(
+            int productoId,
+            int cantidad,
+            string? itemType = null,
+            int? comboId = null,
+            CancellationToken cancellationToken = default)
         {
             var items = GetCartItems();
-            var item = items.FirstOrDefault(x => x.ProductoId == productoId);
+            var isCombo = string.Equals(itemType, CartItemTypes.Combo, StringComparison.Ordinal);
+            var item = items.FirstOrDefault(candidate => isCombo
+                ? candidate.ItemType == CartItemTypes.Combo && candidate.ComboId == comboId
+                : candidate.ItemType != CartItemTypes.Combo && candidate.ProductoId == productoId);
             if (item is null)
                 return RedirectToAction(nameof(Index));
 
@@ -90,17 +149,37 @@ namespace Proyecto_Final.Controllers
             }
             else
             {
-                var product = await _storeDbService.GetStoreProductByIdAsync(productoId);
-                if (product is null)
+                if (isCombo)
                 {
-                    items.Remove(item);
-                    TempData["LoginSuccess"] = "Un producto del carrito ya no está disponible.";
+                    var combo = comboId.HasValue
+                        ? await _combos.GetStoreComboAsync(comboId.Value, cancellationToken)
+                        : null;
+                    if (combo is null || !combo.Disponible)
+                    {
+                        items.Remove(item);
+                        TempData["ErrorMessage"] = "Un combo del carrito ya no está disponible.";
+                    }
+                    else
+                    {
+                        item.StockDisponible = combo.StockDisponible;
+                        item.Precio = combo.Precio;
+                        item.Cantidad = Math.Min(cantidad, combo.StockDisponible);
+                    }
                 }
                 else
                 {
-                    item.StockDisponible = product.Stock;
-                    item.Precio = product.Precio;
-                    item.Cantidad = Math.Min(cantidad, Math.Max(product.Stock, 1));
+                    var product = await _storeDbService.GetStoreProductByIdAsync(productoId, cancellationToken);
+                    if (product is null)
+                    {
+                        items.Remove(item);
+                        TempData["LoginSuccess"] = "Un producto del carrito ya no está disponible.";
+                    }
+                    else
+                    {
+                        item.StockDisponible = product.Stock;
+                        item.Precio = product.Precio;
+                        item.Cantidad = Math.Min(cantidad, Math.Max(product.Stock, 1));
+                    }
                 }
             }
 
@@ -110,10 +189,13 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Remove(int productoId)
+        public IActionResult Remove(int productoId, string? itemType = null, int? comboId = null)
         {
             var items = GetCartItems();
-            items.RemoveAll(x => x.ProductoId == productoId);
+            var isCombo = string.Equals(itemType, CartItemTypes.Combo, StringComparison.Ordinal);
+            items.RemoveAll(candidate => isCombo
+                ? candidate.ItemType == CartItemTypes.Combo && candidate.ComboId == comboId
+                : candidate.ItemType != CartItemTypes.Combo && candidate.ProductoId == productoId);
             SaveCartItems(items);
             return RedirectToAction(nameof(Index));
         }
@@ -136,6 +218,7 @@ namespace Proyecto_Final.Controllers
 
             var model = new CheckoutViewModel
             {
+                OperationToken = Guid.NewGuid(),
                 Cart = cart,
                 CorreoElectronico = HttpContext.Session.GetString("UserEmail"),
                 TipoEntrega = "Envío a domicilio",
@@ -237,6 +320,11 @@ namespace Proyecto_Final.Controllers
                 $"{model.Pais}, {model.Provincia}, {model.Canton}, " +
                 $"{model.Distrito}. {model.DireccionDetalle}";
 
+            if (model.OperationToken == Guid.Empty)
+            {
+                ModelState.AddModelError(string.Empty, "El intento de compra expiró. Recargue el checkout e intente nuevamente.");
+            }
+
             if (!ModelState.IsValid)
             {
                 return View(model);
@@ -247,39 +335,21 @@ namespace Proyecto_Final.Controllers
                 var usuarioId =
                     HttpContext.Session.GetInt32("UserId") ?? 0;
 
-                var pedidoId = await _storeDbService.CreateOrderAsync(
+                var order = await _storeDbService.CreateOrderWithPromotionsAsync(
                     usuarioId,
                     model,
-                    model.Cart.Items);
+                    model.Cart.Items,
+                    HttpContext.RequestAborted);
 
-                // CU-173 — Aplicar promociones es "mejor esfuerzo": la venta YA está registrada,
-                // así que ninguna falla del motor de promociones puede interrumpir la compra.
-                var totalConfirmado = model.Cart.Subtotal;
-                try
-                {
-                    var aplicadas = await EvaluatePromotionsAsync(model.Cart.Items, usuarioId);
-                    if (aplicadas.Count > 0)
-                    {
-                        await _storeDbService.ApplyPromotionsToOrderAsync(
-                            pedidoId, aplicadas,
-                            usuarioId, HttpContext.Session.GetString("UserFullName") ?? "Cliente");
-                        totalConfirmado = model.Cart.Total; // descuentos aplicados con éxito
-                    }
-                }
-                catch
-                {
-                    // Si la promoción falla (p. ej. sin stock de regalía), el pedido queda a precio
-                    // normal y la compra continúa sin interrupción.
-                    totalConfirmado = model.Cart.Subtotal;
-                }
+                var confirmedItems = order.Items.Concat(order.Gifts).ToList();
 
                 var confirmacion = new OrderConfirmationViewModel
                 {
-                    PedidoId = pedidoId,
+                    PedidoId = order.PedidoId,
                     TipoEntrega = model.TipoEntrega,
                     DireccionEntrega = model.DireccionEntrega,
-                    Total = totalConfirmado,
-                    Items = model.Cart.Items
+                    Total = order.Total,
+                    Items = confirmedItems
                 };
 
                 var destinatario =
@@ -291,12 +361,24 @@ namespace Proyecto_Final.Controllers
                     HttpContext.Session.GetString("UserFullName")
                     ?? "Cliente";
 
-                _emailService.SendOrderReceipt(
-                    destinatario,
-                    cliente,
-                    pedidoId,
-                    model,
-                    model.Cart.Items);
+                try
+                {
+                    _emailService.SendOrderReceipt(
+                        destinatario,
+                        cliente,
+                        order.PedidoId,
+                        model,
+                        confirmedItems,
+                        order.Total,
+                        confirmedItems.Sum(item => item.MontoDescuento));
+                }
+                catch (Exception exception)
+                {
+                    // El pedido ya fue confirmado de forma atómica en SQL. SMTP es un efecto
+                    // secundario y no debe convertir una compra confirmada en un aparente fallo.
+                    _logger.LogWarning(exception, "No fue posible enviar el comprobante del pedido {PedidoId}.", order.PedidoId);
+                    TempData["ErrorMessage"] = "El pedido fue confirmado, pero no fue posible enviar el comprobante por correo.";
+                }
 
                 HttpContext.Session.Remove(CartSessionKey);
 
@@ -304,15 +386,14 @@ namespace Proyecto_Final.Controllers
                     JsonSerializer.Serialize(confirmacion);
 
                 TempData["LoginSuccess"] =
-                    $"Pedido #{pedidoId} creado correctamente.";
+                    $"Pedido #{order.PedidoId} creado correctamente.";
 
                 return RedirectToAction(nameof(Confirmation));
             }
             catch (SqlException ex)
-                when (ex.Message.Contains(
-                    "stock",
-                    StringComparison.OrdinalIgnoreCase))
+                when (ex.Number is 51106 or 51107 or 53101 or 54615 or 54616)
             {
+                _logger.LogWarning(ex, "El checkout fue rechazado por falta de inventario para el usuario {UserId}.", HttpContext.Session.GetInt32("UserId"));
                 ModelState.AddModelError(
                     string.Empty,
                     "No hay stock suficiente para completar el pedido. " +
@@ -320,8 +401,9 @@ namespace Proyecto_Final.Controllers
 
                 return View(model);
             }
-            catch (Exception)
+            catch (Exception exception)
             {
+                _logger.LogError(exception, "No se pudo completar el checkout del usuario {UserId}.", HttpContext.Session.GetInt32("UserId"));
                 ModelState.AddModelError(
                     string.Empty,
                     "No se pudo completar el pedido. Intente nuevamente.");
@@ -345,7 +427,8 @@ namespace Proyecto_Final.Controllers
         // CU-173 — arma el carrito y aplica automáticamente las promociones vigentes.
         private async Task<CartViewModel> BuildCartViewModelAsync()
         {
-            var items = GetCartItems();
+            var items = await RefreshCartItemsAsync(GetCartItems());
+            SaveCartItems(items);
             var cart = new CartViewModel { Items = items };
             if (items.Count == 0) return cart;
 
@@ -353,27 +436,86 @@ namespace Proyecto_Final.Controllers
             try
             {
                 var usuarioId = HttpContext.Session.GetInt32("UserId") ?? 0;
-                var segmento = await _storeDbService.GetUserSegmentAsync(usuarioId);
+                var segmento = await _storeDbService.GetUserSegmentAsync(usuarioId, HttpContext.RequestAborted);
                 var vigentes = await _promotions.GetActivePromotionsAsync(segmento);
-                var resultado = PromotionEngine.Apply(cart.Items, vigentes);
+                var resultado = PromotionEngine.Apply(
+                    cart.Items.Where(item => item.ItemType == CartItemTypes.Product).ToList(),
+                    vigentes);
                 cart.Regalias = resultado.Gifts;
             }
-            catch
+            catch (Exception exception)
             {
+                _logger.LogWarning(exception, "No fue posible calcular las promociones para presentar el carrito.");
                 foreach (var it in cart.Items) { it.MontoDescuento = 0; it.PromocionNombre = null; }
                 cart.Regalias.Clear();
+            }
+
+            try
+            {
+                var productIds = cart.Items
+                    .Where(item => item.ItemType == CartItemTypes.Product && item.ProductoId > 0)
+                    .Select(item => item.ProductoId)
+                    .ToHashSet();
+                cart.Recomendaciones = await _crossSell.GetSuggestionsAsync(
+                    HttpContext.Session.GetInt32("UserId"), productIds, HttpContext.RequestAborted);
+            }
+            catch (Exception exception)
+            {
+                _logger.LogWarning(exception, "No fue posible calcular recomendaciones de venta cruzada.");
+                cart.Recomendaciones = [];
             }
             return cart;
         }
 
-        // Recalcula (autoritativo, servidor) las promociones aplicables para persistirlas.
-        private async Task<List<AppliedPromotion>> EvaluatePromotionsAsync(List<CartItemViewModel> items, int usuarioId)
+        private async Task<List<CartItemViewModel>> RefreshCartItemsAsync(List<CartItemViewModel> items)
         {
-            if (items == null || items.Count == 0) return new List<AppliedPromotion>();
-            var segmento = await _storeDbService.GetUserSegmentAsync(usuarioId);
-            var vigentes = await _promotions.GetActivePromotionsAsync(segmento);
-            var resultado = PromotionEngine.Apply(items, vigentes);
-            return resultado.Applied;
+            var refreshed = new List<CartItemViewModel>();
+            foreach (var item in items.Where(item => item.Cantidad > 0))
+            {
+                if (item.ItemType == CartItemTypes.Combo && item.ComboId.HasValue)
+                {
+                    var combo = await _combos.GetStoreComboAsync(item.ComboId.Value, HttpContext.RequestAborted);
+                    if (combo is null || !combo.Disponible)
+                    {
+                        continue;
+                    }
+
+                    refreshed.Add(new CartItemViewModel
+                    {
+                        ItemType = CartItemTypes.Combo,
+                        ComboId = combo.ComboId,
+                        Nombre = combo.Nombre,
+                        Categoria = "Combo",
+                        Descripcion = combo.Descripcion,
+                        Precio = combo.Precio,
+                        StockDisponible = combo.StockDisponible,
+                        Cantidad = Math.Min(item.Cantidad, combo.StockDisponible),
+                        ImagenUrl = combo.ImagenUrl
+                    });
+                    continue;
+                }
+
+                if (item.ProductoId <= 0)
+                {
+                    continue;
+                }
+
+                var product = await _storeDbService.GetStoreProductByIdAsync(item.ProductoId, HttpContext.RequestAborted);
+                if (product is null || product.Stock <= 0) continue;
+                refreshed.Add(new CartItemViewModel
+                {
+                    ItemType = CartItemTypes.Product,
+                    ProductoId = product.ProductoId,
+                    Nombre = product.Nombre,
+                    Categoria = product.Categoria,
+                    Descripcion = product.Descripcion,
+                    Precio = product.Precio,
+                    StockDisponible = product.Stock,
+                    Cantidad = Math.Min(item.Cantidad, product.Stock),
+                    ImagenUrl = product.ImagenUrl
+                });
+            }
+            return refreshed;
         }
 
         private List<CartItemViewModel> GetCartItems()

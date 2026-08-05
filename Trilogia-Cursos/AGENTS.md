@@ -1,144 +1,60 @@
 # AGENTS.md — Desarrollo_Trilogia / Trilogia-Cursos
 
-## Project identity
-This repository contains a university project named `Trilogia-Cursos / Desarrollo_Trilogia`, a .NET MVC + SQL Server web application for a distributor/liquor store called `Licorera La Bodega / DistribuidoraJJ`.
+## Identidad y fuente de verdad
 
-Main projects:
+Aplicación universitaria .NET 9 MVC + API + SQL Server para DistribuidoraJJ / Licorera La Bodega.
+
 - MVC: `Proyecto_Final`
 - API: `Proyecto_FinalAPI`
-- Database: `DistribuidoraJJ_DB`
-- SQL scripts: `database/`
-- Docs: `docs/`
+- Solución: `Proyecto_Final.slnx`
+- SQL: `database/`, `database/migrations/` y archivo histórico `database_Esteban/`
+- Documentación: `docs/`
 
-## Current expected state
-`origin/Danny` currently contains changes that are not yet integrated into `main`, including Sprint 3:
-- Modern UI improvements for client side, home, shop, cart, footer, and confirmation page.
-- Reusable custom modal replacing native browser alerts/confirmations.
-- HTML email templates for password recovery and contact notifications.
-- Local network testing setup.
-- Base security hardening: security headers, safer session cookie, reduced technical error exposure, and login attempt limiter.
-- Employee management module with admin views, employee portal, leave requests, tasks, salary/history, demo seed data, and documentation.
-- Previous modules: login, register, forgot/reset password, dashboard, inventory, movements, orders, invoicing, roles, permissions, clients, credits, consultations, audit, mobile sales, offline orders CU-072, and Costa Rica demo data.
+La fuente de verdad es el último `origin/main`. Todo cambio se hace en una rama `codex/*` o de funcionalidad, mediante PR y con CI verde. No usar ramas personales antiguas como base.
 
-P0 work is performed from a branch based on `origin/Danny`. Do not assume that `main` and `Danny` are equivalent until the integration pull request is reviewed and merged.
+## Reglas no negociables
 
-## Non-negotiable rules
-1. Do not modify `appsettings.json` or `appsettings.Development.json` unless explicitly requested.
-2. Do not commit local connection strings, real email passwords, API keys, or secrets.
-3. Do not add ZIP files, `bin/`, `obj/`, `.vs/`, or full project copies to the repository.
-4. Before changing important code, inspect the current repository files. Do not assume previous code is still exact.
-5. Keep changes small and separated by purpose.
-6. SQL changes must be provided as separate scripts inside `database/`.
-7. Do not break existing modules while adding new functionality.
-8. Prefer safe additive changes over risky rewrites.
-9. Always include testing steps and a Git commit summary/description when proposing changes.
-10. If there is a Git conflict, stop and ask for a screenshot or explicit resolution instructions.
+1. Nunca versionar credenciales, cadenas de conexión funcionales, contraseñas SMTP, tokens, perfiles de publicación ni datos personales.
+2. Los `appsettings*.json` compartidos son plantillas sanitizadas. La configuración real llega por variables de entorno, User Secrets o App Service Configuration.
+3. No agregar `bin/`, `obj/`, `.vs/`, ZIP, BACPAC, backups, `.env`, `App_Data` ni archivos cargados por usuarios.
+4. Inspeccionar el código vigente antes de editar y preservar cambios ajenos.
+5. Toda operación basada en sesión debe comprobar rol/permiso, pertenencia del recurso y antiforgery cuando modifica estado.
+6. No devolver `ex.Message` al navegador. Registrar el detalle con `ILogger` y mostrar un mensaje genérico.
+7. No confiar en IDs, rutas físicas, roles o precios enviados por el cliente.
+8. Mantener commits lógicos. No hacer merge directo ni automático a `main`.
+9. No reescribir historial compartido ni hacer force-push sin coordinación expresa.
 
-## Local environment used by Danny
-- SQL Server instance: `LAPTOP-MNV7AL4K\\SQLEXPRESS`
-- Database: `DistribuidoraJJ_DB`
-- MVC usual URL: `https://localhost:7013`
-- API usual URL: `https://localhost:57540/`
-- Local network MVC test URL used: `http://0.0.0.0:5013`
-- Laptop IP observed during testing: `192.168.0.193`
+## SQL y migraciones
 
-Important: local connection strings may differ between collaborators. Do not standardize everyone’s machine-specific settings into committed files.
+- Toda evolución nueva va en `database/migrations/` y sigue el orden documentado en su `README.md`.
+- No ejecutar baselines, `Fase*.sql`, `00_todo_en_uno.sql`, `DistribuidoraJJ_DB.sql` ni `database_Esteban/` sobre una base compartida.
+- No incluir `USE`, secretos, nombres de servidor ni datos demo en migraciones.
+- Preferir cambios aditivos, idempotencia, `XACT_ABORT`, transacciones y rollback documentado.
+- Una migración aplicada no se modifica: se crea la siguiente.
+- Validar sintaxis recursivamente; la validación no ejecuta SQL ni sustituye una prueba en base desechable.
 
-## Authentication and demo users
-Roles to validate include administrator, customer, seller, and employee. Their credentials are not stored in this repository.
+## Convenciones vigentes
 
-- Provision required test accounts through an approved script or manually for the current environment.
-- Share temporary credentials only through a private channel.
-- Do not reuse local demo credentials in shared Azure DEV.
-- Do not use credentials present in historical SQL scripts for shared environments.
-- Rotate or disable temporary accounts after testing.
-- Codex must never show secret values in responses.
+- Tabla de permisos: `PerfilPermisos`.
+- Asignación: `UsuarioAsignacionId`, `UsuarioAsignacionNombre`.
+- Pedidos offline CU-072: `PedidoOfflineGuid`, canal `Venta móvil offline`.
+- El asistente se describe como: **Asistente conversacional basado en reglas e interpretación de intenciones**.
+- El chat usa servicios especializados; no agregar nueva lógica de chat a `AdminDbService`.
+- Evidencias de entrega se almacenan fuera de `wwwroot` mediante `IEvidenceStorageService`.
 
-## Important database conventions
-Use the current permissions structure:
-- Correct table: `PerfilPermisos`
-- Correct assignment columns: `UsuarioAsignacionId`, `UsuarioAsignacionNombre`
+## Validación mínima antes de publicar
 
-Do not use old names:
-- Do not use table `PermisosPerfil`
-- Do not use columns `AsignadoPorUsuarioId` or `AsignadoPorNombre`
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/security/Test-RepositorySecrets.ps1
+dotnet restore Proyecto_Final.slnx
+dotnet build Proyecto_Final.slnx --configuration Release --no-restore
+dotnet test Proyecto_Final.slnx --configuration Release --no-build
+dotnet run --project tools/SqlSyntaxValidator/SqlSyntaxValidator.csproj -- database database_Esteban
+git diff --check
+```
 
-Offline orders CU-072 use:
-- `PedidoOfflineGuid`
-- channel: `Venta móvil offline`
+Además, revisar archivos nuevos/rastreados y documentar cualquier prueba de entorno que no haya podido ejecutarse.
 
-## Known technical notes
-- Some previous merge issues came from outdated references to `PermisosPerfil`; avoid reintroducing them.
-- `SecurityController` is a compatibility bridge to Roles, Permissions, and Audit.
-- `Views/Security/Roles.cshtml` should not reference `Proyecto_Final.Models.Perfil`.
-- Current `AdminAuthorizeAttribute` may not accept a module string in some versions. Inspect the filter before adding attributes such as `[AdminAuthorize("Empleados")]`.
-- Employee module uses `EmployeesDbService` and models in `Models/Admin/EmployeeViewModels.cs`.
+## Documentación inicial
 
-## Safe development workflow
-1. Work on a feature branch, not directly on `main`.
-2. Pull the latest repository state first.
-3. Inspect current files before editing.
-4. Make one logical change at a time.
-5. If SQL is required, add a script under `database/`.
-6. Build and test locally.
-7. Commit only relevant files.
-8. Do not commit appsettings unless explicitly approved.
-9. Push the feature branch.
-10. Merge to `main` only after successful testing.
-
-## Required testing checklist after changes
-Build:
-- Clean solution.
-- Rebuild solution.
-- Confirm 0 errors.
-
-Core tests:
-- Login with a temporary account supplied by the environment owner through a private channel.
-- Home
-- Shop
-- Cart
-- Custom modal confirmation
-- Inventory
-- Clients
-- Credits
-- Roles
-- Permissions
-- Audit
-- Mobile sales
-- Offline order flow
-- Employees admin module
-- Employee portal
-
-Employee tests:
-- Admin can list/create/edit employees.
-- Admin can assign tasks.
-- Admin can approve/reject leave requests.
-- Employee can access `Mi portal`.
-- Employee can view salary, job position, responsibilities, tasks, and leave requests.
-- Employee can request leave with or without salary payment.
-
-## Preferred response format for future implementation tasks
-When implementing, provide:
-1. Analysis of risk.
-2. SQL script path and full SQL if needed.
-3. New files to add.
-4. Files to replace completely.
-5. Files not to touch.
-6. Manual test plan.
-7. GitHub Desktop Summary.
-8. GitHub Desktop Description.
-
-## Suggested commit style
-Examples:
-- `style(ui): mejorar footer, carrito y espaciados generales`
-- `style(storefront): mejorar inicio y tienda del cliente`
-- `feat(ui): agregar modal propio reutilizable`
-- `feat(email): maquetar correos del sistema`
-- `chore(dev): permitir pruebas desde red local`
-- `feat(security): reforzar seguridad base del sistema`
-- `feat(empleados): implementar gestion base de empleados`
-- `style(empleados): pulir interfaz del modulo`
-- `chore(seed): agregar datos demo de empleados`
-
-## First instruction for Codex when starting a task
-Before editing, inspect the relevant files and summarize what will be changed. Do not modify appsettings or unrelated modules. Keep changes small, provide a test plan, and list the exact files changed.
+Leer primero `docs/REFERENCIAS_CODEX.md`; después, solo los documentos relacionados con el trabajo. La documentación histórica de Azure acredita ejecuciones anteriores, no valida automáticamente el código actual.

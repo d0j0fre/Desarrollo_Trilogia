@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using System.Data;
 using Proyecto_Final.Filters;
 using Proyecto_Final.Models.Admin;
 using Proyecto_Final.Services;
@@ -8,16 +9,19 @@ namespace Proyecto_Final.Controllers
     [AdminAuthorize("Empleados")]
     public class EmployeesController : Controller
     {
-        private readonly EmployeesDbService _employeesDbService;
+        private readonly IEmployeesService _employeesDbService;
         private readonly AdminDbService _adminDbService;
+        private readonly ILogger<EmployeesController> _logger;
 
-        public EmployeesController(EmployeesDbService employeesDbService, AdminDbService adminDbService)
+        public EmployeesController(IEmployeesService employeesDbService, AdminDbService adminDbService, ILogger<EmployeesController> logger)
         {
             _employeesDbService = employeesDbService;
             _adminDbService = adminDbService;
+            _logger = logger;
         }
 
         [HttpGet]
+        [AdminAuthorize("Empleados", "EMPLEADOS_VER")]
         public async Task<IActionResult> Index(string? buscar, string? estado)
         {
             var model = new EmployeeFilterViewModel
@@ -31,6 +35,7 @@ namespace Proyecto_Final.Controllers
         }
 
         [HttpGet]
+        [AdminAuthorize("Empleados", "EMPLEADOS_CREAR")]
         public async Task<IActionResult> Create()
         {
             var model = new EmployeeFormViewModel
@@ -45,6 +50,7 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AdminAuthorize("Empleados", "EMPLEADOS_CREAR")]
         public async Task<IActionResult> Create(EmployeeFormViewModel model)
         {
             if (string.IsNullOrWhiteSpace(model.Contrasena))
@@ -82,8 +88,9 @@ namespace Proyecto_Final.Controllers
             {
                 ModelState.AddModelError(string.Empty, "No se pudo registrar el empleado. Revise los datos e intente nuevamente.");
             }
-            catch (Exception)
+            catch (Exception exception)
             {
+                _logger.LogError(exception, "No fue posible registrar el empleado.");
                 ModelState.AddModelError(string.Empty, "Ocurrio un error al registrar el empleado. Intente nuevamente.");
             }
 
@@ -92,6 +99,7 @@ namespace Proyecto_Final.Controllers
         }
 
         [HttpGet]
+        [AdminAuthorize("Empleados", "EMPLEADOS_EDITAR")]
         public async Task<IActionResult> Edit(int id)
         {
             var model = await _employeesDbService.GetEmployeeFormByIdAsync(id);
@@ -107,8 +115,14 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AdminAuthorize("Empleados", "EMPLEADOS_EDITAR")]
         public async Task<IActionResult> Edit(EmployeeFormViewModel model)
         {
+            if (string.IsNullOrWhiteSpace(model.RowVersionBase64))
+            {
+                ModelState.AddModelError(nameof(model.RowVersionBase64), "La versión del expediente es obligatoria para editar.");
+            }
+
             if (model.Salario < 0)
             {
                 ModelState.AddModelError(nameof(model.Salario), "El salario no puede ser negativo.");
@@ -135,8 +149,14 @@ namespace Proyecto_Final.Controllers
                 TempData["SuccessMessage"] = "Empleado actualizado correctamente.";
                 return RedirectToAction(nameof(Details), new { id = model.EmpleadoId });
             }
-            catch (Exception)
+            catch (DBConcurrencyException exception)
             {
+                _logger.LogWarning(exception, "Conflicto de concurrencia al actualizar el empleado {EmployeeId}.", model.EmpleadoId);
+                ModelState.AddModelError(string.Empty, "El expediente cambió mientras lo editaba. Recargue la página e intente nuevamente.");
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(exception, "No fue posible actualizar el empleado {EmployeeId}.", model.EmpleadoId);
                 ModelState.AddModelError(string.Empty, "Ocurrio un error al actualizar el empleado. Intente nuevamente.");
             }
 
@@ -145,6 +165,7 @@ namespace Proyecto_Final.Controllers
         }
 
         [HttpGet]
+        [AdminAuthorize("Empleados", "EMPLEADOS_VER")]
         public async Task<IActionResult> Details(int id)
         {
             var model = await _employeesDbService.GetEmployeeDetailAsync(id);
@@ -160,6 +181,7 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AdminAuthorize("Empleados", "EMPLEADOS_EDITAR")]
         public async Task<IActionResult> ToggleStatus(int empleadoId, string? buscar, string? estado)
         {
             if (empleadoId <= 0)

@@ -35,6 +35,7 @@
     <link rel="stylesheet" href="~/css/sprint4-frontend-polish.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/brand-system.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/brand-overrides.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/sprint4-admin.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/chat.css" asp-append-version="true" />
 
     @RenderSection("Styles", required: false)
@@ -59,6 +60,7 @@
         var isCajero = isLoggedIn && (
             string.Equals(userRole, "Cajero", StringComparison.OrdinalIgnoreCase)
             || string.Equals(userRole, "Financiero", StringComparison.OrdinalIgnoreCase));
+        var isPurchasing = isLoggedIn && string.Equals(userRole, "Compras", StringComparison.OrdinalIgnoreCase);
         var categoriasLayout = await AdminDbService.GetStoreCategoriesAsync();
     }
 
@@ -136,6 +138,32 @@
                         <div class="navbar-nav ml-lg-auto py-0 main-nav-clean main-nav-2027">
                             <a asp-controller="Home" asp-action="Index" class="nav-item nav-link"><i class="fa fa-home mr-1"></i>Inicio</a>
 
+                            @if (!isAdmin && (isGerente || isCajero))
+                            {
+                                <div class="nav-item dropdown">
+                                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown"><i class="fa fa-coins mr-1"></i>Finanzas</a>
+                                    <div class="dropdown-menu border-0 rounded-0 m-0">
+                                        <a asp-controller="Budgets" asp-action="Index" class="dropdown-item">Presupuestos anuales</a>
+                                        <a asp-controller="Expenses" asp-action="Index" class="dropdown-item">Gastos operativos</a>
+                                        <a asp-controller="BudgetComparison" asp-action="Index" class="dropdown-item">Presupuesto vs. real</a>
+                                        @if (isGerente) { <a asp-controller="DeliveryBoard" asp-action="Index" class="dropdown-item">Tablero de entregas</a> }
+                                        @if (isGerente) { <a asp-controller="Documents" asp-action="Alerts" class="dropdown-item"><i class="fa fa-bell text-warning mr-1"></i>Alertas documentales</a> }
+                                    </div>
+                                </div>
+                            }
+
+                            @if (!isAdmin && isPurchasing)
+                            {
+                                <div class="nav-item dropdown">
+                                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown"><i class="fa fa-shopping-cart mr-1"></i>Compras</a>
+                                    <div class="dropdown-menu border-0 rounded-0 m-0">
+                                        <a asp-controller="Suppliers" asp-action="Index" class="dropdown-item">Proveedores</a>
+                                        <a asp-controller="PurchaseOrders" asp-action="Index" class="dropdown-item">Órdenes de compra</a>
+                                        <a asp-controller="PriceHistory" asp-action="Index" class="dropdown-item">Histórico de precios</a>
+                                    </div>
+                                </div>
+                            }
+
                             @if (isAdmin)
                             {
                                 <div class="nav-item dropdown admin-nav-dropdown admin-accordion-dropdown">
@@ -159,6 +187,8 @@
                                                 <div class="acc-sec__list">
                                                     <a asp-controller="Inventory" asp-action="Index" class="acc-item"><i class="fa fa-boxes"></i><span>Inventario</span></a>
                                                     <a asp-controller="Inventory" asp-action="Movements" class="acc-item"><i class="fa fa-exchange-alt"></i><span>Movimientos</span></a>
+                                                    <a asp-controller="Inventory" asp-action="TransformStock" class="acc-item"><i class="fa fa-recycle"></i><span>Transformar producto</span></a>
+                                                    <a asp-controller="Combos" asp-action="Index" class="acc-item"><i class="fa fa-box-open"></i><span>Combos</span></a>
                                                     <a asp-controller="Returns" asp-action="Index" class="acc-item"><i class="fa fa-undo"></i><span>Devoluciones</span></a>
                                                     <a asp-controller="Returns" asp-action="Quarantine" class="acc-item"><i class="fa fa-biohazard"></i><span>Cuarentena</span></a>
                                                     <a asp-controller="Assets" asp-action="Index" class="acc-item"><i class="fa fa-snowflake"></i><span>Activos</span></a>
@@ -188,6 +218,7 @@
                                                 </summary>
                                                 <div class="acc-sec__list">
                                                     <a asp-controller="RoutesAdmin" asp-action="Index" class="acc-item"><i class="fa fa-route"></i><span>Rutas y Entregas</span></a>
+                                                    <a asp-controller="DeliveryBoard" asp-action="Index" class="acc-item"><i class="fa fa-th-large"></i><span>Tablero de entregas</span></a>
                                                     <a asp-controller="Vehicles" asp-action="Index" class="acc-item"><i class="fa fa-truck"></i><span>Vehículos</span></a>
                                                     <a asp-controller="Fleet" asp-action="Mileage" class="acc-item"><i class="fa fa-tachometer-alt"></i><span>Kilometraje</span></a>
                                                     <a asp-controller="Fleet" asp-action="Maintenance" class="acc-item"><i class="fa fa-wrench"></i><span>Mantenimiento</span></a>
@@ -204,9 +235,13 @@
                                                 </summary>
                                                 <div class="acc-sec__list">
                                                     <a asp-controller="Finance" asp-action="Index" class="acc-item"><i class="fa fa-cash-register"></i><span>Liquidación de cobros</span></a>
+                                                    <a asp-controller="Budgets" asp-action="Index" class="acc-item"><i class="fa fa-wallet"></i><span>Presupuestos anuales</span></a>
                                                     <a asp-controller="Expenses" asp-action="Index" class="acc-item"><i class="fa fa-receipt"></i><span>Gastos operativos</span></a>
-                                                    <a asp-controller="Expenses" asp-action="Accounts" class="acc-item"><i class="fa fa-wallet"></i><span>Cuentas presupuestarias</span></a>
+                                                    <a asp-controller="BudgetComparison" asp-action="Index" class="acc-item"><i class="fa fa-chart-bar"></i><span>Presupuesto vs. real</span></a>
                                                     <a asp-controller="FinancialReportAdmin" asp-action="Index" class="acc-item"><i class="fa fa-chart-line"></i><span>Ingresos y Egresos</span></a>
+                                                    <a asp-controller="Suppliers" asp-action="Index" class="acc-item"><i class="fa fa-address-book"></i><span>Proveedores</span></a>
+                                                    <a asp-controller="PurchaseOrders" asp-action="Index" class="acc-item"><i class="fa fa-shopping-cart"></i><span>Órdenes de compra</span></a>
+                                                    <a asp-controller="PriceHistory" asp-action="Index" class="acc-item"><i class="fa fa-chart-area"></i><span>Histórico de precios</span></a>
                                                 </div>
                                             </details>
 
@@ -219,8 +254,11 @@
                                                 <div class="acc-sec__list">
                                                     <a asp-controller="Admin" asp-action="Index" class="acc-item"><i class="fa fa-tachometer-alt"></i><span>Dashboard</span></a>
                                                     <a asp-controller="ManagementDashboard" asp-action="Index" class="acc-item"><i class="fa fa-chart-line"></i><span>Tablero gerencial</span></a>
+                                                    <a asp-controller="SalesReports" asp-action="Index" class="acc-item"><i class="fa fa-file-alt"></i><span>Reporte de ventas</span></a>
+                                                    <a asp-controller="SellerPerformance" asp-action="Index" class="acc-item"><i class="fa fa-user-chart"></i><span>Desempeño de vendedores</span></a>
                                                     <a asp-controller="Kpis" asp-action="Index" class="acc-item"><i class="fa fa-bullseye"></i><span>Metas de ventas</span></a>
                                                     <a asp-controller="Kpis" asp-action="Report" class="acc-item"><i class="fa fa-chart-bar"></i><span>Reporte de KPIs</span></a>
+                                                    <a asp-controller="InventoryIntelligence" asp-action="Index" class="acc-item"><i class="fa fa-brain"></i><span>Inteligencia de inventario</span></a>
                                                 </div>
                                             </details>
 
@@ -247,6 +285,9 @@
                                                 <div class="acc-sec__list">
                                                     <a asp-controller="Employees" asp-action="Index" class="acc-item"><i class="fa fa-id-badge"></i><span>Empleados</span></a>
                                                     <a asp-controller="Employees" asp-action="LeaveRequests" class="acc-item"><i class="fa fa-calendar-check"></i><span>Solicitudes (licencias)</span></a>
+                                                    <a asp-controller="Attendance" asp-action="Index" class="acc-item"><i class="fa fa-clock"></i><span>Aprobar jornadas</span></a>
+                                                    <a asp-controller="Payroll" asp-action="Index" class="acc-item"><i class="fa fa-calculator"></i><span>Planilla</span></a>
+                                                    <a asp-controller="PaySlips" asp-action="Index" class="acc-item"><i class="fa fa-file-invoice-dollar"></i><span>Boletas de pago</span></a>
                                                 </div>
                                             </details>
 
@@ -259,6 +300,8 @@
                                                 <div class="acc-sec__list">
                                                     <a asp-controller="Roles" asp-action="Index" class="acc-item"><i class="fa fa-user-shield"></i><span>Roles</span></a>
                                                     <a asp-controller="Permissions" asp-action="Index" class="acc-item"><i class="fa fa-key"></i><span>Permisos</span></a>
+                                                    <a asp-controller="Documents" asp-action="Index" class="acc-item"><i class="fa fa-folder-open"></i><span>Documentos digitales</span></a>
+                                                    <a asp-controller="Documents" asp-action="Alerts" class="acc-item"><i class="fa fa-bell"></i><span>Alertas documentales</span></a>
                                                     <a asp-controller="Audit" asp-action="Index" class="acc-item"><i class="fa fa-history"></i><span>Auditoría</span></a>
                                                 </div>
                                             </details>
@@ -314,6 +357,7 @@
                                         "Crédito y Cobro",
                                         "Empleado",
                                         "Facturador",
+                                        "Gerente",
                                         "Soporte",
                                         "Supervisor",
                                         "Vendedor"
@@ -357,6 +401,14 @@
 
                                         </button>
 
+                                        @if (isAdmin)
+                                        {
+                                            <a asp-controller="Chat" asp-action="Index" class="dropdown-item">
+                                                <i class="fa fa-cog"></i>
+                                                Administrar departamentos
+                                            </a>
+                                        }
+
                                     </div>
 
                                 </div>
@@ -366,6 +418,12 @@
                             {
                                 <a asp-controller="EmployeePortal" asp-action="Index" class="nav-item nav-link nav-highlight">
                                     <i class="fa fa-id-badge mr-1"></i>Mi portal
+                                </a>
+                                <a asp-controller="MyAttendance" asp-action="Index" class="nav-item nav-link nav-highlight">
+                                    <i class="fa fa-clock mr-1"></i>Mis jornadas
+                                </a>
+                                <a asp-controller="MyPaySlips" asp-action="Index" class="nav-item nav-link nav-highlight">
+                                    <i class="fa fa-file-invoice-dollar mr-1"></i>Mis boletas
                                 </a>
                             }
 
@@ -386,6 +444,12 @@
                                 </a>
                                 <a asp-controller="ManagementDashboard" asp-action="Index" class="nav-item nav-link nav-highlight">
                                     <i class="fa fa-chart-line mr-1"></i>Tablero
+                                </a>
+                                <a asp-controller="SalesReports" asp-action="Index" class="nav-item nav-link nav-highlight">
+                                    <i class="fa fa-file-alt mr-1"></i>Ventas
+                                </a>
+                                <a asp-controller="SellerPerformance" asp-action="Index" class="nav-item nav-link nav-highlight">
+                                    <i class="fa fa-users mr-1"></i>Vendedores
                                 </a>
                                 <a asp-controller="Kpis" asp-action="Report" class="nav-item nav-link nav-highlight">
                                     <i class="fa fa-chart-bar mr-1"></i>KPIs
@@ -523,6 +587,12 @@
 </a>
 
 @* Chat *@
+@if (puedeUsarChat)
+{
+    <form id="chatAntiforgery" class="d-none" aria-hidden="true">
+        @Html.AntiForgeryToken()
+    </form>
+}
 <div id="chatWindow" class="chat-window">
 
     <div class="chat-header">
@@ -557,14 +627,13 @@
 
 </div>
 
-<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
     <script src="~/lib/easing/easing.min.js"></script>
     <script src="~/lib/owlcarousel/owl.carousel.min.js"></script>
     <script src="~/js/main.js" asp-append-version="true"></script>
     <script src="~/js/sprint3-modal.js" asp-append-version="true"></script>
+    <script src="~/js/sprint4-admin.js" asp-append-version="true"></script>
 
     <script>
         // Acordeón del menú de Administración:
@@ -606,7 +675,7 @@
 
     @RenderSection("Scripts", required: false)
 
-    <script asp-append-version="true" src="~/js/chat.js"></script>
     <script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
+    <script asp-append-version="true" src="~/js/chat.js"></script>
 </body>
 </html>

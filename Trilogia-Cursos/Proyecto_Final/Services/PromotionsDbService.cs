@@ -107,6 +107,8 @@ namespace Proyecto_Final.Services
             command.Parameters.Add("@ProductoId", SqlDbType.Int).Value = model.ProductoId;
             command.Parameters.Add("@CantidadMinima", SqlDbType.Int).Value = model.CantidadMinima;
             command.Parameters.Add("@PorcentajeDescuento", SqlDbType.Decimal).Value = model.PorcentajeDescuento.HasValue ? model.PorcentajeDescuento.Value : DBNull.Value;
+            command.Parameters["@PorcentajeDescuento"].Precision = 5;
+            command.Parameters["@PorcentajeDescuento"].Scale = 2;
             command.Parameters.Add("@ProductoRegaloId", SqlDbType.Int).Value = model.ProductoRegaloId.HasValue ? model.ProductoRegaloId.Value : DBNull.Value;
             command.Parameters.Add("@CantidadRegalo", SqlDbType.Int).Value = model.CantidadRegalo.HasValue ? model.CantidadRegalo.Value : DBNull.Value;
             command.Parameters.Add("@SegmentoCliente", SqlDbType.NVarChar, 20).Value = model.SegmentoCliente;

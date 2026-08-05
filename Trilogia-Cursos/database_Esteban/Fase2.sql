@@ -1,6 +1,6 @@
 -- ============================================================
--- FASE 2: RELACIONES — DistribuidoraJJ_DB
--- Agrega todas las llaves foráneas en orden seguro (padre ? hijo).
+-- FASE 2: RELACIONES â€” DistribuidoraJJ_DB
+-- Agrega todas las llaves forÃ¡neas en orden seguro (padre ? hijo).
 -- Idempotente: verifica sys.foreign_keys antes de cada ADD.
 -- Prerequisito: Fase 1 ejecutada sin errores.
 -- ============================================================
@@ -44,7 +44,7 @@ IF NOT EXISTS (
         FOREIGN KEY (CategoriaId) REFERENCES dbo.Categorias (CategoriaId);
 GO
 
--- ?? GRUPO 4: Pedidos depende de Usuarios (×2) ??????????????
+-- ?? GRUPO 4: Pedidos depende de Usuarios (Ã—2) ??????????????
 
 IF NOT EXISTS (
     SELECT 1 FROM sys.foreign_keys
@@ -234,7 +234,7 @@ IF NOT EXISTS (
         FOREIGN KEY (UsuarioId) REFERENCES dbo.Usuarios (UsuarioId);
 GO
 
--- ?? GRUPO 14: ClienteCreditoMovimientos (×2) ???????????????
+-- ?? GRUPO 14: ClienteCreditoMovimientos (Ã—2) ???????????????
 
 IF NOT EXISTS (
     SELECT 1 FROM sys.foreign_keys
@@ -334,7 +334,7 @@ IF NOT EXISTS (
         FOREIGN KEY (UsuarioAsignacionId) REFERENCES dbo.Usuarios (UsuarioId);
 GO
 
--- Verificación rápida: contar FKs registradas
+-- VerificaciÃ³n rÃ¡pida: contar FKs registradas
 SELECT COUNT(*) AS TotalFKsCreadas FROM sys.foreign_keys
 WHERE parent_object_id IN (
     OBJECT_ID('dbo.Usuarios'), OBJECT_ID('dbo.Empleados'),
@@ -349,5 +349,5 @@ WHERE parent_object_id IN (
 );
 GO
 
-PRINT '? FASE 2 completada — 29 llaves foráneas agregadas.';
+PRINT '? FASE 2 completada â€” 29 llaves forÃ¡neas agregadas.';
 GO

@@ -44,6 +44,8 @@ namespace Proyecto_Final.Services
             command.Parameters.Add("@Anio", SqlDbType.Int).Value = model.Anio;
             command.Parameters.Add("@Mes", SqlDbType.Int).Value = model.Mes;
             command.Parameters.Add("@MontoMeta", SqlDbType.Decimal).Value = model.MontoMeta;
+            command.Parameters["@MontoMeta"].Precision = 18;
+            command.Parameters["@MontoMeta"].Scale = 2;
             command.Parameters.Add("@Observaciones", SqlDbType.NVarChar, 300).Value = string.IsNullOrWhiteSpace(model.Observaciones) ? DBNull.Value : model.Observaciones.Trim();
             command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId > 0 ? usuarioId : DBNull.Value;
             command.Parameters.Add("@Nombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(usuarioNombre) ? DBNull.Value : usuarioNombre;

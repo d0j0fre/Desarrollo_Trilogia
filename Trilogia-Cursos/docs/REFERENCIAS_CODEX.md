@@ -1,124 +1,59 @@
 # Referencias actuales para Codex
 
-Este archivo es el indice principal de documentacion vigente del proyecto.
+Este es el índice operativo vigente. El código y el último `origin/main` prevalecen sobre notas históricas.
 
-Antes de iniciar un bloque nuevo, leer primero este archivo y luego abrir unicamente los documentos especificos que apliquen al bloque.
+## Estado al 23 de julio de 2026
 
-## Estado actual importante
+- Rama de integración: `codex/p0-saneamiento-integracion-total-20260722`, basada en el último `origin/main`.
+- Los cuatro `appsettings` compartidos están sanitizados; la configuración funcional no vive en Git.
+- La credencial SMTP detectada debe revocarse o rotarse fuera del repositorio. La limpieza del historial requiere coordinación y no se ejecuta automáticamente.
+- CI separa secretos, SQL, build y tests; `final-gate` consolida el resultado.
+- Las migraciones incrementales vigentes son 0001–0011. En Azure DEV se verificaron 0007–0011 como aplicadas; esto no demuestra que 0002–0006 se hayan ejecutado ni que el historial completo sea consecutivo.
+- Sprint 4 de Danny está implementado y sus objetos/permisos 0007–0011 fueron verificados en Azure. Falta login con una contraseña de prueba autorizada y QA funcional autenticado.
+- El diagnóstico de autenticación está en `docs/diagnostico-login-azure-sprint4-20260724.md`: cuenta y procedimiento son correctos; la credencial presentada no coincide con el valor directo almacenado y no se modificaron contraseñas.
+- Chat, evidencia privada, checkout/promociones y garantías requieren aplicar migraciones y efectuar QA de entorno antes de declararlos operativos.
+- La protección de `main` está activa y documentada en `docs/configuracion-proteccion-main.md`.
+- Las validaciones Azure documentadas anteriormente son evidencia histórica y no validan esta rama.
 
-- El trabajo P0 se realiza desde una rama basada en `origin/Danny`; no asumir que `main` y `Danny` son equivalentes hasta completar la integracion revisada.
-- Los `appsettings` fueron limpiados y usan placeholders.
-- No se debe volver a poner secretos ni conexiones locales personales en Git.
-- `cu101_sp_auth_validate_user_password.sql` fue ejecutado manualmente en SSMS.
-- `cu102_sp_seller_get_my_orders.sql` fue ejecutado manualmente en SSMS.
-- Azure SQL DEV quedo creado e importado desde el BACPAC final `DistribuidoraJJ_DB_Azure_Final_20260702.bacpac`.
-- MVC/API local fueron probados contra Azure SQL DEV mediante variable de entorno.
-- Swagger/OpenAPI quedo habilitado en `Proyecto_FinalAPI` para el Bloque 8.
-- `Proyecto_FinalAPI` tiene endpoints de diagnostico `GET /` y `GET /health`.
-- `Proyecto_FinalAPI` quedo publicado en Azure App Service `api-trilogia-cursos-dev-cr01` y validado con `/health`, `/swagger` y `/api/productos`.
-- `Proyecto_Final` MVC quedo publicado en Azure App Service `web-trilogia-cursos-dev-cr01` y validado con Home, Login, navegacion principal, usuarios admin/cliente/vendedor y Admin.
-- Esteban, Gerald y David tienen Owner directo solo en el Resource Group y `db_owner` individual en Azure SQL DEV.
-- Danny permanece como administrador Microsoft Entra individual del servidor SQL porque el tenant institucional bloquea la administracion del grupo previsto.
-- Cada migracion compartida requiere un unico ejecutor designado en el PR.
-- El despliegue final Azure DEV esta documentado en `docs/azure-despliegue-final-qa.md`.
-- El proyecto todavia usa contrasenas en texto plano; la migracion a hash queda para una fase futura.
+## Corrección PR #115 — 27 de julio de 2026
 
-## Documentos vigentes
+- La ruta de integración sigue siendo `codex/integracion-sprint4-danny-david-final`
+  en Draft. Las correcciones de combos, correo y hash se documentan en
+  `docs/sprint4-integracion-danny-david.md`.
+- 0012 no está aplicada en Azure DEV. El BACPAC previo fue exportado, su hash
+  fue comprobado y una importación aislada aprobó `DBCC CHECKDB`; la ejecución
+  futura en Azure todavía exige ejecutor único,
+  `scripts/database/Invoke-Migration0012.ps1` y el verify de solo lectura.
+- Las métricas SQL no son intercambiables: el alcance focalizado `database/` y
+  el alcance CI recursivo `database` + `database_Esteban` se reportan por separado.
+- `database/00_todo_en_uno.sql` no tiene diferencia con la base de PR #115 y
+  nunca se ejecutó durante la integración.
+- El ejecutor de 0012 distingue `Entra` (`sqlcmd -G`) de `Windows`
+  (`sqlcmd -E`), transmite `MigrationSha256=<SHA-256>` como una sola variable y
+  no acepta contraseñas. Su prueba sin conexión está en
+  `scripts/database/Test-InvokeMigration0012.ps1`.
+- La evidencia LocalDB de 0012 cubre instalación limpia y reconciliación del
+  esquema legado real: conserva 1 combo, 3 componentes, 4 líneas históricas de
+  combo y 153 detalles de pedido; reconstruye 12 componentes canónicos y evita
+  doble conteo. También incluye el detalle público antes/después de inactivar,
+  reactivar y agotar un componente. Azure DEV sigue sin modificaciones; la
+  aplicación de 0012 y el QA autenticado allí permanecen pendientes.
 
-### API
+## Índice por tema
 
-- `docs/api-endpoints.md`: endpoints actuales del API.
-- `docs/api-pruebas-manuales.md`: checklist de pruebas manuales del API.
-- `docs/api-auth-futura.md`: analisis para autenticacion futura con JWT u otro mecanismo.
+- Seguridad y configuración: `docs/credenciales-configuracion-segura.md`, `SECURITY.md`, `docs/incidente-seguridad-credencial-smtp-20260722.md`.
+- CI y rama principal: `.github/workflows/ci-security-build.yml`, `docs/configuracion-proteccion-main.md`.
+- SQL: `database/migrations/README.md`, `docs/inventario-sql-y-migraciones.md`.
+- Trazabilidad funcional: `docs/matriz-historias-estado.md`, `docs/resumen-final-proyecto.md`.
+- QA: `docs/qa-final.md`, `docs/api-pruebas-manuales.md`.
+- Sprint 4 Danny: `docs/sprint4-danny-cu201-cu202-cu221-cu222-cu223.md`.
+- Cliente/pedidos: `docs/portal-cliente-pedidos.md`.
+- API: `docs/api-endpoints.md`, `docs/api-auth-futura.md`.
+- Azure histórico: `docs/azure-despliegue-final-qa.md` y guías relacionadas.
 
-### Base de datos y SQL
+## Regla de lectura
 
-- `docs/azure-sql-dev-companeros.md`: guia para que los companeros usen Azure SQL DEV compartido sin tocar appsettings ni subir secretos.
-- `docs/azure-despliegue-final-qa.md`: resumen final del despliegue Azure DEV, URLs oficiales, variables App Service, QA aprobado, riesgos y proximos bloques.
-- `docs/inventario-sql-directo.md`: inventario de SQL directo en C# y ruta de migracion gradual a procedimientos almacenados.
-- `docs/resumen-mejoras-seguridad.md`: resumen de mejoras de seguridad, SQL, permisos, reportes y arquitectura.
-
-### Cliente, pedidos y facturacion
-
-- `docs/portal-cliente-pedidos.md`: reglas del portal cliente, historial, cancelacion y comprobantes.
-- `docs/resumen-final-proyecto.md`: resumen general del estado funcional del proyecto.
-
-### QA y pruebas
-
-- `docs/qa-final.md`: checklist general de pruebas.
-- `docs/seguridad-sprint3-refuerzo.md`: refuerzos de seguridad posteriores al Sprint 3.
-- `docs/acceso-red-local.md`: guia para probar desde celular u otra computadora en red local.
-
-### Seguridad, configuracion y onboarding
-
-- `docs/credenciales-configuracion-segura.md`: politica para secretos, cuentas demo, configuracion local, Azure, respuesta ante exposicion y revision previa a un PR.
-- `docs/azure-colaboracion-equipo.md`: modelo vigente de colaboracion, accesos minimos, conexion Entra MFA y flujo de cambios SQL.
-- `docs/azure-p1-ejecucion-20260714.md`: resultado sanitizado de la ejecucion P1.2, pruebas, rollback y riesgos pendientes.
-- `docs/azure-permisos-directos-equipo.md`: permisos Owner y `db_owner` individuales, revocacion, cambio de IP, pruebas y riesgos del modelo directo.
-- `database/migrations/README.md`: politica operativa para scripts incrementales y el ledger de migraciones.
-
-## Regla para ahorrar tokens
-
-No leer todos los documentos de `docs` por defecto.
-
-Para cada bloque:
-
-1. Leer este indice.
-2. Leer solo los documentos relacionados con el bloque.
-3. No usar prompts antiguos como fuente de verdad.
-4. No asumir que documentacion historica esta actualizada si contradice el codigo o scripts actuales.
-
-## Referencias recomendadas por tipo de bloque
-
-### Si el bloque es API
-
-Leer:
-
-- `docs/api-endpoints.md`
-- `docs/api-pruebas-manuales.md`
-- `docs/api-auth-futura.md`
-
-### Si el bloque es base de datos, SQL o refactor SOLID
-
-Leer:
-
-- `docs/inventario-sql-directo.md`
-- `docs/resumen-mejoras-seguridad.md`
-- scripts en `database/`
-
-### Si el bloque es portal cliente, pedidos o facturacion
-
-Leer:
-
-- `docs/portal-cliente-pedidos.md`
-- `docs/resumen-final-proyecto.md`
-- `docs/qa-final.md`
-
-### Si el bloque es pruebas finales
-
-Leer:
-
-- `docs/qa-final.md`
-- `docs/api-pruebas-manuales.md`
-- `docs/acceso-red-local.md`
-
-### Si el bloque es Azure
-
-Leer:
-
-- Este indice.
-- `docs/azure-sql-dev-companeros.md`
-- `docs/azure-permisos-directos-equipo.md`
-- `docs/azure-despliegue-final-qa.md`
-- `docs/resumen-final-proyecto.md`
-- `docs/api-endpoints.md`
-- `docs/credenciales-configuracion-segura.md`
-- revisar `appsettings` y `Program.cs` directamente.
-
-### Si el bloque involucra seguridad, autenticacion, correo, configuracion u onboarding
-
-Leer:
-
-- `docs/credenciales-configuracion-segura.md`
-
-Antes de cualquier bloque que involucre Azure, autenticacion, correo, variables de entorno o colaboradores, leer `docs/credenciales-configuracion-segura.md`.
+1. Leer este índice.
+2. Inspeccionar los archivos actuales del módulo.
+3. Leer solo la documentación relacionada.
+4. No tratar prompts, ramas personales ni QA histórico como fuente de verdad.

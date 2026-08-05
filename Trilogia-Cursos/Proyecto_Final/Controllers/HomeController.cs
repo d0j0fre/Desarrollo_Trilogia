@@ -9,12 +9,21 @@ namespace Proyecto_Final.Controllers
         private readonly AdminDbService _adminDbService;
         private readonly StoreDbService _storeDbService;
         private readonly EmailService _emailService;
+        private readonly IComboDbService _combos;
+        private readonly ILogger<HomeController> _logger;
 
-        public HomeController(AdminDbService adminDbService, StoreDbService storeDbService, EmailService emailService)
+        public HomeController(
+            AdminDbService adminDbService,
+            StoreDbService storeDbService,
+            EmailService emailService,
+            IComboDbService combos,
+            ILogger<HomeController> logger)
         {
             _adminDbService = adminDbService;
             _storeDbService = storeDbService;
             _emailService = emailService;
+            _combos = combos;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -42,7 +51,36 @@ namespace Proyecto_Final.Controllers
                 Titulo = string.IsNullOrWhiteSpace(categoria) ? "Tienda" : $"Tienda - {categoria}"
             };
 
+            try
+            {
+                model.Combos = (await _combos.GetStoreCombosAsync(buscar, HttpContext.RequestAborted)).ToList();
+            }
+            catch (Exception exception)
+            {
+                _logger.LogWarning(exception, "No fue posible cargar combos en la tienda.");
+            }
+
             return View(model);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ComboDetail(int id, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var combo = await _combos.GetStoreComboAsync(id, cancellationToken);
+                if (combo is not null)
+                {
+                    return View(combo);
+                }
+            }
+            catch (Exception exception)
+            {
+                _logger.LogWarning(exception, "No fue posible cargar el combo {ComboId} en tienda.", id);
+            }
+
+            TempData["ErrorMessage"] = "El combo solicitado no está disponible.";
+            return RedirectToAction(nameof(Shop));
         }
 
         [HttpGet]

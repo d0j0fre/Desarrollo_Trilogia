@@ -1,20 +1,109 @@
+@model IReadOnlyList<Proyecto_Final.Models.Chat.ChatDepartmentAdminViewModel>
 @{
-    ViewData["Title"] = "Chat";
+    ViewData["Title"] = "Administrar departamentos de chat";
 }
 
 <div class="container py-4">
-    <div class="card shadow-sm">
-        <div class="card-header">
-            <h4 class="mb-0">
-                <i class="fa fa-comments mr-2"></i>
-                Chat
-            </h4>
-        </div>
-
-        <div class="card-body">
-            <p class="text-muted mb-0">
-                Aquí aparecerán tus conversaciones.
-            </p>
+    <div class="d-flex flex-wrap align-items-center justify-content-between mb-3">
+        <div>
+            <h2 class="mb-1">Departamentos de chat</h2>
+            <p class="text-muted mb-0">Grupos independientes de los perfiles y roles del sistema.</p>
         </div>
     </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header"><strong>Crear departamento</strong></div>
+        <div class="card-body">
+            <form asp-action="CreateDepartment" method="post" class="form-row">
+                @Html.AntiForgeryToken()
+                <div class="form-group col-md-4">
+                    <label for="departmentName">Nombre</label>
+                    <input id="departmentName" name="Name" class="form-control" maxlength="120" required />
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="departmentDescription">Descripción</label>
+                    <input id="departmentDescription" name="Description" class="form-control" maxlength="300" />
+                </div>
+                <input type="hidden" name="Active" value="true" />
+                <div class="form-group col-md-2 d-flex align-items-end">
+                    <button class="btn btn-primary btn-block" type="submit">Crear</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (Model.Count == 0)
+    {
+        <div class="alert alert-info">Todavía no hay departamentos configurados.</div>
+    }
+
+    @foreach (var department in Model)
+    {
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <form asp-action="UpdateDepartment" method="post" class="form-row align-items-end">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="DepartmentId" value="@department.DepartmentId" />
+                    <div class="form-group col-md-3">
+                        <label>Nombre</label>
+                        <input name="Name" value="@department.Name" class="form-control" maxlength="120" required />
+                    </div>
+                    <div class="form-group col-md-5">
+                        <label>Descripción</label>
+                        <input name="Description" value="@department.Description" class="form-control" maxlength="300" />
+                    </div>
+                    <div class="form-group col-md-2">
+                        <div class="custom-control custom-checkbox mb-2">
+                            <input type="checkbox" class="custom-control-input" id="active-@department.DepartmentId"
+                                   name="Active" value="true" checked="@department.Active" />
+                            <label class="custom-control-label" for="active-@department.DepartmentId">Activo</label>
+                        </div>
+                    </div>
+                    <div class="form-group col-md-2">
+                        <button class="btn btn-outline-primary btn-block" type="submit">Guardar</button>
+                    </div>
+                </form>
+
+                <hr />
+                <h5>Miembros <span class="badge badge-secondary">@department.MemberCount</span></h5>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead><tr><th>Usuario</th><th>Correo</th><th>Publica</th><th></th></tr></thead>
+                        <tbody>
+                        @foreach (var member in department.Members)
+                        {
+                            <tr>
+                                <td>@member.FullName</td>
+                                <td>@member.Email</td>
+                                <td>@(member.CanPost ? "Sí" : "Solo lectura")</td>
+                                <td class="text-right">
+                                    <form asp-action="RemoveMember" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="departmentId" value="@department.DepartmentId" />
+                                        <input type="hidden" name="userId" value="@member.UserId" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Retirar</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+
+                <form asp-action="AddMember" method="post" class="form-inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="departmentId" value="@department.DepartmentId" />
+                    <label class="sr-only" for="user-@department.DepartmentId">ID de usuario</label>
+                    <input id="user-@department.DepartmentId" type="number" min="1" name="userId"
+                           class="form-control mr-2 mb-2" placeholder="ID de usuario" required />
+                    <div class="custom-control custom-checkbox mr-3 mb-2">
+                        <input type="checkbox" class="custom-control-input" id="post-@department.DepartmentId"
+                               name="canPost" value="true" checked />
+                        <label class="custom-control-label" for="post-@department.DepartmentId">Puede publicar</label>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-primary mb-2">Agregar miembro</button>
+                </form>
+            </div>
+        </div>
+    }
 </div>

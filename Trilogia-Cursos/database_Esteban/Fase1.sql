@@ -1,8 +1,8 @@
 -- ============================================================
--- FASE 1: DDL BASE ó DistribuidoraJJ_DB
+-- FASE 1: DDL BASE ‚Äî DistribuidoraJJ_DB
 -- Crea la base de datos y las 21 tablas con PKs, columnas
 -- computadas, defaults y constraints INTERNOS.
--- SIN llaves for·neas (se agregan en Fase 2).
+-- SIN llaves for√°neas (se agregan en Fase 2).
 -- Idempotente: IF OBJECT_ID IS NULL antes de cada tabla.
 -- ============================================================
 
@@ -30,7 +30,7 @@ CREATE TABLE dbo.Perfiles (
 );
 GO
 
--- ?? 2. Categorias (categorÌas de producto) ?????????????????
+-- ?? 2. Categorias (categor√≠as de producto) ?????????????????
 IF OBJECT_ID('dbo.Categorias', 'U') IS NULL
 CREATE TABLE dbo.Categorias (
     CategoriaId   INT           IDENTITY(1,1) NOT NULL,
@@ -42,7 +42,7 @@ CREATE TABLE dbo.Categorias (
 );
 GO
 
--- ?? 3. Permisos (cat·logo de permisos) ?????????????????????
+-- ?? 3. Permisos (cat√°logo de permisos) ?????????????????????
 IF OBJECT_ID('dbo.Permisos', 'U') IS NULL
 CREATE TABLE dbo.Permisos (
     PermisoId     INT           IDENTITY(1,1) NOT NULL,
@@ -101,7 +101,7 @@ CREATE TABLE dbo.Productos (
     ProductoId    INT           IDENTITY(1,1) NOT NULL,
     CategoriaId   INT                         NOT NULL,  -- FK ? Categorias (Fase 2)
     Nombre        NVARCHAR(150)               NOT NULL,
-    Categoria     NVARCHAR(100)               NOT NULL,  -- denormalizado para consultas r·pidas
+    Categoria     NVARCHAR(100)               NOT NULL,  -- denormalizado para consultas r√°pidas
     Descripcion   NVARCHAR(255)               NULL,
     Precio        DECIMAL(18,2)               NOT NULL,
     Stock         INT                         NOT NULL CONSTRAINT DF_Productos_Stock        DEFAULT 0,
@@ -155,7 +155,7 @@ CREATE TABLE dbo.Pedidos (
 );
 GO
 
--- Õndice filtrado: GUIDs ˙nicos sÛlo cuando no son NULL
+-- √çndice filtrado: GUIDs √∫nicos s√≥lo cuando no son NULL
 IF NOT EXISTS (
     SELECT 1 FROM sys.indexes
     WHERE object_id = OBJECT_ID('dbo.Pedidos')
@@ -420,5 +420,5 @@ CREATE TABLE dbo.EmpleadoTareas (
 );
 GO
 
-PRINT '? FASE 1 completada ó 21 tablas creadas sin llaves for·neas.';
+PRINT '? FASE 1 completada ‚Äî 21 tablas creadas sin llaves for√°neas.';
 GO

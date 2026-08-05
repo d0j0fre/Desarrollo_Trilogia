@@ -9,8 +9,7 @@
 -- Las tablas satélite se consultan con guardas OBJECT_ID para que el SP
 -- funcione aunque algún módulo no esté aplicado.
 -- ============================================================
-
-USE DistribuidoraJJ_DB_DEV;
+-- Ejecute este script sobre la base de datos seleccionada por el operador.
 GO
 SET NOCOUNT ON;
 GO

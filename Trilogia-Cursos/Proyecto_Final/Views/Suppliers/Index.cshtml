@@ -1,0 +1,116 @@
+@model Proyecto_Final.Models.Admin.SuppliersIndexViewModel
+@{
+    ViewData["Title"] = "Proveedores";
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <h2>Proveedores</h2>
+            <p>Contactos y estado de proveedores para compras (CU-101).</p>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-lg-4 pb-3">
+            <div class="admin-card" id="supplier-form-card">
+                <h5 id="supplier-form-title">@(Model.Formulario.ProveedorId > 0 ? "Editar proveedor" : "Nuevo proveedor")</h5>
+                <form asp-action="Save" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <input asp-for="Formulario.ProveedorId" name="ProveedorId" id="ProveedorId" type="hidden" />
+                    <div class="form-group">
+                        <label asp-for="Formulario.Nombre"></label>
+                        <input asp-for="Formulario.Nombre" name="Nombre" id="Nombre" class="form-control" />
+                        <span asp-validation-for="Formulario.Nombre" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Formulario.Contacto"></label>
+                        <input asp-for="Formulario.Contacto" name="Contacto" id="Contacto" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Formulario.Telefono"></label>
+                        <input asp-for="Formulario.Telefono" name="Telefono" id="Telefono" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Formulario.Email"></label>
+                        <input asp-for="Formulario.Email" name="Email" id="Email" class="form-control" />
+                        <span asp-validation-for="Formulario.Email" class="text-danger"></span>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input asp-for="Formulario.Activo" name="Activo" id="Activo" class="form-check-input" />
+                        <label for="Activo" class="form-check-label">Proveedor activo</label>
+                    </div>
+                    <button class="btn btn-primary btn-block" type="submit">Guardar proveedor</button>
+                    <button class="btn btn-link btn-block" type="button" id="reset-supplier">Limpiar / nuevo</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-8 pb-3">
+            <div class="admin-table-wrapper">
+                <form asp-action="Index" method="get" class="p-3 border-bottom form-inline">
+                    <input name="filtro" value="@Model.Filtro" maxlength="100" class="form-control mr-2" placeholder="Buscar proveedor" />
+                    <select name="soloActivos" class="form-control mr-2">
+                        <option value="">Todos</option>
+                        <option value="true" selected="@(Model.SoloActivos == true)">Activos</option>
+                        <option value="false" selected="@(Model.SoloActivos == false)">Inactivos</option>
+                    </select>
+                    <button class="btn btn-outline-primary" type="submit">Filtrar</button>
+                </form>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead><tr><th>Nombre</th><th>Contacto</th><th>Teléfono / correo</th><th>Estado</th><th></th></tr></thead>
+                        <tbody>
+                        @if (!Model.Proveedores.Any())
+                        {
+                            <tr><td colspan="5" class="text-center text-muted py-4">No hay proveedores para este filtro.</td></tr>
+                        }
+                        @foreach (var supplier in Model.Proveedores)
+                        {
+                            <tr>
+                                <td><strong>@supplier.Nombre</strong></td>
+                                <td>@(supplier.Contacto ?? "—")</td>
+                                <td>@(supplier.Telefono ?? "—")<small class="d-block text-muted">@(supplier.Email ?? "Sin correo")</small></td>
+                                <td><span class="badge badge-@(supplier.Activo ? "success" : "secondary")">@(supplier.Activo ? "Activo" : "Inactivo")</span></td>
+                                <td class="text-right">
+                                    <button type="button" class="btn btn-sm btn-outline-primary edit-supplier"
+                                            data-id="@supplier.ProveedorId" data-name="@supplier.Nombre" data-contact="@supplier.Contacto"
+                                            data-phone="@supplier.Telefono" data-email="@supplier.Email" data-active="@supplier.Activo.ToString().ToLowerInvariant()">Editar</button>
+                                    <form asp-action="ChangeStatus" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="proveedorId" value="@supplier.ProveedorId" />
+                                        <input type="hidden" name="activo" value="@((!supplier.Activo).ToString().ToLowerInvariant())" />
+                                        <button class="btn btn-sm btn-outline-@(supplier.Activo ? "danger" : "success")" type="submit">@(supplier.Activo ? "Desactivar" : "Reactivar")</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (() => {
+            const byId = id => document.getElementById(id);
+            const set = (id, value) => { const element = byId(id); if (element) element.value = value || ''; };
+            document.querySelectorAll('.edit-supplier').forEach(button => button.addEventListener('click', () => {
+                set('ProveedorId', button.dataset.id); set('Nombre', button.dataset.name);
+                set('Contacto', button.dataset.contact); set('Telefono', button.dataset.phone); set('Email', button.dataset.email);
+                byId('Activo').checked = button.dataset.active === 'true';
+                byId('supplier-form-title').textContent = `Editar proveedor #${button.dataset.id}`;
+                byId('supplier-form-card').scrollIntoView({ behavior: 'smooth' });
+            }));
+            byId('reset-supplier')?.addEventListener('click', () => {
+                ['ProveedorId', 'Nombre', 'Contacto', 'Telefono', 'Email'].forEach(id => set(id, id === 'ProveedorId' ? '0' : ''));
+                byId('Activo').checked = true; byId('supplier-form-title').textContent = 'Nuevo proveedor';
+            });
+        })();
+    </script>
+}

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Proyecto_Final.Services;
 
 namespace Proyecto_Final.Controllers
@@ -7,11 +8,16 @@ namespace Proyecto_Final.Controllers
     {
         private readonly AccountApiService _accountApiService;
         private readonly AdminDbService _adminDbService;
+        private readonly ILogger<AccountController> _logger;
 
-        public AccountController(AccountApiService accountApiService, AdminDbService adminDbService)
+        public AccountController(
+            AccountApiService accountApiService,
+            AdminDbService adminDbService,
+            ILogger<AccountController> logger)
         {
             _accountApiService = accountApiService;
             _adminDbService = adminDbService;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -31,6 +37,7 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting("authentication")]
         public async Task<IActionResult> Login(Proyecto_Final.Models.LoginViewModel model)
         {
             if (!ModelState.IsValid)
@@ -65,8 +72,9 @@ namespace Proyecto_Final.Controllers
                 TempData["LoginSuccess"] = $"Bienvenido, {response.FullName}.";
                 return RedirectToAction("Index", "Home");
             }
-            catch (Exception)
+            catch (Exception exception)
             {
+                _logger.LogError(exception, "Falló el inicio de sesión mediante el API de autenticación.");
                 ModelState.AddModelError(string.Empty, "No fue posible iniciar sesión en este momento. Intentá nuevamente.");
                 return View(model);
             }
@@ -138,6 +146,7 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting("password-recovery")]
         public async Task<IActionResult> ForgotPassword(Proyecto_Final.Models.ForgotPasswordViewModel model)
         {
             if (!ModelState.IsValid)
@@ -189,6 +198,7 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting("password-recovery")]
         public async Task<IActionResult> ResetPassword(Proyecto_Final.Models.ResetPasswordViewModel model)
         {
             if (!ModelState.IsValid)

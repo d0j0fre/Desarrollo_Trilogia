@@ -1,0 +1,21 @@
+@model Proyecto_Final.Models.Admin.PriceHistoryViewModel
+@{
+    ViewData["Title"] = "Histórico de precios";
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5"><div class="col-12"><h2>Histórico de precios</h2><p>Comparación de compras por producto y proveedor (CU-104).</p></div></div>
+    <div class="row px-xl-5"><div class="col-12">
+        <form method="get" class="form-inline mb-3"><select name="productoId" class="form-control mr-2"><option value="">Seleccione un producto</option>@foreach (var product in Model.ProductosDisponibles) { <option value="@product.ProductoId" selected="@(product.ProductoId == Model.ProductoId)">@product.Nombre</option> }</select><button class="btn btn-primary">Consultar</button></form>
+        @if (Model.ProductoId > 0 && !Model.Historial.Any()) { <p class="text-muted">No hay compras no canceladas para este producto.</p> }
+        @if (Model.Historial.Any())
+        {
+            <div class="table-responsive"><table class="table table-hover"><thead><tr><th>Fecha</th><th>Proveedor</th><th>Precio</th><th>Precio anterior</th><th>Variación</th><th>Orden / estado</th></tr></thead><tbody>
+            @foreach (var line in Model.Historial)
+            {
+                <tr class="@(line.VariacionSignificativa ? "table-warning" : "")"><td>@line.FechaCreacionUtc.ToLocalTime().ToString("dd/MM/yyyy")</td><td>@line.ProveedorNombre</td><td>₡@line.PrecioUnitario.ToString("N2")</td><td>@(line.PrecioAnterior.HasValue ? $"₡{line.PrecioAnterior:N2}" : "—")</td><td>@(line.VariacionPorcentual.HasValue ? $"{line.VariacionPorcentual:N2}%" : "—")</td><td><a asp-controller="PurchaseOrders" asp-action="Detail" asp-route-id="@line.OrdenCompraId">#@line.OrdenCompraId</a> · @line.Estado</td></tr>
+            }
+            </tbody></table></div><p class="text-muted">Las variaciones absolutas mayores al 15% se resaltan para revisión; no modifican precios automáticamente.</p>
+        }
+    </div></div>
+</div>

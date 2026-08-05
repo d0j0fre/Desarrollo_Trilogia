@@ -1,0 +1,91 @@
+@model Proyecto_Final.Models.Admin.InventoryIntelligenceViewModel
+@{
+    ViewData["Title"] = "Inteligencia de inventario";
+    var maxSales = Model.TendenciaEstacional.Any() ? Model.TendenciaEstacional.Max(point => point.TotalVendido) : 0m;
+    string RiskClass(string risk) => risk == "Alto" ? "danger" : risk == "Medio" ? "warning" : "info";
+}
+
+<div class="container-fluid py-4 px-xl-5 backoffice-page s4-admin-page">
+    <header class="d-flex flex-wrap justify-content-between align-items-start mb-4">
+        <div class="s4-page-header">
+            <span class="s4-eyebrow"><i class="fa fa-chart-line"></i> CU-241 · CU-242 · CU-243</span>
+            <h2>Inteligencia de inventario</h2>
+            <p class="text-muted mb-0">Abastecimiento, rotación y estacionalidad calculados con pedidos válidos.</p>
+        </div>
+        <small class="text-muted">Generado @Model.GeneratedUtc.ToString("dd/MM/yyyy HH:mm") UTC</small>
+    </header>
+
+    @if (TempData["ErrorMessage"] is string error) { <div class="alert alert-danger" role="alert">@error</div> }
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+    <section class="card mb-4" aria-labelledby="intelligence-filter-title">
+        <div class="card-header" id="intelligence-filter-title">Parámetros del análisis</div>
+        <div class="card-body">
+            <form method="get" class="s4-filters">
+                <div class="s4-filter"><label asp-for="Filter.StartYear">Año inicial</label><input asp-for="Filter.StartYear" name="StartYear" type="number" min="2000" max="2100" class="form-control" /></div>
+                <div class="s4-filter"><label asp-for="Filter.EndYear">Año final</label><input asp-for="Filter.EndYear" name="EndYear" type="number" min="2000" max="2100" class="form-control" /></div>
+                <div class="s4-filter"><label asp-for="Filter.RecentMonths">Meses para promedio</label><input asp-for="Filter.RecentMonths" name="RecentMonths" type="number" min="1" max="12" class="form-control" /></div>
+                <div class="s4-filter"><label asp-for="Filter.CoverageMonths">Meses de cobertura</label><input asp-for="Filter.CoverageMonths" name="CoverageMonths" type="number" min="1" max="12" class="form-control" /></div>
+                <div class="s4-filter"><label asp-for="Filter.SlowWindowDays">Ventana sin rotación</label><input asp-for="Filter.SlowWindowDays" name="SlowWindowDays" type="number" min="30" max="365" class="form-control" /></div>
+                <div class="s4-filter--action"><button class="btn btn-dark btn-block" type="submit"><i class="fa fa-sync mr-1"></i>Actualizar</button></div>
+            </form>
+        </div>
+    </section>
+
+    <div class="s4-kpi-grid mb-4">
+        <article class="s4-kpi s4-kpi--warning"><span class="s4-kpi__label">Sugerencias de compra</span><strong class="s4-kpi__value">@Model.SugerenciasCompra.Count</strong></article>
+        <article class="s4-kpi s4-kpi--danger"><span class="s4-kpi__label">Productos estancados</span><strong class="s4-kpi__value">@Model.ProductosEstancados.Count</strong></article>
+        <article class="s4-kpi s4-kpi--success"><span class="s4-kpi__label">Meses comparables</span><strong class="s4-kpi__value">@Model.TendenciaEstacional.Count / 12</strong></article>
+    </div>
+
+    <section class="card mb-4" aria-labelledby="purchase-title">
+        <div class="card-header" id="purchase-title">Sugerencias de abastecimiento</div>
+        @if (!Model.SugerenciasCompra.Any())
+        {
+            <div class="s4-empty"><i class="fa fa-box-open"></i><h3>Sin compras sugeridas</h3><p class="mb-0">El inventario cubre la demanda estimada con los parámetros actuales.</p></div>
+        }
+        else
+        {
+            <div class="table-responsive"><table class="table table-hover">
+                <thead><tr><th>Producto</th><th>Stock / mínimo</th><th>Venta ventana</th><th>Promedio mensual</th><th>Cobertura</th><th>Sugerencia</th></tr></thead>
+                <tbody>@foreach (var item in Model.SugerenciasCompra) { <tr><td><strong>@item.Nombre</strong>@if(item.DatosInsuficientes){<small class="d-block text-warning"><i class="fa fa-info-circle"></i> Sin ventas suficientes</small>}</td><td>@item.StockActual / @item.StockMinimo</td><td>@item.UnidadesVendidasVentana u.</td><td>@item.PromedioVentaMensual.ToString("N2") u.</td><td>@item.MesesCobertura mes(es)</td><td><span class="badge badge-success">Comprar @item.CantidadSugerida</span></td></tr> }</tbody>
+            </table></div>
+        }
+    </section>
+
+    <section class="card mb-4" aria-labelledby="slow-title">
+        <div class="card-header" id="slow-title">Productos sin rotación</div>
+        @if (!Model.ProductosEstancados.Any())
+        {
+            <div class="s4-empty"><i class="fa fa-check-circle"></i><h3>Sin productos estancados</h3><p class="mb-0">Ningún producto maduro con stock incumple la ventana seleccionada.</p></div>
+        }
+        else
+        {
+            <div class="table-responsive"><table class="table table-hover">
+                <thead><tr><th>Producto</th><th>Stock</th><th>Última venta</th><th>Días sin movimiento</th><th>Venta en ventana</th><th>Riesgo</th></tr></thead>
+                <tbody>@foreach (var item in Model.ProductosEstancados) { <tr><td><strong>@item.Nombre</strong><small class="d-block text-muted">Creado @item.FechaCreacion.ToString("dd/MM/yyyy")</small></td><td>@item.Stock</td><td>@(item.UltimaVenta?.ToString("dd/MM/yyyy") ?? "Sin ventas")</td><td>@item.DiasSinMovimiento</td><td>@item.VendidoEnVentana</td><td><span class="badge badge-@RiskClass(item.NivelRiesgo)">@item.NivelRiesgo</span></td></tr> }</tbody>
+            </table></div>
+        }
+    </section>
+
+    <section class="card" aria-labelledby="seasonal-title">
+        <div class="card-header" id="seasonal-title">Tendencia estacional @Model.Filter.StartYear–@Model.Filter.EndYear</div>
+        <div class="card-body">
+            <div class="s4-seasonal-chart" aria-label="Gráfico de ventas por mes">
+                @foreach (var point in Model.TendenciaEstacional)
+                {
+                    var height = maxSales > 0 ? Math.Max(2, (int)Math.Round(point.TotalVendido / maxSales * 100m)) : 2;
+                    var monthLabel = point.NombreMes.Length <= 3 ? point.NombreMes : point.NombreMes.Substring(0, 3);
+                    <div class="s4-seasonal-column" title="@point.NombreMes: ₡@point.TotalVendido.ToString("N2") · @point.UnidadesVendidas unidades">
+                        <div class="s4-seasonal-track"><div class="s4-seasonal-bar" style="--s4-bar-height:@height%" role="img" aria-label="@point.NombreMes, @point.TotalVendido.ToString("N2") colones, @point.UnidadesVendidas unidades"></div></div>
+                        <small>@monthLabel</small>
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="table-responsive"><table class="table">
+            <thead><tr><th>Mes</th><th class="text-right">Total vendido</th><th class="text-right">Unidades</th></tr></thead>
+            <tbody>@foreach (var point in Model.TendenciaEstacional) { <tr><td>@point.NombreMes</td><td class="text-right">₡@point.TotalVendido.ToString("N2")</td><td class="text-right">@point.UnidadesVendidas</td></tr> }</tbody>
+        </table></div>
+    </section>
+</div>

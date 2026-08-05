@@ -1,0 +1,5 @@
+@model IReadOnlyList<Proyecto_Final.Models.Admin.PaySlipListItemViewModel>
+@{ ViewData["Title"]="Mis boletas"; }
+<div class="container py-4"><h2>Mis boletas de pago</h2><table class="table table-striped"><thead><tr><th>Periodo</th><th>Bruto</th><th>Deducciones</th><th>Neto</th><th></th></tr></thead><tbody>
+@foreach(var item in Model){<tr><td>@item.Periodo</td><td>@item.TotalBruto</td><td>@item.TotalDeducciones</td><td>@item.TotalNeto</td><td><a asp-action="Details" asp-route-id="@item.CalculoId">Ver desglose</a> · <a asp-action="Download" asp-route-id="@item.CalculoId">Descargar</a></td></tr>}
+</tbody></table></div>

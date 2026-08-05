@@ -76,8 +76,8 @@
                         {
                             <div class="col-md-3 col-sm-6 mb-4">
                                 <div class="card h-100">
-                                    <a href="@e.ArchivoUrl" target="_blank" rel="noopener">
-                                        <img src="@e.ArchivoUrl" class="card-img-top" alt="Evidencia pedido @e.PedidoId"
+                                    <a asp-controller="DeliveryEvidence" asp-action="View" asp-route-id="@e.EvidenciaId" target="_blank" rel="noopener">
+                                        <img src="@Url.Action("View", "DeliveryEvidence", new { id = e.EvidenciaId })" class="card-img-top" alt="Evidencia pedido @e.PedidoId"
                                              style="height:160px; object-fit:cover; background:#f4f4f4;" />
                                     </a>
                                     <div class="card-body p-2">

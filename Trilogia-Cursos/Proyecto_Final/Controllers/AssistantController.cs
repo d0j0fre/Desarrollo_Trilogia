@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Proyecto_Final.Filters;
 using Proyecto_Final.Services;
 
@@ -24,6 +25,7 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting("assistant")]
         public async Task<IActionResult> Ask(string pregunta, string? contexto)
         {
             if (string.IsNullOrWhiteSpace(pregunta))

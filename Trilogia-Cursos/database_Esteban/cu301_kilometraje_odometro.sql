@@ -11,8 +11,7 @@
 --
 -- Prerrequisito: cu081 (Vehiculos), cu151 (Marca), cu152 (kilometraje).
 -- ============================================================
-
-USE DistribuidoraJJ_DB_DEV;
+-- Ejecute este script sobre la base de datos seleccionada por el operador.
 GO
 SET NOCOUNT ON;
 GO

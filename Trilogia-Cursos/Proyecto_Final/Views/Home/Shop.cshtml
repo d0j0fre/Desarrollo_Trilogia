@@ -1,8 +1,11 @@
 @model Proyecto_Final.Models.Store.ShopViewModel
 @{
     ViewData["Title"] = Model.Titulo;
-    var cantidadProductos = Model.Productos?.Count ?? 0;
-    var productosDisponibles = Model.Productos?.Count(p => p.Stock > 0) ?? 0;
+    var productos = Model.Productos ?? new List<Proyecto_Final.Models.Store.StoreProductViewModel>();
+    var cantidadProductos = productos.Count;
+    var combos = Model.Combos ?? new List<Proyecto_Final.Models.Admin.StoreComboViewModel>();
+    var cantidadCombos = combos.Count;
+    var productosDisponibles = productos.Count(p => p.Stock > 0);
     var categorias = Model.Categorias ?? new List<string>();
     var categoriasCount = categorias.Count;
 }
@@ -27,8 +30,8 @@
 
             <div class="s3-shop-hero__stats">
                 <div>
-                    <strong>@cantidadProductos</strong>
-                    <span>Productos mostrados</span>
+                    <strong>@(cantidadProductos + cantidadCombos)</strong>
+                    <span>Ofertas mostradas</span>
                 </div>
                 <div>
                     <strong>@productosDisponibles</strong>
@@ -108,7 +111,62 @@
                 }
             </div>
 
-            @if (Model.Productos == null || Model.Productos.Count == 0)
+            @if (string.IsNullOrWhiteSpace(Model.Categoria) && combos.Any())
+            {
+                <div class="s3-section-title mb-3">
+                    <div>
+                        <span class="s3-section-title__eyebrow"><i class="fa fa-box-open"></i> Ofertas armadas</span>
+                        <h3>Combos disponibles</h3>
+                    </div>
+                </div>
+                <div class="s3-product-grid mb-5" aria-label="Combos disponibles">
+                    @foreach (var combo in combos)
+                    {
+                        var comboStockClass = combo.StockDisponible <= 0 ? "out" : combo.StockDisponible <= 3 ? "low" : "ok";
+                        <article class="s3-product-card">
+                            <a asp-controller="Home" asp-action="ComboDetail" asp-route-id="@combo.ComboId" class="s3-product-card__image">
+                                <img src="@Url.Content(combo.ImagenUrl)" alt="Combo @combo.Nombre" loading="lazy" width="360" height="360" />
+                            </a>
+                            <div class="s3-product-card__body">
+                                <div class="s3-product-card__topline">
+                                    <span class="s3-product-card__category">Combo · @combo.CantidadProductos componentes</span>
+                                    <small class="s3-stock-dot @comboStockClass"></small>
+                                </div>
+                                <h3>@combo.Nombre</h3>
+                                <p>@(string.IsNullOrWhiteSpace(combo.ComponentesResumen) ? combo.Descripcion : combo.ComponentesResumen)</p>
+                                <div class="s3-product-card__footer">
+                                    <div>
+                                        <strong>₡@combo.Precio.ToString("N0")</strong>
+                                        <small class="s3-stock-badge @comboStockClass">
+                                            @(combo.Disponible ? $"Disponibles: {combo.StockDisponible}" : "Agotado")
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="s3-product-card__actions">
+                                    <a asp-controller="Home" asp-action="ComboDetail" asp-route-id="@combo.ComboId" class="btn btn-outline-dark btn-sm">
+                                        <i class="fa fa-eye mr-1"></i>Detalle
+                                    </a>
+                                    @if (combo.Disponible)
+                                    {
+                                        <form asp-controller="Cart" asp-action="AddCombo" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="comboId" value="@combo.ComboId" />
+                                            <input type="hidden" name="cantidad" value="1" />
+                                            <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-shopping-cart mr-1"></i>Agregar</button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <button type="button" class="btn btn-secondary btn-sm" disabled>Agotado</button>
+                                    }
+                                </div>
+                            </div>
+                        </article>
+                    }
+                </div>
+            }
+
+            @if (productos.Count == 0 && !combos.Any())
             {
                 <div class="s3-empty-state s3-empty-state--shop">
                     <i class="fa fa-search"></i>
@@ -122,14 +180,14 @@
             else
             {
                 <div class="s3-product-grid">
-                    @foreach (var producto in Model.Productos)
+                    @foreach (var producto in productos)
                     {
                         var claseStock = producto.Stock <= 0 ? "out" : producto.Stock <= 5 ? "low" : "ok";
                         var imagen = string.IsNullOrWhiteSpace(producto.ImagenUrl) ? Url.Content("~/img/whisky-premium.webp") : Url.Content(producto.ImagenUrl);
 
                         <article class="s3-product-card">
                             <a asp-controller="Home" asp-action="Detail" asp-route-id="@producto.ProductoId" class="s3-product-card__image">
-                                <img src="@imagen" alt="@producto.Nombre"
+                                <img src="@imagen" alt="Producto @producto.Nombre" loading="lazy" width="360" height="360"
                                      onerror="this.onerror=null;this.src='/img/whisky-premium.webp';" />
                             </a>
 

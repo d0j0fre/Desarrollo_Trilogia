@@ -1,1407 +1,607 @@
-document.addEventListener("DOMContentLoaded", function () {
+(function () {
+    "use strict";
 
-    const btnPrivateChat = document.getElementById("btnPrivateChat");
-    const btnDepartmentChat = document.getElementById("btnDepartmentChat");
+    document.addEventListener("DOMContentLoaded", function () {
+        const privateButton = document.getElementById("btnPrivateChat");
+        const departmentButton = document.getElementById("btnDepartmentChat");
+        const chatWindow = document.getElementById("chatWindow");
+        const closeButton = document.getElementById("closeChat");
+        const token = document.querySelector("#chatAntiforgery input[name='__RequestVerificationToken']")?.value;
 
-    const chatWindow = document.getElementById("chatWindow");
-    const closeChat = document.getElementById("closeChat");
-
-    if (!btnPrivateChat || !btnDepartmentChat || !chatWindow || !closeChat) {
-        return;
-    }
-
-    const conexionChat = new signalR.HubConnectionBuilder()
-        .withUrl("/chatHub")
-        .withAutomaticReconnect()
-        .build();
-
-    let usuariosChat = [];
-    let usuariosCargados = false;
-
-    let conversacionActualId = null;
-    let usuarioActualIdChat = null;
-
-    let departamentosChat = [];
-    let departamentosCargados = false;
-
-    // Antes esta variable no estaba declarada (global implícita).
-    let modoChatActual = null;
-
-    // Saca la ventana de cualquier navbar, footer o contenedor.
-    document.body.appendChild(chatWindow);
-
-    iniciarSignalR();
-
-    conexionChat.on("ReceiveMessage", function (mensaje) {
-
-        const messagesContainer =
-            document.getElementById("chatMessages");
-
-        if (!messagesContainer) {
+        if (!privateButton || !departmentButton || !chatWindow || !closeButton || !token || !window.signalR) {
             return;
         }
 
-        if (
-            Number(mensaje.conversacionId) !==
-            Number(conversacionActualId)
-        ) {
-            return;
-        }
+        const state = {
+            mode: null,
+            conversationId: null,
+            departmentId: null,
+            currentUserId: null,
+            canPost: false,
+            users: [],
+            departments: [],
+            peerName: "",
+            messagePageSize: 50
+        };
 
-        const esMio =
-            Number(mensaje.remitenteId) ===
-            Number(usuarioActualIdChat);
+        document.body.appendChild(chatWindow);
 
-        agregarMensajeTiempoReal(mensaje, esMio);
-    });
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/chatHub")
+            .withAutomaticReconnect([0, 2000, 5000, 10000])
+            .build();
 
-    conexionChat.onreconnected(async function () {
+        connection.on("ReceiveMessage", function (message) {
+            if (state.mode === "private" && Number(message.conversacionId) === Number(state.conversationId)) {
+                appendMessage(message, Number(message.remitenteId) === Number(state.currentUserId));
+            }
+        });
 
-        console.log("✅ SignalR reconectado");
+        connection.on("ReceiveDepartmentMessage", function (message) {
+            if (state.mode === "department" && Number(message.departamentoId) === Number(state.departmentId)) {
+                appendMessage(message, Number(message.remitenteId) === Number(state.currentUserId), message.remitenteNombre);
+            }
+        });
 
-        if (conversacionActualId) {
+        connection.onreconnected(joinCurrentResource);
+        connection.onclose(function () {
+            showNotice("Se perdió la conexión en tiempo real. Vuelva a abrir el chat.", "warning");
+        });
+
+        startConnection();
+
+        privateButton.addEventListener("click", async function (event) {
+            event.preventDefault();
+            chatWindow.classList.add("show");
+            await leaveCurrentResource();
+            await showUsers();
+        });
+
+        departmentButton.addEventListener("click", async function (event) {
+            event.preventDefault();
+            chatWindow.classList.add("show");
+            await leaveCurrentResource();
+            await showDepartments();
+        });
+
+        closeButton.addEventListener("click", async function () {
+            await leaveCurrentResource();
+            chatWindow.classList.remove("show");
+        });
+
+        async function startConnection() {
             try {
-                await conexionChat.invoke(
-                    "JoinConversation",
-                    String(conversacionActualId)
-                );
-            }
-            catch (error) {
-                console.error(
-                    "No fue posible volver a la conversación:",
-                    error
-                );
+                await connection.start();
+            } catch (error) {
+                console.error("No se pudo iniciar SignalR.", error);
+                window.setTimeout(startConnection, 5000);
             }
         }
-    });
 
-    conexionChat.onreconnecting(function () {
-        console.warn("SignalR intentando reconectar...");
-    });
-
-    conexionChat.onclose(function () {
-        console.warn("SignalR desconectado.");
-    });
-
-    btnPrivateChat.addEventListener("click", async function (event) {
-        event.preventDefault();
-
-        modoChatActual = "privado";
-        chatWindow.classList.add("show");
-
-        if (!usuariosCargados) {
-            await cargarUsuariosChat();
-        }
-        else {
-            mostrarPantallaUsuarios();
-            mostrarUsuarios(usuariosChat);
-            configurarBuscador();
-        }
-    });
-
-    async function cargarDepartamentosChat() {
-
-        mostrarPantallaDepartamentos();
-
-        const lista = document.getElementById(
-            "chatDepartmentsList"
-        );
-
-        if (!lista) {
-            return;
-        }
-
-        lista.innerHTML = `
-        <div class="chat-loading">
-            Cargando departamentos...
-        </div>
-    `;
-
-        try {
-            const response = await fetch(
-                "/Chat/GetDepartments"
-            );
-
-            const data = await response.json();
-
-            if (!response.ok || !data.success) {
-                throw new Error(
-                    data.message ||
-                    "No fue posible cargar los departamentos."
-                );
+        async function showUsers() {
+            state.mode = "users";
+            setBodyList("Buscar usuario...", "Cargando usuarios...");
+            try {
+                const data = await requestJson("/Chat/GetUsers");
+                state.users = data.users || [];
+                renderUsers(state.users);
+                bindFilter("chatListSearch", function (value) {
+                    renderUsers(state.users.filter(function (user) {
+                        return `${user.nombreCompleto} ${user.correo}`.toLowerCase().includes(value);
+                    }));
+                });
+            } catch (error) {
+                renderListError(error.message);
             }
-
-            departamentosChat = data.departments || [];
-            departamentosCargados = true;
-
-            mostrarDepartamentos(departamentosChat);
-        }
-        catch (error) {
-            console.error(error);
-
-            lista.innerHTML = `
-            <div class="chat-loading">
-                ${escaparHtml(error.message)}
-            </div>
-        `;
-        }
-    }
-
-    function mostrarPantallaDepartamentos() {
-
-        const chatBody = document.querySelector(
-            "#chatWindow .chat-body"
-        );
-
-        if (!chatBody) {
-            return;
         }
 
-        chatBody.innerHTML = `
-        <div class="chat-search">
-            <i class="fa fa-search"></i>
-
-            <input type="text"
-                   id="chatDepartmentSearch"
-                   placeholder="Buscar departamento..."
-                   autocomplete="off">
-        </div>
-
-        <div id="chatDepartmentsList"
-             class="chat-users-list">
-
-            <div class="chat-loading">
-                Abre el chat para cargar los departamentos.
-            </div>
-
-        </div>
-    `;
-
-        configurarBuscadorDepartamentos();
-    }
-
-    // Antes esta función estaba duplicada (dos definiciones idénticas).
-    function mostrarDepartamentos(departamentos) {
-
-        const lista = document.getElementById(
-            "chatDepartmentsList"
-        );
-
-        if (!lista) {
-            return;
-        }
-
-        lista.innerHTML = "";
-
-        if (!departamentos || departamentos.length === 0) {
-            lista.innerHTML = `
-            <div class="chat-loading">
-                No hay departamentos disponibles.
-            </div>
-        `;
-
-            return;
-        }
-
-        departamentos.forEach(function (departamento) {
-
-            lista.insertAdjacentHTML(
-                "beforeend",
-                crearDepartamentoChat(departamento)
-            );
-        });
-    }
-
-    function crearDepartamentoChat(departamento) {
-
-        const nombre =
-            departamento.nombre ||
-            "Departamento";
-
-        const descripcion =
-            departamento.descripcion ||
-            "Sin descripción";
-
-        const totalUsuarios =
-            Number(departamento.totalUsuarios || 0);
-
-        return `
-            <button type="button"
-                    class="chat-department-item"
-                    data-id="${departamento.perfilId ?? ""}"
-                    data-name="${escaparAtributo(nombre)}">
-
-                <div class="chat-user-avatar">
-                    <i class="fa fa-users"></i>
-                </div>
-
-                <div class="chat-user-info">
-                    <span class="chat-user-name">
-                        ${escaparHtml(nombre)}
-                    </span>
-
-                    <span class="chat-user-email">
-                        ${escaparHtml(descripcion)}
-                    </span>
-
-                    <span class="chat-department-count">
-                        ${totalUsuarios} usuario(s)
-                    </span>
-                </div>
-
-                <i class="fa fa-chevron-right chat-user-arrow"></i>
-            </button>
-        `;
-    }
-
-    function configurarBuscadorDepartamentos() {
-
-        const buscador = document.getElementById(
-            "chatDepartmentSearch"
-        );
-
-        if (!buscador) {
-            return;
-        }
-
-        buscador.addEventListener(
-            "input",
-            function () {
-
-                const texto = this.value
-                    .trim()
-                    .toLowerCase();
-
-                const filtrados =
-                    departamentosChat.filter(
-                        function (departamento) {
-
-                            const nombre = (
-                                departamento.nombre || ""
-                            ).toLowerCase();
-
-                            const descripcion = (
-                                departamento.descripcion || ""
-                            ).toLowerCase();
-
-                            return (
-                                nombre.includes(texto) ||
-                                descripcion.includes(texto)
-                            );
-                        }
-                    );
-
-                mostrarDepartamentos(filtrados);
-            }
-        );
-    }
-
-    btnDepartmentChat.addEventListener("click", async function (event) {
-        event.preventDefault();
-
-        modoChatActual = "departamento";
-        chatWindow.classList.add("show");
-
-        if (!departamentosCargados) {
-            await cargarDepartamentosChat();
-        }
-        else {
-            mostrarPantallaDepartamentos();
-            mostrarDepartamentos(departamentosChat);
-        }
-    });
-
-    closeChat.addEventListener("click", function () {
-        chatWindow.classList.remove("show");
-    });
-
-    chatWindow.addEventListener("click", async function (event) {
-
-        const sendDepartmentButton =
-            event.target.closest("#sendDepartmentMessage");
-
-        if (sendDepartmentButton) {
-
-            const input =
-                document.getElementById("chatDepartmentMessageInput");
-
-            const messagesContainer =
-                document.getElementById("chatDepartmentMessages");
-
-            if (!input || !messagesContainer) {
+        function renderUsers(users) {
+            const list = document.getElementById("chatSelectableList");
+            if (!list) return;
+            list.replaceChildren();
+            if (!users.length) {
+                list.appendChild(emptyState("No hay usuarios disponibles."));
                 return;
             }
+            users.forEach(function (user) {
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = "chat-user-item";
+                const name = document.createElement("strong");
+                name.textContent = user.nombreCompleto || "Usuario";
+                const email = document.createElement("small");
+                email.textContent = user.correo || "";
+                button.append(name, email);
+                button.addEventListener("click", function () {
+                    openConversation(user.usuarioId, user.nombreCompleto || "Conversación");
+                });
+                list.appendChild(button);
+            });
+        }
 
-            const perfilId =
-                Number(messagesContainer.dataset.profileId);
+        async function openConversation(userId, name) {
+            try {
+                const data = await postForm("/Chat/OpenConversation", { userId: userId });
+                await leaveCurrentResource();
+                state.mode = "private";
+                state.conversationId = data.conversationId;
+                state.peerName = name;
+                await ensureConnected();
+                await connection.invoke("JoinConversation", Number(state.conversationId));
+                renderConversation(name, true);
+                await loadPrivateMessages();
+            } catch (error) {
+                showNotice(error.message, "danger");
+            }
+        }
 
-            const contenido =
-                input.value.trim();
+        async function showDepartments() {
+            state.mode = "departments";
+            setBodyList("Buscar departamento...", "Cargando departamentos...");
+            try {
+                const data = await requestJson("/Chat/GetDepartments");
+                state.departments = data.departments || [];
+                renderDepartments(state.departments);
+                bindFilter("chatListSearch", function (value) {
+                    renderDepartments(state.departments.filter(function (department) {
+                        return `${department.nombre} ${department.descripcion || ""}`.toLowerCase().includes(value);
+                    }));
+                });
+            } catch (error) {
+                renderListError(error.message);
+            }
+        }
 
-            if (!perfilId || !contenido) {
-                input.focus();
+        function renderDepartments(departments) {
+            const list = document.getElementById("chatSelectableList");
+            if (!list) return;
+            list.replaceChildren();
+            if (!departments.length) {
+                list.appendChild(emptyState("No hay departamentos disponibles."));
                 return;
             }
+            departments.forEach(function (department) {
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = "chat-user-item";
+                const name = document.createElement("strong");
+                name.textContent = department.nombre || "Departamento";
+                const detail = document.createElement("small");
+                detail.textContent = department.descripcion || `${department.totalUsuarios || 0} miembros`;
+                button.append(name, detail);
+                button.addEventListener("click", function () {
+                    openDepartment(department);
+                });
+                list.appendChild(button);
+            });
+        }
 
-            sendDepartmentButton.disabled = true;
+        async function openDepartment(department) {
+            try {
+                await leaveCurrentResource();
+                state.mode = "department";
+                state.departmentId = department.departamentoId;
+                state.canPost = Boolean(department.puedePublicar);
+                await ensureConnected();
+                await connection.invoke("JoinDepartment", Number(state.departmentId));
+                renderConversation(department.nombre || "Departamento", state.canPost);
+                await loadDepartmentMessages();
+            } catch (error) {
+                showNotice(error.message, "danger");
+            }
+        }
+
+        function renderConversation(title, canPost) {
+            const body = chatWindow.querySelector(".chat-body");
+            body.replaceChildren();
+
+            const toolbar = document.createElement("div");
+            toolbar.className = "chat-conversation-header";
+            const back = document.createElement("button");
+            back.type = "button";
+            back.className = "btn btn-link btn-sm";
+            back.setAttribute("aria-label", "Volver");
+            back.textContent = "←";
+            back.addEventListener("click", async function () {
+                const previousMode = state.mode;
+                await leaveCurrentResource();
+                if (previousMode === "private") await showUsers(); else await showDepartments();
+            });
+            const heading = document.createElement("strong");
+            heading.textContent = title;
+            const search = document.createElement("button");
+            search.type = "button";
+            search.className = "btn btn-link btn-sm ml-auto";
+            search.textContent = "Buscar";
+            search.addEventListener("click", showSearch);
+            toolbar.append(back, heading, search);
+
+            const messages = document.createElement("div");
+            messages.id = "chatMessages";
+            messages.className = "chat-messages";
+            messages.appendChild(emptyState("Cargando mensajes..."));
+            body.append(toolbar, messages);
+
+            if (canPost) {
+                const form = document.createElement("form");
+                form.className = "chat-input-area";
+                const input = document.createElement("textarea");
+                input.id = "chatMessageInput";
+                input.maxLength = 1000;
+                input.rows = 2;
+                input.required = true;
+                input.placeholder = "Escriba un mensaje...";
+                const send = document.createElement("button");
+                send.type = "submit";
+                send.className = "btn btn-primary btn-sm";
+                send.textContent = "Enviar";
+                form.append(input, send);
+                form.addEventListener("submit", sendMessage);
+                body.appendChild(form);
+            } else {
+                body.appendChild(emptyState("Este departamento es de solo lectura."));
+            }
+        }
+
+        async function loadPrivateMessages(page = 1) {
+            try {
+                const data = await requestJson(`/Chat/GetMessages?conversationId=${encodeURIComponent(state.conversationId)}&page=${page}&pageSize=${state.messagePageSize}`);
+                state.currentUserId = data.currentUserId;
+                renderMessages(data.messages || [], false, page);
+            } catch (error) {
+                showNotice(error.message, "danger");
+            }
+        }
+
+        async function loadDepartmentMessages(page = 1) {
+            try {
+                const data = await requestJson(`/Chat/GetDepartmentMessages?departmentId=${encodeURIComponent(state.departmentId)}&page=${page}&pageSize=${state.messagePageSize}`);
+                state.currentUserId = data.currentUserId;
+                renderMessages(data.messages || [], true, page);
+            } catch (error) {
+                showNotice(error.message, "danger");
+            }
+        }
+
+        function renderMessages(messages, departmental, page) {
+            const container = document.getElementById("chatMessages");
+            if (!container) return;
+            if (page === 1) container.replaceChildren();
+            container.querySelector(".chat-load-older")?.remove();
+            if (!messages.length && page === 1) {
+                container.appendChild(emptyState("Todavía no hay mensajes."));
+                return;
+            }
+            if (!messages.length) return;
+
+            if (page === 1) {
+                messages.forEach(function (message) {
+                    appendMessage(message, Number(message.remitenteId) === Number(state.currentUserId), departmental ? message.remitenteNombre : null);
+                });
+                container.scrollTop = container.scrollHeight;
+            } else {
+                const previousHeight = container.scrollHeight;
+                [...messages].reverse().forEach(function (message) {
+                    const element = createMessageElement(
+                        message,
+                        Number(message.remitenteId) === Number(state.currentUserId),
+                        departmental ? message.remitenteNombre : null);
+                    if (element) container.prepend(element);
+                });
+                container.scrollTop = container.scrollHeight - previousHeight;
+            }
+
+            if (messages.length === state.messagePageSize) {
+                const older = document.createElement("button");
+                older.type = "button";
+                older.className = "btn btn-link btn-sm chat-load-older";
+                older.textContent = "Cargar mensajes anteriores";
+                older.addEventListener("click", function () {
+                    if (departmental) loadDepartmentMessages(page + 1); else loadPrivateMessages(page + 1);
+                });
+                container.prepend(older);
+            }
+        }
+
+        function appendMessage(message, own, senderName) {
+            const container = document.getElementById("chatMessages");
+            if (!container || container.querySelector(`[data-message-id='${Number(message.mensajeId)}']`)) return;
+            const initial = container.querySelector(".chat-loading");
+            if (initial) initial.remove();
+            const item = createMessageElement(message, own, senderName);
+            if (!item) return;
+            container.appendChild(item);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function createMessageElement(message, own, senderName) {
+            const container = document.getElementById("chatMessages");
+            if (!container || container.querySelector(`[data-message-id='${Number(message.mensajeId)}']`)) return null;
+            const item = document.createElement("article");
+            item.className = own ? "chat-message sent" : "chat-message received";
+            item.dataset.messageId = String(Number(message.mensajeId));
+            if (senderName && !own) {
+                const sender = document.createElement("strong");
+                sender.textContent = senderName;
+                item.appendChild(sender);
+            }
+            const content = document.createElement("p");
+            content.textContent = message.contenido || "";
+            const time = document.createElement("time");
+            time.textContent = formatDate(message.fechaEnvio);
+            item.append(content, time);
+            return item;
+        }
+
+        async function sendMessage(event) {
+            event.preventDefault();
+            const input = document.getElementById("chatMessageInput");
+            const content = input?.value.trim();
+            if (!content) return;
             input.disabled = true;
-
-            const enviado = await enviarMensajeDepartamento(
-                perfilId,
-                contenido
-            );
-
-            if (enviado) {
+            try {
+                if (state.mode === "private") {
+                    await postForm("/Chat/SendMessage", { conversationId: state.conversationId, content: content });
+                } else {
+                    await postForm("/Chat/SendDepartmentMessage", { departmentId: state.departmentId, content: content });
+                }
                 input.value = "";
-
-                await cargarMensajesDepartamento(
-                    perfilId
-                );
-            }
-
-            sendDepartmentButton.disabled = false;
-            input.disabled = false;
-            input.focus();
-
-            return;
-        }
-
-        const departamentoButton =
-            event.target.closest(".chat-department-item");
-
-        if (departamentoButton) {
-
-            const perfilId =
-                Number(departamentoButton.dataset.id);
-
-            const nombre =
-                departamentoButton.dataset.name ||
-                "Departamento";
-
-            if (perfilId > 0) {
-                await abrirChatDepartamento(
-                    perfilId,
-                    nombre
-                );
-            }
-
-            return;
-        }
-
-        const usuarioButton =
-            event.target.closest(
-                ".chat-user-item:not(.chat-department-item)"
-            );
-
-        if (usuarioButton) {
-
-            const usuarioId =
-                Number(usuarioButton.dataset.id);
-
-            const nombre =
-                usuarioButton.dataset.name || "Usuario";
-
-            const correo =
-                usuarioButton.dataset.email || "";
-
-            if (usuarioId > 0) {
-                await abrirConversacion(
-                    usuarioId,
-                    nombre,
-                    correo
-                );
-            }
-
-            return;
-        }
-
-        const backButton =
-            event.target.closest("#backToChatUsers");
-
-        if (backButton) {
-
-            await salirConversacionActual();
-
-            if (modoChatActual === "departamento") {
-                mostrarPantallaDepartamentos();
-                mostrarDepartamentos(
-                    departamentosChat
-                );
-            }
-            else {
-                mostrarPantallaUsuarios();
-                mostrarUsuarios(usuariosChat);
-                configurarBuscador();
-            }
-
-            return;
-        }
-
-        const sendButton =
-            event.target.closest("#sendChatMessage");
-
-        if (sendButton) {
-
-            const input =
-                document.getElementById("chatMessageInput");
-
-            if (!input || !conversacionActualId) {
-                return;
-            }
-
-            const contenido = input.value.trim();
-
-            if (!contenido) {
+            } catch (error) {
+                showNotice(error.message, "danger");
+            } finally {
+                input.disabled = false;
                 input.focus();
-                return;
             }
-
-            sendButton.disabled = true;
-            input.disabled = true;
-
-            const enviado = await enviarMensaje(
-                conversacionActualId,
-                contenido
-            );
-
-            if (enviado) {
-                input.value = "";
-            }
-
-            sendButton.disabled = false;
-            input.disabled = false;
-            input.focus();
-
-            return;
         }
-    });
 
-    async function enviarMensajeDepartamento(
-        perfilId,
-        contenido
-    ) {
-        const body = new URLSearchParams();
-
-        body.append("profileId", perfilId);
-        body.append("content", contenido);
-
-        try {
-            const response = await fetch(
-                "/Chat/SendDepartmentMessage",
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type":
-                            "application/x-www-form-urlencoded"
-                    },
-                    body: body
-                }
-            );
-
-            const data = await response.json();
-
-            if (!response.ok || !data.success) {
-                throw new Error(
-                    data.message ||
-                    "No fue posible enviar el mensaje al departamento."
-                );
-            }
-
-            return true;
-        }
-        catch (error) {
-            console.error(error);
-            alert(error.message);
-
-            return false;
-        }
-    }
-
-    chatWindow.addEventListener(
-        "keydown",
-        function (event) {
-
-            if (
-                event.key === "Enter" &&
-                event.target.id === "chatMessageInput"
-            ) {
+        function showSearch() {
+            const previousMode = state.mode;
+            const body = chatWindow.querySelector(".chat-body");
+            body.replaceChildren();
+            const form = document.createElement("form");
+            form.className = "chat-search p-2";
+            const input = document.createElement("input");
+            input.type = "search";
+            input.minLength = 2;
+            input.maxLength = 100;
+            input.required = true;
+            input.placeholder = "Buscar en el historial autorizado...";
+            const scope = document.createElement("select");
+            scope.setAttribute("aria-label", "Alcance de la búsqueda");
+            const currentOption = document.createElement("option");
+            currentOption.value = "current";
+            currentOption.textContent = "Conversación actual";
+            const allOption = document.createElement("option");
+            allOption.value = "all";
+            allOption.textContent = "Todo mi historial";
+            scope.append(currentOption, allOption);
+            const submit = document.createElement("button");
+            submit.type = "submit";
+            submit.className = "btn btn-primary btn-sm";
+            submit.textContent = "Buscar";
+            const back = document.createElement("button");
+            back.type = "button";
+            back.className = "btn btn-link btn-sm";
+            back.textContent = "Volver";
+            back.addEventListener("click", function () {
+                if (previousMode === "private") openConversationFromState(); else openDepartmentFromState();
+            });
+            form.append(input, scope, submit, back);
+            const results = document.createElement("div");
+            results.id = "chatSearchResults";
+            results.className = "chat-users-list";
+            body.append(form, results);
+            form.addEventListener("submit", async function (event) {
                 event.preventDefault();
-
-                const sendButton =
-                    document.getElementById("sendChatMessage");
-
-                if (sendButton && !sendButton.disabled) {
-                    sendButton.click();
-                }
-
-                return;
-            }
-
-            if (
-                event.key === "Enter" &&
-                event.target.id === "chatDepartmentMessageInput"
-            ) {
-                event.preventDefault();
-
-                const sendButton =
-                    document.getElementById("sendDepartmentMessage");
-
-                if (sendButton && !sendButton.disabled) {
-                    sendButton.click();
-                }
-            }
-        }
-    );
-
-    async function iniciarSignalR() {
-
-        try {
-            await conexionChat.start();
-
-            console.log("✅ SignalR conectado");
-        }
-        catch (error) {
-            console.error(
-                "❌ Error al conectar SignalR:",
-                error
-            );
-
-            setTimeout(iniciarSignalR, 5000);
-        }
-    }
-
-    async function esperarConexionSignalR() {
-
-        if (
-            conexionChat.state ===
-            signalR.HubConnectionState.Connected
-        ) {
-            return;
-        }
-
-        if (
-            conexionChat.state ===
-            signalR.HubConnectionState.Disconnected
-        ) {
-            await iniciarSignalR();
-        }
-
-        let intentos = 0;
-
-        while (
-            conexionChat.state !==
-            signalR.HubConnectionState.Connected &&
-            intentos < 20
-        ) {
-            await esperar(250);
-            intentos++;
-        }
-
-        if (
-            conexionChat.state !==
-            signalR.HubConnectionState.Connected
-        ) {
-            throw new Error(
-                "No fue posible conectar el chat en tiempo real."
-            );
-        }
-    }
-
-    function esperar(milisegundos) {
-
-        return new Promise(function (resolve) {
-            setTimeout(resolve, milisegundos);
-        });
-    }
-
-    async function cargarUsuariosChat() {
-
-        mostrarPantallaUsuarios();
-
-        const lista =
-            document.getElementById("chatUsersList");
-
-        if (!lista) {
-            return;
-        }
-
-        lista.innerHTML = `
-            <div class="chat-loading">
-                Cargando usuarios...
-            </div>
-        `;
-
-        try {
-            const response = await fetch(
-                "/Chat/GetUsers"
-            );
-
-            const data = await response.json();
-
-            if (!response.ok || !data.success) {
-                throw new Error(
-                    data.message ||
-                    "No fue posible cargar los usuarios."
-                );
-            }
-
-            usuariosChat = data.users || [];
-            usuariosCargados = true;
-
-            mostrarUsuarios(usuariosChat);
-            configurarBuscador();
-        }
-        catch (error) {
-            console.error(error);
-
-            lista.innerHTML = `
-                <div class="chat-loading">
-                    ${escaparHtml(error.message)}
-                </div>
-            `;
-        }
-    }
-
-    async function abrirConversacion(
-        usuarioId,
-        nombre,
-        correo
-    ) {
-        const chatBody = document.querySelector(
-            "#chatWindow .chat-body"
-        );
-
-        if (!chatBody) {
-            return;
-        }
-
-        chatBody.innerHTML = `
-            <div class="chat-loading">
-                Abriendo conversación...
-            </div>
-        `;
-
-        try {
-            const body = new URLSearchParams();
-
-            body.append("userId", usuarioId);
-
-            const response = await fetch(
-                "/Chat/OpenConversation",
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type":
-                            "application/x-www-form-urlencoded"
-                    },
-                    body: body
-                }
-            );
-
-            const data = await response.json();
-
-            if (!response.ok || !data.success) {
-                throw new Error(
-                    data.message ||
-                    "No fue posible abrir la conversación."
-                );
-            }
-
-            await mostrarConversacion(
-                data.conversationId,
-                usuarioId,
-                nombre,
-                correo
-            );
-        }
-        catch (error) {
-            console.error(error);
-
-            chatBody.innerHTML = `
-                <div class="chat-loading">
-                    ${escaparHtml(error.message)}
-                </div>
-
-                <button type="button"
-                        id="backToChatUsers"
-                        class="chat-back-error">
-                    Volver a los usuarios
-                </button>
-            `;
-        }
-    }
-
-    async function enviarMensaje(
-        conversationId,
-        contenido
-    ) {
-        const body = new URLSearchParams();
-
-        body.append(
-            "conversationId",
-            conversationId
-        );
-
-        body.append(
-            "content",
-            contenido
-        );
-
-        try {
-            const response = await fetch(
-                "/Chat/SendMessage",
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type":
-                            "application/x-www-form-urlencoded"
-                    },
-                    body: body
-                }
-            );
-
-            const data = await response.json();
-
-            if (!response.ok || !data.success) {
-                throw new Error(
-                    data.message ||
-                    "No fue posible enviar el mensaje."
-                );
-            }
-
-            /*
-             * No agregamos el mensaje manualmente.
-             * SignalR lo enviará tanto al emisor como al receptor.
-             */
-            return true;
-        }
-        catch (error) {
-            console.error(error);
-            alert(error.message);
-
-            return false;
-        }
-    }
-
-    function agregarMensajeTiempoReal(
-        mensaje,
-        esMio
-    ) {
-        const messagesContainer =
-            document.getElementById("chatMessages");
-
-        if (!messagesContainer) {
-            return;
-        }
-
-        const empty = messagesContainer.querySelector(
-            ".chat-empty-conversation"
-        );
-
-        if (empty) {
-            empty.remove();
-        }
-
-        messagesContainer.insertAdjacentHTML(
-            "beforeend",
-            crearMensajeHtml(mensaje, esMio)
-        );
-
-        messagesContainer.scrollTop =
-            messagesContainer.scrollHeight;
-    }
-
-    async function mostrarConversacion(
-        conversacionId,
-        usuarioId,
-        nombre,
-        correo
-    ) {
-        const chatBody = document.querySelector(
-            "#chatWindow .chat-body"
-        );
-
-        if (!chatBody) {
-            return;
-        }
-
-        chatBody.innerHTML = `
-            <div class="chat-conversation-header">
-
-                <button type="button"
-                        id="backToChatUsers"
-                        class="chat-back-button"
-                        title="Volver">
-
-                    <i class="fa fa-arrow-left"></i>
-
-                </button>
-
-                <div class="chat-conversation-user">
-
-                    <div class="chat-conversation-name">
-                        ${escaparHtml(nombre)}
-                    </div>
-
-                    <div class="chat-conversation-email">
-                        ${escaparHtml(correo)}
-                    </div>
-
-                </div>
-
-            </div>
-
-            <div class="chat-messages"
-                 id="chatMessages"
-                 data-conversation-id="${conversacionId}"
-                 data-user-id="${usuarioId}">
-
-                <div class="chat-loading">
-                    Cargando mensajes...
-                </div>
-
-            </div>
-
-            <div class="chat-message-form">
-
-                <input type="text"
-                       id="chatMessageInput"
-                       placeholder="Escribe un mensaje..."
-                       maxlength="1000"
-                       autocomplete="off">
-
-                <button type="button"
-                        id="sendChatMessage"
-                        title="Enviar">
-
-                    <i class="fa fa-paper-plane"></i>
-
-                </button>
-
-            </div>
-        `;
-
-        await esperarConexionSignalR();
-
-        if (
-            conversacionActualId &&
-            Number(conversacionActualId) !==
-            Number(conversacionId)
-        ) {
-            await conexionChat.invoke(
-                "LeaveConversation",
-                String(conversacionActualId)
-            );
-        }
-
-        conversacionActualId =
-            Number(conversacionId);
-
-        await conexionChat.invoke(
-            "JoinConversation",
-            String(conversacionId)
-        );
-
-        await cargarMensajes(conversacionId);
-
-        const input =
-            document.getElementById("chatMessageInput");
-
-        if (input) {
-            input.focus();
-        }
-    }
-
-    async function salirConversacionActual() {
-
-        if (!conversacionActualId) {
-            return;
-        }
-
-        try {
-            if (
-                conexionChat.state ===
-                signalR.HubConnectionState.Connected
-            ) {
-                await conexionChat.invoke(
-                    "LeaveConversation",
-                    String(conversacionActualId)
-                );
-            }
-        }
-        catch (error) {
-            console.error(
-                "No fue posible salir de la conversación:",
-                error
-            );
-        }
-
-        conversacionActualId = null;
-        usuarioActualIdChat = null;
-    }
-
-    async function cargarMensajes(conversacionId) {
-
-        const messagesContainer =
-            document.getElementById("chatMessages");
-
-        if (!messagesContainer) {
-            return;
-        }
-
-        try {
-            const response = await fetch(
-                `/Chat/GetMessages?conversationId=${encodeURIComponent(
-                    conversacionId
-                )}`
-            );
-
-            const data = await response.json();
-
-            if (!response.ok || !data.success) {
-                throw new Error(
-                    data.message ||
-                    "No fue posible cargar los mensajes."
-                );
-            }
-
-            usuarioActualIdChat =
-                Number(data.currentUserId);
-
-            mostrarMensajes(
-                data.messages || [],
-                usuarioActualIdChat
-            );
-        }
-        catch (error) {
-            console.error(error);
-
-            messagesContainer.innerHTML = `
-                <div class="chat-loading">
-                    ${escaparHtml(error.message)}
-                </div>
-            `;
-        }
-    }
-
-    function mostrarMensajes(
-        mensajes,
-        usuarioActualId
-    ) {
-        const messagesContainer =
-            document.getElementById("chatMessages");
-
-        if (!messagesContainer) {
-            return;
-        }
-
-        messagesContainer.innerHTML = "";
-
-        if (!mensajes || mensajes.length === 0) {
-            messagesContainer.innerHTML = `
-                <div class="chat-empty-conversation">
-
-                    <i class="fa fa-comments"></i>
-
-                    <span>
-                        Aún no hay mensajes en esta conversación.
-                    </span>
-
-                </div>
-            `;
-
-            return;
-        }
-
-        mensajes.forEach(function (mensaje) {
-
-            const esMio =
-                Number(mensaje.remitenteId) ===
-                Number(usuarioActualId);
-
-            messagesContainer.insertAdjacentHTML(
-                "beforeend",
-                crearMensajeHtml(mensaje, esMio)
-            );
-        });
-
-        messagesContainer.scrollTop =
-            messagesContainer.scrollHeight;
-    }
-
-    function crearMensajeHtml(
-        mensaje,
-        esMio
-    ) {
-        const fecha = mensaje.fechaEnvio
-            ? new Date(
-                mensaje.fechaEnvio.endsWith("Z")
-                    ? mensaje.fechaEnvio
-                    : mensaje.fechaEnvio + "Z"
-            )
-            : null;
-
-        const hora = fecha && !isNaN(fecha.getTime())
-            ? fecha.toLocaleTimeString(
-                "es-CR",
-                {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    hour12: true
-                }
-            )
-            : "";
-
-        return `
-            <div class="chat-message ${esMio
-                ? "chat-message-me"
-                : "chat-message-other"
-            }">
-
-                <div class="chat-message-bubble">
-
-                    <div class="chat-message-content">
-                        ${escaparHtml(mensaje.contenido)}
-                    </div>
-
-                    <div class="chat-message-time">
-                        ${escaparHtml(hora)}
-                    </div>
-
-                </div>
-
-            </div>
-        `;
-    }
-
-    function mostrarPantallaUsuarios() {
-
-        const chatBody = document.querySelector(
-            "#chatWindow .chat-body"
-        );
-
-        if (!chatBody) {
-            return;
-        }
-
-        chatBody.innerHTML = `
-            <div class="chat-search">
-
-                <i class="fa fa-search"></i>
-
-                <input type="text"
-                       id="chatUserSearch"
-                       placeholder="Buscar usuario..."
-                       autocomplete="off">
-
-            </div>
-
-            <div id="chatUsersList"
-                 class="chat-users-list">
-
-                <div class="chat-loading">
-                    Abre el chat para cargar los usuarios.
-                </div>
-
-            </div>
-        `;
-    }
-
-    function mostrarUsuarios(usuarios) {
-
-        const lista =
-            document.getElementById("chatUsersList");
-
-        if (!lista) {
-            return;
-        }
-
-        lista.innerHTML = "";
-
-        if (!usuarios || usuarios.length === 0) {
-            lista.innerHTML = `
-                <div class="chat-loading">
-                    No hay usuarios disponibles.
-                </div>
-            `;
-
-            return;
-        }
-
-        usuarios.forEach(function (usuario) {
-
-            lista.insertAdjacentHTML(
-                "beforeend",
-                crearUsuarioChat(usuario)
-            );
-        });
-    }
-
-    function crearUsuarioChat(usuario) {
-
-        const nombre =
-            usuario.nombreCompleto ||
-            usuario.nombre ||
-            "Usuario";
-
-        const correo =
-            usuario.correo ||
-            "Sin correo";
-
-        const inicial =
-            nombre.trim().charAt(0).toUpperCase() || "?";
-
-        return `
-            <button type="button"
-                    class="chat-user-item"
-                    data-id="${usuario.usuarioId ?? ""}"
-                    data-name="${escaparAtributo(nombre)}"
-                    data-email="${escaparAtributo(correo)}">
-
-                <div class="chat-user-avatar">
-
-                    ${escaparHtml(inicial)}
-
-                    <span class="chat-user-status"></span>
-
-                </div>
-
-                <div class="chat-user-info">
-
-                    <span class="chat-user-name">
-                        ${escaparHtml(nombre)}
-                    </span>
-
-                    <span class="chat-user-email">
-                        ${escaparHtml(correo)}
-                    </span>
-
-                </div>
-
-                <i class="fa fa-chevron-right chat-user-arrow"></i>
-
-            </button>
-        `;
-    }
-
-    function configurarBuscador() {
-
-        const buscador =
-            document.getElementById("chatUserSearch");
-
-        if (!buscador) {
-            return;
-        }
-
-        buscador.addEventListener(
-            "input",
-            function () {
-
-                const texto = this.value
-                    .trim()
-                    .toLowerCase();
-
-                const usuariosFiltrados =
-                    usuariosChat.filter(
-                        function (usuario) {
-
-                            const nombre = (
-                                usuario.nombreCompleto ||
-                                usuario.nombre ||
-                                ""
-                            ).toLowerCase();
-
-                            const correo = (
-                                usuario.correo ||
-                                ""
-                            ).toLowerCase();
-
-                            return (
-                                nombre.includes(texto) ||
-                                correo.includes(texto)
-                            );
-                        }
-                    );
-
-                mostrarUsuarios(usuariosFiltrados);
-            }
-        );
-    }
-
-    function escaparHtml(valor) {
-
-        const div = document.createElement("div");
-
-        div.textContent = valor ?? "";
-
-        return div.innerHTML;
-    }
-
-    function escaparAtributo(valor) {
-
-        return String(valor ?? "")
-            .replaceAll("&", "&amp;")
-            .replaceAll('"', "&quot;")
-            .replaceAll("'", "&#39;")
-            .replaceAll("<", "&lt;")
-            .replaceAll(">", "&gt;");
-    }
-
-    async function cargarMensajesDepartamento(perfilId) {
-
-        const contenedor =
-            document.getElementById(
-                "chatDepartmentMessages"
-            );
-
-        if (!contenedor) {
-            return;
-        }
-
-        try {
-            const response = await fetch(
-                `/Chat/GetDepartmentMessages?profileId=${encodeURIComponent(
-                    perfilId
-                )}`
-            );
-
-            const data = await response.json();
-
-            if (!response.ok || !data.success) {
-                throw new Error(
-                    data.message ||
-                    "No fue posible cargar los mensajes."
-                );
-            }
-
-            contenedor.innerHTML = "";
-
-            const mensajes = data.messages || [];
-
-            if (mensajes.length === 0) {
-                contenedor.innerHTML = `
-                    <div class="chat-empty-conversation">
-                        <i class="fa fa-users"></i>
-
-                        <span>
-                            Aún no hay mensajes en este departamento.
-                        </span>
-                    </div>
-                `;
-
-                return;
-            }
-
-            mensajes.forEach(function (mensaje) {
-
-                const esMio =
-                    Number(mensaje.remitenteId) ===
-                    Number(data.currentUserId);
-
-                contenedor.insertAdjacentHTML(
-                    "beforeend",
-                    crearMensajeHtml(
-                        mensaje,
-                        esMio
-                    )
-                );
+                const query = input.value.trim();
+                if (query.length < 2) return;
+                await executeSearch(query, scope.value, previousMode, 1);
             });
 
-            contenedor.scrollTop =
-                contenedor.scrollHeight;
+            async function executeSearch(query, selectedScope, originMode, page) {
+                try {
+                    const request = { query: query, type: "all", page: page, pageSize: 25 };
+                    if (selectedScope === "current" && originMode === "private") {
+                        request.type = "private";
+                        request.conversationId = state.conversationId;
+                    }
+                    if (selectedScope === "current" && originMode === "department") {
+                        request.type = "department";
+                        request.departmentId = state.departmentId;
+                    }
+                    const data = await postForm("/Chat/Search", request);
+                    renderSearchResults(data.results || [], page > 1);
+                    if (Number(data.total) > page * 25) {
+                        const more = document.createElement("button");
+                        more.type = "button";
+                        more.className = "btn btn-link btn-sm chat-search-more";
+                        more.textContent = "Cargar más resultados";
+                        more.addEventListener("click", function () {
+                            more.remove();
+                            executeSearch(query, selectedScope, originMode, page + 1);
+                        });
+                        results.appendChild(more);
+                    }
+                } catch (error) {
+                    showNotice(error.message, "danger");
+                }
+            }
         }
-        catch (error) {
-            console.error(error);
 
-            contenedor.innerHTML = `
-                <div class="chat-loading">
-                    ${escaparHtml(error.message)}
-                </div>
-            `;
+        function renderSearchResults(results, append) {
+            const container = document.getElementById("chatSearchResults");
+            if (!container) return;
+            if (!append) container.replaceChildren();
+            container.querySelector(".chat-search-more")?.remove();
+            if (!results.length) {
+                if (!append) container.appendChild(emptyState("No se encontraron coincidencias."));
+                return;
+            }
+            results.forEach(function (result) {
+                const article = document.createElement("button");
+                article.type = "button";
+                article.className = "chat-search-result text-left";
+                const heading = document.createElement("strong");
+                heading.textContent = `${result.senderName} · ${result.originName}`;
+                const content = document.createElement("p");
+                content.textContent = result.content;
+                const date = document.createElement("time");
+                date.textContent = formatDate(result.sentAt);
+                article.append(heading, content, date);
+                article.addEventListener("click", function () {
+                    openSearchResult(result);
+                });
+                container.appendChild(article);
+            });
         }
-    }
 
-    // Antes esta función estaba FUERA del DOMContentLoaded, por lo que
-    // no tenía acceso a escaparHtml, modoChatActual ni conexionChat.
-    // Ahora vive dentro del mismo closure que el resto del chat.
-    async function abrirChatDepartamento(
-        perfilId,
-        nombre
-    ) {
-        modoChatActual = "departamento";
+        async function openSearchResult(result) {
+            if (result.originType === "privado" && result.conversationId) {
+                await leaveCurrentResource();
+                state.mode = "private";
+                state.conversationId = result.conversationId;
+                state.peerName = result.originName || "Conversación";
+                await ensureConnected();
+                await connection.invoke("JoinConversation", Number(state.conversationId));
+                renderConversation(state.peerName, true);
+                await loadPrivateMessages();
+                return;
+            }
 
-        const chatBody = document.querySelector(
-            "#chatWindow .chat-body"
-        );
-
-        if (!chatBody) {
-            return;
+            if (result.originType === "departamento" && result.departmentId) {
+                if (!state.departments.some(item => Number(item.departamentoId) === Number(result.departmentId))) {
+                    const data = await requestJson("/Chat/GetDepartments");
+                    state.departments = data.departments || [];
+                }
+                const department = state.departments.find(item => Number(item.departamentoId) === Number(result.departmentId));
+                if (department) await openDepartment(department);
+            }
         }
 
-        chatBody.innerHTML = `
-            <div class="chat-conversation-header">
-
-                <button type="button"
-                        id="backToChatUsers"
-                        class="chat-back-button"
-                        title="Volver">
-                    <i class="fa fa-arrow-left"></i>
-                </button>
-
-                <div class="chat-conversation-user">
-
-                    <div class="chat-conversation-name">
-                        ${escaparHtml(nombre)}
-                    </div>
-
-                    <div class="chat-conversation-email">
-                        Chat general del departamento
-                    </div>
-
-                </div>
-
-            </div>
-
-            <div class="chat-messages"
-                 id="chatDepartmentMessages"
-                 data-profile-id="${perfilId}">
-
-                <div class="chat-empty-conversation">
-                    <i class="fa fa-users"></i>
-
-                    <span>
-                        Chat de ${escaparHtml(nombre)}
-                    </span>
-                </div>
-
-            </div>
-
-            <div class="chat-message-form">
-
-                <input type="text"
-                       id="chatDepartmentMessageInput"
-                       placeholder="Escribe un comunicado..."
-                       maxlength="1000"
-                       autocomplete="off">
-
-                <button type="button"
-                        id="sendDepartmentMessage"
-                        title="Enviar">
-                    <i class="fa fa-paper-plane"></i>
-                </button>
-
-            </div>
-        `;
-        await cargarMensajesDepartamento(perfilId);
-
-        const input =
-            document.getElementById(
-                "chatDepartmentMessageInput"
-            );
-
-        if (input) {
-            input.focus();
+        function openConversationFromState() {
+            const id = state.conversationId;
+            const name = state.peerName;
+            state.mode = "private";
+            state.conversationId = id;
+            renderConversation(name, true);
+            loadPrivateMessages();
         }
-    }
 
-});
+        function openDepartmentFromState() {
+            const department = state.departments.find(item => Number(item.departamentoId) === Number(state.departmentId));
+            state.mode = "department";
+            renderConversation(department?.nombre || "Departamento", state.canPost);
+            loadDepartmentMessages();
+        }
+
+        async function leaveCurrentResource() {
+            if (connection.state === signalR.HubConnectionState.Connected) {
+                try {
+                    if (state.conversationId) await connection.invoke("LeaveConversation", Number(state.conversationId));
+                    if (state.departmentId) await connection.invoke("LeaveDepartment", Number(state.departmentId));
+                } catch (error) {
+                    console.warn("No se pudo abandonar el grupo anterior.", error);
+                }
+            }
+            state.conversationId = null;
+            state.departmentId = null;
+            state.canPost = false;
+        }
+
+        async function joinCurrentResource() {
+            try {
+                if (state.conversationId) await connection.invoke("JoinConversation", Number(state.conversationId));
+                if (state.departmentId) await connection.invoke("JoinDepartment", Number(state.departmentId));
+            } catch (error) {
+                console.error("No se pudo restaurar el grupo autorizado.", error);
+                showNotice("No fue posible restaurar el chat actual.", "warning");
+            }
+        }
+
+        async function ensureConnected() {
+            if (connection.state === signalR.HubConnectionState.Connected) return;
+            if (connection.state === signalR.HubConnectionState.Disconnected) await connection.start();
+        }
+
+        function setBodyList(placeholder, loading) {
+            const body = chatWindow.querySelector(".chat-body");
+            body.replaceChildren();
+            const search = document.createElement("div");
+            search.className = "chat-search";
+            const input = document.createElement("input");
+            input.id = "chatListSearch";
+            input.type = "search";
+            input.autocomplete = "off";
+            input.placeholder = placeholder;
+            search.appendChild(input);
+            const list = document.createElement("div");
+            list.id = "chatSelectableList";
+            list.className = "chat-users-list";
+            list.appendChild(emptyState(loading));
+            body.append(search, list);
+        }
+
+        function bindFilter(id, callback) {
+            document.getElementById(id)?.addEventListener("input", function (event) {
+                callback(event.target.value.trim().toLowerCase());
+            });
+        }
+
+        function renderListError(message) {
+            const list = document.getElementById("chatSelectableList");
+            if (!list) return;
+            list.replaceChildren(emptyState(message));
+        }
+
+        function emptyState(message) {
+            const element = document.createElement("div");
+            element.className = "chat-loading";
+            element.textContent = message;
+            return element;
+        }
+
+        function showNotice(message, kind) {
+            const body = chatWindow.querySelector(".chat-body");
+            if (!body) return;
+            body.querySelector(".chat-inline-notice")?.remove();
+            const notice = document.createElement("div");
+            notice.className = `chat-inline-notice alert alert-${kind || "danger"}`;
+            notice.setAttribute("role", "alert");
+            notice.textContent = message || "No fue posible completar la operación.";
+            body.prepend(notice);
+        }
+
+        async function requestJson(url, options) {
+            const response = await fetch(url, Object.assign({
+                credentials: "same-origin",
+                headers: { "X-Requested-With": "XMLHttpRequest" }
+            }, options || {}));
+            const data = await response.json().catch(function () { return {}; });
+            if (!response.ok || data.success === false) {
+                throw new Error(data.message || "No fue posible completar la operación.");
+            }
+            return data;
+        }
+
+        function postForm(url, values) {
+            const body = new URLSearchParams();
+            Object.keys(values).forEach(function (key) {
+                if (values[key] !== null && values[key] !== undefined) body.append(key, String(values[key]));
+            });
+            return requestJson(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+                    "X-CSRF-TOKEN": token,
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+                body: body.toString()
+            });
+        }
+
+        function formatDate(value) {
+            const date = new Date(value);
+            return Number.isNaN(date.getTime()) ? "" : date.toLocaleString("es-CR", { dateStyle: "short", timeStyle: "short" });
+        }
+    });
+})();

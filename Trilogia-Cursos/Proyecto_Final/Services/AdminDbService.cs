@@ -262,7 +262,7 @@ namespace Proyecto_Final.Services
             }
         }
 
-        public async Task UpdateProductImageAsync(int productoId, string imageUrl)
+        public async Task UpdateProductImageAsync(int productoId, string? imageUrl)
         {
             await using var connection = new SqlConnection(_connectionString);
             await using var command = new SqlCommand("UPDATE dbo.Productos SET ImagenUrl = @ImagenUrl WHERE ProductoId = @ProductoId;", connection);
@@ -1085,7 +1085,8 @@ namespace Proyecto_Final.Services
                         Cantidad = reader.IsDBNull(3) ? 0 : reader.GetInt32(3),
                         PrecioUnitario = reader.IsDBNull(4) ? 0 : reader.GetDecimal(4),
                         Subtotal = reader.IsDBNull(5) ? 0 : reader.GetDecimal(5),
-                        StockActual = reader.IsDBNull(6) ? 0 : reader.GetInt32(6)
+                        StockActual = reader.IsDBNull(6) ? 0 : reader.GetInt32(6),
+                        IsCombo = reader.FieldCount > 7 && !reader.IsDBNull(7) && reader.GetBoolean(7)
                     });
                 }
             }
@@ -2167,11 +2168,45 @@ namespace Proyecto_Final.Services
 
                     Motivo = reader.IsDBNull(7)
                         ? string.Empty
-                        : reader.GetString(7)
+                        : reader.GetString(7),
+
+                    Descripcion = reader.IsDBNull(8)
+                        ? null
+                        : reader.GetString(8),
+
+                    Resolucion = reader.IsDBNull(9)
+                        ? null
+                        : reader.GetString(9),
+
+                    FechaResolucion = reader.IsDBNull(10)
+                        ? null
+                        : reader.GetDateTime(10)
                 });
             }
 
             return warranties;
+        }
+
+        public async Task UpdateWarrantyStatusAsync(
+            int garantiaId,
+            string estado,
+            string? resolucion,
+            int actorUsuarioId,
+            string actorNombre)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_UpdateWarrantyStatus", connection)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+            command.Parameters.Add("@GarantiaId", SqlDbType.Int).Value = garantiaId;
+            command.Parameters.Add("@Estado", SqlDbType.NVarChar, 30).Value = estado.Trim();
+            command.Parameters.Add("@Resolucion", SqlDbType.NVarChar, 1000).Value =
+                string.IsNullOrWhiteSpace(resolucion) ? DBNull.Value : resolucion.Trim();
+            command.Parameters.Add("@ActorUsuarioId", SqlDbType.Int).Value = actorUsuarioId;
+            command.Parameters.Add("@ActorNombre", SqlDbType.NVarChar, 150).Value = actorNombre;
+            await connection.OpenAsync();
+            await command.ExecuteNonQueryAsync();
         }
 
         public async Task<OrderDetailLineViewModel?> GetOrderDetailLineAsync(int pedidoDetalleId)

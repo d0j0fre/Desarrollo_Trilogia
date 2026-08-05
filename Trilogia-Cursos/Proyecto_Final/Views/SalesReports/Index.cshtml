@@ -1,0 +1,26 @@
+@model Proyecto_Final.Models.Admin.DetailedSalesReportViewModel
+@using Proyecto_Final.Models.Admin
+@{
+    var printMode = ViewData["PrintMode"] as bool? == true;
+    ViewData["Title"] = "Reporte de ventas";
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5"><div class="col-12 d-flex justify-content-between"><div><h2>Reporte de ventas</h2><p>Reporte comercial independiente del dashboard (CU-132).</p></div>@if(printMode){<button class="btn btn-outline-primary d-print-none" onclick="window.print()">Imprimir</button>}</div></div>
+    @if (!printMode)
+    {
+        <div class="row px-xl-5"><div class="col-12"><form method="get" class="admin-filter-bar form-row align-items-end">
+            <div class="form-group col-md-2"><label asp-for="Filtro.Desde"></label><input name="Desde" type="date" value="@Model.Filtro.Desde.ToString("yyyy-MM-dd")" class="form-control" /></div>
+            <div class="form-group col-md-2"><label asp-for="Filtro.Hasta"></label><input name="Hasta" type="date" value="@Model.Filtro.Hasta.ToString("yyyy-MM-dd")" class="form-control" /></div>
+            <div class="form-group col-md-2"><label>Agrupación</label><select name="Agrupacion" class="form-control"><option value="diario" selected="@(Model.Filtro.Agrupacion==SalesReportGrouping.Daily)">Diaria</option><option value="mensual" selected="@(Model.Filtro.Agrupacion==SalesReportGrouping.Monthly)">Mensual</option><option value="categoria" selected="@(Model.Filtro.Agrupacion==SalesReportGrouping.Category)">Categoría</option></select></div>
+            <div class="form-group col-md-3"><label>Categoría de factura</label><select name="Categoria" class="form-control"><option value="">Todas</option>@foreach(var category in Model.Categorias){<option value="@category" selected="@(category==Model.Filtro.Categoria)">@category</option>}</select></div>
+            <div class="form-group col-md-3"><button class="btn btn-primary">Consultar</button> <a asp-action="Print" asp-route-Desde="@Model.Filtro.Desde.ToString("yyyy-MM-dd")" asp-route-Hasta="@Model.Filtro.Hasta.ToString("yyyy-MM-dd")" asp-route-Agrupacion="@Model.Filtro.Agrupacion" asp-route-Categoria="@Model.Filtro.Categoria" target="_blank" class="btn btn-outline-secondary">Imprimir</a> <a asp-action="ExportCsv" asp-route-Desde="@Model.Filtro.Desde.ToString("yyyy-MM-dd")" asp-route-Hasta="@Model.Filtro.Hasta.ToString("yyyy-MM-dd")" asp-route-Agrupacion="@Model.Filtro.Agrupacion" asp-route-Categoria="@Model.Filtro.Categoria" class="btn btn-outline-success">CSV</a></div>
+            <div asp-validation-summary="All" class="text-danger col-12"></div>
+        </form></div></div>
+    }
+    <div class="row px-xl-5 mb-4"><div class="col-md-3"><div class="card"><div class="card-body"><small>Ventas facturadas</small><h4>₡@Model.TotalVentas.ToString("N2")</h4></div></div></div><div class="col-md-3"><div class="card"><div class="card-body"><small>Facturas</small><h4>@Model.Facturas</h4></div></div></div><div class="col-md-3"><div class="card"><div class="card-body"><small>Pedidos</small><h4>@Model.Pedidos</h4></div></div></div><div class="col-md-3"><div class="card"><div class="card-body"><small>Ticket promedio</small><h4>₡@Model.TicketPromedio.ToString("N2")</h4></div></div></div></div>
+    <div class="row px-xl-5 pb-5"><div class="col-12 table-responsive"><table class="table table-hover"><thead><tr><th>Grupo</th><th>Categoría</th><th>Ventas</th><th>Facturas</th><th>Pedidos</th><th>Ticket promedio</th><th>Unidades</th></tr></thead><tbody>
+    @if(!Model.HayDatos){<tr><td colspan="7" class="text-center text-muted py-4">No hay ventas para los filtros seleccionados.</td></tr>}
+    @foreach(var row in Model.Filas){<tr><td>@row.Etiqueta</td><td>@(row.Categoria??"—")</td><td>₡@row.TotalVentas.ToString("N2")</td><td>@row.Facturas</td><td>@row.Pedidos</td><td>₡@row.TicketPromedio.ToString("N2")</td><td>@row.Unidades</td></tr>}
+    </tbody></table></div></div>
+</div>

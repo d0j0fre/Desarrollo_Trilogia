@@ -12,8 +12,7 @@
 -- CREATE OR ALTER — idempotente. No modifica SPs existentes.
 -- Prerrequisito: cu081_rutas_entregas_esquema.sql aplicado.
 -- ============================================================
-
-USE DistribuidoraJJ_DB;
+-- Ejecute este script sobre la base de datos seleccionada por el operador.
 GO
 
 /* =========================================================

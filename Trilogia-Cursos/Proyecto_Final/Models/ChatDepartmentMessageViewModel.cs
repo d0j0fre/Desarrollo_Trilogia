@@ -4,7 +4,13 @@
     {
         public int MensajeId { get; set; }
 
-        public int PerfilId { get; set; }
+        public int DepartamentoId { get; set; }
+
+        public int PerfilId
+        {
+            get => DepartamentoId;
+            set => DepartamentoId = value;
+        }
 
         public int RemitenteId { get; set; }
 

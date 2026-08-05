@@ -1,0 +1,5 @@
+@model Proyecto_Final.Models.Admin.PaySlipViewModel
+@{ ViewData["Title"]="Boleta de pago"; }
+<div class="container py-4"><h2>Boleta de pago</h2><dl class="row"><dt class="col-sm-3">Empleado</dt><dd class="col-sm-9">@Model.Empleado</dd><dt class="col-sm-3">Periodo</dt><dd class="col-sm-9">@Model.Periodo</dd><dt class="col-sm-3">Estado</dt><dd class="col-sm-9">@Model.Estado</dd></dl>
+<table class="table"><thead><tr><th>Código</th><th>Concepto</th><th>Tipo</th><th>Monto</th></tr></thead><tbody>@foreach(var line in Model.Lineas){<tr><td>@line.Codigo</td><td>@line.Nombre</td><td>@line.Tipo</td><td>@line.Monto</td></tr>}</tbody></table>
+<dl class="row"><dt class="col-sm-3">Salario base</dt><dd class="col-sm-9">@Model.SalarioBase</dd><dt class="col-sm-3">Total bruto</dt><dd class="col-sm-9">@Model.TotalBruto</dd><dt class="col-sm-3">Deducciones</dt><dd class="col-sm-9">@Model.TotalDeducciones</dd><dt class="col-sm-3">Total neto</dt><dd class="col-sm-9">@Model.TotalNeto</dd></dl><a asp-action="Download" asp-route-id="@Model.CalculoId" class="btn btn-primary">Descargar HTML privado</a></div>

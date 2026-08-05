@@ -123,4 +123,29 @@ namespace Proyecto_Final.Models.Admin
         public List<RouteOrderItemViewModel> Pedidos { get; set; } = new();
         public List<AssignableOrderViewModel> PedidosDisponibles { get; set; } = new();
     }
+
+    public sealed class DeliveryBoardRowViewModel
+    {
+        public int RutaId { get; init; }
+        public string Codigo { get; init; } = string.Empty;
+        public string Zona { get; init; } = string.Empty;
+        public string Estado { get; init; } = string.Empty;
+        public string Chofer { get; init; } = string.Empty;
+        public string VehiculoPlaca { get; init; } = string.Empty;
+        public int TotalPedidos { get; init; }
+        public int Entregados { get; init; }
+        public int Fallidos { get; init; }
+        public int Pendientes { get; init; }
+        public DateTime? FechaDespacho { get; init; }
+    }
+
+    public sealed class DeliveryBoardViewModel
+    {
+        public DateTimeOffset GeneradoUtc { get; init; }
+        public int RutasActivas { get; init; }
+        public int EntregasPendientes { get; init; }
+        public int EntregasCompletadas { get; init; }
+        public int EntregasFallidas { get; init; }
+        public IReadOnlyList<DeliveryBoardRowViewModel> Rutas { get; init; } = [];
+    }
 }

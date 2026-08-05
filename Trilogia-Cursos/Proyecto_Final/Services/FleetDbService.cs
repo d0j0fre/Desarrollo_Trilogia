@@ -109,6 +109,8 @@ namespace Proyecto_Final.Services
             command.Parameters.Add("@Descripcion", SqlDbType.NVarChar, 300).Value = model.Descripcion.Trim();
             command.Parameters.Add("@Taller", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(model.Taller) ? DBNull.Value : model.Taller.Trim();
             command.Parameters.Add("@Costo", SqlDbType.Decimal).Value = model.Costo;
+            command.Parameters["@Costo"].Precision = 18;
+            command.Parameters["@Costo"].Scale = 2;
             command.Parameters.Add("@Estado", SqlDbType.NVarChar, 20).Value = model.Estado;
             command.Parameters.Add("@FechaProgramada", SqlDbType.Date).Value = model.FechaProgramada.HasValue ? model.FechaProgramada.Value.Date : DBNull.Value;
             command.Parameters.Add("@FechaRealizada", SqlDbType.Date).Value = model.FechaRealizada.HasValue ? model.FechaRealizada.Value.Date : DBNull.Value;
@@ -127,6 +129,8 @@ namespace Proyecto_Final.Services
             command.Parameters.Add("@OrdenMantenimientoId", SqlDbType.Int).Value = ordenId;
             command.Parameters.Add("@FechaRealizada", SqlDbType.Date).Value = fechaRealizada.HasValue ? fechaRealizada.Value.Date : DBNull.Value;
             command.Parameters.Add("@Costo", SqlDbType.Decimal).Value = costo.HasValue ? costo.Value : DBNull.Value;
+            command.Parameters["@Costo"].Precision = 18;
+            command.Parameters["@Costo"].Scale = 2;
             await connection.OpenAsync();
             await command.ExecuteNonQueryAsync();
         }

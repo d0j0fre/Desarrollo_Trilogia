@@ -434,7 +434,11 @@ namespace Proyecto_Final.Services
             await using var command = new SqlCommand("dbo.sp_LiquidacionCobros_Registrar", connection) { CommandType = CommandType.StoredProcedure };
             command.Parameters.Add("@RutaId", SqlDbType.Int).Value = model.RutaId;
             command.Parameters.Add("@MontoEfectivoRecibido", SqlDbType.Decimal).Value = model.MontoEfectivoRecibido;
+            command.Parameters["@MontoEfectivoRecibido"].Precision = 18;
+            command.Parameters["@MontoEfectivoRecibido"].Scale = 2;
             command.Parameters.Add("@MontoComprobantes", SqlDbType.Decimal).Value = model.MontoComprobantes;
+            command.Parameters["@MontoComprobantes"].Precision = 18;
+            command.Parameters["@MontoComprobantes"].Scale = 2;
             command.Parameters.Add("@Observaciones", SqlDbType.NVarChar, 400).Value = string.IsNullOrWhiteSpace(model.Observaciones) ? DBNull.Value : model.Observaciones.Trim();
             command.Parameters.Add("@ComprobantesJson", SqlDbType.NVarChar, -1).Value = string.IsNullOrWhiteSpace(comprobantesJson) ? DBNull.Value : comprobantesJson;
             command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId > 0 ? usuarioId : DBNull.Value;
@@ -600,7 +604,7 @@ namespace Proyecto_Final.Services
         // EVIDENCIAS (CU-083)
         // ────────────────────────────────────────────────────
         public async Task<int> RegisterEvidenceAsync(
-            int pedidoId, int? rutaId, string tipoEvidencia, string archivoUrl,
+            int pedidoId, int? rutaId, string tipoEvidencia, string storageKey, string mimeType,
             string? observaciones, int registradoPorUsuarioId, string registradoPorNombre)
         {
             await using var connection = new SqlConnection(_connectionString);
@@ -608,13 +612,64 @@ namespace Proyecto_Final.Services
             command.Parameters.Add("@PedidoId", SqlDbType.Int).Value = pedidoId;
             command.Parameters.Add("@RutaId", SqlDbType.Int).Value = rutaId.HasValue && rutaId.Value > 0 ? rutaId.Value : DBNull.Value;
             command.Parameters.Add("@TipoEvidencia", SqlDbType.NVarChar, 20).Value = tipoEvidencia.Trim();
-            command.Parameters.Add("@ArchivoUrl", SqlDbType.NVarChar, 300).Value = archivoUrl.Trim();
+            command.Parameters.Add("@StorageKey", SqlDbType.NVarChar, 160).Value = storageKey.Trim();
+            command.Parameters.Add("@MimeType", SqlDbType.NVarChar, 100).Value = mimeType.Trim();
             command.Parameters.Add("@Observaciones", SqlDbType.NVarChar, 300).Value = string.IsNullOrWhiteSpace(observaciones) ? DBNull.Value : observaciones.Trim();
             command.Parameters.Add("@RegistradoPorUsuarioId", SqlDbType.Int).Value = registradoPorUsuarioId > 0 ? registradoPorUsuarioId : DBNull.Value;
             command.Parameters.Add("@RegistradoPorNombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(registradoPorNombre) ? DBNull.Value : registradoPorNombre.Trim();
             await connection.OpenAsync();
             var result = await command.ExecuteScalarAsync();
             return result is int id ? id : Convert.ToInt32(result);
+        }
+
+        public async Task MarkEvidenceReadyAsync(int evidenciaId, int registradoPorUsuarioId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Entrega_MarkEvidenceReady", connection)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+            command.Parameters.Add("@EvidenciaId", SqlDbType.Int).Value = evidenciaId;
+            command.Parameters.Add("@RegistradoPorUsuarioId", SqlDbType.Int).Value = registradoPorUsuarioId;
+            await connection.OpenAsync();
+            await command.ExecuteNonQueryAsync();
+        }
+
+        public async Task DeletePendingEvidenceAsync(int evidenciaId, int registradoPorUsuarioId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Entrega_DeletePendingEvidence", connection)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+            command.Parameters.Add("@EvidenciaId", SqlDbType.Int).Value = evidenciaId;
+            command.Parameters.Add("@RegistradoPorUsuarioId", SqlDbType.Int).Value = registradoPorUsuarioId;
+            await connection.OpenAsync();
+            await command.ExecuteNonQueryAsync();
+        }
+
+        public async Task<AuthorizedEvidenceViewModel?> GetAuthorizedEvidenceAsync(
+            int evidenciaId,
+            int usuarioId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Entrega_GetAuthorizedEvidence", connection)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+            command.Parameters.Add("@EvidenciaId", SqlDbType.Int).Value = evidenciaId;
+            command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId;
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync(CommandBehavior.SingleRow);
+            if (!await reader.ReadAsync()) return null;
+            return new AuthorizedEvidenceViewModel
+            {
+                EvidenciaId = reader.GetInt32(0),
+                PedidoId = reader.GetInt32(1),
+                StorageKey = reader.GetString(2),
+                MimeType = reader.GetString(3),
+                TipoEvidencia = reader.GetString(4)
+            };
         }
 
         public async Task<List<EvidenceItemViewModel>> GetEvidencesByOrderAsync(int pedidoId)
@@ -660,10 +715,11 @@ namespace Proyecto_Final.Services
                         EvidenciaId = reader.GetInt32(0),
                         PedidoId = reader.GetInt32(1),
                         TipoEvidencia = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
-                        ArchivoUrl = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
-                        Observaciones = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
-                        RegistradoPorNombre = reader.IsDBNull(5) ? string.Empty : reader.GetString(5),
-                        FechaRegistro = reader.GetDateTime(6)
+                        StorageKey = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
+                        MimeType = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
+                        Observaciones = reader.IsDBNull(5) ? string.Empty : reader.GetString(5),
+                        RegistradoPorNombre = reader.IsDBNull(6) ? string.Empty : reader.GetString(6),
+                        FechaRegistro = reader.GetDateTime(7)
                     });
                 }
             }
@@ -676,10 +732,11 @@ namespace Proyecto_Final.Services
             PedidoId = reader.GetInt32(1),
             RutaId = reader.IsDBNull(2) ? null : reader.GetInt32(2),
             TipoEvidencia = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
-            ArchivoUrl = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
-            Observaciones = reader.IsDBNull(5) ? string.Empty : reader.GetString(5),
-            RegistradoPorNombre = reader.IsDBNull(6) ? string.Empty : reader.GetString(6),
-            FechaRegistro = reader.GetDateTime(7)
+            StorageKey = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
+            MimeType = reader.IsDBNull(5) ? string.Empty : reader.GetString(5),
+            Observaciones = reader.IsDBNull(6) ? string.Empty : reader.GetString(6),
+            RegistradoPorNombre = reader.IsDBNull(7) ? string.Empty : reader.GetString(7),
+            FechaRegistro = reader.GetDateTime(8)
         };
     }
 }

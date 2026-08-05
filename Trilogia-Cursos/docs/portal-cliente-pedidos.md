@@ -1,47 +1,31 @@
-# Portal del cliente e historial de pedidos
+# Portal del cliente, pedidos e inventario
 
-## Implementado
+## Reglas vigentes
 
-- Nuevo portal protegido para usuarios con rol `Cliente`.
-- Vista de resumen con informacion basica del cliente.
-- Bloque de credito disponible cuando existe informacion de credito.
-- Historial de pedidos del cliente autenticado.
-- Detalle de pedido con estado, entrega, direccion, total y lineas de productos.
-- Cancelacion segura de pedidos propios en estado `Pendiente` y sin factura asociada.
-- Comprobante imprimible visible para el cliente cuando el pedido tiene factura asociada.
-- Enlace `Mis pedidos` en la navegacion para clientes logueados.
-- Enlace a `Mis pedidos` desde la confirmacion de compra.
+- El portal requiere rol `Cliente` y usa el `UserId` de la sesión para todas las lecturas/mutaciones.
+- Historial, detalle, comprobante, garantía y evidencias comprueban pertenencia en servidor/base; un ID de URL no concede acceso.
+- El comprobante se consulta por `PedidoId` propio y no sustituye una factura electrónica oficial.
 
-## Reglas de cancelacion
+## Checkout autoritativo
 
-- El pedido debe pertenecer al `UserId` de la sesion.
-- El estado debe ser `Pendiente`.
-- No debe existir una factura asociada en `Facturas`.
-- La transicion permitida es unicamente `Pendiente` a `Cancelado`.
-- No se devuelve stock, porque actualmente la creacion del pedido valida disponibilidad pero no descuenta inventario.
-- La validacion principal vive en `dbo.sp_Client_CancelPendingOrder`.
+- El carrito de sesión se refresca contra productos vigentes antes de mostrar y comprar.
+- La migración 0005 ejecuta pedido, descuento/regalía e inventario dentro de una sola transacción.
+- SQL vuelve a comprobar precio, stock, segmento, vigencia y prioridad con bloqueos de concurrencia.
+- Si falla stock, promoción o pedido, no persiste un pedido parcial ni un descuento desconectado.
+- La confirmación usa total y regalías retornados por la base, no cálculos confiados al navegador.
 
-## Reglas de comprobante
+## Cancelación
 
-- El comprobante se consulta desde el portal usando `PedidoId`, no `FacturaId` directo en la URL cliente.
-- La lectura valida `PedidoId` contra el `UserId` de la sesion antes de mostrar datos.
-- Si no existe factura asociada o no pertenece al cliente autenticado, se muestra un mensaje generico y se redirige a `Mis pedidos`.
-- La vista es imprimible desde navegador con `window.print()`.
-- No se genera PDF en esta fase.
-- El documento se muestra como comprobante del sistema y no sustituye una factura electronica oficial.
+- Solo un pedido propio, `Pendiente` y no facturado puede cancelarse.
+- Como el checkout descuenta inventario al crear el pedido, la cancelación restaura stock exactamente una vez.
+- La facturación no descuenta stock nuevamente.
 
-## Pruebas sugeridas
+## Garantías
 
-1. Iniciar sesion con un usuario cliente y abrir `ClientPortal/Index`.
-2. Confirmar que solo aparecen pedidos del usuario autenticado.
-3. Abrir el detalle de un pedido propio desde `Mis pedidos`.
-4. Intentar acceder por URL directa a un pedido de otro usuario y confirmar que redirige a `Mis pedidos`.
-5. Cancelar un pedido propio pendiente y confirmar que cambia a `Cancelado`.
-6. Intentar cancelar un pedido propio no pendiente y confirmar que no cambia.
-7. Intentar cancelar un pedido facturado y confirmar que no cambia.
-8. Abrir el detalle de un pedido facturado propio y confirmar que aparece `Ver comprobante`.
-9. Abrir el comprobante y confirmar que muestra numero, fecha, cliente, totales y lineas.
-10. Usar el boton `Imprimir` y confirmar que abre la impresion del navegador.
-11. Intentar acceder a `ClientPortal/Invoice/{PedidoId}` con un pedido de otro usuario y confirmar que redirige a `Mis pedidos`.
-12. Crear un pedido desde carrito y usar el enlace `Mis pedidos` desde la confirmacion.
-13. Iniciar sesion como administrador o empleado e intentar abrir `ClientPortal/Index`; debe redirigir a una vista segura.
+- El cliente solo solicita garantía sobre un detalle de pedido propio entregado.
+- No puede existir otra solicitud abierta para el mismo detalle.
+- El administrador necesita el permiso funcional, registra estado/resolución y deja auditoría.
+
+## QA pendiente de entorno
+
+Aplicar migraciones, probar concurrencia de stock, cancelación/restauración, comprobantes propios/ajenos y el flujo completo de garantía. Los tests automatizados cubren el motor de promociones, no sustituyen una prueba transaccional contra SQL Server.
