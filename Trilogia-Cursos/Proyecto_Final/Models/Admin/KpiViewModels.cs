@@ -78,4 +78,19 @@ namespace Proyecto_Final.Models.Admin
         public decimal PorcentajeGlobal => MetaGlobal > 0 ? Math.Round(VentaGlobal / MetaGlobal * 100, 2) : 0m;
         public bool HayDatos => Items.Any();
     }
+
+    // CU-212 — Panel de progreso individual del vendedor sobre su meta del mes.
+    public class MetaProgresoViewModel
+    {
+        public int Anio { get; set; } = DateTime.Now.Year;
+        public int Mes { get; set; } = DateTime.Now.Month;
+        public decimal MontoMeta { get; set; }
+        public decimal VentasReales { get; set; }
+        public decimal PorcentajeCumplimiento { get; set; }
+        public decimal MontoPendiente { get; set; }
+        public bool SinMetaDefinida { get; set; }
+
+        // Evita que la barra de progreso se pase de 100% visualmente.
+        public decimal PorcentajeBarra => Math.Min(PorcentajeCumplimiento, 100m);
+    }
 }
