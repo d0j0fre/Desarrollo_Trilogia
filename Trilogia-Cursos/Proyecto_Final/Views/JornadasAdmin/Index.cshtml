@@ -1,0 +1,95 @@
+﻿@model Proyecto_Final.Models.Admin.JornadasAdminViewModel
+@{
+    ViewData["Title"] = "Aprobación de jornadas";
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header">
+                <h2 class="mb-2">Aprobación de jornadas</h2>
+                <p>Revisión de horas ordinarias, extra y ausencias enviadas por el personal (CU-112).</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-3">
+        <div class="col-12">
+            <div class="admin-card">
+                <form asp-controller="JornadasAdmin" asp-action="Index" method="get" class="form-row align-items-end">
+                    <div class="form-group col-md-3">
+                        <label>Desde</label>
+                        <input type="date" name="desde" value="@Model.Desde.ToString("yyyy-MM-dd")" class="form-control" />
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label>Hasta</label>
+                        <input type="date" name="hasta" value="@Model.Hasta.ToString("yyyy-MM-dd")" class="form-control" />
+                    </div>
+                    <div class="form-group col-md-2">
+                        <button type="submit" class="btn btn-primary btn-block"><i class="fa fa-filter mr-1"></i>Filtrar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-12">
+            <div class="admin-table-wrapper">
+                <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Jornadas pendientes de revisión</h5>
+                    <span class="badge badge-dark">@Model.Pendientes.Count pendiente(s)</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Empleado</th>
+                                <th>Fecha</th>
+                                <th class="text-right">Ordinarias</th>
+                                <th class="text-right">Extra</th>
+                                <th class="text-right">Ausencia</th>
+                                <th>Observaciones</th>
+                                <th style="min-width:260px;">Decisión</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!Model.Pendientes.Any())
+                            {
+                                <tr><td colspan="7" class="text-center text-muted py-4">No hay jornadas pendientes en el rango seleccionado.</td></tr>
+                            }
+                            else
+                            {
+                                @foreach (var j in Model.Pendientes)
+                                {
+                                    <tr>
+                                        <td>@j.NombreCompleto</td>
+                                        <td>@j.Fecha.ToString("dd/MM/yyyy")</td>
+                                        <td class="text-right">@j.HorasOrdinarias.ToString("N2")</td>
+                                        <td class="text-right">@j.HorasExtra.ToString("N2")</td>
+                                        <td class="text-right">@j.HorasAusencia.ToString("N2")</td>
+                                        <td>@(string.IsNullOrWhiteSpace(j.Observaciones) ? "—" : j.Observaciones)</td>
+                                        <td>
+                                            <form asp-controller="JornadasAdmin" asp-action="Resolver" method="post" class="d-flex flex-column">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="desde" value="@Model.Desde.ToString("yyyy-MM-dd")" />
+                                                <input type="hidden" name="hasta" value="@Model.Hasta.ToString("yyyy-MM-dd")" />
+                                                <input type="hidden" name="JornadaId" value="@j.JornadaId" />
+                                                <input type="hidden" name="VersionFilaBase64" value="@j.VersionFilaBase64" />
+                                                <textarea name="RespuestaSupervisor" class="form-control form-control-sm mb-2" rows="2" placeholder="Observación (opcional)"></textarea>
+                                                <div class="d-flex" style="gap:6px;">
+                                                    <button type="submit" name="Decision" value="Aprobada" class="btn btn-sm btn-success flex-fill"><i class="fa fa-check"></i> Aprobar</button>
+                                                    <button type="submit" name="Decision" value="Rechazada" class="btn btn-sm btn-outline-danger flex-fill"><i class="fa fa-times"></i> Rechazar</button>
+                                                </div>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

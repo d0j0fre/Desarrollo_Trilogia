@@ -241,5 +241,7 @@ namespace Proyecto_Final.Models.Admin
         public List<EmployeeTaskViewModel> Tareas { get; set; } = new();
         public List<EmployeeLeaveRequestViewModel> Solicitudes { get; set; } = new();
         public EmployeeLeaveRequestFormViewModel NuevaSolicitud { get; set; } = new();
+        public List<JornadaListItemViewModel> MisJornadas { get; set; } = new();
+        public JornadaFormViewModel NuevaJornada { get; set; } = new();
     }
 }

@@ -51,14 +51,29 @@
             || string.Equals(userRole, "Empleado", StringComparison.OrdinalIgnoreCase)
             || string.Equals(userRole, "Vendedor", StringComparison.OrdinalIgnoreCase));
         var isEmployeePortalUser = isLoggedIn && (
-            string.Equals(userRole, "Empleado", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(userRole, "Vendedor", StringComparison.OrdinalIgnoreCase));
+            string.Equals(userRole, "Administrador", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(userRole, "Empleado", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(userRole, "Vendedor", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(userRole, "Chofer", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(userRole, "Bodeguero", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(userRole, "Cajero", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(userRole, "Facturador", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(userRole, "Compras", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(userRole, "Crédito y Cobro", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(userRole, "Soporte", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(userRole, "Auditor Interno", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(userRole, "Supervisor", StringComparison.OrdinalIgnoreCase));
         var isClient = isLoggedIn && string.Equals(userRole, "Cliente", StringComparison.OrdinalIgnoreCase);
         var isGerente = isLoggedIn && string.Equals(userRole, "Gerente", StringComparison.OrdinalIgnoreCase);
         var isChofer = isLoggedIn && string.Equals(userRole, "Chofer", StringComparison.OrdinalIgnoreCase);
         var isCajero = isLoggedIn && (
             string.Equals(userRole, "Cajero", StringComparison.OrdinalIgnoreCase)
             || string.Equals(userRole, "Financiero", StringComparison.OrdinalIgnoreCase));
+        // CU-112/CU-113: roles distintos de Administrador que tengan el permiso puntual ven un acceso directo (RRHH_JORNADAS_APROBAR / PLANILLA_VER).
+        var puedeVerJornadas = isLoggedIn && !isAdmin
+            && await AdminDbService.TienePermisoCodigoPorRolAsync(userRole ?? string.Empty, "RRHH_JORNADAS_APROBAR");
+        var puedeVerPlanilla = isLoggedIn && !isAdmin
+            && await AdminDbService.TienePermisoCodigoPorRolAsync(userRole ?? string.Empty, "PLANILLA_VER");
         var categoriasLayout = await AdminDbService.GetStoreCategoriesAsync();
     }
 
@@ -247,6 +262,18 @@
                                                 <div class="acc-sec__list">
                                                     <a asp-controller="Employees" asp-action="Index" class="acc-item"><i class="fa fa-id-badge"></i><span>Empleados</span></a>
                                                     <a asp-controller="Employees" asp-action="LeaveRequests" class="acc-item"><i class="fa fa-calendar-check"></i><span>Solicitudes (licencias)</span></a>
+                                                    <a asp-controller="JornadasAdmin" asp-action="Index" class="acc-item"><i class="fa fa-clock"></i><span>Jornadas (aprobación)</span></a>
+                                                </div>
+                                            </details>
+
+                                            <details class="acc-sec">
+                                                <summary class="acc-sec__head">
+                                                    <span class="acc-sec__icon"><i class="fa fa-money-check-alt"></i></span>
+                                                    <span class="acc-sec__label">Planilla</span>
+                                                    <i class="fa fa-chevron-down acc-sec__chev"></i>
+                                                </summary>
+                                                <div class="acc-sec__list">
+                                                    <a asp-controller="Payroll" asp-action="Index" class="acc-item"><i class="fa fa-calculator"></i><span>Períodos de planilla</span></a>
                                                 </div>
                                             </details>
 
@@ -302,9 +329,9 @@
                                 </div>
                             }
 
-                                @{
-                                    var chatRoles = new[]
-                                    {
+                            @{
+                                var chatRoles = new[]
+                                {
                                         "Administrador",
                                         "Auditor Interno",
                                         "Bodeguero",
@@ -319,10 +346,10 @@
                                         "Vendedor"
                                     };
 
-                                    var puedeUsarChat =
-                                        !string.IsNullOrWhiteSpace(userRole) &&
-                                        chatRoles.Contains(userRole, StringComparer.OrdinalIgnoreCase);
-                                }
+                                var puedeUsarChat =
+                                    !string.IsNullOrWhiteSpace(userRole) &&
+                                    chatRoles.Contains(userRole, StringComparer.OrdinalIgnoreCase);
+                            }
 
                             @if (puedeUsarChat)
                             {
@@ -413,6 +440,29 @@
                                 <a asp-controller="Finance" asp-action="Index" class="nav-item nav-link nav-highlight">
                                     <i class="fa fa-cash-register mr-1"></i>Liquidación de cobros
                                 </a>
+                            }
+
+                            @if (puedeVerJornadas || puedeVerPlanilla)
+                            {
+                                <div class="nav-item dropdown">
+                                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">
+                                        <i class="fa fa-user-tie mr-1"></i>RRHH
+                                    </a>
+                                    <div class="dropdown-menu dropdown-menu-right rounded-0 border-0 m-0">
+                                        @if (puedeVerJornadas)
+                                        {
+                                            <a asp-controller="JornadasAdmin" asp-action="Index" class="dropdown-item">
+                                                <i class="fa fa-clock"></i> Jornadas (aprobación)
+                                            </a>
+                                        }
+                                        @if (puedeVerPlanilla)
+                                        {
+                                            <a asp-controller="Payroll" asp-action="Index" class="dropdown-item">
+                                                <i class="fa fa-calculator"></i> Planilla
+                                            </a>
+                                        }
+                                    </div>
+                                </div>
                             }
 
                             @if (!isLoggedIn)
@@ -518,46 +568,46 @@
     </footer>
 
     <a href="#" class="btn back-to-top"
-   style="background-color: #FFD700 !important; color: white !important;">
-    <i class="fa fa-angle-double-up" style="color: white !important;"></i>
-</a>
+       style="background-color: #FFD700 !important; color: white !important;">
+        <i class="fa fa-angle-double-up" style="color: white !important;"></i>
+    </a>
 
-@* Chat *@
-<div id="chatWindow" class="chat-window">
+    @* Chat *@
+    <div id="chatWindow" class="chat-window">
 
-    <div class="chat-header">
-        <span>
-            <i class="fa fa-comments"></i>
-            Chat
-        </span>
+        <div class="chat-header">
+            <span>
+                <i class="fa fa-comments"></i>
+                Chat
+            </span>
 
-        <button type="button" id="closeChat">
-            <i class="fa fa-times"></i>
-        </button>
-    </div>
-
-    <div class="chat-body">
-
-        <div class="chat-search">
-            <i class="fa fa-search"></i>
-
-            <input type="text"
-                   id="chatUserSearch"
-                   placeholder="Buscar usuario..."
-                   autocomplete="off">
+            <button type="button" id="closeChat">
+                <i class="fa fa-times"></i>
+            </button>
         </div>
 
-        <div id="chatUsersList" class="chat-users-list">
-            <div class="chat-loading">
-                Abre el chat para cargar los usuarios.
+        <div class="chat-body">
+
+            <div class="chat-search">
+                <i class="fa fa-search"></i>
+
+                <input type="text"
+                       id="chatUserSearch"
+                       placeholder="Buscar usuario..."
+                       autocomplete="off">
             </div>
+
+            <div id="chatUsersList" class="chat-users-list">
+                <div class="chat-loading">
+                    Abre el chat para cargar los usuarios.
+                </div>
+            </div>
+
         </div>
 
     </div>
 
-</div>
-
-<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
 
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
@@ -567,41 +617,41 @@
     <script src="~/js/sprint3-modal.js" asp-append-version="true"></script>
 
     <script>
-        // Acordeón del menú de Administración:
-        // - mantiene abierto el dropdown mientras se interactúa con el acordeón
-        // - solo una sección abierta a la vez
-        // - al cerrar el menú, se colapsan todas las secciones (reabre mostrando solo las 8 áreas)
-        (function () {
-            var dropdown = document.querySelector('.admin-accordion-dropdown');
-            if (!dropdown) return;
+            // Acordeón del menú de Administración:
+            // - mantiene abierto el dropdown mientras se interactúa con el acordeón
+            // - solo una sección abierta a la vez
+            // - al cerrar el menú, se colapsan todas las secciones (reabre mostrando solo las 8 áreas)
+            (function() {
+                var dropdown = document.querySelector('.admin-accordion-dropdown');
+                if (!dropdown) return;
 
-            var menu = dropdown.querySelector('.admin-acc-menu');
-            if (!menu) return;
+                var menu = dropdown.querySelector('.admin-acc-menu');
+                if (!menu) return;
 
-            var sections = menu.querySelectorAll('details.acc-sec');
+                var sections = menu.querySelectorAll('details.acc-sec');
 
-            // Evita que Bootstrap cierre el dropdown al pulsar una cabecera de sección.
-            // Los enlaces de módulo (navegación real) sí dejan cerrar el menú.
-            menu.addEventListener('click', function (e) {
-                if (e.target.closest('a.acc-item')) return;
-                e.stopPropagation();
-            });
+                // Evita que Bootstrap cierre el dropdown al pulsar una cabecera de sección.
+                // Los enlaces de módulo (navegación real) sí dejan cerrar el menú.
+                menu.addEventListener('click', function(e) {
+                    if (e.target.closest('a.acc-item')) return;
+                    e.stopPropagation();
+                });
 
-            // Comportamiento de acordeón: al abrir una sección se cierran las demás.
-            sections.forEach(function (sec) {
-                sec.addEventListener('toggle', function () {
-                    if (!sec.open) return;
-                    sections.forEach(function (other) {
-                        if (other !== sec) other.open = false;
+                // Comportamiento de acordeón: al abrir una sección se cierran las demás.
+                sections.forEach(function(sec) {
+                    sec.addEventListener('toggle', function() {
+                        if (!sec.open) return;
+                        sections.forEach(function(other) {
+                            if (other !== sec) other.open = false;
+                        });
                     });
                 });
-            });
 
-            // Al cerrarse el dropdown, colapsa todo para reabrir en limpio.
-            $(dropdown).on('hidden.bs.dropdown', function () {
-                sections.forEach(function (sec) { sec.open = false; });
-            });
-        })();
+                // Al cerrarse el dropdown, colapsa todo para reabrir en limpio.
+                $(dropdown).on('hidden.bs.dropdown', function() {
+                    sections.forEach(function(sec) { sec.open = false; });
+                });
+            })();
     </script>
 
     @RenderSection("Scripts", required: false)

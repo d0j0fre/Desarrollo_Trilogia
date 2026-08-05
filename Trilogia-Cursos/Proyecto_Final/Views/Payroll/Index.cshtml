@@ -1,0 +1,94 @@
+﻿@model List<Proyecto_Final.Models.Admin.PayrollPeriodListItemViewModel>
+@{
+    ViewData["Title"] = "Planilla";
+    string EstadoClase(string estado) => estado switch
+    {
+        "Abierto" => "secondary",
+        "Calculado" => "warning",
+        "Aprobado" => "info",
+        "Pagado" => "success",
+        "Anulado" => "danger",
+        _ => "light"
+    };
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header">
+                <h2 class="mb-2">Planilla</h2>
+                <p>Cálculo de salarios, deducciones de ley y comisiones (CU-113).</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-lg-4 pb-3">
+            <div class="admin-card h-100">
+                <h5 class="mb-3">Nuevo período</h5>
+                <form asp-controller="Payroll" asp-action="CrearPeriodo" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="form-group">
+                        <label>Tipo de período</label>
+                        <select name="TipoPeriodo" class="form-control" required>
+                            <option value="Quincenal">Quincenal</option>
+                            <option value="Mensual">Mensual</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha inicial</label>
+                        <input type="date" name="FechaInicio" class="form-control" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha final</label>
+                        <input type="date" name="FechaFin" class="form-control" required />
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block py-2"><i class="fa fa-plus mr-1"></i>Crear período</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-8 pb-3">
+            <div class="admin-table-wrapper h-100">
+                <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Períodos de planilla</h5>
+                    <span class="badge badge-dark">@Model.Count período(s)</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Tipo</th>
+                                <th>Rango</th>
+                                <th>Estado</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!Model.Any())
+                            {
+                                <tr><td colspan="4" class="text-center text-muted py-4">No hay períodos de planilla creados.</td></tr>
+                            }
+                            else
+                            {
+                                @foreach (var p in Model)
+                                {
+                                    <tr>
+                                        <td>@p.TipoPeriodo</td>
+                                        <td>@p.FechaInicio.ToString("dd/MM/yyyy") - @p.FechaFin.ToString("dd/MM/yyyy")</td>
+                                        <td><span class="admin-badge-soft @EstadoClase(p.Estado)">@p.Estado</span></td>
+                                        <td class="text-right">
+                                            <a asp-controller="Payroll" asp-action="Detalle" asp-route-periodoId="@p.PeriodoPlanillaId" class="btn btn-sm btn-outline-primary">
+                                                Ver detalle
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,20 +1,24 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Proyecto_Final.Filters;
 using Proyecto_Final.Models.Admin;
 using Proyecto_Final.Services;
 
 namespace Proyecto_Final.Controllers
 {
-    [SessionAuthorize("Empleado", "Vendedor")]
+    [SessionAuthorize("Administrador", "Empleado", "Vendedor", "Chofer", "Bodeguero", "Cajero",
+    "Facturador", "Compras", "Crédito y Cobro", "Soporte", "Auditor Interno", "Supervisor")]
     public class EmployeePortalController : Controller
     {
         private readonly EmployeesDbService _employeesDbService;
         private readonly AdminDbService _adminDbService;
+        private readonly JornadasDbService _jornadasDbService;
 
-        public EmployeePortalController(EmployeesDbService employeesDbService, AdminDbService adminDbService)
+        public EmployeePortalController(EmployeesDbService employeesDbService, AdminDbService adminDbService, JornadasDbService jornadasDbService)
         {
             _employeesDbService = employeesDbService;
             _adminDbService = adminDbService;
+            _jornadasDbService = jornadasDbService;
         }
 
         [HttpGet]
@@ -33,6 +37,8 @@ namespace Proyecto_Final.Controllers
                 TempData["ErrorMessage"] = "No se encontró un perfil de empleado asociado a su usuario.";
                 return RedirectToAction("Index", "Home");
             }
+
+            model.MisJornadas = await _jornadasDbService.GetMisJornadasAsync(usuarioId, DateTime.Today.AddDays(-14), DateTime.Today);
 
             return View(model);
         }
@@ -107,6 +113,48 @@ namespace Proyecto_Final.Controllers
             catch (Exception)
             {
                 TempData["ErrorMessage"] = "No fue posible actualizar la tarea.";
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        // CU-112 — el empleado registra o edita su jornada (borrador o envío a revisión)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> GuardarJornada(JornadaFormViewModel model)
+        {
+            var usuarioId = HttpContext.Session.GetInt32("UserId") ?? 0;
+            if (usuarioId <= 0)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                TempData["ErrorMessage"] = "Revise las horas ingresadas para la jornada.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            try
+            {
+                await _jornadasDbService.GuardarMiJornadaAsync(usuarioId, model);
+
+                await RegistrarAuditoriaAsync(
+                    model.Enviar ? "Enviar jornada" : "Guardar jornada (borrador)",
+                    "RRHH",
+                    $"El usuario #{usuarioId} {(model.Enviar ? "envió" : "guardó")} su jornada del {model.Fecha:d}.");
+
+                TempData["SuccessMessage"] = model.Enviar
+                    ? "Jornada enviada a revisión del supervisor."
+                    : "Jornada guardada como borrador.";
+            }
+            catch (SqlException ex) when (ex.Number >= 50000)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+            }
+            catch (Exception)
+            {
+                TempData["ErrorMessage"] = "No fue posible guardar la jornada.";
             }
 
             return RedirectToAction(nameof(Index));

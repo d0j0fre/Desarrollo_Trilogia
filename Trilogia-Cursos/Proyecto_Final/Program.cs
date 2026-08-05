@@ -23,6 +23,8 @@ builder.Services.AddSession(options =>
 // Servicios propios
 builder.Services.AddScoped<AdminDbService>();
 builder.Services.AddScoped<EmployeesDbService>();
+builder.Services.AddScoped<JornadasDbService>();
+builder.Services.AddScoped<PayrollDbService>();
 builder.Services.AddScoped<StoreDbService>();
 builder.Services.AddScoped<AccountDbService>();
 builder.Services.AddScoped<EmailService>();

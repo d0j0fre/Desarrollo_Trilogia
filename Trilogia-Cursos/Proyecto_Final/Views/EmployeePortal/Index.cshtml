@@ -161,4 +161,70 @@
             </div>
         }
     </div>
+
+    <div class="employee-card p-4 mt-4">
+        <h4 class="employee-card-title"><i class="fa fa-clock mr-1"></i>Mi jornada</h4>
+        <form asp-controller="EmployeePortal" asp-action="GuardarJornada" method="post" class="form-row align-items-end mb-3">
+            @Html.AntiForgeryToken()
+            <div class="form-group col-md-2">
+                <label>Fecha</label>
+                <input type="date" name="Fecha" value="@DateTime.Today.ToString("yyyy-MM-dd")" class="form-control" required />
+            </div>
+            <div class="form-group col-md-2">
+                <label>Ordinarias</label>
+                <input type="number" step="0.5" min="0" max="24" name="HorasOrdinarias" class="form-control" value="8" required />
+            </div>
+            <div class="form-group col-md-2">
+                <label>Extra</label>
+                <input type="number" step="0.5" min="0" max="24" name="HorasExtra" class="form-control" value="0" required />
+            </div>
+            <div class="form-group col-md-2">
+                <label>Ausencia</label>
+                <input type="number" step="0.5" min="0" max="24" name="HorasAusencia" class="form-control" value="0" required />
+            </div>
+            <div class="form-group col-md-4">
+                <label>Observaciones</label>
+                <input type="text" name="Observaciones" class="form-control" maxlength="500" />
+            </div>
+            <div class="form-group col-md-12 d-flex" style="gap:8px;">
+                <button type="submit" name="Enviar" value="false" class="btn btn-outline-secondary"><i class="fa fa-save mr-1"></i>Guardar borrador</button>
+                <button type="submit" name="Enviar" value="true" class="btn btn-primary"><i class="fa fa-paper-plane mr-1"></i>Enviar a revisión</button>
+            </div>
+        </form>
+
+        @if (!Model.MisJornadas.Any())
+        {
+            <p class="text-muted mb-0">No tenés jornadas registradas en los últimos 14 días.</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Ordinarias</th>
+                            <th>Extra</th>
+                            <th>Ausencia</th>
+                            <th>Estado</th>
+                            <th>Respuesta</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var j in Model.MisJornadas)
+                        {
+                            <tr>
+                                <td>@j.Fecha.ToString("dd/MM/yyyy")</td>
+                                <td>@j.HorasOrdinarias.ToString("N2")</td>
+                                <td>@j.HorasExtra.ToString("N2")</td>
+                                <td>@j.HorasAusencia.ToString("N2")</td>
+                                <td><span class="badge badge-light">@j.Estado</span></td>
+                                <td>@(string.IsNullOrWhiteSpace(j.RespuestaSupervisor) ? "—" : j.RespuestaSupervisor)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
 </div>
