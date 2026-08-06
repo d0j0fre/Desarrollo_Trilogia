@@ -1,5 +1,7 @@
 <Solution>
   <Project Path="Proyecto_Final/Proyecto_Final.csproj" />
   <Project Path="Proyecto_FinalAPI/Proyecto_FinalAPI.csproj" />
-  <Project Path="Proyecto_Final.Tests/Proyecto_Final.Tests.csproj" />
+  <Project Path="Proyecto_Final.Tests/Proyecto_Final.Tests.csproj">
+    <Build Solution="Debug|*" Project="false" />
+  </Project>
 </Solution>
