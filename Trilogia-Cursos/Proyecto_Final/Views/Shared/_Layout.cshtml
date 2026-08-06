@@ -432,6 +432,12 @@
                                 <a asp-controller="SellerOrders" asp-action="Index" class="nav-item nav-link nav-highlight">
                                     <i class="fa fa-mobile-alt mr-1"></i>Venta móvil
                                 </a>
+                                @if (string.Equals(userRole, "Vendedor", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <a asp-controller="MyGoal" asp-action="Index" class="nav-item nav-link nav-highlight">
+                                        <i class="fa fa-bullseye mr-1"></i>Mi meta
+                                    </a>
+                                }
                                 <a asp-controller="Assistant" asp-action="Index" class="nav-item nav-link nav-highlight">
                                     <i class="fa fa-robot mr-1"></i>Asistente
                                 </a>

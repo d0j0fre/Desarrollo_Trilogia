@@ -81,6 +81,32 @@ namespace Proyecto_Final.Services
             return lista;
         }
 
+        // ── CU-212 Progreso individual del vendedor autenticado ─
+        public async Task<MetaProgresoViewModel> GetMiProgresoAsync(int vendedorUsuarioId, int anio, int mes)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Metas_MiProgreso", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.Add("@VendedorUsuarioId", SqlDbType.Int).Value = vendedorUsuarioId;
+            command.Parameters.Add("@Anio", SqlDbType.Int).Value = anio;
+            command.Parameters.Add("@Mes", SqlDbType.Int).Value = mes;
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+            if (await reader.ReadAsync())
+            {
+                return new MetaProgresoViewModel
+                {
+                    Anio = reader.GetInt32(reader.GetOrdinal("Anio")),
+                    Mes = reader.GetInt32(reader.GetOrdinal("Mes")),
+                    MontoMeta = reader.GetDecimal(reader.GetOrdinal("MontoMeta")),
+                    VentasReales = reader.GetDecimal(reader.GetOrdinal("VentasReales")),
+                    PorcentajeCumplimiento = reader.GetDecimal(reader.GetOrdinal("PorcentajeCumplimiento")),
+                    MontoPendiente = reader.GetDecimal(reader.GetOrdinal("MontoPendiente")),
+                    SinMetaDefinida = reader.GetBoolean(reader.GetOrdinal("SinMetaDefinida"))
+                };
+            }
+            return new MetaProgresoViewModel { Anio = anio, Mes = mes, SinMetaDefinida = true };
+        }
+
         // ── CU-213 Reporte de cumplimiento global ───────────
         public async Task<KpiReportViewModel> GetGlobalKpiAsync(int anio, int mes)
         {
