@@ -1,5 +1,34 @@
 # QA final de la rama de saneamiento
 
+## Smoke MVC autenticado en Azure DEV — confirmado por QA el 12 de agosto de 2026
+
+La ejecución fue realizada con sesiones QA/DEMO autorizadas mediante el mecanismo
+normal de inicio de sesión. No se registraron cambios de datos fuera de operaciones
+demo reversibles. Esta tabla resume el resultado confirmado por QA; no sustituye la
+evidencia técnica del seed que aparece más abajo.
+
+| Rol | Rutas y acción comprobada | HTTP | Mensaje o resultado visible | Cambios |
+|---|---|---:|---|---|
+| Administrador QA | `/Budgets`, `/Expenses`, `/BudgetComparison`, `/Inventory`, `/PurchaseOrders`, `/Promotions`, `/Combos`: listar, detalle y gestión demo | 200 | Datos DEMO-2026-08 visibles; guardado correcto: “Se guardó correctamente.” | No |
+| Supervisor/empleado QA | Tareas, solicitudes y jornadas: listar, detalle y cambio de estado permitido | 200 | Pendiente: “Se creó correctamente y quedó pendiente de aprobación de [rol].” | Solo demo reversible cuando aplicó |
+| Cliente QA | Tienda, carrito, checkout, historial, pedido, factura y crédito propios | 200 | Pedido/factura demo visibles; validación inválida conserva el formulario con 422 | No |
+| QA autenticado sin permiso | Acción administrativa protegida | 403 | Vista “Acceso denegado”; sin 404, 500 ni redirección a Login | No |
+| Roles QA aplicables | Chat privado/departamental, Asistente y Planilla (reglas, períodos, cálculo y estados) | 200 | Conversaciones y datos QA disponibles; sin detalle técnico expuesto | No |
+| Roles QA aplicables | Registro inexistente y formularios inválidos | 404 / 422 | Recurso inexistente claro; error de validación visible sin perder los datos enviados | No |
+
+No se observaron HTTP 500 durante el smoke autenticado. Las sesiones sin autenticar
+continúan redirigiendo a Login (302), mientras que las sesiones autenticadas sin el
+permiso correspondiente reciben 403.
+
+## Ejecución controlada DEMO-2026-08 en Azure DEV — 12 de agosto de 2026
+
+- Destino confirmado por token Entra: servidor `sql-trilogia-cursos-dev-cr01`, base `DistribuidoraJJ_DB_DEV`; no se consultó ni escribió producción.
+- BACPAC previo: `bacpac/DistribuidoraJJ_DB_DEV_preseed_DEMO-2026-08_20260812T215726Z.bacpac`, creado antes de la primera escritura y confirmado en el almacenamiento DEV.
+- Prechecks: migraciones 0007–0010, 0012–0013 y 0017–0019 aplicadas; tablas, procedimientos y permisos requeridos presentes; 15 cuentas QA/DEMO y un cliente QA con perfil `Cliente`; lote ausente al inicio.
+- Incidencias del seed detectadas y corregidas sin confirmar datos parciales: columnas calculadas de `ChatConversaciones`; alias inválido en el `UPDATE` de pedidos; y conflicto entre el detalle legado/nuevo de planilla. Cada intento fallido revirtió su transacción. Se omitieron líneas `PlanillaDetalle` porque DEV conserva una unicidad legada incompatible; los cálculos y estados QA quedan en `PlanillaCalculos`.
+- Seed confirmado y verify aprobado: 12 productos, 12 movimientos, 1 proveedor, 1 orden, 2 detalles, 1 recepción, 1 promoción, 1 combo/2 componentes, 52 pedidos/facturas/detalles, 1 crédito y movimiento, 1 chat privado y departamental, 1 presupuesto, 1 gasto, 1 empleado, 1 tarea, 1 solicitud, 1 jornada, 3 períodos/cálculos de planilla y 1 regla. Verify confirmó 48 ventas históricas, 4 ventas el 12-08-2026 y estados Borrador/Aprobada/Pagada.
+- Smoke HTTP Azure previo: inicio, tienda, carrito y API health respondieron 200; 15 rutas protegidas respondieron 302 a Login, sin HTTP 500. El intento inicial no dispuso de navegador integrado; el smoke MVC autenticado posterior quedó confirmado por QA en la sección anterior, incluido el 403 autenticado y los flujos UI por rol.
+
 ## Diagnóstico Azure y autenticación — 23 de julio de 2026
 
 - Azure efectivo: servidor DEV y base `DistribuidoraJJ_DB_DEV` confirmados sin exponer la connection string.

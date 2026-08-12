@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Proyecto_Final.Validation;
 
 namespace Proyecto_Final.Models.Admin
 {
@@ -37,6 +38,7 @@ namespace Proyecto_Final.Models.Admin
 
         [StringLength(50)]
         [Display(Name = "Identificación")]
+        [CostaRicanIdentification]
         public string? ClienteIdentificacion { get; set; }
 
         [StringLength(200)]

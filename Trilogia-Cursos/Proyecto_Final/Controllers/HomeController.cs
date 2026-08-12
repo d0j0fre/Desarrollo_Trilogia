@@ -1,4 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Diagnostics;
+using System.Diagnostics;
+using Proyecto_Final.Models;
 using Proyecto_Final.Models.Store;
 using Proyecto_Final.Services;
 
@@ -141,16 +144,18 @@ namespace Proyecto_Final.Controllers
                         asunto,
                         contenido);
                 }
-                catch
+                catch (Exception exception)
                 {
+                    _logger.LogWarning(exception, "La consulta se guardó, pero no se pudo notificar por correo. Solicitud {TraceId}.", HttpContext.TraceIdentifier);
                     TempData["ErrorMessage"] = "La consulta fue guardada, pero no fue posible enviar la notificación por correo.";
                     return RedirectToAction(nameof(Contact));
                 }
 
-                TempData["SuccessMessage"] = "Tu mensaje fue enviado correctamente.";
+                TempData["SuccessMessage"] = "Se guardó correctamente.";
             }
-            catch (Exception)
+            catch (Exception exception)
             {
+                _logger.LogError(exception, "No se pudo registrar la consulta. Solicitud {TraceId}.", HttpContext.TraceIdentifier);
                 TempData["ErrorMessage"] = "No fue posible registrar la consulta en este momento. Intente nuevamente.";
             }
 
@@ -160,6 +165,18 @@ namespace Proyecto_Final.Controllers
         public IActionResult Privacy()
         {
             return View();
+        }
+
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        [HttpGet]
+        public IActionResult Error()
+        {
+            Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+            var traceId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
+            var exception = HttpContext.Features.Get<IExceptionHandlerFeature>()?.Error;
+            _logger.LogError(exception, "Solicitud no controlada enviada al manejador global. Ruta {Path}. Solicitud {TraceId}.",
+                HttpContext.Request.Path, traceId);
+            return View(new ErrorViewModel { RequestId = traceId });
         }
     }
 }
