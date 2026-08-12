@@ -57,6 +57,8 @@ Cada migracion debe indicar su estrategia de rollback antes de ejecutarse. Los c
 | 0021 | `0021_seller_goal_progress.sql` | Progreso mensual de la meta propia del vendedor | Metas, facturas, pedidos y usuarios |
 | 0022 | `0022_password_hash_transition.sql` | Transición compatible de credenciales directas a PBKDF2 con actualización gradual | Usuarios, perfiles y API de autenticación |
 
+Evidencia Azure SQL DEV (2026-08-12): respaldo lógico `DistribuidoraJJ_DB_DEV_pre0022_20260812` confirmado `Online`; 0022 aplicada y verificada con 59 cuentas pendientes de actualización gradual y 0 hashes inventados.
+
 Los scripts no incluyen `USE`: el ejecutor debe seleccionar explícitamente la base antes de iniciar. Los hashes escritos por 0002–0011 son hashes de manifiesto para identificar versión; la evidencia de despliegue debe registrar además el SHA-256 real del archivo y actualizar el ledger si corresponde.
 
 La evidencia vigente del 4 de agosto de 2026 registra 0013–0020 aplicadas y verificadas en Azure DEV después de BACPAC. Las notas anteriores sobre 0007–0012 son históricas y deben contrastarse siempre con el ledger real antes de ejecutar. 0021 y 0022 requieren consulta del ledger, respaldo vigente, ejecutor único y verificación inmediata; nunca se aplican por inferencia documental. `database_Esteban/cu222_gastos_presupuesto.sql` es sólo referencia histórica.

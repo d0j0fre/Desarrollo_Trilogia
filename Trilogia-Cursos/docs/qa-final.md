@@ -271,6 +271,6 @@ Validación local sobre `fix/runtime-modules-20260806`, partiendo de `fa1e3dc`:
 Pendiente hasta completar publicación:
 
 - [ ] Ejecutar CI del PR y respetar la aprobación/protección de `main`.
-- [ ] Crear respaldo de Azure SQL DEV, aplicar 0022 con SHA-256 real y ejecutar su verificador.
+- [x] Respaldo lógico `DistribuidoraJJ_DB_DEV_pre0022_20260812` confirmado `Online`; 0022 aplicada con SHA-256 `32D6ADE170430000214E8C8FF4FA43ED1ADB943C14D7F0F26AD09E193652D96A` y verificador aprobado (59 usuarios legados pendientes de actualización gradual, sin inventar credenciales).
 - [ ] Desplegar el commit integrado y ejecutar smoke público final.
 - [ ] Ejecutar QA autenticado por rol; no había sesión ni credenciales QA autorizadas disponibles durante la revisión local.
