@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Proyecto_Final.Models.Store;
 using Proyecto_Final.Services;
+using Proyecto_Final.Validation;
 
 namespace Proyecto_Final.Controllers
 {
@@ -233,6 +234,7 @@ namespace Proyecto_Final.Controllers
         {
             model.Cart = await BuildCartViewModelAsync();
             model.TipoEntrega = "Envío a domicilio";
+            model.Identificacion = CostaRicanIdentificationAttribute.Normalize(model.Identificacion);
 
             model.MetodoPago = string.IsNullOrWhiteSpace(model.MetodoPago)
                 ? "Efectivo contra entrega"

@@ -65,6 +65,8 @@ public sealed class BudgetDbService
 
     public async Task<BudgetDetailsViewModel?> GetDetailsAsync(int budgetId)
     {
+        if (budgetId <= 0) return null;
+
         await using var connection = new SqlConnection(_connectionString);
         await using var command = Procedure(connection, "dbo.sp_Budget_GetById");
         command.Parameters.Add("@PresupuestoId", SqlDbType.Int).Value = budgetId;
@@ -73,21 +75,28 @@ public sealed class BudgetDbService
         if (!await reader.ReadAsync()) return null;
         var model = new BudgetDetailsViewModel { Budget = ReadBudget(reader) };
         var details = new List<BudgetDetailLineViewModel>();
-        await reader.NextResultAsync();
-        while (await reader.ReadAsync()) details.Add(new()
+        if (await reader.NextResultAsync())
         {
-            BudgetDetailId = reader.GetInt32(0), CategoryId = reader.GetInt32(1), CategoryName = reader.GetString(2),
-            Month = reader.GetInt32(3), AllocatedAmount = reader.GetDecimal(4), Notes = NullableString(reader, 5)
-        });
+            while (await reader.ReadAsync()) details.Add(new()
+            {
+                BudgetDetailId = reader.GetInt32(0), CategoryId = reader.GetInt32(1), CategoryName = NullableString(reader, 2) ?? "Sin categoría",
+                Month = reader.GetInt32(3), AllocatedAmount = reader.GetDecimal(4), Notes = NullableString(reader, 5)
+            });
+        }
         var audit = new List<BudgetAuditViewModel>();
-        await reader.NextResultAsync();
-        while (await reader.ReadAsync()) audit.Add(new()
+        if (await reader.NextResultAsync())
         {
-            Action = reader.GetString(0), UserName = reader.GetString(1), CreatedUtc = reader.GetDateTime(2), Detail = NullableString(reader, 3)
-        });
+            while (await reader.ReadAsync()) audit.Add(new()
+            {
+                Action = NullableString(reader, 0) ?? "Sin acción", UserName = NullableString(reader, 1) ?? "Usuario no disponible",
+                CreatedUtc = reader.GetDateTime(2), Detail = NullableString(reader, 3)
+            });
+        }
         var categories = new List<SelectOptionViewModel>();
-        await reader.NextResultAsync();
-        while (await reader.ReadAsync()) categories.Add(new() { Id = reader.GetInt32(0), Name = reader.GetString(1) });
+        if (await reader.NextResultAsync())
+        {
+            while (await reader.ReadAsync()) categories.Add(new() { Id = reader.GetInt32(0), Name = NullableString(reader, 1) ?? "Sin nombre" });
+        }
         model.Details = details;
         model.Audit = audit;
         model.Categories = categories;
@@ -151,10 +160,10 @@ public sealed class BudgetDbService
     private static BudgetListItemViewModel ReadBudget(SqlDataReader reader) => new()
     {
         BudgetId = reader.GetInt32(reader.GetOrdinal("PresupuestoId")), Year = reader.GetInt32(reader.GetOrdinal("Anio")),
-        DepartmentId = reader.GetInt32(reader.GetOrdinal("DepartamentoId")), DepartmentName = reader.GetString(reader.GetOrdinal("Departamento")),
-        Currency = reader.GetString(reader.GetOrdinal("Moneda")), Status = reader.GetString(reader.GetOrdinal("Estado")),
+        DepartmentId = reader.GetInt32(reader.GetOrdinal("DepartamentoId")), DepartmentName = NullableString(reader, reader.GetOrdinal("Departamento")) ?? "Departamento no disponible",
+        Currency = NullableString(reader, reader.GetOrdinal("Moneda")) ?? "CRC", Status = NullableString(reader, reader.GetOrdinal("Estado")) ?? "Borrador",
         Notes = NullableString(reader, reader.GetOrdinal("Notas")), AnnualAmount = reader.GetDecimal(reader.GetOrdinal("MontoAnual")),
-        CreatedByName = reader.GetString(reader.GetOrdinal("CreadoPorNombre")), CreatedUtc = reader.GetDateTime(reader.GetOrdinal("FechaCreacionUtc")),
+        CreatedByName = NullableString(reader, reader.GetOrdinal("CreadoPorNombre")) ?? "Usuario no disponible", CreatedUtc = reader.GetDateTime(reader.GetOrdinal("FechaCreacionUtc")),
         Active = reader.GetBoolean(reader.GetOrdinal("Activo"))
     };
 

@@ -3,6 +3,7 @@ using Microsoft.Data.SqlClient;
 using Proyecto_Final.Filters;
 using Proyecto_Final.Models.Admin;
 using Proyecto_Final.Services;
+using Proyecto_Final.Validation;
 
 namespace Proyecto_Final.Controllers
 {
@@ -47,6 +48,7 @@ namespace Proyecto_Final.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Assign(ComodatoAssignViewModel model)
         {
+            model.ClienteIdentificacion = CostaRicanIdentificationAttribute.Normalize(model.ClienteIdentificacion);
             if (!ModelState.IsValid)
             {
                 model.ActivosDisponibles = await _fleet.GetAvailableAssetsAsync();
