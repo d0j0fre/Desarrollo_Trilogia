@@ -42,8 +42,7 @@ builder.Services.AddRateLimiter(options =>
 
 var app = builder.Build();
 
-var swaggerEnabled = app.Environment.IsDevelopment() ||
-                     app.Configuration.GetValue<bool>("Swagger:Enabled");
+var swaggerEnabled = app.Configuration.GetValue<bool>("Swagger:Enabled");
 
 if (swaggerEnabled)
 {
@@ -57,26 +56,27 @@ if (swaggerEnabled)
 
 if (!app.Environment.IsDevelopment())
 {
-    app.UseHttpsRedirection();
+    app.UseHsts();
 }
+
+app.UseHttpsRedirection();
 
 app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseRateLimiter();
 
-app.MapGet("/", (IHostEnvironment environment) => Results.Ok(new
+app.MapGet("/", () => Results.Ok(new
 {
     service = "Proyecto_FinalAPI",
     project = "DistribuidoraJJ - Licorera La Bodega",
     status = "OK",
-    environment = environment.EnvironmentName,
-    swagger = "/swagger",
     health = "/health"
 }));
 
 app.MapGet("/health", () => Results.Ok(new
 {
     status = "OK",
-    service = "Proyecto_FinalAPI"
+    service = "Proyecto_FinalAPI",
+    build = BuildIdentity.CommitSha
 }));
 
 app.MapControllers();

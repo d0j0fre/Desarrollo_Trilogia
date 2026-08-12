@@ -36,7 +36,7 @@ namespace Proyecto_Final.Filters
 
             if (!roleAllowed)
             {
-                context.Result = new RedirectToActionResult("Index", "Home", null);
+                context.Result = AuthorizationResults.AccessDenied();
             }
         }
     }

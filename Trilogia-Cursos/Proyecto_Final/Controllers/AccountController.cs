@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Proyecto_Final.Filters;
 using Proyecto_Final.Services;
 
 namespace Proyecto_Final.Controllers
@@ -34,6 +35,10 @@ namespace Proyecto_Final.Controllers
                 Password = string.Empty
             });
         }
+
+        [HttpGet]
+        [SessionAuthorize]
+        public IActionResult AccesoDenegado() => AuthorizationResults.AccessDenied();
 
         [HttpPost]
         [ValidateAntiForgeryToken]

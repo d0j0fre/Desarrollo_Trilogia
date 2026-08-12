@@ -2,42 +2,15 @@
 
 Este es el índice operativo vigente. El código y el último `origin/main` prevalecen sobre notas históricas.
 
-## Estado al 23 de julio de 2026
+## Estado operativo vigente
 
-- Rama de integración: `codex/p0-saneamiento-integracion-total-20260722`, basada en el último `origin/main`.
-- Los cuatro `appsettings` compartidos están sanitizados; la configuración funcional no vive en Git.
-- La credencial SMTP detectada debe revocarse o rotarse fuera del repositorio. La limpieza del historial requiere coordinación y no se ejecuta automáticamente.
-- CI separa secretos, SQL, build y tests; `final-gate` consolida el resultado.
-- Las migraciones incrementales vigentes son 0001–0011. En Azure DEV se verificaron 0007–0011 como aplicadas; esto no demuestra que 0002–0006 se hayan ejecutado ni que el historial completo sea consecutivo.
-- Sprint 4 de Danny está implementado y sus objetos/permisos 0007–0011 fueron verificados en Azure. Falta login con una contraseña de prueba autorizada y QA funcional autenticado.
-- El diagnóstico de autenticación está en `docs/diagnostico-login-azure-sprint4-20260724.md`: cuenta y procedimiento son correctos; la credencial presentada no coincide con el valor directo almacenado y no se modificaron contraseñas.
-- Chat, evidencia privada, checkout/promociones y garantías requieren aplicar migraciones y efectuar QA de entorno antes de declararlos operativos.
-- La protección de `main` está activa y documentada en `docs/configuracion-proteccion-main.md`.
-- Las validaciones Azure documentadas anteriormente son evidencia histórica y no validan esta rama.
-
-## Corrección PR #115 — 27 de julio de 2026
-
-- La ruta de integración sigue siendo `codex/integracion-sprint4-danny-david-final`
-  en Draft. Las correcciones de combos, correo y hash se documentan en
-  `docs/sprint4-integracion-danny-david.md`.
-- 0012 no está aplicada en Azure DEV. El BACPAC previo fue exportado, su hash
-  fue comprobado y una importación aislada aprobó `DBCC CHECKDB`; la ejecución
-  futura en Azure todavía exige ejecutor único,
-  `scripts/database/Invoke-Migration0012.ps1` y el verify de solo lectura.
-- Las métricas SQL no son intercambiables: el alcance focalizado `database/` y
-  el alcance CI recursivo `database` + `database_Esteban` se reportan por separado.
-- `database/00_todo_en_uno.sql` no tiene diferencia con la base de PR #115 y
-  nunca se ejecutó durante la integración.
-- El ejecutor de 0012 distingue `Entra` (`sqlcmd -G`) de `Windows`
-  (`sqlcmd -E`), transmite `MigrationSha256=<SHA-256>` como una sola variable y
-  no acepta contraseñas. Su prueba sin conexión está en
-  `scripts/database/Test-InvokeMigration0012.ps1`.
-- La evidencia LocalDB de 0012 cubre instalación limpia y reconciliación del
-  esquema legado real: conserva 1 combo, 3 componentes, 4 líneas históricas de
-  combo y 153 detalles de pedido; reconstruye 12 componentes canónicos y evita
-  doble conteo. También incluye el detalle público antes/después de inactivar,
-  reactivar y agotar un componente. Azure DEV sigue sin modificaciones; la
-  aplicación de 0012 y el QA autenticado allí permanecen pendientes.
+- La fuente de verdad de código es el último `origin/main`; las ramas y PR históricos no definen el estado actual.
+- Los `appsettings` compartidos están sanitizados; la configuración funcional vive fuera de Git.
+- CI separa secretos, SQL, build, pruebas y su `final-gate`.
+- La protección de `main` se documenta en `docs/configuracion-proteccion-main.md`.
+- La fuente de verdad de migraciones en Azure DEV es `dbo.SchemaMigrationHistory`. `database/migrations/README.md` contiene el procedimiento vigente; las notas de aplicación anteriores son históricas y no sustituyen la consulta del ledger.
+- Las métricas SQL focalizadas (`database/`) y las de CI recursivo (`database` + `database_Esteban`) se reportan por separado.
+- El QA autenticado requiere cuentas temporales autorizadas y nunca se acredita por documentación o sesiones antiguas.
 
 ## Índice por tema
 
