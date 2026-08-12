@@ -210,7 +210,9 @@ BEGIN TRY
       DECLARE @ChatLower int=IIF(@QaActorId<@QaBuyerId,@QaActorId,@QaBuyerId);
       DECLARE @ChatUpper int=IIF(@QaActorId<@QaBuyerId,@QaBuyerId,@QaActorId);
       DECLARE @NewPrivateConversations table(ConversacionId int NOT NULL);
-      INSERT dbo.ChatConversaciones(UsuarioMenorId,UsuarioMayorId) OUTPUT inserted.ConversacionId INTO @NewPrivateConversations SELECT @ChatLower,@ChatUpper
+      /* The live contract stores the pair in UsuarioUnoId/UsuarioDosId; the
+         normalized UsuarioMenorId/UsuarioMayorId columns are computed. */
+      INSERT dbo.ChatConversaciones(UsuarioUnoId,UsuarioDosId,Activo) OUTPUT inserted.ConversacionId INTO @NewPrivateConversations SELECT @ChatLower,@ChatUpper,1
       WHERE NOT EXISTS(SELECT 1 FROM dbo.ChatConversaciones WHERE UsuarioMenorId=@ChatLower AND UsuarioMayorId=@ChatUpper);
       DECLARE @PrivateConversationId int=(SELECT ConversacionId FROM dbo.ChatConversaciones WHERE UsuarioMenorId=@ChatLower AND UsuarioMayorId=@ChatUpper);
       INSERT dbo.DemoSeedRows(BatchCode,EntityName,EntityId) SELECT @BatchCode,N'ChatConversaciones',ConversacionId FROM @NewPrivateConversations;
