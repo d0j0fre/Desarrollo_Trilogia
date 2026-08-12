@@ -4,7 +4,8 @@
 }
 
 <div class="container-fluid pt-4 backoffice-page">
-    <div class="row px-xl-5"><div class="col-12"><h2>Histórico de precios</h2><p>Comparación de compras por producto y proveedor (CU-104).</p></div></div>
+    @*(CU-104)*@
+    <div class="row px-xl-5"><div class="col-12"><h2>Histórico de precios</h2><p>Comparación de compras por producto y proveedor.</p></div></div>
     <div class="row px-xl-5"><div class="col-12">
         <form method="get" class="form-inline mb-3"><select name="productoId" class="form-control mr-2"><option value="">Seleccione un producto</option>@foreach (var product in Model.ProductosDisponibles) { <option value="@product.ProductoId" selected="@(product.ProductoId == Model.ProductoId)">@product.Nombre</option> }</select><button class="btn btn-primary">Consultar</button></form>
         @if (Model.ProductoId > 0 && !Model.Historial.Any()) { <p class="text-muted">No hay compras no canceladas para este producto.</p> }
