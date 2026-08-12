@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Proyecto_Final.Validation;
 
 namespace Proyecto_Final.Models.Store
 {
@@ -85,6 +86,7 @@ namespace Proyecto_Final.Models.Store
         [Display(Name = "Identificación")]
         [Required(ErrorMessage = "La identificación es obligatoria.")]
         [StringLength(50)]
+        [CostaRicanIdentification]
         public string? Identificacion { get; set; }
 
         [Display(Name = "Factura electrónica")]

@@ -147,6 +147,7 @@ builder.Services.AddSession(options =>
 
 // Servicios propios
 builder.Services.AddScoped<AdminDbService>();
+builder.Services.AddScoped<IRolePermissionService, RolePermissionService>();
 builder.Services.AddScoped<IEmployeesService, EmployeesDbService>();
 builder.Services.AddScoped<IAttendanceService, AttendanceDbService>();
 builder.Services.AddScoped<IPayrollService, PayrollDbService>();
@@ -200,9 +201,9 @@ var app = builder.Build();
 _ = app.Services.GetRequiredService<IPrivateFileStorageService>();
 
 // Pipeline
+app.UseExceptionHandler("/Home/Error");
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
     app.UseHttpsRedirection();
 }
@@ -217,6 +218,13 @@ app.UseSession();
 app.UseRateLimiter();
 
 app.UseAuthorization();
+
+app.MapGet("/health", () => Results.Ok(new
+{
+    status = "OK",
+    service = "Proyecto_Final",
+    build = BuildIdentity.CommitSha
+}));
 
 app.MapControllerRoute(
     name: "default",

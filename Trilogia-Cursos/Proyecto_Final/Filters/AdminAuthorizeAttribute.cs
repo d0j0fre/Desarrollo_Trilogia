@@ -16,13 +16,13 @@ namespace Proyecto_Final.Filters
     {
         private readonly string _modulo;
         private readonly string? _permisoCodigo;
-        private readonly AdminDbService _dbService;
+        private readonly IRolePermissionService _permissionService;
 
-        public AdminAuthorizeFilter(string modulo, string? permisoCodigo, AdminDbService dbService)
+        public AdminAuthorizeFilter(string modulo, string? permisoCodigo, IRolePermissionService permissionService)
         {
             _modulo = modulo;
             _permisoCodigo = permisoCodigo;
-            _dbService = dbService;
+            _permissionService = permissionService;
         }
 
         public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
@@ -43,12 +43,12 @@ namespace Proyecto_Final.Filters
             }
 
             var tienePermiso = string.IsNullOrWhiteSpace(_permisoCodigo)
-                ? await _dbService.TienePermisoPorRolAsync(userRole, _modulo)
-                : await _dbService.TienePermisoCodigoPorRolAsync(userRole ?? string.Empty, _permisoCodigo);
+                ? await _permissionService.HasModulePermissionAsync(userRole, _modulo)
+                : await _permissionService.HasCodePermissionAsync(userRole ?? string.Empty, _permisoCodigo);
 
             if (!tienePermiso)
             {
-                context.Result = new RedirectToActionResult("AccesoDenegado", "Home", null);
+                context.Result = AuthorizationResults.AccessDenied();
             }
         }
     }

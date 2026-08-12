@@ -31,15 +31,47 @@ public sealed class BudgetsController : Controller
     [HttpGet]
     public async Task<IActionResult> Details(int id)
     {
-        var model = await _budgets.GetDetailsAsync(id);
-        return model is null ? NotFound() : View(model);
+        if (id <= 0) return NotFound("El presupuesto solicitado no existe.");
+        try
+        {
+            var model = await _budgets.GetDetailsAsync(id);
+            return model is null ? NotFound("El presupuesto solicitado no existe.") : View(model);
+        }
+        catch (SqlException exception) when (exception.Number >= 50000)
+        {
+            _logger.LogWarning(exception, "Regla de negocio al consultar presupuesto {BudgetId}. Usuario {UserId}. Ruta {Path}. Solicitud {TraceId}.",
+                id, UserId(), Request.Path, HttpContext.TraceIdentifier);
+            return ServiceUnavailable();
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "Error técnico al consultar presupuesto {BudgetId}. Usuario {UserId}. Ruta {Path}. Solicitud {TraceId}.",
+                id, UserId(), Request.Path, HttpContext.TraceIdentifier);
+            return ServiceUnavailable();
+        }
     }
 
     [HttpGet]
     public async Task<IActionResult> Detail(int id)
     {
-        var model = await _budgets.GetDetailsAsync(id);
-        return model is null ? NotFound() : View("Details", model);
+        if (id <= 0) return NotFound("El presupuesto solicitado no existe.");
+        try
+        {
+            var model = await _budgets.GetDetailsAsync(id);
+            return model is null ? NotFound("El presupuesto solicitado no existe.") : View("Details", model);
+        }
+        catch (SqlException exception) when (exception.Number >= 50000)
+        {
+            _logger.LogWarning(exception, "Regla de negocio al consultar presupuesto {BudgetId}. Usuario {UserId}. Ruta {Path}. Solicitud {TraceId}.",
+                id, UserId(), Request.Path, HttpContext.TraceIdentifier);
+            return ServiceUnavailable();
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "Error técnico al consultar presupuesto {BudgetId}. Usuario {UserId}. Ruta {Path}. Solicitud {TraceId}.",
+                id, UserId(), Request.Path, HttpContext.TraceIdentifier);
+            return ServiceUnavailable();
+        }
     }
 
     [HttpGet]
@@ -61,7 +93,7 @@ public sealed class BudgetsController : Controller
         {
             var id = await _budgets.CreateAsync(model, UserId(), UserName());
             await AuditAsync("CREAR_PRESUPUESTO", $"Presupuesto #{id}, año {model.Year}, departamento #{model.DepartmentId}, monto {model.AnnualAmount:N2}.");
-            TempData["SuccessMessage"] = "Presupuesto anual creado en borrador.";
+            TempData["SuccessMessage"] = "Se creó correctamente. El presupuesto quedó en borrador y debe enviarse para aprobación.";
             return RedirectToAction(nameof(Details), new { id });
         }
         catch (Exception exception) { Handle(exception, "crear el presupuesto"); await LoadOptionsAsync(); return View(model); }
@@ -213,6 +245,11 @@ public sealed class BudgetsController : Controller
         var options = await _budgets.GetOptionsAsync();
         ViewBag.Departments = options.Departments;
         ViewBag.Categories = options.Categories;
+    }
+    private IActionResult ServiceUnavailable()
+    {
+        Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+        return View("ServiceUnavailable");
     }
     private Task AuditAsync(string action, string detail) => _admin.CreateAuditLogAsync(UserId(), UserName(), HttpContext.Session.GetString("UserEmail"),
         HttpContext.Session.GetString("UserRole"), action, "Presupuestos", detail, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString());

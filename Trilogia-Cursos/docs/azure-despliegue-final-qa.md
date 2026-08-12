@@ -85,14 +85,16 @@ Variables requeridas:
 
 | Variable | Valor esperado | Sensible |
 | -------- | -------------- | -------- |
-| `ASPNETCORE_ENVIRONMENT` | `Development` | No |
-| `Swagger__Enabled` | `true` | No |
+| `ASPNETCORE_ENVIRONMENT` | `Staging` | No |
+| `Swagger__Enabled` | `true` (habilitación explícita sólo para Azure DEV) | No |
+| `PasswordRecovery__PublicBaseUrl` | URL HTTPS pública del MVC | No |
 | `ConnectionStrings__DefaultConnection` | Connection string a Azure SQL DEV con `<sql-user>` y `<sql-password>` | Si |
 
 Endpoints validados:
 
 - `GET /`
 - `GET /health`
+- `GET /health` incluye únicamente el SHA inmutable de compilación, cuando el artefacto fue construido por CI.
 - `GET /swagger`
 - `GET /swagger/v1/swagger.json`
 - `GET /api/productos`
@@ -120,6 +122,7 @@ Dependencias:
 
 - El MVC consume el API publicado mediante `ApiSettings__BaseUrl`.
 - El MVC tambien consulta directamente Azure SQL DEV mediante `ConnectionStrings__DefaultConnection`.
+- MVC y API exponen `GET /health` con `status`, `service` y `build`; el valor `build` es el SHA inyectado por CI, no contiene secretos ni rutas locales.
 - La referencia directa del MVC hacia `Proyecto_FinalAPI` fue removida para evitar el error `NETSDK1152` al publicar.
 - Los servicios de correo necesarios para MVC quedaron locales al proyecto MVC.
 

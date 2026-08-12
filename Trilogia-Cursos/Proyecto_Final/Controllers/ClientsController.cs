@@ -9,10 +9,12 @@ namespace Proyecto_Final.Controllers
     public class ClientsController : Controller
     {
         private readonly AdminDbService _adminDbService;
+        private readonly ILogger<ClientsController> _logger;
 
-        public ClientsController(AdminDbService adminDbService)
+        public ClientsController(AdminDbService adminDbService, ILogger<ClientsController> logger)
         {
             _adminDbService = adminDbService;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -50,7 +52,7 @@ namespace Proyecto_Final.Controllers
                 ModelState.AddModelError(nameof(model.MotivoInactivacion), "Debe indicar un motivo si registra el cliente como inactivo.");
             }
 
-            if (!ModelState.IsValid) return View(model);
+            if (!ModelState.IsValid) return InvalidClientForm(model);
 
             try
             {
@@ -68,24 +70,21 @@ namespace Proyecto_Final.Controllers
             {
                 ModelState.AddModelError(string.Empty, "No se pudo registrar el cliente. Revise los datos e intente nuevamente.");
             }
-            catch (Exception)
+            catch (Exception exception)
             {
-                ModelState.AddModelError(string.Empty, "Ocurrió un error al registrar el cliente. Intente nuevamente.");
+                return ServiceUnavailable(exception, "registrar el cliente");
             }
 
-            return View(model);
+            return InvalidClientForm(model);
         }
 
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
+            if (id <= 0) return NotFound();
             var model = await _adminDbService.GetClientByIdAsync(id);
 
-            if (model == null)
-            {
-                TempData["ErrorMessage"] = "No se encontró el cliente solicitado.";
-                return RedirectToAction(nameof(Index));
-            }
+            if (model == null) return NotFound();
 
             return View(model);
         }
@@ -99,7 +98,7 @@ namespace Proyecto_Final.Controllers
                 ModelState.AddModelError(nameof(model.MotivoInactivacion), "Debe indicar un motivo para inactivar el cliente.");
             }
 
-            if (!ModelState.IsValid) return View(model);
+            if (!ModelState.IsValid) return InvalidClientForm(model);
 
             try
             {
@@ -117,24 +116,21 @@ namespace Proyecto_Final.Controllers
             {
                 ModelState.AddModelError(string.Empty, "No se pudo actualizar el cliente. Revise los datos e intente nuevamente.");
             }
-            catch (Exception)
+            catch (Exception exception)
             {
-                ModelState.AddModelError(string.Empty, "Ocurrió un error al actualizar el cliente. Intente nuevamente.");
+                return ServiceUnavailable(exception, "actualizar el cliente");
             }
 
-            return View(model);
+            return InvalidClientForm(model);
         }
 
         [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
+            if (id <= 0) return NotFound();
             var cliente = await _adminDbService.GetClientDetailAsync(id);
 
-            if (cliente == null)
-            {
-                TempData["ErrorMessage"] = "No se encontró el cliente solicitado.";
-                return RedirectToAction(nameof(Index));
-            }
+            if (cliente == null) return NotFound();
 
             return View(cliente);
         }
@@ -169,9 +165,9 @@ namespace Proyecto_Final.Controllers
             {
                 TempData["ErrorMessage"] = "No se pudo cambiar el estado del cliente.";
             }
-            catch (Exception)
+            catch (Exception exception)
             {
-                TempData["ErrorMessage"] = "Ocurrió un error al cambiar el estado del cliente.";
+                return ServiceUnavailable(exception, "cambiar el estado del cliente");
             }
 
             if (string.Equals(returnTo, "details", StringComparison.OrdinalIgnoreCase))
@@ -184,16 +180,31 @@ namespace Proyecto_Final.Controllers
 
         private async Task RegistrarAuditoriaAsync(string accion, string modulo, string descripcion)
         {
-            await _adminDbService.CreateAuditLogAsync(
-                HttpContext.Session.GetInt32("UserId"),
-                HttpContext.Session.GetString("UserFullName"),
-                HttpContext.Session.GetString("UserEmail"),
-                HttpContext.Session.GetString("UserRole"),
-                accion,
-                modulo,
-                descripcion,
-                HttpContext.Connection.RemoteIpAddress?.ToString(),
-                Request.Headers.UserAgent.ToString());
+            try
+            {
+                await _adminDbService.CreateAuditLogAsync(
+                    HttpContext.Session.GetInt32("UserId"), HttpContext.Session.GetString("UserFullName"),
+                    HttpContext.Session.GetString("UserEmail"), HttpContext.Session.GetString("UserRole"), accion, modulo,
+                    descripcion, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString());
+            }
+            catch (Exception exception)
+            {
+                _logger.LogWarning(exception, "La auditoría secundaria falló después de {Action}. TraceId {TraceId}", accion, HttpContext.TraceIdentifier);
+            }
+        }
+
+        private ViewResult InvalidClientForm(ClientFormViewModel model)
+        {
+            Response.StatusCode = StatusCodes.Status422UnprocessableEntity;
+            return View(model);
+        }
+
+        private ViewResult ServiceUnavailable(Exception exception, string operation)
+        {
+            _logger.LogError(exception, "Falla técnica al {Operation}. TraceId {TraceId}", operation, HttpContext.TraceIdentifier);
+            Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+            ViewData["TraceId"] = HttpContext.TraceIdentifier;
+            return View("ServiceUnavailable");
         }
     }
 }

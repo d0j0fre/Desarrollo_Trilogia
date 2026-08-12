@@ -51,7 +51,7 @@ jobs:
       - name: Restore solution
         run: dotnet restore ./Trilogia-Cursos/Proyecto_Final.slnx
       - name: Build Release
-        run: dotnet build ./Trilogia-Cursos/Proyecto_Final.slnx --configuration Release --no-restore
+        run: dotnet build ./Trilogia-Cursos/Proyecto_Final.slnx --configuration Release --no-restore -p:BuildCommitSha=${{ github.sha }}
 
   tests:
     name: tests
@@ -64,9 +64,20 @@ jobs:
       - name: Restore solution
         run: dotnet restore ./Trilogia-Cursos/Proyecto_Final.slnx
       - name: Build test dependencies
-        run: dotnet build ./Trilogia-Cursos/Proyecto_Final.slnx --configuration Release --no-restore
+        run: dotnet build ./Trilogia-Cursos/Proyecto_Final.slnx --configuration Release --no-restore -p:BuildCommitSha=${{ github.sha }}
       - name: Run all tests
-        run: dotnet test ./Trilogia-Cursos/Proyecto_Final.slnx --configuration Release --no-build
+        run: >
+          dotnet test ./Trilogia-Cursos/Proyecto_Final.slnx
+          --configuration Release
+          --no-build
+          --collect:"XPlat Code Coverage;Format=cobertura"
+          --results-directory ./Trilogia-Cursos/TestResults
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-cobertura
+          path: ./Trilogia-Cursos/TestResults/**/coverage.cobertura.xml
+          if-no-files-found: error
 
   final-gate:
     name: final-gate

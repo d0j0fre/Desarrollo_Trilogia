@@ -57,17 +57,28 @@ Cada migracion debe indicar su estrategia de rollback antes de ejecutarse. Los c
 | 0021 | `0021_seller_goal_progress.sql` | Progreso mensual de la meta propia del vendedor | Metas, facturas, pedidos y usuarios |
 | 0022 | `0022_password_hash_transition.sql` | Transición compatible de credenciales directas a PBKDF2 con actualización gradual | Usuarios, perfiles y API de autenticación |
 
-Evidencia Azure SQL DEV (2026-08-12): respaldo lógico `DistribuidoraJJ_DB_DEV_pre0022_20260812` confirmado `Online`; 0022 aplicada y verificada con 59 cuentas pendientes de actualización gradual y 0 hashes inventados.
-
 Los scripts no incluyen `USE`: el ejecutor debe seleccionar explícitamente la base antes de iniciar. Los hashes escritos por 0002–0011 son hashes de manifiesto para identificar versión; la evidencia de despliegue debe registrar además el SHA-256 real del archivo y actualizar el ledger si corresponde.
 
-La evidencia vigente del 4 de agosto de 2026 registra 0013–0020 aplicadas y verificadas en Azure DEV después de BACPAC. Las notas anteriores sobre 0007–0012 son históricas y deben contrastarse siempre con el ledger real antes de ejecutar. 0021 y 0022 requieren consulta del ledger, respaldo vigente, ejecutor único y verificación inmediata; nunca se aplican por inferencia documental. `database_Esteban/cu222_gastos_presupuesto.sql` es sólo referencia histórica.
+## Estado de Azure SQL DEV y fuente de verdad
 
-## Ejecución controlada de 0012
+`dbo.SchemaMigrationHistory` es la única fuente de verdad del estado aplicado en
+Azure DEV. Las notas de QA, PR y este repositorio son evidencia histórica: no
+autorizan una ejecución ni sustituyen una consulta actual al ledger. Antes de
+cualquier migración, el ejecutor designado debe leer únicamente los campos no
+sensibles necesarios (`MigrationId`, `FileName`, `FileSha256`, `Status` y
+`AppliedAtUtc`) y contrastarlos con el SHA-256 del archivo que pretende aplicar.
 
-La migración 0012 todavía **no se ha aplicado en Azure DEV**. No debe ejecutarse
-sin BACPAC verificado, ejecutor único y verificación posterior. Tampoco deben
-ejecutarse las migraciones `0002`–`0006` del PR #114.
+La última evidencia documental archivada (2026-08-12) describe respaldo previo y
+verificación de 0022, además de ejecuciones anteriores de 0013–0020. No se
+reproduce aquí como una afirmación de estado actual porque la consulta directa
+del ledger puede cambiar. 0021 también exige confirmación explícita en el ledger.
+`database_Esteban/cu222_gastos_presupuesto.sql` es sólo referencia histórica.
+
+## Ejecución controlada de 0012 cuando el ledger la reporte pendiente
+
+No ejecutar 0012 si el ledger ya registra una fila `Applied`. Si está pendiente,
+exige BACPAC verificado, ejecutor único y verificación posterior. Tampoco deben
+ejecutarse las migraciones `0002`–`0006` por inferencia documental.
 
 Use el ejecutor seguro para calcular el SHA-256 real del archivo final e
 inyectarlo por `sqlcmd`:
@@ -114,7 +125,7 @@ la reconstrucción, además de ejecutar `DBCC CHECKDB`.
 
 Estas migraciones no reutilizan los números 0007–0012 del prototipo de compras del PR #116. Cada archivo recibe el SHA-256 real mediante `sqlcmd -v "MigrationSha256=<SHA-256>"`, cuenta con `verify.sql` y rollback documentado, y rechaza una segunda aplicación registrada.
 
-La ruta 0013 se validó en LocalDB desde esquema mínimo y desde la variante legada de compras; su prueba funcional cubre reintentos, recepción parcial, sobre-recepción, cierre con discrepancia, inventario y auditoría transaccional. La secuencia 0013–0016 también se ejecutó en una base LocalDB desechable, incluyendo la invocación vacía de los procedimientos de reportes y venta cruzada. En Azure DEV siguen pendientes BACPAC, ejecutor único, aplicación ordenada y QA autenticado.
+La ruta 0013 se validó en LocalDB desde esquema mínimo y desde la variante legada de compras; su prueba funcional cubre reintentos, recepción parcial, sobre-recepción, cierre con discrepancia, inventario y auditoría transaccional. La secuencia 0013–0016 también se ejecutó en una base LocalDB desechable, incluyendo la invocación vacía de los procedimientos de reportes y venta cruzada. El estado de Azure DEV debe obtenerse del ledger antes de cualquier operación; el QA autenticado sigue siendo una actividad separada.
 
 El harness reproducible crea y elimina una base cuyo nombre empieza por `TrilogiaMigrations_`, se niega a operar fuera de LocalDB y cubre hash inválido, ausencia de residuos, migraciones y verificadores en orden, flujo funcional de compras, invocaciones vacías, segunda aplicación rechazada, documentos de rollback, ledger y `DBCC CHECKDB ... WITH PHYSICAL_ONLY`:
 
@@ -126,7 +137,7 @@ Si la instancia estándar no está disponible, se debe pasar explícitamente otr
 
 ## Migraciones 0017–0020
 
-Estas migraciones se validaron sintácticamente con ScriptDom y tienen `verify.sql` y rollback compensatorio documentado. No fueron aplicadas a LocalDB ni Azure durante Puerta A porque requieren un esquema base completo y datos/roles de prueba coordinados. Antes de aplicarlas se exige BACPAC, ejecutor único, SHA-256 real, configuración responsable de factores/reglas y QA autenticado. No se precargan porcentajes, tasas ni fórmulas legales.
+Estas migraciones se validaron sintácticamente con ScriptDom y tienen `verify.sql` y rollback compensatorio documentado. El estado de Azure DEV no se infiere de esta sección: debe obtenerse del ledger. Antes de cualquier aplicación se exige BACPAC, ejecutor único, SHA-256 real, configuración responsable de factores/reglas y QA autenticado. No se precargan porcentajes, tasas ni fórmulas legales.
 
 ## Evidencia privada legada
 

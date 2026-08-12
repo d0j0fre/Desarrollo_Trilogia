@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Proyecto_Final.Filters;
 using Proyecto_Final.Models.Admin;
 using Proyecto_Final.Services;
+using Proyecto_Final.Validation;
 
 namespace Proyecto_Final.Controllers
 {
@@ -31,6 +32,8 @@ namespace Proyecto_Final.Controllers
         {
             if (!IsAuthorizedSeller())
                 return RedirectToAction("Login", "Account");
+
+            model.IdentificacionCliente = CostaRicanIdentificationAttribute.Normalize(model.IdentificacionCliente);
 
             var productosSeleccionados = model.Productos
                 .Where(x => x.Cantidad > 0)
@@ -153,7 +156,7 @@ namespace Proyecto_Final.Controllers
                 ClienteUsuarioId = request.ClienteUsuarioId,
                 TipoEntrega = request.TipoEntrega.Trim(),
                 DireccionEntrega = request.DireccionEntrega?.Trim(),
-                IdentificacionCliente = string.IsNullOrWhiteSpace(request.IdentificacionCliente) ? null : request.IdentificacionCliente.Trim(),
+                IdentificacionCliente = string.IsNullOrWhiteSpace(request.IdentificacionCliente) ? null : CostaRicanIdentificationAttribute.Normalize(request.IdentificacionCliente),
                 Observaciones = string.IsNullOrWhiteSpace(request.Observaciones) ? null : request.Observaciones.Trim(),
                 Productos = productosSeleccionados
             };

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Proyecto_Final.Filters;
 using Proyecto_Final.Models.Admin;
 using Proyecto_Final.Services;
@@ -23,9 +24,7 @@ public sealed class PayrollController : Controller
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, "No fue posible cargar los cálculos de planilla.");
-            TempData["ErrorMessage"] = "No fue posible cargar los cálculos de planilla. Inténtelo nuevamente.";
-            return View(new PayrollIndexViewModel());
+            return ServiceUnavailable(exception, "cargar los cálculos de planilla");
         }
     }
 
@@ -101,14 +100,24 @@ public sealed class PayrollController : Controller
                 detail
             );
 
-            TempData["ErrorMessage"] =
-                $"La solicitud no es válida: {detail}";
-
-            return RedirectToAction(nameof(Index));
+            return UnprocessableEntity(new { message = $"La solicitud no es válida: {detail}" });
         }
         try {await action();TempData["SuccessMessage"]=success;}
-        catch(Exception exception){_logger.LogWarning(exception,"Operación de planilla rechazada.");TempData["ErrorMessage"]="No fue posible completar la operación de planilla.";}
+        catch(SqlException exception) when(exception.Number>=50000)
+        {
+            _logger.LogWarning(exception,"Regla de planilla rechazada. TraceId {TraceId}",HttpContext.TraceIdentifier);
+            return UnprocessableEntity(new { message = "La operación de planilla no es válida para el estado actual." });
+        }
+        catch(Exception exception){return ServiceUnavailable(exception,"procesar la operación de planilla");}
         return RedirectToAction(nameof(Index));
     }
     private int UserId()=>HttpContext.Session.GetInt32("UserId")??0; private string UserName()=>HttpContext.Session.GetString("UserFullName")??"Usuario";
+    private ViewResult ServiceUnavailable(Exception exception,string operation)
+    {
+        var traceId=HttpContext.TraceIdentifier;
+        _logger.LogError(exception,"Falla técnica al {Operation}. TraceId {TraceId}",operation,traceId);
+        Response.StatusCode=StatusCodes.Status503ServiceUnavailable;
+        ViewData["TraceId"]=traceId;
+        return View("ServiceUnavailable");
+    }
 }

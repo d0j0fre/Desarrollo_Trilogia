@@ -25,6 +25,21 @@ public sealed class Sprint4DomainTests
         Assert.Equal(expected, BudgetRules.CanApprove(state, creator, approver));
 
     [Fact]
+    public void BudgetDetails_EmptyLinesAndAuditAreValidForANewDraft()
+    {
+        var model = new BudgetDetailsViewModel
+        {
+            Budget = new BudgetListItemViewModel { Status = "Borrador", AnnualAmount = 100m },
+            Details = Array.Empty<BudgetDetailLineViewModel>(),
+            Audit = Array.Empty<BudgetAuditViewModel>()
+        };
+
+        Assert.True(model.CanEdit);
+        Assert.Empty(model.Details);
+        Assert.Equal(0m, model.Details.Sum(line => line.AllocatedAmount));
+    }
+
+    [Fact]
     public void ExpenseTotal_IsCalculatedServerSideEquivalentWithDecimalPrecision() =>
         Assert.Equal(113.25m, ExpenseRules.CalculateTotal(100.22m, 13.03m));
 

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Proyecto_Final.Models.Store;
 using Proyecto_Final.Services;
+using Proyecto_Final.Validation;
 
 namespace Proyecto_Final.Controllers
 {
@@ -52,8 +53,7 @@ namespace Proyecto_Final.Controllers
             var product = await _storeDbService.GetStoreProductByIdAsync(productoId);
             if (product is null)
             {
-                TempData["LoginSuccess"] = "El producto no está disponible.";
-                return RedirectToAction("Shop", "Home");
+                return NotFound();
             }
 
             var items = GetCartItems();
@@ -90,10 +90,13 @@ namespace Proyecto_Final.Controllers
         public async Task<IActionResult> AddCombo(int comboId, int cantidad = 1, CancellationToken cancellationToken = default)
         {
             var combo = await _combos.GetStoreComboAsync(comboId, cancellationToken);
-            if (combo is null || !combo.Disponible)
+            if (combo is null)
             {
-                TempData["ErrorMessage"] = "El combo no está disponible en este momento.";
-                return RedirectToAction("Shop", "Home");
+                return NotFound();
+            }
+            if (!combo.Disponible)
+            {
+                return UnprocessableEntity(new { message = "El combo no está disponible en este momento." });
             }
 
             var items = GetCartItems();
@@ -233,6 +236,7 @@ namespace Proyecto_Final.Controllers
         {
             model.Cart = await BuildCartViewModelAsync();
             model.TipoEntrega = "Envío a domicilio";
+            model.Identificacion = CostaRicanIdentificationAttribute.Normalize(model.Identificacion);
 
             model.MetodoPago = string.IsNullOrWhiteSpace(model.MetodoPago)
                 ? "Efectivo contra entrega"
@@ -327,7 +331,7 @@ namespace Proyecto_Final.Controllers
 
             if (!ModelState.IsValid)
             {
-                return View(model);
+                return InvalidCheckout(model);
             }
 
             try
@@ -399,16 +403,11 @@ namespace Proyecto_Final.Controllers
                     "No hay stock suficiente para completar el pedido. " +
                     "Revise el carrito e intente nuevamente.");
 
-                return View(model);
+                return InvalidCheckout(model);
             }
             catch (Exception exception)
             {
-                _logger.LogError(exception, "No se pudo completar el checkout del usuario {UserId}.", HttpContext.Session.GetInt32("UserId"));
-                ModelState.AddModelError(
-                    string.Empty,
-                    "No se pudo completar el pedido. Intente nuevamente.");
-
-                return View(model);
+                return ServiceUnavailable(exception);
             }
         }
 
@@ -423,6 +422,21 @@ namespace Proyecto_Final.Controllers
         }
 
         private bool IsLoggedIn() => !string.IsNullOrWhiteSpace(HttpContext.Session.GetString("UserEmail"));
+
+        private ViewResult InvalidCheckout(CheckoutViewModel model)
+        {
+            Response.StatusCode = StatusCodes.Status422UnprocessableEntity;
+            return View(model);
+        }
+
+        private ViewResult ServiceUnavailable(Exception exception)
+        {
+            var traceId = HttpContext.TraceIdentifier;
+            _logger.LogError(exception, "Falla técnica durante checkout para usuario {UserId}. TraceId {TraceId}", HttpContext.Session.GetInt32("UserId"), traceId);
+            Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+            ViewData["TraceId"] = traceId;
+            return View("ServiceUnavailable");
+        }
 
         // CU-173 — arma el carrito y aplica automáticamente las promociones vigentes.
         private async Task<CartViewModel> BuildCartViewModelAsync()

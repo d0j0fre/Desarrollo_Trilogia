@@ -1,5 +1,6 @@
 using Microsoft.Data.SqlClient;
 using Proyecto_Final.Models.Admin;
+using Proyecto_Final.Validation;
 using System.Data;
 
 namespace Proyecto_Final.Services
@@ -346,7 +347,7 @@ namespace Proyecto_Final.Services
             command.Parameters.Add("@ActivoId", SqlDbType.Int).Value = model.ActivoId;
             command.Parameters.Add("@ClienteUsuarioId", SqlDbType.Int).Value = model.ClienteUsuarioId.HasValue ? model.ClienteUsuarioId.Value : DBNull.Value;
             command.Parameters.Add("@ClienteNombre", SqlDbType.NVarChar, 150).Value = model.ClienteNombre.Trim();
-            command.Parameters.Add("@ClienteIdentificacion", SqlDbType.NVarChar, 50).Value = string.IsNullOrWhiteSpace(model.ClienteIdentificacion) ? DBNull.Value : model.ClienteIdentificacion.Trim();
+            command.Parameters.Add("@ClienteIdentificacion", SqlDbType.NVarChar, 50).Value = string.IsNullOrWhiteSpace(model.ClienteIdentificacion) ? DBNull.Value : CostaRicanIdentificationAttribute.Normalize(model.ClienteIdentificacion);
             command.Parameters.Add("@Ubicacion", SqlDbType.NVarChar, 200).Value = string.IsNullOrWhiteSpace(model.Ubicacion) ? DBNull.Value : model.Ubicacion.Trim();
             command.Parameters.Add("@FechaAsignacion", SqlDbType.Date).Value = model.FechaAsignacion.HasValue ? model.FechaAsignacion.Value.Date : DBNull.Value;
             command.Parameters.Add("@CondicionEntrega", SqlDbType.NVarChar, 300).Value = string.IsNullOrWhiteSpace(model.CondicionEntrega) ? DBNull.Value : model.CondicionEntrega.Trim();
