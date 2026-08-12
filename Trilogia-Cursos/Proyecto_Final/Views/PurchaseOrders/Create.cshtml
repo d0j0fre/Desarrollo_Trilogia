@@ -64,5 +64,14 @@
             }
             document.querySelectorAll('.purchase-line input').forEach(input => input.addEventListener('input', recalculate)); recalculate();
         })();
+
+        // Antes de enviar, deshabilita los campos de productos no seleccionados para no superar el límite de campos del formulario
+        document.querySelector('form').addEventListener('submit', () => {
+            document.querySelectorAll('.purchase-line').forEach(row => {
+                if (!row.querySelector('.select-product').checked) {
+                    row.querySelectorAll('input:not(.select-product)').forEach(input => input.disabled = true);
+                }
+            });
+        });
     </script>
 }

@@ -19,28 +19,37 @@
                     @Html.AntiForgeryToken()
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                     <input asp-for="Formulario.ProveedorId" name="ProveedorId" id="ProveedorId" type="hidden" />
+
                     <div class="form-group">
                         <label asp-for="Formulario.Nombre"></label>
                         <input asp-for="Formulario.Nombre" name="Nombre" id="Nombre" class="form-control" />
                         <span asp-validation-for="Formulario.Nombre" class="text-danger"></span>
                     </div>
+
                     <div class="form-group">
                         <label asp-for="Formulario.Contacto"></label>
                         <input asp-for="Formulario.Contacto" name="Contacto" id="Contacto" class="form-control" />
                     </div>
+
                     <div class="form-group">
                         <label asp-for="Formulario.Telefono"></label>
                         <input asp-for="Formulario.Telefono" name="Telefono" id="Telefono" class="form-control" />
                     </div>
+
                     <div class="form-group">
                         <label asp-for="Formulario.Email"></label>
                         <input asp-for="Formulario.Email" name="Email" id="Email" class="form-control" />
                         <span asp-validation-for="Formulario.Email" class="text-danger"></span>
                     </div>
+
                     <div class="form-check mb-3">
-                        <input asp-for="Formulario.Activo" name="Activo" id="Activo" class="form-check-input" />
+                        @* Checkbox manual: evita el input hidden fantasma que genera asp-for *@
+                        <input type="checkbox" name="Activo" id="Activo" class="form-check-input"
+                               value="true" checked="@(Model.Formulario.Activo)" />
+                        <input type="hidden" name="Activo" value="false" />
                         <label for="Activo" class="form-check-label">Proveedor activo</label>
                     </div>
+
                     <button class="btn btn-primary btn-block" type="submit">Guardar proveedor</button>
                     <button class="btn btn-link btn-block" type="button" id="reset-supplier">Limpiar / nuevo</button>
                 </form>
