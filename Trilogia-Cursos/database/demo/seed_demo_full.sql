@@ -90,12 +90,12 @@ BEGIN TRY
 
         INSERT dbo.DemoSeedRows(BatchCode,EntityName,EntityId)
         SELECT @BatchCode,N'Productos',p.ProductoId FROM dbo.Productos p
-        WHERE p.Nombre LIKE @Marker + N'%' ;
+        WHERE p.Nombre LIKE N'DEMO-2026-08 %' ;
 
         INSERT dbo.MovimientosInventario(ProductoId,ProductoNombre,TipoMovimiento,Cantidad,StockAnterior,StockNuevo,Motivo,UsuarioId,UsuarioNombre,FechaMovimiento)
         SELECT p.ProductoId,p.Nombre,N'Entrada',p.Stock,p.Stock-p.Stock,p.Stock,@Marker + N' inventario inicial QA.',@QaActorId,@QaActorName,DATEADD(HOUR,8,CAST(@CostaRicaToday AS datetime2))
         FROM dbo.Productos p
-        WHERE p.Nombre LIKE @Marker + N'%'
+        WHERE p.Nombre LIKE N'DEMO-2026-08 %'
           AND NOT EXISTS(SELECT 1 FROM dbo.MovimientosInventario m WHERE m.ProductoId=p.ProductoId AND m.Motivo=@Marker + N' inventario inicial QA.');
         INSERT dbo.DemoSeedRows(BatchCode,EntityName,EntityId)
         SELECT @BatchCode,N'MovimientosInventario',m.MovimientoId FROM dbo.MovimientosInventario m WHERE m.Motivo=@Marker + N' inventario inicial QA.';
@@ -288,7 +288,11 @@ BEGIN TRY
       FROM (VALUES (N'Quincenal',DATEFROMPARTS(2026,6,1),DATEFROMPARTS(2026,6,15),CONVERT(decimal(9,6),0.500000)),(N'Quincenal',DATEFROMPARTS(2026,7,1),DATEFROMPARTS(2026,7,15),CONVERT(decimal(9,6),0.500000))) source(Tipo,Desde,Hasta,Factor)
       WHERE NOT EXISTS(SELECT 1 FROM dbo.PlanillaPeriodos p WHERE p.Desde=source.Desde AND p.Hasta=source.Hasta);
       INSERT dbo.DemoSeedRows(BatchCode,EntityName,EntityId) SELECT @BatchCode,N'PlanillaReglas',ReglaId FROM dbo.PlanillaReglas WHERE Codigo=N'DEMO_2026_08_BONO' AND VigenteDesde=@CostaRicaToday;
-      INSERT dbo.DemoSeedRows(BatchCode,EntityName,EntityId) SELECT @BatchCode,N'PlanillaPeriodos',PeriodoId FROM dbo.PlanillaPeriodos WHERE Desde=DATEFROMPARTS(2026,8,1) AND Hasta=@CostaRicaToday;
+      INSERT dbo.DemoSeedRows(BatchCode,EntityName,EntityId)
+      SELECT @BatchCode,N'PlanillaPeriodos',PeriodoId FROM dbo.PlanillaPeriodos
+      WHERE (Desde=DATEFROMPARTS(2026,8,1) AND Hasta=@CostaRicaToday)
+         OR (Desde=DATEFROMPARTS(2026,6,1) AND Hasta=DATEFROMPARTS(2026,6,15))
+         OR (Desde=DATEFROMPARTS(2026,7,1) AND Hasta=DATEFROMPARTS(2026,7,15));
       DECLARE @QaPeriodId int=(SELECT PeriodoId FROM dbo.PlanillaPeriodos WHERE Desde=DATEFROMPARTS(2026,8,1) AND Hasta=@CostaRicaToday);
       IF @QaEmployeeId IS NOT NULL AND OBJECT_ID(N'dbo.PlanillaCalculos',N'U') IS NOT NULL
       BEGIN
