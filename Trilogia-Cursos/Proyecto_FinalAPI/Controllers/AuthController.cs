@@ -13,17 +13,23 @@ namespace Proyecto_FinalAPI.Controllers
         private readonly EmailService _emailService;
         private readonly LoginAttemptLimiter _loginAttemptLimiter;
         private readonly PasswordRecoveryAttemptLimiter _passwordRecoveryAttemptLimiter;
+        private readonly IConfiguration _configuration;
+        private readonly ILogger<AuthController> _logger;
 
         public AuthController(
             IAccountApiDbService accountApiDbService,
             EmailService emailService,
             LoginAttemptLimiter loginAttemptLimiter,
-            PasswordRecoveryAttemptLimiter passwordRecoveryAttemptLimiter)
+            PasswordRecoveryAttemptLimiter passwordRecoveryAttemptLimiter,
+            IConfiguration configuration,
+            ILogger<AuthController> logger)
         {
             _accountApiDbService = accountApiDbService;
             _emailService = emailService;
             _loginAttemptLimiter = loginAttemptLimiter;
             _passwordRecoveryAttemptLimiter = passwordRecoveryAttemptLimiter;
+            _configuration = configuration;
+            _logger = logger;
         }
 
         [HttpPost("login")]
@@ -161,12 +167,19 @@ namespace Proyecto_FinalAPI.Controllers
                 });
             }
 
+            var configuredBaseUrl = _configuration["PasswordRecovery:PublicBaseUrl"]?.TrimEnd('/');
+            if (!Uri.TryCreate(configuredBaseUrl, UriKind.Absolute, out var publicBaseUri) ||
+                !string.Equals(publicBaseUri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogWarning("PasswordRecovery:PublicBaseUrl no está configurada con una URL HTTPS válida.");
+                return Ok(new AuthResult { Success = true, Message = safeRecoveryMessage });
+            }
+
             var token = await _accountApiDbService.CreatePasswordResetTokenAsync(user.UsuarioId);
 
             try
             {
-                var baseUrl = "https://localhost:7013";
-                var resetUrl = $"{baseUrl}/Account/ResetPassword?token={token}&email={Uri.EscapeDataString(user.Correo)}";
+                var resetUrl = $"{configuredBaseUrl}/Account/ResetPassword?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(user.Correo)}";
 
                 var asunto = "Recuperación de contraseña - Licorera La Bodega";
                 var contenido = EmailTemplateBuilder.BuildPasswordResetEmail(
@@ -175,8 +188,9 @@ namespace Proyecto_FinalAPI.Controllers
 
                 _emailService.SendEmail(user.Correo, asunto, contenido);
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "No fue posible enviar el correo de recuperación de contraseña.");
                 return Ok(new AuthResult
                 {
                     Success = true,

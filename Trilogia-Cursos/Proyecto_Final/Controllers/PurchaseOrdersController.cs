@@ -67,7 +67,8 @@ public sealed class PurchaseOrdersController : Controller
         }
         catch (PurchasingOperationException ex)
         {
-            ModelState.AddModelError(string.Empty, ex.Message);
+            _logger.LogWarning(ex, "La creación de la orden de compra fue rechazada por una regla de negocio.");
+            ModelState.AddModelError(string.Empty, ex.UserMessage);
         }
         catch (Exception ex)
         {
@@ -128,7 +129,8 @@ public sealed class PurchaseOrdersController : Controller
         }
         catch (PurchasingOperationException ex)
         {
-            TempData["ErrorMessage"] = ex.Message;
+            _logger.LogWarning(ex, "La recepción de la orden {PurchaseOrderId} fue rechazada.", model.OrdenCompraId);
+            TempData["ErrorMessage"] = ex.UserMessage;
         }
         catch (Exception ex)
         {
@@ -186,7 +188,8 @@ public sealed class PurchaseOrdersController : Controller
         }
         catch (PurchasingOperationException ex)
         {
-            TempData["ErrorMessage"] = ex.Message;
+            _logger.LogWarning(ex, "La operación sobre la orden {PurchaseOrderId} fue rechazada.", model.OrdenCompraId);
+            TempData["ErrorMessage"] = ex.UserMessage;
         }
         catch (Exception ex)
         {

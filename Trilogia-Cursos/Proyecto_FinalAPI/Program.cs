@@ -10,6 +10,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IAccountApiDbService, AccountApiDbService>();
+builder.Services.AddSingleton<IPasswordHashService, PasswordHashService>();
 builder.Services.AddScoped<ProductsApiDbService>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddSingleton<LoginAttemptLimiter>();

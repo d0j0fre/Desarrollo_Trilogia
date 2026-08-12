@@ -2,6 +2,8 @@ using System.ComponentModel.DataAnnotations;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
+using Proyecto_Final.ModelBinders;
 
 namespace Proyecto_Final.Models.Admin;
 
@@ -19,40 +21,149 @@ public sealed class PayrollRuleViewModel
     public string Fuente { get; set; } = string.Empty;
 }
 
-public sealed class PayrollRuleFormViewModel
+public sealed class PayrollRuleFormViewModel : IValidatableObject
 {
-    [Required, StringLength(50), RegularExpression("[A-Z0-9_]+")]
+    [Required(ErrorMessage = "El código de la regla es obligatorio.")]
+    [StringLength(50, ErrorMessage = "El código no puede superar 50 caracteres.")]
+    [RegularExpression("^[A-Z0-9_]+$", ErrorMessage = "Use solo letras mayúsculas, números y guiones bajos en el código.")]
     public string Codigo { get; set; } = string.Empty;
-    [Required, StringLength(150)] public string Nombre { get; set; } = string.Empty;
-    [Required, RegularExpression("Ingreso|Deduccion")] public string Tipo { get; set; } = "Ingreso";
-    [Required, RegularExpression("MontoFijo|PorcentajeSalario|PorHoraExtra|PorcentajeBruto")] public string TipoCalculo { get; set; } = "MontoFijo";
-    [Range(typeof(decimal), "0", "99999999")] public decimal Valor { get; set; }
-    [Range(typeof(decimal), "0", "99999999")] public decimal? Tope { get; set; }
+
+    [Required(ErrorMessage = "El nombre de la regla es obligatorio.")]
+    [StringLength(150, ErrorMessage = "El nombre no puede superar 150 caracteres.")]
+    public string Nombre { get; set; } = string.Empty;
+
+    [Required]
+    [RegularExpression("^(Ingreso|Deduccion)$", ErrorMessage = "El tipo de regla no es válido.")]
+    public string Tipo { get; set; } = "Ingreso";
+
+    [Required]
+    [RegularExpression("^(MontoFijo|PorcentajeSalario|PorHoraExtra|PorcentajeBruto)$", ErrorMessage = "El tipo de cálculo no es válido.")]
+    public string TipoCalculo { get; set; } = "MontoFijo";
+
+    [ModelBinder(BinderType = typeof(FlexibleDecimalModelBinder))]
+    [Range(typeof(decimal), "0", "99999999", ErrorMessage = "El valor debe estar entre 0 y 99 999 999.")]
+    public decimal Valor { get; set; }
+
+    [ModelBinder(BinderType = typeof(FlexibleDecimalModelBinder))]
+    [Range(typeof(decimal), "0", "99999999", ErrorMessage = "El tope debe estar entre 0 y 99 999 999.")]
+    public decimal? Tope { get; set; }
+
     [DataType(DataType.Date)] public DateTime VigenteDesde { get; set; } = DateTime.Today;
     [DataType(DataType.Date)] public DateTime? VigenteHasta { get; set; }
-    [Required, StringLength(500)] public string Fuente { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Indique la fuente oficial o aprobación responsable.")]
+    [StringLength(500, ErrorMessage = "La fuente no puede superar 500 caracteres.")]
+    public string Fuente { get; set; } = string.Empty;
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (VigenteDesde == default)
+        {
+            yield return new ValidationResult(
+                "Debe indicar la fecha de inicio de vigencia.",
+                [nameof(VigenteDesde)]);
+        }
+
+        if (VigenteHasta.HasValue && VigenteHasta.Value.Date < VigenteDesde.Date)
+        {
+            yield return new ValidationResult(
+                "La fecha final no puede ser anterior a la fecha de inicio.",
+                [nameof(VigenteHasta)]);
+        }
+    }
 }
 
 public sealed class PayrollPeriodFormViewModel : IValidatableObject
 {
-    [Required, RegularExpression("Quincenal|Mensual")] public string Tipo { get; set; } = "Quincenal";
-    [DataType(DataType.Date)] public DateTime Desde { get; set; } = DateTime.Today;
-    [DataType(DataType.Date)] public DateTime Hasta { get; set; } = DateTime.Today;
-    [Range(typeof(decimal), "0.000001", "1")] public decimal FactorSalario { get; set; }
-    [Required, StringLength(500)] public string FuenteConfiguracion { get; set; } = string.Empty;
-    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    [Required]
+    [RegularExpression(
+        "^(Quincenal|Mensual)$",
+        ErrorMessage = "El tipo de período no es válido."
+    )]
+    public string Tipo { get; set; } = "Quincenal";
+
+    [DataType(DataType.Date)]
+    public DateTime Desde { get; set; } = DateTime.Today;
+
+    [DataType(DataType.Date)]
+    public DateTime Hasta { get; set; } = DateTime.Today;
+
+    [ModelBinder(BinderType = typeof(FlexibleDecimalModelBinder))]
+    public decimal FactorSalario { get; set; }
+
+    [Required(ErrorMessage = "Debe indicar la fuente o aprobación del factor.")]
+    [StringLength(
+        500,
+        ErrorMessage = "La fuente no puede superar 500 caracteres."
+    )]
+    public string FuenteConfiguracion { get; set; } = string.Empty;
+
+    public IEnumerable<ValidationResult> Validate(
+        ValidationContext validationContext
+    )
     {
-        if (Hasta < Desde) yield return new ValidationResult("El final no puede ser anterior al inicio.", [nameof(Hasta)]);
-        if ((Hasta - Desde).TotalDays > 31) yield return new ValidationResult("El periodo no puede superar 31 días.", [nameof(Hasta)]);
+        if (Desde == default)
+        {
+            yield return new ValidationResult(
+                "Debe indicar la fecha de inicio del período.",
+                [nameof(Desde)]
+            );
+        }
+
+        if (Hasta == default)
+        {
+            yield return new ValidationResult(
+                "Debe indicar la fecha final del período.",
+                [nameof(Hasta)]
+            );
+        }
+
+        if (Hasta < Desde)
+        {
+            yield return new ValidationResult(
+                "El final no puede ser anterior al inicio.",
+                [nameof(Hasta)]
+            );
+        }
+
+        if ((Hasta - Desde).TotalDays > 31)
+        {
+            yield return new ValidationResult(
+                "El período no puede superar 31 días.",
+                [nameof(Hasta)]
+            );
+        }
+
+        if (FactorSalario <= 0m || FactorSalario > 1m)
+        {
+            yield return new ValidationResult(
+                "El factor salarial debe ser mayor que 0 y menor o igual que 1.",
+                [nameof(FactorSalario)]
+            );
+        }
     }
 }
 
-public sealed class PayrollCalculationRequestViewModel
+public sealed class PayrollCalculationRequestViewModel : IValidatableObject
 {
     [Range(1, int.MaxValue)] public int PeriodoId { get; set; }
     [Range(1, int.MaxValue)] public int EmpleadoId { get; set; }
-    [Range(typeof(decimal), "0", "99999999")] public decimal Comisiones { get; set; }
+    [ModelBinder(BinderType = typeof(FlexibleDecimalModelBinder))]
+    [Range(typeof(decimal), "0", "99999999", ErrorMessage = "Las comisiones no pueden ser negativas ni superar 99 999 999.")]
+    public decimal Comisiones { get; set; }
+
+    [Required(ErrorMessage = "No se pudo preparar la solicitud de cálculo. Recargue la página e inténtelo de nuevo.")]
     public Guid IdempotencyKey { get; set; } = Guid.NewGuid();
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (IdempotencyKey == Guid.Empty)
+        {
+            yield return new ValidationResult(
+                "No se pudo preparar la solicitud de cálculo. Recargue la página e inténtelo de nuevo.",
+                [nameof(IdempotencyKey)]);
+        }
+    }
 }
 
 public sealed class PayrollCalculationInput
@@ -100,12 +211,38 @@ public sealed class PayrollListItemViewModel
     public string RowVersionBase64 { get; set; } = string.Empty;
 }
 
-public sealed class PayrollStateChangeViewModel
+public sealed class PayrollStateChangeViewModel : IValidatableObject
 {
     [Range(1, long.MaxValue)] public long CalculoId { get; set; }
-    [Required, RegularExpression("Aprobada|Pagada|Revertida")] public string Estado { get; set; } = string.Empty;
+    [Required, RegularExpression("^(Aprobada|Pagada|Revertida)$")] public string Estado { get; set; } = string.Empty;
     [StringLength(500)] public string? Motivo { get; set; }
-    [Required] public string RowVersionBase64 { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "La versión del cálculo es obligatoria.")]
+    public string RowVersionBase64 { get; set; } = string.Empty;
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        var isRowVersionValid = true;
+
+        try
+        {
+            if (Convert.FromBase64String(RowVersionBase64).Length != 8)
+            {
+                throw new FormatException();
+            }
+        }
+        catch (FormatException)
+        {
+            isRowVersionValid = false;
+        }
+
+        if (!isRowVersionValid)
+        {
+            yield return new ValidationResult(
+                "La versión del cálculo no es válida. Recargue la página e inténtelo de nuevo.",
+                [nameof(RowVersionBase64)]);
+        }
+    }
 }
 
 public sealed class PayrollIndexViewModel

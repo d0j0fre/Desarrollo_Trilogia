@@ -11,11 +11,15 @@ namespace Proyecto_Final.Services
     public class AssistantService
     {
         private readonly string _connectionString;
+        private readonly ILogger<AssistantService> _logger;
 
-        public AssistantService(IConfiguration configuration)
+        public AssistantService(
+            IConfiguration configuration,
+            ILogger<AssistantService> logger)
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection")
                 ?? throw new InvalidOperationException("No se encontró la cadena de conexión DefaultConnection.");
+            _logger = logger;
         }
 
         // ── Categorías y control de acceso por rol ──────────────
@@ -446,9 +450,12 @@ namespace Proyecto_Final.Services
                 await connection.OpenAsync();
                 await command.ExecuteNonQueryAsync();
             }
-            catch
+            catch (Exception exception)
             {
-                // La bitácora es best-effort: nunca debe romper la respuesta al usuario.
+                _logger.LogWarning(
+                    exception,
+                    "No fue posible registrar la consulta del asistente para el usuario {UserId}.",
+                    usuarioId);
             }
         }
 

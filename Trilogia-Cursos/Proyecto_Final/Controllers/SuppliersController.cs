@@ -47,7 +47,8 @@ public sealed class SuppliersController : Controller
         }
         catch (PurchasingOperationException ex)
         {
-            ModelState.AddModelError(string.Empty, ex.Message);
+            _logger.LogWarning(ex, "La operación de proveedor {SupplierId} fue rechazada por una regla de negocio.", formulario.ProveedorId);
+            ModelState.AddModelError(string.Empty, ex.UserMessage);
         }
         catch (Exception ex)
         {
@@ -76,7 +77,8 @@ public sealed class SuppliersController : Controller
         }
         catch (PurchasingOperationException ex)
         {
-            TempData["ErrorMessage"] = ex.Message;
+            _logger.LogWarning(ex, "El cambio de estado del proveedor {SupplierId} fue rechazado.", proveedorId);
+            TempData["ErrorMessage"] = ex.UserMessage;
         }
         catch (Exception ex)
         {

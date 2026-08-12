@@ -253,3 +253,24 @@ tokens, connection strings ni datos de producción.
   secretos ni settings especulativos.
 - [ ] La copia temporal local del BACPAC debe eliminarse con el procedimiento
   seguro del operador; el respaldo remoto validado es la copia de recuperación.
+
+## Cierre integral de módulos y seguridad — 11 de agosto de 2026
+
+Validación local sobre `fix/runtime-modules-20260806`, partiendo de `fa1e3dc`:
+
+- Departamentos conserva las tablas heredadas de Chat; no se recrearon ni copiaron datos.
+- Los verificadores de chat privado, departamentos y métricas confirmaron en Azure DEV 15 conversaciones, 24 mensajes privados, 12 departamentos, 18 membresías y 3 mensajes departamentales.
+- Build Debug y Release: 0 errores y 0 advertencias.
+- Suite completa con cobertura: 194 aprobadas, 0 fallidas y 0 omitidas; 966/15.705 líneas (6,15%) y 452/10.843 ramas (4,16%).
+- ScriptDom: 109 archivos, 995 lotes y 0 errores.
+- Escaneo de secretos: 758 archivos rastreados, 727 archivos de texto y 12 placeholders/vacíos aprobados; 0 hallazgos.
+- La planilla continúa usando factores versionados y fuente/aprobación explícita; no se incorporaron tasas legales.
+- La migración 0022 introduce PBKDF2-SHA256 con sal aleatoria y actualización gradual de credenciales legadas, manteniendo contratos SQL compatibles durante el despliegue.
+- Recuperación de contraseña requiere `PasswordRecovery:PublicBaseUrl` HTTPS; si falta, responde de forma genérica y no genera token.
+
+Pendiente hasta completar publicación:
+
+- [ ] Ejecutar CI del PR y respetar la aprobación/protección de `main`.
+- [ ] Crear respaldo de Azure SQL DEV, aplicar 0022 con SHA-256 real y ejecutar su verificador.
+- [ ] Desplegar el commit integrado y ejecutar smoke público final.
+- [ ] Ejecutar QA autenticado por rol; no había sesión ni credenciales QA autorizadas disponibles durante la revisión local.

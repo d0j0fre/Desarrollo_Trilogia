@@ -57,6 +57,9 @@
         var isClient = isLoggedIn && string.Equals(userRole, "Cliente", StringComparison.OrdinalIgnoreCase);
         var isGerente = isLoggedIn && string.Equals(userRole, "Gerente", StringComparison.OrdinalIgnoreCase);
         var isChofer = isLoggedIn && string.Equals(userRole, "Chofer", StringComparison.OrdinalIgnoreCase);
+        var isWarehouse = isLoggedIn && (
+            string.Equals(userRole, "Bodega", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(userRole, "Bodeguero", StringComparison.OrdinalIgnoreCase));
         var isCajero = isLoggedIn && (
             string.Equals(userRole, "Cajero", StringComparison.OrdinalIgnoreCase)
             || string.Equals(userRole, "Financiero", StringComparison.OrdinalIgnoreCase));
@@ -350,6 +353,7 @@
                                     {
                                         "Administrador",
                                         "Auditor Interno",
+                                        "Bodega",
                                         "Bodeguero",
                                         "Cajero",
                                         "Chofer",
@@ -478,6 +482,13 @@
                                 </a>
                             }
 
+                            @if (isWarehouse)
+                            {
+                                <a asp-controller="Assistant" asp-action="Index" class="nav-item nav-link nav-highlight">
+                                    <i class="fa fa-robot mr-1"></i>Asistente
+                                </a>
+                            }
+
                             @if (isCajero)
                             {
                                 <a asp-controller="Finance" asp-action="Index" class="nav-item nav-link nav-highlight">
@@ -598,8 +609,7 @@
     <form id="chatAntiforgery" class="d-none" aria-hidden="true">
         @Html.AntiForgeryToken()
     </form>
-}
-<div id="chatWindow" class="chat-window">
+    <div id="chatWindow" class="chat-window">
 
     <div class="chat-header">
         <span>
@@ -631,7 +641,8 @@
 
     </div>
 
-</div>
+    </div>
+}
 
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
@@ -682,6 +693,9 @@
     @RenderSection("Scripts", required: false)
 
     <script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
-    <script asp-append-version="true" src="~/js/chat.js"></script>
+    @if (puedeUsarChat)
+    {
+        <script asp-append-version="true" src="~/js/chat.js"></script>
+    }
 </body>
 </html>

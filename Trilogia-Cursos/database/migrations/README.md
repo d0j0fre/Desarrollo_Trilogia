@@ -54,10 +54,12 @@ Cada migracion debe indicar su estrategia de rollback antes de ejecutarse. Los c
 | 0018 | `0018_rrhh_attendance.sql` | Jornadas propias, aprobación segregada e idempotencia | 0017 |
 | 0019 | `0019_payroll_engine.sql` | Planilla configurable, reproducible y auditada | 0018 |
 | 0020 | `0020_private_pay_slips.sql` | Boletas privadas y notificación idempotente | 0019 |
+| 0021 | `0021_seller_goal_progress.sql` | Progreso mensual de la meta propia del vendedor | Metas, facturas, pedidos y usuarios |
+| 0022 | `0022_password_hash_transition.sql` | Transición compatible de credenciales directas a PBKDF2 con actualización gradual | Usuarios, perfiles y API de autenticación |
 
 Los scripts no incluyen `USE`: el ejecutor debe seleccionar explícitamente la base antes de iniciar. Los hashes escritos por 0002–0011 son hashes de manifiesto para identificar versión; la evidencia de despliegue debe registrar además el SHA-256 real del archivo y actualizar el ledger si corresponde.
 
-Al 23 de julio de 2026, Azure DEV registra 0007–0011 como aplicadas y se verificaron sus objetos, columnas principales, índices, constraints y permisos. No deben volver a ejecutarse en esa base. Esta evidencia no demuestra que 0002–0006 estén aplicadas ni convierte el ledger histórico en una secuencia completa. Antes de cualquier corrección se requiere BACPAC, ejecutor único, script incremental nuevo y QA posterior. `database_Esteban/cu222_gastos_presupuesto.sql` es sólo referencia histórica.
+La evidencia vigente del 4 de agosto de 2026 registra 0013–0020 aplicadas y verificadas en Azure DEV después de BACPAC. Las notas anteriores sobre 0007–0012 son históricas y deben contrastarse siempre con el ledger real antes de ejecutar. 0021 y 0022 requieren consulta del ledger, respaldo vigente, ejecutor único y verificación inmediata; nunca se aplican por inferencia documental. `database_Esteban/cu222_gastos_presupuesto.sql` es sólo referencia histórica.
 
 ## Ejecución controlada de 0012
 
