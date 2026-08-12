@@ -40,6 +40,7 @@ public sealed class DocumentsController : Controller
     [HttpGet]
     public async Task<IActionResult> Details(int id)
     {
+        if (id <= 0) return NotFound();
         var model = await _documents.GetDetailsAsync(id, _alerts.CurrentBusinessDate(), _alerts.DefaultWarningDays);
         return model is null ? NotFound() : View(model);
     }
@@ -47,6 +48,7 @@ public sealed class DocumentsController : Controller
     [HttpGet]
     public async Task<IActionResult> Detail(int id)
     {
+        if (id <= 0) return NotFound();
         var model = await _documents.GetDetailsAsync(id, _alerts.CurrentBusinessDate(), _alerts.DefaultWarningDays);
         return model is null ? NotFound() : View("Details", model);
     }
@@ -54,6 +56,7 @@ public sealed class DocumentsController : Controller
     [HttpGet]
     public async Task<IActionResult> History(int id)
     {
+        if (id <= 0) return NotFound();
         var model = await _documents.GetDetailsAsync(id, _alerts.CurrentBusinessDate(), _alerts.DefaultWarningDays);
         if (model is null) return NotFound();
         ViewData["FocusHistory"] = true;
@@ -75,7 +78,7 @@ public sealed class DocumentsController : Controller
     public async Task<IActionResult> Create(DocumentFormViewModel model, CancellationToken cancellationToken)
     {
         ValidateDocument(model, requireFile: true);
-        if (!ModelState.IsValid) { await LoadOptionsAsync(); return View(model); }
+        if (!ModelState.IsValid) { await LoadOptionsAsync(); return InvalidDocumentForm(model); }
         StagedPrivateFile? staged = null;
         var documentId = 0;
         var committed = false;
@@ -109,7 +112,7 @@ public sealed class DocumentsController : Controller
         }
         if (documentId > 0 && !ready) await TryDeletePendingAsync(documentId);
         await LoadOptionsAsync();
-        return View(model);
+        return InvalidDocumentForm(model);
     }
 
     [HttpGet]
@@ -128,7 +131,7 @@ public sealed class DocumentsController : Controller
     public async Task<IActionResult> Edit(DocumentFormViewModel model)
     {
         ValidateDocument(model, requireFile: false);
-        if (!ModelState.IsValid) { await LoadOptionsAsync(); return View(model); }
+        if (!ModelState.IsValid) { await LoadOptionsAsync(); return InvalidDocumentForm(model); }
         try
         {
             await _documents.UpdateMetadataAsync(model, UserId(), UserName());
@@ -140,7 +143,7 @@ public sealed class DocumentsController : Controller
         {
             HandleDatabaseError(exception, "actualizar el documento");
             await LoadOptionsAsync();
-            return View(model);
+            return InvalidDocumentForm(model);
         }
     }
 
@@ -274,5 +277,11 @@ public sealed class DocumentsController : Controller
         if (exception is SqlException sql && sql.Number >= 50000) _logger.LogWarning(exception, "Regla de negocio al {Operation}.", operation);
         else _logger.LogError(exception, "Error al {Operation}.", operation);
         TempData["ErrorMessage"] = $"No fue posible {operation}.";
+    }
+
+    private ViewResult InvalidDocumentForm(DocumentFormViewModel model)
+    {
+        Response.StatusCode = StatusCodes.Status422UnprocessableEntity;
+        return View(model);
     }
 }

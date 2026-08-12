@@ -54,6 +54,21 @@ public sealed class ControllerSurfaceAuditTests
         Assert.Contains("StatusCodes.Status503ServiceUnavailable", source, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void PriorityFlowsExpose404_422And503InsteadOfRedirectingOrThrowing()
+    {
+        var expenses = File.ReadAllText(SourcePath("Controllers", "ExpensesController.cs"));
+        var documents = File.ReadAllText(SourcePath("Controllers", "DocumentsController.cs"));
+        var purchases = File.ReadAllText(SourcePath("Controllers", "PurchaseOrdersController.cs"));
+
+        Assert.Contains("if (id <= 0) return NotFound();", expenses, StringComparison.Ordinal);
+        Assert.Contains("StatusCodes.Status422UnprocessableEntity", expenses, StringComparison.Ordinal);
+        Assert.Contains("StatusCodes.Status503ServiceUnavailable", expenses, StringComparison.Ordinal);
+        Assert.Contains("if (id <= 0) return NotFound();", documents, StringComparison.Ordinal);
+        Assert.Contains("StatusCodes.Status422UnprocessableEntity", documents, StringComparison.Ordinal);
+        Assert.Equal(2, purchases.Split("return UnprocessableEntity(", StringSplitOptions.None).Length - 1);
+    }
+
     private static IReadOnlyList<Type> GetControllers() => typeof(HomeController).Assembly
         .GetTypes()
         .Where(type => type.IsClass && !type.IsAbstract && type.Namespace == typeof(HomeController).Namespace && type.Name.EndsWith("Controller", StringComparison.Ordinal))

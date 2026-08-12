@@ -118,8 +118,7 @@ public sealed class PurchaseOrdersController : Controller
 
         if (!ModelState.IsValid)
         {
-            TempData["ErrorMessage"] = "Los datos de la recepción no son válidos.";
-            return RedirectToAction(nameof(Detail), new { id = model.OrdenCompraId });
+            return UnprocessableEntity(new { message = "Los datos de la recepción no son válidos." });
         }
 
         try
@@ -167,8 +166,7 @@ public sealed class PurchaseOrdersController : Controller
 
         if (!ModelState.IsValid)
         {
-            TempData["ErrorMessage"] = "Debe indicar un motivo de al menos diez caracteres.";
-            return RedirectToAction(nameof(Detail), new { id = model.OrdenCompraId });
+            return UnprocessableEntity(new { message = "Debe indicar un motivo de al menos diez caracteres." });
         }
 
         try
