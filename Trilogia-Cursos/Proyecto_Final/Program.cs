@@ -196,9 +196,9 @@ var app = builder.Build();
 _ = app.Services.GetRequiredService<IPrivateFileStorageService>();
 
 // Pipeline
+app.UseExceptionHandler("/Home/Error");
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
     app.UseHttpsRedirection();
 }

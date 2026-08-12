@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
+using Proyecto_Final.Models;
 using Proyecto_Final.Models.Store;
 using Proyecto_Final.Services;
 
@@ -160,6 +162,16 @@ namespace Proyecto_Final.Controllers
         public IActionResult Privacy()
         {
             return View();
+        }
+
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        [HttpGet]
+        public IActionResult Error()
+        {
+            var traceId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
+            _logger.LogError("Solicitud no controlada enviada al manejador global. Ruta {Path}. Solicitud {TraceId}.",
+                HttpContext.Request.Path, traceId);
+            return View(new ErrorViewModel { RequestId = traceId });
         }
     }
 }
