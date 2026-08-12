@@ -183,7 +183,9 @@ BEGIN TRY
     SELECT p.PedidoId,CASE WHEN p.PedidoId%3=0 THEN @ProductThree WHEN p.PedidoId%2=0 THEN @ProductTwo ELSE @ProductOne END,1+(p.PedidoId%4),x.Precio
     FROM dbo.Pedidos p CROSS APPLY(SELECT CASE WHEN p.PedidoId%3=0 THEN 1150.00 WHEN p.PedidoId%2=0 THEN 2100.00 ELSE 4250.00 END Precio)x
     WHERE p.Observaciones LIKE @Marker + N'%' AND NOT EXISTS(SELECT 1 FROM dbo.PedidoDetalle d WHERE d.PedidoId=p.PedidoId);
-    UPDATE p SET Total=(SELECT SUM(d.Cantidad*d.PrecioUnitario) FROM dbo.PedidoDetalle d WHERE d.PedidoId=p.PedidoId) WHERE p.Observaciones LIKE @Marker + N'%';
+    UPDATE p SET Total=(SELECT SUM(d.Cantidad*d.PrecioUnitario) FROM dbo.PedidoDetalle d WHERE d.PedidoId=p.PedidoId)
+    FROM dbo.Pedidos p
+    WHERE p.Observaciones LIKE @Marker + N'%';
     INSERT dbo.Facturas(PedidoId,NumeroFactura,UsuarioId,ClienteNombre,ClienteCorreo,FechaFactura,Subtotal,Impuesto,Total,Estado)
     SELECT p.PedidoId,N'DEMO-2026-08-F'+RIGHT(N'000'+CONVERT(nvarchar(10),p.PedidoId),3),@QaBuyerId,@QaBuyerName,@QaBuyerEmail,p.FechaPedido,p.Total,0,p.Total,N'Generada'
     FROM dbo.Pedidos p WHERE p.Observaciones LIKE @Marker + N'%' AND NOT EXISTS(SELECT 1 FROM dbo.Facturas f WHERE f.PedidoId=p.PedidoId);
