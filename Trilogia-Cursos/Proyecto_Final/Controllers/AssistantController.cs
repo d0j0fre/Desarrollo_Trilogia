@@ -28,8 +28,13 @@ namespace Proyecto_Final.Controllers
         [EnableRateLimiting("assistant")]
         public async Task<IActionResult> Ask(string pregunta, string? contexto)
         {
-            if (string.IsNullOrWhiteSpace(pregunta))
+            pregunta = pregunta?.Trim() ?? string.Empty;
+
+            if (pregunta.Length == 0)
                 return Json(new { ok = false, message = "Escribe una pregunta." });
+
+            if (pregunta.Length > 500)
+                return Json(new { ok = false, message = "La pregunta no puede superar 500 caracteres." });
 
             var usuarioId = HttpContext.Session.GetInt32("UserId") ?? 0;
             var usuarioNombre = HttpContext.Session.GetString("UserFullName") ?? "Usuario";

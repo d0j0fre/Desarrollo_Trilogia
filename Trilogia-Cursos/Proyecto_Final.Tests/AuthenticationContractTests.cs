@@ -22,7 +22,7 @@ public sealed class AuthenticationContractTests
             "  admin@example.com  ",
             " password with spaces ");
 
-        Assert.Equal("dbo.sp_Auth_ValidateUser", command.CommandText);
+        Assert.Equal("dbo.sp_Auth_GetLoginCredential", command.CommandText);
         Assert.Equal(CommandType.StoredProcedure, command.CommandType);
 
         var email = Assert.IsType<SqlParameter>(command.Parameters["@Correo"]);
@@ -34,6 +34,19 @@ public sealed class AuthenticationContractTests
         Assert.Equal(SqlDbType.NVarChar, password.SqlDbType);
         Assert.Equal(255, password.Size);
         Assert.Equal(" password with spaces ", password.Value);
+    }
+
+    [Fact]
+    public void PasswordHash_UsesSaltAndRejectsWrongOrMalformedValues()
+    {
+        var service = new PasswordHashService();
+        var first = service.Hash("correct horse battery staple");
+        var second = service.Hash("correct horse battery staple");
+
+        Assert.NotEqual(first, second);
+        Assert.True(service.Verify("correct horse battery staple", first));
+        Assert.False(service.Verify("wrong password", first));
+        Assert.False(service.Verify("correct horse battery staple", "not-a-valid-hash"));
     }
 
     [Fact]
@@ -119,6 +132,22 @@ public sealed class AuthenticationContractTests
     }
 
     [Fact]
+    public async Task ForgotPassword_WithoutPublicHttpsUrl_DoesNotCreateTokenAndReturnsGenericResponse()
+    {
+        var database = new Mock<IAccountApiDbService>();
+        database.Setup(service => service.GetUserByEmailAsync("qa@example.com"))
+            .ReturnsAsync(new ApiUser { UsuarioId = 7, Correo = "qa@example.com", NombreCompleto = "QA" });
+        var controller = CreateController(database.Object, publicBaseUrl: null);
+
+        var result = await controller.ForgotPassword(new ForgotPasswordApiRequest { Email = "qa@example.com" });
+
+        var ok = Assert.IsType<OkObjectResult>(result);
+        var response = Assert.IsType<Proyecto_FinalAPI.Controllers.AuthResult>(ok.Value);
+        Assert.True(response.Success);
+        database.Verify(service => service.CreatePasswordResetTokenAsync(It.IsAny<int>()), Times.Never);
+    }
+
+    [Fact]
     public void LoginAttemptLimiter_BlocksAfterFiveFailuresAndCanReset()
     {
         using var cache = new MemoryCache(new MemoryCacheOptions());
@@ -134,15 +163,20 @@ public sealed class AuthenticationContractTests
         Assert.False(limiter.IsBlocked("admin@example.com", "127.0.0.1", out _));
     }
 
-    private static AuthController CreateController(IAccountApiDbService database)
+    private static AuthController CreateController(IAccountApiDbService database, string? publicBaseUrl = "https://qa.example.test")
     {
-        var configuration = new ConfigurationBuilder().AddInMemoryCollection().Build();
+        var values = new Dictionary<string, string?>();
+        if (publicBaseUrl is not null)
+            values["PasswordRecovery:PublicBaseUrl"] = publicBaseUrl;
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(values).Build();
         var cache = new MemoryCache(new MemoryCacheOptions());
         return new AuthController(
             database,
             new EmailService(configuration),
             new LoginAttemptLimiter(cache),
-            new PasswordRecoveryAttemptLimiter(cache))
+            new PasswordRecoveryAttemptLimiter(cache),
+            configuration,
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<AuthController>.Instance)
         {
             ControllerContext = new ControllerContext
             {

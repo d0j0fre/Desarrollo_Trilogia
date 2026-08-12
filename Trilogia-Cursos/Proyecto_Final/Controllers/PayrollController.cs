@@ -12,7 +12,22 @@ public sealed class PayrollController : Controller
     public PayrollController(IPayrollService payroll, ILogger<PayrollController> logger){_payroll=payroll;_logger=logger;}
 
     [HttpGet]
-    public async Task<IActionResult> Index(CancellationToken cancellationToken)=>View(new PayrollIndexViewModel{Calculos=await _payroll.ListAsync(cancellationToken)});
+    public async Task<IActionResult> Index(CancellationToken cancellationToken)
+    {
+        try
+        {
+            return View(new PayrollIndexViewModel
+            {
+                Calculos = await _payroll.ListAsync(cancellationToken)
+            });
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "No fue posible cargar los cálculos de planilla.");
+            TempData["ErrorMessage"] = "No fue posible cargar los cálculos de planilla. Inténtelo nuevamente.";
+            return View(new PayrollIndexViewModel());
+        }
+    }
 
     [HttpPost,ValidateAntiForgeryToken,AdminAuthorize("Planilla","PLANILLA_CONFIGURAR")]
     public async Task<IActionResult> ConfigureRule(PayrollRuleFormViewModel model,CancellationToken cancellationToken)=>await ExecuteAsync(model,()=>_payroll.SaveRuleAsync(model,UserId(),UserName(),cancellationToken),"Regla versionada guardada.");
@@ -32,16 +47,66 @@ public sealed class PayrollController : Controller
     [HttpPost,ValidateAntiForgeryToken,AdminAuthorize("Planilla","PLANILLA_REVERTIR")]
     public Task<IActionResult> Revert(PayrollStateChangeViewModel model,CancellationToken cancellationToken)=>ChangeStateAsync(model,"Revertida",cancellationToken);
 
-    private Task<IActionResult> ChangeStateAsync(PayrollStateChangeViewModel model,string state,CancellationToken cancellationToken)
+    private Task<IActionResult> ChangeStateAsync(
+    PayrollStateChangeViewModel model,
+    string state,
+    CancellationToken cancellationToken)
     {
-        model.Estado=state;
-        return ExecuteAsync(model,()=>_payroll.ChangeStateAsync(model,UserId(),UserName(),cancellationToken),"Estado de planilla actualizado.");
+        // El estado no debe venir controlado por el navegador.
+        // Cada acción determina el estado permitido desde el servidor.
+        model.Estado = state;
+
+        // El model binder registra un error porque el formulario no envía Estado.
+        // Se elimina únicamente ese error y se conserva el resto de validaciones.
+        ModelState.Remove(nameof(PayrollStateChangeViewModel.Estado));
+
+        return ExecuteAsync(
+            model,
+            () => _payroll.ChangeStateAsync(
+                model,
+                UserId(),
+                UserName(),
+                cancellationToken
+            ),
+            "Estado de planilla actualizado."
+        );
     }
 
     private async Task<IActionResult> ExecuteAsync(object model,Func<Task> action,string success)
     {
-        if(!ModelState.IsValid){TempData["ErrorMessage"]="La solicitud no es válida.";return RedirectToAction(nameof(Index));}
-        try{await action();TempData["SuccessMessage"]=success;}
+        if (!ModelState.IsValid)
+        {
+            var errors = ModelState
+                .Where(item => item.Value is { Errors.Count: > 0 })
+                .SelectMany(item => item.Value!.Errors.Select(error =>
+                {
+                    var message = !string.IsNullOrWhiteSpace(error.ErrorMessage)
+                        ? error.ErrorMessage
+                        : "El valor recibido tiene un formato inválido.";
+
+                    var field = string.IsNullOrWhiteSpace(item.Key)
+                        ? "Formulario"
+                        : item.Key;
+
+                    return $"{field}: {message}";
+                }))
+                .ToArray();
+
+            var detail = errors.Length > 0
+                ? string.Join(" | ", errors)
+                : "Error de validación no identificado.";
+
+            _logger.LogWarning(
+                "Solicitud de planilla inválida: {ValidationErrors}",
+                detail
+            );
+
+            TempData["ErrorMessage"] =
+                $"La solicitud no es válida: {detail}";
+
+            return RedirectToAction(nameof(Index));
+        }
+        try {await action();TempData["SuccessMessage"]=success;}
         catch(Exception exception){_logger.LogWarning(exception,"Operación de planilla rechazada.");TempData["ErrorMessage"]="No fue posible completar la operación de planilla.";}
         return RedirectToAction(nameof(Index));
     }

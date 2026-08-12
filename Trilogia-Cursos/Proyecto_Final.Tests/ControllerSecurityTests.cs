@@ -11,6 +11,7 @@ public sealed class ControllerSecurityTests
     [InlineData(typeof(ClientPortalController))]
     [InlineData(typeof(DriverDeliveriesController))]
     [InlineData(typeof(ChatController))]
+    [InlineData(typeof(AssistantController))]
     public void ProtectedControllers_HaveSessionAuthorization(Type controllerType)
     {
         Assert.NotNull(controllerType.GetCustomAttributes(typeof(SessionAuthorizeAttribute), true).SingleOrDefault());
@@ -27,6 +28,7 @@ public sealed class ControllerSecurityTests
     [Theory]
     [InlineData(typeof(ChatController), "SendMessage")]
     [InlineData(typeof(ChatController), "SendDepartmentMessage")]
+    [InlineData(typeof(AssistantController), "Ask")]
     [InlineData(typeof(DriverDeliveriesController), "RegisterEvidence")]
     [InlineData(typeof(WarrantyRequestsAdminController), "UpdateStatus")]
     public void MutatingActions_RequireAntiforgery(Type controllerType, string methodName)

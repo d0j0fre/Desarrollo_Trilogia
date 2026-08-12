@@ -17,10 +17,13 @@ public sealed record PurchasingActor(
 
 public sealed class PurchasingOperationException : Exception
 {
-    public PurchasingOperationException(string message, Exception? innerException = null)
-        : base(message, innerException)
+    public PurchasingOperationException(string userMessage, Exception? innerException = null)
+        : base("La operación de compras fue rechazada.", innerException)
     {
+        UserMessage = userMessage;
     }
+
+    public string UserMessage { get; }
 }
 
 public interface IPurchasingService

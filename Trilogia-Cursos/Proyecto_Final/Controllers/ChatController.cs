@@ -46,7 +46,23 @@ namespace Proyecto_Final.Controllers
         [AdminAuthorize("Chat", "CHAT_DEPARTAMENTOS_GESTIONAR")]
         public async Task<IActionResult> Index()
         {
-            return View(await _chat.GetDepartmentsForAdministrationAsync());
+            try
+            {
+                var departments =
+                    await _chat.GetDepartmentsForAdministrationAsync();
+
+                ViewBag.ChatUsers =
+                    await _chat.GetUsersAsync(CurrentUserId());
+
+                return View(departments);
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(exception, "No fue posible cargar la administración de departamentos de chat.");
+                TempData["ErrorMessage"] = "No fue posible cargar los departamentos en este momento. Inténtelo nuevamente.";
+                ViewBag.ChatUsers = Array.Empty<ChatUserViewModel>();
+                return View(Array.Empty<ChatDepartmentAdminViewModel>());
+            }
         }
 
         [HttpGet]

@@ -17,6 +17,17 @@
         </div>
     </div>
 
+    @if (TempData["ErrorMessage"] is string errorMessage)
+    {
+        <div class="row px-xl-5 pt-3">
+            <div class="col-12">
+                <div class="alert alert-warning mb-0" role="alert">
+                    <i class="fa fa-exclamation-triangle mr-2"></i>@errorMessage
+                </div>
+            </div>
+        </div>
+    }
+
     <div class="row px-xl-5 pb-3">
         <div class="col-lg-3 col-md-6 col-sm-12 pb-3 d-flex">
             <div class="admin-card w-100 text-center">
@@ -294,6 +305,24 @@
                     <div class="col-md-3 col-sm-6 mb-3">
                         <a asp-controller="Audit" asp-action="Index" class="btn btn-primary btn-block py-3">
                             <i class="fa fa-history mr-2"></i>Auditoría
+                        </a>
+                    </div>
+
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <a asp-controller="Payroll" asp-action="Index" class="btn btn-primary btn-block py-3">
+                            <i class="fa fa-calculator mr-2"></i>Planilla
+                        </a>
+                    </div>
+
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <a asp-controller="Chat" asp-action="Index" class="btn btn-primary btn-block py-3">
+                            <i class="fa fa-sitemap mr-2"></i>Departamentos
+                        </a>
+                    </div>
+
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <a asp-controller="Assistant" asp-action="Index" class="btn btn-primary btn-block py-3">
+                            <i class="fa fa-robot mr-2"></i>Asistente
                         </a>
                     </div>
                 </div>
