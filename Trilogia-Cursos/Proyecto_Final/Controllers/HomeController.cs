@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Diagnostics;
 using System.Diagnostics;
 using Proyecto_Final.Models;
 using Proyecto_Final.Models.Store;
@@ -169,7 +170,8 @@ namespace Proyecto_Final.Controllers
         public IActionResult Error()
         {
             var traceId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
-            _logger.LogError("Solicitud no controlada enviada al manejador global. Ruta {Path}. Solicitud {TraceId}.",
+            var exception = HttpContext.Features.Get<IExceptionHandlerFeature>()?.Error;
+            _logger.LogError(exception, "Solicitud no controlada enviada al manejador global. Ruta {Path}. Solicitud {TraceId}.",
                 HttpContext.Request.Path, traceId);
             return View(new ErrorViewModel { RequestId = traceId });
         }
