@@ -14,3 +14,5 @@ Ejecutar con una identidad autorizada y seleccionando explícitamente la base DE
 6. Usar `seed_demo_full.rollback.sql` solo para retirar el lote DEMO-2026-08; nunca como sustituto de un backup.
 
 El script rechaza cualquier base distinta y usa una transacción con `XACT_ABORT`. No se reutilizan los seeds históricos porque contienen un destino distinto y un flujo de contraseñas temporal que no cumple estas restricciones.
+
+El lote requiere un actor `QA`/`DEMO` activo y un segundo usuario `QA`/`DEMO` ya existente con perfil `Cliente`; el seed no crea clientes porque en este esquema un cliente es un usuario y la creación exige una contraseña. La dirección demo queda en el checkout/pedido y no se inserta una entidad independiente porque el esquema disponible solo guarda la dirección en el usuario. Documentos, evidencias, alertas documentales y sus notificaciones se excluyen deliberadamente: el contrato exige una versión con clave de almacenamiento y archivo físico válido. No se crean referencias `Pending`, rutas ni archivos ficticios.

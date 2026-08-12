@@ -20,6 +20,17 @@ SELECT CAST(FechaPedido AS date) AS Fecha,COUNT(*) AS Ventas,SUM(Total) AS Total
 FROM dbo.Pedidos WHERE Observaciones LIKE N'DEMO-2026-08:%'
 GROUP BY CAST(FechaPedido AS date) ORDER BY Fecha;
 
+IF OBJECT_ID(N'dbo.PlanillaCalculos',N'U') IS NOT NULL
+SELECT Estado,COUNT(*) AS CalculosQA
+FROM dbo.PlanillaCalculos
+WHERE IdempotencyKey IN
+(
+ CONVERT(uniqueidentifier,'4AB3E2D1-9AC4-4DD4-A451-000000001101'),
+ CONVERT(uniqueidentifier,'4AB3E2D1-9AC4-4DD4-A451-000000001102'),
+ CONVERT(uniqueidentifier,'4AB3E2D1-9AC4-4DD4-A451-000000001103')
+)
+GROUP BY Estado ORDER BY Estado;
+
 IF (SELECT COUNT(*) FROM dbo.Pedidos WHERE Observaciones LIKE N'DEMO-2026-08:%' AND CAST(FechaPedido AS date)=@CostaRicaToday)<4
   THROW 56012,N'Faltan las cuatro ventas QA del 12 de agosto de 2026 (Costa Rica).',1;
 IF EXISTS(SELECT 1 FROM dbo.Pedidos p WHERE p.Observaciones LIKE N'DEMO-2026-08:%' AND NOT EXISTS(SELECT 1 FROM dbo.PedidoDetalle d WHERE d.PedidoId=p.PedidoId))

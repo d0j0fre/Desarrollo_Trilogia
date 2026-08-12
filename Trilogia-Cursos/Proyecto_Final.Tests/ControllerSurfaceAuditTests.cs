@@ -69,6 +69,23 @@ public sealed class ControllerSurfaceAuditTests
         Assert.Equal(2, purchases.Split("return UnprocessableEntity(", StringSplitOptions.None).Length - 1);
     }
 
+    [Fact]
+    public void DirectedClientCheckoutAndPayrollFlowsPreserveHttpSemantics()
+    {
+        var clients = File.ReadAllText(SourcePath("Controllers", "ClientsController.cs"));
+        var credits = File.ReadAllText(SourcePath("Controllers", "CreditsController.cs"));
+        var cart = File.ReadAllText(SourcePath("Controllers", "CartController.cs"));
+        var payroll = File.ReadAllText(SourcePath("Controllers", "PayrollController.cs"));
+
+        Assert.Contains("InvalidClientForm", clients, StringComparison.Ordinal);
+        Assert.Contains("StatusCodes.Status503ServiceUnavailable", clients, StringComparison.Ordinal);
+        Assert.Contains("if (id <= 0) return NotFound();", credits, StringComparison.Ordinal);
+        Assert.Contains("InvalidCheckout", cart, StringComparison.Ordinal);
+        Assert.Contains("StatusCodes.Status422UnprocessableEntity", cart, StringComparison.Ordinal);
+        Assert.Contains("StatusCodes.Status503ServiceUnavailable", payroll, StringComparison.Ordinal);
+        Assert.Contains("return UnprocessableEntity", payroll, StringComparison.Ordinal);
+    }
+
     private static IReadOnlyList<Type> GetControllers() => typeof(HomeController).Assembly
         .GetTypes()
         .Where(type => type.IsClass && !type.IsAbstract && type.Namespace == typeof(HomeController).Namespace && type.Name.EndsWith("Controller", StringComparison.Ordinal))

@@ -52,13 +52,14 @@ BEGIN TRY
     );
     DECLARE @QaBuyerId int =
     (
-        SELECT TOP (1) UsuarioId FROM dbo.Usuarios
-        WHERE Activo = 1 AND UsuarioId <> @QaActorId
-          AND (Correo LIKE N'%qa%' OR Correo LIKE N'%demo%')
-        ORDER BY UsuarioId
+        SELECT TOP (1) u.UsuarioId FROM dbo.Usuarios u
+        INNER JOIN dbo.Perfiles p ON p.PerfilId = u.PerfilId
+        WHERE u.Activo = 1 AND u.UsuarioId <> @QaActorId AND p.Nombre = N'Cliente'
+          AND (u.Correo LIKE N'%qa%' OR u.Correo LIKE N'%demo%')
+        ORDER BY u.UsuarioId
     );
     IF @QaActorId IS NULL OR @QaBuyerId IS NULL
-        THROW 56001, N'El seed requiere dos usuarios QA/DEMO activos ya provisionados; no crea ni reutiliza usuarios reales.', 1;
+        THROW 56001, N'El seed requiere un actor QA/DEMO y un cliente QA/DEMO activo con perfil Cliente; no crea ni reutiliza usuarios reales.', 1;
 
     DECLARE @QaActorName nvarchar(150) = (SELECT NombreCompleto FROM dbo.Usuarios WHERE UsuarioId = @QaActorId);
     DECLARE @QaBuyerName nvarchar(150) = (SELECT NombreCompleto FROM dbo.Usuarios WHERE UsuarioId = @QaBuyerId);
@@ -278,6 +279,10 @@ BEGIN TRY
       SELECT N'DEMO_2026_08_BONO',N'Bono QA ficticio',N'Ingreso',N'MontoFijo',1000.00,NULL,@CostaRicaToday,NULL,@Marker+N' valor QA, no tasa legal.',@QaActorId,@QaActorName WHERE NOT EXISTS(SELECT 1 FROM dbo.PlanillaReglas WHERE Codigo=N'DEMO_2026_08_BONO' AND VigenteDesde=@CostaRicaToday);
       INSERT dbo.PlanillaPeriodos(Tipo,Desde,Hasta,FactorSalario,FuenteConfiguracion,Estado,ActorUsuarioId,ActorNombre)
       SELECT N'Quincenal',DATEFROMPARTS(2026,8,1),@CostaRicaToday,0.500000,@Marker+N' periodo QA ficticio.',N'Abierto',@QaActorId,@QaActorName WHERE NOT EXISTS(SELECT 1 FROM dbo.PlanillaPeriodos WHERE Desde=DATEFROMPARTS(2026,8,1) AND Hasta=@CostaRicaToday);
+      INSERT dbo.PlanillaPeriodos(Tipo,Desde,Hasta,FactorSalario,FuenteConfiguracion,Estado,ActorUsuarioId,ActorNombre)
+      SELECT source.Tipo,source.Desde,source.Hasta,source.Factor,@Marker+N' periodo QA ficticio.',N'Cerrado',@QaActorId,@QaActorName
+      FROM (VALUES (N'Quincenal',DATEFROMPARTS(2026,6,1),DATEFROMPARTS(2026,6,15),CONVERT(decimal(9,6),0.500000)),(N'Quincenal',DATEFROMPARTS(2026,7,1),DATEFROMPARTS(2026,7,15),CONVERT(decimal(9,6),0.500000))) source(Tipo,Desde,Hasta,Factor)
+      WHERE NOT EXISTS(SELECT 1 FROM dbo.PlanillaPeriodos p WHERE p.Desde=source.Desde AND p.Hasta=source.Hasta);
       INSERT dbo.DemoSeedRows(BatchCode,EntityName,EntityId) SELECT @BatchCode,N'PlanillaReglas',ReglaId FROM dbo.PlanillaReglas WHERE Codigo=N'DEMO_2026_08_BONO' AND VigenteDesde=@CostaRicaToday;
       INSERT dbo.DemoSeedRows(BatchCode,EntityName,EntityId) SELECT @BatchCode,N'PlanillaPeriodos',PeriodoId FROM dbo.PlanillaPeriodos WHERE Desde=DATEFROMPARTS(2026,8,1) AND Hasta=@CostaRicaToday;
       DECLARE @QaPeriodId int=(SELECT PeriodoId FROM dbo.PlanillaPeriodos WHERE Desde=DATEFROMPARTS(2026,8,1) AND Hasta=@CostaRicaToday);
@@ -290,6 +295,18 @@ BEGIN TRY
         INSERT dbo.PlanillaDetalle(CalculoId,Codigo,Nombre,Tipo,Monto) SELECT @QaCalculationId,N'DEMO_2026_08_BONO',N'Bono QA ficticio',N'Ingreso',1000.00 WHERE NOT EXISTS(SELECT 1 FROM dbo.PlanillaDetalle WHERE CalculoId=@QaCalculationId AND Codigo=N'DEMO_2026_08_BONO');
         INSERT dbo.DemoSeedRows(BatchCode,EntityName,EntityId) SELECT @BatchCode,N'PlanillaCalculos',@QaCalculationId;
         INSERT dbo.DemoSeedRows(BatchCode,EntityName,EntityId) SELECT @BatchCode,N'PlanillaDetalle',DetalleId FROM dbo.PlanillaDetalle WHERE CalculoId=@QaCalculationId;
+        DECLARE @QaApprovedPeriodId int=(SELECT PeriodoId FROM dbo.PlanillaPeriodos WHERE Desde=DATEFROMPARTS(2026,6,1) AND Hasta=DATEFROMPARTS(2026,6,15));
+        DECLARE @QaPaidPeriodId int=(SELECT PeriodoId FROM dbo.PlanillaPeriodos WHERE Desde=DATEFROMPARTS(2026,7,1) AND Hasta=DATEFROMPARTS(2026,7,15));
+        INSERT dbo.PlanillaCalculos(PeriodoId,EmpleadoId,SalarioBase,HorasOrdinarias,HorasExtra,Comisiones,TotalIngresos,TotalDeducciones,TotalBruto,TotalNeto,ReglasSnapshotJson,Fingerprint,IdempotencyKey,Estado,CalculadoPorUsuarioId,CalculadoPorNombre,AprobadoPorUsuarioId,AprobadoPorNombre,FechaAprobacionUtc)
+        SELECT @QaApprovedPeriodId,@QaEmployeeId,100000.00,80,0,0,101000.00,0,101000.00,101000.00,N'{"source":"DEMO-2026-08","legalRates":false}',HASHBYTES('SHA2_256',@Marker+N'PLANILLA-002'),CONVERT(uniqueidentifier,'4AB3E2D1-9AC4-4DD4-A451-000000001102'),N'Aprobada',@QaActorId,@QaActorName,@QaBuyerId,@QaBuyerName,DATEADD(DAY,-50,CAST(@CostaRicaToday AS datetime2))
+        WHERE NOT EXISTS(SELECT 1 FROM dbo.PlanillaCalculos WHERE IdempotencyKey=CONVERT(uniqueidentifier,'4AB3E2D1-9AC4-4DD4-A451-000000001102'));
+        INSERT dbo.PlanillaCalculos(PeriodoId,EmpleadoId,SalarioBase,HorasOrdinarias,HorasExtra,Comisiones,TotalIngresos,TotalDeducciones,TotalBruto,TotalNeto,ReglasSnapshotJson,Fingerprint,IdempotencyKey,Estado,CalculadoPorUsuarioId,CalculadoPorNombre,AprobadoPorUsuarioId,AprobadoPorNombre,PagadoPorUsuarioId,PagadoPorNombre,FechaAprobacionUtc,FechaPagoUtc)
+        SELECT @QaPaidPeriodId,@QaEmployeeId,100000.00,80,0,0,101000.00,0,101000.00,101000.00,N'{"source":"DEMO-2026-08","legalRates":false}',HASHBYTES('SHA2_256',@Marker+N'PLANILLA-003'),CONVERT(uniqueidentifier,'4AB3E2D1-9AC4-4DD4-A451-000000001103'),N'Pagada',@QaActorId,@QaActorName,@QaBuyerId,@QaBuyerName,@QaBuyerId,@QaBuyerName,DATEADD(DAY,-35,CAST(@CostaRicaToday AS datetime2)),DATEADD(DAY,-34,CAST(@CostaRicaToday AS datetime2))
+        WHERE NOT EXISTS(SELECT 1 FROM dbo.PlanillaCalculos WHERE IdempotencyKey=CONVERT(uniqueidentifier,'4AB3E2D1-9AC4-4DD4-A451-000000001103'));
+        INSERT dbo.PlanillaDetalle(CalculoId,Codigo,Nombre,Tipo,Monto)
+        SELECT c.CalculoId,N'DEMO_2026_08_BONO',N'Bono QA ficticio',N'Ingreso',1000.00 FROM dbo.PlanillaCalculos c WHERE c.IdempotencyKey IN(CONVERT(uniqueidentifier,'4AB3E2D1-9AC4-4DD4-A451-000000001102'),CONVERT(uniqueidentifier,'4AB3E2D1-9AC4-4DD4-A451-000000001103')) AND NOT EXISTS(SELECT 1 FROM dbo.PlanillaDetalle d WHERE d.CalculoId=c.CalculoId AND d.Codigo=N'DEMO_2026_08_BONO');
+        INSERT dbo.DemoSeedRows(BatchCode,EntityName,EntityId) SELECT @BatchCode,N'PlanillaCalculos',CalculoId FROM dbo.PlanillaCalculos WHERE IdempotencyKey IN(CONVERT(uniqueidentifier,'4AB3E2D1-9AC4-4DD4-A451-000000001102'),CONVERT(uniqueidentifier,'4AB3E2D1-9AC4-4DD4-A451-000000001103'));
+        INSERT dbo.DemoSeedRows(BatchCode,EntityName,EntityId) SELECT @BatchCode,N'PlanillaDetalle',DetalleId FROM dbo.PlanillaDetalle WHERE CalculoId IN(SELECT CalculoId FROM dbo.PlanillaCalculos WHERE IdempotencyKey IN(CONVERT(uniqueidentifier,'4AB3E2D1-9AC4-4DD4-A451-000000001102'),CONVERT(uniqueidentifier,'4AB3E2D1-9AC4-4DD4-A451-000000001103')));
       END;
     END;
 
