@@ -12,17 +12,20 @@ namespace Proyecto_Final.Services
     {
         private readonly string _connectionString;
         private readonly ILogger<AssistantService> _logger;
+        private readonly IRolePermissionService _permissionService;
 
         public AssistantService(
             IConfiguration configuration,
-            ILogger<AssistantService> logger)
+            ILogger<AssistantService> logger,
+            IRolePermissionService permissionService)
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection")
                 ?? throw new InvalidOperationException("No se encontró la cadena de conexión DefaultConnection.");
             _logger = logger;
+            _permissionService = permissionService;
         }
 
-        // ── Categorías y control de acceso por rol ──────────────
+        // ── Categorías y control de acceso por permisos efectivos ──
         private const string Fin = "financiero", Inv = "inventario", Ops = "operativo",
                              Log = "logistica", Cli = "clientes", Rh = "personal";
 
@@ -34,15 +37,36 @@ namespace Proyecto_Final.Services
             [Log] = "Logística", [Cli] = "Clientes", [Rh] = "Personal"
         };
 
-        private static HashSet<string> CategoriasPermitidas(string? rol)
+        private static readonly Dictionary<string, string[]> CategoryPermissions = new()
         {
-            var r = (rol ?? string.Empty).Trim().ToLowerInvariant();
-            if (r is "administrador" or "gerente") return Todas;
-            if (r.Contains("bodeg")) return new() { Inv, Ops, Log };   // bodeguero: sin finanzas ni personal
-            if (r == "vendedor") return new() { Ops, Inv, Cli };
-            if (r == "empleado") return new() { Inv, Ops };
-            if (r == "chofer") return new() { Log };
-            return new();   // otros: solo ayuda
+            [Fin] = new[] { "REPORTES_VENTAS_VER", "PRESUPUESTOS_VER", "GASTOS_VER" },
+            [Inv] = new[] { "INVENTARIO_INTELIGENCIA_VER", "INVENTARIO_VER" },
+            [Ops] = new[] { "PEDIDOS_VER", "COMPRAS_ORDENES_VER", "VENTA_MOVIL_CREAR_PEDIDO" },
+            [Log] = new[] { "ENTREGAS_TABLERO_VER", "FLOTA_KILOMETRAJE", "FLOTA_MANTENIMIENTO" },
+            [Cli] = new[] { "CLIENTES_VER", "CONSULTAS_VER" },
+            [Rh] = new[] { "EMPLEADOS_VER", "PLANILLA_VER", "RRHH_JORNADAS_APROBAR" }
+        };
+
+        public async Task<HashSet<string>> GetAllowedCategoriesAsync(string? role)
+        {
+            var normalizedRole = (role ?? string.Empty).Trim();
+            if (string.Equals(normalizedRole, "Administrador", StringComparison.OrdinalIgnoreCase))
+                return new HashSet<string>(Todas);
+
+            var allowed = new HashSet<string>();
+            foreach (var (category, permissionCodes) in CategoryPermissions)
+            {
+                foreach (var code in permissionCodes)
+                {
+                    if (await _permissionService.HasCodePermissionAsync(normalizedRole, code))
+                    {
+                        allowed.Add(category);
+                        break;
+                    }
+                }
+            }
+
+            return allowed;
         }
 
         private static readonly string[] DetalleWords = { "detalle", "mas ", "más", "amplia", "amplía", "ampliar", "profundiza", "detallado" };
@@ -117,7 +141,7 @@ namespace Proyecto_Final.Services
         public async Task<AssistantAnswerViewModel> AskAsync(string pregunta, string? rol, string? contextoIntent, int usuarioId, string usuarioNombre)
         {
             var norm = Normalizar(pregunta);
-            var permitidas = CategoriasPermitidas(rol);
+            var permitidas = await GetAllowedCategoriesAsync(rol);
             AssistantAnswerViewModel r;
 
             // 1) Ampliar una métrica ya mostrada (E3): resumen de la categoría
