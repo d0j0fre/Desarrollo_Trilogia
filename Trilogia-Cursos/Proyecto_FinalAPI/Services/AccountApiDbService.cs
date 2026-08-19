@@ -74,7 +74,11 @@ namespace Proyecto_FinalAPI.Services
 
                 if (string.IsNullOrWhiteSpace(storedHash))
                 {
-                    await SetPasswordHashAsync(connection, user.UsuarioId, _passwordHashes.Hash(password), cancellationToken);
+                    user.SecurityStamp = await SetPasswordHashAsync(
+                        connection,
+                        user.UsuarioId,
+                        _passwordHashes.Hash(password),
+                        cancellationToken);
                     _logger.LogInformation("La credencial heredada del usuario {UserId} se migró a hash.", user.UsuarioId);
                 }
 
@@ -111,7 +115,8 @@ namespace Proyecto_FinalAPI.Services
                 NombreCompleto = reader.GetString(reader.GetOrdinal("NombreCompleto")),
                 Correo = reader.GetString(reader.GetOrdinal("Correo")),
                 PerfilNombre = reader.GetString(reader.GetOrdinal("PerfilNombre")),
-                Activo = reader.GetBoolean(reader.GetOrdinal("Activo"))
+                Activo = reader.GetBoolean(reader.GetOrdinal("Activo")),
+                SecurityStamp = reader.GetGuid(reader.GetOrdinal("SecurityStamp")).ToString("D")
             };
         }
 
@@ -161,7 +166,8 @@ namespace Proyecto_FinalAPI.Services
                 NombreCompleto = reader.GetString(1),
                 Correo = reader.GetString(2),
                 PerfilNombre = reader.GetString(reader.GetOrdinal("PerfilNombre")),
-                Activo = reader.GetBoolean(reader.GetOrdinal("Activo"))
+                Activo = reader.GetBoolean(reader.GetOrdinal("Activo")),
+                SecurityStamp = reader.GetGuid(reader.GetOrdinal("SecurityStamp")).ToString("D")
             };
         }
 
@@ -242,7 +248,7 @@ namespace Proyecto_FinalAPI.Services
             }
         }
 
-        private static async Task SetPasswordHashAsync(
+        private static async Task<string> SetPasswordHashAsync(
             SqlConnection connection,
             int userId,
             string passwordHash,
@@ -254,7 +260,10 @@ namespace Proyecto_FinalAPI.Services
             };
             command.Parameters.Add(new SqlParameter("@UsuarioId", SqlDbType.Int) { Value = userId });
             command.Parameters.Add(new SqlParameter("@ContrasenaHash", SqlDbType.NVarChar, 512) { Value = passwordHash });
-            await command.ExecuteNonQueryAsync(cancellationToken);
+            var stamp = await command.ExecuteScalarAsync(cancellationToken);
+            return stamp is Guid value
+                ? value.ToString("D")
+                : throw new InvalidOperationException("La actualización de credencial no devolvió un SecurityStamp válido.");
         }
     }
 }

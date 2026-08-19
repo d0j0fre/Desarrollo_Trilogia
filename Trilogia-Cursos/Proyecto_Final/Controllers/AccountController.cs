@@ -64,6 +64,7 @@ namespace Proyecto_Final.Controllers
                 HttpContext.Session.SetString("UserEmail", response.Email ?? string.Empty);
                 HttpContext.Session.SetString("UserFullName", response.FullName ?? string.Empty);
                 HttpContext.Session.SetString("UserRole", response.Role ?? string.Empty);
+                HttpContext.Session.SetString("SecurityStamp", response.SecurityStamp ?? string.Empty);
 
                 await RegistrarAuditoriaAsync(
                     response.UserId ?? 0,

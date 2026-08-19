@@ -81,7 +81,8 @@ namespace Proyecto_FinalAPI.Controllers
                 UserId = user.UsuarioId,
                 FullName = user.NombreCompleto,
                 Email = user.Correo,
-                Role = user.PerfilNombre
+                Role = user.PerfilNombre,
+                SecurityStamp = user.SecurityStamp
             });
         }
 
@@ -288,5 +289,6 @@ namespace Proyecto_FinalAPI.Controllers
         public string? FullName { get; set; }
         public string? Email { get; set; }
         public string? Role { get; set; }
+        public string? SecurityStamp { get; set; }
     }
 }

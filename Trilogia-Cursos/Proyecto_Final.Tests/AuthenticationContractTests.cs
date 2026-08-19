@@ -58,7 +58,9 @@ public sealed class AuthenticationContractTests
         table.Columns.Add("Correo", typeof(string));
         table.Columns.Add("UsuarioId", typeof(int));
         table.Columns.Add("NombreCompleto", typeof(string));
-        table.Rows.Add("Administrador", true, "admin@example.com", 42, "Admin de prueba");
+        table.Columns.Add("SecurityStamp", typeof(Guid));
+        var securityStamp = Guid.NewGuid();
+        table.Rows.Add("Administrador", true, "admin@example.com", 42, "Admin de prueba", securityStamp);
 
         using var reader = table.CreateDataReader();
         Assert.True(reader.Read());
@@ -69,6 +71,7 @@ public sealed class AuthenticationContractTests
         Assert.Equal("admin@example.com", user.Correo);
         Assert.Equal("Administrador", user.PerfilNombre);
         Assert.True(user.Activo);
+        Assert.Equal(securityStamp.ToString("D"), user.SecurityStamp);
     }
 
     [Fact]
@@ -89,7 +92,8 @@ public sealed class AuthenticationContractTests
                 NombreCompleto = "Admin de prueba",
                 Correo = "admin@example.com",
                 PerfilNombre = "Administrador",
-                Activo = true
+                Activo = true,
+                SecurityStamp = Guid.NewGuid().ToString("D")
             });
         var controller = CreateController(database.Object);
 
@@ -103,6 +107,7 @@ public sealed class AuthenticationContractTests
         var response = Assert.IsType<Proyecto_FinalAPI.Controllers.AuthResult>(ok.Value);
         Assert.True(response.Success);
         Assert.Equal("Administrador", response.Role);
+        Assert.False(string.IsNullOrWhiteSpace(response.SecurityStamp));
         Assert.Equal(credentialInput, forwardedPassword);
     }
 

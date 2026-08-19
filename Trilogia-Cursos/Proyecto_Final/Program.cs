@@ -148,6 +148,7 @@ builder.Services.AddSession(options =>
 // Servicios propios
 builder.Services.AddScoped<AdminDbService>();
 builder.Services.AddScoped<IRolePermissionService, RolePermissionService>();
+builder.Services.AddScoped<IUserSessionValidationService, UserSessionValidationService>();
 builder.Services.AddScoped<IEmployeesService, EmployeesDbService>();
 builder.Services.AddScoped<IAttendanceService, AttendanceDbService>();
 builder.Services.AddScoped<IPayrollService, PayrollDbService>();
@@ -215,6 +216,7 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.UseSession();
+app.UseMiddleware<SessionValidationMiddleware>();
 app.UseRateLimiter();
 
 app.UseAuthorization();
