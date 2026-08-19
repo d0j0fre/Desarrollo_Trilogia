@@ -1770,6 +1770,31 @@ namespace Proyecto_Final.Services
             return pedidos;
         }
 
+        public async Task<bool> SellerOwnsOrderAsync(int pedidoId, int vendedorUsuarioId)
+        {
+            if (pedidoId <= 0 || vendedorUsuarioId <= 0)
+            {
+                return false;
+            }
+
+            const string sql = """
+                SELECT CAST(CASE WHEN EXISTS (
+                    SELECT 1
+                    FROM dbo.Pedidos
+                    WHERE PedidoId = @PedidoId
+                      AND VendedorUsuarioId = @VendedorUsuarioId
+                ) THEN 1 ELSE 0 END AS bit);
+                """;
+
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand(sql, connection);
+            command.Parameters.Add("@PedidoId", SqlDbType.Int).Value = pedidoId;
+            command.Parameters.Add("@VendedorUsuarioId", SqlDbType.Int).Value = vendedorUsuarioId;
+            await connection.OpenAsync();
+            var result = await command.ExecuteScalarAsync();
+            return result is not null and not DBNull && Convert.ToBoolean(result);
+        }
+
         public async Task<(int FacturaId, string NumeroFactura)?> GetInvoiceSummaryByOrderAsync(int pedidoId)
         {
             await using var connection = new SqlConnection(_connectionString);

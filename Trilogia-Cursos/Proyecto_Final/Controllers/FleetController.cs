@@ -12,13 +12,20 @@ namespace Proyecto_Final.Controllers
         private readonly FleetDbService _fleet;
         private readonly LogisticsDbService _logistics;
         private readonly AdminDbService _adminDbService;
+        private readonly IRolePermissionService _permissionService;
         private readonly ILogger<FleetController> _logger;
 
-        public FleetController(FleetDbService fleet, LogisticsDbService logistics, AdminDbService adminDbService, ILogger<FleetController> logger)
+        public FleetController(
+            FleetDbService fleet,
+            LogisticsDbService logistics,
+            AdminDbService adminDbService,
+            IRolePermissionService permissionService,
+            ILogger<FleetController> logger)
         {
             _fleet = fleet;
             _logistics = logistics;
             _adminDbService = adminDbService;
+            _permissionService = permissionService;
             _logger = logger;
         }
 
@@ -28,8 +35,8 @@ namespace Proyecto_Final.Controllers
         public async Task<IActionResult> Mileage()
         {
             await PopulateMileageVehiclesAsync();
-            var esChofer = string.Equals(HttpContext.Session.GetString("UserRole"), "Chofer", StringComparison.OrdinalIgnoreCase);
-            int? choferFiltro = esChofer ? HttpContext.Session.GetInt32("UserId") : null;
+            var puedeAdministrar = await CanAdministerMileageAsync();
+            int? choferFiltro = puedeAdministrar ? null : HttpContext.Session.GetInt32("UserId");
             var vm = new MileageIndexViewModel
             {
                 Jornadas = await _fleet.GetMileageAsync(null, choferFiltro)
@@ -73,9 +80,19 @@ namespace Proyecto_Final.Controllers
         [AdminAuthorize("Flota", "FLOTA_KILOMETRAJE")]
         public async Task<IActionResult> CloseMileage(int kilometrajeId, int kmFinal)
         {
+            var actorUsuarioId = HttpContext.Session.GetInt32("UserId") ?? 0;
+            if (actorUsuarioId <= 0)
+            {
+                return AuthorizationResults.AccessDenied();
+            }
+
             try
             {
-                await _fleet.CloseMileageAsync(kilometrajeId, kmFinal);
+                await _fleet.CloseMileageAsync(
+                    kilometrajeId,
+                    kmFinal,
+                    actorUsuarioId,
+                    await CanAdministerMileageAsync());
                 TempData["SuccessMessage"] = "Jornada cerrada. Kilometraje final registrado.";
             }
             catch (SqlException ex) when (ex.Number >= 50000)
@@ -217,6 +234,13 @@ namespace Proyecto_Final.Controllers
         {
             var vehiculos = await _logistics.GetVehiclesAsync(null);
             ViewBag.VehiculosKm = vehiculos.Where(v => v.Activo).ToList();
+        }
+
+        private async Task<bool> CanAdministerMileageAsync()
+        {
+            var role = HttpContext.Session.GetString("UserRole") ?? string.Empty;
+            return string.Equals(role, "Administrador", StringComparison.OrdinalIgnoreCase)
+                || await _permissionService.HasCodePermissionAsync(role, "FLOTA_KILOMETRAJE_ADMIN");
         }
 
         private async Task RegistrarAuditoriaAsync(string accion, string modulo, string descripcion)

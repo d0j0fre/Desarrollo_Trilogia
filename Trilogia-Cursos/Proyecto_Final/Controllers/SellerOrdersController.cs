@@ -209,6 +209,10 @@ namespace Proyecto_Final.Controllers
             if (!IsAuthorizedSeller())
                 return RedirectToAction("Login", "Account");
 
+            var vendedorId = HttpContext.Session.GetInt32("UserId") ?? 0;
+            if (!await _adminDbService.SellerOwnsOrderAsync(id, vendedorId))
+                return NotFound();
+
             var pedido = await _adminDbService.GetOrderDetailAsync(id);
             if (pedido == null)
                 return RedirectToAction(nameof(Index));
@@ -230,6 +234,10 @@ namespace Proyecto_Final.Controllers
         {
             if (!IsAuthorizedSeller())
                 return RedirectToAction("Login", "Account");
+
+            var vendedorId = HttpContext.Session.GetInt32("UserId") ?? 0;
+            if (!await _adminDbService.SellerOwnsOrderAsync(id, vendedorId))
+                return NotFound();
 
             var pedido = await _adminDbService.GetOrderDetailAsync(id);
             if (pedido == null)
