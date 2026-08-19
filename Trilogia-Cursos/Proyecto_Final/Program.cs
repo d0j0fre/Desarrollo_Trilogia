@@ -149,6 +149,7 @@ builder.Services.AddSession(options =>
 builder.Services.AddScoped<AdminDbService>();
 builder.Services.AddScoped<IRolePermissionService, RolePermissionService>();
 builder.Services.AddScoped<IUserSessionValidationService, UserSessionValidationService>();
+builder.Services.AddSingleton<IPasswordHashService, PasswordHashService>();
 builder.Services.AddScoped<IEmployeesService, EmployeesDbService>();
 builder.Services.AddScoped<IAttendanceService, AttendanceDbService>();
 builder.Services.AddScoped<IPayrollService, PayrollDbService>();

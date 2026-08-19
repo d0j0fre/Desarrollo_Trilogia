@@ -14,13 +14,12 @@ namespace Proyecto_Final.Tests;
 public sealed class AuthenticationContractTests
 {
     [Fact]
-    public void ValidateCommand_UsesExplicitContractAndPreservesPasswordWhitespace()
+    public void ValidateCommand_UsesHashOnlyCredentialLookupContract()
     {
         using var connection = new SqlConnection();
         using var command = AccountApiDbService.CreateValidateUserCommand(
             connection,
-            "  admin@example.com  ",
-            " password with spaces ");
+            "  admin@example.com  ");
 
         Assert.Equal("dbo.sp_Auth_GetLoginCredential", command.CommandText);
         Assert.Equal(CommandType.StoredProcedure, command.CommandType);
@@ -30,10 +29,7 @@ public sealed class AuthenticationContractTests
         Assert.Equal(150, email.Size);
         Assert.Equal("admin@example.com", email.Value);
 
-        var password = Assert.IsType<SqlParameter>(command.Parameters["@Contrasena"]);
-        Assert.Equal(SqlDbType.NVarChar, password.SqlDbType);
-        Assert.Equal(255, password.Size);
-        Assert.Equal(" password with spaces ", password.Value);
+        Assert.False(command.Parameters.Contains("@Contrasena"));
     }
 
     [Fact]

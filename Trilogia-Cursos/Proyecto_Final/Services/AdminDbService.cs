@@ -9,11 +9,13 @@ namespace Proyecto_Final.Services
     public class AdminDbService
     {
         private readonly string _connectionString;
+        private readonly IPasswordHashService _passwordHashes;
 
-        public AdminDbService(IConfiguration configuration)
+        public AdminDbService(IConfiguration configuration, IPasswordHashService passwordHashes)
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection")
                 ?? throw new InvalidOperationException("No se encontró la cadena de conexión DefaultConnection.");
+            _passwordHashes = passwordHashes;
         }
 
         public async Task<DashboardSummaryViewModel> GetDashboardSummaryAsync()
@@ -1250,7 +1252,7 @@ namespace Proyecto_Final.Services
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.Add("@NombreCompleto", SqlDbType.NVarChar, 150).Value = model.NombreCompleto.Trim();
                 command.Parameters.Add("@Correo", SqlDbType.NVarChar, 150).Value = model.Correo.Trim();
-                command.Parameters.Add("@Contrasena", SqlDbType.NVarChar, 255).Value = (model.Contrasena ?? string.Empty).Trim();
+                command.Parameters.Add("@ContrasenaHash", SqlDbType.NVarChar, 512).Value = _passwordHashes.Hash(model.Contrasena ?? string.Empty);
                 command.Parameters.Add("@Telefono", SqlDbType.NVarChar, 30).Value = string.IsNullOrWhiteSpace(model.Telefono) ? DBNull.Value : model.Telefono.Trim();
                 command.Parameters.Add("@Direccion", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.Direccion) ? DBNull.Value : model.Direccion.Trim();
                 command.Parameters.Add("@Activo", SqlDbType.Bit).Value = model.Activo;
@@ -1278,7 +1280,9 @@ namespace Proyecto_Final.Services
                 command.Parameters.Add("@Correo", SqlDbType.NVarChar, 150).Value = model.Correo.Trim();
                 command.Parameters.Add("@Telefono", SqlDbType.NVarChar, 30).Value = string.IsNullOrWhiteSpace(model.Telefono) ? DBNull.Value : model.Telefono.Trim();
                 command.Parameters.Add("@Direccion", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.Direccion) ? DBNull.Value : model.Direccion.Trim();
-                command.Parameters.Add("@Contrasena", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.Contrasena) ? DBNull.Value : model.Contrasena.Trim();
+                command.Parameters.Add("@ContrasenaHash", SqlDbType.NVarChar, 512).Value = string.IsNullOrWhiteSpace(model.Contrasena)
+                    ? DBNull.Value
+                    : _passwordHashes.Hash(model.Contrasena);
                 command.Parameters.Add("@Activo", SqlDbType.Bit).Value = model.Activo;
                 command.Parameters.Add("@MotivoInactivacion", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.MotivoInactivacion) ? DBNull.Value : model.MotivoInactivacion.Trim();
 
