@@ -7,7 +7,9 @@
     "use strict";
 
     var cfg = window.driverDeliveriesConfig || {};
-    var QUEUE_KEY = "driverDeliveryQueue";
+    var STORAGE_SCOPE = "driver-delivery-queue-v2";
+    var STORAGE_TTL_MS = 24 * 60 * 60 * 1000;
+    var offlineStorage = window.DistribuidoraJJOfflineStorage;
     var flushing = false;
 
     function uuid() {
@@ -23,12 +25,17 @@
     }
 
     function getQueue() {
-        try { return JSON.parse(localStorage.getItem(QUEUE_KEY)) || []; }
-        catch (e) { return []; }
+        var queue = offlineStorage ? offlineStorage.read(STORAGE_SCOPE) : null;
+        return Array.isArray(queue) ? queue : [];
     }
 
     function setQueue(q) {
-        localStorage.setItem(QUEUE_KEY, JSON.stringify(q));
+        if (!offlineStorage) return;
+        if (q.length === 0) {
+            offlineStorage.remove(STORAGE_SCOPE);
+            return;
+        }
+        offlineStorage.write(STORAGE_SCOPE, q, STORAGE_TTL_MS);
     }
 
     function enqueue(item) {

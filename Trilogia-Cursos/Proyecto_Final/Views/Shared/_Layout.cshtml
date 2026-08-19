@@ -41,7 +41,7 @@
     @RenderSection("Styles", required: false)
 </head>
 
-<body>
+<body data-authenticated-user-id="@(Context.Session.GetInt32("UserId")?.ToString() ?? string.Empty)">
     @{
         var userName = Context.Session.GetString("UserFullName");
         var userRole = Context.Session.GetString("UserRole");
@@ -92,7 +92,7 @@
                             </div>
                         </a>
 
-                        <form asp-controller="Account" asp-action="Logout" method="post" class="m-0">
+                        <form asp-controller="Account" asp-action="Logout" method="post" class="m-0" data-clear-private-storage="true">
                             @Html.AntiForgeryToken()
                             <button type="submit" class="btn btn-primary logout-btn" style="color: #fff !important;">
                                 <i class="fa fa-sign-out-alt mr-1"></i>Cerrar sesión
@@ -667,6 +667,7 @@
     <script src="~/js/main.js" asp-append-version="true"></script>
     <script src="~/js/sprint3-modal.js" asp-append-version="true"></script>
     <script src="~/js/sprint4-admin.js" asp-append-version="true"></script>
+    <script src="~/js/secure-offline-storage.js" asp-append-version="true"></script>
 
     <script>
         // Acordeón del menú de Administración:
