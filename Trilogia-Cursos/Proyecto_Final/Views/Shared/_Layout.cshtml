@@ -1,9 +1,7 @@
 @using Microsoft.AspNetCore.Http
 @using Proyecto_Final.Services
-@using Microsoft.Extensions.Options
 @inject AdminDbService AdminDbService
 @inject IRolePermissionService PermissionService
-@inject IOptions<CompanyOptions> Company
 @{
     var SiteBrandName = Company.Value.BrandName;
     var SiteBrandSubtitle = Company.Value.BrandSubtitle;
@@ -20,7 +18,7 @@
     <title>@documentTitle</title>
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <meta content="supermercado, mayoreo, licorera, distribuidora, licores, whisky, vinos, cervezas, ron, vodka" name="keywords">
-    <meta content="Supermercado Mayoreo - Licorera y distribuidora" name="description">
+    <meta content="@SiteBrandName - @SiteBrandSubtitle" name="description">
 
     <link href="@Url.Content("~/brand/favicon.ico")?v=sm-1" rel="icon" sizes="any">
     <link href="@Url.Content("~/brand/favicon-32x32.png")?v=sm-1" rel="icon" type="image/png" sizes="32x32">
@@ -78,6 +76,7 @@
         var canViewSellerReports = HasPermission("REPORTES_VENDEDORES_VER");
         var canViewKpis = HasPermission("REPORTE_KPI");
         var canUseFinance = HasPermission("LIQUIDACION_FINANCIERA");
+        var canUseChat = HasPermission("CHAT_USAR");
         var canManageChat = HasPermission("CHAT_DEPARTAMENTOS_GESTIONAR");
         var categoriasLayout = await AdminDbService.GetStoreCategoriesAsync();
     }
@@ -377,7 +376,7 @@
                             }
 
                                 @{
-                                    var puedeUsarChat = isAdmin || isEmployeePortalUser || canManageChat;
+                                    var puedeUsarChat = canUseChat;
                                 }
 
                             @if (puedeUsarChat)

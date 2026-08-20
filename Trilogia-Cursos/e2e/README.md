@@ -1,6 +1,6 @@
 # E2E de saneamiento Stage 1
 
-La suite Playwright valida login/`returnUrl`, contacto público, destinos por perfil, consola, logout y limpieza offline. Si se proporcionan IDs ajenos sintéticos, también prueba respuestas 404 de ownership para cliente y vendedor.
+La suite Playwright valida el login normal sin `returnUrl` para Administrador, Cliente, Vendedor y Chofer; además comprueba un `returnUrl` público seguro, contacto, destinos por perfil, consola, logout y limpieza offline. Si se proporcionan IDs ajenos sintéticos, también prueba respuestas 404 de ownership para cliente y vendedor.
 
 ```powershell
 $env:E2E_BASE_URL = 'https://<mvc-dev>'

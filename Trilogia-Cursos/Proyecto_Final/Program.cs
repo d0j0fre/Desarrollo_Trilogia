@@ -144,7 +144,7 @@ if (builder.Environment.IsProduction())
     builder.Services.AddStackExchangeRedisCache(options =>
     {
         options.Configuration = builder.Configuration.GetConnectionString("DistributedCache");
-        options.InstanceName = "SupermercadoMayoreo:";
+        options.InstanceName = "DistribuidoraJJ:";
     });
 }
 else
@@ -154,7 +154,7 @@ else
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(45);
-    options.Cookie.Name = ".SupermercadoMayoreo.Session";
+    options.Cookie.Name = ".DistribuidoraJJ.Session";
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
     options.Cookie.SameSite = SameSiteMode.Lax;
@@ -166,6 +166,8 @@ builder.Services.AddSession(options =>
 // Servicios propios
 builder.Services.AddScoped<AdminDbService>();
 builder.Services.AddScoped<IRolePermissionService, RolePermissionService>();
+builder.Services.AddScoped<IEmployeeRelationshipService, EmployeeRelationshipService>();
+builder.Services.AddScoped<IWorkspaceResolver, WorkspaceResolver>();
 builder.Services.AddScoped<IUserSessionValidationService, UserSessionValidationService>();
 builder.Services.AddSingleton<IPasswordHashService, PasswordHashService>();
 builder.Services.AddScoped<IEmployeesService, EmployeesDbService>();

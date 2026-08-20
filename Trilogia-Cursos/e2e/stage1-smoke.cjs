@@ -16,14 +16,15 @@ function assert(condition, message) {
 }
 
 async function login(page, profile) {
-  await page.goto(`${baseUrl}/Account/Login?returnUrl=${encodeURIComponent(profile.landing)}`, { waitUntil: 'domcontentloaded' });
+  await page.goto(`${baseUrl}/Account/Login`, { waitUntil: 'domcontentloaded' });
   await page.locator('#Email').fill(profile.email);
   await page.locator('#Password').fill(profile.password);
   await Promise.all([
-    page.waitForURL(url => url.pathname.startsWith(profile.landing)),
+    page.waitForURL(url => profile.landing === '/' ? url.pathname === '/' : url.pathname.startsWith(profile.landing)),
     page.locator('button[type="submit"]').click()
   ]);
-  assert(new URL(page.url()).pathname.startsWith(profile.landing), `${profile.name}: destino de login inesperado: ${page.url()}`);
+  const currentPath = new URL(page.url()).pathname;
+  assert(profile.landing === '/' ? currentPath === '/' : currentPath.startsWith(profile.landing), `${profile.name}: destino de login inesperado: ${page.url()}`);
 }
 
 (async () => {

@@ -9,24 +9,27 @@ namespace Proyecto_Final.Controllers
     {
         private readonly AccountApiService _accountApiService;
         private readonly AdminDbService _adminDbService;
+        private readonly IWorkspaceResolver _workspaceResolver;
         private readonly ILogger<AccountController> _logger;
 
         public AccountController(
             AccountApiService accountApiService,
             AdminDbService adminDbService,
+            IWorkspaceResolver workspaceResolver,
             ILogger<AccountController> logger)
         {
             _accountApiService = accountApiService;
             _adminDbService = adminDbService;
+            _workspaceResolver = workspaceResolver;
             _logger = logger;
         }
 
         [HttpGet]
-        public IActionResult Login(string? returnUrl = null)
+        public async Task<IActionResult> Login(string? returnUrl = null)
         {
             if (!string.IsNullOrWhiteSpace(HttpContext.Session.GetString("UserEmail")))
             {
-                return RedirectAfterLogin(returnUrl, HttpContext.Session.GetString("UserRole"));
+                return await RedirectAfterLoginAsync(returnUrl, HttpContext.Session.GetString("UserRole"));
             }
 
             ViewBag.ReturnUrl = SafeLocalReturnUrl(returnUrl);
@@ -79,7 +82,7 @@ namespace Proyecto_Final.Controllers
                     "El usuario inició sesión correctamente.");
 
                 TempData["LoginSuccess"] = $"Bienvenido, {response.FullName}.";
-                return RedirectAfterLogin(returnUrl, response.Role);
+                return await RedirectAfterLoginAsync(returnUrl, response.Role);
             }
             catch (Exception exception)
             {
@@ -281,22 +284,21 @@ namespace Proyecto_Final.Controllers
                 Request.Headers.UserAgent.ToString());
         }
 
-        private string? SafeLocalReturnUrl(string? returnUrl) =>
-            !string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl) ? returnUrl : null;
+        private string? SafeLocalReturnUrl(string? returnUrl) => SafeLocalReturnUrl(Url, returnUrl);
 
-        private IActionResult RedirectAfterLogin(string? returnUrl, string? role)
+        internal static string? SafeLocalReturnUrl(IUrlHelper url, string? returnUrl) =>
+            !string.IsNullOrWhiteSpace(returnUrl) && url.IsLocalUrl(returnUrl) ? returnUrl : null;
+
+        private async Task<IActionResult> RedirectAfterLoginAsync(string? returnUrl, string? role)
         {
             var localReturnUrl = SafeLocalReturnUrl(returnUrl);
             if (localReturnUrl is not null)
                 return LocalRedirect(localReturnUrl);
 
-            var destination = DefaultLandingForRole(role);
+            var destination = await _workspaceResolver.ResolveAsync(
+                HttpContext.Session.GetInt32("UserId") ?? 0,
+                role);
             return RedirectToAction(destination.Action, destination.Controller);
         }
-
-        internal static (string Action, string Controller) DefaultLandingForRole(string? role) =>
-            string.Equals(role, "Administrador", StringComparison.OrdinalIgnoreCase)
-                ? ("Index", "Admin")
-                : ("Index", "Home");
     }
 }

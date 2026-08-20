@@ -32,6 +32,9 @@ public sealed class DynamicAuthorizationTests
 
         Assert.Contains("GetPermissionCodesAsync", source, StringComparison.Ordinal);
         Assert.Contains("HasPermission(\"VENTA_MOVIL_CREAR\")", source, StringComparison.Ordinal);
+        Assert.Contains("var puedeUsarChat = canUseChat", source, StringComparison.Ordinal);
+        Assert.Contains("HasPermission(\"CHAT_USAR\")", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("isEmployeePortalUser || canManageChat", source, StringComparison.Ordinal);
         Assert.Contains("HasPermission(\"METAS_PROPIAS_VER\")", source, StringComparison.Ordinal);
         Assert.Contains("asp-action=\"Warranties\"", source, StringComparison.Ordinal);
         Assert.DoesNotContain("asp-action=\"Warranty\"", source, StringComparison.Ordinal);
