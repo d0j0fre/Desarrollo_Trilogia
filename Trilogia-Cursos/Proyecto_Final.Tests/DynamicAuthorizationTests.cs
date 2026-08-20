@@ -51,6 +51,26 @@ public sealed class DynamicAuthorizationTests
         }
     }
 
+    [Theory]
+    [InlineData(typeof(ClientsController), "ToggleStatus", "CLIENTES_INACTIVAR")]
+    [InlineData(typeof(ConsultationsController), "UpdateStatus", "CONSULTAS_ATENDER")]
+    [InlineData(typeof(InventoryController), "ToggleFeatured", "INVENTARIO_EDITAR")]
+    [InlineData(typeof(InventoryController), "ToggleStatus", "INVENTARIO_EDITAR")]
+    [InlineData(typeof(InventoryController), "RegisterMovement", "INVENTARIO_MOVIMIENTOS")]
+    [InlineData(typeof(InventoryController), "DeletePermanent", "INVENTARIO_ELIMINAR")]
+    public void SensitiveMutations_RequireExactCapability(Type controller, string actionName, string permission)
+    {
+        var actions = controller.GetMethods().Where(method => method.Name == actionName
+            && method.GetCustomAttributes(typeof(Microsoft.AspNetCore.Mvc.HttpPostAttribute), true).Any()).ToArray();
+        Assert.NotEmpty(actions);
+        Assert.All(actions, action =>
+        {
+            var attribute = Assert.IsType<AdminAuthorizeAttribute>(Assert.Single(
+                action.GetCustomAttributes(typeof(AdminAuthorizeAttribute), true)));
+            Assert.Equal(permission, attribute.Arguments![1]);
+        });
+    }
+
     private static string SourcePath(params string[] segments) =>
         Path.Combine(new[] { FindRepositoryRoot(), "Proyecto_Final" }.Concat(segments).ToArray());
 

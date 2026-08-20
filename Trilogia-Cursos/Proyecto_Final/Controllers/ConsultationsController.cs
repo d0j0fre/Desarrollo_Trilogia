@@ -5,7 +5,7 @@ using Proyecto_Final.Services;
 
 namespace Proyecto_Final.Controllers
 {
-    [AdminAuthorize("Consultas")]
+    [AdminAuthorize("Consultas", "CONSULTAS_VER")]
     public class ConsultationsController : Controller
     {
         private readonly AdminDbService _adminDbService;
@@ -46,6 +46,7 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AdminAuthorize("Consultas", "CONSULTAS_ATENDER")]
         public async Task<IActionResult> UpdateStatus(ConsultationUpdateStatusViewModel model)
         {
             if (!ModelState.IsValid)

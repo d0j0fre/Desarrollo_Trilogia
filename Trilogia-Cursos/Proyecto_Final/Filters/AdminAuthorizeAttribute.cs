@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Proyecto_Final.Services;
 
 namespace Proyecto_Final.Filters
@@ -42,6 +43,12 @@ namespace Proyecto_Final.Filters
                 return;
             }
 
+            // Una política declarada directamente en la acción reemplaza la política
+            // general del controlador. Así, por ejemplo, REPORTE_KPI no requiere además
+            // METAS_GESTIONAR. La propia instancia del filtro de acción se evalúa después.
+            if (IsOverriddenByActionPolicy(context))
+                return;
+
             var tienePermiso = string.IsNullOrWhiteSpace(_permisoCodigo)
                 ? await _permissionService.HasModulePermissionAsync(userRole, _modulo)
                 : await _permissionService.HasCodePermissionAsync(userRole ?? string.Empty, _permisoCodigo);
@@ -50,6 +57,28 @@ namespace Proyecto_Final.Filters
             {
                 context.Result = AuthorizationResults.AccessDenied();
             }
+        }
+
+        private bool IsOverriddenByActionPolicy(AuthorizationFilterContext context)
+        {
+            if (context.ActionDescriptor is not ControllerActionDescriptor descriptor)
+                return false;
+
+            var actionPolicies = descriptor.MethodInfo
+                .GetCustomAttributes(typeof(AdminAuthorizeAttribute), inherit: true)
+                .Cast<AdminAuthorizeAttribute>()
+                .ToArray();
+            if (actionPolicies.Length == 0)
+                return false;
+
+            return actionPolicies.All(policy =>
+            {
+                var arguments = policy.Arguments ?? [];
+                var module = arguments.Length > 0 ? arguments[0]?.ToString() : string.Empty;
+                var permission = arguments.Length > 1 ? arguments[1]?.ToString() : string.Empty;
+                return !string.Equals(module, _modulo, StringComparison.OrdinalIgnoreCase)
+                    || !string.Equals(permission, _permisoCodigo ?? string.Empty, StringComparison.OrdinalIgnoreCase);
+            });
         }
     }
 }
