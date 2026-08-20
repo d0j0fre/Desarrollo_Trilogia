@@ -311,7 +311,7 @@ Evidencia local ejecutada sobre `codex/saneamiento-etapa1`:
 - Baseline oficial inmutable confirmado en `database/DistribuidoraJJ_DB.sql`, SHA-256 `11625D764BFECD4BB86C932A5A6FA3ECCFC00CD4E62AEBF9B603D899828922B7`; secuencia incremental ordenada de 29 migraciones.
 - Build Release y suite completa: 272 pruebas aprobadas, 0 fallidas y 0 omitidas.
 - ScriptDom recursivo sobre `database/`: 99 archivos y 629 lotes, 0 errores.
-- Escaneo de secretos: 821 archivos rastreados, 790 archivos de texto y 12 placeholders/vacíos aprobados; 0 hallazgos.
+- Escaneo de secretos: 834 archivos rastreados, 803 archivos de texto y 12 placeholders/vacíos aprobados; 0 hallazgos.
 - El catálogo de autorización queda cubierto por migraciones oficiales; 0029 incorpora 12 capacidades que antes existían únicamente en scripts históricos.
 - Se agregó una suite Playwright reproducible para login seguro, destinos por rol, contacto, ownership negativo, consola, logout y limpieza offline.
 
