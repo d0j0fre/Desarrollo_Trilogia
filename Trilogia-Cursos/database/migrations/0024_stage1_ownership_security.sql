@@ -49,35 +49,48 @@ BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
 
-    DECLARE @KmInicial INT, @KmFinalActual INT, @VehiculoId INT, @ChoferUsuarioId INT;
-    SELECT @KmInicial = KmInicial,
-           @KmFinalActual = KmFinal,
-           @VehiculoId = VehiculoId,
-           @ChoferUsuarioId = ChoferUsuarioId
-    FROM dbo.VehiculoKilometraje WITH (UPDLOCK, HOLDLOCK)
-    WHERE KilometrajeId = @KilometrajeId;
-
-    IF @KmInicial IS NULL THROW 53043, N'No se encontró la jornada indicada.', 1;
     IF @ActorUsuarioId <= 0 THROW 53047, N'Actor inválido.', 1;
-    IF ISNULL(@PuedeAdministrar, 0) = 0 AND ISNULL(@ChoferUsuarioId, 0) <> @ActorUsuarioId
-        THROW 53048, N'La jornada no pertenece al usuario autenticado.', 1;
-    IF @KmFinalActual IS NOT NULL THROW 53044, N'La jornada ya fue cerrada.', 1;
-    IF @KmFinal < @KmInicial THROW 53045, N'El kilometraje final no puede ser menor al inicial.', 1;
 
-    BEGIN TRANSACTION;
+    BEGIN TRY
+        BEGIN TRANSACTION;
 
-    UPDATE dbo.VehiculoKilometraje
-    SET KmFinal = @KmFinal, FechaCierre = SYSDATETIME()
-    WHERE KilometrajeId = @KilometrajeId
-      AND (@PuedeAdministrar = 1 OR ChoferUsuarioId = @ActorUsuarioId);
+        DECLARE @KmInicial INT, @KmFinalActual INT, @VehiculoId INT, @ChoferUsuarioId INT;
+        SELECT @KmInicial = KmInicial,
+               @KmFinalActual = KmFinal,
+               @VehiculoId = VehiculoId,
+               @ChoferUsuarioId = ChoferUsuarioId
+        FROM dbo.VehiculoKilometraje WITH (UPDLOCK, HOLDLOCK)
+        WHERE KilometrajeId = @KilometrajeId;
 
-    IF @@ROWCOUNT <> 1 THROW 53048, N'La jornada no pertenece al usuario autenticado.', 1;
+        IF @KmInicial IS NULL THROW 53043, N'No se encontró la jornada indicada.', 1;
+        IF ISNULL(@PuedeAdministrar, 0) = 0 AND ISNULL(@ChoferUsuarioId, 0) <> @ActorUsuarioId
+            THROW 53048, N'La jornada no pertenece al usuario autenticado.', 1;
+        IF @KmFinalActual IS NOT NULL THROW 53044, N'La jornada ya fue cerrada.', 1;
+        IF @KmFinal < @KmInicial THROW 53045, N'El kilometraje final no puede ser menor al inicial.', 1;
 
-    UPDATE dbo.Vehiculos
-    SET KilometrajeActual = @KmFinal
-    WHERE VehiculoId = @VehiculoId AND KilometrajeActual < @KmFinal;
+        UPDATE dbo.VehiculoKilometraje
+        SET KmFinal = @KmFinal, FechaCierre = SYSDATETIME()
+        WHERE KilometrajeId = @KilometrajeId
+          AND KmFinal IS NULL
+          AND (ISNULL(@PuedeAdministrar, 0) = 1 OR ChoferUsuarioId = @ActorUsuarioId);
 
-    COMMIT TRANSACTION;
+        IF @@ROWCOUNT <> 1
+        BEGIN
+            IF EXISTS (SELECT 1 FROM dbo.VehiculoKilometraje WHERE KilometrajeId = @KilometrajeId AND KmFinal IS NOT NULL)
+                THROW 53044, N'La jornada ya fue cerrada.', 1;
+            THROW 53048, N'La jornada no pertenece al usuario autenticado.', 1;
+        END;
+
+        UPDATE dbo.Vehiculos
+        SET KilometrajeActual = @KmFinal
+        WHERE VehiculoId = @VehiculoId AND KilometrajeActual < @KmFinal;
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH;
 END;
 GO
 
