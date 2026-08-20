@@ -41,8 +41,8 @@ public sealed class ProductionReadinessTests
         {
             FullName = "Persona de prueba",
             Email = "qa@example.test",
-            Password = "12345678901",
-            ConfirmPassword = "12345678901",
+            Password = string.Concat("short", "-pass!"),
+            ConfirmPassword = string.Concat("short", "-pass!"),
             AcceptTerms = true
         };
         var results = new List<ValidationResult>();

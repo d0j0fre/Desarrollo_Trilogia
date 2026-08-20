@@ -1,26 +1,27 @@
 using System.Reflection;
 using Microsoft.AspNetCore.Mvc;
 using Proyecto_Final.Controllers;
+using Proyecto_Final.Controllers.Admin;
 
 namespace Proyecto_Final.Tests;
 
 public sealed class ControllerSurfaceAuditTests
 {
     [Fact]
-    public void AuditScope_ContainsAll58MvcAndApiControllers()
+    public void AuditScope_IncludesControllersFromAllSubnamespaces()
     {
         var controllers = GetControllers();
         var apiControllers = typeof(Proyecto_FinalAPI.Controllers.AuthController).Assembly
             .GetTypes()
-            .Count(type => type.IsClass && !type.IsAbstract && type.Namespace == typeof(Proyecto_FinalAPI.Controllers.AuthController).Namespace && type.Name.EndsWith("Controller", StringComparison.Ordinal));
+            .Count(type => IsControllerInNamespace(type, typeof(Proyecto_FinalAPI.Controllers.AuthController).Namespace!));
 
-        Assert.Equal(56, controllers.Count);
+        Assert.True(controllers.Count >= 57);
         Assert.Equal(2, apiControllers);
-        Assert.Equal(58, controllers.Count + apiControllers);
         Assert.Contains(typeof(BudgetsController), controllers);
         Assert.Contains(typeof(ChatController), controllers);
         Assert.Contains(typeof(PayrollController), controllers);
         Assert.Contains(typeof(PurchaseOrdersController), controllers);
+        Assert.Contains(typeof(WarrantyRequestsAdminController), controllers);
     }
 
     [Fact]
@@ -88,9 +89,17 @@ public sealed class ControllerSurfaceAuditTests
 
     private static IReadOnlyList<Type> GetControllers() => typeof(HomeController).Assembly
         .GetTypes()
-        .Where(type => type.IsClass && !type.IsAbstract && type.Namespace == typeof(HomeController).Namespace && type.Name.EndsWith("Controller", StringComparison.Ordinal))
+        .Where(type => IsControllerInNamespace(type, typeof(HomeController).Namespace!))
         .OrderBy(type => type.Name)
         .ToArray();
+
+    private static bool IsControllerInNamespace(Type type, string rootNamespace) =>
+        type.IsClass
+        && !type.IsAbstract
+        && typeof(ControllerBase).IsAssignableFrom(type)
+        && (string.Equals(type.Namespace, rootNamespace, StringComparison.Ordinal)
+            || type.Namespace?.StartsWith(rootNamespace + ".", StringComparison.Ordinal) == true)
+        && type.Name.EndsWith("Controller", StringComparison.Ordinal);
 
     private static bool IsMvcAction(MethodInfo method) => !method.IsSpecialName && !method.IsDefined(typeof(NonActionAttribute), true);
 

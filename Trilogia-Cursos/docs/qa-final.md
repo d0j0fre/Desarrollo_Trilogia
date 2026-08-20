@@ -303,3 +303,22 @@ Pendiente hasta completar publicación:
 - [x] Respaldo lógico `DistribuidoraJJ_DB_DEV_pre0022_20260812` confirmado `Online`; 0022 aplicada con SHA-256 `32D6ADE170430000214E8C8FF4FA43ED1ADB943C14D7F0F26AD09E193652D96A` y verificador aprobado (59 usuarios legados pendientes de actualización gradual, sin inventar credenciales).
 - [ ] Desplegar el commit integrado y ejecutar smoke público final.
 - [ ] Ejecutar QA autenticado por rol; no había sesión ni credenciales QA autorizadas disponibles durante la revisión local.
+
+## Saneamiento integral Stage 1 — 19 de agosto de 2026
+
+Evidencia local ejecutada sobre `codex/saneamiento-etapa1`:
+
+- Baseline oficial inmutable confirmado en `database/DistribuidoraJJ_DB.sql`, SHA-256 `11625D764BFECD4BB86C932A5A6FA3ECCFC00CD4E62AEBF9B603D899828922B7`; secuencia incremental ordenada de 29 migraciones.
+- Build Release y suite completa: 272 pruebas aprobadas, 0 fallidas y 0 omitidas.
+- ScriptDom recursivo sobre `database/`: 99 archivos y 629 lotes, 0 errores.
+- Escaneo de secretos: 821 archivos rastreados, 790 archivos de texto y 12 placeholders/vacíos aprobados; 0 hallazgos.
+- El catálogo de autorización queda cubierto por migraciones oficiales; 0029 incorpora 12 capacidades que antes existían únicamente en scripts históricos.
+- Se agregó una suite Playwright reproducible para login seguro, destinos por rol, contacto, ownership negativo, consola, logout y limpieza offline.
+
+Limitaciones y validaciones pendientes de entorno:
+
+- [ ] Ejecutar el baseline en una base SQL Server limpia, aplicar 0001–0029 en orden, correr cada `verify.sql` y finalizar con `DBCC CHECKDB`. La comprobación local actual valida integridad SHA, secuencia y sintaxis; no equivale a una instalación real.
+- [ ] Antes de aplicar 0026, confirmar que todos los usuarios activos tienen hash válido; aplicar 0024–0029 solo después de backup y autorización del responsable del entorno.
+- [ ] Ejecutar Playwright autenticado en DEV con secretos temporales autorizados para Administrador, Cliente, Vendedor y Chofer. La ejecución local pública no se marca aprobada porque las páginas dependen de configuración/datos externos ausentes.
+- [ ] Validar Redis, CSP y cabeceras en el despliegue productivo; confirmar también SMTP y rate limiting distribuido entre instancias.
+- [ ] Repetir pruebas de ownership con IDs sintéticos ajenos y comprobar 403/404 sin filtración, además de antiforgery y errores sin detalle interno.
