@@ -5,7 +5,7 @@ using Proyecto_Final.Services;
 namespace Proyecto_Final.Controllers
 {
     // CU-212 — Panel de progreso en tiempo real del vendedor sobre su propia meta.
-    [SessionAuthorize("Vendedor")]
+    [AdminAuthorize("Metas y KPIs", "METAS_PROPIAS_VER")]
     public class MyGoalController : Controller
     {
         private readonly KpiDbService _kpis;

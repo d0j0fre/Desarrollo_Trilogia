@@ -5,16 +5,18 @@ namespace Proyecto_Final.Services
         Task<bool> CanAccessConversationAsync(int userId, int conversationId);
         Task<bool> CanAccessDepartmentAsync(int userId, string? role, int departmentId);
         Task<bool> CanPostToDepartmentAsync(int userId, string? role, int departmentId);
-        bool CanManageAllDepartments(string? role);
+        Task<bool> CanManageAllDepartmentsAsync(string? role);
     }
 
     public sealed class ChatAuthorizationService : IChatAuthorizationService
     {
         private readonly IChatDbService _chatDbService;
+        private readonly IRolePermissionService _permissionService;
 
-        public ChatAuthorizationService(IChatDbService chatDbService)
+        public ChatAuthorizationService(IChatDbService chatDbService, IRolePermissionService permissionService)
         {
             _chatDbService = chatDbService;
+            _permissionService = permissionService;
         }
 
         public Task<bool> CanAccessConversationAsync(int userId, int conversationId)
@@ -27,33 +29,34 @@ namespace Proyecto_Final.Services
             return _chatDbService.IsConversationMemberAsync(conversationId, userId);
         }
 
-        public Task<bool> CanAccessDepartmentAsync(int userId, string? role, int departmentId)
+        public async Task<bool> CanAccessDepartmentAsync(int userId, string? role, int departmentId)
         {
             if (userId <= 0 || departmentId <= 0)
             {
-                return Task.FromResult(false);
+                return false;
             }
 
-            return _chatDbService.IsDepartmentMemberAsync(
+            return await _chatDbService.IsDepartmentMemberAsync(
                 departmentId,
                 userId,
-                CanManageAllDepartments(role));
+                await CanManageAllDepartmentsAsync(role));
         }
 
-        public Task<bool> CanPostToDepartmentAsync(int userId, string? role, int departmentId)
+        public async Task<bool> CanPostToDepartmentAsync(int userId, string? role, int departmentId)
         {
             if (userId <= 0 || departmentId <= 0)
             {
-                return Task.FromResult(false);
+                return false;
             }
 
-            return _chatDbService.CanPostToDepartmentAsync(
+            return await _chatDbService.CanPostToDepartmentAsync(
                 departmentId,
                 userId,
-                CanManageAllDepartments(role));
+                await CanManageAllDepartmentsAsync(role));
         }
 
-        public bool CanManageAllDepartments(string? role) =>
-            string.Equals(role, "Administrador", StringComparison.OrdinalIgnoreCase);
+        public async Task<bool> CanManageAllDepartmentsAsync(string? role) =>
+            string.Equals(role, "Administrador", StringComparison.OrdinalIgnoreCase)
+            || await _permissionService.HasCodePermissionAsync(role ?? string.Empty, "CHAT_DEPARTAMENTOS_GESTIONAR");
     }
 }

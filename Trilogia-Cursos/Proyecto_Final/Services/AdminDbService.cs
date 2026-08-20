@@ -1939,6 +1939,60 @@ namespace Proyecto_Final.Services
             return result != null && result != DBNull.Value && Convert.ToBoolean(result);
         }
 
+        public async Task<HashSet<string>> GetPermissionCodesByRoleAsync(string? roleName)
+        {
+            var permissions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            if (string.IsNullOrWhiteSpace(roleName))
+                return permissions;
+
+            const string sql = """
+                SELECT permission.Codigo
+                FROM dbo.Perfiles profile
+                INNER JOIN dbo.PerfilPermisos assignment ON assignment.PerfilId = profile.PerfilId
+                INNER JOIN dbo.Permisos permission ON permission.PermisoId = assignment.PermisoId
+                WHERE profile.Nombre = @NombreRol
+                  AND profile.Activo = 1
+                  AND permission.Activo = 1;
+                """;
+
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand(sql, connection);
+            command.Parameters.Add("@NombreRol", SqlDbType.NVarChar, 100).Value = roleName.Trim();
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                if (!reader.IsDBNull(0))
+                    permissions.Add(reader.GetString(0));
+            }
+
+            return permissions;
+        }
+
+        public async Task<bool> IsEmployeeUserAsync(int userId)
+        {
+            if (userId <= 0)
+                return false;
+
+            const string sql = """
+                SELECT CAST(CASE WHEN EXISTS (
+                    SELECT 1
+                    FROM dbo.Empleados employee
+                    INNER JOIN dbo.Usuarios userAccount ON userAccount.UsuarioId = employee.UsuarioId
+                    WHERE employee.UsuarioId = @UsuarioId
+                      AND employee.Activo = 1
+                      AND userAccount.Activo = 1
+                ) THEN 1 ELSE 0 END AS bit);
+                """;
+
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand(sql, connection);
+            command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = userId;
+            await connection.OpenAsync();
+            var value = await command.ExecuteScalarAsync();
+            return value is not null and not DBNull && Convert.ToBoolean(value);
+        }
+
         private static List<string> ObtenerAliasModulo(string modulo)
         {
             var clave = NormalizarModulo(modulo);

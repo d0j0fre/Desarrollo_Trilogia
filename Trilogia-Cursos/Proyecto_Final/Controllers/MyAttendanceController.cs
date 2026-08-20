@@ -5,7 +5,8 @@ using Proyecto_Final.Services;
 
 namespace Proyecto_Final.Controllers;
 
-[SessionAuthorize("Empleado", "Vendedor")]
+[SessionAuthorize]
+[EmployeeRelationshipAuthorize]
 public sealed class MyAttendanceController : Controller
 {
     private readonly IAttendanceService _attendance;

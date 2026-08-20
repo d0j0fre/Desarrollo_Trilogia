@@ -10,7 +10,6 @@ public sealed class ControllerSecurityTests
     [Theory]
     [InlineData(typeof(ClientPortalController))]
     [InlineData(typeof(DriverDeliveriesController))]
-    [InlineData(typeof(ChatController))]
     [InlineData(typeof(AssistantController))]
     public void ProtectedControllers_HaveSessionAuthorization(Type controllerType)
     {

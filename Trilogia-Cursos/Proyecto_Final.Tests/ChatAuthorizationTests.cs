@@ -10,7 +10,7 @@ public sealed class ChatAuthorizationTests
     {
         var repository = new Mock<IChatDbService>();
         repository.Setup(service => service.IsConversationMemberAsync(12, 44)).ReturnsAsync(false);
-        var authorization = new ChatAuthorizationService(repository.Object);
+        var authorization = new ChatAuthorizationService(repository.Object, Mock.Of<IRolePermissionService>());
 
         Assert.False(await authorization.CanAccessConversationAsync(44, 12));
     }
@@ -20,7 +20,7 @@ public sealed class ChatAuthorizationTests
     {
         var repository = new Mock<IChatDbService>();
         repository.Setup(service => service.IsConversationMemberAsync(12, 44)).ReturnsAsync(true);
-        var authorization = new ChatAuthorizationService(repository.Object);
+        var authorization = new ChatAuthorizationService(repository.Object, Mock.Of<IRolePermissionService>());
 
         Assert.True(await authorization.CanAccessConversationAsync(44, 12));
     }
@@ -30,20 +30,22 @@ public sealed class ChatAuthorizationTests
     {
         var repository = new Mock<IChatDbService>();
         repository.Setup(service => service.IsDepartmentMemberAsync(3, 8, false)).ReturnsAsync(true);
-        var authorization = new ChatAuthorizationService(repository.Object);
+        var authorization = new ChatAuthorizationService(repository.Object, Mock.Of<IRolePermissionService>());
 
         Assert.True(await authorization.CanAccessDepartmentAsync(8, "Empleado", 3));
         repository.Verify(service => service.IsDepartmentMemberAsync(3, 8, false), Times.Once);
     }
 
     [Fact]
-    public async Task DepartmentPost_PassesAdministrativeScopeOnlyForAdministrator()
+    public async Task DepartmentPost_PassesAdministrativeScopeForConfiguredPermission()
     {
         var repository = new Mock<IChatDbService>();
         repository.Setup(service => service.CanPostToDepartmentAsync(5, 1, true)).ReturnsAsync(true);
-        var authorization = new ChatAuthorizationService(repository.Object);
+        var permissions = new Mock<IRolePermissionService>();
+        permissions.Setup(service => service.HasCodePermissionAsync("Delegado", "CHAT_DEPARTAMENTOS_GESTIONAR")).ReturnsAsync(true);
+        var authorization = new ChatAuthorizationService(repository.Object, permissions.Object);
 
-        Assert.True(await authorization.CanPostToDepartmentAsync(1, "Administrador", 5));
+        Assert.True(await authorization.CanPostToDepartmentAsync(1, "Delegado", 5));
         repository.Verify(service => service.CanPostToDepartmentAsync(5, 1, true), Times.Once);
     }
 
