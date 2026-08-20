@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Data.SqlClient;
 using Proyecto_Final.Filters;
 using Proyecto_Final.Services;
+using Microsoft.Extensions.Options;
 
 namespace Proyecto_Final.Controllers
 {
@@ -14,19 +15,22 @@ namespace Proyecto_Final.Controllers
         private readonly EmailService _emailService;
         private readonly IEvidenceStorageService _evidenceStorage;
         private readonly ILogger<DriverDeliveriesController> _logger;
+        private readonly CompanyOptions _company;
 
         public DriverDeliveriesController(
             LogisticsDbService logistics,
             AdminDbService adminDbService,
             EmailService emailService,
             IEvidenceStorageService evidenceStorage,
-            ILogger<DriverDeliveriesController> logger)
+            ILogger<DriverDeliveriesController> logger,
+            IOptions<CompanyOptions> company)
         {
             _logistics = logistics;
             _adminDbService = adminDbService;
             _emailService = emailService;
             _evidenceStorage = evidenceStorage;
             _logger = logger;
+            _company = company.Value;
         }
 
         [HttpGet]
@@ -226,7 +230,7 @@ namespace Proyecto_Final.Controllers
                 var body =
                     $"<p>Hola {System.Net.WebUtility.HtmlEncode(name)},</p>" +
                     $"<p>Su pedido <strong>#{orderId}</strong> ahora está <strong>{System.Net.WebUtility.HtmlEncode(status)}</strong>.</p>" +
-                    "<p>Gracias por su preferencia.<br/>Supermercado Mayoreo</p>";
+                    $"<p>Gracias por su preferencia.<br/>{System.Net.WebUtility.HtmlEncode(_company.BrandName)}</p>";
                 _emailService.SendEmail(email, subject, body);
             }
             catch (Exception exception)

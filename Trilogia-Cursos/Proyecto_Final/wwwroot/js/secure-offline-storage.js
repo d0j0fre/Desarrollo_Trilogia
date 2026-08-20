@@ -89,7 +89,7 @@
         }
     }
 
-    window.SupermercadoMayoreoOfflineStorage = {
+    window.DistribuidoraJJOfflineStorage = {
         read: read,
         write: write,
         remove: remove,

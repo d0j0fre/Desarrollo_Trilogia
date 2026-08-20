@@ -224,7 +224,7 @@
             var routeId = @Model.RutaId;
             var storageScope = 'driver-route-v2:' + routeId;
             var storageTtlMs = 12 * 60 * 60 * 1000;
-            var offlineStorage = window.SupermercadoMayoreoOfflineStorage;
+            var offlineStorage = window.DistribuidoraJJOfflineStorage;
             // Puntos con coordenadas, en el orden de visita
             var liveStops = [
                 @foreach (var d in Model.Entregas.Where(x => x.Latitud.HasValue && x.Longitud.HasValue))

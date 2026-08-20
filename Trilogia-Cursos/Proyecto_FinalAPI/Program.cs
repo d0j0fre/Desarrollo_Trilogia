@@ -11,6 +11,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddMemoryCache();
+builder.Services.Configure<CompanyOptions>(builder.Configuration.GetSection("Company"));
 builder.Services.AddScoped<IAccountApiDbService, AccountApiDbService>();
 builder.Services.AddSingleton<IPasswordHashService, PasswordHashService>();
 builder.Services.AddScoped<ProductsApiDbService>();

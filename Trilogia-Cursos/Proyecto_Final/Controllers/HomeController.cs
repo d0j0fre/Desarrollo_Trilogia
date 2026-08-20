@@ -5,6 +5,7 @@ using System.Diagnostics;
 using Proyecto_Final.Models;
 using Proyecto_Final.Models.Store;
 using Proyecto_Final.Services;
+using Microsoft.Extensions.Options;
 
 namespace Proyecto_Final.Controllers
 {
@@ -16,6 +17,7 @@ namespace Proyecto_Final.Controllers
         private readonly IComboDbService _combos;
         private readonly ILogger<HomeController> _logger;
         private readonly string? _contactNotificationRecipient;
+        private readonly CompanyOptions _company;
 
         public HomeController(
             AdminDbService adminDbService,
@@ -23,7 +25,8 @@ namespace Proyecto_Final.Controllers
             EmailService emailService,
             IComboDbService combos,
             ILogger<HomeController> logger,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IOptions<CompanyOptions> company)
         {
             _adminDbService = adminDbService;
             _storeDbService = storeDbService;
@@ -31,6 +34,7 @@ namespace Proyecto_Final.Controllers
             _combos = combos;
             _logger = logger;
             _contactNotificationRecipient = configuration["Contact:NotificationRecipient"]?.Trim();
+            _company = company.Value;
         }
 
         [HttpGet]
@@ -140,7 +144,8 @@ namespace Proyecto_Final.Controllers
                     model.Nombre,
                     model.Correo,
                     model.Asunto,
-                    model.Mensaje);
+                    model.Mensaje,
+                    _company);
 
                 if (!string.IsNullOrWhiteSpace(_contactNotificationRecipient))
                 {

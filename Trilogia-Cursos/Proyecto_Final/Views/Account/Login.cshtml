@@ -17,11 +17,11 @@
                     <img src="~/brand/logo-icon.png"
                          asp-append-version="true"
                          class="s4-auth-brand-logo"
-                         alt="Supermercado Mayoreo" />
+                         alt="@Company.Value.BrandName" />
                 </div>
                 <div class="s4-auth-brand-copy">
-                    <span class="s4-auth-brand-name">Supermercado Mayoreo</span>
-                    <small class="s4-auth-brand-subtitle">Licorera - Distribuidora</small>
+                    <span class="s4-auth-brand-name">@Company.Value.BrandName</span>
+                    <small class="s4-auth-brand-subtitle">@Company.Value.BrandSubtitle</small>
                     <h1>Iniciar sesión</h1>
                     <p>Accede a pedidos, comprobantes y perfil desde tu cuenta.</p>
                 </div>

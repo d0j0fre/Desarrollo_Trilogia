@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Proyecto_FinalAPI.Models;
 using Proyecto_FinalAPI.Services;
+using Microsoft.Extensions.Options;
 
 namespace Proyecto_FinalAPI.Controllers
 {
@@ -15,6 +16,7 @@ namespace Proyecto_FinalAPI.Controllers
         private readonly PasswordRecoveryAttemptLimiter _passwordRecoveryAttemptLimiter;
         private readonly IConfiguration _configuration;
         private readonly ILogger<AuthController> _logger;
+        private readonly CompanyOptions _company;
 
         public AuthController(
             IAccountApiDbService accountApiDbService,
@@ -22,7 +24,8 @@ namespace Proyecto_FinalAPI.Controllers
             LoginAttemptLimiter loginAttemptLimiter,
             PasswordRecoveryAttemptLimiter passwordRecoveryAttemptLimiter,
             IConfiguration configuration,
-            ILogger<AuthController> logger)
+            ILogger<AuthController> logger,
+            IOptions<CompanyOptions> company)
         {
             _accountApiDbService = accountApiDbService;
             _emailService = emailService;
@@ -30,6 +33,7 @@ namespace Proyecto_FinalAPI.Controllers
             _passwordRecoveryAttemptLimiter = passwordRecoveryAttemptLimiter;
             _configuration = configuration;
             _logger = logger;
+            _company = company.Value;
         }
 
         [HttpPost("login")]
@@ -182,10 +186,11 @@ namespace Proyecto_FinalAPI.Controllers
             {
                 var resetUrl = $"{configuredBaseUrl}/Account/ResetPassword?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(user.Correo)}";
 
-                var asunto = "Recuperación de contraseña - Supermercado Mayoreo";
+                var asunto = $"Recuperación de contraseña - {_company.BrandName}";
                 var contenido = EmailTemplateBuilder.BuildPasswordResetEmail(
                     user.NombreCompleto,
-                    resetUrl);
+                    resetUrl,
+                    _company);
 
                 _emailService.SendEmail(user.Correo, asunto, contenido);
             }

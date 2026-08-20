@@ -78,7 +78,7 @@ public sealed class ProductionReadinessTests
     {
         var values = new Dictionary<string, string?>
         {
-            ["Company:BrandName"] = "Supermercado Mayoreo",
+            ["Company:BrandName"] = "Distribuidora JJ",
             ["Company:BrandSubtitle"] = "Licorera - Distribuidora",
             ["ApiSettings:BaseUrl"] = "https://localhost:5001",
             ["ConnectionStrings:DefaultConnection"] = "Server=example.invalid;Database=test",

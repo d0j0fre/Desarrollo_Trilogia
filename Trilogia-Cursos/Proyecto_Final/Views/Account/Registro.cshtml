@@ -18,11 +18,11 @@
                     <img src="~/brand/logo-icon.png"
                          asp-append-version="true"
                          class="s4-auth-brand-logo"
-                         alt="Supermercado Mayoreo" />
+                         alt="@Company.Value.BrandName" />
                 </div>
                 <div class="s4-auth-brand-copy">
-                    <span class="s4-auth-brand-name">Supermercado Mayoreo</span>
-                    <small class="s4-auth-brand-subtitle">Licorera - Distribuidora</small>
+                    <span class="s4-auth-brand-name">@Company.Value.BrandName</span>
+                    <small class="s4-auth-brand-subtitle">@Company.Value.BrandSubtitle</small>
                     <h1>Crea tu cuenta</h1>
                     <p>Compra más rápido y consulta tus pedidos desde el portal del cliente.</p>
                 </div>
@@ -31,7 +31,7 @@
             <section class="s4-auth-card s4-auth-card--register s4-auth-card--clean">
                 <div class="s4-auth-card-title">
                     <span>Nueva cuenta</span>
-                    <h2>Registrate en Supermercado Mayoreo</h2>
+                    <h2>Registrate en @Company.Value.BrandName</h2>
                     <p>Completa tus datos para empezar.</p>
                 </div>
 

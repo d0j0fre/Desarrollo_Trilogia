@@ -177,7 +177,12 @@ public sealed class AuthenticationContractTests
             new LoginAttemptLimiter(cache),
             new PasswordRecoveryAttemptLimiter(cache),
             configuration,
-            Microsoft.Extensions.Logging.Abstractions.NullLogger<AuthController>.Instance)
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<AuthController>.Instance,
+            Microsoft.Extensions.Options.Options.Create(new CompanyOptions
+            {
+                BrandName = "Distribuidora JJ",
+                BrandSubtitle = "Licorera - Distribuidora"
+            }))
         {
             ControllerContext = new ControllerContext
             {

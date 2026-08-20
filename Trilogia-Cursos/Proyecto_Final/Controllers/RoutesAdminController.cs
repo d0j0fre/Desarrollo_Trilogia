@@ -3,6 +3,7 @@ using Microsoft.Data.SqlClient;
 using Proyecto_Final.Filters;
 using Proyecto_Final.Models.Admin;
 using Proyecto_Final.Services;
+using Microsoft.Extensions.Options;
 
 namespace Proyecto_Final.Controllers
 {
@@ -14,17 +15,20 @@ namespace Proyecto_Final.Controllers
         private readonly AdminDbService _adminDbService;
         private readonly EmailService _emailService;
         private readonly ILogger<RoutesAdminController> _logger;
+        private readonly CompanyOptions _company;
 
         public RoutesAdminController(
             LogisticsDbService logistics,
             AdminDbService adminDbService,
             EmailService emailService,
-            ILogger<RoutesAdminController> logger)
+            ILogger<RoutesAdminController> logger,
+            IOptions<CompanyOptions> company)
         {
             _logistics = logistics;
             _adminDbService = adminDbService;
             _emailService = emailService;
             _logger = logger;
+            _company = company.Value;
         }
 
         [HttpGet]
@@ -409,7 +413,7 @@ namespace Proyecto_Final.Controllers
                     $"<p>Hola {System.Net.WebUtility.HtmlEncode(nombre)},</p>" +
                     $"<p>Le informamos que su pedido <strong>#{pedidoId}</strong> ahora está en estado " +
                     $"<strong>{System.Net.WebUtility.HtmlEncode(estado)}</strong>.</p>" +
-                    "<p>Gracias por su preferencia.<br/>Supermercado Mayoreo</p>";
+                    $"<p>Gracias por su preferencia.<br/>{System.Net.WebUtility.HtmlEncode(_company.BrandName)}</p>";
                 _emailService.SendEmail(correo, asunto, cuerpo);
             }
             catch (Exception ex)

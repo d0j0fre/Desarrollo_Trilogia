@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Proyecto_Final.Filters;
 using Proyecto_Final.Services;
+using Microsoft.Extensions.Options;
 
 namespace Proyecto_Final.Controllers
 {
@@ -9,11 +10,13 @@ namespace Proyecto_Final.Controllers
     {
         private readonly AdminDbService _adminDbService;
         private readonly EmailService _emailService;
+        private readonly CompanyOptions _company;
 
-        public BillingController(AdminDbService adminDbService, EmailService emailService)
+        public BillingController(AdminDbService adminDbService, EmailService emailService, IOptions<CompanyOptions> company)
         {
             _adminDbService = adminDbService;
             _emailService = emailService;
+            _company = company.Value;
         }
 
         [HttpGet]
@@ -101,7 +104,8 @@ namespace Proyecto_Final.Controllers
                     factura.NumeroFactura,
                     factura.PedidoId,
                     factura.FechaFactura,
-                    factura.Total);
+                    factura.Total,
+                    _company);
 
                 _emailService.SendEmail(factura.Correo, $"Comprobante {factura.NumeroFactura}", contenido);
 

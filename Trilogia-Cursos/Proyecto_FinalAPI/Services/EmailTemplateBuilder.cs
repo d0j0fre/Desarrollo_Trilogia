@@ -4,7 +4,7 @@ namespace Proyecto_FinalAPI.Services
 {
     public static class EmailTemplateBuilder
     {
-        public static string BuildPasswordResetEmail(string nombreCompleto, string resetUrl)
+        public static string BuildPasswordResetEmail(string nombreCompleto, string resetUrl, CompanyOptions company)
         {
             var nombreSeguro = Encode(nombreCompleto, "Cliente");
             var resetUrlSeguro = WebUtility.HtmlEncode(resetUrl ?? string.Empty);
@@ -30,10 +30,11 @@ namespace Proyecto_FinalAPI.Services
                 subtitulo: "Solicitud de seguridad de cuenta",
                 badge: "Seguridad",
                 contenido: contenido,
-                notaInferior: "Este mensaje fue generado automáticamente por el sistema de Supermercado Mayoreo.");
+                notaInferior: $"Este mensaje fue generado automáticamente por el sistema de {company.BrandName}.",
+                company: company);
         }
 
-        public static string BuildContactNotificationEmail(string nombre, string correo, string asunto, string mensaje)
+        public static string BuildContactNotificationEmail(string nombre, string correo, string asunto, string mensaje, CompanyOptions company)
         {
             var nombreSeguro = Encode(nombre, "No indicado");
             var correoSeguro = Encode(correo, "No indicado");
@@ -82,12 +83,16 @@ namespace Proyecto_FinalAPI.Services
                 subtitulo: asuntoSeguro,
                 badge: "Contacto",
                 contenido: contenido,
-                notaInferior: "Recordá revisar el módulo de Consultas para darle seguimiento administrativo.");
+                notaInferior: "Recordá revisar el módulo de Consultas para darle seguimiento administrativo.",
+                company: company);
         }
 
-        private static string BuildBaseTemplate(string titulo, string subtitulo, string badge, string contenido, string notaInferior)
+        private static string BuildBaseTemplate(string titulo, string subtitulo, string badge, string contenido, string notaInferior, CompanyOptions company)
         {
-            var tituloSeguro = Encode(titulo, "Supermercado Mayoreo");
+            ArgumentNullException.ThrowIfNull(company);
+            var marcaSegura = Encode(company.BrandName, string.Empty);
+            var subtituloMarcaSeguro = Encode(company.BrandSubtitle, string.Empty);
+            var tituloSeguro = Encode(titulo, company.BrandName);
             var subtituloSeguro = Encode(subtitulo, "Notificación del sistema");
             var badgeSeguro = Encode(badge, "Sistema");
             var notaSeguro = Encode(notaInferior, string.Empty);
@@ -131,9 +136,9 @@ namespace Proyecto_FinalAPI.Services
                     </tr>
                     <tr>
                         <td style='background:#111114;padding:20px 32px;text-align:center;'>
-                            <p style='margin:0 0 6px;color:#ffffff;font-size:14px;font-weight:800;'>Supermercado Mayoreo</p>
+                            <p style='margin:0 0 6px;color:#ffffff;font-size:14px;font-weight:800;'>{marcaSegura}</p>
                             <p style='margin:0;color:rgba(255,255,255,.62);font-size:12px;line-height:1.6;'>
-                                Licorera - Distribuidora · Sistema de gestión comercial · Costa Rica
+                                {subtituloMarcaSeguro} · Sistema de gestión comercial · Costa Rica
                             </p>
                         </td>
                     </tr>

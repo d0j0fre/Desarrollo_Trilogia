@@ -1,10 +1,17 @@
 namespace Proyecto_FinalAPI.Services;
 
+public sealed class CompanyOptions
+{
+    public string BrandName { get; set; } = string.Empty;
+    public string BrandSubtitle { get; set; } = string.Empty;
+}
+
 public static class StartupConfigurationValidator
 {
     public static void Validate(IConfiguration configuration, IHostEnvironment environment)
     {
         Require(configuration["Company:BrandName"], "Company:BrandName");
+        Require(configuration["Company:BrandSubtitle"], "Company:BrandSubtitle");
         if (!environment.IsProduction())
             return;
 

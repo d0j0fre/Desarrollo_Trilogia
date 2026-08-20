@@ -23,7 +23,7 @@ public sealed class OfflineStoragePrivacyTests
     {
         var source = File.ReadAllText(SourcePath(parts));
 
-        Assert.Contains("SupermercadoMayoreoOfflineStorage", source, StringComparison.Ordinal);
+        Assert.Contains("DistribuidoraJJOfflineStorage", source, StringComparison.Ordinal);
         Assert.DoesNotContain("localStorage.getItem", source, StringComparison.Ordinal);
         Assert.DoesNotContain("localStorage.setItem", source, StringComparison.Ordinal);
     }
