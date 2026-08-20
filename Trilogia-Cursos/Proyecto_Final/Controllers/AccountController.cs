@@ -22,12 +22,14 @@ namespace Proyecto_Final.Controllers
         }
 
         [HttpGet]
-        public IActionResult Login()
+        public IActionResult Login(string? returnUrl = null)
         {
             if (!string.IsNullOrWhiteSpace(HttpContext.Session.GetString("UserEmail")))
             {
-                return RedirectToAction("Index", "Home");
+                return RedirectAfterLogin(returnUrl, HttpContext.Session.GetString("UserRole"));
             }
+
+            ViewBag.ReturnUrl = SafeLocalReturnUrl(returnUrl);
 
             return View(new Proyecto_Final.Models.LoginViewModel
             {
@@ -43,8 +45,9 @@ namespace Proyecto_Final.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [EnableRateLimiting("authentication")]
-        public async Task<IActionResult> Login(Proyecto_Final.Models.LoginViewModel model)
+        public async Task<IActionResult> Login(Proyecto_Final.Models.LoginViewModel model, string? returnUrl = null)
         {
+            ViewBag.ReturnUrl = SafeLocalReturnUrl(returnUrl);
             if (!ModelState.IsValid)
             {
                 return View(model);
@@ -76,7 +79,7 @@ namespace Proyecto_Final.Controllers
                     "El usuario inició sesión correctamente.");
 
                 TempData["LoginSuccess"] = $"Bienvenido, {response.FullName}.";
-                return RedirectToAction("Index", "Home");
+                return RedirectAfterLogin(returnUrl, response.Role);
             }
             catch (Exception exception)
             {
@@ -277,5 +280,23 @@ namespace Proyecto_Final.Controllers
                 HttpContext.Connection.RemoteIpAddress?.ToString(),
                 Request.Headers.UserAgent.ToString());
         }
+
+        private string? SafeLocalReturnUrl(string? returnUrl) =>
+            !string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl) ? returnUrl : null;
+
+        private IActionResult RedirectAfterLogin(string? returnUrl, string? role)
+        {
+            var localReturnUrl = SafeLocalReturnUrl(returnUrl);
+            if (localReturnUrl is not null)
+                return LocalRedirect(localReturnUrl);
+
+            var destination = DefaultLandingForRole(role);
+            return RedirectToAction(destination.Action, destination.Controller);
+        }
+
+        internal static (string Action, string Controller) DefaultLandingForRole(string? role) =>
+            string.Equals(role, "Administrador", StringComparison.OrdinalIgnoreCase)
+                ? ("Index", "Admin")
+                : ("Index", "Home");
     }
 }
