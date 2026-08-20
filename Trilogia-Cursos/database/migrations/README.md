@@ -56,8 +56,17 @@ Cada migracion debe indicar su estrategia de rollback antes de ejecutarse. Los c
 | 0020 | `0020_private_pay_slips.sql` | Boletas privadas y notificación idempotente | 0019 |
 | 0021 | `0021_seller_goal_progress.sql` | Progreso mensual de la meta propia del vendedor | Metas, facturas, pedidos y usuarios |
 | 0022 | `0022_password_hash_transition.sql` | Transición compatible de credenciales directas a PBKDF2 con actualización gradual | Usuarios, perfiles y API de autenticación |
+| 0023 | `0023_supervisor_rrhh_permisos.sql` | Capacidades explícitas de expedientes y boletas para Supervisor | 0017 y 0020 |
+| 0024 | `0024_stage1_ownership_security.sql` | Ownership de cierre de kilometraje y capacidad administrativa explícita | Flota, usuarios y permisos |
+| 0025 | `0025_session_revocation.sql` | Security stamp y estado vigente de sesión | Usuarios, perfiles y autenticación |
+| 0026 | `0026_hash_only_credentials.sql` | Retiro de autenticación activa con contraseña plana | 0022; todos los usuarios activos deben tener hash |
+| 0027 | `0027_dynamic_authorization_capabilities.sql` | Capacidades dinámicas para venta móvil, chat y meta propia | Perfiles y permisos |
+| 0028 | `0028_granular_mutation_permissions.sql` | Separación de lectura y mutaciones sensibles | Perfiles, permisos, clientes, consultas e inventario |
+| 0029 | `0029_complete_capability_catalog.sql` | Versionado de capacidades activas antes presentes solo en scripts históricos | Perfiles y permisos |
 
 Los scripts no incluyen `USE`: el ejecutor debe seleccionar explícitamente la base antes de iniciar. Los hashes escritos por 0002–0011 son hashes de manifiesto para identificar versión; la evidencia de despliegue debe registrar además el SHA-256 real del archivo y actualizar el ledger si corresponde.
+
+Desde 0012, cada migración nueva debe contar con verificador y estrategia de rollback documentada. La verificación y rollback faltantes de 0023 se incorporaron sin alterar el script de migración. La instalación desde cero se define en `database/baseline/README.md`; los archivos `Fase*.sql` y `database_Esteban/` no forman parte de esa secuencia.
 
 ## Estado de Azure SQL DEV y fuente de verdad
 
