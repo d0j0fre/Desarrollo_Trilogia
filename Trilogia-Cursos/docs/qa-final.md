@@ -322,3 +322,35 @@ Limitaciones y validaciones pendientes de entorno:
 - [ ] Ejecutar Playwright autenticado en DEV con secretos temporales autorizados para Administrador, Cliente, Vendedor y Chofer. La ejecución local pública no se marca aprobada porque las páginas dependen de configuración/datos externos ausentes.
 - [ ] Validar Redis, CSP y cabeceras en el despliegue productivo; confirmar también SMTP y rate limiting distribuido entre instancias.
 - [ ] Repetir pruebas de ownership con IDs sintéticos ajenos y comprobar 403/404 sin filtración, además de antiforgery y errores sin detalle interno.
+
+## Cierre Stage 1.1 — 19 de agosto de 2026
+
+Correcciones realizadas sobre el mismo PR #127:
+
+- El cierre de kilometraje inicia la transacción antes de la lectura `UPDLOCK/HOLDLOCK`, conserva ownership en el `UPDATE`, exige `KmFinal IS NULL`, confirma una sola fila y traduce el segundo cierre al error de negocio 53044. El harness LocalDB desechable ejecutó dos sesiones: A cerró en 150, B fue rechazada y jornada/odómetro conservaron un único valor.
+- `WorkspaceResolver` selecciona destinos existentes mediante rol, capacidades efectivas, módulos autorizados y relación laboral. El `returnUrl` local explícito conserva prioridad; uno externo se descarta.
+- El menú Chat depende exclusivamente de `CHAT_USAR`; `CHAT_DEPARTAMENTOS_GESTIONAR` queda limitado a la administración. El controlador mantiene la misma capacidad exacta y el bypass único de Administrador.
+- La identidad activa se normalizó a `Distribuidora JJ` / `Licorera - Distribuidora`. Vistas, correos MVC/API, comprobantes, cookie, Redis y almacenamiento offline consumen configuración o identificadores técnicos coherentes. No se modificó el diseño visual.
+
+Pruebas y evidencia:
+
+- Se añadieron 16 casos de regresión: landings críticos y personalizados, módulos de Facturación/Créditos/Auditoría, relación laboral/fallback, `returnUrl` local/externo, Chat permitido/denegado/Administrador, contrato atómico de 0024 y auditoría automática de marcas obsoletas.
+- Restauración y build Release: aprobados, 0 errores y 0 advertencias.
+- Suite completa: 288 aprobadas, 0 fallidas y 0 omitidas.
+- SQL ScriptDom recursivo (`database` + `database_Esteban`): 130 archivos, 1032 lotes, 0 errores.
+- Baseline: SHA-256 oficial confirmado y 29 migraciones ordenadas; verificador de 0024 ampliado.
+- Escaneo de secretos: 841 archivos rastreados, 810 archivos de texto, 12 placeholders/vacíos aprobados y 0 hallazgos.
+- Playwright público local: aprobado para Login con `returnUrl` seguro y Contacto sobre una base mínima desechable. La instancia y la base fueron eliminadas al terminar.
+- `git diff --check`: aprobado.
+
+No se ejecutó Playwright autenticado porque no se proporcionaron credenciales QA autorizadas. Tampoco se aplicaron migraciones en Azure o en bases compartidas, no se desplegó y no se hizo merge.
+
+Pendientes de entorno que continúan abiertos:
+
+- [ ] SQL Server limpio: baseline -> 0001–0029 -> cada `verify.sql` -> `DBCC CHECKDB`.
+- [ ] Confirmar que todos los usuarios activos tienen hash válido antes de 0026.
+- [ ] Aplicar 0024–0029 solo con autorización, backup, ejecutor designado y SHA real.
+- [ ] Ejecutar Playwright DEV autenticado con cuentas QA temporales para Administrador, Cliente, Vendedor y Chofer, incluidos ownership negativo y logout.
+- [ ] Validar Redis real y rate limiting distribuido entre instancias.
+- [ ] Validar SMTP real sin exponer credenciales.
+- [ ] Validar CSP y cabeceras en el despliegue efectivo.
