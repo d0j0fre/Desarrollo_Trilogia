@@ -193,15 +193,6 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [AdminAuthorize("Inventario", "INVENTARIO_EDITAR")]
-        public async Task<IActionResult> Delete(int productoId, string? filtro)
-        {
-            // Compatibilidad con formularios anteriores: esta acción ahora solo inactiva/reactiva.
-            return await ToggleStatus(productoId, filtro);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
         [AdminAuthorize("Inventario", "INVENTARIO_ELIMINAR")]
         public async Task<IActionResult> DeletePermanent(int productoId, string? filtro)
         {

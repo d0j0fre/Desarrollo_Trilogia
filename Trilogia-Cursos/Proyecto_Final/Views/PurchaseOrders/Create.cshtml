@@ -1,16 +1,19 @@
-@model Proyecto_Final.Models.Admin.PurchaseOrderFormViewModel
+@using System.Globalization
+@using Proyecto_Final.Models.Admin
+@model PurchaseOrderFormViewModel
 @{
     var fromSuggestions = ViewData["FromSuggestions"] as bool? == true;
+    var catalog = ViewBag.ProductCatalog as IReadOnlyList<PurchaseOrderLineSelectionViewModel> ?? [];
     ViewData["Title"] = fromSuggestions ? "Sugerencias de compra" : "Nueva orden de compra";
 }
 
 <div class="container-fluid pt-4 backoffice-page">
     <div class="row px-xl-5"><div class="col-12">
         <h2>@ViewData["Title"]</h2>
-        <p>@(fromSuggestions ? "Revise cantidades sugeridas y defina precios; ninguna compra se crea automáticamente." : "Seleccione proveedor, productos, cantidades y precios de compra.")</p>
+        <p>@(fromSuggestions ? "Revise las líneas sugeridas y defina precios; ninguna compra se crea automáticamente." : "Busque productos y agregue únicamente las líneas que formarán la orden.")</p>
     </div></div>
     <div class="row px-xl-5 pb-5"><div class="col-12">
-        <form asp-action="Create" method="post">
+        <form asp-action="Create" method="post" id="purchase-order-form">
             @Html.AntiForgeryToken()
             <input asp-for="TokenOperacion" type="hidden" />
             <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
@@ -18,23 +21,45 @@
                 <div class="form-group col-md-5"><label asp-for="ProveedorId">Proveedor activo</label><select asp-for="ProveedorId" class="form-control"><option value="">Seleccione</option>@foreach (var supplier in Model.Proveedores) { <option value="@supplier.ProveedorId">@supplier.Nombre</option> }</select><span asp-validation-for="ProveedorId" class="text-danger"></span></div>
                 <div class="form-group col-md-7"><label asp-for="Notas"></label><input asp-for="Notas" class="form-control" /></div>
             </div>
+
+            <div class="card mb-3"><div class="card-body">
+                <label for="product-search" class="font-weight-bold">Agregar producto</label>
+                <div class="form-row align-items-end">
+                    <div class="form-group col-md-5 mb-md-0"><input id="product-search" type="search" class="form-control" placeholder="Filtrar por nombre" autocomplete="off" /></div>
+                    <div class="form-group col-md-5 mb-md-0">
+                        <select id="product-catalog" class="form-control">
+                            <option value="">Seleccione un producto</option>
+                            @foreach (var product in catalog)
+                            {
+                                <option value="@product.ProductoId" data-stock="@product.StockActual" data-average="@product.PromedioVentaMensual.ToString(CultureInfo.InvariantCulture)" data-last="@(product.UltimoPrecioPagado?.ToString(CultureInfo.InvariantCulture) ?? string.Empty)">@product.Nombre</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group col-md-2 mb-0"><button type="button" id="add-product" class="btn btn-outline-primary btn-block">Agregar</button></div>
+                </div>
+                <small class="form-text text-muted">Máximo @PurchasingPolicy.MaximumLinesPerOrder líneas por orden. El formulario solo envía las líneas agregadas.</small>
+                <div id="line-message" class="text-danger mt-2" role="alert"></div>
+            </div></div>
+
             <div class="table-responsive">
                 <table class="table table-sm table-hover">
-                    <thead><tr><th></th><th>Producto</th><th>Stock</th><th>Promedio mensual</th><th>Cantidad</th><th>Precio compra</th><th>Último precio</th><th>Subtotal</th></tr></thead>
-                    <tbody>
+                    <thead><tr><th>Producto</th><th>Stock</th><th>Promedio mensual</th><th>Cantidad</th><th>Precio compra</th><th>Último precio</th><th>Subtotal</th><th></th></tr></thead>
+                    <tbody id="purchase-lines">
                     @for (var index = 0; index < Model.Productos.Count; index++)
                     {
-                        <tr class="purchase-line">
-                            <td><input asp-for="Productos[index].ProductoId" type="hidden" /><input asp-for="Productos[index].Nombre" type="hidden" /><input asp-for="Productos[index].StockActual" type="hidden" /><input asp-for="Productos[index].PromedioVentaMensual" type="hidden" /><input asp-for="Productos[index].DatosInsuficientes" type="hidden" /><input asp-for="Productos[index].Seleccionado" class="select-product" /></td>
-                            <td>@Model.Productos[index].Nombre @if (Model.Productos[index].DatosInsuficientes) { <small class="d-block text-muted">Datos históricos insuficientes</small> }</td>
-                            <td>@Model.Productos[index].StockActual</td><td>@Model.Productos[index].PromedioVentaMensual.ToString("N1")</td>
-                            <td><input asp-for="Productos[index].Cantidad" type="number" min="1" class="form-control form-control-sm quantity" style="width:90px" /></td>
-                            <td><input asp-for="Productos[index].PrecioUnitario" type="number" min="0.01" step="0.01" class="form-control form-control-sm price" data-last="@(Model.Productos[index].UltimoPrecioPagado?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "")" style="width:130px" /><small class="price-warning text-danger"></small></td>
-                            <td>@(Model.Productos[index].UltimoPrecioPagado.HasValue ? $"₡{Model.Productos[index].UltimoPrecioPagado:N2}" : "—")</td><td class="line-total">₡0.00</td>
+                        var product = Model.Productos[index];
+                        <tr class="purchase-line" data-product-id="@product.ProductoId">
+                            <td><input data-field="ProductoId" name="Productos[@index].ProductoId" value="@product.ProductoId" type="hidden" /><input data-field="Seleccionado" name="Productos[@index].Seleccionado" value="true" type="hidden" />@product.Nombre @if (product.DatosInsuficientes) { <small class="d-block text-muted">Datos históricos insuficientes</small> }</td>
+                            <td>@product.StockActual</td>
+                            <td>@product.PromedioVentaMensual.ToString("N1")</td>
+                            <td><input data-field="Cantidad" name="Productos[@index].Cantidad" value="@product.Cantidad" type="number" min="1" class="form-control form-control-sm quantity" style="width:90px" /></td>
+                            <td><input data-field="PrecioUnitario" name="Productos[@index].PrecioUnitario" value="@product.PrecioUnitario.ToString(CultureInfo.InvariantCulture)" type="number" min="0.01" step="0.01" class="form-control form-control-sm price" data-last="@(product.UltimoPrecioPagado?.ToString(CultureInfo.InvariantCulture) ?? string.Empty)" style="width:130px" /><small class="price-warning text-danger"></small></td>
+                            <td>@(product.UltimoPrecioPagado.HasValue ? $"₡{product.UltimoPrecioPagado:N2}" : "—")</td><td class="line-total">₡0.00</td>
+                            <td><button type="button" class="btn btn-sm btn-outline-danger remove-line" aria-label="Quitar @product.Nombre"><i class="fa fa-times"></i></button></td>
                         </tr>
                     }
                     </tbody>
-                    <tfoot><tr><th colspan="7" class="text-right">Total</th><th id="order-total">₡0.00</th></tr></tfoot>
+                    <tfoot><tr><th colspan="6" class="text-right">Total</th><th id="order-total">₡0.00</th><th></th></tr></tfoot>
                 </table>
             </div>
             <div class="d-flex justify-content-between"><a asp-action="Index" class="btn btn-outline-secondary">Volver</a><button type="submit" class="btn btn-primary">Crear orden</button></div>
@@ -46,32 +71,61 @@
     <partial name="_ValidationScriptsPartial" />
     <script>
         (() => {
+            const maximumLines = @PurchasingPolicy.MaximumLinesPerOrder;
+            const lines = document.getElementById('purchase-lines');
+            const catalog = document.getElementById('product-catalog');
+            const search = document.getElementById('product-search');
+            const message = document.getElementById('line-message');
             const money = value => `₡${value.toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            const makeInput = (field, value, type, className) => { const input = document.createElement('input'); input.dataset.field = field; input.value = value; input.type = type; if (className) input.className = className; return input; };
+            const appendTextCell = (row, value) => { const cell = row.insertCell(); cell.textContent = value; return cell; };
+
+            function reindex() {
+                const selected = new Set();
+                lines.querySelectorAll('.purchase-line').forEach((row, index) => {
+                    selected.add(row.dataset.productId);
+                    row.querySelectorAll('[data-field]').forEach(input => input.name = `Productos[${index}].${input.dataset.field}`);
+                });
+                Array.from(catalog.options).forEach(option => { if (option.value) option.disabled = selected.has(option.value); });
+            }
+
             function recalculate() {
                 let total = 0;
-                document.querySelectorAll('.purchase-line').forEach(row => {
-                    const selected = row.querySelector('.select-product').checked;
+                lines.querySelectorAll('.purchase-line').forEach(row => {
                     const quantity = Number(row.querySelector('.quantity').value) || 0;
                     const priceInput = row.querySelector('.price');
                     const price = Number(priceInput.value) || 0;
-                    const subtotal = selected ? quantity * price : 0;
+                    const subtotal = quantity * price;
                     row.querySelector('.line-total').textContent = money(subtotal); total += subtotal;
                     const previous = Number(priceInput.dataset.last);
                     const variation = previous > 0 ? ((price - previous) / previous) * 100 : 0;
-                    row.querySelector('.price-warning').textContent = selected && Math.abs(variation) > 15 ? `${variation.toFixed(1)}% vs. último precio` : '';
+                    row.querySelector('.price-warning').textContent = previous > 0 && Math.abs(variation) > 15 ? `${variation.toFixed(1)}% vs. último precio` : '';
                 });
                 document.getElementById('order-total').textContent = money(total);
             }
-            document.querySelectorAll('.purchase-line input').forEach(input => input.addEventListener('input', recalculate)); recalculate();
-        })();
 
-        // Antes de enviar, deshabilita los campos de productos no seleccionados para no superar el límite de campos del formulario
-        document.querySelector('form').addEventListener('submit', () => {
-            document.querySelectorAll('.purchase-line').forEach(row => {
-                if (!row.querySelector('.select-product').checked) {
-                    row.querySelectorAll('input:not(.select-product)').forEach(input => input.disabled = true);
-                }
-            });
-        });
+            function addSelectedProduct() {
+                message.textContent = '';
+                const option = catalog.selectedOptions[0];
+                if (!option || !option.value) { message.textContent = 'Seleccione un producto para agregar.'; return; }
+                if (lines.children.length >= maximumLines) { message.textContent = `La orden admite como máximo ${maximumLines} líneas.`; return; }
+                const row = lines.insertRow(); row.className = 'purchase-line'; row.dataset.productId = option.value;
+                const nameCell = row.insertCell(); nameCell.append(makeInput('ProductoId', option.value, 'hidden'), makeInput('Seleccionado', 'true', 'hidden'), document.createTextNode(option.textContent));
+                appendTextCell(row, option.dataset.stock || '0');
+                appendTextCell(row, Number(option.dataset.average || 0).toLocaleString('es-CR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }));
+                const quantityCell = row.insertCell(); const quantity = makeInput('Cantidad', '1', 'number', 'form-control form-control-sm quantity'); quantity.min = '1'; quantity.style.width = '90px'; quantityCell.append(quantity);
+                const priceCell = row.insertCell(); const price = makeInput('PrecioUnitario', '1', 'number', 'form-control form-control-sm price'); price.min = '0.01'; price.step = '0.01'; price.style.width = '130px'; price.dataset.last = option.dataset.last || ''; const warning = document.createElement('small'); warning.className = 'price-warning text-danger'; priceCell.append(price, warning);
+                appendTextCell(row, option.dataset.last ? money(Number(option.dataset.last)) : '—'); appendTextCell(row, money(1)).className = 'line-total';
+                const actionCell = row.insertCell(); const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'btn btn-sm btn-outline-danger remove-line'; remove.setAttribute('aria-label', `Quitar ${option.textContent}`); remove.innerHTML = '<i class="fa fa-times"></i>'; actionCell.append(remove);
+                catalog.value = ''; reindex(); recalculate();
+            }
+
+            document.getElementById('add-product').addEventListener('click', addSelectedProduct);
+            lines.addEventListener('input', recalculate);
+            lines.addEventListener('click', event => { const button = event.target.closest('.remove-line'); if (!button) return; button.closest('.purchase-line').remove(); reindex(); recalculate(); });
+            search.addEventListener('input', () => { const query = search.value.trim().toLocaleLowerCase('es'); Array.from(catalog.options).forEach(option => { if (option.value) option.hidden = query.length > 0 && !option.textContent.toLocaleLowerCase('es').includes(query); }); });
+            document.getElementById('purchase-order-form').addEventListener('submit', event => { if (lines.children.length === 0) { event.preventDefault(); message.textContent = 'Agregue al menos un producto a la orden.'; } });
+            reindex(); recalculate();
+        })();
     </script>
 }

@@ -34,6 +34,23 @@ public sealed class PurchasingTests
     }
 
     [Fact]
+    public void PurchaseOrder_RejectsMoreThanFiftySelectedLines()
+    {
+        var model = ValidOrder();
+        model.Productos = Enumerable.Range(1, PurchasingPolicy.MaximumLinesPerOrder + 1)
+            .Select(id => new PurchaseOrderLineSelectionViewModel
+            {
+                ProductoId = id,
+                Seleccionado = true,
+                Cantidad = 1,
+                PrecioUnitario = 1m
+            })
+            .ToList();
+
+        Assert.Contains(Validate(model), result => result.ErrorMessage!.Contains("50 líneas", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
     public void NormalizeLines_IsDeterministicAndDoesNotMutateInput()
     {
         var first = new PurchaseOrderLineSelectionViewModel { ProductoId = 9, Seleccionado = true, Cantidad = 2, PrecioUnitario = 10.125m };

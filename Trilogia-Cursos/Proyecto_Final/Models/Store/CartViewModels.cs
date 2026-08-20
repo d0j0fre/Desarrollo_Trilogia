@@ -80,25 +80,15 @@ namespace Proyecto_Final.Models.Store
         [EmailAddress(ErrorMessage = "Ingresa un correo válido.")]
         public string? CorreoElectronico { get; set; }
 
-        [Display(Name = "Tipo de cliente")]
-        public string TipoCliente { get; set; } = "Cliente Físico";
-
         [Display(Name = "Identificación")]
         [Required(ErrorMessage = "La identificación es obligatoria.")]
         [StringLength(50)]
         [CostaRicanIdentification]
         public string? Identificacion { get; set; }
 
-        [Display(Name = "Factura electrónica")]
-        public bool FacturaElectronica { get; set; }
-
         [Display(Name = "Teléfono")]
         [Phone]
         public string? Telefono { get; set; }
-
-        [Display(Name = "Teléfono 2")]
-        [Phone]
-        public string? Telefono2 { get; set; }
 
         [Display(Name = "País / Región")]
         public string Pais { get; set; } = "Costa Rica";
