@@ -14,9 +14,10 @@ public sealed class ExpensesController : Controller
     private readonly IPrivateFileStorageService _storage;
     private readonly AdminDbService _admin;
     private readonly ILogger<ExpensesController> _logger;
+    private readonly BusinessClock _clock;
 
-    public ExpensesController(ExpensesDbService expenses, IPrivateFileStorageService storage, AdminDbService admin, ILogger<ExpensesController> logger)
-    { _expenses = expenses; _storage = storage; _admin = admin; _logger = logger; }
+    public ExpensesController(ExpensesDbService expenses, IPrivateFileStorageService storage, AdminDbService admin, ILogger<ExpensesController> logger, BusinessClock clock)
+    { _expenses = expenses; _storage = storage; _admin = admin; _logger = logger; _clock = clock; }
 
     [HttpGet]
     public async Task<IActionResult> Index([FromQuery] ExpenseFilterViewModel filter)
@@ -28,7 +29,7 @@ public sealed class ExpensesController : Controller
             Filter = filter, Expenses = result.Page, Departments = options.Departments, Categories = options.Categories,
             RegisteredTotal = result.Registered, ApprovedTotal = result.Approved, PaidTotal = result.Paid,
             PendingTotal = result.Pending, AvailableBudget = result.Available,
-            NewExpense = new() { ExpenseDate = DateTime.Today, OperationToken = Guid.NewGuid() }
+            NewExpense = new() { ExpenseDate = _clock.Today, OperationToken = Guid.NewGuid() }
         });
     }
 
@@ -69,7 +70,7 @@ public sealed class ExpensesController : Controller
         await LoadOptionsAsync();
         return View(new OperatingExpenseFormViewModel
         {
-            ExpenseDate = DateTime.Today,
+            ExpenseDate = _clock.Today,
             OperationToken = Guid.NewGuid()
         });
     }

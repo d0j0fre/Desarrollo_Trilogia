@@ -5,6 +5,7 @@ using Proyecto_Final.Hubs;
 using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
+StartupConfigurationValidator.Validate(builder.Configuration, builder.Environment);
 
 // MVC
 builder.Services.AddControllersWithViews();
@@ -26,6 +27,17 @@ builder.Services.AddRateLimiter(options =>
             }));
 
     options.AddPolicy("password-recovery", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(15),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+
+    options.AddPolicy("public-contact", httpContext =>
         RateLimitPartition.GetFixedWindowLimiter(
             httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             _ => new FixedWindowRateLimiterOptions
@@ -126,12 +138,23 @@ builder.Services.AddRateLimiter(options =>
             }));
 });
 
-// Session
-builder.Services.AddDistributedMemoryCache();
+// Session compartida: memoria solo para desarrollo local; Redis es obligatorio en producción.
+if (builder.Environment.IsProduction())
+{
+    builder.Services.AddStackExchangeRedisCache(options =>
+    {
+        options.Configuration = builder.Configuration.GetConnectionString("DistributedCache");
+        options.InstanceName = "SupermercadoMayoreo:";
+    });
+}
+else
+{
+    builder.Services.AddDistributedMemoryCache();
+}
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(45);
-    options.Cookie.Name = ".DistribuidoraJJ.Session";
+    options.Cookie.Name = ".SupermercadoMayoreo.Session";
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
     options.Cookie.SameSite = SameSiteMode.Lax;
@@ -179,6 +202,8 @@ builder.Services.AddSingleton<IEvidenceStorageService, FileEvidenceStorageServic
 builder.Services.AddSingleton<IPrivateFileStorageService, PrivateFileStorageService>();
 builder.Services.AddSingleton<IProductImageStorageService, ProductImageStorageService>();
 builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton<BusinessClock>();
+builder.Services.Configure<CompanyOptions>(builder.Configuration.GetSection("Company"));
 
 // HttpClient para consumir la API de autenticación
 builder.Services.AddHttpClient<AccountApiService>(client =>

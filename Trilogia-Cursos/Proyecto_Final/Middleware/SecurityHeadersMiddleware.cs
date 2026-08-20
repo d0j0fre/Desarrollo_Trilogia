@@ -22,14 +22,16 @@ namespace Proyecto_Final.Middleware
                 SetHeaderIfMissing(headers, "Permissions-Policy", "camera=(), microphone=(), geolocation=()");
                 SetHeaderIfMissing(
                     headers,
-                    "Content-Security-Policy-Report-Only",
+                    "Content-Security-Policy",
                     "default-src 'self'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; " +
-                    "img-src 'self' data: blob: https://*.tile.openstreetmap.org; " +
-                    "style-src 'self' 'unsafe-inline' https://unpkg.com https://stackpath.bootstrapcdn.com; " +
+                    "img-src 'self' data: blob: https://*.tile.openstreetmap.org https://unpkg.com; " +
+                    "style-src 'self' 'unsafe-inline' https://unpkg.com https://stackpath.bootstrapcdn.com https://fonts.googleapis.com https://cdnjs.cloudflare.com; " +
                     "script-src 'self' 'unsafe-inline' https://code.jquery.com https://stackpath.bootstrapcdn.com https://unpkg.com; " +
-                    "connect-src 'self' ws: wss:; font-src 'self' data:");
+                    "connect-src 'self' ws: wss:; font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com");
 
-                if (IsSensitivePath(context.Request.Path))
+                if (ShouldDisableCaching(
+                    context.Features.Get<Microsoft.AspNetCore.Http.Features.ISessionFeature>()?.Session?.GetInt32("UserId") is > 0,
+                    context.Request.Path))
                 {
                     headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0";
                     headers["Pragma"] = "no-cache";
@@ -50,42 +52,10 @@ namespace Proyecto_Final.Middleware
             }
         }
 
-        private static bool IsSensitivePath(PathString path)
-        {
-            return path.StartsWithSegments("/Account")
-                || path.StartsWithSegments("/Admin")
-                || path.StartsWithSegments("/Inventory")
-                || path.StartsWithSegments("/OrdersAdmin")
-                || path.StartsWithSegments("/Billing")
-                || path.StartsWithSegments("/Clients")
-                || path.StartsWithSegments("/Credits")
-                || path.StartsWithSegments("/Employees")
-                || path.StartsWithSegments("/EmployeePortal")
-                || path.StartsWithSegments("/Roles")
-                || path.StartsWithSegments("/Permissions")
-                || path.StartsWithSegments("/Audit")
-                || path.StartsWithSegments("/SellerOrders")
-                || path.StartsWithSegments("/RoutesAdmin")
-                || path.StartsWithSegments("/Vehicles")
-                || path.StartsWithSegments("/DriverDeliveries")
-                || path.StartsWithSegments("/ManagementDashboard")
-                || path.StartsWithSegments("/Returns")
-                || path.StartsWithSegments("/Fleet")
-                || path.StartsWithSegments("/Assets")
-                || path.StartsWithSegments("/Assistant")
-                || path.StartsWithSegments("/Chat")
-                || path.StartsWithSegments("/Promotions")
-                || path.StartsWithSegments("/Comodatos")
-                || path.StartsWithSegments("/Expenses")
-                || path.StartsWithSegments("/Finance")
-                || path.StartsWithSegments("/Documents")
-                || path.StartsWithSegments("/Budgets")
-                || path.StartsWithSegments("/BudgetComparison")
-                || path.StartsWithSegments("/Kpis")
-                || path.StartsWithSegments("/Reclamos")
-                || path.StartsWithSegments("/WarrantyRequestsAdmin")
-                || path.StartsWithSegments("/FinancialReportAdmin")
-                || path.StartsWithSegments("/DeliveryEvidence");
-        }
+        internal static bool ShouldDisableCaching(bool authenticated, PathString path) =>
+            authenticated
+            || path.StartsWithSegments("/Account")
+            || path.StartsWithSegments("/Cart/Checkout")
+            || path.StartsWithSegments("/Cart/Confirmation");
     }
 }

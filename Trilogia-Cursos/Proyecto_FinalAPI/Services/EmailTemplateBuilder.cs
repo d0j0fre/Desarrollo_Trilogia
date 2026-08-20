@@ -30,7 +30,7 @@ namespace Proyecto_FinalAPI.Services
                 subtitulo: "Solicitud de seguridad de cuenta",
                 badge: "Seguridad",
                 contenido: contenido,
-                notaInferior: "Este mensaje fue generado automáticamente por el sistema de Licorera La Bodega.");
+                notaInferior: "Este mensaje fue generado automáticamente por el sistema de Supermercado Mayoreo.");
         }
 
         public static string BuildContactNotificationEmail(string nombre, string correo, string asunto, string mensaje)
@@ -87,7 +87,7 @@ namespace Proyecto_FinalAPI.Services
 
         private static string BuildBaseTemplate(string titulo, string subtitulo, string badge, string contenido, string notaInferior)
         {
-            var tituloSeguro = Encode(titulo, "Licorera La Bodega");
+            var tituloSeguro = Encode(titulo, "Supermercado Mayoreo");
             var subtituloSeguro = Encode(subtitulo, "Notificación del sistema");
             var badgeSeguro = Encode(badge, "Sistema");
             var notaSeguro = Encode(notaInferior, string.Empty);
@@ -131,9 +131,9 @@ namespace Proyecto_FinalAPI.Services
                     </tr>
                     <tr>
                         <td style='background:#111114;padding:20px 32px;text-align:center;'>
-                            <p style='margin:0 0 6px;color:#ffffff;font-size:14px;font-weight:800;'>Licorera La Bodega</p>
+                            <p style='margin:0 0 6px;color:#ffffff;font-size:14px;font-weight:800;'>Supermercado Mayoreo</p>
                             <p style='margin:0;color:rgba(255,255,255,.62);font-size:12px;line-height:1.6;'>
-                                DistribuidoraJJ · Sistema de gestión comercial · Costa Rica
+                                Licorera - Distribuidora · Sistema de gestión comercial · Costa Rica
                             </p>
                         </td>
                     </tr>

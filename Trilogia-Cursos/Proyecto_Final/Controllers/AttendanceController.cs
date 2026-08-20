@@ -10,16 +10,17 @@ public sealed class AttendanceController : Controller
 {
     private readonly IAttendanceService _attendance;
     private readonly ILogger<AttendanceController> _logger;
+    private readonly BusinessClock _clock;
 
-    public AttendanceController(IAttendanceService attendance, ILogger<AttendanceController> logger)
+    public AttendanceController(IAttendanceService attendance, ILogger<AttendanceController> logger, BusinessClock clock)
     {
-        _attendance = attendance; _logger = logger;
+        _attendance = attendance; _logger = logger; _clock = clock;
     }
 
     [HttpGet]
     public async Task<IActionResult> Index(DateTime? desde, DateTime? hasta, CancellationToken cancellationToken)
     {
-        var end = (hasta ?? DateTime.Today).Date;
+        var end = (hasta ?? _clock.Today).Date;
         var start = (desde ?? end.AddDays(-30)).Date;
         ViewBag.Desde = start; ViewBag.Hasta = end;
         return View(await _attendance.GetPendingAsync(start, end, cancellationToken));

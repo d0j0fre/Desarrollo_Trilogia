@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Diagnostics;
 using Proyecto_Final.Models;
 using Proyecto_Final.Models.Store;
@@ -14,19 +15,22 @@ namespace Proyecto_Final.Controllers
         private readonly EmailService _emailService;
         private readonly IComboDbService _combos;
         private readonly ILogger<HomeController> _logger;
+        private readonly string? _contactNotificationRecipient;
 
         public HomeController(
             AdminDbService adminDbService,
             StoreDbService storeDbService,
             EmailService emailService,
             IComboDbService combos,
-            ILogger<HomeController> logger)
+            ILogger<HomeController> logger,
+            IConfiguration configuration)
         {
             _adminDbService = adminDbService;
             _storeDbService = storeDbService;
             _emailService = emailService;
             _combos = combos;
             _logger = logger;
+            _contactNotificationRecipient = configuration["Contact:NotificationRecipient"]?.Trim();
         }
 
         [HttpGet]
@@ -114,6 +118,7 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting("public-contact")]
         public async Task<IActionResult> Contact(ContactViewModel model)
         {
             if (!ModelState.IsValid)
@@ -137,18 +142,18 @@ namespace Proyecto_Final.Controllers
                     model.Asunto,
                     model.Mensaje);
 
-                try
+                if (!string.IsNullOrWhiteSpace(_contactNotificationRecipient))
                 {
-                    _emailService.SendEmail(
-                        "p13972127@gmail.com",
-                        asunto,
-                        contenido);
-                }
-                catch (Exception exception)
-                {
-                    _logger.LogWarning(exception, "La consulta se guardó, pero no se pudo notificar por correo. Solicitud {TraceId}.", HttpContext.TraceIdentifier);
-                    TempData["ErrorMessage"] = "La consulta fue guardada, pero no fue posible enviar la notificación por correo.";
-                    return RedirectToAction(nameof(Contact));
+                    try
+                    {
+                        _emailService.SendEmail(_contactNotificationRecipient, asunto, contenido);
+                    }
+                    catch (Exception exception)
+                    {
+                        _logger.LogWarning(exception, "La consulta se guardó, pero no se pudo notificar por correo. Solicitud {TraceId}.", HttpContext.TraceIdentifier);
+                        TempData["ErrorMessage"] = "La consulta fue guardada, pero no fue posible enviar la notificación por correo.";
+                        return RedirectToAction(nameof(Contact));
+                    }
                 }
 
                 TempData["SuccessMessage"] = "Se guardó correctamente.";

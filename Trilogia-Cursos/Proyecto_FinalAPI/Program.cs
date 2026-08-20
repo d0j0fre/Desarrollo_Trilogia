@@ -4,6 +4,8 @@ using Proyecto_FinalAPI.Services;
 using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
+StartupConfigurationValidator.Validate(builder.Configuration, builder.Environment);
+var companyName = builder.Configuration["Company:BrandName"]!;
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -50,7 +52,7 @@ if (swaggerEnabled)
     app.UseSwaggerUI(options =>
     {
         options.RoutePrefix = "swagger";
-        options.DocumentTitle = "Proyecto_FinalAPI - Licorera La Bodega";
+        options.DocumentTitle = $"{companyName} API";
     });
 }
 
@@ -67,7 +69,7 @@ app.UseRateLimiter();
 app.MapGet("/", () => Results.Ok(new
 {
     service = "Proyecto_FinalAPI",
-    project = "DistribuidoraJJ - Licorera La Bodega",
+    project = companyName,
     status = "OK",
     health = "/health"
 }));

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Proyecto_Final.Validation;
 
 namespace Proyecto_Final.Models.Admin
 {
@@ -48,7 +49,7 @@ namespace Proyecto_Final.Models.Admin
         [Display(Name = "Dirección")]
         public string? Direccion { get; set; }
 
-        [StringLength(255, MinimumLength = 4, ErrorMessage = "La contraseña debe tener al menos 4 caracteres.")]
+        [StringLength(PasswordPolicy.MaximumLength, MinimumLength = PasswordPolicy.MinimumLength, ErrorMessage = "La contraseña debe tener entre 12 y 128 caracteres.")]
         [DataType(DataType.Password)]
         [Display(Name = "Contraseña")]
         public string? Contrasena { get; set; }

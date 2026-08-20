@@ -226,7 +226,7 @@ namespace Proyecto_Final.Controllers
                 var body =
                     $"<p>Hola {System.Net.WebUtility.HtmlEncode(name)},</p>" +
                     $"<p>Su pedido <strong>#{orderId}</strong> ahora está <strong>{System.Net.WebUtility.HtmlEncode(status)}</strong>.</p>" +
-                    "<p>Gracias por su preferencia.<br/>Licorera La Bodega</p>";
+                    "<p>Gracias por su preferencia.<br/>Supermercado Mayoreo</p>";
                 _emailService.SendEmail(email, subject, body);
             }
             catch (Exception exception)

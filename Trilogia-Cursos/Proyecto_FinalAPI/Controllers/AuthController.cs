@@ -92,12 +92,12 @@ namespace Proyecto_FinalAPI.Controllers
             if (request == null ||
                 string.IsNullOrWhiteSpace(request.FullName) ||
                 string.IsNullOrWhiteSpace(request.Email) ||
-                string.IsNullOrWhiteSpace(request.Password))
+                !PasswordPolicy.IsValid(request.Password))
             {
                 return BadRequest(new AuthResult
                 {
                     Success = false,
-                    Message = "Los datos del registro son obligatorios."
+                    Message = "Los datos del registro no cumplen la política requerida."
                 });
             }
 
@@ -182,7 +182,7 @@ namespace Proyecto_FinalAPI.Controllers
             {
                 var resetUrl = $"{configuredBaseUrl}/Account/ResetPassword?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(user.Correo)}";
 
-                var asunto = "Recuperación de contraseña - Licorera La Bodega";
+                var asunto = "Recuperación de contraseña - Supermercado Mayoreo";
                 var contenido = EmailTemplateBuilder.BuildPasswordResetEmail(
                     user.NombreCompleto,
                     resetUrl);
@@ -212,7 +212,7 @@ namespace Proyecto_FinalAPI.Controllers
         {
             if (request == null ||
                 string.IsNullOrWhiteSpace(request.Token) ||
-                string.IsNullOrWhiteSpace(request.NewPassword))
+                !PasswordPolicy.IsValid(request.NewPassword))
             {
                 return BadRequest(new AuthResult
                 {

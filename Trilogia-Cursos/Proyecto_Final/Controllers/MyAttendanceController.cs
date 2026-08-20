@@ -11,20 +11,21 @@ public sealed class MyAttendanceController : Controller
 {
     private readonly IAttendanceService _attendance;
     private readonly ILogger<MyAttendanceController> _logger;
+    private readonly BusinessClock _clock;
 
-    public MyAttendanceController(IAttendanceService attendance, ILogger<MyAttendanceController> logger)
+    public MyAttendanceController(IAttendanceService attendance, ILogger<MyAttendanceController> logger, BusinessClock clock)
     {
-        _attendance = attendance; _logger = logger;
+        _attendance = attendance; _logger = logger; _clock = clock;
     }
 
     [HttpGet]
     public async Task<IActionResult> Index(DateTime? desde, DateTime? hasta, CancellationToken cancellationToken)
     {
         var userId = HttpContext.Session.GetInt32("UserId") ?? 0;
-        var end = (hasta ?? DateTime.Today).Date; var start = (desde ?? end.AddDays(-30)).Date;
+        var end = (hasta ?? _clock.Today).Date; var start = (desde ?? end.AddDays(-30)).Date;
         return View(new MyAttendanceIndexViewModel
         {
-            Form = new AttendanceFormViewModel { Fecha = DateTime.Today },
+            Form = new AttendanceFormViewModel { Fecha = _clock.Today },
             Jornadas = await _attendance.GetMineAsync(userId, start, end, cancellationToken)
         });
     }

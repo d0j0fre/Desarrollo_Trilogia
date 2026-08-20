@@ -1,10 +1,12 @@
 @using Microsoft.AspNetCore.Http
 @using Proyecto_Final.Services
+@using Microsoft.Extensions.Options
 @inject AdminDbService AdminDbService
 @inject IRolePermissionService PermissionService
+@inject IOptions<CompanyOptions> Company
 @{
-    const string SiteBrandName = "Supermercado Mayoreo";
-    const string SiteBrandSubtitle = "Licorera - Distribuidora";
+    var SiteBrandName = Company.Value.BrandName;
+    var SiteBrandSubtitle = Company.Value.BrandSubtitle;
     var pageTitle = ViewData["Title"]?.ToString();
     var documentTitle = string.IsNullOrWhiteSpace(pageTitle)
         ? SiteBrandName

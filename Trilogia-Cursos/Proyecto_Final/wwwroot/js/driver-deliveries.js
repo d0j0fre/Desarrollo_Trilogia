@@ -9,7 +9,7 @@
     var cfg = window.driverDeliveriesConfig || {};
     var STORAGE_SCOPE = "driver-delivery-queue-v2";
     var STORAGE_TTL_MS = 24 * 60 * 60 * 1000;
-    var offlineStorage = window.DistribuidoraJJOfflineStorage;
+    var offlineStorage = window.SupermercadoMayoreoOfflineStorage;
     var flushing = false;
 
     function uuid() {

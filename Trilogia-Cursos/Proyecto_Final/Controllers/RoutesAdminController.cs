@@ -409,7 +409,7 @@ namespace Proyecto_Final.Controllers
                     $"<p>Hola {System.Net.WebUtility.HtmlEncode(nombre)},</p>" +
                     $"<p>Le informamos que su pedido <strong>#{pedidoId}</strong> ahora está en estado " +
                     $"<strong>{System.Net.WebUtility.HtmlEncode(estado)}</strong>.</p>" +
-                    "<p>Gracias por su preferencia.<br/>Licorera La Bodega</p>";
+                    "<p>Gracias por su preferencia.<br/>Supermercado Mayoreo</p>";
                 _emailService.SendEmail(correo, asunto, cuerpo);
             }
             catch (Exception ex)

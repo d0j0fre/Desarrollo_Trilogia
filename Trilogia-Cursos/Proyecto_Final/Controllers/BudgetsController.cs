@@ -13,9 +13,10 @@ public sealed class BudgetsController : Controller
     private readonly BudgetDbService _budgets;
     private readonly AdminDbService _admin;
     private readonly ILogger<BudgetsController> _logger;
+    private readonly BusinessClock _clock;
 
-    public BudgetsController(BudgetDbService budgets, AdminDbService admin, ILogger<BudgetsController> logger)
-    { _budgets = budgets; _admin = admin; _logger = logger; }
+    public BudgetsController(BudgetDbService budgets, AdminDbService admin, ILogger<BudgetsController> logger, BusinessClock clock)
+    { _budgets = budgets; _admin = admin; _logger = logger; _clock = clock; }
 
     [HttpGet]
     public async Task<IActionResult> Index([FromQuery] BudgetFilterViewModel filter)
@@ -24,7 +25,7 @@ public sealed class BudgetsController : Controller
         return View(new BudgetsIndexViewModel
         {
             Filter = filter, Budgets = await _budgets.ListAsync(filter), Departments = options.Departments,
-            Categories = options.Categories, NewBudget = new() { Year = filter.Year ?? DateTime.Today.Year }
+            Categories = options.Categories, NewBudget = new() { Year = filter.Year ?? _clock.Today.Year }
         });
     }
 
@@ -79,7 +80,7 @@ public sealed class BudgetsController : Controller
     public async Task<IActionResult> Create(int? year)
     {
         await LoadOptionsAsync();
-        return View(new BudgetCreateViewModel { Year = year ?? DateTime.Today.Year });
+        return View(new BudgetCreateViewModel { Year = year ?? _clock.Today.Year });
     }
 
     [HttpPost]
