@@ -1,5 +1,6 @@
 using Proyecto_Final.Models.Store;
 using Proyecto_Final.Services;
+using System.Text.RegularExpressions;
 
 namespace Proyecto_Final.Tests;
 
@@ -75,6 +76,49 @@ public sealed class OrderReceiptHtmlBuilderTests
         Assert.DoesNotContain("Producto <script>", html);
     }
 
+    [Fact]
+    public void Receipt_RealTemplate_ReplacesEveryKnownTokenAndUsesConfiguredBrand()
+    {
+        var template = File.ReadAllText(RepositoryPath("Proyecto_Final", "EmailTemplates", "OrderReceipt.html"));
+        var sourceTokens = Regex.Matches(template, @"\{\{[A-Z_]+\}\}")
+            .Select(match => match.Value)
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+
+        var html = OrderReceiptHtmlBuilder.Build(
+            template,
+            "Cliente QA",
+            125,
+            new CheckoutViewModel
+            {
+                MetodoPago = "Tarjeta QA",
+                TipoEntrega = "Retiro en tienda",
+                DireccionEntrega = "Sucursal QA"
+            },
+            [new CartItemViewModel { Nombre = "Producto QA", Precio = 10000m, Cantidad = 1 }],
+            10000m,
+            0m,
+            new DateTime(2026, 8, 21, 9, 30, 0),
+            new CompanyOptions { BrandName = "Distribuidora JJ", BrandSubtitle = "Licorera - Distribuidora" });
+
+        Assert.Contains("Distribuidora JJ", html);
+        Assert.Contains("Licorera - Distribuidora", html);
+        Assert.Contains("<title>Confirmación de pedido - Distribuidora JJ</title>", html);
+        Assert.DoesNotContain("{{BRAND_NAME}}", html);
+        Assert.DoesNotContain("{{BRAND_SUBTITLE}}", html);
+        Assert.DoesNotContain(sourceTokens, token => html.Contains(token, StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Receipt_EmailService_UsesBusinessClockInsteadOfSystemClock()
+    {
+        var source = File.ReadAllText(RepositoryPath("Proyecto_Final", "Services", "EmailService.cs"));
+
+        Assert.Contains("BusinessClock clock", source, StringComparison.Ordinal);
+        Assert.Contains("_clock.LocalNow", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("DateTime.Now", source, StringComparison.Ordinal);
+    }
+
     private static string Build(
         IReadOnlyCollection<CartItemViewModel> items,
         decimal totalConfirmado,
@@ -93,4 +137,11 @@ public sealed class OrderReceiptHtmlBuilderTests
             descuentoTotal,
             new DateTime(2026, 7, 27, 10, 0, 0),
             new CompanyOptions { BrandName = "Distribuidora JJ", BrandSubtitle = "Licorera - Distribuidora" });
+
+    private static string RepositoryPath(params string[] parts)
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "Proyecto_Final.slnx"))) directory = directory.Parent;
+        return Path.Combine(new[] { directory?.FullName ?? throw new DirectoryNotFoundException() }.Concat(parts).ToArray());
+    }
 }

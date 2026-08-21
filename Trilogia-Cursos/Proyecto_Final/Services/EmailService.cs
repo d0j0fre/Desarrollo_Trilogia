@@ -12,11 +12,13 @@ namespace Proyecto_Final.Services
     {
         private readonly IConfiguration _configuration;
         private readonly CompanyOptions _company;
+        private readonly BusinessClock _clock;
 
-        public EmailService(IConfiguration configuration, IOptions<CompanyOptions> company)
+        public EmailService(IConfiguration configuration, IOptions<CompanyOptions> company, BusinessClock clock)
         {
             _configuration = configuration;
             _company = company.Value;
+            _clock = clock;
         }
 
         public void SendEmail(string destinatario, string asunto, string contenido)
@@ -81,7 +83,7 @@ namespace Proyecto_Final.Services
                 items,
                 totalConfirmado,
                 descuentoTotal,
-                DateTime.Now,
+                _clock.LocalNow,
                 _company);
 
             SendEmail(

@@ -1,5 +1,14 @@
 # QA final de la rama de saneamiento
 
+## Cierre definitivo Stage 1
+
+- Se corrigió el branding residual activo: iniciales `DJJ`, metadata y nomenclatura de caché; no se modificaron logo, colores ni diseño.
+- La prueba `Receipt_RealTemplate_ReplacesEveryKnownTokenAndUsesConfiguredBrand` carga la plantilla real `Proyecto_Final/EmailTemplates/OrderReceipt.html` y confirma que el HTML final contiene `Distribuidora JJ` y `Licorera - Distribuidora` sin tokens `{{...}}` pendientes.
+- `EmailService.SendOrderReceipt` utiliza `BusinessClock.LocalNow` para la fecha comercial del comprobante; el flujo no usa `DateTime.Now`.
+- Validación local del cierre: `dotnet restore` aprobado; `dotnet build Release --no-restore` aprobado sin errores; `dotnet test Release --no-build` con **290/290** pruebas aprobadas; prueba focalizada de comprobante **6/6**; secret scan **841** archivos rastreados/**810** de texto; ScriptDom **130** archivos/**1032** lotes, **0** errores; `git diff --check` aprobado.
+
+Los pendientes de entorno documentados a continuación se mantienen sin cambios y no se acreditan como completados por este cierre.
+
 ## Smoke MVC autenticado en Azure DEV — confirmado por QA el 12 de agosto de 2026
 
 La ejecución fue realizada con sesiones QA/DEMO autorizadas mediante el mecanismo
