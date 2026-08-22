@@ -99,4 +99,8 @@
 
   const validationSummary = document.querySelector("[data-djj-validation-summary]");
   if (validationSummary?.textContent.trim()) validationSummary.focus();
+
+  document.querySelectorAll("[data-djj-print]").forEach((button) => {
+    button.addEventListener("click", () => window.print());
+  });
 })();
