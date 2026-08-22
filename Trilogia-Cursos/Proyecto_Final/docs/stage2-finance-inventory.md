@@ -41,3 +41,30 @@ Fecha de revisión: 2026-08-21. Fuente de verdad: controladores, modelos y vista
 - No se añaden filtros, ordenamientos, bulk actions, acciones de factura ni estados que el backend no soporte.
 - La búsqueda UI UX Pro Max para `budget expense approval` y la búsqueda específica de stack `table form responsive` no devolvieron coincidencias verificables; se aplican sus guías generales de tablas/formularios accesibles y el Design System aprobado.
 - El smoke autenticado queda condicionado al acceso de Azure SQL. El error conocido es 40615 para la IP `152.231.188.125`; Stage 2.4 no autoriza cambios de firewall.
+
+## Gate UI UX Pro Max — postimplementación
+
+| Dominio | Jerarquía | Claridad financiera | Tabla / formulario / filtros | Estados y prevención | Accesibilidad / responsive | Resultado |
+| --- | --- | --- | --- | --- | --- | --- |
+| Finanzas / liquidaciones | PASS | PASS | PASS | PASS | PASS por revisión estática; WARN smoke autenticado | WARN |
+| Crédito y cobro | PASS | PASS | PASS | PASS | PASS por revisión estática; WARN smoke autenticado | WARN |
+| Clientes | PASS | PASS | PASS | PASS | PASS por revisión estática; WARN smoke autenticado | WARN |
+| Presupuestos | PASS | PASS | PASS | PASS | PASS por revisión estática; WARN smoke autenticado | WARN |
+| Gastos | PASS | PASS | PASS | PASS | PASS por revisión estática; WARN smoke autenticado | WARN |
+| Facturación administrativa | PASS | PASS | PASS | PASS | PASS por revisión estática; WARN smoke autenticado | WARN |
+
+No quedaron `FAIL` dentro del alcance. Los `WARN` comparten una sola causa de entorno: no hubo sesión QA autenticada conectada a Azure SQL desde la IP permitida. Se comprobó localmente `GET /health` = 200, `GET /Account/Login` = 200 y redirección 302 a Login para `/Finance` y `/Clients` sin sesión. No se modificó firewall ni se intentó un bypass.
+
+## Validación Stage 2.4
+
+- Restore: aprobado.
+- Build Release: aprobado, 0 errores y 0 advertencias.
+- Tests: 304/304 aprobados.
+- Cobertura Cobertura XML: 8.33% de líneas (1,406/16,863) y 5.53% de ramas. La cobertura global baja preexistente no se oculta; Stage 2.4 añadió cuatro contratos de UI focalizados.
+- Secret scan: 878 archivos rastreados, 844 de texto, 12 placeholders aprobados, 0 hallazgos.
+- ScriptDom: 130 archivos, 1,032 lotes, 0 errores.
+- SVG: 10 archivos válidos, 0 errores. Referencias de assets Stage 2.4: 0 faltantes.
+- CSS Stage 2: 7 archivos, 1,067 líneas, 74,524 bytes; 0 `!important`, 0 hex fuera de tokens y 0 tokens indefinidos (se excluyen las custom properties dinámicas declaradas en markup).
+- Stage 2 acumulado: 33 vistas con layout Stage 2 de 154 vistas Razor; 121 vistas todavía no migradas.
+- Alcance financiero migrado: 22 vistas de página, el parcial de gasto y la salida Print. Auditoría focalizada: 0 `s3`/`s4`, 0 Font Awesome y 0 logos legacy.
+- `git diff --check`: aprobado.
