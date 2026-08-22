@@ -215,6 +215,7 @@
                     return;
                 }
 
+                submitButton.style.width = submitButton.getBoundingClientRect().width + "px";
                 submitButton.disabled = true;
                 submitButton.setAttribute("aria-busy", "true");
                 submitButton.textContent = "Creando pedido…";

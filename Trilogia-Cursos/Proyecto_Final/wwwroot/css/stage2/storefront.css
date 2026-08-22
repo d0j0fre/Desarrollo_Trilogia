@@ -277,7 +277,8 @@
 .djj-auth-card form { display: grid; gap: var(--djj-space-4); }
 .djj-auth-logo { display: block; max-width: 13.75rem; margin: 0 auto var(--djj-space-6); }
 .djj-auth-row { display: flex; flex-wrap: wrap; gap: var(--djj-space-3); justify-content: space-between; }
-.djj-auth-terms { display: flex; gap: var(--djj-space-2); align-items: flex-start; }
+.djj-auth-row label,
+.djj-auth-terms { display: flex; min-height: 2.75rem; gap: var(--djj-space-2); align-items: center; }
 .djj-auth-submit { width: 100%; }
 .djj-auth-switch { text-align: center; }
 .djj-auth-page--single { grid-template-columns: 1fr; }

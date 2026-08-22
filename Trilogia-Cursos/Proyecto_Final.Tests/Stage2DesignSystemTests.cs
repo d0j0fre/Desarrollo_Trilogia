@@ -106,6 +106,8 @@ public sealed class Stage2DesignSystemTests
         Assert.Contains("id=\"provincia\"", checkout, StringComparison.Ordinal);
         Assert.Contains("id=\"canton\"", checkout, StringComparison.Ordinal);
         Assert.Contains("id=\"distrito\"", checkout, StringComparison.Ordinal);
+        Assert.Contains("aria-describedby=\"Provincia-error\"", checkout, StringComparison.Ordinal);
+        Assert.Contains("aria-describedby=\"ReferenciaPago-hint ReferenciaPago-error\"", checkout, StringComparison.Ordinal);
     }
 
     [Fact]
