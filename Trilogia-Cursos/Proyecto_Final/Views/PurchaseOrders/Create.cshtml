@@ -5,67 +5,62 @@
     var fromSuggestions = ViewData["FromSuggestions"] as bool? == true;
     var catalog = ViewBag.ProductCatalog as IReadOnlyList<PurchaseOrderLineSelectionViewModel> ?? [];
     ViewData["Title"] = fromSuggestions ? "Sugerencias de compra" : "Nueva orden de compra";
+    Layout = "_WorkspaceLayout";
 }
 
-<div class="container-fluid pt-4 backoffice-page">
-    <div class="row px-xl-5"><div class="col-12">
-        <h2>@ViewData["Title"]</h2>
+<header class="djj-page-header"><div class="djj-page-header__copy"><span class="djj-page-header__eyebrow">Compras · Nueva orden</span>
+        <h1>@ViewData["Title"]</h1>
         <p>@(fromSuggestions ? "Revise las líneas sugeridas y defina precios; ninguna compra se crea automáticamente." : "Busque productos y agregue únicamente las líneas que formarán la orden.")</p>
-    </div></div>
-    <div class="row px-xl-5 pb-5"><div class="col-12">
-        <form asp-action="Create" method="post" id="purchase-order-form">
+    </div></header>
+        <form asp-action="Create" method="post" id="purchase-order-form" class="djj-workspace-form">
             @Html.AntiForgeryToken()
             <input asp-for="TokenOperacion" type="hidden" />
-            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
-            <div class="form-row">
-                <div class="form-group col-md-5"><label asp-for="ProveedorId">Proveedor activo</label><select asp-for="ProveedorId" class="form-control"><option value="">Seleccione</option>@foreach (var supplier in Model.Proveedores) { <option value="@supplier.ProveedorId">@supplier.Nombre</option> }</select><span asp-validation-for="ProveedorId" class="text-danger"></span></div>
-                <div class="form-group col-md-7"><label asp-for="Notas"></label><input asp-for="Notas" class="form-control" /></div>
-            </div>
+            <div asp-validation-summary="ModelOnly" class="djj-validation-summary" role="alert" tabindex="-1"></div>
+            <section class="djj-card djj-form-grid">
+                <div class="djj-field"><label asp-for="ProveedorId">Proveedor activo</label><select asp-for="ProveedorId" class="djj-select"><option value="">Seleccioná un proveedor</option>@foreach (var supplier in Model.Proveedores) { <option value="@supplier.ProveedorId">@supplier.Nombre</option> }</select><span asp-validation-for="ProveedorId" class="djj-field__error"></span></div>
+                <div class="djj-field"><label asp-for="Notas"></label><input asp-for="Notas" class="djj-input" /></div>
+            </section>
 
-            <div class="card mb-3"><div class="card-body">
-                <label for="product-search" class="font-weight-bold">Agregar producto</label>
-                <div class="form-row align-items-end">
-                    <div class="form-group col-md-5 mb-md-0"><input id="product-search" type="search" class="form-control" placeholder="Filtrar por nombre" autocomplete="off" /></div>
-                    <div class="form-group col-md-5 mb-md-0">
-                        <select id="product-catalog" class="form-control">
+            <section class="djj-card djj-workspace-form">
+                <div class="djj-card__header"><div><h2>Agregar productos</h2><p>Solo se envían las líneas incorporadas.</p></div></div>
+                <div class="djj-form-grid">
+                    <div class="djj-field"><label for="product-search">Buscar en catálogo</label><input id="product-search" type="search" class="djj-input" placeholder="Filtrar por nombre" autocomplete="off" /></div>
+                    <div class="djj-field"><label for="product-catalog">Producto</label><select id="product-catalog" class="djj-select">
                             <option value="">Seleccione un producto</option>
                             @foreach (var product in catalog)
                             {
                                 <option value="@product.ProductoId" data-stock="@product.StockActual" data-average="@product.PromedioVentaMensual.ToString(CultureInfo.InvariantCulture)" data-last="@(product.UltimoPrecioPagado?.ToString(CultureInfo.InvariantCulture) ?? string.Empty)">@product.Nombre</option>
                             }
                         </select>
-                    </div>
-                    <div class="form-group col-md-2 mb-0"><button type="button" id="add-product" class="btn btn-outline-primary btn-block">Agregar</button></div>
+                    </div><button type="button" id="add-product" class="djj-button djj-button--outline">Agregar producto</button>
                 </div>
-                <small class="form-text text-muted">Máximo @PurchasingPolicy.MaximumLinesPerOrder líneas por orden. El formulario solo envía las líneas agregadas.</small>
-                <div id="line-message" class="text-danger mt-2" role="alert"></div>
-            </div></div>
+                <small class="djj-field__hint">Máximo @PurchasingPolicy.MaximumLinesPerOrder líneas por orden.</small>
+                <div id="line-message" class="djj-field__error" role="alert"></div>
+            </section>
 
-            <div class="table-responsive">
-                <table class="table table-sm table-hover">
+            <div class="djj-table-shell">
+                <table class="djj-table djj-table--compact">
                     <thead><tr><th>Producto</th><th>Stock</th><th>Promedio mensual</th><th>Cantidad</th><th>Precio compra</th><th>Último precio</th><th>Subtotal</th><th></th></tr></thead>
                     <tbody id="purchase-lines">
                     @for (var index = 0; index < Model.Productos.Count; index++)
                     {
                         var product = Model.Productos[index];
                         <tr class="purchase-line" data-product-id="@product.ProductoId">
-                            <td><input data-field="ProductoId" name="Productos[@index].ProductoId" value="@product.ProductoId" type="hidden" /><input data-field="Seleccionado" name="Productos[@index].Seleccionado" value="true" type="hidden" />@product.Nombre @if (product.DatosInsuficientes) { <small class="d-block text-muted">Datos históricos insuficientes</small> }</td>
+                            <td><input data-field="ProductoId" name="Productos[@index].ProductoId" value="@product.ProductoId" type="hidden" /><input data-field="Seleccionado" name="Productos[@index].Seleccionado" value="true" type="hidden" />@product.Nombre @if (product.DatosInsuficientes) { <small class="djj-table__note">Datos históricos insuficientes</small> }</td>
                             <td>@product.StockActual</td>
                             <td>@product.PromedioVentaMensual.ToString("N1")</td>
-                            <td><input data-field="Cantidad" name="Productos[@index].Cantidad" value="@product.Cantidad" type="number" min="1" class="form-control form-control-sm quantity" style="width:90px" /></td>
-                            <td><input data-field="PrecioUnitario" name="Productos[@index].PrecioUnitario" value="@product.PrecioUnitario.ToString(CultureInfo.InvariantCulture)" type="number" min="0.01" step="0.01" class="form-control form-control-sm price" data-last="@(product.UltimoPrecioPagado?.ToString(CultureInfo.InvariantCulture) ?? string.Empty)" style="width:130px" /><small class="price-warning text-danger"></small></td>
+                            <td><input data-field="Cantidad" name="Productos[@index].Cantidad" value="@product.Cantidad" type="number" min="1" class="djj-input djj-line-input quantity" /></td>
+                            <td><input data-field="PrecioUnitario" name="Productos[@index].PrecioUnitario" value="@product.PrecioUnitario.ToString(CultureInfo.InvariantCulture)" type="number" min="0.01" step="0.01" class="djj-input djj-line-input price" data-last="@(product.UltimoPrecioPagado?.ToString(CultureInfo.InvariantCulture) ?? string.Empty)" /><small class="price-warning djj-field__error"></small></td>
                             <td>@(product.UltimoPrecioPagado.HasValue ? $"₡{product.UltimoPrecioPagado:N2}" : "—")</td><td class="line-total">₡0.00</td>
-                            <td><button type="button" class="btn btn-sm btn-outline-danger remove-line" aria-label="Quitar @product.Nombre"><i class="fa fa-times"></i></button></td>
+                            <td><button type="button" class="djj-button djj-button--ghost djj-button--sm remove-line" aria-label="Quitar @product.Nombre">Quitar</button></td>
                         </tr>
                     }
                     </tbody>
-                    <tfoot><tr><th colspan="6" class="text-right">Total</th><th id="order-total">₡0.00</th><th></th></tr></tfoot>
+                    <tfoot><tr><th colspan="6" class="djj-align-right">Total</th><th id="order-total">₡0.00</th><th></th></tr></tfoot>
                 </table>
             </div>
-            <div class="d-flex justify-content-between"><a asp-action="Index" class="btn btn-outline-secondary">Volver</a><button type="submit" class="btn btn-primary">Crear orden</button></div>
+            <div class="djj-form-actions"><a asp-action="Index" class="djj-button djj-button--ghost">Cancelar</a><button type="submit" class="djj-button djj-button--primary">Crear orden</button></div>
         </form>
-    </div></div>
-</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
@@ -113,10 +108,10 @@
                 const nameCell = row.insertCell(); nameCell.append(makeInput('ProductoId', option.value, 'hidden'), makeInput('Seleccionado', 'true', 'hidden'), document.createTextNode(option.textContent));
                 appendTextCell(row, option.dataset.stock || '0');
                 appendTextCell(row, Number(option.dataset.average || 0).toLocaleString('es-CR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }));
-                const quantityCell = row.insertCell(); const quantity = makeInput('Cantidad', '1', 'number', 'form-control form-control-sm quantity'); quantity.min = '1'; quantity.style.width = '90px'; quantityCell.append(quantity);
-                const priceCell = row.insertCell(); const price = makeInput('PrecioUnitario', '1', 'number', 'form-control form-control-sm price'); price.min = '0.01'; price.step = '0.01'; price.style.width = '130px'; price.dataset.last = option.dataset.last || ''; const warning = document.createElement('small'); warning.className = 'price-warning text-danger'; priceCell.append(price, warning);
+                const quantityCell = row.insertCell(); const quantity = makeInput('Cantidad', '1', 'number', 'djj-input djj-line-input quantity'); quantity.min = '1'; quantityCell.append(quantity);
+                const priceCell = row.insertCell(); const price = makeInput('PrecioUnitario', '1', 'number', 'djj-input djj-line-input price'); price.min = '0.01'; price.step = '0.01'; price.dataset.last = option.dataset.last || ''; const warning = document.createElement('small'); warning.className = 'price-warning djj-field__error'; priceCell.append(price, warning);
                 appendTextCell(row, option.dataset.last ? money(Number(option.dataset.last)) : '—'); appendTextCell(row, money(1)).className = 'line-total';
-                const actionCell = row.insertCell(); const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'btn btn-sm btn-outline-danger remove-line'; remove.setAttribute('aria-label', `Quitar ${option.textContent}`); remove.innerHTML = '<i class="fa fa-times"></i>'; actionCell.append(remove);
+                const actionCell = row.insertCell(); const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'djj-button djj-button--ghost djj-button--sm remove-line'; remove.setAttribute('aria-label', `Quitar ${option.textContent}`); remove.textContent = 'Quitar'; actionCell.append(remove);
                 catalog.value = ''; reindex(); recalculate();
             }
 
