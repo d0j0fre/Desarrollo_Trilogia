@@ -42,6 +42,10 @@ La fuente de verdad es el último `origin/main`. Todo cambio se hace en una rama
 - El chat usa servicios especializados; no agregar nueva lógica de chat a `AdminDbService`.
 - Evidencias de entrega se almacenan fuera de `wwwroot` mediante `IEvidenceStorageService`.
 
+## Stage 2 — UI UX Pro Max mandatory workflow
+
+Todo cambio visual o de interacción debe leer primero `.agents/skills/ui-ux-pro-max/SKILL.md`, consultar las skills complementarias pertinentes y respetar `docs/brand-guidelines.md` y `docs/stage2-design-system.md`. Antes y después de implementar se revisan jerarquía, densidad, semántica, responsive y accesibilidad; una vista no se considera terminada sin ese gate UI/UX.
+
 ## Validación mínima antes de publicar
 
 ```powershell
