@@ -30,6 +30,14 @@ public sealed class Stage2DesignSystemTests
         ["Views", "Expenses", "Index.cshtml"], ["Views", "Expenses", "Create.cshtml"], ["Views", "Expenses", "Edit.cshtml"], ["Views", "Expenses", "Details.cshtml"], ["Views", "Expenses", "Accounts.cshtml"],
         ["Views", "BudgetComparison", "Index.cshtml"], ["Views", "Billing", "Index.cshtml"], ["Views", "Billing", "Detail.cshtml"]
     ];
+    private static readonly string[][] MigratedHrViews =
+    [
+        ["Views", "Employees", "Index.cshtml"], ["Views", "Employees", "Create.cshtml"], ["Views", "Employees", "Edit.cshtml"],
+        ["Views", "Employees", "Details.cshtml"], ["Views", "Employees", "LeaveRequests.cshtml"],
+        ["Views", "EmployeePortal", "Index.cshtml"], ["Views", "Attendance", "Index.cshtml"], ["Views", "MyAttendance", "Index.cshtml"],
+        ["Views", "Payroll", "Index.cshtml"], ["Views", "PaySlips", "Index.cshtml"],
+        ["Views", "MyPaySlips", "Index.cshtml"], ["Views", "MyPaySlips", "Details.cshtml"]
+    ];
 
     [Fact]
     public void PilotViews_UseOnlyTheirStage2Layouts()
@@ -81,7 +89,7 @@ public sealed class Stage2DesignSystemTests
     public void EveryPilotPhosphorReference_ExistsInTheLocalSprite()
     {
         var sprite = ReadProject("Views", "Shared", "_DjjIconSprite.cshtml");
-        var sources = MigratedStorefrontViews.Select(ReadProject).Concat(new[]
+        var sources = MigratedStorefrontViews.Select(ReadProject).Concat(MigratedBackofficeViews.Select(ReadProject)).Concat(MigratedFinanceViews.Select(ReadProject)).Concat(MigratedHrViews.Select(ReadProject)).Concat(new[]
         {
             ReadProject("Views", "Admin", "Index.cshtml"),
             ReadProject("Views", "Shared", "_StorefrontLayout.cshtml"),
@@ -249,6 +257,96 @@ public sealed class Stage2DesignSystemTests
         Assert.Contains("@if (canCredits)", layout, StringComparison.Ordinal);
         Assert.Contains("@if (canBilling)", layout, StringComparison.Ordinal);
         Assert.Contains("@if (canFinance)", layout, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MigratedHrDomains_UseWorkspaceAndHaveNoLegacyVisualDependencies()
+    {
+        Assert.All(MigratedHrViews.Select(ReadProject), view =>
+        {
+            Assert.Contains("_WorkspaceLayout", view, StringComparison.Ordinal);
+            Assert.DoesNotContain("s3-", view, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("s4-", view, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("fa fa-", view, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("font-awesome", view, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("custom-theme.css", view, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("sprint3-employees.css", view, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("<table class=\"table", view, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("<style", view, StringComparison.OrdinalIgnoreCase);
+        });
+    }
+
+    [Fact]
+    public void EmployeePresentation_MinimizesListExposureAndPreservesWriteContracts()
+    {
+        var index = ReadProject("Views", "Employees", "Index.cshtml");
+        var create = ReadProject("Views", "Employees", "Create.cshtml");
+        var edit = ReadProject("Views", "Employees", "Edit.cshtml");
+        var details = ReadProject("Views", "Employees", "Details.cshtml");
+        var requests = ReadProject("Views", "Employees", "LeaveRequests.cshtml");
+
+        Assert.DoesNotContain("item.Salario", index, StringComparison.Ordinal);
+        Assert.DoesNotContain("item.Correo", index, StringComparison.Ordinal);
+        Assert.DoesNotContain("item.Telefono", index, StringComparison.Ordinal);
+        Assert.Contains("asp-validation-summary", create, StringComparison.Ordinal);
+        Assert.Contains("data-djj-validation-summary", edit, StringComparison.Ordinal);
+        Assert.Contains("asp-for=\"RowVersionBase64\"", edit, StringComparison.Ordinal);
+        Assert.Contains("name=\"EmpleadoId\"", details, StringComparison.Ordinal);
+        Assert.Contains("name=\"TareaId\"", details, StringComparison.Ordinal);
+        Assert.Contains("name=\"SolicitudId\"", requests, StringComparison.Ordinal);
+        Assert.Contains("data-djj-confirm", requests, StringComparison.Ordinal);
+        Assert.All(new[] { create, edit, details, requests }, view => Assert.Contains("AntiForgeryToken", view, StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void AttendanceAndPayroll_PreserveSensitivePostContracts()
+    {
+        var attendance = ReadProject("Views", "Attendance", "Index.cshtml");
+        var mine = ReadProject("Views", "MyAttendance", "Index.cshtml");
+        var payroll = ReadProject("Views", "Payroll", "Index.cshtml");
+        var slips = ReadProject("Views", "PaySlips", "Index.cshtml");
+
+        Assert.Contains("name=\"RowVersionBase64\"", attendance, StringComparison.Ordinal);
+        Assert.Contains("name=\"Decision\" value=\"Aprobada\"", attendance, StringComparison.Ordinal);
+        Assert.Contains("name=\"Decision\" value=\"Rechazada\"", attendance, StringComparison.Ordinal);
+        Assert.Contains("asp-for=\"Form.IdempotencyKey\"", mine, StringComparison.Ordinal);
+        Assert.Contains("name=\"submit\" value=\"false\"", mine, StringComparison.Ordinal);
+        Assert.Contains("name=\"submit\" value=\"true\"", mine, StringComparison.Ordinal);
+        Assert.Contains("name=\"IdempotencyKey\"", payroll, StringComparison.Ordinal);
+        Assert.Contains("name=\"CalculoId\"", payroll, StringComparison.Ordinal);
+        Assert.Contains("name=\"RowVersionBase64\"", payroll, StringComparison.Ordinal);
+        Assert.Contains("Can(\"PLANILLA_APROBAR\")", payroll, StringComparison.Ordinal);
+        Assert.Contains("Can(\"PLANILLA_PAGAR\")", payroll, StringComparison.Ordinal);
+        Assert.Contains("Can(\"PLANILLA_REVERTIR\")", payroll, StringComparison.Ordinal);
+        Assert.Contains("name=\"IdempotencyKey\"", slips, StringComparison.Ordinal);
+        Assert.All(new[] { attendance, mine, payroll, slips }, view => Assert.Contains("AntiForgeryToken", view, StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void WorkspaceNavigation_UsesRealHrPermissionsAndEmployeeRelationship()
+    {
+        var layout = ReadProject("Views", "Shared", "_WorkspaceLayout.cshtml");
+        Assert.Contains("Can(\"EMPLEADOS_VER\")", layout, StringComparison.Ordinal);
+        Assert.Contains("Can(\"EMPLEADOS_SOLICITUDES\")", layout, StringComparison.Ordinal);
+        Assert.Contains("Can(\"RRHH_JORNADAS_APROBAR\")", layout, StringComparison.Ordinal);
+        Assert.Contains("Can(\"PLANILLA_VER\")", layout, StringComparison.Ordinal);
+        Assert.Contains("Can(\"PLANILLA_BOLETAS_GESTIONAR\")", layout, StringComparison.Ordinal);
+        Assert.Contains("EmployeeRelationshipService.IsEmployeeAsync", layout, StringComparison.Ordinal);
+        Assert.Contains("@if (canPayroll)", layout, StringComparison.Ordinal);
+        Assert.Contains("@if (canManagePaySlips)", layout, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void PaySlipDetail_IsBrandedPrivateAndPrintable()
+    {
+        var detail = ReadProject("Views", "MyPaySlips", "Details.cshtml");
+        var workspace = ReadProject("wwwroot", "css", "stage2", "workspace.css");
+        Assert.Contains("Distribuidora JJ", detail, StringComparison.Ordinal);
+        Assert.Contains("Licorera - Distribuidora", detail, StringComparison.Ordinal);
+        Assert.Contains("data-djj-print-document", detail, StringComparison.Ordinal);
+        Assert.Contains("data-djj-screen-only", detail, StringComparison.Ordinal);
+        Assert.Contains("@media print", workspace, StringComparison.Ordinal);
+        Assert.DoesNotContain("logo-icon.png", detail, StringComparison.OrdinalIgnoreCase);
     }
 
     private static string ReadProject(params string[] parts) => File.ReadAllText(ProjectPath(parts));
