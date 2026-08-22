@@ -288,12 +288,16 @@ public sealed class Stage2DesignSystemTests
         Assert.DoesNotContain("item.Salario", index, StringComparison.Ordinal);
         Assert.DoesNotContain("item.Correo", index, StringComparison.Ordinal);
         Assert.DoesNotContain("item.Telefono", index, StringComparison.Ordinal);
+        Assert.Contains("Can(\"EMPLEADOS_CREAR\")", index, StringComparison.Ordinal);
+        Assert.Contains("Can(\"EMPLEADOS_EDITAR\")", index, StringComparison.Ordinal);
         Assert.Contains("asp-validation-summary", create, StringComparison.Ordinal);
         Assert.Contains("data-djj-validation-summary", edit, StringComparison.Ordinal);
         Assert.Contains("asp-for=\"RowVersionBase64\"", edit, StringComparison.Ordinal);
         Assert.Contains("name=\"EmpleadoId\"", details, StringComparison.Ordinal);
         Assert.Contains("name=\"TareaId\"", details, StringComparison.Ordinal);
         Assert.Contains("name=\"SolicitudId\"", requests, StringComparison.Ordinal);
+        Assert.Contains("value=\"Cancelada\"", requests, StringComparison.Ordinal);
+        Assert.Contains("value=\"Pendiente\"", requests, StringComparison.Ordinal);
         Assert.Contains("data-djj-confirm", requests, StringComparison.Ordinal);
         Assert.All(new[] { create, edit, details, requests }, view => Assert.Contains("AntiForgeryToken", view, StringComparison.Ordinal));
     }
