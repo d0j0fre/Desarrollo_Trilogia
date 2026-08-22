@@ -1,17 +1,3 @@
-﻿@{
-    ViewData["Title"] = "Acceso Denegado";
-    Layout = "~/Views/Shared/_Layout.cshtml";
-}
-
-<main class="container my-5 text-center d-flex flex-column justify-content-center align-items-center" style="min-height: 50vh;" aria-labelledby="access-denied-title">
-    <i class="fa fa-lock text-danger mb-3" style="font-size: 5rem;" aria-hidden="true"></i>
-    <p class="display-4 fw-bold text-dark mb-0" aria-hidden="true">403</p>
-    <h1 id="access-denied-title" class="h3 text-uppercase mt-2">Acceso denegado</h1>
-    <p class="text-muted mt-2 mb-4" style="font-size: 1.1rem; max-width: 34rem;">
-        No es posible mostrar esta sección con tu acceso actual.
-    </p>
-    <a asp-controller="Home" asp-action="Index" class="btn shadow-sm" style="background-color: #D4AF37; color: #212529; font-weight: bold; padding: 10px 30px;">
-        Volver al inicio
-    </a>
-</main>
-</div>
+@{ ViewData["Title"]="Acceso denegado"; Layout="~/Views/Shared/_Layout.cshtml"; }
+@section Styles { <link rel="stylesheet" href="~/css/stage2/tokens.css" asp-append-version="true" /><link rel="stylesheet" href="~/css/stage2/base.css" asp-append-version="true" /><link rel="stylesheet" href="~/css/stage2/components.css" asp-append-version="true" /> }
+<main class="djj-state-page" aria-labelledby="access-denied-title"><section class="djj-card djj-state-card"><span class="djj-state-card__code" aria-hidden="true">403</span><h1 id="access-denied-title">Acceso denegado</h1><p>No es posible mostrar esta sección con tu acceso actual. Si necesitás completar esta tarea, solicitá el permiso correspondiente a la persona administradora.</p><div class="djj-form-actions"><button class="djj-button djj-button--ghost" type="button" onclick="history.back()">Volver</button><a asp-controller="Home" asp-action="Index" class="djj-button djj-button--primary">Ir al inicio</a></div></section></main>
