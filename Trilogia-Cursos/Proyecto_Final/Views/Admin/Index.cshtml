@@ -2,16 +2,13 @@
 @{
     Layout = "_WorkspaceLayout";
     ViewData["Title"] = "Panel general";
-    var quickLinks = new[]
+    var secondaryLinks = new[]
     {
-        ("Inventory", "Index", "warehouse", "Inventario", "Productos y existencias"),
         ("Inventory", "Movements", "history", "Movimientos", "Entradas y salidas"),
         ("Roles", "Index", "shield", "Roles", "Acceso por perfil"),
         ("Permissions", "Index", "shield", "Permisos", "Capacidades del sistema"),
         ("Clients", "Index", "users", "Clientes", "Perfiles comerciales"),
-        ("OrdersAdmin", "Index", "orders", "Pedidos", "Seguimiento operativo"),
         ("SellerOrders", "Index", "store", "Venta móvil", "Pedidos del vendedor"),
-        ("Billing", "Index", "receipt", "Facturación", "Comprobantes y estados"),
         ("Consultations", "Index", "chat", "Consultas", "Atención y seguimiento"),
         ("Audit", "Index", "history", "Auditoría", "Actividad registrada"),
         ("Payroll", "Index", "calculator", "Planilla", "Períodos y cálculos"),
@@ -77,20 +74,20 @@
 </section>
 
 <section class="djj-admin-section" aria-labelledby="djj-quick-title">
-    <div class="djj-admin-section__heading"><h2 id="djj-quick-title">Accesos rápidos</h2><p>Los mismos módulos disponibles, organizados para reducir búsqueda y desplazamiento.</p></div>
-    <div class="djj-admin-quick-grid">
-        <a class="djj-admin-quick-link" asp-controller="AccountsReceivableAdmin" asp-action="Index">
-            <span class="djj-admin-quick-link__icon"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-credit"></use></svg></span>
-            <span class="djj-admin-quick-link__copy"><strong>Crédito y cobro</strong><span>Cuentas por cobrar</span></span>
-            <svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-caret-right"></use></svg>
-        </a>
-        @foreach (var link in quickLinks)
-        {
-            <a class="djj-admin-quick-link" asp-controller="@link.Item1" asp-action="@link.Item2">
-                <span class="djj-admin-quick-link__icon"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-@link.Item3"></use></svg></span>
-                <span class="djj-admin-quick-link__copy"><strong>@link.Item4</strong><span>@link.Item5</span></span>
-                <svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-caret-right"></use></svg>
-            </a>
-        }
+    <div class="djj-admin-section__heading"><h2 id="djj-quick-title">Operación principal</h2><p>Tres destinos alineados con los indicadores y alertas de este panel.</p></div>
+    <div class="djj-admin-primary-actions">
+        <a class="djj-admin-quick-link djj-admin-quick-link--primary" asp-controller="Inventory" asp-action="Index"><span class="djj-admin-quick-link__icon"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-warehouse"></use></svg></span><span class="djj-admin-quick-link__copy"><strong>Inventario</strong><span>Productos y existencias</span></span><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-caret-right"></use></svg></a>
+        <a class="djj-admin-quick-link djj-admin-quick-link--primary" asp-controller="OrdersAdmin" asp-action="Index"><span class="djj-admin-quick-link__icon"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-orders"></use></svg></span><span class="djj-admin-quick-link__copy"><strong>Pedidos</strong><span>Seguimiento operativo</span></span><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-caret-right"></use></svg></a>
+        <a class="djj-admin-quick-link djj-admin-quick-link--primary" asp-controller="Billing" asp-action="Index"><span class="djj-admin-quick-link__icon"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-receipt"></use></svg></span><span class="djj-admin-quick-link__copy"><strong>Facturación</strong><span>Comprobantes y estados</span></span><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-caret-right"></use></svg></a>
     </div>
+    <details class="djj-admin-module-disclosure">
+        <summary>Ver los otros 11 módulos</summary>
+        <div class="djj-admin-quick-grid">
+            <a class="djj-admin-quick-link" asp-controller="AccountsReceivableAdmin" asp-action="Index"><span class="djj-admin-quick-link__icon"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-credit"></use></svg></span><span class="djj-admin-quick-link__copy"><strong>Crédito y cobro</strong><span>Cuentas por cobrar</span></span><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-caret-right"></use></svg></a>
+            @foreach (var link in secondaryLinks)
+            {
+                <a class="djj-admin-quick-link" asp-controller="@link.Item1" asp-action="@link.Item2"><span class="djj-admin-quick-link__icon"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-@link.Item3"></use></svg></span><span class="djj-admin-quick-link__copy"><strong>@link.Item4</strong><span>@link.Item5</span></span><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-caret-right"></use></svg></a>
+            }
+        </div>
+    </details>
 </section>
