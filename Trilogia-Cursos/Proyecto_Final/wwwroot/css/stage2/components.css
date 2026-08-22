@@ -244,6 +244,12 @@
 .djj-table .djj-table__number { text-align: right; font-variant-numeric: tabular-nums; }
 .djj-table .djj-table__status { text-align: center; }
 
+.djj-state-page { display: grid; min-height: 65dvh; place-items: center; padding: var(--djj-space-8) var(--djj-page-gutter); background: var(--djj-color-canvas); }
+.djj-state-card { width: min(100%, 36rem); text-align: center; }
+.djj-state-card__code { display: block; margin-bottom: var(--djj-space-2); color: var(--djj-color-primary); font-size: clamp(3rem, 10vw, 5rem); font-weight: var(--djj-weight-bold); line-height: 1; }
+.djj-state-card p { color: var(--djj-color-text-secondary); }
+.djj-state-card .djj-form-actions { justify-content: center; }
+
 @media (max-width: 35.99rem) {
   .djj-button:not(.djj-button--inline-mobile) { width: 100%; }
   .djj-page-header__actions { width: 100%; }
