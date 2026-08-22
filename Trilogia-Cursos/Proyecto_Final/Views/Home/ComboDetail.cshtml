@@ -1,57 +1,34 @@
 @model Proyecto_Final.Models.Admin.StoreComboViewModel
 @{
+    Layout = "_StorefrontLayout";
     ViewData["Title"] = Model.Nombre;
+    var requestedReturnUrl = Context.Request.Query["returnUrl"].ToString();
+    var returnUrl = Url.IsLocalUrl(requestedReturnUrl) ? requestedReturnUrl : Url.Action("Shop", "Home");
+    var statusTone = Model.Disponible ? (Model.StockDisponible <= 3 ? "warning" : "success") : "danger";
 }
 
-@section Styles {
-    <link href="~/css/sprint3-storefront-polish.css" rel="stylesheet" asp-append-version="true" />
-}
-
-<main class="s3-storefront-page s4-combo-store-detail">
-    <nav aria-label="Migas de pan" class="s4-breadcrumb">
-        <a asp-controller="Home" asp-action="Shop">Tienda</a>
-        <i class="fa fa-angle-right" aria-hidden="true"></i>
-        <span aria-current="page">@Model.Nombre</span>
-    </nav>
-
-    <section class="s4-combo-store-card">
-        <div class="s4-combo-store-card__visual">
-            <span class="s4-combo-store-card__pill"><i class="fa fa-box-open"></i> Combo</span>
-            <img src="@Url.Content(Model.ImagenUrl)" alt="Combo @Model.Nombre" />
-        </div>
-        <div class="s4-combo-store-card__content">
-            <span class="s3-home-eyebrow">Oferta armada por el comercio</span>
-            <h1>@Model.Nombre</h1>
-            <p>@Model.Descripcion</p>
-
-            <div class="s4-combo-store-facts">
-                <div><span>Componentes</span><strong>@Model.CantidadProductos</strong></div>
-                <div><span>Disponibles</span><strong>@Model.StockDisponible</strong></div>
-                <div><span>Precio</span><strong>₡@Model.Precio.ToString("N2")</strong></div>
-            </div>
-
-            <div class="s4-combo-components-summary">
-                <i class="fa fa-layer-group" aria-hidden="true"></i>
-                <div>
-                    <strong>Contenido del combo</strong>
-                    <span>@(string.IsNullOrWhiteSpace(Model.ComponentesResumen) ? $"Componentes definidos por {Company.Value.BrandName}." : Model.ComponentesResumen)</span>
-                </div>
-            </div>
-
+<main class="djj-container djj-store-page">
+    <nav class="djj-store-page__breadcrumb" aria-label="Migas de pan"><ol class="djj-breadcrumb"><li><a asp-controller="Home" asp-action="Index">Inicio</a></li><li aria-hidden="true"><svg class="djj-icon djj-icon--sm"><use href="#djj-icon-caret-right"></use></svg></li><li><a href="@returnUrl">Catálogo</a></li><li aria-hidden="true"><svg class="djj-icon djj-icon--sm"><use href="#djj-icon-caret-right"></use></svg></li><li aria-current="page">@Model.Nombre</li></ol></nav>
+    <article class="djj-product-detail">
+        <div class="djj-product-detail__media djj-product-detail__media--combo"><span class="djj-status-badge djj-status-badge--neutral"><svg class="djj-icon djj-icon--sm" aria-hidden="true"><use href="#djj-icon-package"></use></svg>Combo</span><img src="@Url.Content(Model.ImagenUrl)" alt="@Model.Nombre" width="640" height="640" /></div>
+        <div class="djj-product-detail__content">
+            <header><span class="djj-page-header__eyebrow">Oferta armada por el comercio</span><h1>@Model.Nombre</h1></header>
+            <strong class="djj-product-detail__price">₡@Model.Precio.ToString("N0")</strong><p class="djj-product-detail__description">@Model.Descripcion</p>
+            <dl class="djj-product-detail__facts"><div><dt>Componentes</dt><dd>@Model.CantidadProductos</dd></div><div><dt>Disponibilidad</dt><dd><span class="djj-status-badge djj-status-badge--@statusTone">@(Model.Disponible ? $"{Model.StockDisponible} combo(s)" : "Agotado")</span></dd></div></dl>
+            <section class="djj-product-detail__summary" aria-labelledby="combo-content-title"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-package"></use></svg><div><h2 id="combo-content-title">Contenido del combo</h2><p>@(string.IsNullOrWhiteSpace(Model.ComponentesResumen) ? "Componentes definidos por Distribuidora JJ." : Model.ComponentesResumen)</p></div></section>
             @if (Model.Disponible)
             {
-                <form asp-controller="Cart" asp-action="AddCombo" method="post" class="s4-combo-store-actions">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="comboId" value="@Model.ComboId" />
-                    <label for="comboQuantity">Cantidad</label>
-                    <input id="comboQuantity" type="number" name="cantidad" value="1" min="1" max="@Model.StockDisponible" class="form-control" />
-                    <button type="submit" class="btn btn-primary"><i class="fa fa-shopping-cart mr-1"></i>Agregar combo</button>
+                <form asp-controller="Cart" asp-action="AddCombo" method="post" class="djj-product-purchase">
+                    @Html.AntiForgeryToken()<input type="hidden" name="comboId" value="@Model.ComboId" />
+                    <div class="djj-field"><label class="djj-field__label" for="comboQuantity">Cantidad</label><input class="djj-input djj-product-purchase__quantity" id="comboQuantity" type="number" name="cantidad" value="1" min="1" max="@Model.StockDisponible" inputmode="numeric" /></div>
+                    <button class="djj-button djj-button--primary" type="submit"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-cart"></use></svg>Agregar combo</button>
                 </form>
             }
             else
             {
-                <div class="alert alert-warning" role="status">Este combo no tiene disponibilidad suficiente.</div>
+                <div class="djj-alert djj-alert--warning" role="status"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-warning"></use></svg><div><strong>Combo agotado</strong><p>Este combo no tiene disponibilidad suficiente.</p></div></div>
             }
+            <a class="djj-button djj-button--ghost djj-button--inline-mobile" href="@returnUrl"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-store"></use></svg>Volver al catálogo</a>
         </div>
-    </section>
+    </article>
 </main>

@@ -9,6 +9,8 @@
     var isLoggedIn = Context.Session.GetInt32("UserId") is > 0;
     var userName = Context.Session.GetString("UserFullName") ?? "Mi cuenta";
     var userRole = Context.Session.GetString("UserRole") ?? string.Empty;
+    var bodyClass = ViewData["BodyClass"]?.ToString() ?? string.Empty;
+    var isClient = string.Equals(userRole, "Cliente", StringComparison.OrdinalIgnoreCase);
     bool IsCurrent(string expectedController, string? expectedAction = null) =>
         string.Equals(controller, expectedController, StringComparison.OrdinalIgnoreCase)
         && (expectedAction is null || string.Equals(action, expectedAction, StringComparison.OrdinalIgnoreCase));
@@ -31,7 +33,7 @@
     <link rel="stylesheet" href="~/css/stage2/utilities.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
 </head>
-<body class="djj-stage2 djj-storefront" data-djj-layout="storefront">
+<body class="djj-stage2 djj-storefront @bodyClass" data-djj-layout="storefront">
     <a class="djj-skip-link" href="#djj-main-content">Saltar al contenido principal</a>
     <partial name="_DjjIconSprite" />
 
@@ -86,6 +88,10 @@
                 <li><a asp-controller="Home" asp-action="Contact" aria-current="@(IsCurrent("Home", "Contact") ? "page" : null)">Contacto</a></li>
                 @if (isLoggedIn)
                 {
+                    @if (isClient)
+                    {
+                        <li><a asp-controller="ClientPortal" asp-action="Index" aria-current="@(IsCurrent("ClientPortal") ? "page" : null)">Mi cuenta</a></li>
+                    }
                     <li><a asp-controller="Assistant" asp-action="Index" aria-current="@(IsCurrent("Assistant") ? "page" : null)">Asistente</a></li>
                 }
             </ul>
@@ -108,6 +114,10 @@
                     <li class="djj-mobile-nav__divider" aria-hidden="true"></li>
                     @if (isLoggedIn)
                     {
+                        @if (isClient)
+                        {
+                            <li><a asp-controller="ClientPortal" asp-action="Index" aria-current="@(IsCurrent("ClientPortal") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-orders"></use></svg>Mi cuenta</a></li>
+                        }
                         <li><a asp-controller="Profile" asp-action="Edit"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-user"></use></svg>@userName <span class="djj-sr-only">(@userRole)</span></a></li>
                         <li><a asp-controller="Assistant" asp-action="Index"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-robot"></use></svg>Asistente</a></li>
                     }
