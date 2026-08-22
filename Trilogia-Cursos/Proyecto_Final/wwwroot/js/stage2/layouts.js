@@ -103,4 +103,26 @@
   document.querySelectorAll("[data-djj-print]").forEach((button) => {
     button.addEventListener("click", () => window.print());
   });
+
+  document.addEventListener("change", (event) => {
+    const input = event.target.closest("input[type='file'][data-file-label]");
+    if (!input) return;
+    const label = document.getElementById(input.dataset.fileLabel);
+    if (!label) return;
+    const file = input.files?.[0];
+    label.textContent = file ? `${file.name} · ${Math.max(1, Math.round(file.size / 1024))} KB` : "Ningún archivo seleccionado";
+  });
+
+  document.addEventListener("input", (event) => {
+    const input = event.target.closest("[data-expense-money]");
+    if (!input) return;
+    const form = input.closest("form");
+    const output = form?.querySelector("[data-expense-total]");
+    if (!output) return;
+    const total = [...form.querySelectorAll("[data-expense-money]")].reduce((sum, field) => {
+      const value = Number.parseFloat(field.value);
+      return Number.isFinite(value) && value > 0 ? sum + value : sum;
+    }, 0);
+    output.textContent = new Intl.NumberFormat("es-CR", { style: "currency", currency: "CRC" }).format(total);
+  });
 })();

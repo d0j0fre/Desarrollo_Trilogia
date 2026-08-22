@@ -87,6 +87,34 @@
 .djj-inline-action { display: flex; align-items: center; gap: var(--djj-space-2); }
 .djj-line-input { width: 7rem; min-width: 5.5rem; }
 .djj-product-preview { border: 1px solid var(--djj-color-border); border-radius: var(--djj-radius-md); object-fit: cover; }
+.djj-money,
+.djj-money-output { font-variant-numeric: tabular-nums; }
+.djj-money--dominant { font-size: var(--djj-font-size-2xl); font-weight: var(--djj-weight-bold); }
+.djj-money-output { display: flex; min-height: var(--djj-control-height); align-items: center; border: 1px solid var(--djj-color-border); border-radius: var(--djj-control-radius); background: var(--djj-color-surface-subtle); padding-inline: var(--djj-space-3); font-weight: var(--djj-weight-bold); }
+.djj-kpi-card small { color: var(--djj-color-text-secondary); }
+.djj-kpi-card__compact { font-size: var(--djj-font-size-lg); }
+.djj-table-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--djj-space-3); border-top: 1px solid var(--djj-color-border); padding: var(--djj-space-3) var(--djj-space-4); color: var(--djj-color-text-secondary); font-size: var(--djj-font-size-sm); }
+.djj-financial-line { border-bottom: 1px solid var(--djj-color-border); padding-bottom: var(--djj-space-4); }
+.djj-financial-actions { margin-bottom: var(--djj-space-5); }
+.djj-action-cluster { display: flex; flex-wrap: wrap; align-items: end; gap: var(--djj-space-3); padding: var(--djj-space-4) var(--djj-space-5); }
+.djj-audit-list { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.djj-audit-list li { display: grid; gap: var(--djj-space-1); border-bottom: 1px solid var(--djj-color-border); padding: var(--djj-space-3) var(--djj-space-5); }
+.djj-audit-list li:last-child { border-bottom: 0; }
+.djj-audit-list span { color: var(--djj-color-text-secondary); font-size: var(--djj-font-size-xs); }
+.djj-audit-list p { margin: 0; }
+.djj-budget-progress { margin-bottom: var(--djj-space-5); }
+.djj-progress { height: 0.75rem; overflow: hidden; border-radius: var(--djj-radius-pill); background: var(--djj-color-surface-subtle); }
+.djj-progress__bar { display: block; width: var(--djj-progress-value); height: 100%; border-radius: inherit; background: var(--djj-color-primary); }
+.djj-progress__bar--success { background: var(--djj-color-success); }
+.djj-progress__bar--warning { background: var(--djj-color-warning); }
+.djj-progress__bar--danger { background: var(--djj-color-danger); }
+.djj-money-comparison { display: flex; flex-wrap: wrap; gap: var(--djj-space-4); margin-top: var(--djj-space-3); color: var(--djj-color-text-secondary); font-size: var(--djj-font-size-sm); }
+.djj-money-comparison strong { color: var(--djj-color-text); font-variant-numeric: tabular-nums; }
+.djj-financial-panels { display: grid; gap: var(--djj-space-5); }
+.djj-monthly-comparison { display: grid; gap: var(--djj-space-4); padding: var(--djj-space-5); }
+.djj-progress-row { display: grid; gap: var(--djj-space-2); }
+.djj-progress-row > div:first-child { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--djj-space-2); font-size: var(--djj-font-size-sm); }
+.djj-progress-row span { color: var(--djj-color-text-secondary); font-variant-numeric: tabular-nums; }
 .djj-detail-layout { display: grid; align-items: start; gap: var(--djj-space-5); margin-bottom: var(--djj-space-5); }
 .djj-detail-grid { display: grid; gap: var(--djj-space-4); margin: 0; }
 .djj-detail-grid div { min-width: 0; }
@@ -134,6 +162,8 @@
   .djj-filter-bar--wide { grid-template-columns: repeat(3, minmax(8rem, 1fr)); }
   .djj-kpi-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .djj-form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .djj-form-grid--three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .djj-form-grid--four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .djj-detail-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .djj-admin-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .djj-admin-quick-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -147,6 +177,11 @@
   .djj-admin-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .djj-admin-panels { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .djj-admin-quick-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .djj-form-grid--four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .djj-kpi-grid--four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .djj-kpi-grid--five { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .djj-financial-panels { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .djj-filter-bar--finance { grid-template-columns: repeat(6, minmax(8rem, 1fr)) auto; }
 }
 
 @media (max-width: 63.99rem) {
