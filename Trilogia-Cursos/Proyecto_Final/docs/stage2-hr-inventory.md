@@ -68,3 +68,28 @@ Los accesos propios (`EmployeePortal`, `MyAttendance`, `MyPaySlips`) dependen de
 - `time input` exige tipos de input correctos y etiquetas visibles.
 - No hubo coincidencias verificables, incluso tras reintento, para HR/employee management, attendance/timesheet, leave approval, payroll/payslip, sensitive-data UX, iconos de asistencia ni la consulta de stack HTML responsive. Se aplican las heurísticas generales comprobadas, las guías de accesibilidad y responsive de las skills y el Design System Stage 2; no se atribuyen resultados inexistentes al dataset.
 
+## Gate UI UX Pro Max — postimplementación
+
+| Dominio | Jerarquía / prioridad | Tabla / formulario | Estado / prevención | Privacidad | Responsive / accesibilidad | Resultado |
+| --- | --- | --- | --- | --- | --- | --- |
+| Empleados y expediente | PASS | PASS | PASS | PASS: listado sin salario, correo ni teléfono | PASS estático; WARN smoke autenticado | WARN |
+| Tareas y portal propio | PASS: lista operativa, no Kanban | PASS | PASS: prioridad y estado con texto | PASS: solo perfil propio o expediente autorizado | PASS estático; WARN smoke autenticado | WARN |
+| Jornadas | PASS | PASS: horas tabulares y filtros reales | PASS: aprobar/rechazar con contexto | PASS | PASS estático; WARN smoke autenticado | WARN |
+| Solicitudes | PASS | PASS: motivo resumido en tabla | PASS: aprobar/rechazar/cancelar diferenciados; cuatro estados preservados | PASS | PASS estático; WARN smoke autenticado | WARN |
+| Planilla | PASS | PASS: formularios agrupados y montos alineados | PASS: permisos y confirmaciones por transición | PASS: no se expone en navegación sin permiso | PASS estático; WARN smoke autenticado | WARN |
+| Boletas | PASS | PASS | PASS: notificación solo pagada | PASS: ownership/permiso y enlace privado preservados | PASS estático e impresión; WARN smoke autenticado | WARN |
+
+No quedaron `FAIL` dentro del alcance. Los `WARN` corresponden exclusivamente a QA de entorno: la aplicación local inició y `/Employees` sin sesión redirigió correctamente a `/Account/Login`, pero no había una sesión QA autenticada disponible para renderizar datos de RRHH en 1440/1024/390. No se introdujeron credenciales ni se modificó el firewall. El bloqueo histórico Azure SQL 40615 para `152.231.188.125` no se asume vigente ni resuelto sin una nueva prueba autenticada.
+
+## Validación Stage 2.5
+
+- Restore: aprobado.
+- Build Release: aprobado, 0 errores y 0 advertencias. Un primer intento durante el smoke local registró reintentos de copia por el proceso en ejecución; tras detenerlo, el build final quedó limpio.
+- Tests: 309/309 aprobados; 19 pruebas focalizadas del Design System Stage 2.
+- Cobertura Cobertura XML: 8.36% de líneas (1,406/16,808) y 5.43% de ramas (702/12,923).
+- Secret scan: 879 archivos rastreados, 845 de texto, 12 placeholders aprobados, 0 hallazgos.
+- ScriptDom: 130 archivos, 1,032 lotes, 0 errores.
+- SVG: 10 archivos válidos, 0 errores. Referencias de assets del Workspace: 0 faltantes.
+- CSS Stage 2: 7 archivos, 1,124 líneas, 78,726 bytes; 0 `!important`, 0 hex fuera de `tokens.css` y 0 tokens indefinidos, excluyendo las propiedades dinámicas declaradas en markup.
+- Stage 2.5: 12 vistas de página y el parcial de formulario migrados. Acumulado por asignación explícita de layout: 70 de 154 archivos Razor; 84 vistas, parciales o layouts sin asignación Stage 2 explícita.
+- Dependencias legacy en las 12 páginas migradas: 0 `s3`, 0 `s4`, 0 Font Awesome, 0 CSS legacy, 0 logos legacy y 0 estilos embebidos.
