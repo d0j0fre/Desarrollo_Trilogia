@@ -7,22 +7,26 @@ namespace Proyecto_Final.Services;
 public sealed class BudgetComparisonDbService
 {
     private readonly string _connectionString;
-    public BudgetComparisonDbService(IConfiguration configuration) =>
+    private readonly BusinessClock _clock;
+    public BudgetComparisonDbService(IConfiguration configuration, BusinessClock clock)
+    {
+        _clock = clock;
         _connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("No se encontró la cadena de conexión DefaultConnection.");
+    }
 
     public async Task<BudgetComparisonDashboardViewModel> GetDashboardAsync(BudgetComparisonFilterViewModel filter)
     {
-        filter.Year = filter.Year is >= 2000 and <= 2100 ? filter.Year : DateTime.Today.Year;
+        filter.Year = filter.Year is >= 2000 and <= 2100 ? filter.Year : _clock.Today.Year;
         filter.Page = Math.Max(filter.Page, 1);
         filter.PageSize = Math.Clamp(filter.PageSize, 1, 100);
-        var model = new BudgetComparisonDashboardViewModel { Filter = filter, UpdatedUtc = DateTime.UtcNow };
+        var model = new BudgetComparisonDashboardViewModel { Filter = filter, UpdatedUtc = _clock.UtcNow.UtcDateTime };
         await using var connection = new SqlConnection(_connectionString);
         await using var command = Procedure(connection, "dbo.sp_BudgetComparison_Dashboard");
         AddFilters(command, filter);
         command.Parameters.Add("@Pagina", SqlDbType.Int).Value = filter.Page;
         command.Parameters.Add("@TamanoPagina", SqlDbType.Int).Value = filter.PageSize;
-        command.Parameters.Add("@FechaNegocio", SqlDbType.Date).Value = DateTime.Today;
+        command.Parameters.Add("@FechaNegocio", SqlDbType.Date).Value = _clock.Today;
         await connection.OpenAsync();
         await using var reader = await command.ExecuteReaderAsync();
         if (await reader.ReadAsync()) model.Summary = new()

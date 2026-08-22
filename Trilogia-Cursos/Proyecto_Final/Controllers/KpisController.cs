@@ -13,12 +13,14 @@ namespace Proyecto_Final.Controllers
         private readonly KpiDbService _kpis;
         private readonly AdminDbService _adminDbService;
         private readonly ILogger<KpisController> _logger;
+        private readonly BusinessClock _clock;
 
-        public KpisController(KpiDbService kpis, AdminDbService adminDbService, ILogger<KpisController> logger)
+        public KpisController(KpiDbService kpis, AdminDbService adminDbService, ILogger<KpisController> logger, BusinessClock clock)
         {
             _kpis = kpis;
             _adminDbService = adminDbService;
             _logger = logger;
+            _clock = clock;
         }
 
         // CU-211 — Gestión de metas
@@ -79,9 +81,9 @@ namespace Proyecto_Final.Controllers
             return View(model);
         }
 
-        private static (int anio, int mes) NormalizarPeriodo(int? anio, int? mes)
+        private (int anio, int mes) NormalizarPeriodo(int? anio, int? mes)
         {
-            var hoy = DateTime.Now;
+            var hoy = _clock.LocalNow;
             var a = anio is >= 2000 and <= 2100 ? anio.Value : hoy.Year;
             var m = mes is >= 1 and <= 12 ? mes.Value : hoy.Month;
             return (a, m);

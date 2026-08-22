@@ -27,11 +27,13 @@ namespace Proyecto_Final.Services
     public class EmployeesDbService : IEmployeesService
     {
         private readonly string _connectionString;
+        private readonly IPasswordHashService _passwordHashes;
 
-        public EmployeesDbService(IConfiguration configuration)
+        public EmployeesDbService(IConfiguration configuration, IPasswordHashService passwordHashes)
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection")
                 ?? throw new InvalidOperationException("No se encontró la cadena de conexión DefaultConnection.");
+            _passwordHashes = passwordHashes;
         }
 
         public async Task<List<EmployeeRoleOptionViewModel>> GetEmployeeRolesAsync()
@@ -461,20 +463,18 @@ namespace Proyecto_Final.Services
             return history;
         }
 
-        private static void AddEmployeeFormParameters(SqlCommand command, EmployeeFormViewModel model, bool includePassword)
+        private void AddEmployeeFormParameters(SqlCommand command, EmployeeFormViewModel model, bool includePassword)
         {
             command.Parameters.Add("@PerfilId", SqlDbType.Int).Value = model.PerfilId;
             command.Parameters.Add("@NombreCompleto", SqlDbType.NVarChar, 150).Value = model.NombreCompleto.Trim();
             command.Parameters.Add("@Correo", SqlDbType.NVarChar, 150).Value = model.Correo.Trim();
 
-            if (includePassword)
-            {
-                command.Parameters.Add("@Contrasena", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.Contrasena) ? DBNull.Value : model.Contrasena.Trim();
-            }
-            else
-            {
-                command.Parameters.Add("@Contrasena", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.Contrasena) ? DBNull.Value : model.Contrasena.Trim();
-            }
+            if (includePassword && string.IsNullOrWhiteSpace(model.Contrasena))
+                throw new InvalidOperationException("La contraseña inicial es obligatoria.");
+
+            command.Parameters.Add("@ContrasenaHash", SqlDbType.NVarChar, 512).Value = string.IsNullOrWhiteSpace(model.Contrasena)
+                ? DBNull.Value
+                : _passwordHashes.Hash(model.Contrasena);
 
             command.Parameters.Add("@Telefono", SqlDbType.NVarChar, 30).Value = string.IsNullOrWhiteSpace(model.Telefono) ? DBNull.Value : model.Telefono.Trim();
             command.Parameters.Add("@Direccion", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.Direccion) ? DBNull.Value : model.Direccion.Trim();

@@ -20,7 +20,7 @@ public sealed class ProductImageLifecycleSecurityTests
     [InlineData("Create","INVENTARIO_CREAR")]
     [InlineData("Edit","INVENTARIO_EDITAR")]
     [InlineData("RemoveImage","INVENTARIO_EDITAR")]
-    [InlineData("DeletePermanent","INVENTARIO_EDITAR")]
+    [InlineData("DeletePermanent","INVENTARIO_ELIMINAR")]
     public void ImageMutations_RequireExactPermissionAndAntiforgery(string method,string permission)
     {
         var action=typeof(InventoryController).GetMethods().Single(candidate=>candidate.Name==method&&candidate.GetCustomAttributes(typeof(HttpPostAttribute),true).Any());

@@ -6,7 +6,7 @@ using Proyecto_Final.Validation;
 
 namespace Proyecto_Final.Controllers
 {
-    [SessionAuthorize("Administrador", "Empleado", "Vendedor")]
+    [AdminAuthorize("Venta móvil", "VENTA_MOVIL_CREAR")]
     public class SellerOrdersController : Controller
     {
         private readonly AdminDbService _adminDbService;
@@ -19,9 +19,6 @@ namespace Proyecto_Final.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            if (!IsAuthorizedSeller())
-                return RedirectToAction("Login", "Account");
-
             var model = await BuildCreateModelAsync(new SellerOrderCreateViewModel());
             return View(model);
         }
@@ -30,9 +27,6 @@ namespace Proyecto_Final.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(SellerOrderCreateViewModel model)
         {
-            if (!IsAuthorizedSeller())
-                return RedirectToAction("Login", "Account");
-
             model.IdentificacionCliente = CostaRicanIdentificationAttribute.Normalize(model.IdentificacionCliente);
 
             var productosSeleccionados = model.Productos
@@ -81,16 +75,6 @@ namespace Proyecto_Final.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SyncOffline([FromBody] SellerOfflineOrderSyncRequestViewModel request)
         {
-            if (!IsAuthorizedSeller())
-            {
-                return Unauthorized(new SellerOfflineOrderSyncResponseViewModel
-                {
-                    Success = false,
-                    Message = "La sesión no está activa. Inicie sesión nuevamente para sincronizar pedidos offline.",
-                    PedidoOfflineGuid = request?.PedidoOfflineGuid ?? string.Empty
-                });
-            }
-
             if (request == null)
             {
                 return Json(new SellerOfflineOrderSyncResponseViewModel
@@ -206,8 +190,9 @@ namespace Proyecto_Final.Controllers
         [HttpGet]
         public async Task<IActionResult> Confirmation(int id)
         {
-            if (!IsAuthorizedSeller())
-                return RedirectToAction("Login", "Account");
+            var vendedorId = HttpContext.Session.GetInt32("UserId") ?? 0;
+            if (!await _adminDbService.SellerOwnsOrderAsync(id, vendedorId))
+                return NotFound();
 
             var pedido = await _adminDbService.GetOrderDetailAsync(id);
             if (pedido == null)
@@ -228,8 +213,9 @@ namespace Proyecto_Final.Controllers
         [HttpGet]
         public async Task<IActionResult> RetainedConfirmation(int id)
         {
-            if (!IsAuthorizedSeller())
-                return RedirectToAction("Login", "Account");
+            var vendedorId = HttpContext.Session.GetInt32("UserId") ?? 0;
+            if (!await _adminDbService.SellerOwnsOrderAsync(id, vendedorId))
+                return NotFound();
 
             var pedido = await _adminDbService.GetOrderDetailAsync(id);
             if (pedido == null)
@@ -241,9 +227,6 @@ namespace Proyecto_Final.Controllers
         [HttpGet]
         public async Task<IActionResult> MyOrders()
         {
-            if (!IsAuthorizedSeller())
-                return RedirectToAction("Login", "Account");
-
             var vendedorId = HttpContext.Session.GetInt32("UserId") ?? 0;
             var pedidos = await _adminDbService.GetSellerMyOrdersAsync(vendedorId);
             return View(pedidos);
@@ -277,19 +260,6 @@ namespace Proyecto_Final.Controllers
                 Stock = producto.Stock,
                 Cantidad = cantidades.TryGetValue(producto.ProductoId, out var cantidad) ? Math.Max(cantidad, 0) : 0
             }).ToList();
-        }
-
-        private bool IsAuthorizedSeller()
-        {
-            var email = HttpContext.Session.GetString("UserEmail");
-            var role = HttpContext.Session.GetString("UserRole");
-
-            if (string.IsNullOrWhiteSpace(email))
-                return false;
-
-            return string.Equals(role, "Administrador", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(role, "Empleado", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(role, "Vendedor", StringComparison.OrdinalIgnoreCase);
         }
 
         private async Task RegistrarAuditoriaAsync(string accion, string modulo, string descripcion)

@@ -10,16 +10,18 @@ namespace Proyecto_Final.Controllers
     public class ManagementDashboardController : Controller
     {
         private readonly ReportsDbService _reports;
+        private readonly BusinessClock _clock;
 
-        public ManagementDashboardController(ReportsDbService reports)
+        public ManagementDashboardController(ReportsDbService reports, BusinessClock clock)
         {
             _reports = reports;
+            _clock = clock;
         }
 
         [HttpGet]
         public async Task<IActionResult> Index(string? rango, DateTime? desde, DateTime? hasta)
         {
-            var hoy = DateTime.Today;
+            var hoy = _clock.Today;
             DateTime rangoDesde, rangoHasta;
             string rangoNormalizado;
 

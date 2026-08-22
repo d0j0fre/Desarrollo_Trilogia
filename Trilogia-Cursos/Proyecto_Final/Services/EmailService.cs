@@ -4,16 +4,21 @@ using System.Text;
 using Proyecto_Final.Models.Store;
 
 using System.Globalization;
+using Microsoft.Extensions.Options;
 
 namespace Proyecto_Final.Services
 {
     public class EmailService
     {
         private readonly IConfiguration _configuration;
+        private readonly CompanyOptions _company;
+        private readonly BusinessClock _clock;
 
-        public EmailService(IConfiguration configuration)
+        public EmailService(IConfiguration configuration, IOptions<CompanyOptions> company, BusinessClock clock)
         {
             _configuration = configuration;
+            _company = company.Value;
+            _clock = clock;
         }
 
         public void SendEmail(string destinatario, string asunto, string contenido)
@@ -78,7 +83,8 @@ namespace Proyecto_Final.Services
                 items,
                 totalConfirmado,
                 descuentoTotal,
-                DateTime.Now);
+                _clock.LocalNow,
+                _company);
 
             SendEmail(
                 destinatario,
@@ -99,11 +105,13 @@ namespace Proyecto_Final.Services
             IEnumerable<CartItemViewModel> items,
             decimal totalConfirmado,
             decimal descuentoTotal,
-            DateTime fecha)
+            DateTime fecha,
+            CompanyOptions company)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(template);
             ArgumentNullException.ThrowIfNull(checkout);
             ArgumentNullException.ThrowIfNull(items);
+            ArgumentNullException.ThrowIfNull(company);
             if (pedidoId <= 0 || totalConfirmado < 0 || descuentoTotal < 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(totalConfirmado), "Los importes confirmados del pedido no son válidos.");
@@ -142,6 +150,8 @@ namespace Proyecto_Final.Services
                 : string.Empty;
 
             return template
+                .Replace("{{BRAND_NAME}}", Encode(company.BrandName))
+                .Replace("{{BRAND_SUBTITLE}}", Encode(company.BrandSubtitle))
                 .Replace("{{CLIENTE}}", Encode(cliente))
                 .Replace("{{PEDIDO}}", Encode("#" + pedidoId))
                 .Replace("{{FECHA}}", Encode(fecha.ToString("dd/MM/yyyy HH:mm", CostaRicaCulture)))

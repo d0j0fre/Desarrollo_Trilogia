@@ -9,25 +9,30 @@ namespace Proyecto_Final.Controllers
     {
         private readonly AccountApiService _accountApiService;
         private readonly AdminDbService _adminDbService;
+        private readonly IWorkspaceResolver _workspaceResolver;
         private readonly ILogger<AccountController> _logger;
 
         public AccountController(
             AccountApiService accountApiService,
             AdminDbService adminDbService,
+            IWorkspaceResolver workspaceResolver,
             ILogger<AccountController> logger)
         {
             _accountApiService = accountApiService;
             _adminDbService = adminDbService;
+            _workspaceResolver = workspaceResolver;
             _logger = logger;
         }
 
         [HttpGet]
-        public IActionResult Login()
+        public async Task<IActionResult> Login(string? returnUrl = null)
         {
             if (!string.IsNullOrWhiteSpace(HttpContext.Session.GetString("UserEmail")))
             {
-                return RedirectToAction("Index", "Home");
+                return await RedirectAfterLoginAsync(returnUrl, HttpContext.Session.GetString("UserRole"));
             }
+
+            ViewBag.ReturnUrl = SafeLocalReturnUrl(returnUrl);
 
             return View(new Proyecto_Final.Models.LoginViewModel
             {
@@ -43,8 +48,9 @@ namespace Proyecto_Final.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [EnableRateLimiting("authentication")]
-        public async Task<IActionResult> Login(Proyecto_Final.Models.LoginViewModel model)
+        public async Task<IActionResult> Login(Proyecto_Final.Models.LoginViewModel model, string? returnUrl = null)
         {
+            ViewBag.ReturnUrl = SafeLocalReturnUrl(returnUrl);
             if (!ModelState.IsValid)
             {
                 return View(model);
@@ -64,6 +70,7 @@ namespace Proyecto_Final.Controllers
                 HttpContext.Session.SetString("UserEmail", response.Email ?? string.Empty);
                 HttpContext.Session.SetString("UserFullName", response.FullName ?? string.Empty);
                 HttpContext.Session.SetString("UserRole", response.Role ?? string.Empty);
+                HttpContext.Session.SetString("SecurityStamp", response.SecurityStamp ?? string.Empty);
 
                 await RegistrarAuditoriaAsync(
                     response.UserId ?? 0,
@@ -75,7 +82,7 @@ namespace Proyecto_Final.Controllers
                     "El usuario inició sesión correctamente.");
 
                 TempData["LoginSuccess"] = $"Bienvenido, {response.FullName}.";
-                return RedirectToAction("Index", "Home");
+                return await RedirectAfterLoginAsync(returnUrl, response.Role);
             }
             catch (Exception exception)
             {
@@ -275,6 +282,23 @@ namespace Proyecto_Final.Controllers
                 descripcion,
                 HttpContext.Connection.RemoteIpAddress?.ToString(),
                 Request.Headers.UserAgent.ToString());
+        }
+
+        private string? SafeLocalReturnUrl(string? returnUrl) => SafeLocalReturnUrl(Url, returnUrl);
+
+        internal static string? SafeLocalReturnUrl(IUrlHelper url, string? returnUrl) =>
+            !string.IsNullOrWhiteSpace(returnUrl) && url.IsLocalUrl(returnUrl) ? returnUrl : null;
+
+        private async Task<IActionResult> RedirectAfterLoginAsync(string? returnUrl, string? role)
+        {
+            var localReturnUrl = SafeLocalReturnUrl(returnUrl);
+            if (localReturnUrl is not null)
+                return LocalRedirect(localReturnUrl);
+
+            var destination = await _workspaceResolver.ResolveAsync(
+                HttpContext.Session.GetInt32("UserId") ?? 0,
+                role);
+            return RedirectToAction(destination.Action, destination.Controller);
         }
     }
 }

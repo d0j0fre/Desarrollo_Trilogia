@@ -6,6 +6,7 @@ using System.Text;
 namespace Proyecto_Final.Controllers;
 
 [SessionAuthorize]
+[EmployeeRelationshipAuthorize]
 public sealed class MyPaySlipsController : Controller
 {
     private readonly IPaySlipService _service;

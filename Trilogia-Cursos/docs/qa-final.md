@@ -1,5 +1,14 @@
 # QA final de la rama de saneamiento
 
+## Cierre definitivo Stage 1
+
+- Se corrigió el branding residual activo: iniciales `DJJ`, metadata y nomenclatura de caché; no se modificaron logo, colores ni diseño.
+- La prueba `Receipt_RealTemplate_ReplacesEveryKnownTokenAndUsesConfiguredBrand` carga la plantilla real `Proyecto_Final/EmailTemplates/OrderReceipt.html` y confirma que el HTML final contiene `Distribuidora JJ` y `Licorera - Distribuidora` sin tokens `{{...}}` pendientes.
+- `EmailService.SendOrderReceipt` utiliza `BusinessClock.LocalNow` para la fecha comercial del comprobante; el flujo no usa `DateTime.Now`.
+- Validación local del cierre: `dotnet restore` aprobado; `dotnet build Release --no-restore` aprobado sin errores; `dotnet test Release --no-build` con **290/290** pruebas aprobadas; prueba focalizada de comprobante **6/6**; secret scan **841** archivos rastreados/**810** de texto; ScriptDom **130** archivos/**1032** lotes, **0** errores; `git diff --check` aprobado.
+
+Los pendientes de entorno documentados a continuación se mantienen sin cambios y no se acreditan como completados por este cierre.
+
 ## Smoke MVC autenticado en Azure DEV — confirmado por QA el 12 de agosto de 2026
 
 La ejecución fue realizada con sesiones QA/DEMO autorizadas mediante el mecanismo
@@ -303,3 +312,54 @@ Pendiente hasta completar publicación:
 - [x] Respaldo lógico `DistribuidoraJJ_DB_DEV_pre0022_20260812` confirmado `Online`; 0022 aplicada con SHA-256 `32D6ADE170430000214E8C8FF4FA43ED1ADB943C14D7F0F26AD09E193652D96A` y verificador aprobado (59 usuarios legados pendientes de actualización gradual, sin inventar credenciales).
 - [ ] Desplegar el commit integrado y ejecutar smoke público final.
 - [ ] Ejecutar QA autenticado por rol; no había sesión ni credenciales QA autorizadas disponibles durante la revisión local.
+
+## Saneamiento integral Stage 1 — 19 de agosto de 2026
+
+Evidencia local ejecutada sobre `codex/saneamiento-etapa1`:
+
+- Baseline oficial inmutable confirmado en `database/DistribuidoraJJ_DB.sql`, SHA-256 `11625D764BFECD4BB86C932A5A6FA3ECCFC00CD4E62AEBF9B603D899828922B7`; secuencia incremental ordenada de 29 migraciones.
+- Build Release y suite completa: 272 pruebas aprobadas, 0 fallidas y 0 omitidas.
+- ScriptDom recursivo sobre `database/`: 99 archivos y 629 lotes, 0 errores.
+- Escaneo de secretos: 834 archivos rastreados, 803 archivos de texto y 12 placeholders/vacíos aprobados; 0 hallazgos.
+- El catálogo de autorización queda cubierto por migraciones oficiales; 0029 incorpora 12 capacidades que antes existían únicamente en scripts históricos.
+- Se agregó una suite Playwright reproducible para login seguro, destinos por rol, contacto, ownership negativo, consola, logout y limpieza offline.
+
+Limitaciones y validaciones pendientes de entorno:
+
+- [ ] Ejecutar el baseline en una base SQL Server limpia, aplicar 0001–0029 en orden, correr cada `verify.sql` y finalizar con `DBCC CHECKDB`. La comprobación local actual valida integridad SHA, secuencia y sintaxis; no equivale a una instalación real.
+- [ ] Antes de aplicar 0026, confirmar que todos los usuarios activos tienen hash válido; aplicar 0024–0029 solo después de backup y autorización del responsable del entorno.
+- [ ] Ejecutar Playwright autenticado en DEV con secretos temporales autorizados para Administrador, Cliente, Vendedor y Chofer. La ejecución local pública no se marca aprobada porque las páginas dependen de configuración/datos externos ausentes.
+- [ ] Validar Redis, CSP y cabeceras en el despliegue productivo; confirmar también SMTP y rate limiting distribuido entre instancias.
+- [ ] Repetir pruebas de ownership con IDs sintéticos ajenos y comprobar 403/404 sin filtración, además de antiforgery y errores sin detalle interno.
+
+## Cierre Stage 1.1 — 19 de agosto de 2026
+
+Correcciones realizadas sobre el mismo PR #127:
+
+- El cierre de kilometraje inicia la transacción antes de la lectura `UPDLOCK/HOLDLOCK`, conserva ownership en el `UPDATE`, exige `KmFinal IS NULL`, confirma una sola fila y traduce el segundo cierre al error de negocio 53044. El harness LocalDB desechable ejecutó dos sesiones: A cerró en 150, B fue rechazada y jornada/odómetro conservaron un único valor.
+- `WorkspaceResolver` selecciona destinos existentes mediante rol, capacidades efectivas, módulos autorizados y relación laboral. El `returnUrl` local explícito conserva prioridad; uno externo se descarta.
+- El menú Chat depende exclusivamente de `CHAT_USAR`; `CHAT_DEPARTAMENTOS_GESTIONAR` queda limitado a la administración. El controlador mantiene la misma capacidad exacta y el bypass único de Administrador.
+- La identidad activa se normalizó a `Distribuidora JJ` / `Licorera - Distribuidora`. Vistas, correos MVC/API, comprobantes, cookie, Redis y almacenamiento offline consumen configuración o identificadores técnicos coherentes. No se modificó el diseño visual.
+
+Pruebas y evidencia:
+
+- Se añadieron 16 casos de regresión: landings críticos y personalizados, módulos de Facturación/Créditos/Auditoría, relación laboral/fallback, `returnUrl` local/externo, Chat permitido/denegado/Administrador, contrato atómico de 0024 y auditoría automática de marcas obsoletas.
+- Restauración y build Release: aprobados, 0 errores y 0 advertencias.
+- Suite completa: 288 aprobadas, 0 fallidas y 0 omitidas.
+- SQL ScriptDom recursivo (`database` + `database_Esteban`): 130 archivos, 1032 lotes, 0 errores.
+- Baseline: SHA-256 oficial confirmado y 29 migraciones ordenadas; verificador de 0024 ampliado.
+- Escaneo de secretos: 841 archivos rastreados, 810 archivos de texto, 12 placeholders/vacíos aprobados y 0 hallazgos.
+- Playwright público local: aprobado para Login con `returnUrl` seguro y Contacto sobre una base mínima desechable. La instancia y la base fueron eliminadas al terminar.
+- `git diff --check`: aprobado.
+
+No se ejecutó Playwright autenticado porque no se proporcionaron credenciales QA autorizadas. Tampoco se aplicaron migraciones en Azure o en bases compartidas, no se desplegó y no se hizo merge.
+
+Pendientes de entorno que continúan abiertos:
+
+- [ ] SQL Server limpio: baseline -> 0001–0029 -> cada `verify.sql` -> `DBCC CHECKDB`.
+- [ ] Confirmar que todos los usuarios activos tienen hash válido antes de 0026.
+- [ ] Aplicar 0024–0029 solo con autorización, backup, ejecutor designado y SHA real.
+- [ ] Ejecutar Playwright DEV autenticado con cuentas QA temporales para Administrador, Cliente, Vendedor y Chofer, incluidos ownership negativo y logout.
+- [ ] Validar Redis real y rate limiting distribuido entre instancias.
+- [ ] Validar SMTP real sin exponer credenciales.
+- [ ] Validar CSP y cabeceras en el despliegue efectivo.

@@ -5,14 +5,10 @@ using Proyecto_Final.Hubs;
 using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
+StartupConfigurationValidator.Validate(builder.Configuration, builder.Environment);
 
 // MVC
 builder.Services.AddControllersWithViews();
-// Sube el límite de campos de formulario: la orden de compra envía 8 campos por producto del catálogo
-builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
-{
-    options.ValueCountLimit = 4096;
-});
 builder.Services.AddSignalR();
 builder.Services.AddAntiforgery(options => options.HeaderName = "X-CSRF-TOKEN");
 builder.Services.AddRateLimiter(options =>
@@ -31,6 +27,17 @@ builder.Services.AddRateLimiter(options =>
             }));
 
     options.AddPolicy("password-recovery", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(15),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+
+    options.AddPolicy("public-contact", httpContext =>
         RateLimitPartition.GetFixedWindowLimiter(
             httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             _ => new FixedWindowRateLimiterOptions
@@ -131,8 +138,19 @@ builder.Services.AddRateLimiter(options =>
             }));
 });
 
-// Session
-builder.Services.AddDistributedMemoryCache();
+// Session compartida: memoria solo para desarrollo local; Redis es obligatorio en producción.
+if (builder.Environment.IsProduction())
+{
+    builder.Services.AddStackExchangeRedisCache(options =>
+    {
+        options.Configuration = builder.Configuration.GetConnectionString("DistributedCache");
+        options.InstanceName = "DistribuidoraJJ:";
+    });
+}
+else
+{
+    builder.Services.AddDistributedMemoryCache();
+}
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(45);
@@ -148,6 +166,10 @@ builder.Services.AddSession(options =>
 // Servicios propios
 builder.Services.AddScoped<AdminDbService>();
 builder.Services.AddScoped<IRolePermissionService, RolePermissionService>();
+builder.Services.AddScoped<IEmployeeRelationshipService, EmployeeRelationshipService>();
+builder.Services.AddScoped<IWorkspaceResolver, WorkspaceResolver>();
+builder.Services.AddScoped<IUserSessionValidationService, UserSessionValidationService>();
+builder.Services.AddSingleton<IPasswordHashService, PasswordHashService>();
 builder.Services.AddScoped<IEmployeesService, EmployeesDbService>();
 builder.Services.AddScoped<IAttendanceService, AttendanceDbService>();
 builder.Services.AddScoped<IPayrollService, PayrollDbService>();
@@ -182,6 +204,8 @@ builder.Services.AddSingleton<IEvidenceStorageService, FileEvidenceStorageServic
 builder.Services.AddSingleton<IPrivateFileStorageService, PrivateFileStorageService>();
 builder.Services.AddSingleton<IProductImageStorageService, ProductImageStorageService>();
 builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton<BusinessClock>();
+builder.Services.Configure<CompanyOptions>(builder.Configuration.GetSection("Company"));
 
 // HttpClient para consumir la API de autenticación
 builder.Services.AddHttpClient<AccountApiService>(client =>
@@ -215,6 +239,7 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.UseSession();
+app.UseMiddleware<SessionValidationMiddleware>();
 app.UseRateLimiter();
 
 app.UseAuthorization();

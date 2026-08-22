@@ -103,10 +103,10 @@
                         <img src="~/brand/logo-icon.png"
                              asp-append-version="true"
                              class="s4-client-invoice-logo"
-                             alt="Supermercado Mayoreo" />
+                             alt="@Company.Value.BrandName" />
                         <div>
-                            <span>Supermercado Mayoreo</span>
-                            <small>Licorera - Distribuidora</small>
+                            <span>@Company.Value.BrandName</span>
+                            <small>@Company.Value.BrandSubtitle</small>
                         </div>
                     </div>
                     <h2>Estado de cuenta</h2>

@@ -121,6 +121,7 @@ public sealed record PurchaseOrderLineRequest(int ProductoId, int Cantidad, deci
 public static class PurchasingPolicy
 {
     public const decimal SignificantPriceVariationPercent = 15m;
+    public const int MaximumLinesPerOrder = 50;
 
     public static IReadOnlyList<PurchaseOrderLineRequest> NormalizeLines(
         IEnumerable<PurchaseOrderLineSelectionViewModel>? products) =>
@@ -141,6 +142,11 @@ public static class PurchasingPolicy
         {
             yield return new ValidationResult("Debe seleccionar al menos un producto.", [nameof(PurchaseOrderFormViewModel.Productos)]);
             yield break;
+        }
+
+        if (selected.Length > MaximumLinesPerOrder)
+        {
+            yield return new ValidationResult($"Una orden no puede superar {MaximumLinesPerOrder} líneas.", [nameof(PurchaseOrderFormViewModel.Productos)]);
         }
 
         if (selected.GroupBy(product => product.ProductoId).Any(group => group.Key <= 0 || group.Count() > 1))

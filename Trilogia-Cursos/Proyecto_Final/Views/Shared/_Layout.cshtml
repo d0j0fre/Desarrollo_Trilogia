@@ -1,9 +1,10 @@
 @using Microsoft.AspNetCore.Http
 @using Proyecto_Final.Services
 @inject AdminDbService AdminDbService
+@inject IRolePermissionService PermissionService
 @{
-    const string SiteBrandName = "Supermercado Mayoreo";
-    const string SiteBrandSubtitle = "Licorera - Distribuidora";
+    var SiteBrandName = Company.Value.BrandName;
+    var SiteBrandSubtitle = Company.Value.BrandSubtitle;
     var pageTitle = ViewData["Title"]?.ToString();
     var documentTitle = string.IsNullOrWhiteSpace(pageTitle)
         ? SiteBrandName
@@ -16,12 +17,12 @@
     <meta charset="utf-8">
     <title>@documentTitle</title>
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <meta content="supermercado, mayoreo, licorera, distribuidora, licores, whisky, vinos, cervezas, ron, vodka" name="keywords">
-    <meta content="Supermercado Mayoreo - Licorera y distribuidora" name="description">
+    <meta content="Distribuidora JJ, licorera, distribuidora, licores, whisky, vinos, cervezas, ron, vodka" name="keywords">
+    <meta content="@SiteBrandName - @SiteBrandSubtitle" name="description">
 
-    <link href="@Url.Content("~/brand/favicon.ico")?v=sm-1" rel="icon" sizes="any">
-    <link href="@Url.Content("~/brand/favicon-32x32.png")?v=sm-1" rel="icon" type="image/png" sizes="32x32">
-    <link href="@Url.Content("~/brand/apple-touch-icon.png")?v=sm-1" rel="apple-touch-icon" sizes="180x180">
+    <link href="@Url.Content("~/brand/favicon.ico")?v=djj-1" rel="icon" sizes="any">
+    <link href="@Url.Content("~/brand/favicon-32x32.png")?v=djj-1" rel="icon" type="image/png" sizes="32x32">
+    <link href="@Url.Content("~/brand/apple-touch-icon.png")?v=djj-1" rel="apple-touch-icon" sizes="180x180">
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
@@ -41,31 +42,42 @@
     @RenderSection("Styles", required: false)
 </head>
 
-<body>
+<body data-authenticated-user-id="@(Context.Session.GetInt32("UserId")?.ToString() ?? string.Empty)">
     @{
         var userName = Context.Session.GetString("UserFullName");
         var userRole = Context.Session.GetString("UserRole");
         var isLoggedIn = !string.IsNullOrWhiteSpace(Context.Session.GetString("UserEmail"));
         var isAdmin = isLoggedIn && string.Equals(userRole, "Administrador", StringComparison.OrdinalIgnoreCase);
-        var isSellerOrStaff = isLoggedIn && (
-            string.Equals(userRole, "Administrador", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(userRole, "Empleado", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(userRole, "Vendedor", StringComparison.OrdinalIgnoreCase));
-        var isEmployeePortalUser = isLoggedIn && (
-            string.Equals(userRole, "Empleado", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(userRole, "Vendedor", StringComparison.OrdinalIgnoreCase));
         var isClient = isLoggedIn && string.Equals(userRole, "Cliente", StringComparison.OrdinalIgnoreCase);
-        var isGerente = isLoggedIn && string.Equals(userRole, "Gerente", StringComparison.OrdinalIgnoreCase);
         var isChofer = isLoggedIn && string.Equals(userRole, "Chofer", StringComparison.OrdinalIgnoreCase);
-        var isWarehouse = isLoggedIn && (
-            string.Equals(userRole, "Bodega", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(userRole, "Bodeguero", StringComparison.OrdinalIgnoreCase));
-        var isCajero = isLoggedIn && (
-            string.Equals(userRole, "Cajero", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(userRole, "Financiero", StringComparison.OrdinalIgnoreCase));
-        var isPurchasing = isLoggedIn && string.Equals(userRole, "Compras", StringComparison.OrdinalIgnoreCase);
-        // Supervisor: acceso a RRHH y Planilla sin ver el resto de módulos administrativos.
-        var isSupervisor = isLoggedIn && string.Equals(userRole, "Supervisor", StringComparison.OrdinalIgnoreCase);
+        var userId = Context.Session.GetInt32("UserId") ?? 0;
+        var effectivePermissions = isLoggedIn && !isAdmin
+            ? await PermissionService.GetPermissionCodesAsync(userRole)
+            : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        bool HasPermission(string code) => isAdmin || effectivePermissions.Contains(code);
+        var isEmployeePortalUser = isLoggedIn && await AdminDbService.IsEmployeeUserAsync(userId);
+        var canViewBudgets = HasPermission("PRESUPUESTOS_VER");
+        var canViewExpenses = HasPermission("GASTOS_VER");
+        var canCompareBudgets = HasPermission("PRESUPUESTOS_COMPARAR");
+        var canViewDeliveryBoard = HasPermission("ENTREGAS_TABLERO_VER");
+        var canViewDocumentAlerts = HasPermission("DOCUMENTOS_VER");
+        var canViewSuppliers = HasPermission("PROVEEDORES_VER");
+        var canViewPurchaseOrders = HasPermission("COMPRAS_ORDENES_VER");
+        var canViewPriceHistory = HasPermission("COMPRAS_PRECIOS_VER");
+        var canViewEmployees = HasPermission("EMPLEADOS_VER");
+        var canManageLeaveRequests = HasPermission("EMPLEADOS_SOLICITUDES");
+        var canApproveAttendance = HasPermission("RRHH_JORNADAS_APROBAR");
+        var canViewPayroll = HasPermission("PLANILLA_VER");
+        var canManagePaySlips = HasPermission("PLANILLA_BOLETAS_GESTIONAR");
+        var canCreateMobileSale = HasPermission("VENTA_MOVIL_CREAR");
+        var canAuthorizeOrders = HasPermission("PEDIDOS_AUTORIZAR_RECHAZAR");
+        var canViewManagementDashboard = HasPermission("REPORTES_DASHBOARD");
+        var canViewSalesReports = HasPermission("REPORTES_VENTAS_VER");
+        var canViewSellerReports = HasPermission("REPORTES_VENDEDORES_VER");
+        var canViewKpis = HasPermission("REPORTE_KPI");
+        var canUseFinance = HasPermission("LIQUIDACION_FINANCIERA");
+        var canUseChat = HasPermission("CHAT_USAR");
+        var canManageChat = HasPermission("CHAT_DEPARTAMENTOS_GESTIONAR");
         var categoriasLayout = await AdminDbService.GetStoreCategoriesAsync();
     }
 
@@ -92,7 +104,7 @@
                             </div>
                         </a>
 
-                        <form asp-controller="Account" asp-action="Logout" method="post" class="m-0">
+                        <form asp-controller="Account" asp-action="Logout" method="post" class="m-0" data-clear-private-storage="true">
                             @Html.AntiForgeryToken()
                             <button type="submit" class="btn btn-primary logout-btn" style="color: #fff !important;">
                                 <i class="fa fa-sign-out-alt mr-1"></i>Cerrar sesión
@@ -127,7 +139,7 @@
                     <a asp-controller="Home" asp-action="Index" class="brand-navbar text-decoration-none" aria-label="@SiteBrandName">
                         <span class="brand-navbar__mark" aria-hidden="true">
                             <img class="brand-navbar__icon" src="@Url.Content("~/brand/logo-icon.png")" alt="" onerror="this.style.display='none';" />
-                            <span class="brand-navbar__initials">SM</span>
+                            <span class="brand-navbar__initials">DJJ</span>
                         </span>
                         <span class="brand-navbar__copy">
                             <span class="brand-navbar__name">@SiteBrandName</span>
@@ -143,42 +155,42 @@
                         <div class="navbar-nav ml-lg-auto py-0 main-nav-clean main-nav-2027">
                             <a asp-controller="Home" asp-action="Index" class="nav-item nav-link"><i class="fa fa-home mr-1"></i>Inicio</a>
 
-                            @if (!isAdmin && (isGerente || isCajero))
+                            @if (!isAdmin && (canViewBudgets || canViewExpenses || canCompareBudgets || canViewDeliveryBoard || canViewDocumentAlerts))
                             {
                                 <div class="nav-item dropdown">
                                     <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown"><i class="fa fa-coins mr-1"></i>Finanzas</a>
                                     <div class="dropdown-menu border-0 rounded-0 m-0">
-                                        <a asp-controller="Budgets" asp-action="Index" class="dropdown-item">Presupuestos anuales</a>
-                                        <a asp-controller="Expenses" asp-action="Index" class="dropdown-item">Gastos operativos</a>
-                                        <a asp-controller="BudgetComparison" asp-action="Index" class="dropdown-item">Presupuesto vs. real</a>
-                                        @if (isGerente) { <a asp-controller="DeliveryBoard" asp-action="Index" class="dropdown-item">Tablero de entregas</a> }
-                                        @if (isGerente) { <a asp-controller="Documents" asp-action="Alerts" class="dropdown-item"><i class="fa fa-bell text-warning mr-1"></i>Alertas documentales</a> }
+                                        @if (canViewBudgets) { <a asp-controller="Budgets" asp-action="Index" class="dropdown-item">Presupuestos anuales</a> }
+                                        @if (canViewExpenses) { <a asp-controller="Expenses" asp-action="Index" class="dropdown-item">Gastos operativos</a> }
+                                        @if (canCompareBudgets) { <a asp-controller="BudgetComparison" asp-action="Index" class="dropdown-item">Presupuesto vs. real</a> }
+                                        @if (canViewDeliveryBoard) { <a asp-controller="DeliveryBoard" asp-action="Index" class="dropdown-item">Tablero de entregas</a> }
+                                        @if (canViewDocumentAlerts) { <a asp-controller="Documents" asp-action="Alerts" class="dropdown-item"><i class="fa fa-bell text-warning mr-1"></i>Alertas documentales</a> }
                                     </div>
                                 </div>
                             }
 
-                            @if (!isAdmin && isPurchasing)
+                            @if (!isAdmin && (canViewSuppliers || canViewPurchaseOrders || canViewPriceHistory))
                             {
                                 <div class="nav-item dropdown">
                                     <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown"><i class="fa fa-shopping-cart mr-1"></i>Compras</a>
                                     <div class="dropdown-menu border-0 rounded-0 m-0">
-                                        <a asp-controller="Suppliers" asp-action="Index" class="dropdown-item">Proveedores</a>
-                                        <a asp-controller="PurchaseOrders" asp-action="Index" class="dropdown-item">Órdenes de compra</a>
-                                        <a asp-controller="PriceHistory" asp-action="Index" class="dropdown-item">Histórico de precios</a>
+                                        @if (canViewSuppliers) { <a asp-controller="Suppliers" asp-action="Index" class="dropdown-item">Proveedores</a> }
+                                        @if (canViewPurchaseOrders) { <a asp-controller="PurchaseOrders" asp-action="Index" class="dropdown-item">Órdenes de compra</a> }
+                                        @if (canViewPriceHistory) { <a asp-controller="PriceHistory" asp-action="Index" class="dropdown-item">Histórico de precios</a> }
                                     </div>
                                 </div>
                             }
 
-                            @if (!isAdmin && isSupervisor)
+                            @if (!isAdmin && (canViewEmployees || canManageLeaveRequests || canApproveAttendance || canViewPayroll || canManagePaySlips))
                             {
                                 <div class="nav-item dropdown">
                                     <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown"><i class="fa fa-user-tie mr-1"></i>Personal</a>
                                     <div class="dropdown-menu border-0 rounded-0 m-0">
-                                        <a asp-controller="Employees" asp-action="Index" class="dropdown-item">Empleados</a>
-                                        <a asp-controller="Employees" asp-action="LeaveRequests" class="dropdown-item">Solicitudes (licencias)</a>
-                                        <a asp-controller="Attendance" asp-action="Index" class="dropdown-item">Aprobar jornadas</a>
-                                        <a asp-controller="Payroll" asp-action="Index" class="dropdown-item">Planilla</a>
-                                        <a asp-controller="PaySlips" asp-action="Index" class="dropdown-item">Boletas de pago</a>
+                                        @if (canViewEmployees) { <a asp-controller="Employees" asp-action="Index" class="dropdown-item">Empleados</a> }
+                                        @if (canManageLeaveRequests) { <a asp-controller="Employees" asp-action="LeaveRequests" class="dropdown-item">Solicitudes (licencias)</a> }
+                                        @if (canApproveAttendance) { <a asp-controller="Attendance" asp-action="Index" class="dropdown-item">Aprobar jornadas</a> }
+                                        @if (canViewPayroll) { <a asp-controller="Payroll" asp-action="Index" class="dropdown-item">Planilla</a> }
+                                        @if (canManagePaySlips) { <a asp-controller="PaySlips" asp-action="Index" class="dropdown-item">Boletas de pago</a> }
                                     </div>
                                 </div>
                             }
@@ -289,7 +301,6 @@
                                                 </summary>
                                                 <div class="acc-sec__list">
                                                     <a asp-controller="Clients" asp-action="Index" class="acc-item"><i class="fa fa-users"></i><span>Clientes</span></a>
-                                                    <a asp-controller="Credits" asp-action="Index" class="acc-item"><i class="fa fa-credit-card"></i><span>Créditos</span></a>
                                                     <a asp-controller="Reclamos" asp-action="Index" class="acc-item"><i class="fa fa-exclamation-circle"></i><span>Reclamos</span></a>
                                                     <a asp-controller="Consultations" asp-action="Index" class="acc-item"><i class="fa fa-comments"></i><span>Consultas</span></a>
                                                 </div>
@@ -349,7 +360,7 @@
                                         </a>
 
                                         <a asp-controller="ClientPortal"
-                                           asp-action="Warranty"
+                                           asp-action="Warranties"
                                            class="dropdown-item">
                                             <i class="fa fa-undo"></i> Mis garantías
                                         </a>
@@ -365,27 +376,7 @@
                             }
 
                                 @{
-                                    var chatRoles = new[]
-                                    {
-                                        "Administrador",
-                                        "Auditor Interno",
-                                        "Bodega",
-                                        "Bodeguero",
-                                        "Cajero",
-                                        "Chofer",
-                                        "Compras",
-                                        "Crédito y Cobro",
-                                        "Empleado",
-                                        "Facturador",
-                                        "Gerente",
-                                        "Soporte",
-                                        "Supervisor",
-                                        "Vendedor"
-                                    };
-
-                                    var puedeUsarChat =
-                                        !string.IsNullOrWhiteSpace(userRole) &&
-                                        chatRoles.Contains(userRole, StringComparer.OrdinalIgnoreCase);
+                                    var puedeUsarChat = canUseChat;
                                 }
 
                             @if (puedeUsarChat)
@@ -421,7 +412,7 @@
 
                                         </button>
 
-                                        @if (isAdmin)
+                                        @if (canManageChat)
                                         {
                                             <a asp-controller="Chat" asp-action="Index" class="dropdown-item">
                                                 <i class="fa fa-cog"></i>
@@ -447,41 +438,47 @@
                                 </a>
                             }
 
-                            @if (isSellerOrStaff)
+                            @if (canCreateMobileSale)
                             {
                                 <a asp-controller="SellerOrders" asp-action="Index" class="nav-item nav-link nav-highlight">
                                     <i class="fa fa-mobile-alt mr-1"></i>Venta móvil
                                 </a>
-                                @if (string.Equals(userRole, "Vendedor", StringComparison.OrdinalIgnoreCase))
+                                @if (HasPermission("METAS_PROPIAS_VER"))
                                 {
                                     <a asp-controller="MyGoal" asp-action="Index" class="nav-item nav-link nav-highlight">
                                         <i class="fa fa-bullseye mr-1"></i>Mi meta
                                     </a>
                                 }
-                                <a asp-controller="Assistant" asp-action="Index" class="nav-item nav-link nav-highlight">
-                                    <i class="fa fa-robot mr-1"></i>Asistente
-                                </a>
                             }
 
-                            @if (isGerente)
+                            @if (canAuthorizeOrders)
                             {
                                 <a asp-controller="ManagerOrders" asp-action="Index" class="nav-item nav-link nav-highlight">
                                     <i class="fa fa-clipboard-check mr-1"></i>Pedidos retenidos
                                 </a>
+                            }
+                            @if (canViewManagementDashboard)
+                            {
                                 <a asp-controller="ManagementDashboard" asp-action="Index" class="nav-item nav-link nav-highlight">
                                     <i class="fa fa-chart-line mr-1"></i>Tablero
                                 </a>
+                            }
+                            @if (canViewSalesReports)
+                            {
                                 <a asp-controller="SalesReports" asp-action="Index" class="nav-item nav-link nav-highlight">
                                     <i class="fa fa-file-alt mr-1"></i>Ventas
                                 </a>
+                            }
+                            @if (canViewSellerReports)
+                            {
                                 <a asp-controller="SellerPerformance" asp-action="Index" class="nav-item nav-link nav-highlight">
                                     <i class="fa fa-users mr-1"></i>Vendedores
                                 </a>
+                            }
+                            @if (canViewKpis)
+                            {
                                 <a asp-controller="Kpis" asp-action="Report" class="nav-item nav-link nav-highlight">
                                     <i class="fa fa-chart-bar mr-1"></i>KPIs
-                                </a>
-                                <a asp-controller="Assistant" asp-action="Index" class="nav-item nav-link nav-highlight">
-                                    <i class="fa fa-robot mr-1"></i>Asistente
                                 </a>
                             }
 
@@ -493,22 +490,19 @@
                                 <a asp-controller="Fleet" asp-action="Mileage" class="nav-item nav-link nav-highlight">
                                     <i class="fa fa-tachometer-alt mr-1"></i>Kilometraje
                                 </a>
-                                <a asp-controller="Assistant" asp-action="Index" class="nav-item nav-link nav-highlight">
-                                    <i class="fa fa-robot mr-1"></i>Asistente
-                                </a>
                             }
 
-                            @if (isWarehouse)
-                            {
-                                <a asp-controller="Assistant" asp-action="Index" class="nav-item nav-link nav-highlight">
-                                    <i class="fa fa-robot mr-1"></i>Asistente
-                                </a>
-                            }
-
-                            @if (isCajero)
+                            @if (canUseFinance)
                             {
                                 <a asp-controller="Finance" asp-action="Index" class="nav-item nav-link nav-highlight">
                                     <i class="fa fa-cash-register mr-1"></i>Liquidación de cobros
+                                </a>
+                            }
+
+                            @if (isLoggedIn && !isClient)
+                            {
+                                <a asp-controller="Assistant" asp-action="Index" class="nav-item nav-link nav-highlight">
+                                    <i class="fa fa-robot mr-1"></i>Asistente
                                 </a>
                             }
 
@@ -552,7 +546,7 @@
                     </span>
                 </a>
                 <p class="s3-footer__text mb-3">
-                    Sistema web para consulta de productos, gestion de pedidos, venta movil, inventario, facturacion y administracion general del supermercado y distribuidora.
+                    Sistema web para consulta de productos, gestion de pedidos, venta movil, inventario, facturacion y administracion general de la distribuidora.
                 </p>
                 <a asp-controller="Home" asp-action="Contact" class="btn btn-primary btn-sm" style="color: #fff !important;">
                     <i class="fa fa-envelope mr-1"></i>Ir a contacto
@@ -591,7 +585,7 @@
                 </div>
                 <div class="s3-footer__contact-item">
                     <i class="fa fa-envelope"></i>
-                    <span>contacto@supermercadomayoreo.cr</span>
+                    <span>Contacto por formulario web</span>
                 </div>
                 <div class="s3-footer__contact-item">
                     <i class="fa fa-phone-alt"></i>
@@ -667,6 +661,7 @@
     <script src="~/js/main.js" asp-append-version="true"></script>
     <script src="~/js/sprint3-modal.js" asp-append-version="true"></script>
     <script src="~/js/sprint4-admin.js" asp-append-version="true"></script>
+    <script src="~/js/secure-offline-storage.js" asp-append-version="true"></script>
 
     <script>
         // Acordeón del menú de Administración:

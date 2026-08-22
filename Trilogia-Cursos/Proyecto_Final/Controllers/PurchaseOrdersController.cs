@@ -44,6 +44,7 @@ public sealed class PurchaseOrdersController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [RequestFormLimits(ValueCountLimit = 512)]
     [EnableRateLimiting("finance-write")]
     [AdminAuthorize("Compras", "COMPRAS_ORDENES_CREAR")]
     public async Task<IActionResult> Create(PurchaseOrderFormViewModel model, CancellationToken cancellationToken)
@@ -202,15 +203,15 @@ public sealed class PurchaseOrdersController : Controller
     {
         model.Proveedores = await _purchasing.GetSuppliersAsync(true, null, cancellationToken);
         var posted = model.Productos
+            .Where(product => product.Seleccionado)
             .Where(product => product.ProductoId > 0)
             .GroupBy(product => product.ProductoId)
             .ToDictionary(group => group.Key, group => group.First());
         var products = await _admin.GetActiveProductsForSelectAsync();
         var lastPrices = await _purchasing.GetLastPurchasePricesAsync(cancellationToken);
 
-        model.Productos = products.Select(product =>
+        var catalog = products.Select(product =>
         {
-            posted.TryGetValue(product.ProductoId, out var previous);
             return new PurchaseOrderLineSelectionViewModel
             {
                 ProductoId = product.ProductoId,
@@ -218,13 +219,26 @@ public sealed class PurchaseOrdersController : Controller
                 StockActual = product.Stock,
                 PrecioTienda = product.Precio,
                 UltimoPrecioPagado = lastPrices.TryGetValue(product.ProductoId, out var lastPrice) ? lastPrice : null,
-                PromedioVentaMensual = previous?.PromedioVentaMensual ?? 0,
-                DatosInsuficientes = previous?.DatosInsuficientes ?? false,
-                Seleccionado = previous?.Seleccionado ?? false,
-                Cantidad = previous?.Cantidad ?? 1,
-                PrecioUnitario = previous?.PrecioUnitario ?? 1m
+                Cantidad = 1,
+                PrecioUnitario = 1m
             };
         }).ToList();
+
+        var catalogById = catalog.ToDictionary(product => product.ProductoId);
+        model.Productos = posted.Values
+            .Where(product => catalogById.ContainsKey(product.ProductoId))
+            .Select(previous =>
+            {
+                var authoritative = catalogById[previous.ProductoId];
+                authoritative.PromedioVentaMensual = previous.PromedioVentaMensual;
+                authoritative.DatosInsuficientes = previous.DatosInsuficientes;
+                authoritative.Seleccionado = true;
+                authoritative.Cantidad = previous.Cantidad;
+                authoritative.PrecioUnitario = previous.PrecioUnitario;
+                return authoritative;
+            })
+            .ToList();
+        ViewBag.ProductCatalog = catalog;
     }
 
     private PurchasingActor CurrentActor() => new(

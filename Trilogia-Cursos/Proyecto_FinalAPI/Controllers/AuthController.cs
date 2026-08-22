@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Proyecto_FinalAPI.Models;
 using Proyecto_FinalAPI.Services;
+using Microsoft.Extensions.Options;
 
 namespace Proyecto_FinalAPI.Controllers
 {
@@ -15,6 +16,7 @@ namespace Proyecto_FinalAPI.Controllers
         private readonly PasswordRecoveryAttemptLimiter _passwordRecoveryAttemptLimiter;
         private readonly IConfiguration _configuration;
         private readonly ILogger<AuthController> _logger;
+        private readonly CompanyOptions _company;
 
         public AuthController(
             IAccountApiDbService accountApiDbService,
@@ -22,7 +24,8 @@ namespace Proyecto_FinalAPI.Controllers
             LoginAttemptLimiter loginAttemptLimiter,
             PasswordRecoveryAttemptLimiter passwordRecoveryAttemptLimiter,
             IConfiguration configuration,
-            ILogger<AuthController> logger)
+            ILogger<AuthController> logger,
+            IOptions<CompanyOptions> company)
         {
             _accountApiDbService = accountApiDbService;
             _emailService = emailService;
@@ -30,6 +33,7 @@ namespace Proyecto_FinalAPI.Controllers
             _passwordRecoveryAttemptLimiter = passwordRecoveryAttemptLimiter;
             _configuration = configuration;
             _logger = logger;
+            _company = company.Value;
         }
 
         [HttpPost("login")]
@@ -81,7 +85,8 @@ namespace Proyecto_FinalAPI.Controllers
                 UserId = user.UsuarioId,
                 FullName = user.NombreCompleto,
                 Email = user.Correo,
-                Role = user.PerfilNombre
+                Role = user.PerfilNombre,
+                SecurityStamp = user.SecurityStamp
             });
         }
 
@@ -91,12 +96,12 @@ namespace Proyecto_FinalAPI.Controllers
             if (request == null ||
                 string.IsNullOrWhiteSpace(request.FullName) ||
                 string.IsNullOrWhiteSpace(request.Email) ||
-                string.IsNullOrWhiteSpace(request.Password))
+                !PasswordPolicy.IsValid(request.Password))
             {
                 return BadRequest(new AuthResult
                 {
                     Success = false,
-                    Message = "Los datos del registro son obligatorios."
+                    Message = "Los datos del registro no cumplen la política requerida."
                 });
             }
 
@@ -181,10 +186,11 @@ namespace Proyecto_FinalAPI.Controllers
             {
                 var resetUrl = $"{configuredBaseUrl}/Account/ResetPassword?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(user.Correo)}";
 
-                var asunto = "Recuperación de contraseña - Licorera La Bodega";
+                var asunto = $"Recuperación de contraseña - {_company.BrandName}";
                 var contenido = EmailTemplateBuilder.BuildPasswordResetEmail(
                     user.NombreCompleto,
-                    resetUrl);
+                    resetUrl,
+                    _company);
 
                 _emailService.SendEmail(user.Correo, asunto, contenido);
             }
@@ -211,7 +217,7 @@ namespace Proyecto_FinalAPI.Controllers
         {
             if (request == null ||
                 string.IsNullOrWhiteSpace(request.Token) ||
-                string.IsNullOrWhiteSpace(request.NewPassword))
+                !PasswordPolicy.IsValid(request.NewPassword))
             {
                 return BadRequest(new AuthResult
                 {
@@ -288,5 +294,6 @@ namespace Proyecto_FinalAPI.Controllers
         public string? FullName { get; set; }
         public string? Email { get; set; }
         public string? Role { get; set; }
+        public string? SecurityStamp { get; set; }
     }
 }

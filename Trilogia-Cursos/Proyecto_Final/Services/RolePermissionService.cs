@@ -7,4 +7,7 @@ public sealed class RolePermissionService(AdminDbService adminDbService) : IRole
 
     public Task<bool> HasCodePermissionAsync(string roleName, string permissionCode) =>
         adminDbService.TienePermisoCodigoPorRolAsync(roleName, permissionCode);
+
+    public Task<HashSet<string>> GetPermissionCodesAsync(string? roleName) =>
+        adminDbService.GetPermissionCodesByRoleAsync(roleName);
 }

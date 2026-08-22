@@ -34,7 +34,7 @@
                 <i class="fa fa-layer-group" aria-hidden="true"></i>
                 <div>
                     <strong>Contenido del combo</strong>
-                    <span>@(string.IsNullOrWhiteSpace(Model.ComponentesResumen) ? "Componentes definidos por Supermercado Mayoreo." : Model.ComponentesResumen)</span>
+                    <span>@(string.IsNullOrWhiteSpace(Model.ComponentesResumen) ? $"Componentes definidos por {Company.Value.BrandName}." : Model.ComponentesResumen)</span>
                 </div>
             </div>
 

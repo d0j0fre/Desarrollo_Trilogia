@@ -59,12 +59,14 @@ namespace Proyecto_Final.Services
             return result is int id ? id : Convert.ToInt32(result);
         }
 
-        public async Task CloseMileageAsync(int kilometrajeId, int kmFinal)
+        public async Task CloseMileageAsync(int kilometrajeId, int kmFinal, int actorUsuarioId, bool puedeAdministrar)
         {
             await using var connection = new SqlConnection(_connectionString);
             await using var command = new SqlCommand("dbo.sp_Kilometraje_Cerrar", connection) { CommandType = CommandType.StoredProcedure };
             command.Parameters.Add("@KilometrajeId", SqlDbType.Int).Value = kilometrajeId;
             command.Parameters.Add("@KmFinal", SqlDbType.Int).Value = kmFinal;
+            command.Parameters.Add("@ActorUsuarioId", SqlDbType.Int).Value = actorUsuarioId;
+            command.Parameters.Add("@PuedeAdministrar", SqlDbType.Bit).Value = puedeAdministrar;
             await connection.OpenAsync();
             await command.ExecuteNonQueryAsync();
         }

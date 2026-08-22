@@ -55,6 +55,11 @@ namespace Proyecto_Final.Controllers
             {
                 return NotFound();
             }
+            if (product.Stock <= 0)
+            {
+                TempData["ErrorMessage"] = $"{product.Nombre} está agotado y no se agregó al carrito.";
+                return RedirectToAction(nameof(Index));
+            }
 
             var items = GetCartItems();
             var item = items.FirstOrDefault(x => x.ProductoId == productoId);
@@ -69,7 +74,7 @@ namespace Proyecto_Final.Controllers
                     Descripcion = product.Descripcion,
                     Precio = product.Precio,
                     StockDisponible = product.Stock,
-                    Cantidad = Math.Min(Math.Max(cantidad, 1), Math.Max(product.Stock, 1)),
+                    Cantidad = CartQuantity.ClampToAvailableStock(cantidad, product.Stock),
                     ImagenUrl = product.ImagenUrl
                 });
             }
@@ -77,7 +82,7 @@ namespace Proyecto_Final.Controllers
             {
                 item.StockDisponible = product.Stock;
                 item.Precio = product.Precio;
-                item.Cantidad = Math.Min(item.Cantidad + Math.Max(cantidad, 1), Math.Max(product.Stock, 1));
+                item.Cantidad = CartQuantity.ClampToAvailableStock(item.Cantidad + Math.Max(cantidad, 1), product.Stock);
             }
 
             SaveCartItems(items);
@@ -179,9 +184,17 @@ namespace Proyecto_Final.Controllers
                     }
                     else
                     {
-                        item.StockDisponible = product.Stock;
-                        item.Precio = product.Precio;
-                        item.Cantidad = Math.Min(cantidad, Math.Max(product.Stock, 1));
+                        if (product.Stock <= 0)
+                        {
+                            items.Remove(item);
+                            TempData["ErrorMessage"] = $"{product.Nombre} está agotado y se retiró del carrito.";
+                        }
+                        else
+                        {
+                            item.StockDisponible = product.Stock;
+                            item.Precio = product.Precio;
+                            item.Cantidad = CartQuantity.ClampToAvailableStock(cantidad, product.Stock);
+                        }
                     }
                 }
             }
@@ -545,6 +558,12 @@ namespace Proyecto_Final.Controllers
         {
             HttpContext.Session.SetString(CartSessionKey, JsonSerializer.Serialize(items));
         }
+    }
+
+    internal static class CartQuantity
+    {
+        internal static int ClampToAvailableStock(int requested, int availableStock) =>
+            availableStock <= 0 ? 0 : Math.Min(Math.Max(requested, 1), availableStock);
     }
 }
 

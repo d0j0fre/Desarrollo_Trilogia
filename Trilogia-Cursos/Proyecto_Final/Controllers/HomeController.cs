@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Diagnostics;
 using Proyecto_Final.Models;
 using Proyecto_Final.Models.Store;
 using Proyecto_Final.Services;
+using Microsoft.Extensions.Options;
 
 namespace Proyecto_Final.Controllers
 {
@@ -14,19 +16,25 @@ namespace Proyecto_Final.Controllers
         private readonly EmailService _emailService;
         private readonly IComboDbService _combos;
         private readonly ILogger<HomeController> _logger;
+        private readonly string? _contactNotificationRecipient;
+        private readonly CompanyOptions _company;
 
         public HomeController(
             AdminDbService adminDbService,
             StoreDbService storeDbService,
             EmailService emailService,
             IComboDbService combos,
-            ILogger<HomeController> logger)
+            ILogger<HomeController> logger,
+            IConfiguration configuration,
+            IOptions<CompanyOptions> company)
         {
             _adminDbService = adminDbService;
             _storeDbService = storeDbService;
             _emailService = emailService;
             _combos = combos;
             _logger = logger;
+            _contactNotificationRecipient = configuration["Contact:NotificationRecipient"]?.Trim();
+            _company = company.Value;
         }
 
         [HttpGet]
@@ -114,6 +122,7 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting("public-contact")]
         public async Task<IActionResult> Contact(ContactViewModel model)
         {
             if (!ModelState.IsValid)
@@ -135,20 +144,21 @@ namespace Proyecto_Final.Controllers
                     model.Nombre,
                     model.Correo,
                     model.Asunto,
-                    model.Mensaje);
+                    model.Mensaje,
+                    _company);
 
-                try
+                if (!string.IsNullOrWhiteSpace(_contactNotificationRecipient))
                 {
-                    _emailService.SendEmail(
-                        "p13972127@gmail.com",
-                        asunto,
-                        contenido);
-                }
-                catch (Exception exception)
-                {
-                    _logger.LogWarning(exception, "La consulta se guardó, pero no se pudo notificar por correo. Solicitud {TraceId}.", HttpContext.TraceIdentifier);
-                    TempData["ErrorMessage"] = "La consulta fue guardada, pero no fue posible enviar la notificación por correo.";
-                    return RedirectToAction(nameof(Contact));
+                    try
+                    {
+                        _emailService.SendEmail(_contactNotificationRecipient, asunto, contenido);
+                    }
+                    catch (Exception exception)
+                    {
+                        _logger.LogWarning(exception, "La consulta se guardó, pero no se pudo notificar por correo. Solicitud {TraceId}.", HttpContext.TraceIdentifier);
+                        TempData["ErrorMessage"] = "La consulta fue guardada, pero no fue posible enviar la notificación por correo.";
+                        return RedirectToAction(nameof(Contact));
+                    }
                 }
 
                 TempData["SuccessMessage"] = "Se guardó correctamente.";

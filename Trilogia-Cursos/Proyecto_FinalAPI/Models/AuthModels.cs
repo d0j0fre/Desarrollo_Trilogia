@@ -41,6 +41,7 @@ namespace Proyecto_FinalAPI.Models
         public string Correo { get; set; } = string.Empty;
         public string PerfilNombre { get; set; } = string.Empty;
         public bool Activo { get; set; }
+        public string SecurityStamp { get; set; } = string.Empty;
     }
 
     public class PasswordResetTokenInfo

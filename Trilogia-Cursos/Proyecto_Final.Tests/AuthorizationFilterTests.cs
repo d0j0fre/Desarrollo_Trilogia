@@ -1,9 +1,12 @@
 using Microsoft.AspNetCore.Http;
+using System.Reflection;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Routing;
 using Moq;
+using Proyecto_Final.Controllers;
 using Proyecto_Final.Filters;
 using Proyecto_Final.Services;
 
@@ -50,6 +53,26 @@ public sealed class AuthorizationFilterTests
         AssertAccessDenied(context.Result);
     }
 
+    [Fact]
+    public async Task ActionPermission_ReplacesControllerPermissionInsteadOfAccumulatingBoth()
+    {
+        var permissions = new Mock<IRolePermissionService>(MockBehavior.Strict);
+        permissions.Setup(service => service.HasCodePermissionAsync("Analista", "REPORTE_KPI")).ReturnsAsync(true);
+        var descriptor = new ControllerActionDescriptor
+        {
+            ControllerTypeInfo = typeof(KpisController).GetTypeInfo(),
+            MethodInfo = typeof(KpisController).GetMethod(nameof(KpisController.Report))!
+        };
+        var context = CreateContext(7, "analista@example.test", "Analista", descriptor);
+
+        await new AdminAuthorizeFilter("Metas y KPIs", "METAS_GESTIONAR", permissions.Object).OnAuthorizationAsync(context);
+        await new AdminAuthorizeFilter("Metas y KPIs", "REPORTE_KPI", permissions.Object).OnAuthorizationAsync(context);
+
+        Assert.Null(context.Result);
+        permissions.Verify(service => service.HasCodePermissionAsync("Analista", "METAS_GESTIONAR"), Times.Never);
+        permissions.Verify(service => service.HasCodePermissionAsync("Analista", "REPORTE_KPI"), Times.Once);
+    }
+
     private static void AssertAccessDenied(IActionResult? result)
     {
         var view = Assert.IsType<ViewResult>(result);
@@ -57,7 +80,11 @@ public sealed class AuthorizationFilterTests
         Assert.Equal("~/Views/Account/AccesoDenegado.cshtml", view.ViewName);
     }
 
-    private static AuthorizationFilterContext CreateContext(int? userId = null, string? email = null, string? role = null)
+    private static AuthorizationFilterContext CreateContext(
+        int? userId = null,
+        string? email = null,
+        string? role = null,
+        ActionDescriptor? descriptor = null)
     {
         var httpContext = new DefaultHttpContext
         {
@@ -72,7 +99,7 @@ public sealed class AuthorizationFilterTests
             httpContext.Session.SetString("UserRole", role);
 
         return new AuthorizationFilterContext(
-            new ActionContext(httpContext, new RouteData(), new ActionDescriptor()),
+            new ActionContext(httpContext, new RouteData(), descriptor ?? new ActionDescriptor()),
             new List<IFilterMetadata>());
     }
 

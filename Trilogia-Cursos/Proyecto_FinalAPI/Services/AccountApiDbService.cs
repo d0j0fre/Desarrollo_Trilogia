@@ -45,7 +45,7 @@ namespace Proyecto_FinalAPI.Services
             CancellationToken cancellationToken = default)
         {
             await using var connection = new SqlConnection(_connectionString);
-            await using var command = CreateValidateUserCommand(connection, email, password);
+            await using var command = CreateValidateUserCommand(connection, email);
 
             try
             {
@@ -63,20 +63,12 @@ namespace Proyecto_FinalAPI.Services
                 var user = MapAuthenticatedUser(reader);
                 var hashOrdinal = reader.GetOrdinal("ContrasenaHash");
                 var storedHash = reader.IsDBNull(hashOrdinal) ? null : reader.GetString(hashOrdinal);
-                var legacyMatch = reader.GetBoolean(reader.GetOrdinal("LegacyPasswordMatches"));
-                var verified = string.IsNullOrWhiteSpace(storedHash)
-                    ? legacyMatch
-                    : _passwordHashes.Verify(password, storedHash);
+                var verified = !string.IsNullOrWhiteSpace(storedHash)
+                    && _passwordHashes.Verify(password, storedHash);
 
                 await reader.DisposeAsync();
                 if (!verified || !user.Activo)
                     return null;
-
-                if (string.IsNullOrWhiteSpace(storedHash))
-                {
-                    await SetPasswordHashAsync(connection, user.UsuarioId, _passwordHashes.Hash(password), cancellationToken);
-                    _logger.LogInformation("La credencial heredada del usuario {UserId} se migró a hash.", user.UsuarioId);
-                }
 
                 return user;
             }
@@ -92,14 +84,13 @@ namespace Proyecto_FinalAPI.Services
             }
         }
 
-        internal static SqlCommand CreateValidateUserCommand(SqlConnection connection, string email, string password)
+        internal static SqlCommand CreateValidateUserCommand(SqlConnection connection, string email)
         {
             var command = new SqlCommand("dbo.sp_Auth_GetLoginCredential", connection)
             {
                 CommandType = CommandType.StoredProcedure
             };
             command.Parameters.Add(new SqlParameter("@Correo", SqlDbType.NVarChar, 150) { Value = email.Trim() });
-            command.Parameters.Add(new SqlParameter("@Contrasena", SqlDbType.NVarChar, 255) { Value = password });
             return command;
         }
 
@@ -111,7 +102,8 @@ namespace Proyecto_FinalAPI.Services
                 NombreCompleto = reader.GetString(reader.GetOrdinal("NombreCompleto")),
                 Correo = reader.GetString(reader.GetOrdinal("Correo")),
                 PerfilNombre = reader.GetString(reader.GetOrdinal("PerfilNombre")),
-                Activo = reader.GetBoolean(reader.GetOrdinal("Activo"))
+                Activo = reader.GetBoolean(reader.GetOrdinal("Activo")),
+                SecurityStamp = reader.GetGuid(reader.GetOrdinal("SecurityStamp")).ToString("D")
             };
         }
 
@@ -161,7 +153,8 @@ namespace Proyecto_FinalAPI.Services
                 NombreCompleto = reader.GetString(1),
                 Correo = reader.GetString(2),
                 PerfilNombre = reader.GetString(reader.GetOrdinal("PerfilNombre")),
-                Activo = reader.GetBoolean(reader.GetOrdinal("Activo"))
+                Activo = reader.GetBoolean(reader.GetOrdinal("Activo")),
+                SecurityStamp = reader.GetGuid(reader.GetOrdinal("SecurityStamp")).ToString("D")
             };
         }
 
@@ -242,19 +235,5 @@ namespace Proyecto_FinalAPI.Services
             }
         }
 
-        private static async Task SetPasswordHashAsync(
-            SqlConnection connection,
-            int userId,
-            string passwordHash,
-            CancellationToken cancellationToken)
-        {
-            await using var command = new SqlCommand("dbo.sp_Auth_SetPasswordHash", connection)
-            {
-                CommandType = CommandType.StoredProcedure
-            };
-            command.Parameters.Add(new SqlParameter("@UsuarioId", SqlDbType.Int) { Value = userId });
-            command.Parameters.Add(new SqlParameter("@ContrasenaHash", SqlDbType.NVarChar, 512) { Value = passwordHash });
-            await command.ExecuteNonQueryAsync(cancellationToken);
-        }
     }
 }

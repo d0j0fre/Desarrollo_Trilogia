@@ -9,11 +9,13 @@ namespace Proyecto_Final.Services
     public class AdminDbService
     {
         private readonly string _connectionString;
+        private readonly IPasswordHashService _passwordHashes;
 
-        public AdminDbService(IConfiguration configuration)
+        public AdminDbService(IConfiguration configuration, IPasswordHashService passwordHashes)
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection")
                 ?? throw new InvalidOperationException("No se encontró la cadena de conexión DefaultConnection.");
+            _passwordHashes = passwordHashes;
         }
 
         public async Task<DashboardSummaryViewModel> GetDashboardSummaryAsync()
@@ -1250,7 +1252,7 @@ namespace Proyecto_Final.Services
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.Add("@NombreCompleto", SqlDbType.NVarChar, 150).Value = model.NombreCompleto.Trim();
                 command.Parameters.Add("@Correo", SqlDbType.NVarChar, 150).Value = model.Correo.Trim();
-                command.Parameters.Add("@Contrasena", SqlDbType.NVarChar, 255).Value = (model.Contrasena ?? string.Empty).Trim();
+                command.Parameters.Add("@ContrasenaHash", SqlDbType.NVarChar, 512).Value = _passwordHashes.Hash(model.Contrasena ?? string.Empty);
                 command.Parameters.Add("@Telefono", SqlDbType.NVarChar, 30).Value = string.IsNullOrWhiteSpace(model.Telefono) ? DBNull.Value : model.Telefono.Trim();
                 command.Parameters.Add("@Direccion", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.Direccion) ? DBNull.Value : model.Direccion.Trim();
                 command.Parameters.Add("@Activo", SqlDbType.Bit).Value = model.Activo;
@@ -1278,7 +1280,9 @@ namespace Proyecto_Final.Services
                 command.Parameters.Add("@Correo", SqlDbType.NVarChar, 150).Value = model.Correo.Trim();
                 command.Parameters.Add("@Telefono", SqlDbType.NVarChar, 30).Value = string.IsNullOrWhiteSpace(model.Telefono) ? DBNull.Value : model.Telefono.Trim();
                 command.Parameters.Add("@Direccion", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.Direccion) ? DBNull.Value : model.Direccion.Trim();
-                command.Parameters.Add("@Contrasena", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.Contrasena) ? DBNull.Value : model.Contrasena.Trim();
+                command.Parameters.Add("@ContrasenaHash", SqlDbType.NVarChar, 512).Value = string.IsNullOrWhiteSpace(model.Contrasena)
+                    ? DBNull.Value
+                    : _passwordHashes.Hash(model.Contrasena);
                 command.Parameters.Add("@Activo", SqlDbType.Bit).Value = model.Activo;
                 command.Parameters.Add("@MotivoInactivacion", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.MotivoInactivacion) ? DBNull.Value : model.MotivoInactivacion.Trim();
 
@@ -1770,6 +1774,31 @@ namespace Proyecto_Final.Services
             return pedidos;
         }
 
+        public async Task<bool> SellerOwnsOrderAsync(int pedidoId, int vendedorUsuarioId)
+        {
+            if (pedidoId <= 0 || vendedorUsuarioId <= 0)
+            {
+                return false;
+            }
+
+            const string sql = """
+                SELECT CAST(CASE WHEN EXISTS (
+                    SELECT 1
+                    FROM dbo.Pedidos
+                    WHERE PedidoId = @PedidoId
+                      AND VendedorUsuarioId = @VendedorUsuarioId
+                ) THEN 1 ELSE 0 END AS bit);
+                """;
+
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand(sql, connection);
+            command.Parameters.Add("@PedidoId", SqlDbType.Int).Value = pedidoId;
+            command.Parameters.Add("@VendedorUsuarioId", SqlDbType.Int).Value = vendedorUsuarioId;
+            await connection.OpenAsync();
+            var result = await command.ExecuteScalarAsync();
+            return result is not null and not DBNull && Convert.ToBoolean(result);
+        }
+
         public async Task<(int FacturaId, string NumeroFactura)?> GetInvoiceSummaryByOrderAsync(int pedidoId)
         {
             await using var connection = new SqlConnection(_connectionString);
@@ -1908,6 +1937,60 @@ namespace Proyecto_Final.Services
             await connection.OpenAsync();
             var result = await command.ExecuteScalarAsync();
             return result != null && result != DBNull.Value && Convert.ToBoolean(result);
+        }
+
+        public async Task<HashSet<string>> GetPermissionCodesByRoleAsync(string? roleName)
+        {
+            var permissions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            if (string.IsNullOrWhiteSpace(roleName))
+                return permissions;
+
+            const string sql = """
+                SELECT permission.Codigo
+                FROM dbo.Perfiles profile
+                INNER JOIN dbo.PerfilPermisos assignment ON assignment.PerfilId = profile.PerfilId
+                INNER JOIN dbo.Permisos permission ON permission.PermisoId = assignment.PermisoId
+                WHERE profile.Nombre = @NombreRol
+                  AND profile.Activo = 1
+                  AND permission.Activo = 1;
+                """;
+
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand(sql, connection);
+            command.Parameters.Add("@NombreRol", SqlDbType.NVarChar, 100).Value = roleName.Trim();
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                if (!reader.IsDBNull(0))
+                    permissions.Add(reader.GetString(0));
+            }
+
+            return permissions;
+        }
+
+        public async Task<bool> IsEmployeeUserAsync(int userId)
+        {
+            if (userId <= 0)
+                return false;
+
+            const string sql = """
+                SELECT CAST(CASE WHEN EXISTS (
+                    SELECT 1
+                    FROM dbo.Empleados employee
+                    INNER JOIN dbo.Usuarios userAccount ON userAccount.UsuarioId = employee.UsuarioId
+                    WHERE employee.UsuarioId = @UsuarioId
+                      AND employee.Activo = 1
+                      AND userAccount.Activo = 1
+                ) THEN 1 ELSE 0 END AS bit);
+                """;
+
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand(sql, connection);
+            command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = userId;
+            await connection.OpenAsync();
+            var value = await command.ExecuteScalarAsync();
+            return value is not null and not DBNull && Convert.ToBoolean(value);
         }
 
         private static List<string> ObtenerAliasModulo(string modulo)

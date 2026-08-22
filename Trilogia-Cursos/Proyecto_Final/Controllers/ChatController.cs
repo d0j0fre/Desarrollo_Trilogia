@@ -8,21 +8,7 @@ using Proyecto_Final.Services;
 
 namespace Proyecto_Final.Controllers
 {
-    [SessionAuthorize(
-        "Administrador",
-        "Auditor Interno",
-        "Bodeguero",
-        "Bodega",
-        "Cajero",
-        "Chofer",
-        "Compras",
-        "Crédito y Cobro",
-        "Empleado",
-        "Facturador",
-        "Gerente",
-        "Soporte",
-        "Supervisor",
-        "Vendedor")]
+    [AdminAuthorize("Chat", "CHAT_USAR")]
     public sealed class ChatController : Controller
     {
         private readonly IChatDbService _chat;
@@ -198,7 +184,7 @@ namespace Proyecto_Final.Controllers
             {
                 var departments = await _chat.GetDepartmentsAsync(
                     userId,
-                    _authorization.CanManageAllDepartments(CurrentRole()));
+                    await _authorization.CanManageAllDepartmentsAsync(CurrentRole()));
                 return Json(new { success = true, departments });
             }
             catch (Exception exception)
@@ -230,7 +216,7 @@ namespace Proyecto_Final.Controllers
                     departmentId,
                     userId,
                     normalized,
-                    _authorization.CanManageAllDepartments(CurrentRole()));
+                    await _authorization.CanManageAllDepartmentsAsync(CurrentRole()));
                 if (message is null)
                 {
                     return StatusCode(StatusCodes.Status503ServiceUnavailable, ChatError("El chat no está disponible temporalmente."));
@@ -270,7 +256,7 @@ namespace Proyecto_Final.Controllers
                 var messages = await _chat.GetDepartmentMessagesAsync(
                     departmentId,
                     userId,
-                    _authorization.CanManageAllDepartments(CurrentRole()),
+                    await _authorization.CanManageAllDepartmentsAsync(CurrentRole()),
                     page,
                     pageSize);
                 return Json(new { success = true, currentUserId = userId, page = Math.Max(page, 1), messages });
@@ -317,7 +303,7 @@ namespace Proyecto_Final.Controllers
             {
                 var results = await _chat.SearchMessagesAsync(
                     userId,
-                    _authorization.CanManageAllDepartments(CurrentRole()),
+                    await _authorization.CanManageAllDepartmentsAsync(CurrentRole()),
                     request);
                 return Json(new
                 {

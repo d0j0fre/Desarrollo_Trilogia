@@ -1,26 +1,6 @@
 @model Proyecto_Final.Models.Admin.SellerOrderCreateViewModel
-@using System.Text.Json
 @{
     ViewData["Title"] = "Venta móvil";
-
-    var clientesCatalogoJson = JsonSerializer.Serialize(Model.Clientes.Select(cliente => new
-    {
-        usuarioId = cliente.UsuarioId,
-        nombreCompleto = cliente.NombreCompleto,
-        correo = cliente.Correo,
-        telefono = cliente.Telefono,
-        direccion = cliente.Direccion,
-        displayText = cliente.DisplayText
-    }));
-
-    var productosCatalogoJson = JsonSerializer.Serialize(Model.Productos.Select(producto => new
-    {
-        productoId = producto.ProductoId,
-        nombre = producto.Nombre,
-        categoria = producto.Categoria,
-        precio = producto.Precio,
-        stock = producto.Stock
-    }));
 }
 
 @section Styles {
@@ -327,13 +307,10 @@
             const pendingOrdersPanel = document.getElementById('pendingOrdersPanel');
             const pendingOrdersList = document.getElementById('pendingOrdersList');
             const offlineMessage = document.getElementById('sellerOfflineMessage');
-            const storageKey = 'distribuidorajj_seller_offline_orders_v1';
-            const catalogKey = 'distribuidorajj_seller_catalog_v1';
+            const storageScope = 'seller-offline-orders-v2';
+            const storageTtlMs = 24 * 60 * 60 * 1000;
+            const offlineStorage = window.DistribuidoraJJOfflineStorage;
             const syncUrl = '@Url.Action("SyncOffline", "SellerOrders")';
-            const catalog = {
-                clientes: @Html.Raw(clientesCatalogoJson),
-                productos: @Html.Raw(productosCatalogoJson)
-            };
             let isSyncing = false;
 
             function formatCurrency(value) {
@@ -378,25 +355,17 @@
             }
 
             function loadOrders() {
-                try {
-                    const raw = localStorage.getItem(storageKey);
-                    return raw ? JSON.parse(raw) : [];
-                } catch (error) {
-                    return [];
-                }
+                const orders = offlineStorage ? offlineStorage.read(storageScope) : null;
+                return Array.isArray(orders) ? orders : [];
             }
 
             function saveOrders(orders) {
-                localStorage.setItem(storageKey, JSON.stringify(orders));
+                if (!offlineStorage) {
+                    showMessage('danger', 'El almacenamiento seguro sin conexión no está disponible.');
+                    return;
+                }
+                offlineStorage.write(storageScope, orders, storageTtlMs);
                 renderPendingOrders();
-            }
-
-            function cacheCatalog() {
-                localStorage.setItem(catalogKey, JSON.stringify({
-                    actualizadoEn: new Date().toISOString(),
-                    clientes: catalog.clientes,
-                    productos: catalog.productos
-                }));
             }
 
             function updateConnectionStatus() {
@@ -441,14 +410,12 @@
 
             function buildOrderFromForm() {
                 const clienteUsuarioId = parseInt(clientSelect.value || '0', 10);
-                const selectedClient = clientSelect.options[clientSelect.selectedIndex];
                 const tipoEntrega = (document.getElementById('TipoEntrega').value || '').trim();
                 const direccionEntrega = (document.getElementById('DireccionEntrega').value || '').trim();
                 const identificacionCliente = (document.getElementById('IdentificacionCliente').value || '').trim();
                 const observaciones = (document.getElementById('Observaciones').value || '').trim();
                 const productos = [];
                 const errors = [];
-                let total = 0;
                 let totalItems = 0;
 
                 if (clienteUsuarioId <= 0) {
@@ -471,23 +438,16 @@
 
                     const item = input.closest('.seller-product-item');
                     const stock = parseInt(item.dataset.stock || '0', 10);
-                    const price = parseFloat(item.dataset.price || '0');
-
                     if (qty > stock) {
                         errors.push('La cantidad de ' + item.dataset.displayName + ' supera el stock disponible.');
                     }
 
                     productos.push({
                         productoId: parseInt(item.dataset.productId || '0', 10),
-                        nombre: item.dataset.displayName || 'Producto',
-                        categoria: item.dataset.displayCategory || '',
-                        cantidad: qty,
-                        precio: price,
-                        stock: stock
+                        cantidad: qty
                     });
 
                     totalItems += qty;
-                    total += qty * price;
                 });
 
                 if (productos.length === 0) {
@@ -500,13 +460,11 @@
                     order: {
                         pedidoOfflineGuid: createGuid(),
                         clienteUsuarioId: clienteUsuarioId,
-                        clienteNombre: selectedClient ? selectedClient.textContent.trim() : '',
                         tipoEntrega: tipoEntrega,
                         direccionEntrega: direccionEntrega,
                         identificacionCliente: identificacionCliente,
                         observaciones: observaciones,
                         productos: productos,
-                        total: total,
                         totalItems: totalItems,
                         estadoOffline: 'Pendiente',
                         mensajeError: '',
@@ -561,7 +519,7 @@
                 }
 
                 pendingOrdersList.innerHTML = orders.map(order => {
-                    const productsText = order.productos.map(product => escapeHtml(product.nombre) + ' x' + product.cantidad).join(', ');
+                    const productsText = order.productos.map(product => '#' + product.productoId + ' x' + product.cantidad).join(', ');
                     const createdAt = new Date(order.creadoEn).toLocaleString('es-CR');
                     const status = order.estadoOffline || 'Pendiente';
                     const badgeClass = getStatusBadgeClass(status);
@@ -573,10 +531,10 @@
                     return '<div class="offline-order-card" data-guid="' + escapeHtml(order.pedidoOfflineGuid) + '">' +
                         '<div class="d-flex flex-column flex-md-row justify-content-between" style="gap:8px;">' +
                             '<div>' +
-                                '<strong>' + escapeHtml(order.clienteNombre) + '</strong>' +
+                                '<strong>Cliente #' + escapeHtml(order.clienteUsuarioId) + '</strong>' +
                                 '<small class="text-muted">Guardado: ' + createdAt + '</small>' +
                                 '<small class="text-muted">Productos: ' + productsText + '</small>' +
-                                '<small class="text-muted">Total estimado: ' + formatCurrency(order.total || 0) + '</small>' +
+                                '<small class="text-muted">Unidades: ' + escapeHtml(order.totalItems || 0) + '</small>' +
                                 errorHtml +
                             '</div>' +
                             '<div class="text-md-right">' +
@@ -747,7 +705,6 @@
 
             window.addEventListener('offline', updateConnectionStatus);
 
-            cacheCatalog();
             updateSummary();
             updateConnectionStatus();
             renderPendingOrders();

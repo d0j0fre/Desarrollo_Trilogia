@@ -7,61 +7,39 @@ namespace Proyecto_Final.Controllers
     public class SecurityController : Controller
     {
         [HttpGet]
+        [Obsolete("Ruta de compatibilidad. Use Roles/Index.")]
         public IActionResult Roles()
         {
             return RedirectToAction("Index", "Roles");
         }
 
         [HttpGet]
+        [Obsolete("Ruta de compatibilidad. Use Audit/Index.")]
         public IActionResult Auditoria()
         {
             return RedirectToAction("Index", "Audit");
         }
 
         [HttpGet]
+        [Obsolete("Ruta de compatibilidad. Use Roles/Create.")]
         public IActionResult CrearRol()
         {
             return RedirectToAction("Create", "Roles");
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult CrearRolPost()
-        {
-            return RedirectToAction("Create", "Roles");
-        }
-
         [HttpGet]
+        [Obsolete("Ruta de compatibilidad. Use Roles/Edit.")]
         public IActionResult EditarRol(int id)
         {
             return RedirectToAction("Edit", "Roles", new { id });
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult EditarRolPost(int perfilId)
-        {
-            return RedirectToAction("Edit", "Roles", new { id = perfilId });
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult EliminarPerfil(int id)
-        {
-            return RedirectToAction("Index", "Roles");
-        }
-
         [HttpGet]
+        [Obsolete("Ruta de compatibilidad. Use Permissions/Edit.")]
         public IActionResult Permisos(int perfilId)
         {
             return RedirectToAction("Edit", "Permissions", new { id = perfilId });
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult GuardarPermisos(int perfilId)
-        {
-            return RedirectToAction("Edit", "Permissions", new { id = perfilId });
-        }
     }
 }

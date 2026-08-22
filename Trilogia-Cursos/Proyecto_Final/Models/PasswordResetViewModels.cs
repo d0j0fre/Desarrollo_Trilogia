@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Proyecto_Final.Validation;
 
 namespace Proyecto_Final.Models
 {
@@ -15,7 +16,7 @@ namespace Proyecto_Final.Models
         public string Token { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "La nueva contraseña es obligatoria")]
-        [StringLength(100, MinimumLength = 4, ErrorMessage = "La contraseña debe tener al menos 4 caracteres")]
+        [StringLength(PasswordPolicy.MaximumLength, MinimumLength = PasswordPolicy.MinimumLength, ErrorMessage = "La contraseña debe tener entre 12 y 128 caracteres")]
         [DataType(DataType.Password)]
         [Display(Name = "Nueva contraseña")]
         public string Password { get; set; } = string.Empty;
