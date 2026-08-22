@@ -13,6 +13,9 @@
     var canInventory = Can("INVENTARIO_VER");
     var canPurchases = Can("COMPRAS_ORDENES_VER");
     var canClients = Can("CLIENTES_VER");
+    var canCredits = Can("CREDITOS_VER");
+    var canBilling = Can("FACTURACION_VER");
+    var canFinance = Can("LIQUIDACION_FINANCIERA");
     var canBudgets = Can("PRESUPUESTOS_VER");
     var canExpenses = Can("GASTOS_VER");
     var canEmployees = Can("EMPLEADOS_VER");
@@ -54,10 +57,17 @@
                         <li class="djj-workspace-nav__label">Resumen</li>
                         <li><a asp-controller="Admin" asp-action="Index" aria-current="@(IsCurrent("Admin") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-chart"></use></svg><span class="djj-workspace-nav__text">Panel general</span></a></li>
                     }
-                    @if (isAdmin)
+                    @if (isAdmin || canBilling)
                     {
                         <li class="djj-workspace-nav__label">Ventas y pedidos</li>
-                        <li><a asp-controller="OrdersAdmin" asp-action="Index" aria-current="@(IsCurrent("OrdersAdmin", "Billing") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-orders"></use></svg><span class="djj-workspace-nav__text">Pedidos y facturación</span></a></li>
+                        @if (isAdmin)
+                        {
+                            <li><a asp-controller="OrdersAdmin" asp-action="Index" aria-current="@(IsCurrent("OrdersAdmin") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-orders"></use></svg><span class="djj-workspace-nav__text">Pedidos</span></a></li>
+                        }
+                        @if (canBilling)
+                        {
+                            <li><a asp-controller="Billing" asp-action="Index" aria-current="@(IsCurrent("Billing") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-receipt"></use></svg><span class="djj-workspace-nav__text">Facturación</span></a></li>
+                        }
                     }
                     @if (canInventory)
                     {
@@ -69,17 +79,37 @@
                         <li class="djj-workspace-nav__label">Compras</li>
                         <li><a asp-controller="PurchaseOrders" asp-action="Index" aria-current="@(IsCurrent("PurchaseOrders", "Suppliers", "PriceHistory") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-package"></use></svg><span class="djj-workspace-nav__text">Órdenes y proveedores</span></a></li>
                     }
-                    @if (canClients || canBudgets || canExpenses || canEmployees || canPayroll)
+                    @if (canClients || canCredits)
                     {
-                        <li class="djj-workspace-nav__label">Gestión</li>
+                        <li class="djj-workspace-nav__label">Clientes</li>
                     }
                     @if (canClients)
                     {
-                        <li><a asp-controller="Clients" asp-action="Index" aria-current="@(IsCurrent("Clients", "AccountsReceivableAdmin") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-users"></use></svg><span class="djj-workspace-nav__text">Clientes y crédito</span></a></li>
+                        <li><a asp-controller="Clients" asp-action="Index" aria-current="@(IsCurrent("Clients") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-users"></use></svg><span class="djj-workspace-nav__text">Clientes</span></a></li>
                     }
-                    @if (canBudgets || canExpenses)
+                    @if (canCredits)
                     {
-                        <li><a asp-controller="Budgets" asp-action="Index" aria-current="@(IsCurrent("Budgets", "Expenses", "BudgetComparison") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-receipt"></use></svg><span class="djj-workspace-nav__text">Finanzas</span></a></li>
+                        <li><a asp-controller="Credits" asp-action="Index" aria-current="@(IsCurrent("Credits", "AccountsReceivableAdmin") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-calculator"></use></svg><span class="djj-workspace-nav__text">Crédito y cobro</span></a></li>
+                    }
+                    @if (canBudgets || canExpenses || canFinance)
+                    {
+                        <li class="djj-workspace-nav__label">Finanzas</li>
+                    }
+                    @if (canBudgets)
+                    {
+                        <li><a asp-controller="Budgets" asp-action="Index" aria-current="@(IsCurrent("Budgets", "BudgetComparison") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-chart"></use></svg><span class="djj-workspace-nav__text">Presupuestos</span></a></li>
+                    }
+                    @if (canExpenses)
+                    {
+                        <li><a asp-controller="Expenses" asp-action="Index" aria-current="@(IsCurrent("Expenses") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-receipt"></use></svg><span class="djj-workspace-nav__text">Gastos</span></a></li>
+                    }
+                    @if (canFinance)
+                    {
+                        <li><a asp-controller="Finance" asp-action="Index" aria-current="@(IsCurrent("Finance") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-orders"></use></svg><span class="djj-workspace-nav__text">Liquidaciones</span></a></li>
+                    }
+                    @if (canEmployees || canPayroll)
+                    {
+                        <li class="djj-workspace-nav__label">Personal</li>
                     }
                     @if (canEmployees)
                     {
