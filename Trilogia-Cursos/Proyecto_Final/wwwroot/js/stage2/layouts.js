@@ -90,4 +90,13 @@
   window.addEventListener("online", updateConnection);
   window.addEventListener("offline", updateConnection);
   updateConnection();
+
+  document.querySelectorAll("form[data-djj-confirm]").forEach((form) => {
+    form.addEventListener("submit", (event) => {
+      if (!window.confirm(form.dataset.djjConfirm)) event.preventDefault();
+    });
+  });
+
+  const validationSummary = document.querySelector("[data-djj-validation-summary]");
+  if (validationSummary?.textContent.trim()) validationSummary.focus();
 })();

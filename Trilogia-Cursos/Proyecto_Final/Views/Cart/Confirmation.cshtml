@@ -1,84 +1,11 @@
 @using Microsoft.AspNetCore.Http
 @model Proyecto_Final.Models.Store.OrderConfirmationViewModel
-@{
-    ViewData["Title"] = "Pedido creado";
-    var isClient = string.Equals(Context.Session.GetString("UserRole"), "Cliente", StringComparison.OrdinalIgnoreCase);
-}
-
-<div class="container-fluid s3-page-shell py-5">
-    <div class="s3-confirmation-card">
-        <div class="s3-confirmation-card__head">
-            <div class="s3-confirmation-icon">
-                <i class="fa fa-check"></i>
-            </div>
-            <h1>Pedido creado correctamente</h1>
-            <p>
-                El pedido fue registrado en el sistema. Podés seguir comprando o revisar el detalle de los productos incluidos.
-            </p>
-        </div>
-
-        <div class="s3-confirmation-card__body">
-            <div class="s3-confirmation-facts">
-                <div class="s3-confirmation-fact">
-                    <span>Número de pedido</span>
-                    <strong>#@Model.PedidoId</strong>
-                </div>
-                <div class="s3-confirmation-fact">
-                    <span>Tipo de entrega</span>
-                    <strong>@Model.TipoEntrega</strong>
-                </div>
-                <div class="s3-confirmation-fact">
-                    <span>Productos</span>
-                    <strong>@Model.Items.Sum(x => x.Cantidad)</strong>
-                </div>
-                <div class="s3-confirmation-fact">
-                    <span>Total</span>
-                    <strong>₡@Model.Total.ToString("N2")</strong>
-                </div>
-            </div>
-
-            @if (!string.IsNullOrWhiteSpace(Model.DireccionEntrega))
-            {
-                <div class="alert alert-light border mb-4">
-                    <strong><i class="fa fa-map-marker-alt text-primary mr-1"></i>Dirección:</strong>
-                    @Model.DireccionEntrega
-                </div>
-            }
-
-            <div class="s3-section-title">
-                <div>
-                    <span class="s3-section-title__eyebrow"><i class="fa fa-box"></i> Detalle</span>
-                    <h3>Productos del pedido</h3>
-                </div>
-            </div>
-
-            <div class="s3-confirmation-products">
-                @foreach (var item in Model.Items)
-                {
-                    <div class="s3-confirmation-product">
-                        <div>
-                            <strong>@item.Nombre</strong>
-                            <span class="d-block">Cantidad: @item.Cantidad · @item.Categoria</span>
-                        </div>
-                        <strong>₡@item.Subtotal.ToString("N2")</strong>
-                    </div>
-                }
-            </div>
-
-            <div class="s3-confirmation-actions">
-                <a asp-controller="Home" asp-action="Shop" class="btn btn-primary">
-                    <i class="fa fa-store mr-1"></i>Seguir comprando
-                </a>
-                @if (isClient)
-                {
-                    <a asp-controller="ClientPortal" asp-action="Index" class="btn btn-outline-primary">
-                        <i class="fa fa-clipboard-list mr-1"></i>Mis pedidos
-                    </a>
-                }
-                <a asp-controller="Home" asp-action="Index" class="btn btn-outline-dark">
-                    <i class="fa fa-home mr-1"></i>Volver al inicio
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
+@{ Layout = "_StorefrontLayout"; ViewData["Title"] = "Pedido creado"; var isClient = string.Equals(Context.Session.GetString("UserRole"), "Cliente", StringComparison.OrdinalIgnoreCase); }
+<main class="djj-container djj-store-page djj-confirmation">
+    <section class="djj-card djj-confirmation__card" aria-labelledby="confirmation-title"><span class="djj-state__icon djj-state__icon--success"><svg class="djj-icon djj-icon--lg" aria-hidden="true"><use href="#djj-icon-check"></use></svg></span><span class="djj-page-header__eyebrow">Pedido #@Model.PedidoId</span><h1 id="confirmation-title">Pedido creado correctamente</h1><p>Registramos tu pedido. Podés consultar su detalle desde el portal cuando iniciás sesión como cliente.</p>
+        <dl class="djj-confirmation__facts"><div><dt>Entrega</dt><dd>@Model.TipoEntrega</dd></div><div><dt>Productos</dt><dd>@Model.Items.Sum(x => x.Cantidad)</dd></div><div><dt>Total</dt><dd>₡@Model.Total.ToString("N0")</dd></div></dl>
+        @if(!string.IsNullOrWhiteSpace(Model.DireccionEntrega)){<div class="djj-alert djj-alert--info"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-truck"></use></svg><div><strong>Dirección de entrega</strong><p>@Model.DireccionEntrega</p></div></div>}
+        <section class="djj-confirmation__items" aria-labelledby="confirmation-items-title"><h2 id="confirmation-items-title">Detalle del pedido</h2>@foreach(var item in Model.Items){<div><span><strong>@item.Nombre</strong><small>@item.Cantidad × @item.Categoria</small></span><strong>₡@item.Subtotal.ToString("N0")</strong></div>}</section>
+        <div class="djj-confirmation__actions"><a class="djj-button djj-button--primary" asp-controller="Home" asp-action="Shop">Seguir comprando</a>@if(isClient){<a class="djj-button djj-button--outline" asp-controller="ClientPortal" asp-action="Index">Ver mis pedidos</a>}<a class="djj-button djj-button--ghost" asp-controller="Home" asp-action="Index">Ir al inicio</a></div>
+    </section>
+</main>

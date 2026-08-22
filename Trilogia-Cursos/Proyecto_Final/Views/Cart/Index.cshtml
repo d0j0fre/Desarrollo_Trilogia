@@ -1,245 +1,39 @@
 @model Proyecto_Final.Models.Store.CartViewModel
-@{
-    ViewData["Title"] = "Carrito";
-}
-
-<div class="container-fluid s3-page-shell s3-cart-page">
-    <div class="s3-cart-hero">
-        <div>
-            <span class="s3-eyebrow"><i class="fa fa-shopping-cart"></i> Carrito de compras</span>
-            <h1>Revisá tu pedido</h1>
-            <p>
-                Verificá cantidades, stock disponible y subtotal antes de finalizar la compra.
-            </p>
-        </div>
-
-        <div class="s3-cart-hero__icon">
-            <i class="fa fa-shopping-basket"></i>
-        </div>
-    </div>
-
+@{ Layout = "_StorefrontLayout"; ViewData["Title"] = "Carrito"; }
+<main class="djj-container djj-store-page">
+    <nav class="djj-store-page__breadcrumb" aria-label="Migas de pan"><ol class="djj-breadcrumb"><li><a asp-controller="Home" asp-action="Index">Inicio</a></li><li aria-hidden="true"><svg class="djj-icon djj-icon--sm"><use href="#djj-icon-caret-right"></use></svg></li><li aria-current="page">Carrito</li></ol></nav>
+    <header class="djj-store-heading"><div class="djj-store-heading__copy"><span class="djj-page-header__eyebrow">Carrito de compras</span><h1>Revisá tu pedido</h1><p>Verificá cantidades, disponibilidad y total antes de continuar.</p></div></header>
     @if (Model.Items.Count == 0)
     {
-        <div class="s3-cart-empty">
-            <div>
-                <div class="s3-cart-empty__icon">
-                    <i class="fa fa-shopping-cart"></i>
-                </div>
-                <h2>Tu carrito está vacío</h2>
-                <p>
-                    Agregá productos desde la tienda para preparar tu pedido. Podés revisar whiskies, vinos, rones, cervezas y más categorías disponibles.
-                </p>
-                <a asp-controller="Home" asp-action="Shop" class="btn btn-primary btn-lg">
-                    <i class="fa fa-store mr-1"></i>Ir a la tienda
-                </a>
-            </div>
-        </div>
+        <section class="djj-card djj-state"><span class="djj-state__icon"><svg class="djj-icon djj-icon--lg" aria-hidden="true"><use href="#djj-icon-cart"></use></svg></span><h2>Tu carrito está vacío</h2><p>Explorá el catálogo y agregá los productos que necesitás.</p><a class="djj-button djj-button--primary djj-button--inline-mobile" asp-controller="Home" asp-action="Shop"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-store"></use></svg>Ir al catálogo</a></section>
     }
     else
     {
-        <div class="s3-cart-grid">
-            <div class="s3-cart-list">
-                @foreach (var item in Model.Items)
-                {
-                    var imagen = string.IsNullOrWhiteSpace(item.ImagenUrl) ? Url.Content("~/img/whisky-premium.webp") : Url.Content(item.ImagenUrl);
-                    var puedeAumentar = item.Cantidad < item.StockDisponible;
-                    var puedeDisminuir = item.Cantidad > 1;
-
-                    <article class="s3-cart-item">
-                        <div class="s3-cart-item__image">
-                            <img src="@imagen" alt="Producto @item.Nombre en el carrito" loading="lazy" width="120" height="120" />
+        <div class="djj-cart-layout">
+            <section class="djj-cart-list" aria-label="Productos del carrito">
+            @foreach (var item in Model.Items)
+            {
+                var image = string.IsNullOrWhiteSpace(item.ImagenUrl) ? Url.Content("~/img/whisky-premium.webp") : Url.Content(item.ImagenUrl);
+                <article class="djj-card djj-cart-item">
+                    <img class="djj-cart-item__image" src="@image" alt="@item.Nombre" width="128" height="128" loading="lazy" />
+                    <div class="djj-cart-item__copy"><span>@item.Categoria</span><h2>@item.Nombre</h2><p>Disponibles: @item.StockDisponible</p><strong>₡@item.Precio.ToString("N0") c/u</strong></div>
+                    <div class="djj-cart-item__quantity">
+                        <span class="djj-field__label">Cantidad</span>
+                        <div class="djj-cart-stepper">
+                            <form asp-action="Update" method="post">@Html.AntiForgeryToken()<input type="hidden" name="productoId" value="@item.ProductoId" /><input type="hidden" name="comboId" value="@item.ComboId" /><input type="hidden" name="itemType" value="@item.ItemType" /><input type="hidden" name="cantidad" value="@(item.Cantidad - 1)" /><button class="djj-icon-button" type="submit" disabled="@(item.Cantidad <= 1)" aria-label="Disminuir cantidad de @item.Nombre">−</button></form>
+                            <form asp-action="Update" method="post" class="djj-cart-stepper__edit">@Html.AntiForgeryToken()<input type="hidden" name="productoId" value="@item.ProductoId" /><input type="hidden" name="comboId" value="@item.ComboId" /><input type="hidden" name="itemType" value="@item.ItemType" /><label class="djj-sr-only" for="qty-@item.ItemType-@(item.ComboId ?? item.ProductoId)">Cantidad de @item.Nombre</label><input class="djj-input" id="qty-@item.ItemType-@(item.ComboId ?? item.ProductoId)" type="number" name="cantidad" value="@item.Cantidad" min="1" max="@item.StockDisponible" inputmode="numeric" /><button class="djj-button djj-button--outline djj-button--sm" type="submit">Actualizar</button></form>
+                            <form asp-action="Update" method="post">@Html.AntiForgeryToken()<input type="hidden" name="productoId" value="@item.ProductoId" /><input type="hidden" name="comboId" value="@item.ComboId" /><input type="hidden" name="itemType" value="@item.ItemType" /><input type="hidden" name="cantidad" value="@(item.Cantidad + 1)" /><button class="djj-icon-button" type="submit" disabled="@(item.Cantidad >= item.StockDisponible)" aria-label="Aumentar cantidad de @item.Nombre">+</button></form>
                         </div>
-
-                        <div class="s3-cart-item__info">
-                            <span class="s3-cart-item__category">@item.Categoria</span>
-                            <h3 class="s3-cart-item__name">@item.Nombre</h3>
-                            <p class="s3-cart-item__meta">
-                                Stock disponible: <strong>@item.StockDisponible</strong>
-                            </p>
-                            <div class="s3-cart-item__price">
-                                ₡@item.Precio.ToString("N2")
-                            </div>
-                        </div>
-
-                        <div class="s3-cart-qty">
-                            <small class="text-muted font-weight-bold">Cantidad</small>
-
-                            <div class="s3-cart-qty__buttons">
-                                <form asp-action="Update" method="post" class="s3-cart-qty__form">
-                                     @Html.AntiForgeryToken()
-                                     <input type="hidden" name="productoId" value="@item.ProductoId" />
-                                     <input type="hidden" name="comboId" value="@item.ComboId" />
-                                     <input type="hidden" name="itemType" value="@item.ItemType" />
-                                    <input type="hidden" name="cantidad" value="@(item.Cantidad - 1)" />
-                                    <button class="btn btn-outline-secondary btn-sm" type="submit" disabled="@(!puedeDisminuir)" aria-label="Disminuir cantidad">
-                                        <i class="fa fa-minus"></i>
-                                    </button>
-                                </form>
-
-                                <form asp-action="Update" method="post" class="s3-cart-qty__input-form">
-                                     @Html.AntiForgeryToken()
-                                     <input type="hidden" name="productoId" value="@item.ProductoId" />
-                                     <input type="hidden" name="comboId" value="@item.ComboId" />
-                                     <input type="hidden" name="itemType" value="@item.ItemType" />
-                                    <input type="number" name="cantidad" value="@item.Cantidad" min="1" max="@item.StockDisponible" class="form-control form-control-sm s3-cart-qty__input" />
-                                    <button class="btn btn-primary btn-sm" type="submit">
-                                        <i class="fa fa-sync-alt mr-1"></i>Actualizar
-                                    </button>
-                                </form>
-
-                                <form asp-action="Update" method="post" class="s3-cart-qty__form">
-                                     @Html.AntiForgeryToken()
-                                     <input type="hidden" name="productoId" value="@item.ProductoId" />
-                                     <input type="hidden" name="comboId" value="@item.ComboId" />
-                                     <input type="hidden" name="itemType" value="@item.ItemType" />
-                                    <input type="hidden" name="cantidad" value="@(item.Cantidad + 1)" />
-                                    <button class="btn btn-outline-secondary btn-sm" type="submit" disabled="@(!puedeAumentar)" aria-label="Aumentar cantidad">
-                                        <i class="fa fa-plus"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-
-                        <div class="s3-cart-item__subtotal">
-                            <div>
-                                <span>Subtotal</span>
-                                @if (item.MontoDescuento > 0)
-                                {
-                                    <strong class="text-muted s4-price-before">₡@item.Subtotal.ToString("N2")</strong>
-                                    <strong class="text-success d-block">₡@item.SubtotalConDescuento.ToString("N2")</strong>
-                                    <span class="badge badge-success"><i class="fa fa-tags mr-1"></i>@item.PromocionNombre</span>
-                                }
-                                else
-                                {
-                                    <strong>₡@item.Subtotal.ToString("N2")</strong>
-                                }
-                            </div>
-
-                            <form asp-action="Remove" method="post" class="s3-cart-remove-form"
-                                  data-s3-confirm="¿Desea quitar esta oferta del carrito?"
-                                  data-s3-confirm-title="Quitar del carrito"
-                                  data-s3-confirm-type="warning"
-                                  data-s3-confirm-ok="Quitar"
-                                  data-s3-confirm-cancel="Cancelar">
-                                 @Html.AntiForgeryToken()
-                                 <input type="hidden" name="productoId" value="@item.ProductoId" />
-                                 <input type="hidden" name="comboId" value="@item.ComboId" />
-                                 <input type="hidden" name="itemType" value="@item.ItemType" />
-                                <button class="btn btn-outline-danger btn-sm" type="submit">
-                                    <i class="fa fa-trash-alt mr-1"></i>Quitar
-                                </button>
-                            </form>
-                        </div>
-                    </article>
-                }
-
-                @if (Model.Regalias.Any())
-                {
-                    foreach (var regalo in Model.Regalias)
-                    {
-                        <article class="s3-cart-item">
-                            <div class="s3-cart-item__image">
-                                <img src="@Url.Content("~/img/whisky-premium.webp")" alt="Producto de regalo @regalo.Nombre" loading="lazy" width="120" height="120" />
-                            </div>
-                            <div class="s3-cart-item__info">
-                                <span class="s3-cart-item__category"><span class="badge badge-success"><i class="fa fa-gift mr-1"></i>Regalía</span></span>
-                                <h3 class="s3-cart-item__name">@regalo.Nombre</h3>
-                                <p class="s3-cart-item__meta">Promoción: <strong>@regalo.PromocionNombre</strong></p>
-                            </div>
-                            <div class="s3-cart-qty"><small class="text-muted font-weight-bold">Cantidad</small><div class="s3-cart-qty__buttons"><strong>@regalo.Cantidad</strong></div></div>
-                            <div class="s3-cart-item__subtotal"><div><span>Subtotal</span><strong class="text-success">GRATIS</strong></div></div>
-                        </article>
-                    }
-                }
-            </div>
-
-            <aside class="s3-cart-summary">
-                <div class="s3-cart-summary__head">
-                    <h3><i class="fa fa-receipt mr-2 text-primary"></i>Resumen</h3>
-                </div>
-
-                <div class="s3-cart-summary__body">
-                    <div class="s3-cart-summary__row">
-                        <span>Total de productos</span>
-                        <strong>@Model.TotalItems</strong>
                     </div>
-                    <div class="s3-cart-summary__row">
-                        <span>Líneas del pedido</span>
-                        <strong>@Model.Items.Count</strong>
-                    </div>
-                    @if (Model.TienePromociones)
-                    {
-                        <div class="s3-cart-summary__row">
-                            <span>Subtotal</span>
-                            <strong>₡@Model.Subtotal.ToString("N2")</strong>
-                        </div>
-                        @if (Model.DescuentoTotal > 0)
-                        {
-                            <div class="s3-cart-summary__row text-success">
-                                <span><i class="fa fa-tags mr-1"></i>Descuento por promociones</span>
-                                <strong>-₡@Model.DescuentoTotal.ToString("N2")</strong>
-                            </div>
-                        }
-                        @if (Model.Regalias.Any())
-                        {
-                            <div class="s3-cart-summary__row text-success">
-                                <span><i class="fa fa-gift mr-1"></i>Regalías incluidas</span>
-                                <strong>@Model.Regalias.Sum(r => r.Cantidad) u.</strong>
-                            </div>
-                        }
-                    }
-                    <div class="s3-cart-summary__total">
-                        <span>Total</span>
-                        <strong>₡@Model.Total.ToString("N2")</strong>
-                    </div>
-
-                    <div class="s3-cart-note">
-                        <i class="fa fa-info-circle text-primary mr-1"></i>
-                        El stock y los precios se validan nuevamente al finalizar la compra para proteger el inventario.
-                    </div>
-
-                    <div class="s3-cart-summary__actions">
-                        <a asp-action="Checkout" class="btn btn-primary btn-lg">
-                            <i class="fa fa-check-circle mr-1"></i>Finalizar compra
-                        </a>
-                        <a asp-controller="Home" asp-action="Shop" class="btn btn-outline-dark">
-                            <i class="fa fa-arrow-left mr-1"></i>Seguir comprando
-                        </a>
-                    </div>
-                </div>
-            </aside>
+                    <div class="djj-cart-item__subtotal"><span>Subtotal</span>@if(item.MontoDescuento > 0){<del>₡@item.Subtotal.ToString("N0")</del><strong>₡@item.SubtotalConDescuento.ToString("N0")</strong><small>@item.PromocionNombre</small>}else{<strong>₡@item.Subtotal.ToString("N0")</strong>}<form asp-action="Remove" method="post" data-djj-confirm="¿Quitar @item.Nombre del carrito?">@Html.AntiForgeryToken()<input type="hidden" name="productoId" value="@item.ProductoId" /><input type="hidden" name="comboId" value="@item.ComboId" /><input type="hidden" name="itemType" value="@item.ItemType" /><button class="djj-button djj-button--danger djj-button--sm" type="submit">Quitar</button></form></div>
+                </article>
+            }
+            @foreach (var gift in Model.Regalias)
+            {
+                <article class="djj-card djj-cart-item djj-cart-item--gift"><span class="djj-state__icon"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-package"></use></svg></span><div class="djj-cart-item__copy"><span class="djj-status-badge djj-status-badge--success">Regalía</span><h2>@gift.Nombre</h2><p>@gift.PromocionNombre · @gift.Cantidad unidad(es)</p></div><strong class="djj-cart-item__free">Incluido</strong></article>
+            }
+            </section>
+            <aside class="djj-card djj-cart-summary" aria-labelledby="cart-summary-title"><h2 id="cart-summary-title">Resumen</h2><dl><div><dt>Productos</dt><dd>@Model.TotalItems</dd></div><div><dt>Subtotal</dt><dd>₡@Model.Subtotal.ToString("N0")</dd></div>@if(Model.DescuentoTotal > 0){<div class="djj-cart-summary__discount"><dt>Descuentos</dt><dd>−₡@Model.DescuentoTotal.ToString("N0")</dd></div>}<div class="djj-cart-summary__total"><dt>Total</dt><dd>₡@Model.Total.ToString("N0")</dd></div></dl><p><svg class="djj-icon djj-icon--sm" aria-hidden="true"><use href="#djj-icon-info"></use></svg>El stock y los precios se validan al finalizar.</p><a class="djj-button djj-button--primary" asp-action="Checkout">Finalizar compra</a><a class="djj-button djj-button--ghost" asp-controller="Home" asp-action="Shop">Seguir comprando</a></aside>
         </div>
     }
-
-    @if (Model.Recomendaciones.Count > 0)
-    {
-        <section class="mt-4" aria-labelledby="cross-sell-title">
-            <h3 id="cross-sell-title">También podría interesarte</h3>
-            <p class="text-muted">Sugerencias explicables; ningún producto se agrega automáticamente.</p>
-            <div class="row">
-                @foreach (var suggestion in Model.Recomendaciones)
-                {
-                    var suggestionImage = string.IsNullOrWhiteSpace(suggestion.ImagenUrl) ? Url.Content("~/img/whisky-premium.webp") : Url.Content(suggestion.ImagenUrl);
-                    <div class="col-md-6 mb-3">
-                        <article class="card h-100 p-3">
-                            <div class="d-flex">
-                                <img src="@suggestionImage" alt="Producto recomendado @suggestion.Nombre" loading="lazy" width="96" height="96" style="object-fit:cover;aspect-ratio:1/1" />
-                                <div class="ml-3">
-                                    <h4 class="h6">@suggestion.Nombre</h4>
-                                    <strong>₡@suggestion.Precio.ToString("N2")</strong>
-                                    <p class="small text-muted mb-2">@suggestion.Explanation</p>
-                                    <form asp-controller="Cart" asp-action="Add" method="post">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="productoId" value="@suggestion.ProductoId" />
-                                        <input type="hidden" name="cantidad" value="1" />
-                                        <button class="btn btn-outline-primary btn-sm" type="submit">Agregar al carrito</button>
-                                    </form>
-                                </div>
-                            </div>
-                        </article>
-                    </div>
-                }
-            </div>
-        </section>
-    }
-</div>
+</main>

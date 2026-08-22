@@ -206,5 +206,19 @@
         canton.addEventListener("change", function () {
             cargarDistritos("");
         });
+
+        var checkoutForm = getElement("checkoutForm");
+        var submitButton = checkoutForm ? checkoutForm.querySelector("[data-djj-submit]") : null;
+        checkoutForm?.addEventListener("submit", function () {
+            window.setTimeout(function () {
+                if (!checkoutForm.checkValidity() || !submitButton) {
+                    return;
+                }
+
+                submitButton.disabled = true;
+                submitButton.setAttribute("aria-busy", "true");
+                submitButton.textContent = "Creando pedido…";
+            }, 0);
+        });
     });
 })();
