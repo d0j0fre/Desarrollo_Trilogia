@@ -64,7 +64,7 @@ No quedaron `FAIL` dentro del alcance. Los `WARN` comparten una sola causa de en
 - Secret scan: 878 archivos rastreados, 844 de texto, 12 placeholders aprobados, 0 hallazgos.
 - ScriptDom: 130 archivos, 1,032 lotes, 0 errores.
 - SVG: 10 archivos válidos, 0 errores. Referencias de assets Stage 2.4: 0 faltantes.
-- CSS Stage 2: 7 archivos, 1,067 líneas, 74,524 bytes; 0 `!important`, 0 hex fuera de tokens y 0 tokens indefinidos (se excluyen las custom properties dinámicas declaradas en markup).
+- CSS Stage 2: 7 archivos, 1,069 líneas, 74,773 bytes; 0 `!important`, 0 hex fuera de tokens y 0 tokens indefinidos (se excluyen las custom properties dinámicas declaradas en markup).
 - Stage 2 acumulado: 33 vistas con layout Stage 2 de 154 vistas Razor; 121 vistas todavía no migradas.
 - Alcance financiero migrado: 22 vistas de página, el parcial de gasto y la salida Print. Auditoría focalizada: 0 `s3`/`s4`, 0 Font Awesome y 0 logos legacy.
 - `git diff --check`: aprobado.

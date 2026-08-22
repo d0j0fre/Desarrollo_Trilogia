@@ -38,6 +38,8 @@
 .djj-button--success:hover { background: var(--djj-color-success-hover); color: var(--djj-neutral-0); }
 .djj-button--danger { background: var(--djj-color-danger); color: var(--djj-neutral-0); }
 .djj-button--danger:hover { background: var(--djj-color-danger-hover); color: var(--djj-neutral-0); }
+.djj-button--danger-outline { border-color: var(--djj-color-danger); background: transparent; color: var(--djj-color-danger); }
+.djj-button--danger-outline:hover { background: var(--djj-color-danger-surface); color: var(--djj-color-danger-hover); }
 .djj-button--neutral { background: var(--djj-neutral-800); color: var(--djj-neutral-0); }
 .djj-button--neutral:hover { background: var(--djj-neutral-950); color: var(--djj-neutral-0); }
 
