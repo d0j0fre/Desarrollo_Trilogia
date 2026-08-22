@@ -20,6 +20,16 @@ public sealed class Stage2DesignSystemTests
         ["Views", "PurchaseOrders", "Detail.cshtml"], ["Views", "PriceHistory", "Index.cshtml"]
         , ["Views", "Combos", "Index.cshtml"], ["Views", "Returns", "Index.cshtml"], ["Views", "Returns", "Quarantine.cshtml"]
     ];
+    private static readonly string[][] MigratedFinanceViews =
+    [
+        ["Views", "Finance", "Index.cshtml"], ["Views", "Finance", "Liquidate.cshtml"],
+        ["Views", "Credits", "Index.cshtml"], ["Views", "Credits", "Details.cshtml"],
+        ["Views", "AccountsReceivableAdmin", "Index.cshtml"], ["Views", "AccountsReceivableAdmin", "Detail.cshtml"],
+        ["Views", "Clients", "Index.cshtml"], ["Views", "Clients", "Create.cshtml"], ["Views", "Clients", "Edit.cshtml"], ["Views", "Clients", "Details.cshtml"],
+        ["Views", "Budgets", "Index.cshtml"], ["Views", "Budgets", "Create.cshtml"], ["Views", "Budgets", "Edit.cshtml"], ["Views", "Budgets", "Details.cshtml"],
+        ["Views", "Expenses", "Index.cshtml"], ["Views", "Expenses", "Create.cshtml"], ["Views", "Expenses", "Edit.cshtml"], ["Views", "Expenses", "Details.cshtml"], ["Views", "Expenses", "Accounts.cshtml"],
+        ["Views", "BudgetComparison", "Index.cshtml"], ["Views", "Billing", "Index.cshtml"], ["Views", "Billing", "Detail.cshtml"]
+    ];
 
     [Fact]
     public void PilotViews_UseOnlyTheirStage2Layouts()
@@ -166,6 +176,79 @@ public sealed class Stage2DesignSystemTests
         Assert.Contains("<li class=\"djj-workspace-nav__label\">Compras</li>", layout, StringComparison.Ordinal);
         Assert.Contains("@if (canInventory)", layout, StringComparison.Ordinal);
         Assert.Contains("@if (canPurchases)", layout, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MigratedFinanceDomains_UseWorkspaceAndHaveNoLegacyVisualDependencies()
+    {
+        Assert.All(MigratedFinanceViews.Select(ReadProject), view =>
+        {
+            Assert.Contains("_WorkspaceLayout", view, StringComparison.Ordinal);
+            Assert.DoesNotContain("s3-", view, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("s4-", view, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("fa fa-", view, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("font-awesome", view, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("custom-theme.css", view, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("logo-icon.png", view, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("<table class=\"table", view, StringComparison.OrdinalIgnoreCase);
+        });
+    }
+
+    [Fact]
+    public void FinanceForms_PreserveSensitivePostContractsAndAccessibleRecovery()
+    {
+        var liquidation = ReadProject("Views", "Finance", "Liquidate.cshtml");
+        var credit = ReadProject("Views", "AccountsReceivableAdmin", "Detail.cshtml");
+        var client = ReadProject("Views", "Clients", "Details.cshtml");
+        var budget = ReadProject("Views", "Budgets", "Details.cshtml");
+        var expense = ReadProject("Views", "Expenses", "Details.cshtml");
+        var expenseForm = ReadProject("Views", "Expenses", "_OperatingForm.cshtml");
+
+        Assert.Contains("Comprobantes[@i].Monto", liquidation, StringComparison.Ordinal);
+        Assert.Contains("asp-for=\"SettingsForm.UsuarioId\"", credit, StringComparison.Ordinal);
+        Assert.Contains("asp-for=\"MovementForm.UsuarioId\"", credit, StringComparison.Ordinal);
+        Assert.Contains("name=\"returnTo\" value=\"details\"", client, StringComparison.Ordinal);
+        Assert.Contains("asp-action=\"Approve\"", budget, StringComparison.Ordinal);
+        Assert.Contains("asp-action=\"Reject\"", budget, StringComparison.Ordinal);
+        Assert.Contains("asp-action=\"Pay\"", expense, StringComparison.Ordinal);
+        Assert.Contains("asp-action=\"Cancel\"", expense, StringComparison.Ordinal);
+        Assert.Contains("asp-for=\"OperationToken\"", expenseForm, StringComparison.Ordinal);
+        Assert.Contains("data-expense-money", expenseForm, StringComparison.Ordinal);
+        Assert.Contains("data-expense-total", expenseForm, StringComparison.Ordinal);
+        Assert.All(new[] { liquidation, credit }, view =>
+        {
+            Assert.Contains("role=\"alert\"", view, StringComparison.Ordinal);
+            Assert.Contains("data-djj-validation-summary", view, StringComparison.Ordinal);
+        });
+    }
+
+    [Fact]
+    public void FinancePresentation_UsesExplicitMoneyAndContextualConfirmations()
+    {
+        var sources = MigratedFinanceViews.Select(ReadProject).ToArray();
+        Assert.All(sources.Where(view => view.Contains("<table", StringComparison.OrdinalIgnoreCase)), view =>
+            Assert.Contains("djj-table", view, StringComparison.Ordinal));
+
+        var budget = ReadProject("Views", "Budgets", "Details.cshtml");
+        var expense = ReadProject("Views", "Expenses", "Details.cshtml");
+        var liquidation = ReadProject("Views", "Finance", "Liquidate.cshtml");
+        Assert.Contains("₡", budget, StringComparison.Ordinal);
+        Assert.Contains("data-djj-confirm", budget, StringComparison.Ordinal);
+        Assert.Contains("data-djj-confirm", expense, StringComparison.Ordinal);
+        Assert.Contains("data-djj-confirm", liquidation, StringComparison.Ordinal);
+        Assert.DoesNotContain("!important", string.Concat(sources), StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void WorkspaceNavigation_UsesRealFinancialPermissions()
+    {
+        var layout = ReadProject("Views", "Shared", "_WorkspaceLayout.cshtml");
+        Assert.Contains("Can(\"CREDITOS_VER\")", layout, StringComparison.Ordinal);
+        Assert.Contains("Can(\"FACTURACION_VER\")", layout, StringComparison.Ordinal);
+        Assert.Contains("Can(\"LIQUIDACION_FINANCIERA\")", layout, StringComparison.Ordinal);
+        Assert.Contains("@if (canCredits)", layout, StringComparison.Ordinal);
+        Assert.Contains("@if (canBilling)", layout, StringComparison.Ordinal);
+        Assert.Contains("@if (canFinance)", layout, StringComparison.Ordinal);
     }
 
     private static string ReadProject(params string[] parts) => File.ReadAllText(ProjectPath(parts));
