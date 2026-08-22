@@ -11,6 +11,15 @@ public sealed class Stage2DesignSystemTests
         ["Views", "ClientPortal", "Index.cshtml"], ["Views", "ClientPortal", "Detail.cshtml"], ["Views", "ClientPortal", "Invoice.cshtml"], ["Views", "ClientPortal", "Statement.cshtml"], ["Views", "ClientPortal", "Warranty.cshtml"], ["Views", "ClientPortal", "Warranties.cshtml"],
         ["Views", "Profile", "Edit.cshtml"], ["Views", "Account", "Login.cshtml"], ["Views", "Account", "Registro.cshtml"], ["Views", "Account", "ForgotPassword.cshtml"], ["Views", "Account", "ResetPassword.cshtml"]
     ];
+    private static readonly string[][] MigratedBackofficeViews =
+    [
+        ["Views", "Inventory", "Index.cshtml"], ["Views", "Inventory", "Create.cshtml"], ["Views", "Inventory", "Edit.cshtml"],
+        ["Views", "Inventory", "Movements.cshtml"], ["Views", "Inventory", "RegisterMovement.cshtml"], ["Views", "Inventory", "TransformStock.cshtml"],
+        ["Views", "InventoryIntelligence", "Index.cshtml"], ["Views", "OrdersAdmin", "Index.cshtml"], ["Views", "OrdersAdmin", "Detail.cshtml"],
+        ["Views", "Suppliers", "Index.cshtml"], ["Views", "PurchaseOrders", "Index.cshtml"], ["Views", "PurchaseOrders", "Create.cshtml"],
+        ["Views", "PurchaseOrders", "Detail.cshtml"], ["Views", "PriceHistory", "Index.cshtml"]
+        , ["Views", "Combos", "Index.cshtml"], ["Views", "Returns", "Index.cshtml"], ["Views", "Returns", "Quarantine.cshtml"]
+    ];
 
     [Fact]
     public void PilotViews_UseOnlyTheirStage2Layouts()
@@ -117,6 +126,46 @@ public sealed class Stage2DesignSystemTests
         Assert.Equal(3, Regex.Matches(admin, "djj-admin-quick-link--primary").Count);
         Assert.Contains("Ver los otros 11 módulos", admin, StringComparison.Ordinal);
         Assert.Contains("asp-controller=\"AccountsReceivableAdmin\"", admin, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MigratedBackofficeCore_UsesWorkspaceAndHasNoLegacyVisualDependencies()
+    {
+        Assert.All(MigratedBackofficeViews.Select(ReadProject), view =>
+        {
+            Assert.Contains("_WorkspaceLayout", view, StringComparison.Ordinal);
+            Assert.DoesNotContain("s3-", view, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("s4-", view, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("fa fa-", view, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("custom-theme.css", view, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("logo-icon.png", view, StringComparison.OrdinalIgnoreCase);
+        });
+    }
+
+    [Fact]
+    public void BackofficeCore_PreservesOperationalPostContractsAndAccessibleTables()
+    {
+        var movement = ReadProject("Views", "Inventory", "RegisterMovement.cshtml");
+        var purchase = ReadProject("Views", "PurchaseOrders", "Create.cshtml");
+        var receipt = ReadProject("Views", "PurchaseOrders", "Detail.cshtml");
+
+        Assert.Contains("id=\"tipoMovimiento\"", movement, StringComparison.Ordinal);
+        Assert.Contains("id=\"generaGasto\"", movement, StringComparison.Ordinal);
+        Assert.Contains("asp-for=\"TokenOperacion\"", purchase, StringComparison.Ordinal);
+        Assert.Contains("id=\"purchase-lines\"", purchase, StringComparison.Ordinal);
+        Assert.Contains("name=\"CantidadRecibidaAhora\"", receipt, StringComparison.Ordinal);
+        Assert.All(MigratedBackofficeViews.Select(ReadProject), view => Assert.DoesNotContain("<table class=\"table", view, StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void WorkspaceNavigation_GroupsOperationalDomainsWithoutBypassingPermissions()
+    {
+        var layout = ReadProject("Views", "Shared", "_WorkspaceLayout.cshtml");
+        Assert.Contains("Ventas y pedidos", layout, StringComparison.Ordinal);
+        Assert.Contains("<li class=\"djj-workspace-nav__label\">Inventario</li>", layout, StringComparison.Ordinal);
+        Assert.Contains("<li class=\"djj-workspace-nav__label\">Compras</li>", layout, StringComparison.Ordinal);
+        Assert.Contains("@if (canInventory)", layout, StringComparison.Ordinal);
+        Assert.Contains("@if (canPurchases)", layout, StringComparison.Ordinal);
     }
 
     private static string ReadProject(params string[] parts) => File.ReadAllText(ProjectPath(parts));
