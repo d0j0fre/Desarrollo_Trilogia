@@ -54,21 +54,20 @@
                         <li class="djj-workspace-nav__label">Resumen</li>
                         <li><a asp-controller="Admin" asp-action="Index" aria-current="@(IsCurrent("Admin") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-chart"></use></svg><span class="djj-workspace-nav__text">Panel general</span></a></li>
                     }
-                    @if (canInventory || canPurchases || isAdmin)
+                    @if (isAdmin)
                     {
-                        <li class="djj-workspace-nav__label">Operación</li>
+                        <li class="djj-workspace-nav__label">Ventas y pedidos</li>
+                        <li><a asp-controller="OrdersAdmin" asp-action="Index" aria-current="@(IsCurrent("OrdersAdmin", "Billing") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-orders"></use></svg><span class="djj-workspace-nav__text">Pedidos y facturación</span></a></li>
                     }
                     @if (canInventory)
                     {
-                        <li><a asp-controller="Inventory" asp-action="Index" aria-current="@(IsCurrent("Inventory", "InventoryIntelligence", "Combos") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-warehouse"></use></svg><span class="djj-workspace-nav__text">Inventario</span></a></li>
-                    }
-                    @if (isAdmin)
-                    {
-                        <li><a asp-controller="OrdersAdmin" asp-action="Index" aria-current="@(IsCurrent("OrdersAdmin", "Billing") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-orders"></use></svg><span class="djj-workspace-nav__text">Pedidos y facturación</span></a></li>
+                        <li class="djj-workspace-nav__label">Inventario</li>
+                        <li><a asp-controller="Inventory" asp-action="Index" aria-current="@(IsCurrent("Inventory", "InventoryIntelligence", "Combos", "Returns") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-warehouse"></use></svg><span class="djj-workspace-nav__text">Productos y existencias</span></a></li>
                     }
                     @if (canPurchases)
                     {
-                        <li><a asp-controller="PurchaseOrders" asp-action="Index" aria-current="@(IsCurrent("PurchaseOrders", "Suppliers", "PriceHistory") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-package"></use></svg><span class="djj-workspace-nav__text">Compras</span></a></li>
+                        <li class="djj-workspace-nav__label">Compras</li>
+                        <li><a asp-controller="PurchaseOrders" asp-action="Index" aria-current="@(IsCurrent("PurchaseOrders", "Suppliers", "PriceHistory") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-package"></use></svg><span class="djj-workspace-nav__text">Órdenes y proveedores</span></a></li>
                     }
                     @if (canClients || canBudgets || canExpenses || canEmployees || canPayroll)
                     {
