@@ -1,15 +1,21 @@
+@using Microsoft.AspNetCore.Http
 @model Proyecto_Final.Models.Admin.EmployeeDetailViewModel
+@inject IRolePermissionService PermissionService
 @{
     Layout = "_WorkspaceLayout";
     ViewData["Title"] = "Detalle de empleado";
     var active = Model.Activo && Model.UsuarioActivo;
     string StateTone(string state) => state switch { "Completada" or "Aprobada" => "success", "Cancelada" or "Rechazada" => "danger", "Pendiente" or "En proceso" => "warning", _ => "neutral" };
     string PriorityTone(string priority) => priority switch { "Urgente" or "Alta" => "danger", "Media" => "warning", _ => "neutral" };
+    var role = Context.Session.GetString("UserRole") ?? string.Empty;
+    var isAdmin = string.Equals(role, "Administrador", StringComparison.OrdinalIgnoreCase);
+    var permissions = isAdmin ? new HashSet<string>(StringComparer.OrdinalIgnoreCase) : await PermissionService.GetPermissionCodesAsync(role);
+    bool Can(string code) => isAdmin || permissions.Contains(code);
 }
 
 <header class="djj-page-header">
     <div class="djj-page-header__copy"><span class="djj-page-header__eyebrow">Expediente laboral · #@Model.EmpleadoId</span><h1>@Model.NombreCompleto</h1><p>@Model.Puesto · @(string.IsNullOrWhiteSpace(Model.Departamento) ? "Sin departamento" : Model.Departamento) · @Model.Rol</p><div class="djj-cluster"><span class="djj-status-badge djj-status-badge--@(active ? "success" : "neutral")">@(active ? "Activo" : "Inactivo")</span></div></div>
-    <div class="djj-page-header__actions"><a asp-action="Edit" asp-route-id="@Model.EmpleadoId" class="djj-button djj-button--primary">Editar expediente</a><a asp-action="Index" class="djj-button djj-button--ghost">Volver</a></div>
+    <div class="djj-page-header__actions">@if (Can("EMPLEADOS_EDITAR")) { <a asp-action="Edit" asp-route-id="@Model.EmpleadoId" class="djj-button djj-button--primary">Editar expediente</a> }<a asp-action="Index" class="djj-button djj-button--ghost">Volver</a></div>
 </header>
 
 <div class="djj-detail-layout">

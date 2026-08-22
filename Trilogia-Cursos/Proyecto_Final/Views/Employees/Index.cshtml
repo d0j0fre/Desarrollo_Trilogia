@@ -1,8 +1,14 @@
+@using Microsoft.AspNetCore.Http
 @model Proyecto_Final.Models.Admin.EmployeeFilterViewModel
+@inject IRolePermissionService PermissionService
 @{
     Layout = "_WorkspaceLayout";
     ViewData["Title"] = "Empleados";
     string StateTone(bool active) => active ? "success" : "neutral";
+    var role = Context.Session.GetString("UserRole") ?? string.Empty;
+    var isAdmin = string.Equals(role, "Administrador", StringComparison.OrdinalIgnoreCase);
+    var permissions = isAdmin ? new HashSet<string>(StringComparer.OrdinalIgnoreCase) : await PermissionService.GetPermissionCodesAsync(role);
+    bool Can(string code) => isAdmin || permissions.Contains(code);
 }
 
 <header class="djj-page-header">
@@ -12,8 +18,8 @@
         <p>Gestioná la relación laboral, el estado y el seguimiento del personal sin exponer datos sensibles en el listado.</p>
     </div>
     <div class="djj-page-header__actions">
-        <a asp-action="LeaveRequests" class="djj-button djj-button--outline">Ver solicitudes</a>
-        <a asp-action="Create" class="djj-button djj-button--primary"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-users"></use></svg>Nuevo empleado</a>
+        @if (Can("EMPLEADOS_SOLICITUDES")) { <a asp-action="LeaveRequests" class="djj-button djj-button--outline">Ver solicitudes</a> }
+        @if (Can("EMPLEADOS_CREAR")) { <a asp-action="Create" class="djj-button djj-button--primary"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-users"></use></svg>Nuevo empleado</a> }
     </div>
 </header>
 
@@ -44,7 +50,7 @@
                     <td><span class="djj-table__primary">@item.Puesto</span><small class="djj-table__note">@(string.IsNullOrWhiteSpace(item.Departamento) ? "Sin departamento" : item.Departamento)</small></td>
                     <td><span class="djj-table__primary">@item.TareasPendientes tarea(s) pendiente(s)</span><small class="djj-table__note">@item.SolicitudesPendientes solicitud(es) pendiente(s)</small></td>
                     <td><span class="djj-status-badge djj-status-badge--@StateTone(active)">@(active ? "Activo" : "Inactivo")</span></td>
-                    <td><div class="djj-row-actions"><a asp-action="Details" asp-route-id="@item.EmpleadoId" class="djj-button djj-button--outline djj-button--sm">Ver expediente</a><details class="djj-action-menu"><summary aria-label="Más acciones para @item.NombreCompleto"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-menu"></use></svg></summary><div class="djj-action-menu__panel"><a asp-action="Edit" asp-route-id="@item.EmpleadoId">Editar</a><form asp-action="ToggleStatus" method="post" data-djj-confirm="@(item.Activo ? $"Inactivar a {item.NombreCompleto}. Su expediente permanecerá disponible, pero el empleado quedará inactivo." : $"Reactivar a {item.NombreCompleto} para devolverle el estado activo.")">@Html.AntiForgeryToken()<input type="hidden" name="empleadoId" value="@item.EmpleadoId" /><input type="hidden" name="buscar" value="@Model.Buscar" /><input type="hidden" name="estado" value="@Model.Estado" /><button type="submit" class="@(item.Activo ? "djj-action-menu__danger" : null)">@(item.Activo ? "Inactivar" : "Reactivar")</button></form></div></details></div></td>
+                    <td><div class="djj-row-actions"><a asp-action="Details" asp-route-id="@item.EmpleadoId" class="djj-button djj-button--outline djj-button--sm">Ver expediente</a>@if (Can("EMPLEADOS_EDITAR")) { <details class="djj-action-menu"><summary aria-label="Más acciones para @item.NombreCompleto"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-menu"></use></svg></summary><div class="djj-action-menu__panel"><a asp-action="Edit" asp-route-id="@item.EmpleadoId">Editar</a><form asp-action="ToggleStatus" method="post" data-djj-confirm="@(item.Activo ? $"Inactivar a {item.NombreCompleto}. Su expediente permanecerá disponible, pero el empleado quedará inactivo." : $"Reactivar a {item.NombreCompleto} para devolverle el estado activo.")">@Html.AntiForgeryToken()<input type="hidden" name="empleadoId" value="@item.EmpleadoId" /><input type="hidden" name="buscar" value="@Model.Buscar" /><input type="hidden" name="estado" value="@Model.Estado" /><button type="submit" class="@(item.Activo ? "djj-action-menu__danger" : null)">@(item.Activo ? "Inactivar" : "Reactivar")</button></form></div></details> }</div></td>
                 </tr>
             }
             </tbody>
