@@ -1,11 +1,14 @@
 @using Microsoft.AspNetCore.Http
 @inject IRolePermissionService PermissionService
+@inject IEmployeeRelationshipService EmployeeRelationshipService
 @{
     var brandName = Company.Value.BrandName;
     var pageTitle = ViewData["Title"]?.ToString() ?? "Workspace";
     var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty;
     var userName = Context.Session.GetString("UserFullName") ?? "Usuario";
     var userRole = Context.Session.GetString("UserRole") ?? string.Empty;
+    var userId = Context.Session.GetInt32("UserId") ?? 0;
+    var isEmployeePortalUser = userId > 0 && await EmployeeRelationshipService.IsEmployeeAsync(userId);
     var isAdmin = string.Equals(userRole, "Administrador", StringComparison.OrdinalIgnoreCase);
     var permissions = isAdmin ? new HashSet<string>(StringComparer.OrdinalIgnoreCase) : await PermissionService.GetPermissionCodesAsync(userRole);
     bool Can(string code) => isAdmin || permissions.Contains(code);
@@ -19,7 +22,10 @@
     var canBudgets = Can("PRESUPUESTOS_VER");
     var canExpenses = Can("GASTOS_VER");
     var canEmployees = Can("EMPLEADOS_VER");
+    var canLeaveRequests = Can("EMPLEADOS_SOLICITUDES");
+    var canApproveAttendance = Can("RRHH_JORNADAS_APROBAR");
     var canPayroll = Can("PLANILLA_VER");
+    var canManagePaySlips = Can("PLANILLA_BOLETAS_GESTIONAR");
     var canChat = Can("CHAT_USAR");
 }
 <!DOCTYPE html>
@@ -107,17 +113,35 @@
                     {
                         <li><a asp-controller="Finance" asp-action="Index" aria-current="@(IsCurrent("Finance") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-orders"></use></svg><span class="djj-workspace-nav__text">Liquidaciones</span></a></li>
                     }
-                    @if (canEmployees || canPayroll)
+                    @if (canEmployees || canLeaveRequests || canApproveAttendance || canPayroll || canManagePaySlips || isEmployeePortalUser)
                     {
                         <li class="djj-workspace-nav__label">Personal</li>
                     }
                     @if (canEmployees)
                     {
-                        <li><a asp-controller="Employees" asp-action="Index" aria-current="@(IsCurrent("Employees", "Attendance") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-id-card"></use></svg><span class="djj-workspace-nav__text">Personal</span></a></li>
+                        <li><a asp-controller="Employees" asp-action="Index" aria-current="@(IsCurrent("Employees") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-id-card"></use></svg><span class="djj-workspace-nav__text">Empleados y tareas</span></a></li>
+                    }
+                    @if (canApproveAttendance)
+                    {
+                        <li><a asp-controller="Attendance" asp-action="Index" aria-current="@(IsCurrent("Attendance") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-history"></use></svg><span class="djj-workspace-nav__text">Jornadas</span></a></li>
+                    }
+                    @if (canLeaveRequests)
+                    {
+                        <li><a asp-controller="Employees" asp-action="LeaveRequests" aria-current="@(IsCurrent("Employees") && string.Equals(ViewContext.RouteData.Values["action"]?.ToString(), "LeaveRequests", StringComparison.OrdinalIgnoreCase) ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-folders"></use></svg><span class="djj-workspace-nav__text">Solicitudes</span></a></li>
                     }
                     @if (canPayroll)
                     {
-                        <li><a asp-controller="Payroll" asp-action="Index" aria-current="@(IsCurrent("Payroll", "PaySlips") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-calculator"></use></svg><span class="djj-workspace-nav__text">Planilla</span></a></li>
+                        <li><a asp-controller="Payroll" asp-action="Index" aria-current="@(IsCurrent("Payroll") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-calculator"></use></svg><span class="djj-workspace-nav__text">Planilla</span></a></li>
+                    }
+                    @if (canManagePaySlips)
+                    {
+                        <li><a asp-controller="PaySlips" asp-action="Index" aria-current="@(IsCurrent("PaySlips") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-receipt"></use></svg><span class="djj-workspace-nav__text">Boletas</span></a></li>
+                    }
+                    @if (isEmployeePortalUser)
+                    {
+                        <li><a asp-controller="EmployeePortal" asp-action="Index" aria-current="@(IsCurrent("EmployeePortal") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-user"></use></svg><span class="djj-workspace-nav__text">Mi portal</span></a></li>
+                        <li><a asp-controller="MyAttendance" asp-action="Index" aria-current="@(IsCurrent("MyAttendance") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-history"></use></svg><span class="djj-workspace-nav__text">Mis jornadas</span></a></li>
+                        <li><a asp-controller="MyPaySlips" asp-action="Index" aria-current="@(IsCurrent("MyPaySlips") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-receipt"></use></svg><span class="djj-workspace-nav__text">Mis boletas</span></a></li>
                     }
                     <li class="djj-workspace-nav__label">Herramientas</li>
                     @if (canChat)

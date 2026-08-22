@@ -97,6 +97,12 @@
     });
   });
 
+  document.querySelectorAll("button[data-djj-confirm]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      if (!window.confirm(button.dataset.djjConfirm)) event.preventDefault();
+    });
+  });
+
   const validationSummary = document.querySelector("[data-djj-validation-summary]");
   if (validationSummary?.textContent.trim()) validationSummary.focus();
 

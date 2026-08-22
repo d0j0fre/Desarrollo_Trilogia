@@ -125,6 +125,33 @@
 .djj-seasonal-track { display: flex; align-items: end; min-height: 0; border-radius: var(--djj-radius-sm); background: var(--djj-color-surface-subtle); }
 .djj-seasonal-bar { width: 100%; height: var(--djj-chart-height); min-height: 0.25rem; border-radius: var(--djj-radius-sm) var(--djj-radius-sm) 0 0; background: var(--djj-color-primary); }
 
+/* Human resources and payroll */
+.djj-form-grid__full { grid-column: 1 / -1; }
+.djj-hr-form-sections { display: grid; gap: var(--djj-space-8); }
+.djj-hr-form-sections fieldset { display: grid; min-width: 0; gap: var(--djj-space-4); margin: 0; border: 0; padding: 0; }
+.djj-hr-form-sections legend { width: 100%; border-bottom: 1px solid var(--djj-color-border); padding-bottom: var(--djj-space-2); font-size: var(--djj-font-size-lg); font-weight: var(--djj-weight-bold); }
+.djj-hr-split { display: grid; gap: var(--djj-space-5); margin-bottom: var(--djj-space-5); }
+.djj-hr-list { display: grid; margin: 0; padding: 0; list-style: none; }
+.djj-hr-list > li { display: grid; align-items: start; gap: var(--djj-space-4); border-bottom: 1px solid var(--djj-color-border); padding: var(--djj-space-4) var(--djj-space-5); }
+.djj-hr-list > li:last-child { border-bottom: 0; }
+.djj-hr-list__content { min-width: 0; }
+.djj-hr-list__content p { margin: var(--djj-space-2) 0; overflow-wrap: anywhere; color: var(--djj-color-text-secondary); }
+.djj-hr-list__content small { color: var(--djj-color-text-muted); }
+.djj-hr-request-summary { max-width: 22rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.djj-hr-decision { display: grid; min-width: 18rem; gap: var(--djj-space-2); }
+.djj-payroll-config { display: grid; align-items: start; gap: var(--djj-space-5); margin: var(--djj-space-5) 0; }
+.djj-form-status { min-height: 1.25rem; margin: 0; color: var(--djj-color-text-secondary); font-size: var(--djj-font-size-sm); }
+.djj-payroll-actions { display: grid; min-width: 16rem; gap: var(--djj-space-2); }
+.djj-payroll-actions form { margin: 0; }
+.djj-payroll-reason { min-width: 12rem; }
+.djj-detail-grid--four { grid-template-columns: 1fr; }
+.djj-payslip { display: grid; gap: var(--djj-space-5); }
+.djj-payslip-totals { display: grid; max-width: 34rem; margin-left: auto; border: 1px solid var(--djj-color-border); border-radius: var(--djj-radius-lg); background: var(--djj-color-surface); }
+.djj-payslip-totals > div { display: flex; justify-content: space-between; gap: var(--djj-space-5); border-bottom: 1px solid var(--djj-color-border); padding: var(--djj-space-3) var(--djj-space-5); }
+.djj-payslip-totals > div:last-child { border-bottom: 0; }
+.djj-payslip-totals strong { text-align: right; font-variant-numeric: tabular-nums; }
+.djj-payslip-totals__net { background: var(--djj-color-surface-inverse); color: var(--djj-color-text-inverse); font-size: var(--djj-font-size-lg); }
+
 .djj-workspace-shell[data-sidebar-collapsed="true"] .djj-workspace-sidebar { width: var(--djj-sidebar-collapsed); }
 .djj-workspace-shell[data-sidebar-collapsed="true"] .djj-workspace-main { margin-left: var(--djj-sidebar-collapsed); }
 .djj-workspace-shell[data-sidebar-collapsed="true"] .djj-workspace-sidebar__logo,
@@ -168,6 +195,8 @@
   .djj-admin-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .djj-admin-quick-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .djj-admin-primary-actions { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .djj-detail-grid--four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .djj-hr-list > li { grid-template-columns: minmax(0, 1fr) auto; }
 }
 
 @media (min-width: 80rem) {
@@ -182,6 +211,10 @@
   .djj-kpi-grid--five { grid-template-columns: repeat(5, minmax(0, 1fr)); }
   .djj-financial-panels { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .djj-filter-bar--finance { grid-template-columns: repeat(6, minmax(8rem, 1fr)) auto; }
+  .djj-hr-split { grid-template-columns: minmax(18rem, 0.8fr) minmax(0, 1.2fr); }
+  .djj-hr-split--balanced { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .djj-payroll-config { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .djj-detail-grid--four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
 @media (max-width: 63.99rem) {
@@ -198,4 +231,28 @@
   .djj-workspace-topbar { padding-inline: var(--djj-space-3); }
   .djj-workspace-content { padding-inline: var(--djj-space-3); }
   .djj-admin-quick-grid { grid-template-columns: 1fr; }
+  .djj-form-grid__full { grid-column: auto; }
+  .djj-hr-list > li { padding-inline: var(--djj-space-3); }
+  .djj-hr-list .djj-inline-action,
+  .djj-hr-decision .djj-row-actions { align-items: stretch; flex-direction: column; }
+  .djj-hr-list .djj-select,
+  .djj-hr-list .djj-button,
+  .djj-hr-decision .djj-button { width: 100%; }
+  .djj-hr-decision { min-width: 15rem; }
+}
+
+@media print {
+  .djj-workspace-sidebar,
+  .djj-workspace-topbar,
+  .djj-workspace-scrim,
+  .djj-breadcrumb,
+  .djj-workspace-messages,
+  [data-djj-screen-only] { display: none; }
+  .djj-workspace-main { margin-left: 0; }
+  .djj-workspace-content { max-width: none; padding: 0; }
+  .djj-payslip { color: var(--djj-neutral-950); }
+  .djj-payslip .djj-card,
+  .djj-payslip-totals { break-inside: avoid; box-shadow: none; }
+  .djj-payslip .djj-table-wrap { overflow: visible; }
+  .djj-payslip-totals__net { border: 1px solid var(--djj-neutral-950); background: var(--djj-neutral-0); color: var(--djj-neutral-950); }
 }
