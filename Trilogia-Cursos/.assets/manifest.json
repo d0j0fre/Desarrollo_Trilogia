@@ -1,0 +1,122 @@
+{
+  "schemaVersion": 1,
+  "assets": [
+    {
+      "id": "djj-logo-horizontal-color-v1",
+      "name": "Distribuidora JJ — logo horizontal color",
+      "type": "logo",
+      "path": "Proyecto_Final\\wwwroot\\brand\\stage2\\logo_stage2-identity_horizontal_20260821_color.svg",
+      "status": "approved-identity-not-integrated",
+      "version": 1,
+      "createdAt": "2026-08-21T00:00:00-06:00"
+    },
+    {
+      "id": "djj-logo-horizontal-reversed-v1",
+      "name": "Distribuidora JJ — logo horizontal invertido",
+      "type": "logo",
+      "path": "Proyecto_Final\\wwwroot\\brand\\stage2\\logo_stage2-identity_horizontal_20260821_reversed.svg",
+      "status": "approved-identity-not-integrated",
+      "version": 1,
+      "createdAt": "2026-08-21T00:00:00-06:00"
+    },
+    {
+      "id": "djj-logo-stacked-v1",
+      "name": "Distribuidora JJ — logo secundario vertical",
+      "type": "logo",
+      "path": "Proyecto_Final\\wwwroot\\brand\\stage2\\logo_stage2-identity_stacked_20260821_color.svg",
+      "status": "approved-identity-not-integrated",
+      "version": 1,
+      "createdAt": "2026-08-21T00:00:00-06:00"
+    },
+    {
+      "id": "djj-logo-compact-v1",
+      "name": "Distribuidora JJ — logo compacto",
+      "type": "logo",
+      "path": "Proyecto_Final\\wwwroot\\brand\\stage2\\logo_stage2-identity_compact_20260821_color.svg",
+      "status": "approved-identity-not-integrated",
+      "version": 1,
+      "createdAt": "2026-08-21T00:00:00-06:00"
+    },
+    {
+      "id": "djj-mark-color-v1",
+      "name": "Distribuidora JJ — isotipo color",
+      "type": "logo",
+      "path": "Proyecto_Final\\wwwroot\\brand\\stage2\\logo_stage2-identity_mark_20260821_color.svg",
+      "status": "approved-identity-not-integrated",
+      "version": 1,
+      "createdAt": "2026-08-21T00:00:00-06:00"
+    },
+    {
+      "id": "djj-mark-reversed-v1",
+      "name": "Distribuidora JJ — isotipo claro",
+      "type": "logo",
+      "path": "Proyecto_Final\\wwwroot\\brand\\stage2\\logo_stage2-identity_mark_20260821_reversed.svg",
+      "status": "approved-identity-not-integrated",
+      "version": 1,
+      "createdAt": "2026-08-21T00:00:00-06:00"
+    },
+    {
+      "id": "djj-logo-mono-dark-v1",
+      "name": "Distribuidora JJ — logo monocromático oscuro",
+      "type": "logo",
+      "path": "Proyecto_Final\\wwwroot\\brand\\stage2\\logo_stage2-identity_horizontal_20260821_mono-dark.svg",
+      "status": "approved-identity-not-integrated",
+      "version": 1,
+      "createdAt": "2026-08-21T00:00:00-06:00"
+    },
+    {
+      "id": "djj-logo-mono-light-v1",
+      "name": "Distribuidora JJ — logo monocromático claro",
+      "type": "logo",
+      "path": "Proyecto_Final\\wwwroot\\brand\\stage2\\logo_stage2-identity_horizontal_20260821_mono-light.svg",
+      "status": "approved-identity-not-integrated",
+      "version": 1,
+      "createdAt": "2026-08-21T00:00:00-06:00"
+    },
+    {
+      "id": "djj-favicon-svg-v1",
+      "name": "Distribuidora JJ — favicon SVG",
+      "type": "icon",
+      "path": "Proyecto_Final\\wwwroot\\brand\\stage2\\icon_stage2-identity_favicon_20260821_32.svg",
+      "status": "approved-identity-not-integrated",
+      "version": 1,
+      "createdAt": "2026-08-21T00:00:00-06:00"
+    },
+    {
+      "id": "djj-favicon-png-v1",
+      "name": "Distribuidora JJ — favicon PNG",
+      "type": "icon",
+      "path": "Proyecto_Final\\wwwroot\\brand\\stage2\\icon_stage2-identity_favicon_20260821_32.png",
+      "status": "approved-identity-not-integrated",
+      "version": 1,
+      "createdAt": "2026-08-21T00:00:00-06:00"
+    },
+    {
+      "id": "djj-app-icon-svg-v1",
+      "name": "Distribuidora JJ — app icon SVG",
+      "type": "icon",
+      "path": "Proyecto_Final\\wwwroot\\brand\\stage2\\icon_stage2-identity_app_20260821_512.svg",
+      "status": "approved-identity-not-integrated",
+      "version": 1,
+      "createdAt": "2026-08-21T00:00:00-06:00"
+    },
+    {
+      "id": "djj-app-icon-png-v1",
+      "name": "Distribuidora JJ — app icon PNG",
+      "type": "icon",
+      "path": "Proyecto_Final\\wwwroot\\brand\\stage2\\icon_stage2-identity_app_20260821_512.png",
+      "status": "approved-identity-not-integrated",
+      "version": 1,
+      "createdAt": "2026-08-21T00:00:00-06:00"
+    },
+    {
+      "id": "djj-brand-board-v1",
+      "name": "Distribuidora JJ — board de identidad",
+      "type": "design",
+      "path": "docs\\brand\\design_stage2-identity_brand-board_20260821.svg",
+      "status": "approved-identity-not-integrated",
+      "version": 1,
+      "createdAt": "2026-08-21T00:00:00-06:00"
+    }
+  ]
+}
