@@ -1,319 +1,65 @@
 @model Proyecto_Final.Models.Admin.DriverRouteViewModel
 @{
+    Layout = "_FieldLayout";
     ViewData["Title"] = $"Ruta {Model.Codigo}";
     var editable = Model.Estado == "Despachada";
-    string BadgeEntrega(string e) => e switch { "EnRuta" => "dark", "Entregado" => "success", "Fallido" => "danger", _ => "warning" };
+    string BadgeEntrega(string e) => e switch { "EnRuta" => "info", "Entregado" => "success", "Fallido" => "danger", _ => "warning" };
     string TextoEntrega(string e) => e switch { "EnRuta" => "En ruta", _ => e };
-
-    // Opción A — navegación real por deep-link a Waze / Google Maps.
     var inv = System.Globalization.CultureInfo.InvariantCulture;
     string Coord(decimal? lat, decimal? lng) => $"{lat.GetValueOrDefault().ToString(inv)},{lng.GetValueOrDefault().ToString(inv)}";
     string WazeUrl(decimal? lat, decimal? lng) => $"https://waze.com/ul?ll={lat.GetValueOrDefault().ToString(inv)}%2C{lng.GetValueOrDefault().ToString(inv)}&navigate=yes";
     string MapsStopUrl(decimal? lat, decimal? lng) => $"https://www.google.com/maps/dir/?api=1&destination={Coord(lat, lng)}&travelmode=driving";
-
     var paradasNav = Model.Entregas.Where(e => e.Latitud.HasValue && e.Longitud.HasValue).ToList();
     string? rutaCompletaUrl = null;
-    if (paradasNav.Count > 0)
-    {
-        var destino = paradasNav[paradasNav.Count - 1];
-        rutaCompletaUrl = $"https://www.google.com/maps/dir/?api=1&destination={Coord(destino.Latitud, destino.Longitud)}&travelmode=driving";
-        if (paradasNav.Count > 1)
-        {
-            var waypoints = paradasNav.Take(paradasNav.Count - 1).Select(s => Coord(s.Latitud, s.Longitud));
-            rutaCompletaUrl += "&waypoints=" + Uri.EscapeDataString(string.Join("|", waypoints));
-        }
-    }
+    if (paradasNav.Count > 0) { var destino = paradasNav[paradasNav.Count - 1]; rutaCompletaUrl = $"https://www.google.com/maps/dir/?api=1&destination={Coord(destino.Latitud, destino.Longitud)}&travelmode=driving"; if (paradasNav.Count > 1) { var waypoints = paradasNav.Take(paradasNav.Count - 1).Select(s => Coord(s.Latitud, s.Longitud)); rutaCompletaUrl += "&waypoints=" + Uri.EscapeDataString(string.Join("|", waypoints)); } }
+    var total = Model.Entregas.Count;
+    var completadas = Model.Entregas.Count(e => e.EstadoEntrega == "Entregado");
+    var progreso = total == 0 ? 0 : completadas * 100 / total;
+    var routeStopsJson = System.Text.Json.JsonSerializer.Serialize(Model.Entregas
+        .Where(x => x.Latitud.HasValue && x.Longitud.HasValue)
+        .Select(d => new { seq = d.Secuencia, cliente = d.Cliente, dir = d.DireccionEntrega, estado = d.EstadoEntrega, lat = d.Latitud, lng = d.Longitud }));
 }
 
-@section Styles {
-    <link href="~/css/custom-theme.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <style>
-        .sig-canvas { border: 1px dashed #bbb; border-radius: 6px; touch-action: none; background: #fff; width: 100%; max-width: 320px; height: 140px; }
-        .delivery-card { border: 1px solid #eee; border-radius: 10px; }
-        #routeMap { height: 340px; border-radius: 10px; z-index: 0; }
-        .route-pin { background:#0b5ed7; color:#fff; border-radius:50%; width:26px; height:26px; display:flex; align-items:center; justify-content:center; font-weight:700; border:2px solid #fff; box-shadow:0 0 4px rgba(0,0,0,.4); }
-    </style>
-}
+@section Styles { <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" /> }
 
-<div class="container-fluid pt-4 backoffice-page">
-    <div class="row px-xl-5">
-        <div class="col-12">
-            <div class="admin-page-header d-flex justify-content-between align-items-center flex-wrap">
-                <div>
-                    <h2 class="mb-2">Ruta @Model.Codigo</h2>
-                    <p class="mb-0">Zona: <strong>@Model.Zona</strong> · Vehículo: <strong>@Model.VehiculoPlaca</strong></p>
-                </div>
-                <div class="mt-2 mt-md-0 text-right">
-                    <span id="connectionBadge" class="badge badge-success"><i class="fa fa-wifi mr-1"></i>En línea</span>
-                    <span style="display:none;"><span class="badge badge-warning">Pendientes: <span id="pendingSyncBadge">0</span></span></span>
-                    <br />
-                    <a asp-action="Index" class="btn btn-outline-secondary btn-sm mt-2"><i class="fa fa-arrow-left mr-1"></i>Mis rutas</a>
-                </div>
-            </div>
-        </div>
-    </div>
+<header class="djj-page-header djj-field-page-header"><div class="djj-page-header__copy"><span class="djj-page-header__eyebrow">@Model.Zona · @Model.VehiculoPlaca</span><h1>Ruta @Model.Codigo</h1><p>@(editable ? "Actualiza la siguiente entrega y registra evidencia cuando corresponda." : $"La ruta está {Model.Estado.ToLowerInvariant()}; sus entregas no se pueden actualizar.")</p></div><span class="djj-status-badge djj-status-badge--@(editable ? "info" : "neutral")">@Model.Estado</span></header>
 
-    <div class="row px-xl-5">
-        <div class="col-12">
-            <div id="driverToast" class="alert" style="display:none;"></div>
-            @if (!editable)
-            {
-                <div class="alert alert-info">Esta ruta está en estado <strong>@Model.Estado</strong>. Solo puedes actualizar entregas de una ruta despachada.</div>
-            }
-        </div>
-    </div>
+<section class="djj-field-route-summary djj-card" aria-label="Progreso de la ruta"><div><strong>@completadas de @total</strong><span>entregas completadas</span></div><div class="djj-field-progress"><div class="djj-field-progress__track"><span style="--djj-progress-value:@progreso%"></span></div></div><div class="djj-field-sync-status" id="connectionBadge" role="status" aria-live="polite" data-djj-delivery-connection>Comprobando conexión</div><span class="djj-field-sync-queue" hidden>Pendientes de sincronizar: <strong id="pendingSyncBadge">0</strong></span></section>
 
-    @* CU-252 — Mapa con la ruta y el orden de visitas *@
-    <div class="row px-xl-5 mb-4">
-        <div class="col-12">
-            <div class="admin-table-wrapper p-2">
-                <div class="d-flex justify-content-between align-items-center p-2 flex-wrap">
-                    <h6 class="mb-0"><i class="fa fa-map-marked-alt mr-2 text-primary"></i>Ruta sugerida en el mapa</h6>
-                    <div>
-                        @if (rutaCompletaUrl != null)
-                        {
-                            <a href="@rutaCompletaUrl" target="_blank" rel="noopener" class="btn btn-sm btn-success mr-1">
-                                <i class="fas fa-directions mr-1"></i>Navegar ruta completa
-                            </a>
-                        }
-                        <button type="button" id="refreshRouteBtn" class="btn btn-sm btn-outline-primary"><i class="fa fa-sync mr-1"></i>Actualizar ruta</button>
-                    </div>
-                </div>
-                <div id="mapOfflineBanner" class="alert alert-warning m-2" style="display:none;">
-                    <i class="fa fa-wifi-slash mr-1"></i>Sin conexión: se muestra la última ruta descargada. Los datos podrían no estar actualizados.
-                </div>
-                <div id="noCoordsBanner" class="alert alert-secondary m-2" style="display:none;">
-                    Aún no hay coordenadas capturadas para esta ruta. Contacte a logística para secuenciarla.
-                </div>
-                <div id="routeMap"></div>
-            </div>
-        </div>
-    </div>
+<div id="driverToast" class="djj-field-toast" role="status" aria-live="polite" hidden></div>
+@if (!editable) { <div class="djj-alert djj-alert--info" role="status"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-info"></use></svg><div>Esta ruta está <strong>@Model.Estado</strong>. Solo se actualizan entregas de rutas despachadas.</div></div> }
 
-    @Html.AntiForgeryToken()
+<section class="djj-field-map djj-card" aria-labelledby="route-map-title"><div class="djj-field-section-head"><div><h2 id="route-map-title">Ruta sugerida</h2><p>La dirección de cada entrega también está disponible abajo.</p></div><div class="djj-field-inline-actions">@if (rutaCompletaUrl != null) { <a href="@rutaCompletaUrl" target="_blank" rel="noopener" class="djj-button djj-button--secondary djj-button--sm">Abrir navegación</a> }<button type="button" id="refreshRouteBtn" class="djj-button djj-button--ghost djj-button--sm">Actualizar</button></div></div><div id="mapOfflineBanner" class="djj-alert djj-alert--warning" hidden><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-wifi"></use></svg><div>Sin conexión: se muestra la última ruta descargada. Los datos podrían no estar actualizados.</div></div><div id="noCoordsBanner" class="djj-alert djj-alert--info" hidden><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-info"></use></svg><div>Aún no hay coordenadas para esta ruta. Contactá a logística para secuenciarla.</div></div><div id="routeMap" aria-label="Mapa de la ruta"></div></section>
 
-    <div class="row px-xl-5 pb-5">
-        @foreach (var d in Model.Entregas)
-        {
-            <div class="col-lg-6 mb-4">
-                <div class="delivery-card p-3 h-100 delivery-card-root" data-rutapedidoid="@d.RutaPedidoId" data-estado="@d.EstadoEntrega">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <h5 class="mb-1">#@d.PedidoId · @d.Cliente</h5>
-                            <p class="mb-1"><i class="fa fa-map-marker-alt mr-2 text-primary"></i>@d.DireccionEntrega</p>
-                            @if (!string.IsNullOrWhiteSpace(d.Telefono))
-                            {
-                                <p class="mb-1"><i class="fa fa-phone mr-2"></i>@d.Telefono</p>
-                            }
-                            <p class="mb-1">Total: <strong>₡@d.Total.ToString("N2")</strong></p>
-                        </div>
-                        <span class="admin-badge-soft @BadgeEntrega(d.EstadoEntrega)">
-                            <span class="delivery-status-label">@TextoEntrega(d.EstadoEntrega)</span>
-                        </span>
-                    </div>
-
-                    @* Opción A — cómo llegar: abre la app de navegación del chofer *@
-                    @if (d.Latitud.HasValue && d.Longitud.HasValue)
-                    {
-                        <div class="delivery-nav mt-2 d-flex">
-                            <a href="@WazeUrl(d.Latitud, d.Longitud)" target="_blank" rel="noopener" class="btn btn-sm btn-info flex-fill mr-2">
-                                <i class="fab fa-waze mr-1"></i>Waze
-                            </a>
-                            <a href="@MapsStopUrl(d.Latitud, d.Longitud)" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary flex-fill">
-                                <i class="fas fa-map-marker-alt mr-1"></i>Google Maps
-                            </a>
-                        </div>
-                    }
-                    else
-                    {
-                        <p class="text-muted small mt-2 mb-0"><i class="fa fa-info-circle mr-1"></i>Sin coordenada: pídele a logística que ubique esta parada.</p>
-                    }
-
-                    @if (editable && d.EstadoEntrega != "Entregado" && d.EstadoEntrega != "Fallido")
-                    {
-                        <hr />
-                        <div class="delivery-actions d-flex flex-wrap">
-                            <button type="button" class="btn btn-sm btn-outline-dark mr-2 mb-2" data-action="EnRuta"><i class="fa fa-truck mr-1"></i>En ruta</button>
-                            <button type="button" class="btn btn-sm btn-success mr-2 mb-2" data-action="Entregado"><i class="fa fa-check mr-1"></i>Entregado</button>
-                            <button type="button" class="btn btn-sm btn-outline-danger mb-2" data-action="Fallido"><i class="fa fa-times mr-1"></i>Fallido</button>
-                        </div>
-                        <div class="fallido-box mt-2" hidden>
-                            <div class="form-group mb-2">
-                                <input type="text" class="fallido-motivo form-control form-control-sm" maxlength="300" placeholder="Motivo del fallo" />
-                            </div>
-                            <button type="button" class="btn btn-sm btn-danger" data-action="Fallido-confirm">Confirmar fallo</button>
-                        </div>
-                    }
-
-                    @if (d.EstadoEntrega == "Fallido" && !string.IsNullOrWhiteSpace(d.MotivoFallo))
-                    {
-                        <p class="text-danger mt-2 mb-0"><small>Motivo: @d.MotivoFallo</small></p>
-                    }
-
-                    @* CU-083 — Evidencia de entrega (foto o firma) *@
-                    @if (editable)
-                    {
-                        <hr />
-                        <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="collapse" data-target="#ev-@d.RutaPedidoId">
-                            <i class="fa fa-camera mr-1"></i>Registrar evidencia (@d.TotalEvidencias)
-                        </button>
-                        <div class="collapse mt-3" id="ev-@d.RutaPedidoId">
-                            <ul class="nav nav-tabs" role="tablist">
-                                <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#foto-@d.RutaPedidoId">Foto</a></li>
-                                <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#firma-@d.RutaPedidoId">Firma</a></li>
-                            </ul>
-                            <div class="tab-content pt-3">
-                                <div class="tab-pane fade show active" id="foto-@d.RutaPedidoId">
-                                    <form asp-action="RegisterEvidence" method="post" enctype="multipart/form-data">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="pedidoId" value="@d.PedidoId" />
-                                        <input type="hidden" name="rutaId" value="@Model.RutaId" />
-                                        <input type="hidden" name="tipo" value="Foto" />
-                                        <div class="form-group">
-                                            <input type="file" name="archivo" accept="image/*" capture="environment" class="form-control-file" required />
-                                        </div>
-                                        <div class="form-group">
-                                            <input type="text" name="observaciones" class="form-control form-control-sm" maxlength="300" placeholder="Observaciones (opcional)" />
-                                        </div>
-                                        <button type="submit" class="btn btn-sm btn-primary"><i class="fa fa-upload mr-1"></i>Guardar foto</button>
-                                    </form>
-                                </div>
-                                <div class="tab-pane fade" id="firma-@d.RutaPedidoId">
-                                    <form asp-action="RegisterEvidence" method="post" class="sig-form">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="pedidoId" value="@d.PedidoId" />
-                                        <input type="hidden" name="rutaId" value="@Model.RutaId" />
-                                        <input type="hidden" name="tipo" value="Firma" />
-                                        <input type="hidden" name="firmaBase64" class="sig-data" />
-                                        <canvas class="sig-canvas" width="320" height="140"></canvas>
-                                        <div class="form-group mt-2">
-                                            <input type="text" name="observaciones" class="form-control form-control-sm" maxlength="300" placeholder="Observaciones (opcional)" />
-                                        </div>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary sig-clear"><i class="fa fa-eraser mr-1"></i>Limpiar</button>
-                                        <button type="submit" class="btn btn-sm btn-primary"><i class="fa fa-signature mr-1"></i>Guardar firma</button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    }
-                    else if (d.TotalEvidencias > 0)
-                    {
-                        <hr />
-                        <p class="mb-0 text-success"><i class="fa fa-check-circle mr-1"></i>@d.TotalEvidencias evidencia(s) registrada(s)</p>
-                    }
-                </div>
-            </div>
-        }
-    </div>
-</div>
+@Html.AntiForgeryToken()
+<section class="djj-field-deliveries" aria-labelledby="delivery-list-title"><header class="djj-field-section-head"><div><h2 id="delivery-list-title">Entregas</h2><p>Qué entregar, dónde y qué acción requiere cada parada.</p></div></header>@foreach (var d in Model.Entregas) { <article class="djj-field-delivery-card delivery-card" data-rutapedidoid="@d.RutaPedidoId" data-estado="@d.EstadoEntrega"><div class="djj-field-card__head"><div><span class="djj-field-card__eyebrow">Parada @d.Secuencia · Pedido #@d.PedidoId</span><h3>@d.Cliente</h3></div><span class="djj-status-badge djj-status-badge--@BadgeEntrega(d.EstadoEntrega)"><span class="delivery-status-label">@TextoEntrega(d.EstadoEntrega)</span></span></div><dl class="djj-field-delivery-details"><div><dt>Dirección</dt><dd>@d.DireccionEntrega</dd></div>@if (!string.IsNullOrWhiteSpace(d.Telefono)) { <div><dt>Teléfono</dt><dd><a href="tel:@d.Telefono">@d.Telefono</a></dd></div> }<div><dt>Total del pedido</dt><dd>₡@d.Total.ToString("N2")</dd></div></dl>@if (d.Latitud.HasValue && d.Longitud.HasValue) { <div class="djj-field-inline-actions"><a href="@WazeUrl(d.Latitud, d.Longitud)" target="_blank" rel="noopener" class="djj-button djj-button--secondary djj-button--sm">Abrir Waze</a><a href="@MapsStopUrl(d.Latitud, d.Longitud)" target="_blank" rel="noopener" class="djj-button djj-button--ghost djj-button--sm">Google Maps</a></div> } else { <p class="djj-field-helper"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-info"></use></svg>Sin coordenada: pedí a logística que ubique esta parada.</p> }
+@if (editable && d.EstadoEntrega != "Entregado" && d.EstadoEntrega != "Fallido") { <div class="djj-field-delivery-actions"><button type="button" class="djj-button djj-button--secondary djj-button--block" data-action="Entregado"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-check"></use></svg>Marcar entregado</button><button type="button" class="djj-button djj-button--ghost" data-action="EnRuta">En ruta</button><button type="button" class="djj-button djj-button--danger-outline" data-action="Fallido">Reportar incidencia</button></div><div class="fallido-box djj-field-inline-form" hidden><label for="fallido-@d.RutaPedidoId">Motivo de la incidencia</label><input id="fallido-@d.RutaPedidoId" type="text" class="djj-input fallido-motivo" maxlength="300" /><button type="button" class="djj-button djj-button--danger" data-action="Fallido-confirm">Confirmar incidencia</button></div> }
+@if (d.EstadoEntrega == "Fallido" && !string.IsNullOrWhiteSpace(d.MotivoFallo)) { <p class="djj-field-helper djj-field-helper--danger"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-warning"></use></svg>Motivo: @d.MotivoFallo</p> }
+@if (editable) { <details class="djj-field-evidence"><summary>Registrar evidencia <span>(@d.TotalEvidencias)</span></summary><div class="djj-field-evidence__body"><form asp-action="RegisterEvidence" method="post" enctype="multipart/form-data" class="djj-field-form"><h4>Foto</h4>@Html.AntiForgeryToken()<input type="hidden" name="pedidoId" value="@d.PedidoId" /><input type="hidden" name="rutaId" value="@Model.RutaId" /><input type="hidden" name="tipo" value="Foto" /><label for="photo-@d.RutaPedidoId">Archivo de foto</label><input id="photo-@d.RutaPedidoId" type="file" name="archivo" accept="image/*" capture="environment" class="djj-input" required data-file-label="photo-label-@d.RutaPedidoId" /><small id="photo-label-@d.RutaPedidoId">Ningún archivo seleccionado</small><label for="photo-note-@d.RutaPedidoId">Observaciones <span>(opcional)</span></label><input id="photo-note-@d.RutaPedidoId" type="text" name="observaciones" class="djj-input" maxlength="300" /><button type="submit" class="djj-button djj-button--primary djj-button--block">Guardar foto</button></form><form asp-action="RegisterEvidence" method="post" class="sig-form djj-field-form"><h4>Firma</h4>@Html.AntiForgeryToken()<input type="hidden" name="pedidoId" value="@d.PedidoId" /><input type="hidden" name="rutaId" value="@Model.RutaId" /><input type="hidden" name="tipo" value="Firma" /><input type="hidden" name="firmaBase64" class="sig-data" /><canvas class="sig-canvas" width="320" height="140" aria-label="Área para capturar firma"></canvas><label for="sign-note-@d.RutaPedidoId">Observaciones <span>(opcional)</span></label><input id="sign-note-@d.RutaPedidoId" type="text" name="observaciones" class="djj-input" maxlength="300" /><div class="djj-field-inline-actions"><button type="button" class="djj-button djj-button--ghost sig-clear">Limpiar</button><button type="submit" class="djj-button djj-button--primary">Guardar firma</button></div></form></div></details> } else if (d.TotalEvidencias > 0) { <p class="djj-field-helper djj-field-helper--success"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-check"></use></svg>@d.TotalEvidencias evidencia(s) registrada(s)</p> }</article> }</section>
 
 @section Scripts {
-    <script>
-        window.driverDeliveriesConfig = {
-            updateUrl: '@Url.Action("UpdateStatus", "DriverDeliveries")',
-            token: document.querySelector('input[name="__RequestVerificationToken"]').value
-        };
-    </script>
+    <script>window.driverDeliveriesConfig = { updateUrl: '@Url.Action("UpdateStatus", "DriverDeliveries")', token: document.querySelector('input[name="__RequestVerificationToken"]').value };</script>
     <script src="~/js/driver-deliveries.js" asp-append-version="true"></script>
-
-    @* CU-252 — Mapa de la ruta (Leaflet + OpenStreetMap) con caché offline *@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         (function () {
-            var routeId = @Model.RutaId;
-            var storageScope = 'driver-route-v2:' + routeId;
-            var storageTtlMs = 12 * 60 * 60 * 1000;
-            var offlineStorage = window.DistribuidoraJJOfflineStorage;
-            // Puntos con coordenadas, en el orden de visita
-            var liveStops = [
-                @foreach (var d in Model.Entregas.Where(x => x.Latitud.HasValue && x.Longitud.HasValue))
-                {
-                    @:{ seq: @d.Secuencia, cliente: '@Html.Raw(System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(d.Cliente))', dir: '@Html.Raw(System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(d.DireccionEntrega))', estado: '@d.EstadoEntrega', lat: @d.Latitud.GetValueOrDefault().ToString(System.Globalization.CultureInfo.InvariantCulture), lng: @d.Longitud.GetValueOrDefault().ToString(System.Globalization.CultureInfo.InvariantCulture) },
-                }
-            ];
-
-            var offline = !navigator.onLine;
-            var stops = liveStops;
-
-            // E2: sin conexión, usar la última ruta descargada
-            if (offline) {
-                try {
-                    var cached = offlineStorage ? offlineStorage.read(storageScope) : null;
-                    if (cached && cached.length) { stops = cached; document.getElementById('mapOfflineBanner').style.display = 'block'; }
-                } catch (e) { }
-            } else if (liveStops.length) {
-                // En línea: guardar como última ruta descargada
-                try { if (offlineStorage) offlineStorage.write(storageScope, liveStops, storageTtlMs); } catch (e) { }
-            }
-
+            var routeId = @Model.RutaId, storageScope = 'driver-route-v2:' + routeId, storageTtlMs = 12 * 60 * 60 * 1000, offlineStorage = window.DistribuidoraJJOfflineStorage;
+            var liveStops = @Html.Raw(routeStopsJson), offline = !navigator.onLine, stops = liveStops;
+            if (offline) { try { var cached = offlineStorage ? offlineStorage.read(storageScope) : null; if (cached && cached.length) { stops = cached; document.getElementById('mapOfflineBanner').hidden = false; } } catch (e) { } }
+            else if (liveStops.length) { try { if (offlineStorage) offlineStorage.write(storageScope, liveStops, storageTtlMs); } catch (e) { } }
             stops.sort(function (a, b) { return a.seq - b.seq; });
-
-            if (!stops.length) {
-                document.getElementById('noCoordsBanner').style.display = 'block';
-                return;
-            }
-
-            var map = L.map('routeMap');
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19, attribution: '© OpenStreetMap'
-            }).addTo(map);
-
+            if (!stops.length) { document.getElementById('noCoordsBanner').hidden = false; return; }
+            var map = L.map('routeMap'), accent = getComputedStyle(document.documentElement).getPropertyValue('--djj-color-primary').trim();
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
             var latlngs = [];
-            stops.forEach(function (s) {
-                var ll = [s.lat, s.lng];
-                latlngs.push(ll);
-                var icon = L.divIcon({ className: '', html: '<div class="route-pin">' + s.seq + '</div>', iconSize: [26, 26], iconAnchor: [13, 13] });
-                var wazeUrl = 'https://waze.com/ul?ll=' + s.lat + '%2C' + s.lng + '&navigate=yes';
-                var mapsUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + s.lat + ',' + s.lng + '&travelmode=driving';
-                L.marker(ll, { icon: icon }).addTo(map)
-                    .bindPopup('<strong>#' + s.seq + ' · ' + s.cliente + '</strong><br/>' + s.dir + '<br/><em>' + s.estado + '</em>' +
-                        '<div class="mt-2"><a href="' + wazeUrl + '" target="_blank" rel="noopener" class="btn btn-sm btn-info mr-1"><i class="fab fa-waze"></i> Waze</a>' +
-                        '<a href="' + mapsUrl + '" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary"><i class="fas fa-map-marker-alt"></i> Maps</a></div>');
-            });
-
-            if (latlngs.length > 1) {
-                L.polyline(latlngs, { color: '#0b5ed7', weight: 3, opacity: 0.7 }).addTo(map);
-            }
-            map.fitBounds(L.latLngBounds(latlngs).pad(0.2));
-
-            // E3: la ruta se actualiza si es recalculada (recarga al pulsar o al reconectar)
+            stops.forEach(function (s) { var ll = [s.lat, s.lng]; latlngs.push(ll); var icon = L.divIcon({ className: '', html: '<div class="djj-field-route-pin">' + s.seq + '</div>', iconSize: [26, 26], iconAnchor: [13, 13] }); L.marker(ll, { icon: icon }).addTo(map).bindPopup('<strong>#' + s.seq + ' · ' + s.cliente + '</strong><br>' + s.dir + '<br><em>' + s.estado + '</em>'); });
+            if (latlngs.length > 1) L.polyline(latlngs, { color: accent, weight: 3, opacity: .7 }).addTo(map);
+            map.fitBounds(L.latLngBounds(latlngs).pad(.2));
             document.getElementById('refreshRouteBtn').addEventListener('click', function () { location.reload(); });
             window.addEventListener('online', function () { location.reload(); });
         })();
     </script>
     <script>
-        // Firma en canvas (mínimo, sin dependencias).
-        (function () {
-            document.querySelectorAll('.sig-form').forEach(function (form) {
-                var canvas = form.querySelector('.sig-canvas');
-                if (!canvas) return;
-                var ctx = canvas.getContext('2d');
-                var drawing = false, dirty = false;
-                ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.strokeStyle = '#222';
-
-                function pos(e) {
-                    var rect = canvas.getBoundingClientRect();
-                    var t = e.touches ? e.touches[0] : e;
-                    return { x: (t.clientX - rect.left) * (canvas.width / rect.width), y: (t.clientY - rect.top) * (canvas.height / rect.height) };
-                }
-                function start(e) { drawing = true; dirty = true; var p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); e.preventDefault(); }
-                function move(e) { if (!drawing) return; var p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); e.preventDefault(); }
-                function end() { drawing = false; }
-
-                canvas.addEventListener('mousedown', start); canvas.addEventListener('mousemove', move);
-                window.addEventListener('mouseup', end);
-                canvas.addEventListener('touchstart', start); canvas.addEventListener('touchmove', move);
-                canvas.addEventListener('touchend', end);
-
-                var clearBtn = form.querySelector('.sig-clear');
-                if (clearBtn) clearBtn.addEventListener('click', function () { ctx.clearRect(0, 0, canvas.width, canvas.height); dirty = false; });
-
-                form.addEventListener('submit', function (e) {
-                    if (!dirty) { e.preventDefault(); if (window.S3Modal) { S3Modal.warning('Capture la firma antes de guardar.'); } else { alert('Capture la firma antes de guardar.'); } return; }
-                    form.querySelector('.sig-data').value = canvas.toDataURL('image/png');
-                });
-            });
-        })();
+        (function () { document.querySelectorAll('.sig-form').forEach(function (form) { var canvas = form.querySelector('.sig-canvas'); if (!canvas) return; var ctx = canvas.getContext('2d'), drawing = false, dirty = false; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--djj-color-text').trim(); function pos(e) { var rect = canvas.getBoundingClientRect(), t = e.touches ? e.touches[0] : e; return { x: (t.clientX - rect.left) * (canvas.width / rect.width), y: (t.clientY - rect.top) * (canvas.height / rect.height) }; } function start(e) { drawing = true; dirty = true; var p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); e.preventDefault(); } function move(e) { if (!drawing) return; var p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); e.preventDefault(); } function end() { drawing = false; } canvas.addEventListener('mousedown', start); canvas.addEventListener('mousemove', move); window.addEventListener('mouseup', end); canvas.addEventListener('touchstart', start); canvas.addEventListener('touchmove', move); canvas.addEventListener('touchend', end); form.querySelector('.sig-clear')?.addEventListener('click', function () { ctx.clearRect(0, 0, canvas.width, canvas.height); dirty = false; }); form.addEventListener('submit', function (e) { if (!dirty) { e.preventDefault(); canvas.focus(); } }); }); })();
     </script>
 }

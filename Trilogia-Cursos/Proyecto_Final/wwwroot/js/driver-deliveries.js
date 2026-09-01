@@ -50,19 +50,14 @@
         if (!badge) return;
         var count = getQueue().length;
         badge.textContent = count;
-        badge.parentElement.style.display = count > 0 ? "inline-block" : "none";
+        badge.parentElement.hidden = count === 0;
     }
 
     function updateConnectionBadge() {
         var badge = document.getElementById("connectionBadge");
         if (!badge) return;
-        if (navigator.onLine) {
-            badge.className = "badge badge-success";
-            badge.innerHTML = '<i class="fa fa-wifi mr-1"></i>En línea';
-        } else {
-            badge.className = "badge badge-secondary";
-            badge.innerHTML = '<i class="fa fa-plug mr-1"></i>Sin conexión';
-        }
+        badge.dataset.online = String(navigator.onLine);
+        badge.textContent = navigator.onLine ? "En línea" : "Sin conexión";
     }
 
     function labelEstado(estado) {
@@ -148,9 +143,9 @@
         var box = document.getElementById("driverToast");
         if (!box) { if (window.S3Modal) { S3Modal.info(message); } else { alert(message); } return; }
         box.textContent = message;
-        box.className = "alert " + (isError ? "alert-danger" : "alert-success");
-        box.style.display = "block";
-        setTimeout(function () { box.style.display = "none"; }, 4000);
+        box.className = "djj-field-toast" + (isError ? " djj-field-toast--error" : "");
+        box.hidden = false;
+        setTimeout(function () { box.hidden = true; }, 4000);
     }
 
     function handleAction(card, estado, motivo) {
