@@ -8,6 +8,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Azure.Identity habilita Authentication=Active Directory Default en la cadena de
+         conexion, que es como el proyecto se conecta a Azure SQL sin contrasena.
+         Llega de forma transitiva con Microsoft.Data.SqlClient, pero se declara explicito
+         para que una actualizacion de ese paquete no lo quite sin aviso. -->
+    <PackageReference Include="Azure.Identity" Version="1.11.4" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
   </ItemGroup>
