@@ -48,7 +48,7 @@
                     <span id="connectionBadge" class="badge badge-success"><i class="fa fa-wifi mr-1"></i>En línea</span>
                     <span style="display:none;"><span class="badge badge-warning">Pendientes: <span id="pendingSyncBadge">0</span></span></span>
                     <br />
-                    <a asp-action="Index" class="btn btn-outline-secondary btn-sm mt-2"><i class="fa fa-arrow-left mr-1"></i>Mis rutas</a>
+                    <a asp-action="Index" class="btn btn-ds-view btn-sm mt-2"><i class="fa fa-arrow-left mr-1"></i>Mis rutas</a>
                 </div>
             </div>
         </div>
@@ -73,11 +73,11 @@
                     <div>
                         @if (rutaCompletaUrl != null)
                         {
-                            <a href="@rutaCompletaUrl" target="_blank" rel="noopener" class="btn btn-sm btn-success mr-1">
+                            <a href="@rutaCompletaUrl" target="_blank" rel="noopener" class="btn btn-sm btn-ds-view mr-1">
                                 <i class="fas fa-directions mr-1"></i>Navegar ruta completa
                             </a>
                         }
-                        <button type="button" id="refreshRouteBtn" class="btn btn-sm btn-outline-primary"><i class="fa fa-sync mr-1"></i>Actualizar ruta</button>
+                        <button type="button" id="refreshRouteBtn" class="btn btn-sm btn-ds-edit"><i class="fa fa-sync mr-1"></i>Actualizar ruta</button>
                     </div>
                 </div>
                 <div id="mapOfflineBanner" class="alert alert-warning m-2" style="display:none;">
@@ -117,10 +117,10 @@
                     @if (d.Latitud.HasValue && d.Longitud.HasValue)
                     {
                         <div class="delivery-nav mt-2 d-flex">
-                            <a href="@WazeUrl(d.Latitud, d.Longitud)" target="_blank" rel="noopener" class="btn btn-sm btn-info flex-fill mr-2">
+                            <a href="@WazeUrl(d.Latitud, d.Longitud)" target="_blank" rel="noopener" class="btn btn-sm btn-ds-view flex-fill mr-2">
                                 <i class="fab fa-waze mr-1"></i>Waze
                             </a>
-                            <a href="@MapsStopUrl(d.Latitud, d.Longitud)" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary flex-fill">
+                            <a href="@MapsStopUrl(d.Latitud, d.Longitud)" target="_blank" rel="noopener" class="btn btn-sm btn-ds-view flex-fill">
                                 <i class="fas fa-map-marker-alt mr-1"></i>Google Maps
                             </a>
                         </div>
@@ -134,15 +134,15 @@
                     {
                         <hr />
                         <div class="delivery-actions d-flex flex-wrap">
-                            <button type="button" class="btn btn-sm btn-outline-dark mr-2 mb-2" data-action="EnRuta"><i class="fa fa-truck mr-1"></i>En ruta</button>
-                            <button type="button" class="btn btn-sm btn-success mr-2 mb-2" data-action="Entregado"><i class="fa fa-check mr-1"></i>Entregado</button>
-                            <button type="button" class="btn btn-sm btn-outline-danger mb-2" data-action="Fallido"><i class="fa fa-times mr-1"></i>Fallido</button>
+                            <button type="button" class="btn btn-sm btn-ds-action mr-2 mb-2" data-action="EnRuta"><i class="fa fa-truck mr-1"></i>En ruta</button>
+                            <button type="button" class="btn btn-sm btn-ds-action mr-2 mb-2" data-action="Entregado"><i class="fa fa-check mr-1"></i>Entregado</button>
+                            <button type="button" class="btn btn-sm btn-ds-danger--soft mb-2" data-action="Fallido"><i class="fa fa-times mr-1"></i>Fallido</button>
                         </div>
                         <div class="fallido-box mt-2" hidden>
                             <div class="form-group mb-2">
                                 <input type="text" class="fallido-motivo form-control form-control-sm" maxlength="300" placeholder="Motivo del fallo" />
                             </div>
-                            <button type="button" class="btn btn-sm btn-danger" data-action="Fallido-confirm">Confirmar fallo</button>
+                            <button type="button" class="btn btn-sm btn-ds-danger--soft" data-action="Fallido-confirm">Confirmar fallo</button>
                         </div>
                     }
 
@@ -155,7 +155,7 @@
                     @if (editable)
                     {
                         <hr />
-                        <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="collapse" data-target="#ev-@d.RutaPedidoId">
+                        <button type="button" class="btn btn-sm btn-ds-create" data-toggle="collapse" data-target="#ev-@d.RutaPedidoId">
                             <i class="fa fa-camera mr-1"></i>Registrar evidencia (@d.TotalEvidencias)
                         </button>
                         <div class="collapse mt-3" id="ev-@d.RutaPedidoId">
@@ -176,7 +176,7 @@
                                         <div class="form-group">
                                             <input type="text" name="observaciones" class="form-control form-control-sm" maxlength="300" placeholder="Observaciones (opcional)" />
                                         </div>
-                                        <button type="submit" class="btn btn-sm btn-primary"><i class="fa fa-upload mr-1"></i>Guardar foto</button>
+                                        <button type="submit" class="btn btn-sm btn-ds-action"><i class="fa fa-upload mr-1"></i>Guardar foto</button>
                                     </form>
                                 </div>
                                 <div class="tab-pane fade" id="firma-@d.RutaPedidoId">
@@ -190,8 +190,8 @@
                                         <div class="form-group mt-2">
                                             <input type="text" name="observaciones" class="form-control form-control-sm" maxlength="300" placeholder="Observaciones (opcional)" />
                                         </div>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary sig-clear"><i class="fa fa-eraser mr-1"></i>Limpiar</button>
-                                        <button type="submit" class="btn btn-sm btn-primary"><i class="fa fa-signature mr-1"></i>Guardar firma</button>
+                                        <button type="button" class="btn btn-sm btn-ds-neutral sig-clear"><i class="fa fa-eraser mr-1"></i>Limpiar</button>
+                                        <button type="submit" class="btn btn-sm btn-ds-action"><i class="fa fa-signature mr-1"></i>Guardar firma</button>
                                     </form>
                                 </div>
                             </div>
@@ -266,8 +266,8 @@
                 var mapsUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + s.lat + ',' + s.lng + '&travelmode=driving';
                 L.marker(ll, { icon: icon }).addTo(map)
                     .bindPopup('<strong>#' + s.seq + ' · ' + s.cliente + '</strong><br/>' + s.dir + '<br/><em>' + s.estado + '</em>' +
-                        '<div class="mt-2"><a href="' + wazeUrl + '" target="_blank" rel="noopener" class="btn btn-sm btn-info mr-1"><i class="fab fa-waze"></i> Waze</a>' +
-                        '<a href="' + mapsUrl + '" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary"><i class="fas fa-map-marker-alt"></i> Maps</a></div>');
+                        '<div class="mt-2"><a href="' + wazeUrl + '" target="_blank" rel="noopener" class="btn btn-sm btn-ds-view mr-1"><i class="fab fa-waze"></i> Waze</a>' +
+                        '<a href="' + mapsUrl + '" target="_blank" rel="noopener" class="btn btn-sm btn-ds-view"><i class="fas fa-map-marker-alt"></i> Maps</a></div>');
             });
 
             if (latlngs.length > 1) {

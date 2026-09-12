@@ -17,7 +17,7 @@
                     <h2 class="mb-2">Segmentos de cliente</h2>
                     <p class="mb-0">Marca a cada cliente como minorista o mayorista para dirigir las promociones segmentadas.</p>
                 </div>
-                <a asp-action="Index" class="btn btn-outline-secondary mt-2 mt-md-0"><i class="fa fa-arrow-left mr-2"></i>Volver a promociones</a>
+                <a asp-action="Index" class="btn btn-ds-neutral mt-2 mt-md-0"><i class="fa fa-arrow-left mr-2"></i>Volver a promociones</a>
             </div>
         </div>
     </div>
@@ -27,8 +27,8 @@
             <div class="admin-filter-bar">
                 <form asp-action="Segments" method="get" class="form-inline">
                     <input type="text" name="buscar" value="@buscar" class="form-control mr-2 mb-2" placeholder="Nombre o correo" />
-                    <button type="submit" class="btn btn-primary mr-2 mb-2"><i class="fa fa-search mr-2"></i>Buscar</button>
-                    <a asp-action="Segments" class="btn btn-outline-secondary mb-2"><i class="fa fa-eraser mr-2"></i>Limpiar</a>
+                    <button type="submit" class="btn btn-ds-search mr-2 mb-2"><i class="fa fa-search mr-2"></i>Buscar</button>
+                    <a asp-action="Segments" class="btn btn-ds-neutral mb-2"><i class="fa fa-eraser mr-2"></i>Limpiar</a>
                 </form>
             </div>
         </div>
@@ -63,7 +63,7 @@
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="usuarioId" value="@c.UsuarioId" />
                                                 <input type="hidden" name="segmento" value="@destino" />
-                                                <button type="submit" class="btn btn-sm btn-outline-primary"><i class="fa fa-exchange-alt mr-1"></i>@destino</button>
+                                                <button type="submit" class="btn btn-sm btn-ds-action"><i class="fa fa-exchange-alt mr-1"></i>@destino</button>
                                             </form>
                                         </td>
                                     </tr>

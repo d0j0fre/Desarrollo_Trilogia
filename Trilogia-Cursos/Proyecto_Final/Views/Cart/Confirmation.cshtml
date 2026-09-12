@@ -66,16 +66,16 @@
             </div>
 
             <div class="s3-confirmation-actions">
-                <a asp-controller="Home" asp-action="Shop" class="btn btn-primary">
+                <a asp-controller="Home" asp-action="Shop" class="btn btn-ds-neutral">
                     <i class="fa fa-store mr-1"></i>Seguir comprando
                 </a>
                 @if (isClient)
                 {
-                    <a asp-controller="ClientPortal" asp-action="Index" class="btn btn-outline-primary">
+                    <a asp-controller="ClientPortal" asp-action="Index" class="btn btn-ds-view">
                         <i class="fa fa-clipboard-list mr-1"></i>Mis pedidos
                     </a>
                 }
-                <a asp-controller="Home" asp-action="Index" class="btn btn-outline-dark">
+                <a asp-controller="Home" asp-action="Index" class="btn btn-ds-neutral">
                     <i class="fa fa-home mr-1"></i>Volver al inicio
                 </a>
             </div>

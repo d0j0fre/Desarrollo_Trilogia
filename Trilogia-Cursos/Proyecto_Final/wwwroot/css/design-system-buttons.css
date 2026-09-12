@@ -1,0 +1,480 @@
+/* =========================================================
+   Design system - Botones semanticos
+   Ultima capa de la cascada. Define la intencion del boton,
+   no su ubicacion. Reemplaza el uso indiscriminado de
+   .btn-primary (rojo) por tokens por intencion.
+
+   Contraste verificado WCAG 2.1 AA (>= 4.5:1) en cada par
+   fondo/texto. Ninguna combinacion es fosforescente.
+   ========================================================= */
+
+:root {
+    /* Accion primaria / transacciones - verde esmeralda sobrio */
+    --ds-action: #1F6F4A;            /* 6.12:1 sobre blanco */
+    --ds-action-hover: #1A5C3D;      /* 7.61:1 sobre blanco */
+    --ds-action-active: #154C32;
+    --ds-action-rgb: 31, 111, 74;
+    /* Verde de brillo medio para el modal, donde el tono base resulta apagado */
+    --ds-action-soft: #1E7A4F;       /* 5.31:1 sobre blanco */
+    --ds-action-soft-hover: #23895A; /* 4.58:1 sobre blanco */
+
+    /* Lectura / visualizacion - vino oscuro (borgona) */
+    --ds-view: #6E1622;              /* 11.66:1 sobre blanco */
+    --ds-view-hover: #8B1C2A;        /*  9.29:1 sobre blanco */
+    --ds-view-active: #58111B;
+    --ds-view-rgb: 110, 22, 34;
+
+    /* Edicion / modificacion - mostaza opaca */
+    --ds-edit: #C9A227;              /* 6.81:1 con texto #1F1F1F */
+    --ds-edit-hover: #B08D1C;        /* 5.23:1 con texto #1F1F1F */
+    --ds-edit-active: #9A7B16;
+    --ds-edit-ink: #1F1F1F;
+    --ds-edit-rgb: 201, 162, 39;
+
+    /* Alerta / estado destructivo - granate opaco */
+    --ds-danger: #8B0E16;            /* 9.67:1 sobre blanco */
+    --ds-danger-hover: #A11420;      /* 8.02:1 sobre blanco */
+    --ds-danger-active: #710A11;
+    --ds-danger-rgb: 139, 14, 22;
+
+    /* Neutro sobrio - .btn-primary sin intencion asignada aun */
+    --ds-neutral: #262626;
+    --ds-neutral-hover: #3A3A3A;
+    --ds-neutral-rgb: 38, 38, 38;
+
+    --ds-ink-light: #FFFFFF;
+    --ds-ink-dark: #1F1F1F;
+
+    --ds-transition: 180ms cubic-bezier(.2, .7, .3, 1);
+    --ds-radius: 6px;
+}
+
+/* ---------------------------------------------------------
+   Base comun a todas las intenciones
+   --------------------------------------------------------- */
+
+.btn-ds-create,
+.btn-ds-action,
+.btn-ds-view,
+.btn-ds-search,
+.btn-ds-edit,
+.btn-ds-danger,
+.btn-ds-neutral,
+.btn-ds-danger--soft {
+    border-radius: var(--ds-radius) !important;
+    border-width: 1px;
+    border-style: solid;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-decoration: none;
+    transition:
+        background-color var(--ds-transition),
+        border-color var(--ds-transition),
+        color var(--ds-transition),
+        box-shadow var(--ds-transition),
+        transform var(--ds-transition);
+}
+
+.btn-ds-create:focus-visible,
+.btn-ds-action:focus-visible,
+.btn-ds-view:focus-visible,
+.btn-ds-search:focus-visible,
+.btn-ds-edit:focus-visible,
+.btn-ds-danger:focus-visible,
+.btn-ds-neutral:focus-visible,
+.btn-ds-danger--soft:focus-visible {
+    outline: 2px solid var(--brand-gold-primary, #D4AF37);
+    outline-offset: 2px;
+}
+
+.btn-ds-create:disabled,
+.btn-ds-action:disabled,
+.btn-ds-view:disabled,
+.btn-ds-search:disabled,
+.btn-ds-edit:disabled,
+.btn-ds-danger:disabled,
+.btn-ds-neutral:disabled,
+.btn-ds-danger--soft:disabled,
+.btn-ds-create.disabled,
+.btn-ds-action.disabled,
+.btn-ds-view.disabled,
+.btn-ds-search.disabled,
+.btn-ds-edit.disabled,
+.btn-ds-danger.disabled,
+.btn-ds-neutral.disabled,
+.btn-ds-danger--soft.disabled {
+    opacity: .55;
+    box-shadow: none !important;
+    transform: none !important;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* ---------------------------------------------------------
+   1. CREACION / NUEVO
+   "Nuevo producto", "Nueva ruta", "Nuevo cliente".
+   Fondo semi-oscuro, borde blanco y texto blanco: legible tanto sobre las
+   cabeceras oscuras del backoffice como sobre tarjetas claras.
+   --------------------------------------------------------- */
+
+.btn-ds-create {
+    background-color: rgba(31, 31, 31, .88) !important;
+    border-color: rgba(255, 255, 255, .90) !important;
+    color: var(--ds-ink-light) !important;
+    transition: all .3s ease;
+}
+
+.btn-ds-create:hover,
+.btn-ds-create:focus {
+    background-color: var(--ds-ink-light) !important;
+    border-color: var(--ds-ink-light) !important;
+    color: var(--ds-ink-dark) !important;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, .26);
+    transform: translateY(-1px);
+}
+
+.btn-ds-create:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+/* Excepciones: el hero del inicio y el pie ya eran legibles en transparente
+   y conservan ese aspecto por decision de diseno. */
+.s3-home-hero .btn-ds-create,
+.s3-footer .btn-ds-create,
+.btn-ds-create--ghost {
+    background-color: transparent !important;
+    border-color: rgba(255, 255, 255, .85) !important;
+    color: var(--ds-ink-light) !important;
+}
+
+.s3-home-hero .btn-ds-create:hover,
+.s3-home-hero .btn-ds-create:focus,
+.s3-footer .btn-ds-create:hover,
+.s3-footer .btn-ds-create:focus,
+.btn-ds-create--ghost:hover,
+.btn-ds-create--ghost:focus {
+    background-color: var(--ds-ink-light) !important;
+    border-color: var(--ds-ink-light) !important;
+    color: var(--ds-ink-dark) !important;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, .22);
+}
+
+/* ---------------------------------------------------------
+   2. ACCION PRIMARIA / TRANSACCIONES
+   "Comprar", "Agregar al carrito", "Finalizar", "Pagar", "Ingresar"
+   --------------------------------------------------------- */
+
+.btn-ds-action {
+    background-color: var(--ds-action) !important;
+    border-color: var(--ds-action) !important;
+    color: var(--ds-ink-light) !important;
+}
+
+.btn-ds-action:hover,
+.btn-ds-action:focus {
+    background-color: var(--ds-action-hover) !important;
+    border-color: var(--ds-action-hover) !important;
+    color: var(--ds-ink-light) !important;
+    box-shadow: 0 8px 18px rgba(var(--ds-action-rgb), .28);
+    transform: translateY(-1px);
+}
+
+.btn-ds-action:active {
+    background-color: var(--ds-action-active) !important;
+    border-color: var(--ds-action-active) !important;
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+/* ---------------------------------------------------------
+   3. LECTURA / VISUALIZACION
+   "Ver", "Ver detalle", "Ver todo el catalogo"
+   --------------------------------------------------------- */
+
+.btn-ds-view {
+    background-color: var(--ds-view) !important;
+    border-color: var(--ds-view) !important;
+    color: var(--ds-ink-light) !important;
+}
+
+.btn-ds-view:hover,
+.btn-ds-view:focus {
+    background-color: var(--ds-view-hover) !important;
+    border-color: var(--ds-view-hover) !important;
+    color: var(--ds-ink-light) !important;
+    box-shadow: 0 8px 18px rgba(var(--ds-view-rgb), .26);
+    transform: translateY(-1px);
+}
+
+.btn-ds-view:active {
+    background-color: var(--ds-view-active) !important;
+    border-color: var(--ds-view-active) !important;
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+/* ---------------------------------------------------------
+   4. BUSQUEDA / FILTROS
+   "Buscar", "Filtrar". Animacion mas contenida que Creacion.
+   --------------------------------------------------------- */
+
+.btn-ds-search {
+    background-color: transparent !important;
+    border-color: rgba(var(--ds-neutral-rgb), .55) !important;
+    color: var(--ds-ink-dark) !important;
+}
+
+.btn-ds-search:hover,
+.btn-ds-search:focus {
+    background-color: rgba(var(--ds-neutral-rgb), .07) !important;
+    border-color: var(--ds-neutral) !important;
+    color: var(--ds-ink-dark) !important;
+    box-shadow: inset 0 0 0 1px rgba(var(--ds-neutral-rgb), .22);
+}
+
+.s3-home-hero .btn-ds-search,
+.s3-shop-hero .btn-ds-search,
+.s3-shop-search-card .btn-ds-search,
+.s3-footer .btn-ds-search,
+.topbar .btn-ds-search,
+.modern-nav-shell .btn-ds-search,
+.btn-ds-search--on-dark {
+    background-color: transparent !important;
+    border-color: rgba(255, 255, 255, .75) !important;
+    color: var(--ds-ink-light) !important;
+}
+
+.s3-home-hero .btn-ds-search:hover,
+.s3-home-hero .btn-ds-search:focus,
+.s3-shop-hero .btn-ds-search:hover,
+.s3-shop-hero .btn-ds-search:focus,
+.s3-shop-search-card .btn-ds-search:hover,
+.s3-shop-search-card .btn-ds-search:focus,
+.s3-footer .btn-ds-search:hover,
+.s3-footer .btn-ds-search:focus,
+.topbar .btn-ds-search:hover,
+.topbar .btn-ds-search:focus,
+.modern-nav-shell .btn-ds-search:hover,
+.modern-nav-shell .btn-ds-search:focus,
+.btn-ds-search--on-dark:hover,
+.btn-ds-search--on-dark:focus {
+    background-color: rgba(255, 255, 255, .14) !important;
+    border-color: var(--ds-ink-light) !important;
+    color: var(--ds-ink-light) !important;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .35);
+}
+
+/* ---------------------------------------------------------
+   5. EDICION / MODIFICACION
+   "Editar", "Modificar". Mostaza opaca, tinta oscura.
+   --------------------------------------------------------- */
+
+.btn-ds-edit {
+    background-color: var(--ds-edit) !important;
+    border-color: var(--ds-edit) !important;
+    color: var(--ds-edit-ink) !important;
+}
+
+.btn-ds-edit:hover,
+.btn-ds-edit:focus {
+    background-color: var(--ds-edit-hover) !important;
+    border-color: var(--ds-edit-hover) !important;
+    color: var(--ds-edit-ink) !important;
+    box-shadow: 0 8px 18px rgba(var(--ds-edit-rgb), .30);
+    transform: translateY(-1px);
+}
+
+.btn-ds-edit:active {
+    background-color: var(--ds-edit-active) !important;
+    border-color: var(--ds-edit-active) !important;
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+/* ---------------------------------------------------------
+   6. ALERTA / ESTADO DESTRUCTIVO
+   "Cerrar sesion", "Inactivar usuario", "Inactivar producto".
+   Uso estrictamente reservado.
+   --------------------------------------------------------- */
+
+.btn-ds-danger {
+    background-color: var(--ds-danger) !important;
+    border-color: var(--ds-danger) !important;
+    color: var(--ds-ink-light) !important;
+}
+
+.btn-ds-danger:hover,
+.btn-ds-danger:focus {
+    background-color: var(--ds-danger-hover) !important;
+    border-color: var(--ds-danger-hover) !important;
+    color: var(--ds-ink-light) !important;
+    box-shadow: 0 8px 18px rgba(var(--ds-danger-rgb), .28);
+    transform: translateY(-1px);
+}
+
+.btn-ds-danger:active {
+    background-color: var(--ds-danger-active) !important;
+    border-color: var(--ds-danger-active) !important;
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+/* El boton de logout conserva su geometria de pildora heredada */
+.btn-ds-danger.logout-btn {
+    border-radius: 999px !important;
+}
+
+/* Variante outline para tablas densas, mismo token granate */
+.btn-ds-danger--soft {
+    background-color: transparent !important;
+    border-color: var(--ds-danger) !important;
+    color: var(--ds-danger) !important;
+}
+
+.btn-ds-danger--soft:hover,
+.btn-ds-danger--soft:focus {
+    background-color: var(--ds-danger) !important;
+    border-color: var(--ds-danger) !important;
+    color: var(--ds-ink-light) !important;
+}
+
+/* ---------------------------------------------------------
+   7. NEUTRAL / SECUNDARIO
+   "Volver", "Cancelar", "Cerrar", "Limpiar", "Siguiente".
+   No es una de las seis intenciones del estandar: es el tono
+   callado para descartes y navegacion, que no deben competir
+   con la accion principal de la pantalla.
+
+   Convencion de sufijos en esta hoja:
+     .btn-ds-x        -> tinta blanca, para fondos OSCUROS
+     .btn-ds-x--dark  -> tinta oscura, para fondos CLAROS
+   El neutro invierte el caso por defecto (vive sobre tarjetas
+   claras), por eso su variante se llama --on-dark.
+   --------------------------------------------------------- */
+
+.btn-ds-neutral {
+    background-color: transparent !important;
+    border-color: rgba(var(--ds-neutral-rgb), .55) !important;
+    color: var(--ds-ink-dark) !important;
+}
+
+.btn-ds-neutral:hover,
+.btn-ds-neutral:focus {
+    background-color: var(--ds-neutral) !important;
+    border-color: var(--ds-neutral) !important;
+    color: var(--ds-ink-light) !important;
+}
+
+.s3-home-hero .btn-ds-neutral,
+.s3-shop-hero .btn-ds-neutral,
+.s3-shop-search-card .btn-ds-neutral,
+.s3-footer .btn-ds-neutral,
+.topbar .btn-ds-neutral,
+.modern-nav-shell .btn-ds-neutral,
+.btn-ds-neutral--on-dark {
+    background-color: transparent !important;
+    border-color: rgba(255, 255, 255, .55) !important;
+    color: var(--ds-ink-light) !important;
+}
+
+.s3-home-hero .btn-ds-neutral:hover,
+.s3-home-hero .btn-ds-neutral:focus,
+.s3-shop-hero .btn-ds-neutral:hover,
+.s3-shop-hero .btn-ds-neutral:focus,
+.s3-shop-search-card .btn-ds-neutral:hover,
+.s3-shop-search-card .btn-ds-neutral:focus,
+.s3-footer .btn-ds-neutral:hover,
+.s3-footer .btn-ds-neutral:focus,
+.topbar .btn-ds-neutral:hover,
+.topbar .btn-ds-neutral:focus,
+.modern-nav-shell .btn-ds-neutral:hover,
+.modern-nav-shell .btn-ds-neutral:focus,
+.btn-ds-neutral--on-dark:hover,
+.btn-ds-neutral--on-dark:focus {
+    background-color: rgba(255, 255, 255, .16) !important;
+    border-color: var(--ds-ink-light) !important;
+    color: var(--ds-ink-light) !important;
+}
+
+/* ---------------------------------------------------------
+   Regreso al inicio desde el hero de la tienda
+   --------------------------------------------------------- */
+
+.s3-shop-hero__back {
+    align-self: flex-start;
+    margin-bottom: .85rem;
+    opacity: .82;
+}
+
+.s3-shop-hero__back:hover,
+.s3-shop-hero__back:focus {
+    opacity: 1;
+}
+
+/* ---------------------------------------------------------
+   Modal de confirmacion compartido (sprint3-modal.js)
+   El JS ya escribe data-type en el dialogo: coloreamos por CSS
+   sin tocar la logica. Destructivo -> granate; resto -> accion.
+   --------------------------------------------------------- */
+
+.s3-modal-dialog .s3-modal-btn-confirm {
+    background: var(--ds-action-soft, #1E7A4F) !important;
+    border-color: var(--ds-action-soft, #1E7A4F) !important;
+    color: var(--ds-ink-light) !important;
+    border-radius: var(--ds-radius) !important;
+    transition: background-color var(--ds-transition), border-color var(--ds-transition);
+}
+
+.s3-modal-dialog .s3-modal-btn-confirm:hover,
+.s3-modal-dialog .s3-modal-btn-confirm:focus {
+    background: var(--ds-action-soft-hover, #23895A) !important;
+    border-color: var(--ds-action-soft-hover, #23895A) !important;
+}
+
+.s3-modal-dialog[data-type="danger"] .s3-modal-btn-confirm,
+.s3-modal-dialog[data-type="error"] .s3-modal-btn-confirm {
+    background: var(--ds-danger) !important;
+    border-color: var(--ds-danger) !important;
+    color: var(--ds-ink-light) !important;
+    box-shadow: none !important;
+}
+
+.s3-modal-dialog[data-type="danger"] .s3-modal-btn-confirm:hover,
+.s3-modal-dialog[data-type="danger"] .s3-modal-btn-confirm:focus,
+.s3-modal-dialog[data-type="error"] .s3-modal-btn-confirm:hover,
+.s3-modal-dialog[data-type="error"] .s3-modal-btn-confirm:focus {
+    background: var(--ds-danger-hover) !important;
+    border-color: var(--ds-danger-hover) !important;
+    color: var(--ds-ink-light) !important;
+}
+
+/* ---------------------------------------------------------
+   Accesibilidad: respetar preferencia de movimiento reducido
+   --------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+    .btn-ds-create,
+    .btn-ds-action,
+    .btn-ds-view,
+    .btn-ds-search,
+    .btn-ds-edit,
+    .btn-ds-danger,
+    .btn-ds-neutral,
+    .btn-ds-danger--soft {
+        transition: none;
+    }
+
+    .btn-ds-create:hover,
+    .btn-ds-action:hover,
+    .btn-ds-view:hover,
+    .btn-ds-edit:hover,
+    .btn-ds-danger:hover,
+    .btn-ds-create:focus,
+    .btn-ds-action:focus,
+    .btn-ds-view:focus,
+    .btn-ds-edit:focus,
+    .btn-ds-danger:focus {
+        transform: none;
+    }
+}

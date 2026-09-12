@@ -18,7 +18,7 @@
                         @Model.RolDescripcion
                     </p>
                 </div>
-                <a asp-controller="Permissions" asp-action="Index" class="btn btn-outline-secondary">← Volver</a>
+                <a asp-controller="Permissions" asp-action="Index" class="btn btn-ds-neutral">← Volver</a>
             </div>
         </div>
     </div>
@@ -112,10 +112,10 @@
                         <p class="text-muted mb-0">Revise bien antes de guardar los cambios del rol.</p>
                     </div>
                     <div class="d-flex" style="gap:10px;">
-                        <a asp-controller="Permissions" asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+                        <a asp-controller="Permissions" asp-action="Index" class="btn btn-ds-neutral">Cancelar</a>
                         @if (!esAdministrador)
                         {
-                            <button type="submit" class="btn btn-primary">
+                            <button type="submit" class="btn btn-ds-action">
                                 <i class="fa fa-save mr-1"></i> Guardar permisos
                             </button>
                         }

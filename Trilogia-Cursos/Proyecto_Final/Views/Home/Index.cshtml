@@ -33,10 +33,10 @@
             </p>
 
             <div class="s3-home-hero__actions">
-                <a asp-controller="Home" asp-action="Shop" class="btn btn-primary btn-lg">
+                <a asp-controller="Home" asp-action="Shop" class="btn btn-ds-create btn-lg">
                     <i class="fa fa-shopping-bag mr-1"></i>Ir a la tienda
                 </a>
-                <a asp-controller="Home" asp-action="Shop" asp-route-categoria="Whisky" class="btn btn-outline-light btn-lg">
+                <a asp-controller="Home" asp-action="Shop" asp-route-categoria="Whisky" class="btn btn-ds-create btn-lg">
                     <i class="fa fa-glass-cheers mr-1"></i>Ver premium
                 </a>
             </div>
@@ -128,7 +128,7 @@
                 <span class="s3-home-eyebrow"><i class="fa fa-layer-group"></i>Categorías</span>
                 <h2>Encontrá más rápido lo que buscás</h2>
             </div>
-            <a asp-controller="Home" asp-action="Shop" class="btn btn-outline-dark">
+            <a asp-controller="Home" asp-action="Shop" class="btn btn-ds-view">
                 Ver todo el catálogo
             </a>
         </div>
@@ -156,7 +156,7 @@
                 <span class="s3-home-eyebrow"><i class="fa fa-star"></i>Destacados</span>
                 <h2>Productos recomendados</h2>
             </div>
-            <a asp-controller="Home" asp-action="Shop" class="btn btn-primary">
+            <a asp-controller="Home" asp-action="Shop" class="btn btn-ds-view">
                 <i class="fa fa-store mr-1"></i>Comprar ahora
             </a>
         </div>
@@ -185,7 +185,7 @@
                                     <strong>₡@item.Precio.ToString("N0")</strong>
                                     <small class="s3-stock-badge @stockClass">@item.EstadoStock</small>
                                 </div>
-                                <a asp-controller="Home" asp-action="Detail" asp-route-id="@item.ProductoId" class="btn btn-primary btn-sm">
+                                <a asp-controller="Home" asp-action="Detail" asp-route-id="@item.ProductoId" class="btn btn-ds-view btn-sm">
                                     Ver
                                 </a>
                             </div>

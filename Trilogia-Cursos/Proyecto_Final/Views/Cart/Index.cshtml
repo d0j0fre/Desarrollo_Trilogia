@@ -29,7 +29,7 @@
                 <p>
                     Agregá productos desde la tienda para preparar tu pedido. Podés revisar whiskies, vinos, rones, cervezas y más categorías disponibles.
                 </p>
-                <a asp-controller="Home" asp-action="Shop" class="btn btn-primary btn-lg">
+                <a asp-controller="Home" asp-action="Shop" class="btn btn-ds-create btn-lg">
                     <i class="fa fa-store mr-1"></i>Ir a la tienda
                 </a>
             </div>
@@ -71,7 +71,7 @@
                                      <input type="hidden" name="comboId" value="@item.ComboId" />
                                      <input type="hidden" name="itemType" value="@item.ItemType" />
                                     <input type="hidden" name="cantidad" value="@(item.Cantidad - 1)" />
-                                    <button class="btn btn-outline-secondary btn-sm" type="submit" disabled="@(!puedeDisminuir)" aria-label="Disminuir cantidad">
+                                    <button class="btn btn-ds-neutral btn-sm" type="submit" disabled="@(!puedeDisminuir)" aria-label="Disminuir cantidad">
                                         <i class="fa fa-minus"></i>
                                     </button>
                                 </form>
@@ -82,7 +82,7 @@
                                      <input type="hidden" name="comboId" value="@item.ComboId" />
                                      <input type="hidden" name="itemType" value="@item.ItemType" />
                                     <input type="number" name="cantidad" value="@item.Cantidad" min="1" max="@item.StockDisponible" class="form-control form-control-sm s3-cart-qty__input" />
-                                    <button class="btn btn-primary btn-sm" type="submit">
+                                    <button class="btn btn-ds-edit btn-sm" type="submit">
                                         <i class="fa fa-sync-alt mr-1"></i>Actualizar
                                     </button>
                                 </form>
@@ -93,7 +93,7 @@
                                      <input type="hidden" name="comboId" value="@item.ComboId" />
                                      <input type="hidden" name="itemType" value="@item.ItemType" />
                                     <input type="hidden" name="cantidad" value="@(item.Cantidad + 1)" />
-                                    <button class="btn btn-outline-secondary btn-sm" type="submit" disabled="@(!puedeAumentar)" aria-label="Aumentar cantidad">
+                                    <button class="btn btn-ds-neutral btn-sm" type="submit" disabled="@(!puedeAumentar)" aria-label="Aumentar cantidad">
                                         <i class="fa fa-plus"></i>
                                     </button>
                                 </form>
@@ -125,7 +125,7 @@
                                  <input type="hidden" name="productoId" value="@item.ProductoId" />
                                  <input type="hidden" name="comboId" value="@item.ComboId" />
                                  <input type="hidden" name="itemType" value="@item.ItemType" />
-                                <button class="btn btn-outline-danger btn-sm" type="submit">
+                                <button class="btn btn-ds-danger--soft btn-sm" type="submit">
                                     <i class="fa fa-trash-alt mr-1"></i>Quitar
                                 </button>
                             </form>
@@ -199,10 +199,10 @@
                     </div>
 
                     <div class="s3-cart-summary__actions">
-                        <a asp-action="Checkout" class="btn btn-primary btn-lg">
+                        <a asp-action="Checkout" class="btn btn-ds-action btn-lg">
                             <i class="fa fa-check-circle mr-1"></i>Finalizar compra
                         </a>
-                        <a asp-controller="Home" asp-action="Shop" class="btn btn-outline-dark">
+                        <a asp-controller="Home" asp-action="Shop" class="btn btn-ds-neutral">
                             <i class="fa fa-arrow-left mr-1"></i>Seguir comprando
                         </a>
                     </div>
@@ -232,7 +232,7 @@
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="productoId" value="@suggestion.ProductoId" />
                                         <input type="hidden" name="cantidad" value="1" />
-                                        <button class="btn btn-outline-primary btn-sm" type="submit">Agregar al carrito</button>
+                                        <button class="btn btn-ds-action btn-sm" type="submit">Agregar al carrito</button>
                                     </form>
                                 </div>
                             </div>

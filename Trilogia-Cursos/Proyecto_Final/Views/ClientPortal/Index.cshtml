@@ -119,7 +119,7 @@
                         <span class="s4-client-status-pill dark">Inactivo</span>
                     }
                 }
-                <a asp-controller="ClientPortal" asp-action="Statement" class="btn btn-sm s4-client-table-action mt-3">
+                <a asp-controller="ClientPortal" asp-action="Statement" class="btn btn-sm btn-ds-view s4-client-table-action mt-3">
                     <i class="fa fa-download"></i> Descargar estado de cuenta
                 </a>
             </article>
@@ -165,7 +165,7 @@
                                     <td>@(string.IsNullOrWhiteSpace(pedido.TipoEntrega) ? "No indicado" : pedido.TipoEntrega)</td>
                                     <td class="font-weight-bold">&#8353;@pedido.Total.ToString("N2")</td>
                                     <td class="text-right">
-                                        <a asp-controller="ClientPortal" asp-action="Detail" asp-route-id="@pedido.PedidoId" class="btn btn-sm s4-client-table-action">
+                                        <a asp-controller="ClientPortal" asp-action="Detail" asp-route-id="@pedido.PedidoId" class="btn btn-sm btn-ds-view s4-client-table-action">
                                             Ver detalle
                                         </a>
                                     </td>

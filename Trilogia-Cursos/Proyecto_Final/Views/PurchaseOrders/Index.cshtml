@@ -10,8 +10,8 @@
         @*Recepción parcial, total y cierre documentado (CU-102/CU-103).*@
         <div class="col-md-7"><h2>Órdenes de compra</h2></div>
         <div class="col-md-5 text-md-right">
-            <a asp-action="Suggestions" class="btn btn-outline-primary">Sugerencias</a>
-            <a asp-action="Create" class="btn btn-primary">Nueva orden</a>
+            <a asp-action="Suggestions" class="btn btn-ds-view">Sugerencias</a>
+            <a asp-action="Create" class="btn btn-ds-create">Nueva orden</a>
         </div>
     </div>
     <div class="row px-xl-5 pb-5">
@@ -27,7 +27,7 @@
                     @foreach (var supplier in suppliers)
                     { <option value="@supplier.ProveedorId" selected="@(ViewBag.ProveedorId == supplier.ProveedorId)">@supplier.Nombre</option> }
                 </select>
-                <button class="btn btn-outline-primary">Filtrar</button>
+                <button class="btn btn-ds-search">Filtrar</button>
             </form>
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
@@ -42,7 +42,7 @@
                             <td><span class="badge badge-@color">@order.Estado</span></td>
                             <td>₡@order.MontoTotal.ToString("N2")</td><td>@order.TotalRecibido / @order.TotalOrdenado</td>
                             <td>@order.FechaCreacionUtc.ToLocalTime().ToString("dd/MM/yyyy")</td>
-                            <td><a asp-action="Detail" asp-route-id="@order.OrdenCompraId" class="btn btn-sm btn-outline-primary">Ver</a></td>
+                            <td><a asp-action="Detail" asp-route-id="@order.OrdenCompraId" class="btn btn-sm btn-ds-view">Ver</a></td>
                         </tr>
                     }
                     </tbody>

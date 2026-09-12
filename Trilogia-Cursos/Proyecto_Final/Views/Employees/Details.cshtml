@@ -20,8 +20,8 @@
             </div>
         </div>
         <div class="employee-actions">
-            <a asp-controller="Employees" asp-action="Edit" asp-route-id="@Model.EmpleadoId" class="btn btn-primary"><i class="fa fa-edit mr-1"></i>Editar</a>
-            <a asp-controller="Employees" asp-action="Index" class="btn btn-outline-light"><i class="fa fa-arrow-left mr-1"></i>Volver</a>
+            <a asp-controller="Employees" asp-action="Edit" asp-route-id="@Model.EmpleadoId" class="btn btn-ds-edit"><i class="fa fa-edit mr-1"></i>Editar</a>
+            <a asp-controller="Employees" asp-action="Index" class="btn btn-ds-neutral"><i class="fa fa-arrow-left mr-1"></i>Volver</a>
         </div>
     </div>
 
@@ -93,7 +93,7 @@
                             <input name="FechaLimite" class="form-control" type="date" />
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-primary btn-block"><i class="fa fa-plus mr-1"></i>Asignar tarea</button>
+                    <button type="submit" class="btn btn-ds-create btn-block"><i class="fa fa-plus mr-1"></i>Asignar tarea</button>
                 </form>
             </div>
         </div>
@@ -131,7 +131,7 @@
                                         <option selected="@(tarea.Estado == "Completada")">Completada</option>
                                         <option selected="@(tarea.Estado == "Cancelada")">Cancelada</option>
                                     </select>
-                                    <button type="submit" class="btn btn-sm btn-outline-dark">Actualizar</button>
+                                    <button type="submit" class="btn btn-sm btn-ds-edit">Actualizar</button>
                                 </form>
                             </div>
                         }

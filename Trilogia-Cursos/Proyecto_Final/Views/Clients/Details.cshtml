@@ -16,8 +16,8 @@
                     <p class="text-muted mb-0">Información general, estado e historial comercial.</p>
                 </div>
                 <div>
-                    <a asp-controller="Clients" asp-action="Edit" asp-route-id="@Model.UsuarioId" class="btn btn-primary mr-2">Editar</a>
-                    <a asp-controller="Clients" asp-action="Index" class="btn btn-outline-secondary">← Volver</a>
+                    <a asp-controller="Clients" asp-action="Edit" asp-route-id="@Model.UsuarioId" class="btn btn-ds-edit mr-2">Editar</a>
+                    <a asp-controller="Clients" asp-action="Index" class="btn btn-ds-neutral">← Volver</a>
                 </div>
             </div>
         </div>
@@ -94,7 +94,7 @@
                         <label class="font-weight-bold">Motivo</label>
                         <textarea name="motivo" class="form-control" rows="2" placeholder="Motivo del cambio de estado"></textarea>
                     </div>
-                    <button type="submit" class="btn @(Model.Activo ? "btn-danger" : "btn-success") btn-block">
+                    <button type="submit" class="btn @(Model.Activo ? "btn-ds-danger" : "btn-ds-action") btn-block">
                         @(Model.Activo ? "Inactivar cliente" : "Reactivar cliente")
                     </button>
                 </form>

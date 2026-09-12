@@ -15,7 +15,7 @@
                     <h2 class="mb-1">Crédito y deudas de clientes</h2>
                     <p class="text-muted mb-0">Control del límite de crédito, deuda actual, crédito disponible y movimientos financieros.</p>
                 </div>
-                <a asp-controller="Clients" asp-action="Index" class="btn btn-outline-secondary">Ver clientes</a>
+                <a asp-controller="Clients" asp-action="Index" class="btn btn-ds-view">Ver clientes</a>
             </div>
         </div>
     </div>
@@ -55,10 +55,10 @@
                     <option value="SinCredito" selected="@(Model.EstadoCredito == "SinCredito")">Sin crédito asignado</option>
                 </select>
 
-                <button type="submit" class="btn btn-dark">Buscar</button>
+                <button type="submit" class="btn btn-ds-search">Buscar</button>
                 @if (!string.IsNullOrWhiteSpace(Model.Buscar) || !string.IsNullOrWhiteSpace(Model.EstadoCredito))
                 {
-                    <a asp-controller="Credits" asp-action="Index" class="btn btn-outline-secondary">Limpiar</a>
+                    <a asp-controller="Credits" asp-action="Index" class="btn btn-ds-neutral">Limpiar</a>
                 }
             </form>
         </div>
@@ -128,7 +128,7 @@
                                         <td>@item.TotalMovimientos</td>
                                         <td>@(item.UltimoMovimiento.HasValue ? item.UltimoMovimiento.Value.ToString("dd/MM/yyyy HH:mm") : "Sin movimientos")</td>
                                         <td>
-                                            <a asp-controller="Credits" asp-action="Details" asp-route-id="@item.UsuarioId" class="btn btn-sm btn-primary">
+                                            <a asp-controller="Credits" asp-action="Details" asp-route-id="@item.UsuarioId" class="btn btn-sm btn-ds-view">
                                                 Administrar
                                             </a>
                                         </td>

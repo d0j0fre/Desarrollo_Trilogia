@@ -53,7 +53,7 @@
                         <textarea asp-for="Nueva.Motivo" class="form-control" rows="2" placeholder="Ej: producto dañado, error de despacho"></textarea>
                         <span asp-validation-for="Nueva.Motivo" class="text-danger"></span>
                     </div>
-                    <button type="submit" class="btn btn-primary btn-block"><i class="fa fa-undo mr-2"></i>Registrar devolución</button>
+                    <button type="submit" class="btn btn-ds-create btn-block"><i class="fa fa-undo mr-2"></i>Registrar devolución</button>
                 </form>
             </div>
         </div>
@@ -68,8 +68,8 @@
                         <option value="Reintegrada" selected="@(Model.Estado == "Reintegrada")">Reintegrada</option>
                         <option value="Descartada" selected="@(Model.Estado == "Descartada")">Descartada</option>
                     </select>
-                    <button type="submit" class="btn btn-primary mr-2 mb-2"><i class="fa fa-search mr-2"></i>Buscar</button>
-                    <a asp-action="Index" class="btn btn-outline-secondary mb-2"><i class="fa fa-eraser mr-2"></i>Limpiar</a>
+                    <button type="submit" class="btn btn-ds-search mr-2 mb-2"><i class="fa fa-search mr-2"></i>Buscar</button>
+                    <a asp-action="Index" class="btn btn-ds-neutral mb-2"><i class="fa fa-eraser mr-2"></i>Limpiar</a>
                 </form>
             </div>
 
