@@ -146,6 +146,13 @@ Los registros anteriores a 0004 conservan `StorageStatus = Legacy` y no se sirve
 
 ## Migracion 0023
 
+> **Estado: NO aplicada en Azure DEV.** El archivo se incorpora al repositorio
+> para revision, pero nadie la ha ejecutado todavia. Antes de aplicarla,
+> consultar `dbo.SchemaMigrationHistory`, que es la unica fuente de verdad.
+> La aplicacion funciona con o sin ella: `ToggleProductStatusAsync` devuelve
+> `bool?` y el controlador audita "Cambiar estado" cuando el procedimiento no
+> informa el estado resultante.
+
 Sustituye unicamente la definicion de `dbo.sp_Admin_ToggleProductStatus`. No
 toca tablas, columnas, indices, restricciones, permisos ni filas de negocio.
 
@@ -164,3 +171,7 @@ errores.
 El codigo de aplicacion tolera ambas situaciones: `ToggleProductStatusAsync`
 devuelve `bool?` y el controlador no afirma una direccion cuando el
 procedimiento no informa el estado resultante.
+
+El repositorio no normaliza fines de linea (`core.autocrlf` local decide), asi
+que el SHA-256 del archivo puede variar entre clones. Calcularlo siempre sobre
+el archivo real que se va a ejecutar, como hace el ejecutor de `scripts/database`.
