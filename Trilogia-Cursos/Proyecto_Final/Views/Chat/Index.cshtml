@@ -110,7 +110,7 @@
                 <div class="form-group col-md-2 d-flex align-items-end">
 
                     <button type="submit"
-                            class="btn btn-primary btn-block">
+                            class="btn btn-ds-create btn-block">
 
                         Crear
                     </button>
@@ -213,7 +213,7 @@
                     <div class="form-group col-md-2">
 
                         <button type="submit"
-                                class="btn btn-outline-primary btn-block">
+                                class="btn btn-ds-action btn-block">
 
                             Guardar
                         </button>
@@ -297,7 +297,12 @@
                                         <form asp-controller="Chat"
                                               asp-action="RemoveMember"
                                               method="post"
-                                              class="d-inline">
+                                              class="d-inline"
+                                              data-s3-confirm="¿Desea retirar este usuario del departamento?"
+                                              data-s3-confirm-title="Retirar del departamento"
+                                              data-s3-confirm-type="danger"
+                                              data-s3-confirm-ok="Sí, retirar"
+                                              data-s3-confirm-cancel="Cancelar">
 
                                             @Html.AntiForgeryToken()
 
@@ -310,8 +315,7 @@
                                                    value="@member.UserId" />
 
                                             <button type="submit"
-                                                    class="btn btn-sm btn-outline-danger"
-                                                    onclick="return confirm('¿Desea retirar este usuario del departamento?');">
+                                                    class="btn btn-sm btn-ds-danger--soft">
 
                                                 Retirar
                                             </button>
@@ -397,7 +401,7 @@
                         <div class="form-group col-md-2 mb-2">
 
                             <button type="submit"
-                                    class="btn btn-primary btn-block">
+                                    class="btn btn-ds-action btn-block">
 
                                 Agregar
                             </button>

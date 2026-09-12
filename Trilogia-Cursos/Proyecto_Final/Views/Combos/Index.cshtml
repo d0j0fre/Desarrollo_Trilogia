@@ -12,7 +12,7 @@
             <h2>Combos comerciales</h2>
             <p class="text-muted mb-0">Ofertas vendibles con disponibilidad calculada desde sus componentes.</p>
         </div>
-        <a asp-action="Create" class="btn btn-primary"><i class="fa fa-plus mr-1"></i>Nuevo combo</a>
+        <a asp-action="Create" class="btn btn-ds-create"><i class="fa fa-plus mr-1"></i>Nuevo combo</a>
     </header>
 
     @if (TempData["SuccessMessage"] is string success) { <div class="alert alert-success" role="status">@success</div> }
@@ -28,7 +28,7 @@
         <div class="card-header" id="combo-list-title">Catálogo de combos</div>
         @if (!Model.Any())
         {
-            <div class="s4-empty"><i class="fa fa-box-open"></i><h3>Aún no hay combos</h3><p>Defina una oferta con al menos un componente y cantidad positiva.</p><a asp-action="Create" class="btn btn-primary">Crear primer combo</a></div>
+            <div class="s4-empty"><i class="fa fa-box-open"></i><h3>Aún no hay combos</h3><p>Defina una oferta con al menos un componente y cantidad positiva.</p><a asp-action="Create" class="btn btn-ds-create">Crear primer combo</a></div>
         }
         else
         {
@@ -44,10 +44,10 @@
                         <td><span class="badge badge-@(combo.PuedeVenderse ? "success" : "danger")">@combo.StockDisponibleCombo @(combo.StockDisponibleCombo == 1 ? "unidad" : "unidades")</span></td>
                         <td><span class="badge badge-@(combo.PuedeVenderse ? "success" : "secondary")">@combo.EstadoDisponibilidad</span></td>
                         <td class="text-right">
-                            <a asp-action="Detail" asp-route-id="@combo.ComboId" class="btn btn-sm btn-outline-primary mr-1">Detalle</a>
+                            <a asp-action="Detail" asp-route-id="@combo.ComboId" class="btn btn-sm btn-ds-view mr-1">Detalle</a>
                             <form asp-action="ToggleStatus" asp-route-id="@combo.ComboId" method="post" class="d-inline" data-confirm="¿Confirma que desea @(combo.Activo ? "inactivar" : "activar") el combo @combo.Nombre?">
                                 @Html.AntiForgeryToken()
-                                <button type="submit" class="btn btn-sm btn-outline-secondary">@(combo.Activo ? "Inactivar" : "Activar")</button>
+                                <button type="submit" class="btn btn-sm @(combo.Activo ? "btn-ds-danger" : "btn-ds-action")">@(combo.Activo ? "Inactivar" : "Activar")</button>
                             </form>
                         </td>
                     </tr>

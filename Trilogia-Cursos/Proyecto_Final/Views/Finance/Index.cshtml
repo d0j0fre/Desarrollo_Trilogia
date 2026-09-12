@@ -47,7 +47,7 @@
                                         <td class="text-center"><span class="admin-badge-soft info">@r.Estado</span></td>
                                         <td class="text-center">@r.Entregados / @r.TotalPedidos</td>
                                         <td class="text-center">
-                                            <a asp-action="Liquidate" asp-route-rutaId="@r.RutaId" class="btn btn-sm btn-primary"><i class="fa fa-cash-register mr-1"></i>Liquidar</a>
+                                            <a asp-action="Liquidate" asp-route-rutaId="@r.RutaId" class="btn btn-sm btn-ds-action"><i class="fa fa-cash-register mr-1"></i>Liquidar</a>
                                         </td>
                                     </tr>
                                 }
@@ -69,8 +69,8 @@
                         <option value="Faltante" selected="@(estado == "Faltante")">Faltante</option>
                         <option value="Sobrante" selected="@(estado == "Sobrante")">Sobrante</option>
                     </select>
-                    <button type="submit" class="btn btn-primary mr-2 mb-2"><i class="fa fa-filter mr-2"></i>Filtrar</button>
-                    <a asp-action="Index" class="btn btn-outline-secondary mb-2"><i class="fa fa-eraser mr-2"></i>Limpiar</a>
+                    <button type="submit" class="btn btn-ds-search mr-2 mb-2"><i class="fa fa-filter mr-2"></i>Filtrar</button>
+                    <a asp-action="Index" class="btn btn-ds-neutral mb-2"><i class="fa fa-eraser mr-2"></i>Limpiar</a>
                 </form>
             </div>
         </div>

@@ -16,7 +16,7 @@
                     <h2 class="mb-1">Clientes</h2>
                     <p class="text-muted mb-0">Registrar, administrar, activar e inactivar clientes del sistema.</p>
                 </div>
-                <a asp-controller="Clients" asp-action="Create" class="btn btn-primary btn-modern-primary">
+                <a asp-controller="Clients" asp-action="Create" class="btn btn-ds-create">
                     <i class="fa fa-plus mr-1"></i>Nuevo cliente
                 </a>
             </div>
@@ -54,10 +54,10 @@
                     <option value="Inactivo" selected="@(Model.Estado == "Inactivo")">Inactivos</option>
                 </select>
 
-                <button type="submit" class="btn btn-dark"><i class="fa fa-search mr-1"></i>Buscar</button>
+                <button type="submit" class="btn btn-ds-search"><i class="fa fa-search mr-1"></i>Buscar</button>
                 @if (!string.IsNullOrWhiteSpace(Model.Buscar) || !string.IsNullOrWhiteSpace(Model.Estado))
                 {
-                    <a asp-controller="Clients" asp-action="Index" class="btn btn-outline-secondary"><i class="fa fa-times mr-1"></i>Limpiar</a>
+                    <a asp-controller="Clients" asp-action="Index" class="btn btn-ds-neutral"><i class="fa fa-times mr-1"></i>Limpiar</a>
                 }
             </form>
         </div>
@@ -122,8 +122,8 @@
                                         </td>
                                         <td>
                                             <div class="admin-actions admin-actions--clients">
-                                                <a asp-controller="Clients" asp-action="Details" asp-route-id="@item.UsuarioId" class="btn btn-sm btn-outline-dark"><i class="fa fa-eye mr-1"></i>Detalle</a>
-                                                <a asp-controller="Clients" asp-action="Edit" asp-route-id="@item.UsuarioId" class="btn btn-sm btn-primary"><i class="fa fa-edit mr-1"></i>Editar</a>
+                                                <a asp-controller="Clients" asp-action="Details" asp-route-id="@item.UsuarioId" class="btn btn-sm btn-ds-view"><i class="fa fa-eye mr-1"></i>Detalle</a>
+                                                <a asp-controller="Clients" asp-action="Edit" asp-route-id="@item.UsuarioId" class="btn btn-sm btn-ds-edit"><i class="fa fa-edit mr-1"></i>Editar</a>
 
                                                 <form asp-controller="Clients" asp-action="ToggleStatus" method="post" class="mb-0"
                                                       data-s3-confirm="@(item.Activo ? "¿Desea inactivar este cliente? El cliente no podrá iniciar sesión ni realizar pedidos." : "¿Desea reactivar este cliente?")"
@@ -136,7 +136,7 @@
                                                     <input type="hidden" name="buscar" value="@Model.Buscar" />
                                                     <input type="hidden" name="estado" value="@Model.Estado" />
                                                     <input type="hidden" name="motivo" value="@(item.Activo ? "Inactivación realizada desde el listado de clientes." : "Reactivación realizada desde el listado de clientes.")" />
-                                                    <button type="submit" class="btn btn-sm @(item.Activo ? "btn-danger" : "btn-success")">
+                                                    <button type="submit" class="btn btn-sm @(item.Activo ? "btn-ds-danger" : "btn-ds-action")">
                                                         <i class="fa @(item.Activo ? "fa-user-slash" : "fa-user-check") mr-1"></i>@(item.Activo ? "Inactivar" : "Activar")
                                                     </button>
                                                 </form>

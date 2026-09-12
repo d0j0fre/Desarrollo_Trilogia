@@ -41,7 +41,7 @@
                         <input asp-for="Formulario.Activo" name="Activo" id="Activo" class="form-check-input" />
                         <label for="Activo" class="form-check-label">Proveedor activo</label>
                     </div>
-                    <button class="btn btn-primary btn-block" type="submit">Guardar proveedor</button>
+                    <button class="btn btn-ds-action btn-block" type="submit">Guardar proveedor</button>
                     <button class="btn btn-link btn-block" type="button" id="reset-supplier">Limpiar / nuevo</button>
                 </form>
             </div>
@@ -56,7 +56,7 @@
                         <option value="true" selected="@(Model.SoloActivos == true)">Activos</option>
                         <option value="false" selected="@(Model.SoloActivos == false)">Inactivos</option>
                     </select>
-                    <button class="btn btn-outline-primary" type="submit">Filtrar</button>
+                    <button class="btn btn-ds-search" type="submit">Filtrar</button>
                 </form>
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
@@ -74,14 +74,14 @@
                                 <td>@(supplier.Telefono ?? "—")<small class="d-block text-muted">@(supplier.Email ?? "Sin correo")</small></td>
                                 <td><span class="badge badge-@(supplier.Activo ? "success" : "secondary")">@(supplier.Activo ? "Activo" : "Inactivo")</span></td>
                                 <td class="text-right">
-                                    <button type="button" class="btn btn-sm btn-outline-primary edit-supplier"
+                                    <button type="button" class="btn btn-sm btn-ds-edit edit-supplier"
                                             data-id="@supplier.ProveedorId" data-name="@supplier.Nombre" data-contact="@supplier.Contacto"
                                             data-phone="@supplier.Telefono" data-email="@supplier.Email" data-active="@supplier.Activo.ToString().ToLowerInvariant()">Editar</button>
                                     <form asp-action="ChangeStatus" method="post" class="d-inline">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="proveedorId" value="@supplier.ProveedorId" />
                                         <input type="hidden" name="activo" value="@((!supplier.Activo).ToString().ToLowerInvariant())" />
-                                        <button class="btn btn-sm btn-outline-@(supplier.Activo ? "danger" : "success")" type="submit">@(supplier.Activo ? "Desactivar" : "Reactivar")</button>
+                                        <button class="btn btn-sm @(supplier.Activo ? "btn-ds-danger" : "btn-ds-action")" type="submit">@(supplier.Activo ? "Inactivar" : "Reactivar")</button>
                                     </form>
                                 </td>
                             </tr>

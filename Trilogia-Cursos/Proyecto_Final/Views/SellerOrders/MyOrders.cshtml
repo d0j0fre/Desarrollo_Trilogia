@@ -28,7 +28,7 @@
                     <h2 class="mb-1">Mis pedidos</h2>
                     <p class="mb-0">Seguimiento de los pedidos que has registrado, incluyendo su estado de aprobación.</p>
                 </div>
-                <a asp-controller="SellerOrders" asp-action="Index" class="btn btn-primary mt-3 mt-md-0">
+                <a asp-controller="SellerOrders" asp-action="Index" class="btn btn-ds-create mt-3 mt-md-0">
                     <i class="fa fa-plus mr-1"></i> Nuevo pedido
                 </a>
             </div>
@@ -109,7 +109,7 @@
                                         </td>
                                         <td>
                                             <a asp-controller="OrdersAdmin" asp-action="Detail" asp-route-id="@pedido.PedidoId"
-                                               class="btn btn-sm btn-outline-secondary">
+                                               class="btn btn-sm btn-ds-view">
                                                 <i class="fa fa-eye"></i>
                                             </a>
                                         </td>

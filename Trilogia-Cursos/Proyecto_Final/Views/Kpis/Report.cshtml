@@ -27,7 +27,7 @@
                     <h2 class="mb-2">Cumplimiento global de KPIs</h2>
                     <p>Rendimiento de la fuerza de ventas — @meses[Model.Mes] @Model.Anio (CU-213).</p>
                 </div>
-                <a asp-controller="Kpis" asp-action="Index" asp-route-anio="@Model.Anio" asp-route-mes="@Model.Mes" class="btn btn-outline-secondary mt-3 mt-md-0">
+                <a asp-controller="Kpis" asp-action="Index" asp-route-anio="@Model.Anio" asp-route-mes="@Model.Mes" class="btn btn-ds-view mt-3 mt-md-0">
                     <i class="fa fa-bullseye mr-1"></i>Gestionar metas
                 </a>
             </div>
@@ -52,7 +52,7 @@
                         </select>
                     </div>
                     <div class="form-group col-md-4">
-                        <button type="submit" class="btn btn-primary btn-block"><i class="fa fa-filter mr-1"></i>Generar reporte</button>
+                        <button type="submit" class="btn btn-ds-action btn-block"><i class="fa fa-filter mr-1"></i>Generar reporte</button>
                     </div>
                 </form>
             </div>

@@ -13,8 +13,8 @@
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="JornadaId" value="@item.JornadaId" /><input type="hidden" name="RowVersionBase64" value="@item.RowVersionBase64" />
                     <input name="RespuestaSupervisor" maxlength="500" class="form-control form-control-sm mr-1" placeholder="Observación" />
-                    <button name="Decision" value="Aprobada" class="btn btn-success btn-sm mr-1">Aprobar</button>
-                    <button name="Decision" value="Rechazada" class="btn btn-danger btn-sm">Rechazar</button>
+                    <button name="Decision" value="Aprobada" class="btn btn-ds-action btn-sm mr-1">Aprobar</button>
+                    <button name="Decision" value="Rechazada" class="btn btn-ds-danger--soft btn-sm">Rechazar</button>
                 </form></td></tr>
         }
         </tbody>

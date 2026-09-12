@@ -20,7 +20,7 @@
                 <p>Detalle de productos, entrega y estado actual.</p>
             </div>
 
-            <a asp-controller="ClientPortal" asp-action="Index" class="btn s4-client-hero-action">
+            <a asp-controller="ClientPortal" asp-action="Index" class="btn btn-ds-neutral s4-client-hero-action">
                 Volver a Mis pedidos
             </a>
         </div>
@@ -101,7 +101,7 @@
                                                 <a asp-controller="ClientPortal"
                                                    asp-action="Warranty"
                                                    asp-route-id="@linea.PedidoDetalleId"
-                                                   class="btn btn-warning btn-sm">
+                                                   class="btn btn-ds-action btn-sm">
                                                     <i class="fa fa-shield"></i>
                                                     Solicitar garantía
                                                 </a>
@@ -134,7 +134,7 @@
                 </div>
 
                 <div class="s4-client-action-panel__buttons">
-                    <a asp-controller="ClientPortal" asp-action="Index" class="btn s4-client-secondary-action">
+                    <a asp-controller="ClientPortal" asp-action="Index" class="btn btn-ds-neutral s4-client-secondary-action">
                         Volver a Mis pedidos
                     </a>
 
@@ -143,7 +143,7 @@
                         <a asp-controller="ClientPortal"
                            asp-action="Invoice"
                            asp-route-id="@Model.PedidoId"
-                           class="btn s4-client-primary-action">
+                           class="btn btn-ds-view s4-client-primary-action">
                             Ver comprobante
                         </a>
                     }
@@ -158,7 +158,7 @@
                               data-s3-confirm-cancel="Volver">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="id" value="@Model.PedidoId" />
-                            <button type="submit" class="btn s4-client-danger-action">
+                            <button type="submit" class="btn btn-ds-danger s4-client-danger-action">
                                 Cancelar pedido
                             </button>
                         </form>

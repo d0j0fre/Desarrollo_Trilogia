@@ -43,7 +43,7 @@
                         <label class="font-weight-bold">Observaciones (opcional)</label>
                         <input asp-for="Nueva.Observaciones" class="form-control" />
                     </div>
-                    <button type="submit" class="btn btn-primary btn-block"><i class="fa fa-play mr-2"></i>Iniciar jornada</button>
+                    <button type="submit" class="btn btn-ds-action btn-block"><i class="fa fa-play mr-2"></i>Iniciar jornada</button>
                 </form>
             </div>
         </div>
@@ -95,7 +95,7 @@
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="kilometrajeId" value="@j.KilometrajeId" />
                                                     <input type="number" name="kmFinal" class="form-control form-control-sm mr-1" style="width:100px" min="@j.KmInicial" placeholder="Km final" required />
-                                                    <button type="submit" class="btn btn-sm btn-outline-success"><i class="fa fa-stop"></i></button>
+                                                    <button type="submit" class="btn btn-sm btn-ds-action" aria-label="Cerrar jornada"><i class="fa fa-stop"></i></button>
                                                 </form>
                                             }
                                             else

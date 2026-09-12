@@ -15,7 +15,7 @@
                     <h2 class="mb-2">Historial de consultas</h2>
                     <p>Consulta, búsqueda y seguimiento de mensajes enviados desde el formulario de contacto.</p>
                 </div>
-                <a asp-controller="Admin" asp-action="Index" class="btn btn-outline-secondary mt-3 mt-md-0">
+                <a asp-controller="Admin" asp-action="Index" class="btn btn-ds-neutral mt-3 mt-md-0">
                     <i class="fa fa-arrow-left mr-1"></i>Volver al panel
                 </a>
             </div>
@@ -41,7 +41,7 @@
                             <input type="text" name="buscar" value="@Model.Buscar" class="form-control" placeholder="Nombre, correo, asunto o mensaje" />
                         </div>
                         <div class="form-group col-md-2">
-                            <button type="submit" class="btn btn-primary btn-block">
+                            <button type="submit" class="btn btn-ds-search btn-block">
                                 <i class="fa fa-search mr-1"></i>Buscar
                             </button>
                         </div>
@@ -94,7 +94,7 @@
                                         <td>@item.Asunto</td>
                                         <td><span class="admin-badge-soft @estadoClase">@item.Estado</span></td>
                                         <td class="text-right">
-                                            <a asp-controller="Consultations" asp-action="Details" asp-route-id="@item.ConsultaId" class="btn btn-sm btn-primary">
+                                            <a asp-controller="Consultations" asp-action="Details" asp-route-id="@item.ConsultaId" class="btn btn-sm btn-ds-view">
                                                 <i class="fa fa-eye mr-1"></i>Ver
                                             </a>
                                         </td>

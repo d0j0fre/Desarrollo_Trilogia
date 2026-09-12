@@ -21,7 +21,7 @@
                     <h2 class="mb-2">Metas de ventas</h2>
                     <p>Defina las metas mensuales de ingresos por vendedor (CU-211).</p>
                 </div>
-                <a asp-controller="Kpis" asp-action="Report" asp-route-anio="@Model.Anio" asp-route-mes="@Model.Mes" class="btn btn-outline-primary mt-3 mt-md-0">
+                <a asp-controller="Kpis" asp-action="Report" asp-route-anio="@Model.Anio" asp-route-mes="@Model.Mes" class="btn btn-ds-view mt-3 mt-md-0">
                     <i class="fa fa-chart-line mr-1"></i>Ver reporte de KPIs
                 </a>
             </div>
@@ -46,7 +46,7 @@
                         </select>
                     </div>
                     <div class="form-group col-md-4">
-                        <button type="submit" class="btn btn-primary btn-block"><i class="fa fa-filter mr-1"></i>Ver período</button>
+                        <button type="submit" class="btn btn-ds-search btn-block"><i class="fa fa-filter mr-1"></i>Ver período</button>
                     </div>
                 </form>
             </div>
@@ -89,7 +89,7 @@
 
                     <p class="text-muted small mb-3">Período: <strong>@meses[Model.Mes] @Model.Anio</strong>. Si ya existe una meta para ese vendedor en el período, se actualizará.</p>
 
-                    <button type="submit" class="btn btn-primary btn-block py-2"><i class="fa fa-save mr-1"></i>Guardar meta</button>
+                    <button type="submit" class="btn btn-ds-action btn-block py-2"><i class="fa fa-save mr-1"></i>Guardar meta</button>
                 </form>
             </div>
         </div>

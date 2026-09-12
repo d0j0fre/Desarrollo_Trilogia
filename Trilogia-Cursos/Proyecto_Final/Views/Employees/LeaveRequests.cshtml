@@ -15,7 +15,7 @@
             <h1>Solicitudes de empleados</h1>
             <p>Revisá, aprobá o rechazá solicitudes con o sin goce salarial.</p>
         </div>
-        <a asp-controller="Employees" asp-action="Index" class="btn btn-outline-dark"><i class="fa fa-arrow-left mr-1"></i>Empleados</a>
+        <a asp-controller="Employees" asp-action="Index" class="btn btn-ds-view"><i class="fa fa-arrow-left mr-1"></i>Empleados</a>
     </div>
 
     <form asp-controller="Employees" asp-action="LeaveRequests" method="get" class="employee-filter mb-4">
@@ -26,7 +26,7 @@
             <option value="Rechazada" selected="@(estado == "Rechazada")">Rechazadas</option>
             <option value="Cancelada" selected="@(estado == "Cancelada")">Canceladas</option>
         </select>
-        <button type="submit" class="btn btn-dark"><i class="fa fa-filter mr-1"></i>Filtrar</button>
+        <button type="submit" class="btn btn-ds-search"><i class="fa fa-filter mr-1"></i>Filtrar</button>
     </form>
 
     <div class="employee-card">
@@ -83,7 +83,7 @@
                                             <option selected="@(item.Estado == "Cancelada")">Cancelada</option>
                                         </select>
                                         <input type="text" name="RespuestaAdmin" class="form-control form-control-sm" placeholder="Respuesta u observación" value="@item.RespuestaAdmin" />
-                                        <button type="submit" class="btn btn-sm btn-primary">Guardar</button>
+                                        <button type="submit" class="btn btn-sm btn-ds-action">Guardar</button>
                                     </form>
                                 </td>
                             </tr>

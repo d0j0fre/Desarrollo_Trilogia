@@ -11,16 +11,18 @@
     background-color: var(--brand-gold-primary) !important;
 }
 
+/* El rojo queda reservado para alertas/inactivacion (.btn-ds-danger).
+   .btn-primary pasa a un neutro sobrio hasta que cada boton reciba su token. */
 .btn-primary {
-    background: linear-gradient(135deg, var(--brand-red-primary), var(--brand-red-secondary)) !important;
-    border-color: var(--brand-red-primary) !important;
+    background: var(--ds-neutral, #262626) !important;
+    border-color: var(--ds-neutral, #262626) !important;
     color: var(--brand-white) !important;
 }
 
 .btn-primary:hover,
 .btn-primary:focus {
-    background: linear-gradient(135deg, var(--brand-red-secondary), var(--brand-red-primary)) !important;
-    border-color: var(--brand-red-secondary) !important;
+    background: var(--ds-neutral-hover, #3A3A3A) !important;
+    border-color: var(--ds-neutral-hover, #3A3A3A) !important;
     color: var(--brand-white) !important;
 }
 
@@ -323,22 +325,22 @@
 }
 
 .s4-auth-page--clean .custom-control-input:checked ~ .custom-control-label::before {
-    background-color: var(--brand-red-primary);
+    background-color: var(--ds-action, #1F6F4A);
     border-color: var(--brand-red-primary);
 }
 
 .s4-auth-page--clean .s4-auth-card--clean .s4-auth-primary {
-    background: linear-gradient(135deg, var(--brand-red-primary), var(--brand-red-secondary)) !important;
-    border-color: var(--brand-red-primary) !important;
-    box-shadow: 0 14px 28px rgba(var(--brand-red-primary-rgb), .22);
+    background: var(--ds-action, #1F6F4A) !important;
+    border-color: var(--ds-action, #1F6F4A) !important;
+    box-shadow: 0 14px 28px rgba(31, 111, 74, .22);
     color: var(--brand-white) !important;
 }
 
 .s4-auth-page--clean .s4-auth-card--clean .s4-auth-primary:hover,
 .s4-auth-page--clean .s4-auth-card--clean .s4-auth-primary:focus {
-    background: var(--brand-red-secondary) !important;
-    border-color: var(--brand-gold-primary) !important;
-    box-shadow: 0 14px 28px rgba(var(--brand-red-primary-rgb), .28);
+    background: var(--ds-action-hover, #1A5C3D) !important;
+    border-color: var(--ds-action-hover, #1A5C3D) !important;
+    box-shadow: 0 14px 28px rgba(31, 111, 74, .28);
     color: var(--brand-white) !important;
 }
 
@@ -425,27 +427,27 @@
 }
 
 .s3-storefront-page .btn-primary {
-    background: var(--brand-red-secondary) !important;
-    border-color: var(--brand-gold-primary) !important;
+    background: var(--ds-neutral, #262626) !important;
+    border-color: var(--ds-neutral, #262626) !important;
     color: var(--brand-white) !important;
 }
 
 .s3-storefront-page .btn-primary:hover,
 .s3-storefront-page .btn-primary:focus {
-    background: var(--brand-red-primary) !important;
-    border-color: var(--brand-gold-light) !important;
+    background: var(--ds-neutral-hover, #3A3A3A) !important;
+    border-color: var(--ds-neutral-hover, #3A3A3A) !important;
     color: var(--brand-white) !important;
 }
 
 .s3-storefront-page .btn-outline-dark {
-    border-color: var(--brand-red-primary) !important;
-    color: var(--brand-red-primary) !important;
+    border-color: var(--ds-neutral, #262626) !important;
+    color: var(--ds-neutral, #262626) !important;
 }
 
 .s3-storefront-page .btn-outline-dark:hover,
 .s3-storefront-page .btn-outline-dark:focus {
-    background: var(--brand-red-primary) !important;
-    border-color: var(--brand-red-primary) !important;
+    background: var(--ds-neutral, #262626) !important;
+    border-color: var(--ds-neutral, #262626) !important;
     color: var(--brand-white) !important;
 }
 
@@ -544,8 +546,8 @@
 
 .s3-storefront-page .s3-shop-filter:hover,
 .s3-storefront-page .s3-shop-filter.active {
-    border-color: var(--brand-red-primary);
-    background: var(--brand-red-primary);
+    border-color: var(--ds-view, #6E1622);
+    background: var(--ds-view, #6E1622);
     color: var(--brand-white);
 }
 
@@ -604,15 +606,21 @@
     box-shadow: 0 18px 40px rgba(var(--brand-black-rgb), .1);
 }
 
+/* Navegacion hacia atras: tono neutro, nunca el granate de alerta. */
 .s4-product-detail-page .s4-product-detail-back {
-    background: var(--brand-red-primary);
-    color: var(--brand-white);
+    background: transparent;
+    border: 1px solid rgba(38, 38, 38, .55);
+    color: var(--ds-ink-dark, #1F1F1F);
+    transition: background-color 180ms cubic-bezier(.2, .7, .3, 1),
+                border-color 180ms cubic-bezier(.2, .7, .3, 1),
+                color 180ms cubic-bezier(.2, .7, .3, 1);
 }
 
 .s4-product-detail-page .s4-product-detail-back:hover,
 .s4-product-detail-page .s4-product-detail-back:focus {
-    background: var(--brand-red-secondary);
-    color: var(--brand-gold-light);
+    background: var(--ds-neutral, #262626);
+    border-color: var(--ds-neutral, #262626);
+    color: var(--brand-white);
 }
 
 .s4-product-detail-page .s4-product-detail-media {
@@ -658,15 +666,22 @@
 }
 
 .s4-product-detail-page .s4-product-detail-primary {
-    background: var(--brand-red-primary) !important;
-    border-color: var(--brand-red-primary) !important;
+    background: var(--ds-action, #1F6F4A) !important;
+    border-color: var(--ds-action, #1F6F4A) !important;
+    color: var(--brand-white) !important;
+}
+
+.s4-product-detail-page .s4-product-detail-primary:disabled,
+.s4-product-detail-page .s4-product-detail-primary.disabled {
+    background: #6C757D !important;
+    border-color: #6C757D !important;
     color: var(--brand-white) !important;
 }
 
 .s4-product-detail-page .s4-product-detail-primary:hover,
 .s4-product-detail-page .s4-product-detail-primary:focus {
-    background: var(--brand-red-secondary) !important;
-    border-color: var(--brand-gold-primary) !important;
+    background: var(--ds-action-hover, #1A5C3D) !important;
+    border-color: var(--ds-action-hover, #1A5C3D) !important;
     color: var(--brand-white) !important;
 }
 
@@ -777,15 +792,15 @@
 }
 
 .s3-cart-page .btn-primary {
-    background: var(--brand-red-primary) !important;
-    border-color: var(--brand-red-primary) !important;
+    background: var(--ds-neutral, #262626) !important;
+    border-color: var(--ds-neutral, #262626) !important;
     color: var(--brand-white) !important;
 }
 
 .s3-cart-page .btn-primary:hover,
 .s3-cart-page .btn-primary:focus {
-    background: var(--brand-red-secondary) !important;
-    border-color: var(--brand-gold-primary) !important;
+    background: var(--ds-neutral-hover, #3A3A3A) !important;
+    border-color: var(--ds-neutral-hover, #3A3A3A) !important;
     color: var(--brand-white) !important;
 }
 
@@ -928,8 +943,8 @@
 
 .s4-checkout-page .s4-checkout-option:hover,
 .s4-checkout-page .s4-checkout-option.active {
-    border-color: var(--brand-red-primary);
-    background: var(--brand-red-primary);
+    border-color: var(--ds-action, #1F6F4A);
+    background: var(--ds-action, #1F6F4A);
     color: var(--brand-white);
 }
 
@@ -960,15 +975,15 @@
 }
 
 .s4-checkout-page .s4-checkout-submit {
-    background: var(--brand-red-primary) !important;
-    border-color: var(--brand-red-primary) !important;
+    background: var(--ds-action, #1F6F4A) !important;
+    border-color: var(--ds-action, #1F6F4A) !important;
     color: var(--brand-white) !important;
 }
 
 .s4-checkout-page .s4-checkout-submit:hover,
 .s4-checkout-page .s4-checkout-submit:focus {
-    background: var(--brand-red-secondary) !important;
-    border-color: var(--brand-gold-primary) !important;
+    background: var(--ds-action-hover, #1A5C3D) !important;
+    border-color: var(--ds-action-hover, #1A5C3D) !important;
     color: var(--brand-white) !important;
 }
 
@@ -1069,26 +1084,26 @@
 }
 
 .s3-confirmation-card .btn-primary {
-    background: var(--brand-red-primary) !important;
-    border-color: var(--brand-red-primary) !important;
+    background: var(--ds-neutral, #262626) !important;
+    border-color: var(--ds-neutral, #262626) !important;
     color: var(--brand-white) !important;
 }
 
 .s3-confirmation-card .btn-primary:hover,
 .s3-confirmation-card .btn-primary:focus {
-    background: var(--brand-red-secondary) !important;
-    border-color: var(--brand-gold-primary) !important;
+    background: var(--ds-neutral-hover, #3A3A3A) !important;
+    border-color: var(--ds-neutral-hover, #3A3A3A) !important;
 }
 
 .s3-confirmation-card .btn-outline-primary {
-    border-color: var(--brand-red-primary);
-    color: var(--brand-red-primary);
+    border-color: var(--ds-neutral, #262626);
+    color: var(--ds-neutral, #262626);
 }
 
 .s3-confirmation-card .btn-outline-primary:hover,
 .s3-confirmation-card .btn-outline-primary:focus {
-    background: var(--brand-red-primary);
-    border-color: var(--brand-red-primary);
+    background: var(--ds-neutral, #262626);
+    border-color: var(--ds-neutral, #262626);
     color: var(--brand-white);
 }
 
@@ -1267,25 +1282,57 @@
     color: var(--brand-white);
 }
 
-.s4-client-portal-page .s4-client-primary-action,
-.s4-client-portal-page .s4-client-hero-action {
-    border-color: var(--brand-gold-primary);
-    background: var(--brand-red-primary);
+.s4-client-portal-page .s4-client-primary-action {
+    border-color: var(--ds-view, #6E1622);
+    background: var(--ds-view, #6E1622);
     color: var(--brand-white);
 }
 
 .s4-client-portal-page .s4-client-primary-action:hover,
-.s4-client-portal-page .s4-client-primary-action:focus,
+.s4-client-portal-page .s4-client-primary-action:focus {
+    border-color: var(--ds-view-hover, #8B1C2A);
+    background: var(--ds-view-hover, #8B1C2A);
+    color: var(--brand-white);
+}
+
+/* Navegacion hacia atras sobre el hero oscuro: neutro de contorno claro. */
+.s4-client-portal-page .s4-client-hero-action {
+    border-color: rgba(255, 255, 255, .55);
+    background: transparent;
+    color: var(--brand-white);
+}
+
 .s4-client-portal-page .s4-client-hero-action:hover,
 .s4-client-portal-page .s4-client-hero-action:focus {
-    border-color: var(--brand-gold-light);
-    background: var(--brand-red-secondary);
+    border-color: var(--brand-white);
+    background: rgba(255, 255, 255, .16);
+    color: var(--brand-white);
+}
+
+/* Acciones de lectura dentro de las tablas del portal. */
+.s4-client-portal-page .s4-client-table-action {
+    border-color: var(--ds-view, #6E1622);
+    background: var(--ds-view, #6E1622);
+    color: var(--brand-white);
+}
+
+.s4-client-portal-page .s4-client-table-action:hover,
+.s4-client-portal-page .s4-client-table-action:focus {
+    border-color: var(--ds-view-hover, #8B1C2A);
+    background: var(--ds-view-hover, #8B1C2A);
     color: var(--brand-white);
 }
 
 .s4-client-portal-page .s4-client-danger-action {
-    border-color: var(--brand-red-secondary);
-    background: var(--brand-red-secondary);
+    border-color: var(--ds-danger, #8B0E16);
+    background: var(--ds-danger, #8B0E16);
+    color: var(--brand-white);
+}
+
+.s4-client-portal-page .s4-client-danger-action:hover,
+.s4-client-portal-page .s4-client-danger-action:focus {
+    border-color: var(--ds-danger-hover, #A11420);
+    background: var(--ds-danger-hover, #A11420);
     color: var(--brand-white);
 }
 
@@ -1319,15 +1366,15 @@
 }
 
 .s4-client-invoice-page .s4-client-invoice-primary {
-    border-color: var(--brand-gold-primary);
-    background: var(--brand-red-primary);
+    border-color: var(--ds-view, #6E1622);
+    background: var(--ds-view, #6E1622);
     color: var(--brand-white);
 }
 
 .s4-client-invoice-page .s4-client-invoice-primary:hover,
 .s4-client-invoice-page .s4-client-invoice-primary:focus {
-    border-color: var(--brand-gold-light);
-    background: var(--brand-red-secondary);
+    border-color: var(--ds-view-hover, #8B1C2A);
+    background: var(--ds-view-hover, #8B1C2A);
     color: var(--brand-white);
 }
 
@@ -1482,15 +1529,15 @@
 }
 
 .billing-page .billing-action-link {
-    border-color: var(--brand-red-primary);
+    border-color: var(--ds-view, #6E1622);
     border-radius: 6px;
-    color: var(--brand-red-primary);
+    color: var(--ds-view, #6E1622);
 }
 
 .billing-page .billing-action-link:hover,
 .billing-page .billing-action-link:focus {
-    background: var(--brand-red-primary);
-    border-color: var(--brand-red-primary);
+    background: var(--ds-view, #6E1622);
+    border-color: var(--ds-view, #6E1622);
     color: var(--brand-white);
 }
 
@@ -1560,15 +1607,15 @@
 }
 
 .billing-detail-page .billing-detail-actions .btn-primary {
-    background: var(--brand-red-primary) !important;
-    border-color: var(--brand-red-primary) !important;
+    background: var(--ds-neutral, #262626) !important;
+    border-color: var(--ds-neutral, #262626) !important;
     color: var(--brand-white) !important;
 }
 
 .billing-detail-page .billing-detail-actions .btn-primary:hover,
 .billing-detail-page .billing-detail-actions .btn-primary:focus {
-    background: var(--brand-red-secondary) !important;
-    border-color: var(--brand-gold-primary) !important;
+    background: var(--ds-neutral-hover, #3A3A3A) !important;
+    border-color: var(--ds-neutral-hover, #3A3A3A) !important;
 }
 
 @media print {
@@ -1769,8 +1816,8 @@
 
 .backoffice-page .btn-primary,
 .backoffice-page .btn-modern-primary {
-    border-color: var(--brand-red-primary) !important;
-    background: var(--brand-red-primary) !important;
+    border-color: var(--ds-neutral, #262626) !important;
+    background: var(--ds-neutral, #262626) !important;
     color: var(--brand-white) !important;
 }
 
@@ -1778,8 +1825,8 @@
 .backoffice-page .btn-primary:focus,
 .backoffice-page .btn-modern-primary:hover,
 .backoffice-page .btn-modern-primary:focus {
-    border-color: var(--brand-red-secondary) !important;
-    background: var(--brand-red-secondary) !important;
+    border-color: var(--ds-neutral-hover, #3A3A3A) !important;
+    background: var(--ds-neutral-hover, #3A3A3A) !important;
     color: var(--brand-white) !important;
 }
 
@@ -1791,18 +1838,18 @@
 
 .backoffice-page .btn-dark:hover,
 .backoffice-page .btn-dark:focus {
-    border-color: var(--brand-red-primary) !important;
-    background: var(--brand-red-primary) !important;
+    border-color: var(--ds-neutral-hover, #3A3A3A) !important;
+    background: var(--ds-neutral-hover, #3A3A3A) !important;
 }
 
 .backoffice-page .btn-outline-primary {
-    border-color: var(--brand-red-primary) !important;
-    color: var(--brand-red-primary) !important;
+    border-color: var(--ds-neutral, #262626) !important;
+    color: var(--ds-neutral, #262626) !important;
 }
 
 .backoffice-page .btn-outline-primary:hover,
 .backoffice-page .btn-outline-primary:focus {
-    background: var(--brand-red-primary) !important;
+    background: var(--ds-neutral, #262626) !important;
     color: var(--brand-white) !important;
 }
 
@@ -1928,8 +1975,8 @@
 
 .backoffice-page .form-check-input:checked,
 .backoffice-page .custom-control-input:checked ~ .custom-control-label::before {
-    border-color: var(--brand-red-primary) !important;
-    background-color: var(--brand-red-primary) !important;
+    border-color: var(--ds-action, #1F6F4A) !important;
+    background-color: var(--ds-action, #1F6F4A) !important;
 }
 
 .backoffice-page .admin-actions {
@@ -2140,15 +2187,15 @@ body .employee-page .employee-salary {
 }
 
 body .employee-page .btn-primary {
-    border-color: var(--brand-red-primary);
-    background: var(--brand-red-primary);
+    border-color: var(--ds-neutral, #262626);
+    background: var(--ds-neutral, #262626);
     color: var(--brand-white);
 }
 
 body .employee-page .btn-primary:hover,
 body .employee-page .btn-primary:focus {
-    border-color: var(--brand-red-secondary);
-    background: var(--brand-red-secondary);
+    border-color: var(--ds-neutral-hover, #3A3A3A);
+    background: var(--ds-neutral-hover, #3A3A3A);
 }
 
 body .employee-page .btn-outline-dark {

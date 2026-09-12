@@ -122,7 +122,7 @@
                     <h2 class="mb-1">Venta móvil</h2>
                     <p class="mb-0">Registrar pedidos de clientes desde celular o tablet, incluso si se pierde la conexión.</p>
                 </div>
-                <a asp-controller="SellerOrders" asp-action="MyOrders" class="btn btn-outline-light mt-3 mt-md-0">
+                <a asp-controller="SellerOrders" asp-action="MyOrders" class="btn btn-ds-view mt-3 mt-md-0">
                     <i class="fa fa-clipboard-list mr-1"></i> Ver pedidos
                 </a>
             </div>
@@ -145,10 +145,10 @@
                     </div>
                     <div class="d-flex flex-column flex-md-row align-items-md-center" style="gap:10px;">
                         <span class="badge badge-warning p-2">Pendientes: <span id="pendingOrdersCount">0</span></span>
-                        <button type="button" id="togglePendingOrders" class="btn btn-outline-light">
+                        <button type="button" id="togglePendingOrders" class="btn btn-ds-view">
                             <i class="fa fa-list mr-1"></i> Ver pendientes
                         </button>
-                        <button type="button" id="syncPendingOrders" class="btn btn-primary">
+                        <button type="button" id="syncPendingOrders" class="btn btn-ds-action">
                             <i class="fa fa-sync mr-1"></i> Sincronizar ahora
                         </button>
                     </div>
@@ -166,7 +166,7 @@
                         <h5 class="mb-1">Pedidos guardados en este navegador</h5>
                         <p class="text-muted mb-0">Los pedidos con error se pueden reintentar cuando haya conexión.</p>
                     </div>
-                    <button type="button" id="clearSyncedOrders" class="btn btn-outline-secondary btn-sm">
+                    <button type="button" id="clearSyncedOrders" class="btn btn-ds-neutral btn-sm">
                         Limpiar sincronizados
                     </button>
                 </div>
@@ -292,10 +292,10 @@
                     <div class="text-muted small">Total estimado: <strong id="selectedTotal">₡0,00</strong></div>
                 </div>
                 <div class="d-flex flex-column flex-md-row" style="gap:10px;">
-                    <button type="button" id="saveOfflineOrder" class="btn btn-outline-secondary btn-lg">
+                    <button type="button" id="saveOfflineOrder" class="btn btn-ds-action btn-lg">
                         <i class="fa fa-cloud-download-alt mr-1"></i> Guardar sin conexión
                     </button>
-                    <button type="submit" class="btn btn-primary btn-lg">
+                    <button type="submit" class="btn btn-ds-create btn-lg">
                         <i class="fa fa-save mr-1"></i> Registrar pedido
                     </button>
                 </div>
@@ -567,7 +567,7 @@
                     const badgeClass = getStatusBadgeClass(status);
                     const errorHtml = order.mensajeError ? '<small class="text-danger mt-1">' + escapeHtml(order.mensajeError) + '</small>' : '';
                     const detailLink = order.redirectUrl
-                        ? '<a class="btn btn-sm btn-outline-primary" href="' + escapeHtml(order.redirectUrl) + '">Ver pedido</a>'
+                        ? '<a class="btn btn-sm btn-ds-view" href="' + escapeHtml(order.redirectUrl) + '">Ver pedido</a>'
                         : '';
 
                     return '<div class="offline-order-card" data-guid="' + escapeHtml(order.pedidoOfflineGuid) + '">' +
@@ -583,7 +583,7 @@
                                 '<span class="badge ' + badgeClass + ' mb-2">' + escapeHtml(status) + '</span>' +
                                 '<div class="d-flex justify-content-md-end" style="gap:6px;">' +
                                     detailLink +
-                                    '<button type="button" class="btn btn-sm btn-outline-danger" data-remove-offline="' + escapeHtml(order.pedidoOfflineGuid) + '">Eliminar</button>' +
+                                    '<button type="button" class="btn btn-sm btn-ds-danger--soft" data-remove-offline="' + escapeHtml(order.pedidoOfflineGuid) + '">Descartar borrador</button>' +
                                 '</div>' +
                             '</div>' +
                         '</div>' +

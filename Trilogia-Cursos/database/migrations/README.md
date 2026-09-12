@@ -56,6 +56,7 @@ Cada migracion debe indicar su estrategia de rollback antes de ejecutarse. Los c
 | 0020 | `0020_private_pay_slips.sql` | Boletas privadas y notificación idempotente | 0019 |
 | 0021 | `0021_seller_goal_progress.sql` | Progreso mensual de la meta propia del vendedor | Metas, facturas, pedidos y usuarios |
 | 0022 | `0022_password_hash_transition.sql` | Transición compatible de credenciales directas a PBKDF2 con actualización gradual | Usuarios, perfiles y API de autenticación |
+| 0023 | `0023_toggle_product_status_returns_state.sql` | `sp_Admin_ToggleProductStatus` devuelve el estado resultante para que la auditoría distinga activar de inactivar | Tabla `dbo.Productos` con columna `Activo` |
 
 Los scripts no incluyen `USE`: el ejecutor debe seleccionar explícitamente la base antes de iniciar. Los hashes escritos por 0002–0011 son hashes de manifiesto para identificar versión; la evidencia de despliegue debe registrar además el SHA-256 real del archivo y actualizar el ledger si corresponde.
 
@@ -142,3 +143,24 @@ Estas migraciones se validaron sintácticamente con ScriptDom y tienen `verify.s
 ## Evidencia privada legada
 
 Los registros anteriores a 0004 conservan `StorageStatus = Legacy` y no se sirven desde la aplicación. Antes de retirar cualquier carpeta pública histórica, un operador debe copiar cada archivo a `EvidenceStorage:RootPath`, asignar una clave generada, verificar la firma binaria y marcar el registro como `Ready`. No se debe marcar como listo un archivo inexistente o no validado.
+
+## Migracion 0023
+
+Sustituye unicamente la definicion de `dbo.sp_Admin_ToggleProductStatus`. No
+toca tablas, columnas, indices, restricciones, permisos ni filas de negocio.
+
+Se aplica con `CREATE OR ALTER`, de modo que conserva el `object_id` y los
+`GRANT EXECUTE` existentes; un `DROP` + `CREATE` los habria perdido. Normaliza
+cualquier firma previa, incluida la variante de dos parametros
+(`@ProductoId`, `@Activo`) de `database_Esteban/Fase3_1-3.sql`, que la
+aplicacion nunca puede invocar porque solo envia `@ProductoId`.
+
+Ensayada en LocalDB desechable sobre las dos variantes historicas: reproduccion
+del defecto, aplicacion, verificacion, rechazo de segunda aplicacion, rechazo de
+SHA-256 invalido con reversion completa de la transaccion, normalizacion de la
+firma legada, rollback compensatorio y `DBCC CHECKDB WITH PHYSICAL_ONLY` sin
+errores.
+
+El codigo de aplicacion tolera ambas situaciones: `ToggleProductStatusAsync`
+devuelve `bool?` y el controlador no afirma una direccion cuando el
+procedimiento no informa el estado resultante.

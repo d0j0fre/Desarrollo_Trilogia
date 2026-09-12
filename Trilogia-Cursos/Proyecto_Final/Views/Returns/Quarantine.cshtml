@@ -23,8 +23,8 @@
             <div class="admin-filter-bar">
                 <form asp-action="Quarantine" method="get" class="form-inline">
                     <input type="text" name="buscar" value="@buscar" class="form-control mr-2 mb-2" placeholder="Producto o motivo" />
-                    <button type="submit" class="btn btn-primary mr-2 mb-2"><i class="fa fa-search mr-2"></i>Buscar</button>
-                    <a asp-action="Quarantine" class="btn btn-outline-secondary mb-2"><i class="fa fa-eraser mr-2"></i>Limpiar</a>
+                    <button type="submit" class="btn btn-ds-search mr-2 mb-2"><i class="fa fa-search mr-2"></i>Buscar</button>
+                    <a asp-action="Quarantine" class="btn btn-ds-neutral mb-2"><i class="fa fa-eraser mr-2"></i>Limpiar</a>
                 </form>
             </div>
         </div>
@@ -73,7 +73,7 @@
                                                   data-s3-confirm-cancel="Cancelar">
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="devolucionId" value="@d.DevolucionId" />
-                                                <button type="submit" class="btn btn-sm btn-outline-success mb-1"><i class="fa fa-check mr-1"></i>Liberar</button>
+                                                <button type="submit" class="btn btn-sm btn-ds-action mb-1"><i class="fa fa-check mr-1"></i>Liberar</button>
                                             </form>
                                             <form asp-action="Discard" method="post" class="d-inline"
                                                   data-s3-confirm="¿Descartar definitivamente? No se reintegrará al inventario."
@@ -83,7 +83,7 @@
                                                   data-s3-confirm-cancel="Cancelar">
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="devolucionId" value="@d.DevolucionId" />
-                                                <button type="submit" class="btn btn-sm btn-outline-danger mb-1"><i class="fa fa-trash mr-1"></i>Descartar</button>
+                                                <button type="submit" class="btn btn-sm btn-ds-danger--soft mb-1"><i class="fa fa-trash mr-1"></i>Descartar</button>
                                             </form>
                                         </td>
                                     </tr>

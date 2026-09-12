@@ -20,10 +20,10 @@
             <p class="text-muted mb-0">Agrupadas por prioridad con fecha de negocio de Costa Rica.</p>
         </div>
         <div class="d-flex flex-wrap">
-            <a asp-action="Index" class="btn btn-outline-secondary mr-2 mb-2">Documentos</a>
+            <a asp-action="Index" class="btn btn-ds-view mr-2 mb-2">Documentos</a>
             <form asp-action="GenerateAlerts" method="post" class="mb-2">
                 @Html.AntiForgeryToken()
-                <button class="btn btn-warning" type="submit"><i class="fa fa-sync mr-1"></i>Generar sin duplicar</button>
+                <button class="btn btn-ds-action" type="submit"><i class="fa fa-sync mr-1"></i>Generar sin duplicar</button>
             </form>
         </div>
     </header>
@@ -53,7 +53,7 @@
                     <label asp-for="Filter.MaxDays">Horizonte máximo</label>
                     <input asp-for="Filter.MaxDays" name="MaxDays" type="number" min="0" max="365" class="form-control" placeholder="30 días" />
                 </div>
-                <div class="s4-filter--action"><button class="btn btn-dark btn-block" type="submit">Aplicar</button></div>
+                <div class="s4-filter--action"><button class="btn btn-ds-search btn-block" type="submit">Aplicar</button></div>
             </form>
         </div>
     </section>
@@ -89,7 +89,7 @@
                                         <form asp-action="MarkAlertHandled" method="post">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="id" value="@alert.AlertId" />
-                                            <button class="btn btn-sm btn-outline-success" type="submit"><i class="fa fa-check mr-1"></i>Atender</button>
+                                            <button class="btn btn-sm btn-ds-action" type="submit"><i class="fa fa-check mr-1"></i>Atender</button>
                                         </form>
                                     }
                                 </td>
@@ -105,8 +105,8 @@
     <nav class="d-flex justify-content-between align-items-center mt-3" aria-label="Paginación de alertas">
         <span class="text-muted">@Model.Alerts.Total alerta(s)</span>
         <div>
-            @if (Model.Alerts.Page > 1) { <a asp-route-Page="@(Model.Alerts.Page - 1)" asp-route-Status="@Model.Filter.Status" asp-route-DepartmentId="@Model.Filter.DepartmentId" asp-route-MaxDays="@Model.Filter.MaxDays" class="btn btn-sm btn-outline-secondary">Anterior</a> }
-            @if (Model.Alerts.Page < Model.Alerts.TotalPages) { <a asp-route-Page="@(Model.Alerts.Page + 1)" asp-route-Status="@Model.Filter.Status" asp-route-DepartmentId="@Model.Filter.DepartmentId" asp-route-MaxDays="@Model.Filter.MaxDays" class="btn btn-sm btn-outline-secondary">Siguiente</a> }
+            @if (Model.Alerts.Page > 1) { <a asp-route-Page="@(Model.Alerts.Page - 1)" asp-route-Status="@Model.Filter.Status" asp-route-DepartmentId="@Model.Filter.DepartmentId" asp-route-MaxDays="@Model.Filter.MaxDays" class="btn btn-sm btn-ds-neutral">Anterior</a> }
+            @if (Model.Alerts.Page < Model.Alerts.TotalPages) { <a asp-route-Page="@(Model.Alerts.Page + 1)" asp-route-Status="@Model.Filter.Status" asp-route-DepartmentId="@Model.Filter.DepartmentId" asp-route-MaxDays="@Model.Filter.MaxDays" class="btn btn-sm btn-ds-neutral">Siguiente</a> }
         </div>
     </nav>
 </div>

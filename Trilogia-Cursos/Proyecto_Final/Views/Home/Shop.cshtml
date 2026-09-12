@@ -18,6 +18,11 @@
 <div class="s3-storefront-page s3-shop-page">
     <section class="s3-shop-hero">
         <div class="s3-shop-hero__content">
+            <a asp-controller="Home" asp-action="Index"
+               class="btn btn-sm btn-ds-neutral s3-shop-hero__back">
+                <i class="fa fa-arrow-left mr-1"></i>Regresar al inicio
+            </a>
+
             <span class="s3-home-eyebrow">
                 <i class="fa fa-shopping-bag"></i>
                 Catálogo disponible
@@ -49,7 +54,7 @@
             <label for="buscar" class="s3-shop-search-card__label">Buscar producto</label>
             <div class="s3-shop-search-card__group">
                 <input id="buscar" type="text" name="buscar" value="@Model.Buscar" class="form-control" placeholder="Ejemplo: whisky, vino, combo..." />
-                <button class="btn btn-primary" type="submit">
+                <button class="btn btn-ds-search" type="submit">
                     <i class="fa fa-search mr-1"></i>Buscar
                 </button>
             </div>
@@ -143,7 +148,7 @@
                                     </div>
                                 </div>
                                 <div class="s3-product-card__actions">
-                                    <a asp-controller="Home" asp-action="ComboDetail" asp-route-id="@combo.ComboId" class="btn btn-outline-dark btn-sm">
+                                    <a asp-controller="Home" asp-action="ComboDetail" asp-route-id="@combo.ComboId" class="btn btn-ds-view btn-sm">
                                         <i class="fa fa-eye mr-1"></i>Detalle
                                     </a>
                                     @if (combo.Disponible)
@@ -152,12 +157,12 @@
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="comboId" value="@combo.ComboId" />
                                             <input type="hidden" name="cantidad" value="1" />
-                                            <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-shopping-cart mr-1"></i>Agregar</button>
+                                            <button type="submit" class="btn btn-ds-action btn-sm"><i class="fa fa-shopping-cart mr-1"></i>Agregar</button>
                                         </form>
                                     }
                                     else
                                     {
-                                        <button type="button" class="btn btn-secondary btn-sm" disabled>Agotado</button>
+                                        <button type="button" class="btn btn-ds-neutral btn-sm" disabled>Agotado</button>
                                     }
                                 </div>
                             </div>
@@ -172,7 +177,7 @@
                     <i class="fa fa-search"></i>
                     <h3>No se encontraron productos</h3>
                     <p>Probá con otra categoría o con otro texto de búsqueda.</p>
-                    <a asp-controller="Home" asp-action="Shop" class="btn btn-primary">
+                    <a asp-controller="Home" asp-action="Shop" class="btn btn-ds-view">
                         Ver todo el catálogo
                     </a>
                 </div>
@@ -210,7 +215,7 @@
                                 </div>
 
                                 <div class="s3-product-card__actions">
-                                    <a asp-controller="Home" asp-action="Detail" asp-route-id="@producto.ProductoId" class="btn btn-outline-dark btn-sm">
+                                    <a asp-controller="Home" asp-action="Detail" asp-route-id="@producto.ProductoId" class="btn btn-ds-view btn-sm">
                                         <i class="fa fa-eye mr-1"></i>Detalle
                                     </a>
 
@@ -220,14 +225,14 @@
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="productoId" value="@producto.ProductoId" />
                                             <input type="hidden" name="cantidad" value="1" />
-                                            <button type="submit" class="btn btn-primary btn-sm">
+                                            <button type="submit" class="btn btn-ds-action btn-sm">
                                                 <i class="fa fa-shopping-cart mr-1"></i>Agregar
                                             </button>
                                         </form>
                                     }
                                     else
                                     {
-                                        <button type="button" class="btn btn-secondary btn-sm" disabled>
+                                        <button type="button" class="btn btn-ds-neutral btn-sm" disabled>
                                             Agotado
                                         </button>
                                     }

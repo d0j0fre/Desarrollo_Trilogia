@@ -142,17 +142,17 @@
             <div class="admin-card h-100">
                 <h5 class="mb-4">Acciones</h5>
 
-                <a asp-controller="Billing" asp-action="Index" class="btn btn-outline-secondary btn-block mb-2">
+                <a asp-controller="Billing" asp-action="Index" class="btn btn-ds-neutral btn-block mb-2">
                     <i class="fa fa-arrow-left mr-2"></i>Volver a facturación
                 </a>
 
-                <button type="button" class="btn btn-primary btn-block mb-2" onclick="window.print();">
+                <button type="button" class="btn btn-ds-view btn-block mb-2" onclick="window.print();">
                     <i class="fa fa-print mr-2"></i>Imprimir factura
                 </button>
 
                 <form asp-controller="Billing" asp-action="ResendEmail" asp-route-id="@Model.FacturaId" method="post" class="mb-2">
                     @Html.AntiForgeryToken()
-                    <button type="submit" class="btn btn-outline-primary btn-block">
+                    <button type="submit" class="btn btn-ds-action btn-block">
                         <i class="fa fa-envelope mr-2"></i>Reenviar comprobante por correo
                     </button>
                 </form>

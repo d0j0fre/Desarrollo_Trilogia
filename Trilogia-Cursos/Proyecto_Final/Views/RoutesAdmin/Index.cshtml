@@ -26,7 +26,7 @@
                     <h2 class="mb-2">Rutas y entregas</h2>
                     <p class="mb-0">Genera y organiza rutas de reparto agrupando pedidos por zona y asignando chofer y vehículo.</p>
                 </div>
-                <a asp-action="Create" class="btn btn-primary mt-2 mt-md-0">
+                <a asp-action="Create" class="btn btn-ds-create mt-2 mt-md-0">
                     <i class="fa fa-plus mr-2"></i>Nueva ruta
                 </a>
             </div>
@@ -52,8 +52,8 @@
                         <input type="text" name="buscar" value="@buscar" class="form-control" placeholder="Código, zona, chofer o placa" />
                     </div>
                     <div class="col-md-3">
-                        <button type="submit" class="btn btn-primary mr-2 mb-2"><i class="fa fa-search mr-2"></i>Filtrar</button>
-                        <a asp-action="Index" class="btn btn-outline-secondary mb-2"><i class="fa fa-eraser mr-2"></i>Limpiar</a>
+                        <button type="submit" class="btn btn-ds-search mr-2 mb-2"><i class="fa fa-search mr-2"></i>Filtrar</button>
+                        <a asp-action="Index" class="btn btn-ds-neutral mb-2"><i class="fa fa-eraser mr-2"></i>Limpiar</a>
                     </div>
                 </form>
             </div>
@@ -105,7 +105,7 @@
                                         </td>
                                         <td>@r.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</td>
                                         <td class="text-center">
-                                            <a asp-action="Detail" asp-route-id="@r.RutaId" class="btn btn-sm btn-outline-primary mb-1">
+                                            <a asp-action="Detail" asp-route-id="@r.RutaId" class="btn btn-sm btn-ds-view mb-1">
                                                 <i class="fa fa-eye mr-1"></i>Ver
                                             </a>
                                         </td>
