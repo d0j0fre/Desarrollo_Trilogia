@@ -81,7 +81,7 @@ namespace Proyecto_Final.Controllers
             catch (Exception exception)
             {
                 _logger.LogError(exception, "No se pudo listar usuarios de chat para el usuario {UserId}.", userId);
-                return StatusCode(500, ChatError("No fue posible cargar los usuarios del chat."));
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, ChatError("El chat no está disponible temporalmente."));
             }
         }
 
@@ -117,7 +117,7 @@ namespace Proyecto_Final.Controllers
             catch (Exception exception)
             {
                 _logger.LogError(exception, "Error al abrir una conversación para el usuario {UserId}.", currentUserId);
-                return StatusCode(500, ChatError("No fue posible abrir la conversación."));
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, ChatError("El chat no está disponible temporalmente."));
             }
         }
 
@@ -142,7 +142,7 @@ namespace Proyecto_Final.Controllers
                 var message = await _chat.SendMessageAsync(conversationId, userId, normalized);
                 if (message is null)
                 {
-                    return StatusCode(500, ChatError("No fue posible guardar el mensaje."));
+                    return StatusCode(StatusCodes.Status503ServiceUnavailable, ChatError("El chat no está disponible temporalmente."));
                 }
 
                 await _hubContext.Clients.Group(ChatHub.ConversationGroup(conversationId))
@@ -161,7 +161,7 @@ namespace Proyecto_Final.Controllers
                     "Error al enviar un mensaje del usuario {UserId} a la conversación {ConversationId}.",
                     userId,
                     conversationId);
-                return StatusCode(500, ChatError("No fue posible enviar el mensaje."));
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, ChatError("El chat no está disponible temporalmente."));
             }
         }
 
@@ -186,7 +186,7 @@ namespace Proyecto_Final.Controllers
                     "Error al consultar la conversación {ConversationId} para el usuario {UserId}.",
                     conversationId,
                     userId);
-                return StatusCode(500, ChatError("No fue posible cargar los mensajes."));
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, ChatError("El chat no está disponible temporalmente."));
             }
         }
 
@@ -204,7 +204,7 @@ namespace Proyecto_Final.Controllers
             catch (Exception exception)
             {
                 _logger.LogError(exception, "Error al listar departamentos del usuario {UserId}.", userId);
-                return StatusCode(500, ChatError("No fue posible cargar los departamentos."));
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, ChatError("El chat no está disponible temporalmente."));
             }
         }
 
@@ -233,7 +233,7 @@ namespace Proyecto_Final.Controllers
                     _authorization.CanManageAllDepartments(CurrentRole()));
                 if (message is null)
                 {
-                    return StatusCode(500, ChatError("No fue posible guardar el mensaje."));
+                    return StatusCode(StatusCodes.Status503ServiceUnavailable, ChatError("El chat no está disponible temporalmente."));
                 }
 
                 await _hubContext.Clients.Group(ChatHub.DepartmentGroup(departmentId))
@@ -252,7 +252,7 @@ namespace Proyecto_Final.Controllers
                     "Error al enviar mensaje departamental del usuario {UserId} al departamento {DepartmentId}.",
                     userId,
                     departmentId);
-                return StatusCode(500, ChatError("No fue posible enviar el mensaje."));
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, ChatError("El chat no está disponible temporalmente."));
             }
         }
 
@@ -282,7 +282,7 @@ namespace Proyecto_Final.Controllers
                     "Error al consultar el departamento {DepartmentId} para el usuario {UserId}.",
                     departmentId,
                     userId);
-                return StatusCode(500, ChatError("No fue posible cargar los mensajes del departamento."));
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, ChatError("El chat no está disponible temporalmente."));
             }
         }
 
@@ -331,7 +331,7 @@ namespace Proyecto_Final.Controllers
             catch (Exception exception)
             {
                 _logger.LogError(exception, "Error al buscar en el historial autorizado del usuario {UserId}.", userId);
-                return StatusCode(500, ChatError("No fue posible buscar en el historial."));
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, ChatError("El chat no está disponible temporalmente."));
             }
         }
 

@@ -18,8 +18,9 @@
         <div class="col-12">
             <div class="admin-page-header d-flex flex-column flex-md-row justify-content-between align-items-md-center">
                 <div>
+                    @*(CU-211)*@
                     <h2 class="mb-2">Metas de ventas</h2>
-                    <p>Defina las metas mensuales de ingresos por vendedor (CU-211).</p>
+                    <p>Defina las metas mensuales de ingresos por vendedor</p>
                 </div>
                 <a asp-controller="Kpis" asp-action="Report" asp-route-anio="@Model.Anio" asp-route-mes="@Model.Mes" class="btn btn-ds-view mt-3 mt-md-0">
                     <i class="fa fa-chart-line mr-1"></i>Ver reporte de KPIs

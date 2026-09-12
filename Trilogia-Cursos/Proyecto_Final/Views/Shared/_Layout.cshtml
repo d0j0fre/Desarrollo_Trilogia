@@ -65,6 +65,8 @@
             string.Equals(userRole, "Cajero", StringComparison.OrdinalIgnoreCase)
             || string.Equals(userRole, "Financiero", StringComparison.OrdinalIgnoreCase));
         var isPurchasing = isLoggedIn && string.Equals(userRole, "Compras", StringComparison.OrdinalIgnoreCase);
+        // Supervisor: acceso a RRHH y Planilla sin ver el resto de módulos administrativos.
+        var isSupervisor = isLoggedIn && string.Equals(userRole, "Supervisor", StringComparison.OrdinalIgnoreCase);
         var categoriasLayout = await AdminDbService.GetStoreCategoriesAsync();
     }
 
@@ -164,6 +166,20 @@
                                         <a asp-controller="Suppliers" asp-action="Index" class="dropdown-item">Proveedores</a>
                                         <a asp-controller="PurchaseOrders" asp-action="Index" class="dropdown-item">Órdenes de compra</a>
                                         <a asp-controller="PriceHistory" asp-action="Index" class="dropdown-item">Histórico de precios</a>
+                                    </div>
+                                </div>
+                            }
+
+                            @if (!isAdmin && isSupervisor)
+                            {
+                                <div class="nav-item dropdown">
+                                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown"><i class="fa fa-user-tie mr-1"></i>Personal</a>
+                                    <div class="dropdown-menu border-0 rounded-0 m-0">
+                                        <a asp-controller="Employees" asp-action="Index" class="dropdown-item">Empleados</a>
+                                        <a asp-controller="Employees" asp-action="LeaveRequests" class="dropdown-item">Solicitudes (licencias)</a>
+                                        <a asp-controller="Attendance" asp-action="Index" class="dropdown-item">Aprobar jornadas</a>
+                                        <a asp-controller="Payroll" asp-action="Index" class="dropdown-item">Planilla</a>
+                                        <a asp-controller="PaySlips" asp-action="Index" class="dropdown-item">Boletas de pago</a>
                                     </div>
                                 </div>
                             }

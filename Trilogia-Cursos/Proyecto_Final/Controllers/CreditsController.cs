@@ -33,13 +33,10 @@ namespace Proyecto_Final.Controllers
         [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
+            if (id <= 0) return NotFound();
             var model = await _adminDbService.GetClientCreditDetailAsync(id);
 
-            if (model == null)
-            {
-                TempData["ErrorMessage"] = "No se encontró el cliente solicitado.";
-                return RedirectToAction(nameof(Index));
-            }
+            if (model == null) return NotFound();
 
             return View(model);
         }

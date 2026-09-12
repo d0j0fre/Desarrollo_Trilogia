@@ -35,15 +35,31 @@ public sealed class ExpensesController : Controller
     [HttpGet]
     public async Task<IActionResult> Details(int id)
     {
-        var model = await _expenses.GetOperatingDetailsAsync(id);
-        return model is null ? NotFound() : View(model);
+        if (id <= 0) return NotFound();
+        try
+        {
+            var model = await _expenses.GetOperatingDetailsAsync(id);
+            return model is null ? NotFound() : View(model);
+        }
+        catch (SqlException exception) when (exception.Number < 50000)
+        {
+            return ServiceUnavailable(exception, id);
+        }
     }
 
     [HttpGet]
     public async Task<IActionResult> Detail(int id)
     {
-        var model = await _expenses.GetOperatingDetailsAsync(id);
-        return model is null ? NotFound() : View("Details", model);
+        if (id <= 0) return NotFound();
+        try
+        {
+            var model = await _expenses.GetOperatingDetailsAsync(id);
+            return model is null ? NotFound() : View("Details", model);
+        }
+        catch (SqlException exception) when (exception.Number < 50000)
+        {
+            return ServiceUnavailable(exception, id);
+        }
     }
 
     [HttpGet]
@@ -65,7 +81,7 @@ public sealed class ExpensesController : Controller
     public async Task<IActionResult> Create(OperatingExpenseFormViewModel model, CancellationToken cancellationToken)
     {
         ValidateExpense(model);
-        if (!ModelState.IsValid) { await LoadOptionsAsync(); return View(model); }
+        if (!ModelState.IsValid) { await LoadOptionsAsync(); return InvalidExpenseForm(model); }
         StagedPrivateFile? staged = null;
         var expenseId = 0;
         var committed = false;
@@ -101,7 +117,7 @@ public sealed class ExpensesController : Controller
         }
         if (staged is not null && expenseId > 0 && !ready) await TryClearPendingReceiptAsync(expenseId);
         await LoadOptionsAsync();
-        return View(model);
+        return InvalidExpenseForm(model);
     }
 
     [HttpGet]
@@ -123,7 +139,7 @@ public sealed class ExpensesController : Controller
         ValidateExpense(model);
         if (model.Receipt is not null && model.Receipt.Length > 0)
             ModelState.AddModelError(nameof(model.Receipt), "El comprobante original se conserva; cree una corrección auditada si necesita reemplazarlo.");
-        if (!ModelState.IsValid) { await LoadOptionsAsync(); return View(model); }
+        if (!ModelState.IsValid) { await LoadOptionsAsync(); return InvalidExpenseForm(model); }
         StagedPrivateFile? staged = null;
         var committed = false;
         var ready = false;
@@ -150,7 +166,7 @@ public sealed class ExpensesController : Controller
         }
         if (staged is not null && !ready) await TryClearPendingReceiptAsync(model.ExpenseId);
         await LoadOptionsAsync();
-        return View(model);
+        return InvalidExpenseForm(model);
     }
 
     [HttpPost]
@@ -230,5 +246,20 @@ public sealed class ExpensesController : Controller
         if (exception is SqlException sql && sql.Number >= 50000) _logger.LogWarning(exception, "Regla de negocio al {Operation}.", operation);
         else _logger.LogError(exception, "Error al {Operation}.", operation);
         TempData["ErrorMessage"] = $"No fue posible {operation}.";
+    }
+
+    private ViewResult InvalidExpenseForm(OperatingExpenseFormViewModel model)
+    {
+        Response.StatusCode = StatusCodes.Status422UnprocessableEntity;
+        return View(model);
+    }
+
+    private ViewResult ServiceUnavailable(SqlException exception, int expenseId)
+    {
+        var traceId = HttpContext.TraceIdentifier;
+        _logger.LogError(exception, "Falla SQL controlada al consultar gasto {ExpenseId}. TraceId {TraceId}", expenseId, traceId);
+        Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+        ViewData["TraceId"] = traceId;
+        return View("ServiceUnavailable");
     }
 }

@@ -24,8 +24,9 @@
         <div class="col-12">
             <div class="admin-page-header d-flex flex-column flex-md-row justify-content-between align-items-md-center">
                 <div>
+                    @*(CU-213)*@
                     <h2 class="mb-2">Cumplimiento global de KPIs</h2>
-                    <p>Rendimiento de la fuerza de ventas — @meses[Model.Mes] @Model.Anio (CU-213).</p>
+                    <p>Rendimiento de la fuerza de ventas — @meses[Model.Mes] @Model.Anio</p>
                 </div>
                 <a asp-controller="Kpis" asp-action="Index" asp-route-anio="@Model.Anio" asp-route-mes="@Model.Mes" class="btn btn-ds-view mt-3 mt-md-0">
                     <i class="fa fa-bullseye mr-1"></i>Gestionar metas
