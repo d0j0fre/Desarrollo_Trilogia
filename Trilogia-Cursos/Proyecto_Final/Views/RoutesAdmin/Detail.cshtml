@@ -46,8 +46,8 @@
                     <p class="mb-0">Zona: <strong>@c.Zona</strong></p>
                 </div>
                 <div class="mt-2 mt-md-0">
-                    <a asp-action="Evidences" asp-route-id="@c.RutaId" class="btn btn-outline-secondary mr-1"><i class="fa fa-camera mr-2"></i>Evidencias</a>
-                    <a asp-action="Index" class="btn btn-outline-secondary"><i class="fa fa-arrow-left mr-2"></i>Volver</a>
+                    <a asp-action="Evidences" asp-route-id="@c.RutaId" class="btn btn-ds-view mr-1"><i class="fa fa-camera mr-2"></i>Evidencias</a>
+                    <a asp-action="Index" class="btn btn-ds-neutral"><i class="fa fa-arrow-left mr-2"></i>Volver</a>
                 </div>
             </div>
         </div>
@@ -83,7 +83,7 @@
                               data-s3-confirm-cancel="Cancelar">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="rutaId" value="@c.RutaId" />
-                            <button type="submit" class="btn btn-outline-primary"><i class="fa fa-route mr-2"></i>Secuenciar automáticamente</button>
+                            <button type="submit" class="btn btn-ds-action"><i class="fa fa-route mr-2"></i>Secuenciar automáticamente</button>
                         </form>
                         <form asp-action="Dispatch" method="post" class="mr-2 mb-2"
                               data-s3-confirm="¿Despachar la ruta? Los pedidos pasarán a En ruta y se notificará a los clientes."
@@ -93,12 +93,12 @@
                               data-s3-confirm-cancel="Cancelar">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="rutaId" value="@c.RutaId" />
-                            <button type="submit" class="btn btn-primary"><i class="fa fa-truck mr-2"></i>Despachar ruta</button>
+                            <button type="submit" class="btn btn-ds-action"><i class="fa fa-truck mr-2"></i>Despachar ruta</button>
                         </form>
                     }
                     @if (c.Estado == "Despachada")
                     {
-                        <button type="button" class="btn btn-outline-warning mr-2 mb-2" data-toggle="collapse" data-target="#recalcBox">
+                        <button type="button" class="btn btn-ds-action mr-2 mb-2" data-toggle="collapse" data-target="#recalcBox">
                             <i class="fa fa-sync mr-2"></i>Recalcular ruta
                         </button>
                     }
@@ -112,12 +112,12 @@
                               data-s3-confirm-cancel="Cancelar">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="rutaId" value="@c.RutaId" />
-                            <button type="submit" class="btn btn-outline-primary"><i class="fa fa-clipboard-check mr-2"></i>Liquidar ruta</button>
+                            <button type="submit" class="btn btn-ds-action"><i class="fa fa-clipboard-check mr-2"></i>Liquidar ruta</button>
                         </form>
                     }
                     @if (puedeCancelar)
                     {
-                        <button type="button" class="btn btn-outline-danger mb-2" data-toggle="collapse" data-target="#cancelBox">
+                        <button type="button" class="btn btn-ds-danger mb-2" data-toggle="collapse" data-target="#cancelBox">
                             <i class="fa fa-ban mr-2"></i>Cancelar ruta
                         </button>
                     }
@@ -138,7 +138,7 @@
                                 <label class="font-weight-bold">Motivo</label>
                                 <input type="text" name="motivo" class="form-control" maxlength="300" placeholder="Motivo de la cancelación" />
                             </div>
-                            <button type="submit" class="btn btn-danger btn-sm">Confirmar cancelación</button>
+                            <button type="submit" class="btn btn-ds-danger--soft btn-sm">Confirmar cancelación</button>
                         </form>
                     </div>
                 }
@@ -168,7 +168,7 @@
                             <div class="form-group">
                                 <input type="text" name="motivoFallo" class="form-control" maxlength="300" placeholder="Motivo (ej: cliente cerrado)" />
                             </div>
-                            <button type="submit" class="btn btn-warning btn-sm"><i class="fa fa-sync mr-1"></i>Recalcular</button>
+                            <button type="submit" class="btn btn-ds-action btn-sm"><i class="fa fa-sync mr-1"></i>Recalcular</button>
                         </form>
                     </div>
                 }
@@ -182,7 +182,7 @@
                     <div class="d-flex align-items-center">
                         @if (rutaMapsUrl != null)
                         {
-                            <a href="@rutaMapsUrl" target="_blank" rel="noopener" class="btn btn-sm btn-outline-success mr-3" title="Verificar el recorrido en Google Maps">
+                            <a href="@rutaMapsUrl" target="_blank" rel="noopener" class="btn btn-sm btn-ds-view mr-3" title="Verificar el recorrido en Google Maps">
                                 <i class="fas fa-directions mr-1"></i>Ver recorrido en Maps
                             </a>
                         }
@@ -233,7 +233,7 @@
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="rutaId" value="@c.RutaId" />
                                                 <input type="hidden" name="pedidoId" value="@p.PedidoId" />
-                                                <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fa fa-times"></i></button>
+                                                <button type="submit" class="btn btn-sm btn-ds-danger--soft" aria-label="Quitar pedido de la ruta"><i class="fa fa-times"></i></button>
                                             </form>
                                         </td>
                                     }
@@ -264,7 +264,7 @@
                                         <option value="@d.PedidoId">#@d.PedidoId - @d.Cliente (@d.DireccionEntrega)</option>
                                     }
                                 </select>
-                                <button type="submit" class="btn btn-outline-primary mb-2"><i class="fa fa-plus mr-2"></i>Agregar</button>
+                                <button type="submit" class="btn btn-ds-action mb-2"><i class="fa fa-plus mr-2"></i>Agregar</button>
                             </form>
                         }
                     </div>
@@ -298,13 +298,13 @@
                                                 <td><input type="number" step="0.000001" name="lat" value="@(p.Latitud?.ToString(System.Globalization.CultureInfo.InvariantCulture))" class="form-control form-control-sm lat-input" placeholder="9.93" /></td>
                                                 <td><input type="number" step="0.000001" name="lng" value="@(p.Longitud?.ToString(System.Globalization.CultureInfo.InvariantCulture))" class="form-control form-control-sm lng-input" placeholder="-84.08" /></td>
                                                 <td class="align-middle text-center">
-                                                    <button type="button" class="btn btn-sm btn-outline-primary btn-locate" title="Ubicar en el mapa"><i class="fa fa-map-marker-alt"></i></button>
+                                                    <button type="button" class="btn btn-sm btn-ds-view btn-locate" title="Ubicar en el mapa"><i class="fa fa-map-marker-alt"></i></button>
                                                 </td>
                                             </tr>
                                         }
                                     </tbody>
                                 </table>
-                                <button type="submit" class="btn btn-outline-secondary btn-sm"><i class="fa fa-save mr-1"></i>Guardar orden y ubicaciones</button>
+                                <button type="submit" class="btn btn-ds-action btn-sm"><i class="fa fa-save mr-1"></i>Guardar orden y ubicaciones</button>
                             </form>
                         </div>
                     </div>

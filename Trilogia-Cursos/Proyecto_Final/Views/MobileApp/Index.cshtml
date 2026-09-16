@@ -1,0 +1,281 @@
+@model Proyecto_Final.Models.Admin.MobileAppPageViewModel
+@{
+    ViewData["Title"] = "Aplicación móvil";
+    var hayVersion = Model.Vigente is not null && !Model.ArchivoFaltante;
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="row px-xl-5"><div class="col-12"><div class="alert alert-success">@TempData["SuccessMessage"]</div></div></div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="row px-xl-5"><div class="col-12"><div class="alert alert-danger">@TempData["ErrorMessage"]</div></div></div>
+    }
+
+    @if (hayVersion)
+    {
+        var v = Model.Vigente!;
+
+        <div class="row px-xl-5 pb-4">
+            @* ── Descarga: es el motivo de existir de esta página ────────── *@
+            <div class="col-lg-5 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center py-4">
+                        <h3 class="mb-2">Instalá la aplicación</h3>
+                        <p class="text-muted mb-4">Apuntá la cámara del teléfono al código</p>
+
+                        <img src="@Url.Action("Qr", "MobileApp")"
+                             alt="Código para descargar la aplicación"
+                             class="img-fluid mb-4"
+                             style="max-width: 240px;" />
+
+                        <div class="mb-3">
+                            <a href="@Url.Action("Download", "MobileApp")" class="btn btn-ds-action btn-lg btn-block">
+                                <i class="fa fa-download mr-2"></i>Descargar en este dispositivo
+                            </a>
+                        </div>
+
+                        <small class="text-muted d-block">
+                            Versión @v.VersionNombre · @v.TamanoLegible ·
+                            @v.FechaPublicacion.ToLocalTime().ToString("dd/MM/yyyy")
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            @* ── Cómo instalarla ─────────────────────────────────────────── *@
+            <div class="col-lg-7">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">Cómo instalarla en el teléfono</h5>
+                        <ol class="mb-4 pl-3">
+                            <li class="mb-2">Abrí la cámara del teléfono y apuntá al código. Tocá el aviso que aparece.</li>
+                            <li class="mb-2">Aceptá la descarga del archivo.</li>
+                            <li class="mb-2">
+                                Android va a advertir que la aplicación viene de un <strong>origen desconocido</strong>.
+                                Es normal: no está en Google Play porque es de uso interno.
+                                Tocá <strong>Configuración</strong> y permití la instalación desde el navegador.
+                            </li>
+                            <li class="mb-2">Tocá <strong>Instalar</strong> y luego <strong>Abrir</strong>.</li>
+                            <li>Entrá con el mismo correo y contraseña que usás en este sistema.</li>
+                        </ol>
+
+                        @if (!string.IsNullOrWhiteSpace(v.Notas))
+                        {
+                            <h6 class="mb-2">Novedades de esta versión</h6>
+                            <p class="mb-4">@v.Notas</p>
+                        }
+
+                        <details>
+                            <summary class="text-muted" style="cursor: pointer;">
+                                <small>Verificar que el archivo es el correcto</small>
+                            </summary>
+                            <div class="mt-2">
+                                <small class="text-muted d-block mb-1">
+                                    Huella digital del archivo (SHA-256). Sirve para confirmar que lo que se
+                                    descargó es exactamente lo que el equipo publicó.
+                                </small>
+                                <code class="d-block text-break small">@v.Sha256Legible</code>
+                                <small class="text-muted d-block mt-1">Compilación @v.BuildNumero</small>
+                            </div>
+                        </details>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row px-xl-5">
+            <div class="col-12">
+                <h2>Aplicación móvil</h2>
+            </div>
+        </div>
+
+        <div class="row px-xl-5 pb-4">
+            <div class="col-lg-8">
+                @if (Model.ArchivoFaltante)
+                {
+                    <div class="alert alert-danger mb-0">
+                        <strong>El archivo de la versión publicada no está disponible.</strong>
+                        <p class="mb-0 mt-2">
+                            El registro de la versión existe pero su archivo ya no está en el servidor.
+                            Suele pasar si el servidor se recreó. Hay que volver a publicarla.
+                        </p>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info mb-0">
+                        <strong>La aplicación todavía no está disponible para descargar.</strong>
+                        <p class="mb-0 mt-2">
+                            @if (Model.PuedePublicar)
+                            {
+                                <span>Publicá la primera versión con el formulario de abajo.</span>
+                            }
+                            else
+                            {
+                                <span>El equipo de desarrollo todavía no ha publicado ninguna versión. Volvé más tarde.</span>
+                            }
+                        </p>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    @* ── Todo lo de abajo es trabajo del equipo de desarrollo ───────────── *@
+    @if (Model.PuedePublicar)
+    {
+        <div class="row px-xl-5 pb-5">
+            <div class="col-12">
+                <details class="card" @(hayVersion ? "" : "open")>
+                    <summary class="card-body py-3" style="cursor: pointer;">
+                        <strong><i class="fa fa-code mr-2"></i>Publicar una versión</strong>
+                        <small class="text-muted d-block mt-1">
+                            Para el equipo de desarrollo. Los choferes no necesitan esta sección.
+                        </small>
+                    </summary>
+
+                    <div class="card-body border-top">
+                        <p class="text-muted small mb-3">
+                            Subí el archivo <code>.apk</code> compilado. El sistema calcula su huella y su
+                            tamaño solo. El número de compilación tiene que ser mayor que el de la última
+                            versión publicada; la versión mínima soportada bloquea las aplicaciones más
+                            viejas y las obliga a actualizar.
+                        </p>
+
+                        <form asp-action="Publish" method="post" enctype="multipart/form-data" class="row">
+                            @Html.AntiForgeryToken()
+
+                            <div class="form-group col-md-6">
+                                <label for="archivo">Archivo de la aplicación (.apk)</label>
+                                <input id="archivo" name="archivo" type="file" accept=".apk"
+                                       class="form-control-file" required />
+                                <small class="form-text text-muted">
+                                    Usá el que termina en <code>-arm64-v8a-release.apk</code>.
+                                </small>
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="VersionNombre">Versión</label>
+                                <input id="VersionNombre" name="VersionNombre" class="form-control"
+                                       placeholder="1.0.0" pattern="\d+\.\d+\.\d+" required />
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="BuildNumero">Compilación</label>
+                                <input id="BuildNumero" name="BuildNumero" type="number" min="1"
+                                       class="form-control" required />
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="MinBuildSoportado">Mínima soportada</label>
+                                <input id="MinBuildSoportado" name="MinBuildSoportado" type="number" min="1"
+                                       class="form-control" required />
+                            </div>
+
+                            <div class="col-12 mb-3">
+                                <div class="alert alert-warning py-2 mb-0">
+                                    <small>
+                                        <strong>El número de compilación no es el que pasaste a la herramienta.</strong>
+                                        Al separar el archivo por tipo de teléfono, Flutter le suma 2000:
+                                        si compilaste con <code>--build-number=2</code>, acá va
+                                        <code>2002</code>. El valor exacto aparece en la aplicación, en
+                                        <strong>Ajustes → Versión</strong>. Si no coincide, el bloqueo por
+                                        versión mínima no va a funcionar.
+                                    </small>
+                                </div>
+                            </div>
+
+                            <div class="form-group col-md-6">
+                                <label for="Notas">Novedades de la versión</label>
+                                <input id="Notas" name="Notas" class="form-control" maxlength="500"
+                                       placeholder="Qué cambió, en una línea" />
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="MensajeObligatorio">Mensaje si la actualización es obligatoria</label>
+                                <input id="MensajeObligatorio" name="MensajeObligatorio" class="form-control"
+                                       maxlength="300" placeholder="Solo si bloqueás versiones anteriores" />
+                            </div>
+
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-ds-create">
+                                    <i class="fa fa-upload mr-2"></i>Publicar versión
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    @if (Model.Historial.Count > 0)
+                    {
+                        <div class="card-body border-top">
+                            <h6 class="mb-3">Versiones publicadas</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Versión</th>
+                                            <th>Compilación</th>
+                                            <th>Mínima</th>
+                                            <th>Origen</th>
+                                            <th>Publicada</th>
+                                            <th>Por</th>
+                                            <th>Estado</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var release in Model.Historial)
+                                        {
+                                            <tr>
+                                                <td><strong>@release.VersionNombre</strong></td>
+                                                <td>@release.BuildNumero</td>
+                                                <td>@release.MinBuildSoportado</td>
+                                                <td>
+                                                    @if (release.EstaEnElSistema)
+                                                    {
+                                                        <small>En el sistema</small>
+                                                    }
+                                                    else
+                                                    {
+                                                        <small class="text-muted">Externo</small>
+                                                    }
+                                                </td>
+                                                <td><small>@release.FechaPublicacion.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small></td>
+                                                <td><small>@release.PublicadaPorNombre</small></td>
+                                                <td>
+                                                    @if (release.Publicada)
+                                                    {
+                                                        <span class="text-success"><small>En circulación</small></span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="text-muted"><small>Retirada</small></span>
+                                                    }
+                                                </td>
+                                                <td class="text-right">
+                                                    @if (release.Publicada)
+                                                    {
+                                                        <form asp-action="Unpublish" method="post" class="d-inline">
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden" name="versionId" value="@release.VersionId" />
+                                                            <button type="submit" class="btn btn-sm btn-ds-danger"
+                                                                    onclick="return confirm('¿Retirar esta versión de circulación? Los teléfonos que ya la tienen instalada no se ven afectados.');">
+                                                                Retirar
+                                                            </button>
+                                                        </form>
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    }
+                </details>
+            </div>
+        </div>
+    }
+</div>

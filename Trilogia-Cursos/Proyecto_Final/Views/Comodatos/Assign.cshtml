@@ -69,8 +69,8 @@
                         <textarea asp-for="Observaciones" class="form-control" rows="2"></textarea>
                     </div>
 
-                    <button type="submit" class="btn btn-primary" disabled="@(!Model.ActivosDisponibles.Any())"><i class="fa fa-save mr-2"></i>Registrar comodato</button>
-                    <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-ds-create" disabled="@(!Model.ActivosDisponibles.Any())"><i class="fa fa-save mr-2"></i>Registrar comodato</button>
+                    <a asp-action="Index" class="btn btn-ds-neutral">Cancelar</a>
                 </form>
             </div>
         </div>

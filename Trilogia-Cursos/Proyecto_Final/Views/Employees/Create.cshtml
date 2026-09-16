@@ -14,7 +14,7 @@
             <h1>Crear empleado</h1>
             <p>Registrá el usuario interno, puesto, salario y responsabilidades iniciales.</p>
         </div>
-        <a asp-controller="Employees" asp-action="Index" class="btn btn-outline-dark"><i class="fa fa-arrow-left mr-1"></i>Volver</a>
+        <a asp-controller="Employees" asp-action="Index" class="btn btn-ds-neutral"><i class="fa fa-arrow-left mr-1"></i>Volver</a>
     </div>
 
     <div class="employee-card p-4">
@@ -23,7 +23,7 @@
             <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
             @await Html.PartialAsync("_EmployeeForm", Model)
             <div class="text-right mt-4">
-                <button type="submit" class="btn btn-primary btn-lg"><i class="fa fa-save mr-1"></i>Guardar empleado</button>
+                <button type="submit" class="btn btn-ds-action btn-lg"><i class="fa fa-save mr-1"></i>Guardar empleado</button>
             </div>
         </form>
     </div>

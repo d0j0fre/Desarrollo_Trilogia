@@ -16,8 +16,8 @@
                     <p class="text-muted mb-0">Actualiza los datos comerciales y el estado del cliente.</p>
                 </div>
                 <div>
-                    <a asp-controller="Clients" asp-action="Details" asp-route-id="@Model.UsuarioId" class="btn btn-outline-dark mr-2">Detalle</a>
-                    <a asp-controller="Clients" asp-action="Index" class="btn btn-outline-secondary">← Volver</a>
+                    <a asp-controller="Clients" asp-action="Details" asp-route-id="@Model.UsuarioId" class="btn btn-ds-view mr-2">Detalle</a>
+                    <a asp-controller="Clients" asp-action="Index" class="btn btn-ds-neutral">← Volver</a>
                 </div>
             </div>
         </div>
@@ -76,8 +76,8 @@
                     </div>
 
                     <div class="d-flex" style="gap:10px;">
-                        <button type="submit" class="btn btn-primary">Guardar cambios</button>
-                        <a asp-controller="Clients" asp-action="Details" asp-route-id="@Model.UsuarioId" class="btn btn-outline-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-ds-action">Guardar cambios</button>
+                        <a asp-controller="Clients" asp-action="Details" asp-route-id="@Model.UsuarioId" class="btn btn-ds-neutral">Cancelar</a>
                     </div>
                 </form>
             </div>

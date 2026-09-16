@@ -37,6 +37,7 @@
     <link rel="stylesheet" href="~/css/brand-overrides.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/sprint4-admin.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/chat.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/design-system-buttons.css" asp-append-version="true" />
 
     @RenderSection("Styles", required: false)
 </head>
@@ -94,7 +95,7 @@
 
                         <form asp-controller="Account" asp-action="Logout" method="post" class="m-0">
                             @Html.AntiForgeryToken()
-                            <button type="submit" class="btn btn-primary logout-btn" style="color: #fff !important;">
+                            <button type="submit" class="btn btn-ds-danger logout-btn">
                                 <i class="fa fa-sign-out-alt mr-1"></i>Cerrar sesión
                             </button>
                         </form>
@@ -243,6 +244,7 @@
                                                     <a asp-controller="Fleet" asp-action="Maintenance" class="acc-item"><i class="fa fa-wrench"></i><span>Mantenimiento</span></a>
                                                     <a asp-controller="Fleet" asp-action="Alerts" class="acc-item"><i class="fa fa-bell"></i><span>Alertas de flota</span></a>
                                                     <a asp-controller="Comodatos" asp-action="Index" class="acc-item"><i class="fa fa-handshake"></i><span>Comodatos</span></a>
+                                                    <a asp-controller="MobileApp" asp-action="Index" class="acc-item"><i class="fa fa-mobile-alt"></i><span>Aplicación móvil</span></a>
                                                 </div>
                                             </details>
 
@@ -512,6 +514,16 @@
                                 </a>
                             }
 
+                            @* La descarga de la aplicación móvil la ve todo el personal: cualquiera
+                               puede necesitar instalarla, y un chofer nuevo la busca desde acá. Los
+                               clientes no, que no la usan. *@
+                            @if (isLoggedIn && !isClient)
+                            {
+                                <a asp-controller="MobileApp" asp-action="Index" class="nav-item nav-link nav-highlight">
+                                    <i class="fa fa-mobile-alt mr-1"></i>Aplicación móvil
+                                </a>
+                            }
+
                             @if (!isLoggedIn)
                             {
                                 <a asp-controller="Account" asp-action="Login" class="nav-item nav-link text-primary font-weight-bold"><i class="fa fa-user mr-1"></i>Iniciar sesión</a>
@@ -554,7 +566,7 @@
                 <p class="s3-footer__text mb-3">
                     Sistema web para consulta de productos, gestion de pedidos, venta movil, inventario, facturacion y administracion general del supermercado y distribuidora.
                 </p>
-                <a asp-controller="Home" asp-action="Contact" class="btn btn-primary btn-sm" style="color: #fff !important;">
+                <a asp-controller="Home" asp-action="Contact" class="btn btn-ds-create btn-sm">
                     <i class="fa fa-envelope mr-1"></i>Ir a contacto
                 </a>
             </div>
@@ -614,9 +626,9 @@
         </div>
     </footer>
 
-    <a href="#" class="btn back-to-top"
-   style="background-color: #FFD700 !important; color: white !important;">
-    <i class="fa fa-angle-double-up" style="color: white !important;"></i>
+    <a href="#" class="btn back-to-top" aria-label="Volver al inicio de la página"
+   style="background-color: #D4AF37 !important; color: #1F1F1F !important;">
+    <i class="fa fa-angle-double-up" aria-hidden="true" style="color: #1F1F1F !important;"></i>
 </a>
 
 @* Chat *@

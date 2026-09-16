@@ -6,7 +6,7 @@
 }
 
 <div class="container-fluid pt-4 backoffice-page">
-    <div class="row px-xl-5"><div class="col-12 d-flex justify-content-between"><div><h2>Reporte de ventas</h2><p>Reporte comercial independiente del dashboard (CU-132).</p></div>@if(printMode){<button class="btn btn-outline-primary d-print-none" onclick="window.print()">Imprimir</button>}</div></div>
+    <div class="row px-xl-5"><div class="col-12 d-flex justify-content-between"><div><h2>Reporte de ventas</h2><p>Reporte comercial independiente del dashboard (CU-132).</p></div>@if(printMode){<button class="btn btn-ds-view d-print-none" onclick="window.print()">Imprimir</button>}</div></div>
     @if (!printMode)
     {
         <div class="row px-xl-5"><div class="col-12"><form method="get" class="admin-filter-bar form-row align-items-end">
@@ -14,7 +14,7 @@
             <div class="form-group col-md-2"><label asp-for="Filtro.Hasta"></label><input name="Hasta" type="date" value="@Model.Filtro.Hasta.ToString("yyyy-MM-dd")" class="form-control" /></div>
             <div class="form-group col-md-2"><label>Agrupación</label><select name="Agrupacion" class="form-control"><option value="diario" selected="@(Model.Filtro.Agrupacion==SalesReportGrouping.Daily)">Diaria</option><option value="mensual" selected="@(Model.Filtro.Agrupacion==SalesReportGrouping.Monthly)">Mensual</option><option value="categoria" selected="@(Model.Filtro.Agrupacion==SalesReportGrouping.Category)">Categoría</option></select></div>
             <div class="form-group col-md-3"><label>Categoría de factura</label><select name="Categoria" class="form-control"><option value="">Todas</option>@foreach(var category in Model.Categorias){<option value="@category" selected="@(category==Model.Filtro.Categoria)">@category</option>}</select></div>
-            <div class="form-group col-md-3"><button class="btn btn-primary">Consultar</button> <a asp-action="Print" asp-route-Desde="@Model.Filtro.Desde.ToString("yyyy-MM-dd")" asp-route-Hasta="@Model.Filtro.Hasta.ToString("yyyy-MM-dd")" asp-route-Agrupacion="@Model.Filtro.Agrupacion" asp-route-Categoria="@Model.Filtro.Categoria" target="_blank" class="btn btn-outline-secondary">Imprimir</a> <a asp-action="ExportCsv" asp-route-Desde="@Model.Filtro.Desde.ToString("yyyy-MM-dd")" asp-route-Hasta="@Model.Filtro.Hasta.ToString("yyyy-MM-dd")" asp-route-Agrupacion="@Model.Filtro.Agrupacion" asp-route-Categoria="@Model.Filtro.Categoria" class="btn btn-outline-success">CSV</a></div>
+            <div class="form-group col-md-3"><button class="btn btn-ds-search">Consultar</button> <a asp-action="Print" asp-route-Desde="@Model.Filtro.Desde.ToString("yyyy-MM-dd")" asp-route-Hasta="@Model.Filtro.Hasta.ToString("yyyy-MM-dd")" asp-route-Agrupacion="@Model.Filtro.Agrupacion" asp-route-Categoria="@Model.Filtro.Categoria" target="_blank" class="btn btn-ds-view">Imprimir</a> <a asp-action="ExportCsv" asp-route-Desde="@Model.Filtro.Desde.ToString("yyyy-MM-dd")" asp-route-Hasta="@Model.Filtro.Hasta.ToString("yyyy-MM-dd")" asp-route-Agrupacion="@Model.Filtro.Agrupacion" asp-route-Categoria="@Model.Filtro.Categoria" class="btn btn-ds-view">CSV</a></div>
             <div asp-validation-summary="All" class="text-danger col-12"></div>
         </form></div></div>
     }

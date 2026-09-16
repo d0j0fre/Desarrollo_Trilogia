@@ -272,16 +272,27 @@ namespace Proyecto_Final.Services
             await command.ExecuteNonQueryAsync();
         }
 
-        public async Task<bool> ToggleProductStatusAsync(int productoId)
+        /// <summary>
+        /// Invierte el estado del producto y devuelve el estado resultante.
+        /// Devuelve null cuando el procedimiento desplegado no informa el nuevo
+        /// estado (definiciones previas a la migracion 0023): en ese caso el
+        /// llamador no debe afirmar una direccion, porque no la conoce.
+        /// </summary>
+        public async Task<bool?> ToggleProductStatusAsync(int productoId)
         {
             await using var connection = new SqlConnection(_connectionString);
             await using var command = new SqlCommand("dbo.sp_Admin_ToggleProductStatus", connection);
             command.CommandType = CommandType.StoredProcedure;
-            command.Parameters.AddWithValue("@ProductoId", productoId);
+            command.Parameters.Add("@ProductoId", SqlDbType.Int).Value = productoId;
             await connection.OpenAsync();
 
             var result = await command.ExecuteScalarAsync();
-            return result != null && result != DBNull.Value && Convert.ToBoolean(result);
+            if (result == null || result == DBNull.Value)
+            {
+                return null;
+            }
+
+            return Convert.ToBoolean(result);
         }
 
         public async Task<string> DeleteProductPermanentlyAsync(int productoId)

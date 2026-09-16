@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Politica de red de la aplicacion.
+
+  Sin excepciones: todo el trafico va cifrado y se valida el certificado del
+  servidor. No hay ninguna entrada de dominio permitiendo texto plano, ni
+  siquiera para desarrollo: una excepcion escrita aqui viaja dentro del APK
+  publicado, y ese APK se instala fuera de una tienda, en telefonos que se
+  conectan a wifi de terceros todo el dia.
+
+  Para probar contra un servidor local, usa HTTPS con el certificado de
+  desarrollo de dotnet instalado en el telefono, o un tunel HTTPS.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

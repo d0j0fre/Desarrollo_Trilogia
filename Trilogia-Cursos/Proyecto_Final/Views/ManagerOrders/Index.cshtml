@@ -38,12 +38,12 @@
                 <input type="text" name="buscar" value="@buscar"
                        class="form-control"
                        placeholder="Buscar por cliente, vendedor o # pedido..." />
-                <button type="submit" class="btn btn-outline-secondary">
+                <button type="submit" class="btn btn-ds-search" aria-label="Buscar">
                     <i class="fa fa-search"></i>
                 </button>
                 @if (!string.IsNullOrWhiteSpace(buscar))
                 {
-                    <a asp-action="Index" class="btn btn-outline-danger"><i class="fa fa-times"></i></a>
+                    <a asp-action="Index" class="btn btn-ds-neutral" aria-label="Limpiar busqueda"><i class="fa fa-times"></i></a>
                 }
             </form>
         </div>
@@ -98,7 +98,7 @@
                                         <td class="text-right font-weight-bold">₡@p.Total.ToString("N2")</td>
                                         <td>
                                             <a asp-action="Review" asp-route-id="@p.PedidoId"
-                                               class="btn btn-warning btn-sm">
+                                               class="btn btn-ds-action btn-sm">
                                                 <i class="fa fa-gavel mr-1"></i> Revisar
                                             </a>
                                         </td>

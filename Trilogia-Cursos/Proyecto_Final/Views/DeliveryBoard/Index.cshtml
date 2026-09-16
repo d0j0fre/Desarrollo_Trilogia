@@ -14,7 +14,7 @@
     <div class="row px-xl-5 pb-5"><div class="col-12 admin-table-wrapper"><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>Ruta</th><th>Zona</th><th>Chofer / vehículo</th><th>Estado</th><th>Progreso</th><th></th></tr></thead><tbody id="delivery-board-body">
     @foreach (var route in Model.Rutas)
     {
-        <tr><td><strong>@route.Codigo</strong></td><td>@route.Zona</td><td>@route.Chofer<small class="d-block text-muted">@route.VehiculoPlaca</small></td><td>@route.Estado</td><td><span class="text-success">@route.Entregados entregadas</span> · <span class="text-danger">@route.Fallidos fallidas</span> · @route.Pendientes pendientes</td><td><a asp-controller="RoutesAdmin" asp-action="Detail" asp-route-id="@route.RutaId" class="btn btn-sm btn-outline-primary">Ver ruta</a></td></tr>
+        <tr><td><strong>@route.Codigo</strong></td><td>@route.Zona</td><td>@route.Chofer<small class="d-block text-muted">@route.VehiculoPlaca</small></td><td>@route.Estado</td><td><span class="text-success">@route.Entregados entregadas</span> · <span class="text-danger">@route.Fallidos fallidas</span> · @route.Pendientes pendientes</td><td><a asp-controller="RoutesAdmin" asp-action="Detail" asp-route-id="@route.RutaId" class="btn btn-sm btn-ds-view">Ver ruta</a></td></tr>
     }
     </tbody></table></div></div></div>
 </div>
@@ -35,7 +35,7 @@
                 setText('active-routes', data.rutasActivas); setText('pending-deliveries', data.entregasPendientes);
                 setText('completed-deliveries', data.entregasCompletadas); setText('failed-deliveries', data.entregasFallidas);
                 setText('board-updated', `Actualizado: ${new Date(data.generadoUtc).toLocaleTimeString('es-CR')}`);
-                body.innerHTML = data.rutas.map(route => `<tr><td><strong>${escapeHtml(route.codigo)}</strong></td><td>${escapeHtml(route.zona)}</td><td>${escapeHtml(route.chofer)}<small class="d-block text-muted">${escapeHtml(route.vehiculoPlaca)}</small></td><td>${escapeHtml(route.estado)}</td><td><span class="text-success">${route.entregados} entregadas</span> · <span class="text-danger">${route.fallidos} fallidas</span> · ${route.pendientes} pendientes</td><td><a class="btn btn-sm btn-outline-primary" href="/RoutesAdmin/Detail/${route.rutaId}">Ver ruta</a></td></tr>`).join('');
+                body.innerHTML = data.rutas.map(route => `<tr><td><strong>${escapeHtml(route.codigo)}</strong></td><td>${escapeHtml(route.zona)}</td><td>${escapeHtml(route.chofer)}<small class="d-block text-muted">${escapeHtml(route.vehiculoPlaca)}</small></td><td>${escapeHtml(route.estado)}</td><td><span class="text-success">${route.entregados} entregadas</span> · <span class="text-danger">${route.fallidos} fallidas</span> · ${route.pendientes} pendientes</td><td><a class="btn btn-sm btn-ds-view" href="/RoutesAdmin/Detail/${route.rutaId}">Ver ruta</a></td></tr>`).join('');
             } catch { /* El siguiente ciclo reintenta; no se altera el estado mostrado. */ }
         }
         window.setInterval(refresh, 15000);

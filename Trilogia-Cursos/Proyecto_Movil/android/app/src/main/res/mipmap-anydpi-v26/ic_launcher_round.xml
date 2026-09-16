@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icono adaptativo: la insignia de Distribuidora JJ sobre fondo vino. El
+     lanzador recorta la forma (circulo, gota, cuadrado) sin tocar el logo. -->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/brand_wine" />
+    <foreground android:drawable="@mipmap/ic_launcher_foreground" />
+</adaptive-icon>

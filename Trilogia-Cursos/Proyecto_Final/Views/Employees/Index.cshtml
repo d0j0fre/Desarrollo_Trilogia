@@ -14,7 +14,7 @@
             <h1>Empleados</h1>
             <p>Administrá datos laborales, puestos, salarios, tareas y solicitudes del personal.</p>
         </div>
-        <a asp-controller="Employees" asp-action="Create" class="btn btn-primary btn-lg">
+        <a asp-controller="Employees" asp-action="Create" class="btn btn-ds-create btn-lg">
             <i class="fa fa-user-plus mr-1"></i>Nuevo empleado
         </a>
     </div>
@@ -26,8 +26,8 @@
             <option value="Activo" selected="@(Model.Estado == "Activo")">Activos</option>
             <option value="Inactivo" selected="@(Model.Estado == "Inactivo")">Inactivos</option>
         </select>
-        <button type="submit" class="btn btn-dark"><i class="fa fa-search mr-1"></i>Buscar</button>
-        <a asp-controller="Employees" asp-action="LeaveRequests" class="btn btn-outline-primary"><i class="fa fa-calendar-check mr-1"></i>Solicitudes</a>
+        <button type="submit" class="btn btn-ds-search"><i class="fa fa-search mr-1"></i>Buscar</button>
+        <a asp-controller="Employees" asp-action="LeaveRequests" class="btn btn-ds-view"><i class="fa fa-calendar-check mr-1"></i>Solicitudes</a>
     </form>
 
     <div class="employee-card">
@@ -93,10 +93,10 @@
                                 </td>
                                 <td class="text-right">
                                     <div class="employee-actions">
-                                        <a asp-controller="Employees" asp-action="Details" asp-route-id="@item.EmpleadoId" class="btn btn-sm btn-outline-dark">
+                                        <a asp-controller="Employees" asp-action="Details" asp-route-id="@item.EmpleadoId" class="btn btn-sm btn-ds-view">
                                             <i class="fa fa-eye mr-1"></i>Ver
                                         </a>
-                                        <a asp-controller="Employees" asp-action="Edit" asp-route-id="@item.EmpleadoId" class="btn btn-sm btn-primary">
+                                        <a asp-controller="Employees" asp-action="Edit" asp-route-id="@item.EmpleadoId" class="btn btn-sm btn-ds-edit">
                                             <i class="fa fa-edit mr-1"></i>Editar
                                         </a>
                                         <form asp-controller="Employees" asp-action="ToggleStatus" method="post" class="d-inline"
@@ -109,7 +109,7 @@
                                             <input type="hidden" name="empleadoId" value="@item.EmpleadoId" />
                                             <input type="hidden" name="buscar" value="@Model.Buscar" />
                                             <input type="hidden" name="estado" value="@Model.Estado" />
-                                            <button type="submit" class="btn btn-sm @(item.Activo ? "btn-outline-danger" : "btn-outline-success")">
+                                            <button type="submit" class="btn btn-sm @(item.Activo ? "btn-ds-danger" : "btn-ds-action")">
                                                 <i class="fa @(item.Activo ? "fa-ban" : "fa-check") mr-1"></i>@(item.Activo ? "Inactivar" : "Activar")
                                             </button>
                                         </form>

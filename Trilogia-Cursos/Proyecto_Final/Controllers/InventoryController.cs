@@ -171,18 +171,40 @@ namespace Proyecto_Final.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleStatus(int productoId, string? filtro)
         {
-            var activo = await _adminDbService.ToggleProductStatusAsync(productoId);
+            try
+            {
+                // null = el procedimiento desplegado no informa el estado resultante.
+                // No se afirma una direccion que no se conoce: ni en la auditoria
+                // ni en el mensaje.
+                var activo = await _adminDbService.ToggleProductStatusAsync(productoId);
 
-            await RegistrarAuditoriaAsync(
-                activo ? "Activar" : "Inactivar",
-                "Inventario",
-                activo
-                    ? $"Se reactivó el producto #{productoId}."
-                    : $"Se inactivó el producto #{productoId} para ocultarlo del catálogo.");
+                await RegistrarAuditoriaAsync(
+                    activo switch { true => "Activar", false => "Inactivar", null => "Cambiar estado" },
+                    "Inventario",
+                    activo switch
+                    {
+                        true => $"Se reactivó el producto #{productoId}.",
+                        false => $"Se inactivó el producto #{productoId} para ocultarlo del catálogo.",
+                        null => $"Se invirtió el estado del producto #{productoId}."
+                    });
 
-            TempData["SuccessMessage"] = activo
-                ? "Producto reactivado correctamente."
-                : "Producto inactivado correctamente.";
+                TempData["SuccessMessage"] = activo switch
+                {
+                    true => "Producto reactivado correctamente.",
+                    false => "Producto inactivado correctamente.",
+                    null => "Estado del producto actualizado correctamente."
+                };
+            }
+            catch (SqlException exception) when (exception.Number >= 50000)
+            {
+                _logger.LogWarning(exception, "La base de datos rechazó el cambio de estado del producto.");
+                TempData["ErrorMessage"] = "No fue posible cambiar el estado del producto.";
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(exception, "Error al cambiar el estado del producto.");
+                TempData["ErrorMessage"] = "No fue posible cambiar el estado del producto.";
+            }
 
             return RedirectToAction(nameof(Index), new { filtro });
         }
