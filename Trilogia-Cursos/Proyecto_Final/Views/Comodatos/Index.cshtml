@@ -20,8 +20,8 @@
                     <p class="mb-0">Trazabilidad de neveras y exhibidores prestados a clientes: quién los tiene y desde cuándo.</p>
                 </div>
                 <div class="mt-2 mt-md-0">
-                    <a asp-action="Profitability" class="btn btn-light border mr-2"><i class="fa fa-chart-pie mr-2 text-primary"></i>Rentabilidad</a>
-                    <a asp-action="Assign" class="btn btn-primary"><i class="fa fa-plus mr-2"></i>Asignar comodato</a>
+                    <a asp-action="Profitability" class="btn btn-ds-view border mr-2"><i class="fa fa-chart-pie mr-2 text-primary"></i>Rentabilidad</a>
+                    <a asp-action="Assign" class="btn btn-ds-create"><i class="fa fa-plus mr-2"></i>Asignar comodato</a>
                 </div>
             </div>
         </div>
@@ -38,8 +38,8 @@
                         <option value="Devuelto" selected="@(estado == "Devuelto")">Devuelto</option>
                         <option value="Retirado" selected="@(estado == "Retirado")">Retirado</option>
                     </select>
-                    <button type="submit" class="btn btn-primary mr-2 mb-2"><i class="fa fa-search mr-2"></i>Buscar</button>
-                    <a asp-action="Index" class="btn btn-outline-secondary mb-2"><i class="fa fa-eraser mr-2"></i>Limpiar</a>
+                    <button type="submit" class="btn btn-ds-search mr-2 mb-2"><i class="fa fa-search mr-2"></i>Buscar</button>
+                    <a asp-action="Index" class="btn btn-ds-neutral mb-2"><i class="fa fa-eraser mr-2"></i>Limpiar</a>
                 </form>
             </div>
         </div>
@@ -81,7 +81,7 @@
                                         <td class="text-center">
                                             @if (c.Estado == "Activo")
                                             {
-                                                <button type="button" class="btn btn-sm btn-outline-primary"
+                                                <button type="button" class="btn btn-sm btn-ds-action"
                                                         data-toggle="collapse" data-target="#ret-@c.ComodatoId">
                                                     <i class="fa fa-undo mr-1"></i>Devolver
                                                 </button>
@@ -110,7 +110,7 @@
                                                         <option value="Mantenimiento">Enviar a mantenimiento</option>
                                                     </select>
                                                     <input name="CondicionDevolucion" class="form-control mr-2 mb-2" placeholder="Condición del equipo (opcional)" style="min-width:260px" />
-                                                    <button type="submit" class="btn btn-primary mb-2"><i class="fa fa-check mr-1"></i>Registrar devolución</button>
+                                                    <button type="submit" class="btn btn-ds-create mb-2"><i class="fa fa-check mr-1"></i>Registrar devolución</button>
                                                 </form>
                                             </td>
                                         </tr>

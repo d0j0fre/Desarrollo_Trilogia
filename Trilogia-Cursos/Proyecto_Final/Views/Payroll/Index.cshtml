@@ -113,7 +113,7 @@
                         <div class="payroll-field"><label for="rule-to">Vigente hasta</label><input id="rule-to" name="VigenteHasta" value="@ruleEnd" type="date" class="form-control" /></div>
                         <div class="payroll-field payroll-field--full"><label for="rule-source">Fuente o aprobación</label><textarea id="rule-source" name="Fuente" class="form-control" maxlength="500" required placeholder="Normativa, enlace o aprobación responsable">@rule.Fuente</textarea></div>
                     </div>
-                    <button class="btn btn-primary" type="submit"><i class="fa fa-save"></i> Guardar regla</button>
+                    <button class="btn btn-ds-action" type="submit"><i class="fa fa-save"></i> Guardar regla</button>
                     <p class="payroll-form-status" aria-live="polite"></p>
                 </form>
             </div>
@@ -134,7 +134,7 @@
                         <div class="payroll-field payroll-field--full"><label for="salary-factor">Factor salarial</label><input id="salary-factor" name="FactorSalario" value="@period.FactorSalario.ToString(System.Globalization.CultureInfo.InvariantCulture)" class="form-control" inputmode="decimal" min="0.000001" max="1" step="0.000001" required placeholder="Ej: 0,500000" /><small class="payroll-help">Debe ser mayor que 0 y menor o igual a 1.</small></div>
                         <div class="payroll-field payroll-field--full"><label for="factor-source">Fuente o aprobación del factor</label><textarea id="factor-source" name="FuenteConfiguracion" class="form-control" maxlength="500" required placeholder="Documento, acuerdo o aprobación responsable">@period.FuenteConfiguracion</textarea></div>
                     </div>
-                    <button class="btn btn-primary" type="submit"><i class="fa fa-plus-circle"></i> Crear período</button>
+                    <button class="btn btn-ds-create" type="submit"><i class="fa fa-plus-circle"></i> Crear período</button>
                     <p class="payroll-form-status" aria-live="polite"></p>
                 </form>
             </div>
@@ -154,7 +154,7 @@
                         <div class="payroll-field payroll-field--full"><label for="employee-id">ID del empleado</label><input id="employee-id" name="EmpleadoId" value="@(calculation.EmpleadoId > 0 ? calculation.EmpleadoId : "")" type="number" class="form-control" min="1" step="1" required placeholder="Ej: 45" /></div>
                         <div class="payroll-field payroll-field--full"><label for="commission">Comisiones confirmadas</label><input id="commission" name="Comisiones" value="@calculation.Comisiones.ToString(System.Globalization.CultureInfo.InvariantCulture)" class="form-control" inputmode="decimal" min="0" max="99999999" step="0.01" required placeholder="0,00" /><small class="payroll-help">Ingrese 0 si no hay comisiones.</small></div>
                     </div>
-                    <button class="btn btn-dark" type="submit"><i class="fa fa-calculator"></i> Calcular planilla</button>
+                    <button class="btn btn-ds-action" type="submit"><i class="fa fa-calculator"></i> Calcular planilla</button>
                     <p class="payroll-form-status" aria-live="polite"></p>
                 </form>
             </div>
@@ -188,15 +188,15 @@
                                 <div class="payroll-row-actions">
                                 @if (status == "Borrador")
                                 {
-                                    <form asp-action="Approve" method="post" data-prevent-double-submit><input type="hidden" name="CalculoId" value="@item.CalculoId" /><input type="hidden" name="RowVersionBase64" value="@item.RowVersionBase64" />@Html.AntiForgeryToken()<button type="submit" class="btn btn-sm btn-success"><i class="fa fa-check"></i> Aprobar</button></form>
+                                    <form asp-action="Approve" method="post" data-prevent-double-submit><input type="hidden" name="CalculoId" value="@item.CalculoId" /><input type="hidden" name="RowVersionBase64" value="@item.RowVersionBase64" />@Html.AntiForgeryToken()<button type="submit" class="btn btn-sm btn-ds-action"><i class="fa fa-check"></i> Aprobar</button></form>
                                 }
                                 @if (status == "Aprobada")
                                 {
-                                    <form asp-action="Pay" method="post" data-prevent-double-submit><input type="hidden" name="CalculoId" value="@item.CalculoId" /><input type="hidden" name="RowVersionBase64" value="@item.RowVersionBase64" />@Html.AntiForgeryToken()<button type="submit" class="btn btn-sm btn-primary"><i class="fa fa-money-bill-wave"></i> Pagar</button></form>
+                                    <form asp-action="Pay" method="post" data-prevent-double-submit><input type="hidden" name="CalculoId" value="@item.CalculoId" /><input type="hidden" name="RowVersionBase64" value="@item.RowVersionBase64" />@Html.AntiForgeryToken()<button type="submit" class="btn btn-sm btn-ds-action"><i class="fa fa-money-bill-wave"></i> Pagar</button></form>
                                 }
                                 @if (status is "Aprobada" or "Pagada")
                                 {
-                                    <form asp-action="Revert" method="post" class="payroll-revert" data-prevent-double-submit><input type="hidden" name="CalculoId" value="@item.CalculoId" /><input type="hidden" name="RowVersionBase64" value="@item.RowVersionBase64" />@Html.AntiForgeryToken()<label class="sr-only" for="reason-@item.CalculoId">Motivo de reversión</label><input id="reason-@item.CalculoId" name="Motivo" class="form-control" maxlength="500" required placeholder="Motivo de reversión" /><button type="submit" class="btn btn-sm btn-outline-danger"><i class="fa fa-undo"></i> Revertir</button></form>
+                                    <form asp-action="Revert" method="post" class="payroll-revert" data-prevent-double-submit><input type="hidden" name="CalculoId" value="@item.CalculoId" /><input type="hidden" name="RowVersionBase64" value="@item.RowVersionBase64" />@Html.AntiForgeryToken()<label class="sr-only" for="reason-@item.CalculoId">Motivo de reversión</label><input id="reason-@item.CalculoId" name="Motivo" class="form-control" maxlength="500" required placeholder="Motivo de reversión" /><button type="submit" class="btn btn-sm btn-ds-danger--soft"><i class="fa fa-undo"></i> Revertir</button></form>
                                 }
                                 @if (status is not ("Borrador" or "Aprobada" or "Pagada")) { <span class="text-muted small">Sin acciones disponibles</span> }
                                 </div>

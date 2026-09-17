@@ -74,7 +74,7 @@
                             <input asp-for="Nueva.KilometrajeProximo" class="form-control" type="number" min="0" placeholder="Aviso por desgaste" />
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-primary btn-block"><i class="fa fa-wrench mr-2"></i>Registrar orden</button>
+                    <button type="submit" class="btn btn-ds-create btn-block"><i class="fa fa-wrench mr-2"></i>Registrar orden</button>
                 </form>
             </div>
         </div>
@@ -88,8 +88,8 @@
                         <option value="EnProceso" selected="@(Model.Estado == "EnProceso")">En proceso</option>
                         <option value="Completada" selected="@(Model.Estado == "Completada")">Completada</option>
                     </select>
-                    <button type="submit" class="btn btn-primary mr-2 mb-2"><i class="fa fa-filter mr-2"></i>Filtrar</button>
-                    <a asp-action="Maintenance" class="btn btn-outline-secondary mb-2"><i class="fa fa-eraser mr-2"></i>Limpiar</a>
+                    <button type="submit" class="btn btn-ds-search mr-2 mb-2"><i class="fa fa-filter mr-2"></i>Filtrar</button>
+                    <a asp-action="Maintenance" class="btn btn-ds-neutral mb-2"><i class="fa fa-eraser mr-2"></i>Limpiar</a>
                 </form>
             </div>
 
@@ -138,7 +138,7 @@
                                                       data-s3-confirm-cancel="Cancelar">
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="ordenId" value="@o.OrdenMantenimientoId" />
-                                                    <button type="submit" class="btn btn-sm btn-outline-success"><i class="fa fa-check"></i></button>
+                                                    <button type="submit" class="btn btn-sm btn-ds-action" aria-label="Marcar mantenimiento como atendido"><i class="fa fa-check"></i></button>
                                                 </form>
                                             }
                                             else

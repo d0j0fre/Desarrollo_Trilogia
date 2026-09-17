@@ -8,7 +8,7 @@
             <h2>Editar presupuesto</h2>
             <p class="text-muted mb-0">Al cambiar el monto anual, revise nuevamente sus doce meses.</p>
         </div>
-        <a asp-action="Details" asp-route-id="@Model.BudgetId" class="btn btn-outline-secondary">Cancelar</a>
+        <a asp-action="Details" asp-route-id="@Model.BudgetId" class="btn btn-ds-neutral">Cancelar</a>
     </header>
     <div class="card">
         <div class="card-body">
@@ -33,7 +33,7 @@
                     <textarea asp-for="Notes" rows="4" class="form-control"></textarea>
                     <span asp-validation-for="Notes" class="text-danger"></span>
                 </div>
-                <button class="btn btn-primary" type="submit"><i class="fa fa-save mr-1"></i>Guardar cambios</button>
+                <button class="btn btn-ds-action" type="submit"><i class="fa fa-save mr-1"></i>Guardar cambios</button>
             </form>
         </div>
     </div>

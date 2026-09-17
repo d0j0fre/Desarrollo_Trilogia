@@ -2,7 +2,7 @@
 @{
     ViewData["Title"] = "Tablero gerencial";
     var maxSerie = Model.Serie.Any() ? Model.Serie.Max(s => s.Total) : 0m;
-    string Activo(string r) => Model.Rango == r ? "btn-primary" : "btn-outline-primary";
+    string Activo(string r) => Model.Rango == r ? "btn-ds-view" : "btn-ds-search";
 }
 
 @section Styles {
@@ -42,7 +42,7 @@
                     <label class="mr-2 font-weight-bold">Rango personalizado:</label>
                     <input type="date" name="desde" value="@Model.Desde.ToString("yyyy-MM-dd")" class="form-control form-control-sm mr-2" />
                     <input type="date" name="hasta" value="@Model.Hasta.ToString("yyyy-MM-dd")" class="form-control form-control-sm mr-2" />
-                    <button type="submit" class="btn btn-sm btn-primary">Aplicar</button>
+                    <button type="submit" class="btn btn-sm btn-ds-search">Aplicar</button>
                 </form>
             </div>
         </div>

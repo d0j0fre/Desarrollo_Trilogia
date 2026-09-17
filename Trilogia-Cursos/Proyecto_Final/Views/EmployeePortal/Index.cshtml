@@ -85,7 +85,7 @@
                                         <option selected="@(tarea.Estado == "En proceso")">En proceso</option>
                                         <option selected="@(tarea.Estado == "Completada")">Completada</option>
                                     </select>
-                                    <button type="submit" class="btn btn-sm btn-outline-dark">Actualizar</button>
+                                    <button type="submit" class="btn btn-sm btn-ds-edit">Actualizar</button>
                                 </form>
                             </div>
                         }
@@ -120,7 +120,7 @@
                         <label asp-for="NuevaSolicitud.Motivo"></label>
                         <textarea asp-for="NuevaSolicitud.Motivo" name="Motivo" class="form-control" rows="4"></textarea>
                     </div>
-                    <button type="submit" class="btn btn-primary btn-block"><i class="fa fa-paper-plane mr-1"></i>Enviar solicitud</button>
+                    <button type="submit" class="btn btn-ds-action btn-block"><i class="fa fa-paper-plane mr-1"></i>Enviar solicitud</button>
                 </form>
             </div>
         </div>

@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using Microsoft.AspNetCore.Mvc;
 using Proyecto_Final.Controllers;
 
@@ -7,20 +7,69 @@ namespace Proyecto_Final.Tests;
 public sealed class ControllerSurfaceAuditTests
 {
     [Fact]
-    public void AuditScope_ContainsAll58MvcAndApiControllers()
+    public void AuditScope_ContainsAll62MvcAndApiControllers()
     {
         var controllers = GetControllers();
         var apiControllers = typeof(Proyecto_FinalAPI.Controllers.AuthController).Assembly
             .GetTypes()
             .Count(type => type.IsClass && !type.IsAbstract && type.Namespace == typeof(Proyecto_FinalAPI.Controllers.AuthController).Namespace && type.Name.EndsWith("Controller", StringComparison.Ordinal));
 
-        Assert.Equal(56, controllers.Count);
-        Assert.Equal(2, apiControllers);
-        Assert.Equal(58, controllers.Count + apiControllers);
+        // 56 originales + MobileAppController (página de descarga con QR, Fase 7).
+        Assert.Equal(57, controllers.Count);
+        // 2 originales (Auth, Products) + 2 de la superficie móvil Fase 2 +
+        // MobileAppController (compuerta de versión, Fase 7) + 6 de la
+        // aplicación por rol (inventario, pedidos, ventas, gestión, personal y
+        // oficina). MobileControllerBase es abstracta y no cuenta.
+        Assert.Equal(11, apiControllers);
+        Assert.Equal(68, controllers.Count + apiControllers);
         Assert.Contains(typeof(BudgetsController), controllers);
         Assert.Contains(typeof(ChatController), controllers);
         Assert.Contains(typeof(PayrollController), controllers);
         Assert.Contains(typeof(PurchaseOrdersController), controllers);
+    }
+
+    /// <summary>
+    /// La superficie que consume la aplicación móvil vive en la API, nunca en el
+    /// MVC: el MVC exige antiforgery en todo POST y un cliente nativo no
+    /// participa de ese flujo.
+    ///
+    /// La excepción legítima es <c>MobileAppController</c> del MVC, que es una
+    /// página web para personas —el QR de descarga— y no un endpoint del
+    /// teléfono. Por eso la regla se expresa sobre la ruta y no sobre el nombre.
+    /// </summary>
+    [Fact]
+    public void TheMobileApiSurfaceLivesInTheApiProjectOnly()
+    {
+        var mvcControllersServingTheMobileApi = Directory
+            .GetFiles(SourcePath("Controllers"), "*.cs")
+            .Where(path => File.ReadAllText(path).Contains("api/mobile", StringComparison.OrdinalIgnoreCase))
+            .Select(Path.GetFileName)
+            .ToArray();
+
+        Assert.Empty(mvcControllersServingTheMobileApi);
+
+        var apiMobileControllers = typeof(Proyecto_FinalAPI.Controllers.AuthController).Assembly
+            .GetTypes()
+            .Where(type => type.IsClass && !type.IsAbstract && type.Name.StartsWith("Mobile", StringComparison.Ordinal))
+            .ToArray();
+
+        Assert.NotEmpty(apiMobileControllers);
+    }
+
+    /// <summary>
+    /// La página de descarga redirige al archivo en vez de servirlo, y exige
+    /// HTTPS antes de redirigir: un <c>Redirect</c> con una dirección tomada de
+    /// la base es exactamente donde no se quiere un descuido.
+    /// </summary>
+    [Fact]
+    public void TheMobileDownloadPageRedirectsOverHttpsAndAuditsTheDownload()
+    {
+        var source = File.ReadAllText(SourcePath("Controllers", "MobileAppController.cs"));
+
+        Assert.Contains("Uri.UriSchemeHttps", source, StringComparison.Ordinal);
+        Assert.Contains("RegisterAuditAsync", source, StringComparison.Ordinal);
+        Assert.Contains("[SessionAuthorize]", source, StringComparison.Ordinal);
+        Assert.Contains("MOVIL_APP_PUBLICAR", source, StringComparison.Ordinal);
     }
 
     [Fact]

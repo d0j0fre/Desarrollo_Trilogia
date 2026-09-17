@@ -163,7 +163,12 @@ public sealed class AuthenticationContractTests
         Assert.False(limiter.IsBlocked("admin@example.com", "127.0.0.1", out _));
     }
 
-    private static AuthController CreateController(IAccountApiDbService database, string? publicBaseUrl = "https://qa.example.test")
+    private static AuthController CreateController(
+        IAccountApiDbService database,
+        string? publicBaseUrl = "https://qa.example.test",
+        IJwtTokenService? jwtTokenService = null,
+        IRefreshTokenService? refreshTokenService = null,
+        IMobileAuthDbService? mobileAuthDbService = null)
     {
         var values = new Dictionary<string, string?>();
         if (publicBaseUrl is not null)
@@ -176,7 +181,10 @@ public sealed class AuthenticationContractTests
             new LoginAttemptLimiter(cache),
             new PasswordRecoveryAttemptLimiter(cache),
             configuration,
-            Microsoft.Extensions.Logging.Abstractions.NullLogger<AuthController>.Instance)
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<AuthController>.Instance,
+            jwtTokenService ?? Mock.Of<IJwtTokenService>(),
+            refreshTokenService ?? Mock.Of<IRefreshTokenService>(),
+            mobileAuthDbService ?? Mock.Of<IMobileAuthDbService>())
         {
             ControllerContext = new ControllerContext
             {

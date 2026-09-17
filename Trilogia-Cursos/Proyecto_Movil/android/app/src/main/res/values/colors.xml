@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Vino de la marca Distribuidora JJ. Es el mismo tono del encabezado de
+         la aplicacion, para que el arranque no parpadee de un color a otro. -->
+    <color name="brand_wine">#6B0E14</color>
+</resources>

@@ -15,7 +15,7 @@
                     <h2 class="mb-2">Nueva ruta de entrega</h2>
                     <p class="mb-0">Agrupa pedidos por zona y asigna un chofer y un vehículo disponibles.</p>
                 </div>
-                <a asp-action="Index" class="btn btn-outline-secondary mt-2 mt-md-0"><i class="fa fa-arrow-left mr-2"></i>Volver</a>
+                <a asp-action="Index" class="btn btn-ds-neutral mt-2 mt-md-0"><i class="fa fa-arrow-left mr-2"></i>Volver</a>
             </div>
         </div>
     </div>
@@ -78,7 +78,7 @@
                         <span asp-validation-for="Observaciones" class="text-danger"></span>
                     </div>
 
-                    <button type="submit" class="btn btn-primary btn-block" disabled="@(!Model.HayRecursos)">
+                    <button type="submit" class="btn btn-ds-create btn-block" disabled="@(!Model.HayRecursos)">
                         <i class="fa fa-route mr-2"></i>Crear ruta
                     </button>
                 </div>

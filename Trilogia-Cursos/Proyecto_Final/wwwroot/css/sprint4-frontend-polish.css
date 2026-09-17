@@ -1856,23 +1856,24 @@
     margin-top: 0.4rem;
 }
 
+/* Accion primaria del formulario de autenticacion: token verde sobrio */
 .s4-auth-primary {
-    background: #f2be22 !important;
-    border-color: #f2be22 !important;
+    background: var(--ds-action, #1F6F4A) !important;
+    border-color: var(--ds-action, #1F6F4A) !important;
     border-radius: 8px;
-    color: #101010 !important;
+    color: #FFFFFF !important;
     font-weight: 900;
     letter-spacing: 0.02em;
     min-height: 50px;
-    box-shadow: 0 12px 22px rgba(154, 115, 0, 0.22);
+    box-shadow: 0 12px 22px rgba(31, 111, 74, 0.22);
 }
 
 .s4-auth-primary:hover,
 .s4-auth-primary:focus {
-    background: #d9a914 !important;
-    border-color: #d9a914 !important;
-    color: #101010 !important;
-    box-shadow: 0 10px 18px rgba(154, 115, 0, 0.18);
+    background: var(--ds-action-hover, #1A5C3D) !important;
+    border-color: var(--ds-action-hover, #1A5C3D) !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 10px 18px rgba(31, 111, 74, 0.20);
     transform: translateY(-1px);
 }
 
@@ -2080,21 +2081,21 @@
 }
 
 .s4-auth-card--clean .s4-auth-primary {
-    background: #171717 !important;
-    border-color: #171717 !important;
+    background: var(--ds-action, #1F6F4A) !important;
+    border-color: var(--ds-action, #1F6F4A) !important;
     border-radius: 8px;
-    box-shadow: 0 14px 26px rgba(23, 23, 23, 0.18);
-    color: #ffffff !important;
+    box-shadow: 0 14px 26px rgba(31, 111, 74, 0.20);
+    color: #FFFFFF !important;
     font-size: 0.94rem;
     min-height: 52px;
 }
 
 .s4-auth-card--clean .s4-auth-primary:hover,
 .s4-auth-card--clean .s4-auth-primary:focus {
-    background: #f2be22 !important;
-    border-color: #f2be22 !important;
-    box-shadow: 0 12px 24px rgba(154, 115, 0, 0.22);
-    color: #121212 !important;
+    background: var(--ds-action-hover, #1A5C3D) !important;
+    border-color: var(--ds-action-hover, #1A5C3D) !important;
+    box-shadow: 0 12px 24px rgba(31, 111, 74, 0.22);
+    color: #FFFFFF !important;
 }
 
 .s4-auth-card--clean .s4-auth-switch {

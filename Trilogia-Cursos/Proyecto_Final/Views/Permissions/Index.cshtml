@@ -16,7 +16,7 @@
                     <h2 class="mb-1">Permisos por rol</h2>
                     <p class="text-muted mb-0">Seleccione un rol para asignar o revisar sus permisos del sistema.</p>
                 </div>
-                <a asp-controller="Roles" asp-action="Index" class="btn btn-outline-secondary">
+                <a asp-controller="Roles" asp-action="Index" class="btn btn-ds-view">
                     <i class="fa fa-user-shield mr-1"></i> Ir a Roles
                 </a>
             </div>
@@ -28,10 +28,10 @@
             <form asp-controller="Permissions" asp-action="Index" method="get" class="d-flex" style="gap:8px;">
                 <input type="text" name="buscar" value="@buscar"
                        class="form-control" placeholder="Buscar rol por nombre o descripción..." />
-                <button type="submit" class="btn btn-dark">Buscar</button>
+                <button type="submit" class="btn btn-ds-search">Buscar</button>
                 @if (!string.IsNullOrWhiteSpace(buscar))
                 {
-                    <a asp-controller="Permissions" asp-action="Index" class="btn btn-outline-secondary">Limpiar</a>
+                    <a asp-controller="Permissions" asp-action="Index" class="btn btn-ds-neutral">Limpiar</a>
                 }
             </form>
         </div>
@@ -90,7 +90,7 @@
                                             <a asp-controller="Permissions"
                                                asp-action="Edit"
                                                asp-route-id="@item.PerfilId"
-                                               class="btn btn-sm btn-primary">
+                                               class="btn btn-sm btn-ds-view">
                                                 <i class="fa fa-key mr-1"></i> Administrar
                                             </a>
                                         </td>

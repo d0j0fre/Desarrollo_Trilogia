@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.RateLimiting;
+﻿using Microsoft.AspNetCore.RateLimiting;
 using Proyecto_Final.Middleware;
 using Proyecto_Final.Services;
 using Proyecto_Final.Hubs;
@@ -147,6 +147,8 @@ builder.Services.AddSession(options =>
 
 // Servicios propios
 builder.Services.AddScoped<AdminDbService>();
+builder.Services.AddScoped<IMobileAppReleaseService, MobileAppReleaseDbService>();
+builder.Services.AddSingleton<IMobileAppPackageStorage, MobileAppPackageStorageService>();
 builder.Services.AddScoped<IRolePermissionService, RolePermissionService>();
 builder.Services.AddScoped<IEmployeesService, EmployeesDbService>();
 builder.Services.AddScoped<IAttendanceService, AttendanceDbService>();
