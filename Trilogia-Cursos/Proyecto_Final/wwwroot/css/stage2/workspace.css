@@ -169,6 +169,42 @@
 .djj-workspace-shell[data-sidebar-collapsed="true"] .djj-workspace-sidebar__footer a { justify-content: center; padding-inline: 0; }
 
 /* Admin dashboard pilot */
+/* Report families: compact metrics, explicit periods, local table scrolling. */
+.djj-analytics { min-width: 0; }
+.djj-analytics-kpis { display: grid; gap: var(--djj-space-3); margin-bottom: var(--djj-space-5); grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); }
+.djj-analytics-kpis .djj-kpi-card { display: block; padding: var(--djj-space-4); }
+.djj-analytics-kpis .djj-kpi-card__value { margin-bottom: var(--djj-space-2); white-space: nowrap; font-size: clamp(1.25rem, 1rem + 0.6vw, 1.75rem); overflow-wrap: normal; }
+.djj-analytics-kpis .djj-kpi-card__label { margin-bottom: var(--djj-space-2); }
+.djj-analytics-kpis small { display: block; }
+.djj-analytics-filter { margin-bottom: var(--djj-space-5); padding: var(--djj-space-4); }
+.djj-filter-bar.djj-filter-bar--analytics { grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr)); }
+.djj-filter-bar--analytics .djj-filter-bar__actions,
+.djj-filter-bar--analytics [data-valmsg-summary] { grid-column: 1 / -1; }
+.djj-analytics-panels { display: grid; gap: var(--djj-space-5); align-items: start; }
+.djj-analytics-panels > * { min-width: 0; }
+.djj-analytics .djj-table caption { padding: var(--djj-space-3) var(--djj-space-4); color: var(--djj-color-text-secondary); text-align: left; font-size: var(--djj-font-size-sm); }
+.djj-analytics .djj-table tfoot { border-top: 2px solid var(--djj-color-border); font-weight: var(--djj-weight-bold); }
+.djj-analytics .djj-table td.djj-number { text-align: right; }
+.djj-analytics .djj-table th { white-space: nowrap; }
+.djj-analytics .djj-table tbody th { background: var(--djj-color-surface); color: var(--djj-color-text); font-size: var(--djj-font-size-sm); font-weight: var(--djj-weight-medium); letter-spacing: normal; text-transform: none; white-space: normal; }
+.djj-analytics .djj-table__note { max-width: 24rem; }
+.djj-analytics-period { margin-bottom: var(--djj-space-4); color: var(--djj-color-text-secondary); }
+.djj-goal-summary { padding: var(--djj-space-5); margin-bottom: var(--djj-space-5); }
+.djj-goal-summary h2 { font-size: var(--djj-font-size-lg); }
+.djj-goal-summary .djj-progress { margin-block: var(--djj-space-3); height: 1rem; }
+@media (min-width: 80rem) {
+  .djj-analytics-panels { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); }
+}
+@media print {
+  .djj-analytics .djj-table-wrap { overflow: visible; }
+  .djj-analytics-panels { display: block; }
+  .djj-chart-rows { max-height: none; overflow: visible; }
+  .djj-analytics-chart { break-inside: avoid; }
+  .djj-analytics .djj-table { font-size: 9pt; }
+  .djj-analytics .djj-table th,
+  .djj-analytics .djj-table td { padding: 4pt; }
+}
+
 .djj-admin-kpis { display: grid; gap: var(--djj-space-4); }
 .djj-admin-panels { display: grid; gap: var(--djj-space-5); margin-top: var(--djj-space-5); }
 .djj-admin-quick-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--djj-space-3); }

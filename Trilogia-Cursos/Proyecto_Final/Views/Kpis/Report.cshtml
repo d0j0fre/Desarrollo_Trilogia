@@ -1,164 +1,108 @@
 @model Proyecto_Final.Models.Admin.KpiReportViewModel
+@using Proyecto_Final.Models.Presentation
+@using System.Globalization
+@inject IRolePermissionService PermissionService
 @{
+    Layout = "_WorkspaceLayout";
+    var role = Context.Session.GetString("UserRole") ?? string.Empty;
+    var canNavigate = string.Equals(role, "Administrador", StringComparison.OrdinalIgnoreCase) || await PermissionService.HasCodePermissionAsync(role, "METAS_GESTIONAR");
     ViewData["Title"] = "Reporte de cumplimiento de KPIs";
-    var meses = new[] { "", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre" };
-    var maxVenta = Model.Items.Any() ? Model.Items.Max(i => Math.Max(i.VentasReales, i.MontoMeta)) : 0m;
-    string ClasClase(string c) => c switch { "Cumplida" => "success", "EnRiesgo" => "warning", "Incumplida" => "danger", _ => "secondary" };
-    string ClasTexto(string c) => c switch { "Cumplida" => "Cumplida", "EnRiesgo" => "En riesgo", "Incumplida" => "Incumplida", _ => "Sin meta" };
-    var globalClase = Model.PorcentajeGlobal >= 100 ? "success" : Model.PorcentajeGlobal >= 70 ? "warning" : "danger";
+    var culture = CultureInfo.GetCultureInfo("es-CR");
+    var period = new DateTime(Model.Anio, Model.Mes, 1).ToString("MMMM yyyy", culture);
 }
-
-@section Styles {
-    <link href="~/css/custom-theme.css" rel="stylesheet" />
-    <style>
-        .kpi-card { border-radius: 12px; border: 1px solid #eee; }
-        .kpi-value { font-size: 1.6rem; font-weight: 700; }
-        .kpi-icon { font-size: 1.5rem; opacity: .35; }
-        .meta-bar { background: #e9ecef; border-radius: 4px 4px 0 0; }
-        .venta-bar { background: linear-gradient(180deg, #6f42c1, #b98cff); border-radius: 4px 4px 0 0; }
-    </style>
+@{
+    string StatusText(string s) => s switch { "Cumplida" => "Cumplida", "EnRiesgo" => "En riesgo", "Incumplida" => "Incumplida", _ => "Sin meta" };
+    string StatusClass(string s) => s switch { "Cumplida" => "success", "EnRiesgo" => "warning", "Incumplida" => "danger", _ => "neutral" };
+    var chart = new AnalyticsChartViewModel { Title = "Meta frente a venta por vendedor", Context = period, TargetLabel = "Meta", ValueLabel = "Venta real", Rows = Model.Items.Select(i => new AnalyticsChartRow(i.VendedorNombre, i.VentasReales, i.MontoMeta)).ToList() };
 }
+<div class="djj-analytics">
+<header class="djj-page-header">
+<div>
+<h1>Cumplimiento global de KPIs</h1>
+<p>Rendimiento del equipo · @period.</p>
+</div>@if (canNavigate) { <a asp-controller="Kpis" asp-action="Index" asp-route-anio="@Model.Anio" asp-route-mes="@Model.Mes" class="djj-button djj-button--secondary">Gestionar metas</a> }</header>
+<form asp-controller="Kpis" asp-action="Report" method="get" class="djj-card djj-analytics-filter djj-filter-bar djj-filter-bar--analytics" data-djj-screen-only aria-label="Período de metas">
+<div class="djj-field">
+<label for="kpi-anio">Año</label>
+<input id="kpi-anio" type="number" name="anio" value="@Model.Anio" min="2000" max="2100" class="djj-input" />
+</div>
+<div class="djj-field">
+<label for="kpi-mes">Mes</label>
+<select id="kpi-mes" name="mes" class="djj-select">@for (int i = 1; i <= 12; i++) { <option value="@i" selected="@(Model.Mes == i)">@culture.DateTimeFormat.GetMonthName(i)</option> }</select>
+</div>
+<div>
+<button type="submit" class="djj-button djj-button--primary">Generar reporte</button>
+</div>
+</form>
 
-<div class="container-fluid pt-4 backoffice-page">
-    <div class="row px-xl-5">
-        <div class="col-12">
-            <div class="admin-page-header d-flex flex-column flex-md-row justify-content-between align-items-md-center">
-                <div>
-                    @*(CU-213)*@
-                    <h2 class="mb-2">Cumplimiento global de KPIs</h2>
-                    <p>Rendimiento de la fuerza de ventas — @meses[Model.Mes] @Model.Anio</p>
-                </div>
-                <a asp-controller="Kpis" asp-action="Index" asp-route-anio="@Model.Anio" asp-route-mes="@Model.Mes" class="btn btn-outline-secondary mt-3 mt-md-0">
-                    <i class="fa fa-bullseye mr-1"></i>Gestionar metas
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <div class="row px-xl-5 pb-3">
-        <div class="col-12">
-            <div class="admin-card">
-                <form asp-controller="Kpis" asp-action="Report" method="get" class="form-row align-items-end">
-                    <div class="form-group col-md-4">
-                        <label>Año</label>
-                        <input type="number" name="anio" value="@Model.Anio" min="2000" max="2100" class="form-control" />
-                    </div>
-                    <div class="form-group col-md-4">
-                        <label>Mes</label>
-                        <select name="mes" class="form-control">
-                            @for (int i = 1; i <= 12; i++)
-                            {
-                                <option value="@i" selected="@(Model.Mes == i)">@meses[i]</option>
-                            }
-                        </select>
-                    </div>
-                    <div class="form-group col-md-4">
-                        <button type="submit" class="btn btn-primary btn-block"><i class="fa fa-filter mr-1"></i>Generar reporte</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    @if (!Model.HayDatos)
-    {
-        <div class="row px-xl-5"><div class="col-12">
-            <div class="alert alert-info"><i class="fa fa-info-circle mr-2"></i>No hay metas ni ventas por vendedor registradas en este período.</div>
-        </div></div>
-    }
-
-    <div class="row px-xl-5">
-        <div class="col-lg-3 col-md-6 mb-4">
-            <div class="admin-table-wrapper kpi-card p-4 h-100">
-                <div class="d-flex justify-content-between"><span class="text-muted">Meta global</span><i class="fa fa-bullseye kpi-icon text-primary"></i></div>
-                <div class="kpi-value">₡@Model.MetaGlobal.ToString("N2")</div>
-                <small class="text-muted">@Model.VendedoresConMeta vendedor(es) con meta</small>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6 mb-4">
-            <div class="admin-table-wrapper kpi-card p-4 h-100">
-                <div class="d-flex justify-content-between"><span class="text-muted">Venta global</span><i class="fa fa-cash-register kpi-icon text-success"></i></div>
-                <div class="kpi-value text-success">₡@Model.VentaGlobal.ToString("N2")</div>
-                <small class="text-muted">Ingreso facturado del período</small>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6 mb-4">
-            <div class="admin-table-wrapper kpi-card p-4 h-100">
-                <div class="d-flex justify-content-between"><span class="text-muted">Cumplimiento</span><i class="fa fa-percentage kpi-icon text-dark"></i></div>
-                <div class="kpi-value text-@globalClase">@Model.PorcentajeGlobal.ToString("N1")%</div>
-                <small class="text-muted">Venta global vs meta global</small>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6 mb-4">
-            <div class="admin-table-wrapper kpi-card p-4 h-100">
-                <div class="d-flex justify-content-between"><span class="text-muted">Metas cumplidas</span><i class="fa fa-trophy kpi-icon text-warning"></i></div>
-                <div class="kpi-value">@Model.Items.Count(i => i.Clasificacion == "Cumplida") / @Model.Items.Count(i => i.Clasificacion != "SinMeta")</div>
-                <small class="text-muted">Vendedores que alcanzaron su meta</small>
-            </div>
-        </div>
-    </div>
-
-    @if (Model.HayDatos)
-    {
-        <div class="row px-xl-5 pb-4">
-            <div class="col-12">
-                <div class="admin-table-wrapper p-4">
-                    <h5 class="mb-3">Meta vs. venta por vendedor</h5>
-                    <div class="d-flex align-items-end" style="height: 220px; gap: 22px; overflow-x: auto;">
-                        @foreach (var i in Model.Items)
-                        {
-                            var hVenta = maxVenta > 0 ? (int)(i.VentasReales / maxVenta * 180) + 2 : 2;
-                            var hMeta = maxVenta > 0 ? (int)(i.MontoMeta / maxVenta * 180) + 2 : 2;
-                            <div class="text-center" style="min-width: 90px;">
-                                <div class="d-flex align-items-end justify-content-center" style="gap:4px; height:185px;">
-                                    <div class="meta-bar" style="height:@(hMeta)px; width: 22px;" title="Meta: ₡@i.MontoMeta.ToString("N2")"></div>
-                                    <div class="venta-bar" style="height:@(hVenta)px; width: 22px;" title="Venta: ₡@i.VentasReales.ToString("N2")"></div>
-                                </div>
-                                <small class="text-muted d-block mt-1 text-truncate" style="max-width:90px;">@i.VendedorNombre</small>
-                            </div>
-                        }
-                    </div>
-                    <div class="mt-2 small text-muted">
-                        <span class="d-inline-block" style="width:12px;height:12px;background:#e9ecef;border-radius:2px;"></span> Meta
-                        <span class="d-inline-block ml-3" style="width:12px;height:12px;background:#8a5cf6;border-radius:2px;"></span> Venta real
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row px-xl-5 pb-5">
-            <div class="col-12">
-                <div class="admin-table-wrapper">
-                    <div class="p-4 border-bottom"><h5 class="mb-0">Detalle por vendedor</h5></div>
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="thead-light">
-                                <tr>
-                                    <th>Vendedor</th>
-                                    <th class="text-right">Meta</th>
-                                    <th class="text-right">Venta real</th>
-                                    <th class="text-center">Facturas</th>
-                                    <th class="text-right">Cumplimiento</th>
-                                    <th class="text-center">Estado</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var i in Model.Items)
-                                {
-                                    <tr>
-                                        <td>@i.VendedorNombre</td>
-                                        <td class="text-right">@(i.MontoMeta > 0 ? "₡" + i.MontoMeta.ToString("N2") : "—")</td>
-                                        <td class="text-right">₡@i.VentasReales.ToString("N2")</td>
-                                        <td class="text-center">@i.Facturas</td>
-                                        <td class="text-right">@(i.PorcentajeCumplimiento.HasValue ? i.PorcentajeCumplimiento.Value.ToString("N1") + "%" : "—")</td>
-                                        <td class="text-center"><span class="admin-badge-soft @ClasClase(i.Clasificacion)">@ClasTexto(i.Clasificacion)</span></td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    }
+<section class="djj-analytics-kpis" aria-label="Resumen global de metas">
+<article class="djj-kpi-card">
+<p class="djj-kpi-card__label">Meta global</p>
+<p class="djj-kpi-card__value">₡@Model.MetaGlobal.ToString("N2")</p>
+<small>@Model.VendedoresConMeta vendedor(es) con meta</small>
+</article>
+<article class="djj-kpi-card">
+<p class="djj-kpi-card__label">Venta global</p>
+<p class="djj-kpi-card__value">₡@Model.VentaGlobal.ToString("N2")</p>
+<small>Ingresos facturados del equipo · @period</small>
+</article>
+<article class="djj-kpi-card">
+<p class="djj-kpi-card__label">Cumplimiento global</p>
+<p class="djj-kpi-card__value">@(Model.MetaGlobal > 0 ? Model.PorcentajeGlobal.ToString("N1") + "%" : "Sin meta")</p>
+<small>Venta global frente a meta global</small>
+</article>
+<article class="djj-kpi-card">
+<p class="djj-kpi-card__label">Metas cumplidas</p>
+<p class="djj-kpi-card__value">@Model.Items.Count(i => i.Clasificacion == "Cumplida") / @Model.Items.Count(i => i.Clasificacion != "SinMeta")</p>
+<small>Vendedores que alcanzaron su objetivo</small>
+</article>
+</section>
+<partial name="_AnalyticsChart" model="chart" />
+<section class="djj-card djj-data-section" aria-labelledby="kpi-detail">
+<header>
+<div>
+<h2 id="kpi-detail">Detalle por vendedor</h2>
+<p>@period · Incluye vendedores con meta o ventas.</p>
+</div>
+</header>
+<div class="djj-table-wrap" tabindex="0" role="region" aria-label="Detalle de cumplimiento por vendedor">
+<table class="djj-table djj-table--compact">
+<caption>Cumplida: ≥100%; en riesgo: ≥70% y &lt;100%; incumplida: &lt;70%. Clasificación del reporte existente.</caption>
+<thead>
+<tr>
+<th scope="col">Vendedor</th>
+<th scope="col">Meta</th>
+<th scope="col">Venta real</th>
+<th scope="col">Facturas</th>
+<th scope="col">Cumplimiento</th>
+<th scope="col">Restante</th>
+<th scope="col">Estado</th>
+</tr>
+</thead>
+<tbody>
+@if (!Model.HayDatos) { <tr>
+<td colspan="7">
+<div class="djj-empty-state">
+<p>No hay metas ni ventas por vendedor en este período.</p>
+</div>
+</td>
+</tr> }
+@foreach (var item in Model.Items) {
+<tr>
+<th scope="row">@item.VendedorNombre</th>
+<td class="djj-number">@(item.MontoMeta > 0 ? "₡" + item.MontoMeta.ToString("N2") : "—")</td>
+<td class="djj-number">₡@item.VentasReales.ToString("N2")</td>
+<td class="djj-number">@item.Facturas</td>
+<td>@if (item.PorcentajeCumplimiento.HasValue) { <span class="djj-number">@item.PorcentajeCumplimiento.Value.ToString("N1")%</span>
+<progress class="djj-progress" max="100" value="@Math.Clamp(item.PorcentajeCumplimiento.Value, 0m, 100m).ToString(CultureInfo.InvariantCulture)" aria-label="Cumplimiento de @item.VendedorNombre">@item.PorcentajeCumplimiento.Value.ToString("N1")%</progress> } else { <span>—</span> }</td>
+<td class="djj-number">@(item.MontoMeta > 0 ? "₡" + Math.Max(0m, item.MontoMeta - item.VentasReales).ToString("N2") : "—")</td>
+<td>
+<span class="djj-badge djj-badge--@StatusClass(item.Clasificacion)">@StatusText(item.Clasificacion)</span>
+</td>
+</tr>
+}
+</tbody>
+</table>
+</div>
+</section>
 </div>

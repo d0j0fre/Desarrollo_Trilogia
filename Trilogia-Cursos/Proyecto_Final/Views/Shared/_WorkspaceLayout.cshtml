@@ -147,6 +147,34 @@
                         <li><a asp-controller="MyAttendance" asp-action="Index" aria-current="@(IsCurrent("MyAttendance") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-history"></use></svg><span class="djj-workspace-nav__text">Mis jornadas</span></a></li>
                         <li><a asp-controller="MyPaySlips" asp-action="Index" aria-current="@(IsCurrent("MyPaySlips") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-receipt"></use></svg><span class="djj-workspace-nav__text">Mis boletas</span></a></li>
                     }
+                    @if (Can("REPORTES_DASHBOARD") || Can("REPORTES_VENTAS_VER") || Can("REPORTES_VENDEDORES_VER") || Can("METAS_GESTIONAR") || Can("REPORTE_KPI") || Can("METAS_PROPIAS_VER"))
+                    {
+                        <li class="djj-workspace-nav__label">Reportes y metas</li>
+                    }
+                    @if (Can("REPORTES_DASHBOARD"))
+                    {
+                        <li><a asp-controller="ManagementDashboard" asp-action="Index" aria-current="@(IsCurrent("ManagementDashboard") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-chart"></use></svg><span class="djj-workspace-nav__text">Tablero gerencial</span></a></li>
+                    }
+                    @if (Can("REPORTES_VENTAS_VER"))
+                    {
+                        <li><a asp-controller="SalesReports" asp-action="Index" aria-current="@(IsCurrent("SalesReports") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-receipt"></use></svg><span class="djj-workspace-nav__text">Reporte de ventas</span></a></li>
+                    }
+                    @if (Can("REPORTES_VENDEDORES_VER"))
+                    {
+                        <li><a asp-controller="SellerPerformance" asp-action="Index" aria-current="@(IsCurrent("SellerPerformance") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-users"></use></svg><span class="djj-workspace-nav__text">Desempeño del equipo</span></a></li>
+                    }
+                    @if (Can("METAS_GESTIONAR"))
+                    {
+                        <li><a asp-controller="Kpis" asp-action="Index" aria-current="@(IsCurrent("Kpis") && !string.Equals(ViewContext.RouteData.Values["action"]?.ToString(), "Report", StringComparison.OrdinalIgnoreCase) ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-chart"></use></svg><span class="djj-workspace-nav__text">Metas de ventas</span></a></li>
+                    }
+                    @if (Can("REPORTE_KPI"))
+                    {
+                        <li><a asp-controller="Kpis" asp-action="Report" aria-current="@(IsCurrent("Kpis") && string.Equals(ViewContext.RouteData.Values["action"]?.ToString(), "Report", StringComparison.OrdinalIgnoreCase) ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-chart"></use></svg><span class="djj-workspace-nav__text">Cumplimiento de KPIs</span></a></li>
+                    }
+                    @if (Can("METAS_PROPIAS_VER"))
+                    {
+                        <li><a asp-controller="MyGoal" asp-action="Index" aria-current="@(IsCurrent("MyGoal") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-user"></use></svg><span class="djj-workspace-nav__text">Mi meta</span></a></li>
+                    }
                     <li class="djj-workspace-nav__label">Herramientas</li>
                     @if (canChat)
                     {
