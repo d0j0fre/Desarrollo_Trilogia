@@ -2,7 +2,7 @@
 @{
     Layout = "_StorefrontLayout";
     ViewData["Title"] = Model.Nombre;
-    var imagen = string.IsNullOrWhiteSpace(Model.ImagenUrl) ? Url.Content("~/img/whisky-premium.webp") : Url.Content(Model.ImagenUrl);
+    var imagen = string.IsNullOrWhiteSpace(Model.ImagenUrl) ? Url.Content("~/img/product-placeholder.svg") : Url.Content(Model.ImagenUrl);
     var stockTone = Model.Stock <= 0 ? "danger" : Model.Stock <= 5 ? "warning" : "success";
     var requestedReturnUrl = Context.Request.Query["returnUrl"].ToString();
     var returnUrl = Url.IsLocalUrl(requestedReturnUrl) ? requestedReturnUrl : Url.Action("Shop", "Home", new { categoria = Model.Categoria });
@@ -11,7 +11,7 @@
 <main class="djj-container djj-store-page">
     <nav class="djj-store-page__breadcrumb" aria-label="Migas de pan"><ol class="djj-breadcrumb"><li><a asp-controller="Home" asp-action="Index">Inicio</a></li><li aria-hidden="true"><svg class="djj-icon djj-icon--sm"><use href="#djj-icon-caret-right"></use></svg></li><li><a href="@returnUrl">Catálogo</a></li><li aria-hidden="true"><svg class="djj-icon djj-icon--sm"><use href="#djj-icon-caret-right"></use></svg></li><li aria-current="page">@Model.Nombre</li></ol></nav>
     <article class="djj-product-detail">
-        <div class="djj-product-detail__media"><span class="djj-status-badge djj-status-badge--neutral"><svg class="djj-icon djj-icon--sm" aria-hidden="true"><use href="#djj-icon-tag"></use></svg>@Model.Categoria</span><img src="@imagen" alt="@Model.Nombre" width="640" height="640" /></div>
+        <div class="djj-product-detail__media"><span class="djj-status-badge djj-status-badge--neutral"><svg class="djj-icon djj-icon--sm" aria-hidden="true"><use href="#djj-icon-tag"></use></svg>@Model.Categoria</span><img data-djj-product-image src="@imagen" alt="@Model.Nombre" width="640" height="640" /></div>
         <div class="djj-product-detail__content">
             <header><span class="djj-page-header__eyebrow">Producto del catálogo</span><h1>@Model.Nombre</h1></header>
             <strong class="djj-product-detail__price">₡@Model.Precio.ToString("N0")</strong>

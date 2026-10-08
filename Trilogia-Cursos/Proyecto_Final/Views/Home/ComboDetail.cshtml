@@ -10,7 +10,7 @@
 <main class="djj-container djj-store-page">
     <nav class="djj-store-page__breadcrumb" aria-label="Migas de pan"><ol class="djj-breadcrumb"><li><a asp-controller="Home" asp-action="Index">Inicio</a></li><li aria-hidden="true"><svg class="djj-icon djj-icon--sm"><use href="#djj-icon-caret-right"></use></svg></li><li><a href="@returnUrl">Catálogo</a></li><li aria-hidden="true"><svg class="djj-icon djj-icon--sm"><use href="#djj-icon-caret-right"></use></svg></li><li aria-current="page">@Model.Nombre</li></ol></nav>
     <article class="djj-product-detail">
-        <div class="djj-product-detail__media djj-product-detail__media--combo"><span class="djj-status-badge djj-status-badge--neutral"><svg class="djj-icon djj-icon--sm" aria-hidden="true"><use href="#djj-icon-package"></use></svg>Combo</span><img src="@Url.Content(Model.ImagenUrl)" alt="@Model.Nombre" width="640" height="640" /></div>
+        <div class="djj-product-detail__media djj-product-detail__media--combo"><span class="djj-status-badge djj-status-badge--neutral"><svg class="djj-icon djj-icon--sm" aria-hidden="true"><use href="#djj-icon-package"></use></svg>Combo</span><img data-djj-product-image src="@Url.Content(Model.ImagenUrl)" alt="@Model.Nombre" width="640" height="640" /></div>
         <div class="djj-product-detail__content">
             <header><span class="djj-page-header__eyebrow">Oferta armada por el comercio</span><h1>@Model.Nombre</h1></header>
             <strong class="djj-product-detail__price">₡@Model.Precio.ToString("N0")</strong><p class="djj-product-detail__description">@Model.Descripcion</p>

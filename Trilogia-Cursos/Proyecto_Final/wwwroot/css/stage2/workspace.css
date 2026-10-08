@@ -2,7 +2,8 @@
 .djj-workspace-shell { min-height: 100dvh; }
 .djj-workspace-sidebar { position: fixed; inset: 0 auto 0 0; z-index: var(--djj-z-sticky); display: flex; width: var(--djj-sidebar-width); flex-direction: column; overflow: hidden; background: var(--djj-color-surface-inverse); color: var(--djj-color-text-inverse); transition: width var(--djj-duration-normal) var(--djj-ease-standard), transform var(--djj-duration-normal) var(--djj-ease-standard); }
 .djj-workspace-sidebar__brand { display: flex; align-items: center; min-height: var(--djj-header-height); border-bottom: 1px solid var(--djj-neutral-700); padding: var(--djj-space-3) var(--djj-space-4); }
-.djj-workspace-sidebar__logo { width: 9.5rem; }
+.djj-workspace-sidebar__logo { width: 11.25rem; height: auto; }
+.djj-workspace-sidebar__close { display: none; }
 .djj-workspace-sidebar__mark { display: none; width: 2.5rem; height: 2.5rem; }
 .djj-workspace-sidebar__nav { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: var(--djj-space-4) var(--djj-space-3); }
 .djj-workspace-nav { display: grid; gap: var(--djj-space-1); margin: 0; padding: 0; list-style: none; }
@@ -70,6 +71,10 @@
 .djj-action-menu__panel a:hover,
 .djj-action-menu__panel button:hover { background: var(--djj-color-surface-subtle); }
 .djj-action-menu__panel .djj-action-menu__danger { color: var(--djj-color-danger); }
+.djj-table .djj-action-menu__panel { position: static; margin-top: var(--djj-space-2); }
+.djj-table td.djj-table__primary { display: table-cell; }
+.djj-table td.djj-table__primary > img { display: inline-block; margin-right: var(--djj-space-2); vertical-align: middle; object-fit: contain; }
+.djj-table td.djj-table__primary > span { display: inline-block; vertical-align: middle; }
 .djj-empty-state { padding: var(--djj-space-8) var(--djj-space-5); text-align: center; }
 .djj-empty-state h3 { margin-bottom: var(--djj-space-2); }
 .djj-empty-state p { margin: 0; color: var(--djj-color-text-secondary); }
@@ -220,6 +225,8 @@
 @media (max-width: 63.99rem) {
   .djj-workspace-sidebar { z-index: var(--djj-z-drawer); width: min(var(--djj-sidebar-width), calc(100% - 3rem)); transform: translateX(-105%); box-shadow: var(--djj-shadow-overlay); }
   .djj-workspace-sidebar[data-open="true"] { transform: translateX(0); }
+  .djj-workspace-sidebar__close { display: inline-flex; position: absolute; top: 0.875rem; right: 0.5rem; color: var(--djj-neutral-0); }
+  .djj-workspace-sidebar__brand { padding-right: 3.25rem; }
   .djj-workspace-main,
   .djj-workspace-shell[data-sidebar-collapsed="true"] .djj-workspace-main { margin-left: 0; }
   .djj-workspace-sidebar-toggle--desktop { display: none; }

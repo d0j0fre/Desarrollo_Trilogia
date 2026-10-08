@@ -51,7 +51,7 @@
   left: 0;
   z-index: var(--djj-z-sticky);
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   min-height: calc(var(--djj-field-nav-height) + env(safe-area-inset-bottom));
   border-top: 1px solid var(--djj-color-border);
   background: var(--djj-color-surface);

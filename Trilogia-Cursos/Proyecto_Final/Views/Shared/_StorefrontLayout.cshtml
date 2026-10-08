@@ -1,5 +1,6 @@
 @using Microsoft.AspNetCore.Http
 @{
+    ViewData["Stage2Layout"] = true;
     var brandName = Company.Value.BrandName;
     var brandSubtitle = Company.Value.BrandSubtitle;
     var pageTitle = ViewData["Title"]?.ToString();
@@ -33,7 +34,7 @@
     <link rel="stylesheet" href="~/css/stage2/utilities.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
 </head>
-<body class="djj-stage2 djj-storefront @bodyClass" data-djj-layout="storefront">
+<body class="djj-stage2 djj-storefront @bodyClass" data-djj-layout="storefront" data-authenticated-user-id="@(Context.Session.GetInt32("UserId")?.ToString() ?? string.Empty)">
     <a class="djj-skip-link" href="#djj-main-content">Saltar al contenido principal</a>
     <partial name="_DjjIconSprite" />
 
@@ -46,8 +47,11 @@
             </button>
 
             <a class="djj-storefront__brand" asp-controller="Home" asp-action="Index" aria-label="@brandName — Inicio">
-                <img src="~/brand/stage2/logo_stage2-identity_horizontal_20260821_color.svg"
-                     width="640" height="160" alt="@brandName" />
+                <picture>
+                    <source media="(max-width: 63.99rem)" srcset="@Url.Content("~/brand/stage2/logo_stage2-identity_compact_20260821_color.svg")" />
+                    <img src="~/brand/stage2/logo_stage2-identity_horizontal_20260821_color.svg"
+                         width="640" height="160" alt="@brandName" />
+                </picture>
             </a>
 
             <form class="djj-search-box djj-storefront__search" asp-controller="Home" asp-action="Shop" method="get" role="search">
@@ -98,7 +102,7 @@
         </nav>
     </header>
 
-    <aside id="djj-storefront-drawer" class="djj-drawer djj-drawer--left" aria-label="Navegación móvil" aria-hidden="true" data-djj-drawer>
+    <aside id="djj-storefront-drawer" class="djj-drawer djj-drawer--left" role="dialog" aria-modal="true" aria-label="Navegación móvil" aria-hidden="true" data-djj-drawer>
         <div class="djj-drawer__header">
             <img src="~/brand/stage2/logo_stage2-identity_compact_20260821_color.svg" width="420" height="120" alt="@brandName" />
             <button class="djj-icon-button" type="button" aria-label="Cerrar navegación" data-djj-drawer-close>
@@ -160,6 +164,7 @@
         <div class="djj-container djj-storefront__footer-bottom">&copy; @DateTime.UtcNow.Year @brandName</div>
     </footer>
 
+    <script src="~/js/secure-offline-storage.js" asp-append-version="true"></script>
     <script src="~/js/stage2/layouts.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

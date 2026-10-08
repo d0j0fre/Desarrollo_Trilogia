@@ -65,7 +65,7 @@
                         {
                             var comboStatus = combo.Disponible ? (combo.StockDisponible <= 3 ? "warning" : "success") : "danger";
                             <article class="djj-product-card djj-product-card--combo">
-                                <a class="djj-product-card__media" asp-controller="Home" asp-action="ComboDetail" asp-route-id="@combo.ComboId" asp-route-returnUrl="@returnUrl"><img src="@Url.Content(combo.ImagenUrl)" alt="@combo.Nombre" loading="lazy" width="360" height="360" /></a>
+                                <a class="djj-product-card__media" asp-controller="Home" asp-action="ComboDetail" asp-route-id="@combo.ComboId" asp-route-returnUrl="@returnUrl"><img data-djj-product-image src="@Url.Content(combo.ImagenUrl)" alt="@combo.Nombre" loading="lazy" width="360" height="360" /></a>
                                 <div class="djj-product-card__body">
                                     <span class="djj-product-card__category">Combo · @combo.CantidadProductos componentes</span><h3>@combo.Nombre</h3>
                                     <p class="djj-product-card__description">@(string.IsNullOrWhiteSpace(combo.ComponentesResumen) ? combo.Descripcion : combo.ComponentesResumen)</p>
@@ -100,9 +100,9 @@
                         @foreach (var producto in productos)
                         {
                             var status = producto.Stock <= 0 ? "danger" : producto.Stock <= 5 ? "warning" : "success";
-                            var imagen = string.IsNullOrWhiteSpace(producto.ImagenUrl) ? Url.Content("~/img/whisky-premium.webp") : Url.Content(producto.ImagenUrl);
+                            var imagen = string.IsNullOrWhiteSpace(producto.ImagenUrl) ? Url.Content("~/img/product-placeholder.svg") : Url.Content(producto.ImagenUrl);
                             <article class="djj-product-card">
-                                <a class="djj-product-card__media" asp-controller="Home" asp-action="Detail" asp-route-id="@producto.ProductoId" asp-route-returnUrl="@returnUrl"><img src="@imagen" alt="@producto.Nombre" loading="lazy" width="360" height="360" /></a>
+                                <a class="djj-product-card__media" asp-controller="Home" asp-action="Detail" asp-route-id="@producto.ProductoId" asp-route-returnUrl="@returnUrl"><img data-djj-product-image src="@imagen" alt="@producto.Nombre" loading="lazy" width="360" height="360" /></a>
                                 <div class="djj-product-card__body">
                                     <span class="djj-product-card__category">@producto.Categoria</span><h3>@producto.Nombre</h3><p class="djj-product-card__description">@(string.IsNullOrWhiteSpace(producto.Descripcion) ? "Producto disponible en el catálogo activo." : producto.Descripcion)</p>
                                     <div><strong class="djj-product-card__price">₡@producto.Precio.ToString("N0")</strong><span class="djj-status-badge djj-status-badge--@status djj-product-card__stock">@producto.EstadoStock · @producto.Stock unidad(es)</span></div>

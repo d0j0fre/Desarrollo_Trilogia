@@ -24,37 +24,38 @@ body.djj-stage2 {
 
 body.djj-stage2 img,
 body.djj-stage2 svg { display: block; max-width: 100%; }
+:where(body.djj-stage2) img[data-djj-product-image][data-djj-image-missing="true"] { object-fit: contain; background: var(--djj-color-surface-subtle); }
 
-body.djj-stage2 button,
-body.djj-stage2 input,
-body.djj-stage2 select,
-body.djj-stage2 textarea { font: inherit; }
+:where(body.djj-stage2) button,
+:where(body.djj-stage2) input,
+:where(body.djj-stage2) select,
+:where(body.djj-stage2) textarea { font: inherit; }
 
-body.djj-stage2 button,
-body.djj-stage2 a { touch-action: manipulation; }
+:where(body.djj-stage2) button,
+:where(body.djj-stage2) a { touch-action: manipulation; }
 
-body.djj-stage2 a { color: var(--djj-color-primary); text-underline-offset: 0.2em; }
-body.djj-stage2 a:hover { color: var(--djj-color-primary-hover); }
+:where(body.djj-stage2) a { color: var(--djj-color-primary); text-underline-offset: 0.2em; }
+:where(body.djj-stage2) a:hover { color: var(--djj-color-primary-hover); }
 
-body.djj-stage2 h1,
-body.djj-stage2 h2,
-body.djj-stage2 h3,
-body.djj-stage2 h4,
-body.djj-stage2 p { margin-top: 0; }
+:where(body.djj-stage2) h1,
+:where(body.djj-stage2) h2,
+:where(body.djj-stage2) h3,
+:where(body.djj-stage2) h4,
+:where(body.djj-stage2) p { margin-top: 0; }
 
-body.djj-stage2 h1,
-body.djj-stage2 h2,
-body.djj-stage2 h3,
-body.djj-stage2 h4 {
+:where(body.djj-stage2) h1,
+:where(body.djj-stage2) h2,
+:where(body.djj-stage2) h3,
+:where(body.djj-stage2) h4 {
   color: var(--djj-color-text);
   font-weight: var(--djj-weight-bold);
   line-height: var(--djj-leading-heading);
   text-wrap: balance;
 }
 
-body.djj-stage2 h1 { font-size: clamp(1.75rem, 1.45rem + 1.3vw, 2.5rem); }
-body.djj-stage2 h2 { font-size: clamp(1.5rem, 1.3rem + 0.8vw, 2rem); }
-body.djj-stage2 h3 { font-size: clamp(1.125rem, 1.05rem + 0.3vw, 1.375rem); }
+:where(body.djj-stage2) h1 { font-size: clamp(1.75rem, 1.45rem + 1.3vw, 2.5rem); }
+:where(body.djj-stage2) h2 { font-size: clamp(1.5rem, 1.3rem + 0.8vw, 2rem); }
+:where(body.djj-stage2) h3 { font-size: clamp(1.125rem, 1.05rem + 0.3vw, 1.375rem); }
 
 body.djj-stage2 :focus-visible {
   outline: 2px solid var(--djj-color-focus);

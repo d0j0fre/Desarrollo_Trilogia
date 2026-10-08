@@ -17,7 +17,7 @@
   transition: background-color var(--djj-duration-fast) var(--djj-ease-standard), border-color var(--djj-duration-fast) var(--djj-ease-standard), color var(--djj-duration-fast) var(--djj-ease-standard), box-shadow var(--djj-duration-fast) var(--djj-ease-standard);
 }
 
-.djj-button { padding: 0 var(--djj-button-padding-x); }
+.djj-button { padding: var(--djj-space-2) var(--djj-button-padding-x); line-height: 1.25; }
 .djj-button--lg { min-height: var(--djj-button-height-lg); padding-inline: var(--djj-space-6); font-size: var(--djj-font-size-base); }
 .djj-button--sm { min-height: 2.25rem; padding-inline: var(--djj-space-3); }
 .djj-icon-button { width: var(--djj-button-height); padding: 0; }
@@ -25,6 +25,8 @@
 .djj-button--primary { background: var(--djj-color-primary); color: var(--djj-color-on-primary); }
 .djj-button--primary:hover { background: var(--djj-color-primary-hover); color: var(--djj-color-on-primary); }
 .djj-button--primary:active { background: var(--djj-color-primary-active); }
+.djj-button--secondary { background: var(--djj-color-surface-inverse); color: var(--djj-color-text-inverse); }
+.djj-button--secondary:hover { background: var(--djj-neutral-800); color: var(--djj-color-text-inverse); }
 
 .djj-button--outline { border-color: var(--djj-color-border-strong); background: transparent; color: var(--djj-color-text); }
 .djj-button--outline:hover { border-color: var(--djj-color-primary); background: var(--djj-red-50); color: var(--djj-color-primary); }
@@ -89,6 +91,12 @@
 .djj-input[aria-invalid="true"],
 .djj-select[aria-invalid="true"],
 .djj-textarea[aria-invalid="true"] { border-color: var(--djj-color-danger); }
+.djj-input.input-validation-error,
+.djj-select.input-validation-error,
+.djj-textarea.input-validation-error { border-color: var(--djj-color-danger); }
+.field-validation-error { color: var(--djj-color-danger); }
+.validation-summary-valid,
+.field-validation-valid { display: none; }
 .djj-textarea { min-height: 7.5rem; resize: vertical; }
 .djj-input:disabled,
 .djj-select:disabled,
@@ -130,6 +138,12 @@
 .djj-status-badge--warning { background: var(--djj-color-warning-surface); color: var(--djj-color-warning); }
 .djj-status-badge--danger { background: var(--djj-color-danger-surface); color: var(--djj-color-danger); }
 .djj-status-badge--neutral { background: var(--djj-color-surface-subtle); color: var(--djj-color-text-secondary); }
+.djj-status-badge--info,
+.djj-badge--info { background: var(--djj-color-info-surface); color: var(--djj-color-info); }
+.djj-badge--success { background: var(--djj-color-success-surface); color: var(--djj-color-success); }
+.djj-badge--warning { background: var(--djj-color-warning-surface); color: var(--djj-color-warning); }
+.djj-badge--danger { background: var(--djj-color-danger-surface); color: var(--djj-color-danger); }
+.djj-badge--neutral { background: var(--djj-color-surface-subtle); color: var(--djj-color-text-secondary); }
 
 .djj-alert,
 .djj-toast {
@@ -244,6 +258,7 @@
 .djj-table tbody tr:hover { background: var(--djj-neutral-50); }
 .djj-table tbody tr:last-child td { border-bottom: 0; }
 .djj-table .djj-table__number { text-align: right; font-variant-numeric: tabular-nums; }
+.djj-table .djj-align-right { text-align: right; font-variant-numeric: tabular-nums; }
 .djj-table .djj-table__status { text-align: center; }
 
 .djj-state-page { display: grid; min-height: 65dvh; place-items: center; padding: var(--djj-space-8) var(--djj-page-gutter); background: var(--djj-color-canvas); }

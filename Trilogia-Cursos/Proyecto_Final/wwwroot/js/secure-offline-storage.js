@@ -20,6 +20,10 @@
         return PREFIX + userId + ":" + scope;
     }
 
+    function removeSafely(storageKey) {
+        try { localStorage.removeItem(storageKey); } catch (error) { /* Storage can be denied by browser policy. */ }
+    }
+
     function removeLegacyKeys() {
         LEGACY_EXACT_KEYS.forEach(function (legacyKey) { localStorage.removeItem(legacyKey); });
         for (var index = localStorage.length - 1; index >= 0; index -= 1) {
@@ -38,12 +42,12 @@
         try {
             var envelope = JSON.parse(localStorage.getItem(storageKey) || "null");
             if (!envelope || envelope.ownerUserId !== userId || !envelope.expiresAt || Date.now() >= envelope.expiresAt) {
-                localStorage.removeItem(storageKey);
+                removeSafely(storageKey);
                 return null;
             }
             return envelope.value;
         } catch (error) {
-            localStorage.removeItem(storageKey);
+            removeSafely(storageKey);
             return null;
         }
     }
@@ -69,10 +73,12 @@
         var userId = currentUserId();
         if (userId <= 0) return;
         var userPrefix = PREFIX + userId + ":";
-        for (var index = localStorage.length - 1; index >= 0; index -= 1) {
-            var candidate = localStorage.key(index);
-            if (candidate && candidate.indexOf(userPrefix) === 0) localStorage.removeItem(candidate);
-        }
+        try {
+            for (var index = localStorage.length - 1; index >= 0; index -= 1) {
+                var candidate = localStorage.key(index);
+                if (candidate && candidate.indexOf(userPrefix) === 0) localStorage.removeItem(candidate);
+            }
+        } catch (error) { /* Logout must remain available when storage is denied. */ }
     }
 
     function purgeExpired() {
@@ -97,7 +103,7 @@
         purgeExpired: purgeExpired
     };
 
-    purgeExpired();
+    try { purgeExpired(); } catch (error) { /* Keep the page usable when private storage is unavailable. */ }
     document.querySelectorAll("form[data-clear-private-storage='true']").forEach(function (form) {
         form.addEventListener("submit", clearCurrentUser);
     });

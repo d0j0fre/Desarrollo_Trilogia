@@ -1,36 +1,79 @@
 (() => {
   "use strict";
 
+  document.querySelectorAll("img[data-djj-product-image]").forEach((image) => {
+    const fallback = () => {
+      if (image.dataset.djjImageMissing === "true") return;
+      image.dataset.djjImageMissing = "true";
+      image.removeAttribute("srcset");
+      image.src = image.dataset.djjImageFallback;
+    };
+    image.addEventListener("error", fallback, { once: true });
+    if (image.complete && image.naturalWidth === 0) fallback();
+  });
+
   const focusableSelector = [
     "a[href]", "button:not([disabled])", "input:not([disabled])", "select:not([disabled])",
     "textarea:not([disabled])", "[tabindex]:not([tabindex='-1'])"
   ].join(",");
 
   const setPageLocked = (locked) => document.documentElement.toggleAttribute("data-djj-scroll-locked", locked);
+  const visibleControls = (container) => [...container.querySelectorAll(focusableSelector)]
+    .filter((element) => element.getClientRects().length && !element.disabled && !element.closest("[inert]"));
+  const isolate = (regions) => {
+    const previous = new Map();
+    return (locked) => {
+      regions.forEach((region) => {
+        if (!region) return;
+        if (locked) {
+          if (!previous.has(region)) previous.set(region, region.inert);
+          region.inert = true;
+        } else if (previous.has(region)) {
+          region.inert = previous.get(region);
+        }
+      });
+      if (!locked) previous.clear();
+    };
+  };
+  const trapFocus = (container, event) => {
+    if (event.key !== "Tab") return;
+    const controls = visibleControls(container);
+    const first = controls[0];
+    const last = controls[controls.length - 1];
+    if (!first) return;
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+    if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+  };
 
   const setupDrawer = (drawer) => {
     const openButton = document.querySelector(`[data-djj-drawer-open][aria-controls="${drawer.id}"]`);
     const closeButtons = drawer.querySelectorAll("[data-djj-drawer-close]");
     const scrim = document.querySelector(`[data-djj-drawer-scrim][aria-controls="${drawer.id}"]`);
     let returnFocus = null;
+    const lockBackground = isolate([...document.body.children].filter((element) => element !== drawer && element !== scrim && element.tagName !== "SCRIPT"));
+    drawer.inert = true;
 
     const close = () => {
+      lockBackground(false);
+      returnFocus?.focus();
       drawer.dataset.open = "false";
       drawer.setAttribute("aria-hidden", "true");
+      drawer.inert = true;
       openButton?.setAttribute("aria-expanded", "false");
       if (scrim) scrim.hidden = true;
       setPageLocked(false);
-      returnFocus?.focus();
     };
 
     const open = () => {
       returnFocus = document.activeElement;
       drawer.dataset.open = "true";
       drawer.setAttribute("aria-hidden", "false");
+      drawer.inert = false;
       openButton?.setAttribute("aria-expanded", "true");
       if (scrim) scrim.hidden = false;
       setPageLocked(true);
-      drawer.querySelector(focusableSelector)?.focus();
+      lockBackground(true);
+      visibleControls(drawer)[0]?.focus();
     };
 
     openButton?.addEventListener("click", open);
@@ -39,12 +82,10 @@
     drawer.addEventListener("keydown", (event) => {
       if (event.key === "Escape") close();
       if (event.key !== "Tab") return;
-      const focusable = [...drawer.querySelectorAll(focusableSelector)];
-      if (!focusable.length) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
-      if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+      trapFocus(drawer, event);
+    });
+    window.matchMedia("(max-width: 63.99rem)").addEventListener("change", () => {
+      if (drawer.dataset.open === "true") close();
     });
   };
 
@@ -55,11 +96,19 @@
   const workspaceOpen = document.querySelector("[data-djj-workspace-open]");
   const workspaceScrim = document.querySelector("[data-djj-workspace-scrim]");
   const workspaceCollapse = document.querySelector("[data-djj-workspace-collapse]");
+  const workspaceClose = document.querySelector("[data-djj-workspace-close]");
+  const mobileWorkspace = window.matchMedia("(max-width: 63.99rem)");
+  const lockWorkspaceBackground = isolate([document.querySelector(".djj-workspace-main"), document.querySelector(".djj-skip-link")]);
 
   const closeWorkspace = () => {
+    lockWorkspaceBackground(false);
+    if (mobileWorkspace.matches && workspaceSidebar?.contains(document.activeElement)) workspaceOpen?.focus();
     workspaceSidebar?.setAttribute("data-open", "false");
     workspaceOpen?.setAttribute("aria-expanded", "false");
-    workspaceSidebar?.setAttribute("aria-hidden", window.matchMedia("(max-width: 63.99rem)").matches ? "true" : "false");
+    workspaceSidebar?.setAttribute("aria-hidden", String(mobileWorkspace.matches));
+    if (workspaceSidebar) workspaceSidebar.inert = mobileWorkspace.matches;
+    workspaceSidebar?.removeAttribute("role");
+    workspaceSidebar?.removeAttribute("aria-modal");
     if (workspaceScrim) workspaceScrim.hidden = true;
     setPageLocked(false);
   };
@@ -68,15 +117,33 @@
     workspaceSidebar?.setAttribute("data-open", "true");
     workspaceOpen.setAttribute("aria-expanded", "true");
     workspaceSidebar?.setAttribute("aria-hidden", "false");
+    if (workspaceSidebar) workspaceSidebar.inert = false;
+    workspaceSidebar?.setAttribute("role", "dialog");
+    workspaceSidebar?.setAttribute("aria-modal", "true");
     if (workspaceScrim) workspaceScrim.hidden = false;
     setPageLocked(true);
-    workspaceSidebar?.querySelector(focusableSelector)?.focus();
+    lockWorkspaceBackground(true);
+    if (workspaceSidebar) visibleControls(workspaceSidebar)[0]?.focus();
   });
-  workspaceScrim?.addEventListener("click", closeWorkspace);
-  workspaceSidebar?.addEventListener("keydown", (event) => { if (event.key === "Escape") { closeWorkspace(); workspaceOpen?.focus(); } });
+  const dismissWorkspace = () => { closeWorkspace(); workspaceOpen?.focus(); };
+  workspaceScrim?.addEventListener("click", dismissWorkspace);
+  workspaceClose?.addEventListener("click", dismissWorkspace);
+  workspaceSidebar?.addEventListener("keydown", (event) => {
+    if (!mobileWorkspace.matches) return;
+    if (event.key === "Escape") dismissWorkspace();
+    trapFocus(workspaceSidebar, event);
+  });
+  mobileWorkspace.addEventListener("change", () => {
+    workspaceShell?.setAttribute("data-sidebar-collapsed", "false");
+    workspaceCollapse?.setAttribute("aria-expanded", "true");
+    workspaceCollapse?.setAttribute("aria-label", "Contraer navegación");
+    closeWorkspace();
+  });
+  if (workspaceSidebar) closeWorkspace();
 
   workspaceCollapse?.addEventListener("click", () => {
-    const collapsed = workspaceShell?.toggleAttribute("data-sidebar-collapsed") ?? false;
+    const collapsed = workspaceShell?.getAttribute("data-sidebar-collapsed") !== "true";
+    workspaceShell?.setAttribute("data-sidebar-collapsed", String(collapsed));
     workspaceCollapse.setAttribute("aria-expanded", String(!collapsed));
     workspaceCollapse.setAttribute("aria-label", collapsed ? "Expandir navegación" : "Contraer navegación");
   });

@@ -45,7 +45,7 @@ namespace Proyecto_Final.Controllers
             catch (Exception exception)
             {
                 _logger.LogError(exception, "No fue posible cargar la administración de departamentos de chat.");
-                TempData["ErrorMessage"] = "No fue posible cargar los departamentos en este momento. Inténtelo nuevamente.";
+                ViewBag.LoadError = "No fue posible cargar los departamentos en este momento. Inténtelo nuevamente.";
                 ViewBag.ChatUsers = Array.Empty<ChatUserViewModel>();
                 return View(Array.Empty<ChatDepartmentAdminViewModel>());
             }

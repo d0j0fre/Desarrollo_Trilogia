@@ -2,6 +2,7 @@
 @inject IRolePermissionService PermissionService
 @inject IEmployeeRelationshipService EmployeeRelationshipService
 @{
+    ViewData["Stage2Layout"] = true;
     var brandName = Company.Value.BrandName;
     var pageTitle = ViewData["Title"]?.ToString() ?? "Workspace";
     var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty;
@@ -46,12 +47,15 @@
     <link rel="stylesheet" href="~/css/stage2/utilities.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
 </head>
-<body class="djj-stage2 djj-workspace" data-djj-layout="workspace">
+<body class="djj-stage2 djj-workspace" data-djj-layout="workspace" data-authenticated-user-id="@(Context.Session.GetInt32("UserId")?.ToString() ?? string.Empty)">
     <a class="djj-skip-link" href="#djj-main-content">Saltar al contenido principal</a>
     <partial name="_DjjIconSprite" />
 
     <div class="djj-workspace-shell" data-djj-workspace-shell>
         <aside id="djj-workspace-sidebar" class="djj-workspace-sidebar" aria-label="Navegación del workspace" aria-hidden="false" data-djj-workspace-sidebar>
+            <button class="djj-icon-button djj-workspace-sidebar__close" type="button" aria-label="Cerrar navegación" data-djj-workspace-close>
+                <svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-close"></use></svg>
+            </button>
             <a class="djj-workspace-sidebar__brand" asp-controller="Home" asp-action="Index" aria-label="@brandName — Inicio">
                 <img class="djj-workspace-sidebar__logo" src="~/brand/stage2/logo_stage2-identity_horizontal_20260821_reversed.svg" width="640" height="160" alt="@brandName" />
                 <img class="djj-workspace-sidebar__mark" src="~/brand/stage2/logo_stage2-identity_mark_20260821_color.svg" width="144" height="144" alt="" />
@@ -202,6 +206,7 @@
     </div>
     <button class="djj-scrim djj-workspace-scrim" type="button" aria-label="Cerrar navegación" aria-controls="djj-workspace-sidebar" data-djj-workspace-scrim hidden></button>
 
+    <script src="~/js/secure-offline-storage.js" asp-append-version="true"></script>
     <script src="~/js/stage2/layouts.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

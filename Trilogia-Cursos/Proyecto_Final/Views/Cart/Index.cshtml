@@ -13,9 +13,9 @@
             <section class="djj-cart-list" aria-label="Productos del carrito">
             @foreach (var item in Model.Items)
             {
-                var image = string.IsNullOrWhiteSpace(item.ImagenUrl) ? Url.Content("~/img/whisky-premium.webp") : Url.Content(item.ImagenUrl);
+                var image = string.IsNullOrWhiteSpace(item.ImagenUrl) ? Url.Content("~/img/product-placeholder.svg") : Url.Content(item.ImagenUrl);
                 <article class="djj-card djj-cart-item">
-                    <img class="djj-cart-item__image" src="@image" alt="@item.Nombre" width="128" height="128" loading="lazy" />
+                    <img data-djj-product-image class="djj-cart-item__image" src="@image" alt="@item.Nombre" width="128" height="128" loading="lazy" />
                     <div class="djj-cart-item__copy"><span>@item.Categoria</span><h2>@item.Nombre</h2><p>Disponibles: @item.StockDisponible</p><strong>₡@item.Precio.ToString("N0") c/u</strong></div>
                     <div class="djj-cart-item__quantity">
                         <span class="djj-field__label">Cantidad</span>

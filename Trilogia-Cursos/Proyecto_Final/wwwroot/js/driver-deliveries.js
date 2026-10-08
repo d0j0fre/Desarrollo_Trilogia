@@ -30,7 +30,7 @@
     }
 
     function setQueue(q) {
-        if (!offlineStorage) return;
+        if (!offlineStorage) throw new Error("El almacenamiento privado no está disponible.");
         if (q.length === 0) {
             offlineStorage.remove(STORAGE_SCOPE);
             return;
@@ -72,9 +72,7 @@
             label.textContent = pending ? (labelEstado(estado) + " (pendiente de sincronizar)") : labelEstado(estado);
         }
         // Deshabilitar acciones si el estado es final
-        if (estado === "Entregado" || estado === "Fallido") {
-            card.querySelectorAll("[data-action]").forEach(function (b) { b.disabled = true; });
-        }
+        card.querySelectorAll("[data-action]").forEach(function (b) { b.disabled = estado === "Entregado" || estado === "Fallido"; });
     }
 
     function postUpdate(item) {
@@ -90,6 +88,11 @@
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: body.toString()
         }).then(function (resp) {
+            if (resp.redirected || resp.status === 401 || resp.status === 403) {
+                var sessionError = new Error("La sesión necesita verificarse. Los cambios pendientes se conservan.");
+                sessionError.sessionRequired = true;
+                throw sessionError;
+            }
             if (!resp.ok) throw new Error("HTTP " + resp.status);
             return resp.json();
         });
@@ -117,21 +120,24 @@
             var item = q[0];
             return postUpdate(item).then(function (data) {
                 var rest = getQueue();
-                rest.shift();
+                rest = rest.filter(function (queued) { return queued.syncGuid !== item.syncGuid; });
                 setQueue(rest);
                 updatePendingBadge();
                 if (data && data.ok) {
                     appliedOnline = true;
                 } else if (data && data.message) {
                     // Error de negocio (no reintentable): informar y continuar.
+                    var card = document.querySelector('.delivery-card[data-rutapedidoid="' + Number(item.rutaPedidoId) + '"]');
+                    if (card && item.previousState) setCardState(card, item.previousState, false);
                     showToast(data.message, true);
                 }
                 return step();
-            }).catch(function () {
+            }).catch(function (error) {
                 // Error de red: conservar la cola y detener el reenvío.
                 flushing = false;
                 updateConnectionBadge();
                 updatePendingBadge();
+                if (error.sessionRequired) showToast(error.message, true);
                 return Promise.resolve();
             });
         }
@@ -153,10 +159,12 @@
             syncGuid: uuid(),
             rutaPedidoId: parseInt(card.getAttribute("data-rutapedidoid"), 10),
             nuevoEstado: estado,
+            previousState: card.getAttribute("data-estado"),
             motivoFallo: motivo || null
         };
-        enqueue(item);
-        setCardState(card, estado, !navigator.onLine);
+        try { enqueue(item); }
+        catch (error) { showToast("No se pudo guardar el cambio en este dispositivo. La entrega sigue sin actualizarse.", true); return; }
+        setCardState(card, estado, true);
         flush();
         if (!navigator.onLine) {
             showToast("Cambio guardado localmente. Se sincronizará al recuperar señal.", false);
@@ -166,6 +174,11 @@
     function init() {
         updateConnectionBadge();
         updatePendingBadge();
+
+        getQueue().forEach(function (item) {
+            var card = document.querySelector('.delivery-card[data-rutapedidoid="' + Number(item.rutaPedidoId) + '"]');
+            if (card) setCardState(card, item.nuevoEstado, true);
+        });
 
         document.querySelectorAll(".delivery-card").forEach(function (card) {
             card.querySelectorAll("[data-action]").forEach(function (btn) {

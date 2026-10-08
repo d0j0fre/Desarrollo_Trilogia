@@ -24,9 +24,9 @@
 
         @if (destacado is not null)
         {
-            var imagenDestacada = string.IsNullOrWhiteSpace(destacado.ImagenUrl) ? Url.Content("~/img/whisky-premium.webp") : Url.Content(destacado.ImagenUrl);
+            var imagenDestacada = string.IsNullOrWhiteSpace(destacado.ImagenUrl) ? Url.Content("~/img/product-placeholder.svg") : Url.Content(destacado.ImagenUrl);
             <a class="djj-home-hero__feature" asp-controller="Home" asp-action="Detail" asp-route-id="@destacado.ProductoId">
-                <div class="djj-home-hero__feature-media"><img src="@imagenDestacada" alt="@destacado.Nombre" width="640" height="480" /></div>
+                <div class="djj-home-hero__feature-media"><img data-djj-product-image src="@imagenDestacada" alt="@destacado.Nombre" width="640" height="480" /></div>
                 <div class="djj-home-hero__feature-body"><span>Producto destacado</span><h2>@destacado.Nombre</h2><p>₡@destacado.Precio.ToString("N0") · @destacado.EstadoStock</p></div>
             </a>
         }
@@ -67,10 +67,10 @@
             <div class="djj-product-grid">
                 @foreach (var item in productos.Take(4))
                 {
-                    var imagen = string.IsNullOrWhiteSpace(item.ImagenUrl) ? Url.Content("~/img/whisky-premium.webp") : Url.Content(item.ImagenUrl);
+                    var imagen = string.IsNullOrWhiteSpace(item.ImagenUrl) ? Url.Content("~/img/product-placeholder.svg") : Url.Content(item.ImagenUrl);
                     var stockClass = item.Stock <= 0 ? "danger" : item.Stock <= 5 ? "warning" : "success";
                     <article class="djj-product-card">
-                        <a class="djj-product-card__media" asp-controller="Home" asp-action="Detail" asp-route-id="@item.ProductoId"><img src="@imagen" alt="@item.Nombre" loading="lazy" width="360" height="360" /></a>
+                        <a class="djj-product-card__media" asp-controller="Home" asp-action="Detail" asp-route-id="@item.ProductoId"><img data-djj-product-image src="@imagen" alt="@item.Nombre" loading="lazy" width="360" height="360" /></a>
                         <div class="djj-product-card__body">
                             <span class="djj-product-card__category">@item.Categoria</span><h3>@item.Nombre</h3>
                             <p class="djj-product-card__description">@(string.IsNullOrWhiteSpace(item.Descripcion) ? "Producto disponible en el catálogo activo." : item.Descripcion)</p>
