@@ -209,6 +209,8 @@
   .djj-form-layout { grid-template-columns: minmax(0, 2fr) minmax(16rem, 1fr); }
   .djj-detail-layout { grid-template-columns: minmax(0, 2fr) minmax(18rem, 1fr); }
   .djj-admin-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  /* The final two dashboard cards contain currency totals and need room for complete amounts. */
+  .djj-admin-kpis > .djj-kpi-card:nth-last-child(-n + 2) { grid-column: span 2; }
   .djj-admin-panels { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .djj-admin-quick-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .djj-form-grid--four { grid-template-columns: repeat(4, minmax(0, 1fr)); }

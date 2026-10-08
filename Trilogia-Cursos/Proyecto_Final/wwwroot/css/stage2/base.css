@@ -22,8 +22,8 @@ body.djj-stage2 {
   -webkit-font-smoothing: antialiased;
 }
 
-body.djj-stage2 img,
-body.djj-stage2 svg { display: block; max-width: 100%; }
+:where(body.djj-stage2) img,
+:where(body.djj-stage2) svg { display: block; max-width: 100%; }
 :where(body.djj-stage2) img[data-djj-product-image][data-djj-image-missing="true"] { object-fit: contain; background: var(--djj-color-surface-subtle); }
 
 :where(body.djj-stage2) button,

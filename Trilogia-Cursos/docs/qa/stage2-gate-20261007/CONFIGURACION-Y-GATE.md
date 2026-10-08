@@ -1,6 +1,6 @@
 # Stage 2 Foundations — checkpoint y configuración local
 
-2026-10-07. Gate autenticado pendiente de login manual. No iniciar las vistas legacy.
+2026-10-07. Preparación de configuración y checkpoint; QA autenticada completada posteriormente en la misma fecha. Los resultados definitivos están en `CIERRE.md`. No iniciar las vistas legacy.
 
 ## 1. Causa de Azure SQL
 
@@ -37,7 +37,7 @@ Se preparan únicamente archivos identificados de fundaciones: CSS/tokens/layout
 
 Excluidos expresamente: Fleet/Mileage y Vehicles/Create, Edit, Index; `.agents`, caché, documentos personales, presentaciones, reportes Azure, manuales y demás untracked ajenos. No git add global, reset, clean ni borrado de archivos. Los User Secrets permanecen fuera del repositorio.
 
-## 7–10. QA autenticada
+## 7–10. Estado al preparar el primer checkpoint
 
 | Contexto | 1440 | 390 | Motivo |
 | --- | --- | --- | --- |
@@ -65,4 +65,4 @@ No hubo cambios de aplicación adicionales en este cierre: configuración privad
 
 Tras el checkpoint deben permanecer los cuatro archivos modificados del usuario y untracked ajenos. No afirmar working tree limpio. La documentación posterior de resultados autenticados podrá añadirse cuando exista sesión real.
 
-**NO PUSH. NO PR. NO ESCRITURA REMOTA.** No conexión Azure, migraciones, cambios de datos, integración de main ni migración de las ~55 vistas legacy. El gate sigue abierto hasta completar QA autenticada.
+**NO PUSH. NO PR. NO ESCRITURA REMOTA.** No conexión Azure, migraciones, cambios de datos, integración de main ni migración de las ~55 vistas legacy. El primer checkpoint dejó el gate abierto; `CIERRE.md` documenta la QA realizada tras el login manual del usuario.
