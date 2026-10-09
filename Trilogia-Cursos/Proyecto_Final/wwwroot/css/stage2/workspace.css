@@ -301,3 +301,15 @@
   .djj-payslip .djj-table-wrap { overflow: visible; }
   .djj-payslip-totals__net { border: 1px solid var(--djj-neutral-950); background: var(--djj-neutral-0); color: var(--djj-neutral-950); }
 }
+
+/* Commerce forms: share density and spacing across combos and promotions. */
+.djj-commerce-grid { display: grid; min-width: 0; gap: var(--djj-space-5); }
+.djj-commerce-grid > .djj-card { display: grid; align-content: start; gap: var(--djj-space-4); }
+.djj-commerce-grid h2 { margin: 0; font-size: var(--djj-font-size-lg); }
+.djj-commerce-grid [hidden] { display: none; }
+.djj-commerce-grid .djj-form-grid { grid-template-columns: 1fr; }
+.djj-kpi-grid .djj-kpi-card > .djj-badge { justify-self: start; }
+@media (min-width: 64rem) {
+  .djj-commerce-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .djj-commerce-grid .djj-form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

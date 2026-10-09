@@ -1,39 +1,21 @@
 @model Proyecto_Final.Models.Admin.ComboDetailViewModel
-@{ ViewData["Title"] = Model.Nombre; }
-
-<div class="container-fluid py-4 px-xl-5 backoffice-page s4-admin-page">
-    <header class="d-flex flex-wrap justify-content-between align-items-start mb-4">
-        <div class="s4-page-header">
-            <span class="s4-eyebrow"><i class="fa fa-box-open"></i> Combo #@Model.ComboId</span>
-            <h2>@Model.Nombre</h2>
-            <p class="text-muted mb-0">@(string.IsNullOrWhiteSpace(Model.Descripcion) ? "Sin descripción comercial." : Model.Descripcion)</p>
-        </div>
-        <a asp-action="Index" class="btn btn-outline-secondary"><i class="fa fa-arrow-left mr-1"></i>Volver</a>
-    </header>
-
-    <div class="s4-kpi-grid mb-4">
-        <article class="s4-kpi"><span class="s4-kpi__label">Precio de venta</span><strong class="s4-kpi__value">₡@Model.Precio.ToString("N2")</strong></article>
-        <article class="s4-kpi s4-kpi--@(Model.StockDisponibleCombo > 0 ? "success" : "danger")"><span class="s4-kpi__label">Disponibilidad real</span><strong class="s4-kpi__value">@Model.StockDisponibleCombo</strong></article>
-        <article class="s4-kpi"><span class="s4-kpi__label">Componentes</span><strong class="s4-kpi__value">@Model.Componentes.Count</strong></article>
-        <article class="s4-kpi"><span class="s4-kpi__label">Estado</span><strong class="s4-kpi__value">@Model.EstadoDisponibilidad</strong></article>
-    </div>
-
-    <div class="row">
-        <div class="col-lg-8">
-            <section class="card mb-4" aria-labelledby="component-title">
-                <div class="card-header" id="component-title">Composición y cobertura</div>
-                <div class="table-responsive"><table class="table">
-                    <thead><tr><th>Producto</th><th>Estado</th><th>Requerido por combo</th><th>Stock actual</th><th>Combos posibles</th></tr></thead>
-                    <tbody>@foreach (var line in Model.Componentes) { var coverage = line.CombosPosibles; <tr><td><strong>@line.ProductoNombre</strong></td><td>@(line.ProductoActivo ? "Activo" : "Inactivo")</td><td>@line.Cantidad</td><td>@line.StockDisponible</td><td><span class="badge badge-@(coverage > 0 ? "success" : "danger")">@coverage</span></td></tr> }</tbody>
-                </table></div>
-            </section>
-        </div>
-        <div class="col-lg-4">
-            <section class="card mb-4">
-                <div class="card-header">Trazabilidad</div>
-                <div class="card-body"><p><small class="text-muted d-block">Registrado por</small><strong>@Model.RegistradoPorNombre</strong></p><p class="mb-0"><small class="text-muted d-block">Fecha</small><strong>@Model.FechaCreacionUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</strong></p></div>
-            </section>
-            <div class="alert alert-info"><i class="fa fa-calculator mr-1"></i>La disponibilidad es el mínimo entero de stock dividido entre cantidad requerida. El checkout la recalcula y bloquea inventario.</div>
-        </div>
-    </div>
+@{ Layout = "_WorkspaceLayout"; ViewData["Title"] = Model.Nombre; }
+<header class="djj-page-header"><div class="djj-page-header__copy"><span class="djj-page-header__eyebrow">Inventario · Combo #@Model.ComboId</span><h1>@Model.Nombre</h1><p>@(string.IsNullOrWhiteSpace(Model.Descripcion) ? "Sin descripción comercial." : Model.Descripcion)</p></div><a asp-action="Index" class="djj-button djj-button--ghost">Volver a combos</a></header>
+<partial name="_ComboNavigation" />
+<div class="djj-kpi-grid" aria-label="Resumen del combo">
+    <article class="djj-kpi-card"><span>Precio de venta</span><strong class="djj-number">₡@Model.Precio.ToString("N2")</strong></article>
+    <article class="djj-kpi-card"><span>Disponibilidad real</span><strong>@Model.StockDisponibleCombo</strong><small>Combos completos</small></article>
+    <article class="djj-kpi-card"><span>Componentes</span><strong>@Model.Componentes.Count</strong></article>
+    <article class="djj-kpi-card"><span>Estado</span><div class="djj-badge djj-badge--@(Model.Activo ? "success" : "neutral")">@(Model.Activo ? "Activo" : "Inactivo")</div><small>@Model.EstadoDisponibilidad</small></article>
+</div>
+<div class="djj-detail-layout">
+    <section class="djj-card djj-data-section" aria-labelledby="component-title"><header><div><h2 id="component-title">Composición y cobertura</h2><p>Unidades requeridas y capacidad de cada producto.</p></div></header>
+        @if (Model.Componentes.Count == 0) { <div class="djj-empty-state"><h3>Sin componentes</h3><p>Este combo no tiene productos asociados.</p></div> }
+        else {
+            <div class="djj-table-wrap" tabindex="0" role="region" aria-labelledby="component-title"><table class="djj-table djj-table--compact"><caption class="djj-sr-only">Productos, estado, cantidades por combo, stock y cobertura</caption><thead><tr><th scope="col">Producto</th><th scope="col">Estado</th><th scope="col" class="djj-align-right">Por combo</th><th scope="col" class="djj-align-right">Stock actual</th><th scope="col" class="djj-align-right">Combos posibles</th></tr></thead><tbody>
+                @foreach (var line in Model.Componentes) { <tr><td><strong class="djj-table__primary">@line.ProductoNombre</strong></td><td><span class="djj-badge djj-badge--@(line.ProductoActivo ? "success" : "neutral")">@(line.ProductoActivo ? "Activo" : "Inactivo")</span></td><td class="djj-align-right">@line.Cantidad</td><td class="djj-align-right">@line.StockDisponible</td><td class="djj-align-right">@line.CombosPosibles</td></tr> }
+            </tbody></table></div>
+        }
+    </section>
+    <section class="djj-card" aria-labelledby="combo-trace"><h2 id="combo-trace">Trazabilidad</h2><dl class="djj-detail-grid"><div><dt>Registrado por</dt><dd>@Model.RegistradoPorNombre</dd></div><div><dt>Fecha de creación</dt><dd>@Model.FechaCreacionUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</dd></div></dl><p class="djj-field__hint">La disponibilidad refleja el componente con menor cobertura. Un producto inactivo impide vender el combo; se vuelve a verificar el stock al confirmar el pedido.</p></section>
 </div>

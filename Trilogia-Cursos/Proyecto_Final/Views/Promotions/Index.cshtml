@@ -1,119 +1,38 @@
 @using Proyecto_Final.Models.Admin
+@using Proyecto_Final.Models.Presentation
 @model IEnumerable<PromotionListItemViewModel>
 @{
-    ViewData["Title"] = "Promociones";
-    var estado = ViewBag.Estado as string;
-    var buscar = ViewBag.Buscar as string;
-    string EstadoBadge(string e) => e switch { "Activa" => "success", "Inactiva" => "danger", _ => "warning" };
-    string TipoLabel(string t) => t == "DescuentoPorcentual" ? "Descuento %" : "Regalía por volumen";
+    Layout = "_WorkspaceLayout"; ViewData["Title"] = "Promociones";
+    var estado = ViewBag.Estado as string; var buscar = ViewBag.Buscar as string;
+    var promotions = Model.ToList(); var today = DateTime.Today;
 }
-
-@section Styles {
-    <link href="~/css/custom-theme.css" rel="stylesheet" />
-}
-
-<div class="container-fluid pt-4 backoffice-page">
-    <div class="row px-xl-5">
-        <div class="col-12">
-            <div class="admin-page-header d-flex justify-content-between align-items-center flex-wrap">
-                <div>
-                    <h2 class="mb-2">Promociones</h2>
-                    <p class="mb-0">Descuentos y regalías por volumen, segmentados por tipo de cliente.</p>
-                </div>
-                <div class="mt-2 mt-md-0">
-                    <a asp-action="Segments" class="btn btn-light border mr-2"><i class="fa fa-user-tag mr-2 text-primary"></i>Segmentos de cliente</a>
-                    <a asp-action="Create" class="btn btn-primary"><i class="fa fa-plus mr-2"></i>Nueva promoción</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row px-xl-5">
-        <div class="col-12">
-            <div class="admin-filter-bar">
-                <form asp-action="Index" method="get" class="form-inline">
-                    <input type="text" name="buscar" value="@buscar" class="form-control mr-2 mb-2" placeholder="Nombre o producto" />
-                    <select name="estado" class="form-control mr-2 mb-2">
-                        <option value="">Todos los estados</option>
-                        <option value="Activa" selected="@(estado == "Activa")">Activa</option>
-                        <option value="Inactiva" selected="@(estado == "Inactiva")">Inactiva</option>
-                        <option value="Vencida" selected="@(estado == "Vencida")">Vencida</option>
-                    </select>
-                    <button type="submit" class="btn btn-primary mr-2 mb-2"><i class="fa fa-search mr-2"></i>Buscar</button>
-                    <a asp-action="Index" class="btn btn-outline-secondary mb-2"><i class="fa fa-eraser mr-2"></i>Limpiar</a>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <div class="row px-xl-5 pb-5">
-        <div class="col-12">
-            <div class="admin-table-wrapper">
-                <div class="p-4 border-bottom d-flex justify-content-between align-items-center flex-wrap">
-                    <h5 class="mb-0">Listado de promociones</h5>
-                    <span class="text-muted">Total: @(Model?.Count() ?? 0)</span>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0 align-middle">
-                        <thead class="thead-light">
-                            <tr>
-                                <th>Nombre</th><th>Tipo</th><th>Producto</th><th>Segmento</th>
-                                <th class="text-center">Vigencia</th><th class="text-center">Estado</th><th class="text-center">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @if (Model == null || !Model.Any())
-                            {
-                                <tr><td colspan="7" class="text-center text-muted py-4">No hay promociones registradas.</td></tr>
-                            }
-                            else
-                            {
-                                @foreach (var p in Model)
-                                {
-                                    <tr>
-                                        <td class="font-weight-bold">
-                                            @p.Nombre
-                                            @if (p.Vigente) { <span class="admin-badge-soft success ml-1">Vigente</span> }
-                                        </td>
-                                        <td>
-                                            @TipoLabel(p.Tipo)
-                                            <div class="text-muted small">
-                                                @if (p.Tipo == "DescuentoPorcentual") { <text>@p.PorcentajeDescuento% desde @p.CantidadMinima u.</text> }
-                                                else { <text>@p.CantidadRegalo @p.ProductoRegaloNombre por cada @p.CantidadMinima u.</text> }
-                                            </div>
-                                        </td>
-                                        <td>@p.ProductoNombre</td>
-                                        <td>@p.SegmentoCliente</td>
-                                        <td class="text-center">@p.FechaInicio.ToString("dd/MM/yy") – @p.FechaFin.ToString("dd/MM/yy")</td>
-                                        <td class="text-center"><span class="admin-badge-soft @EstadoBadge(p.Estado)">@p.Estado</span></td>
-                                        <td class="text-center">
-                                            @if (p.Estado == "Activa")
-                                            {
-                                                <a asp-action="Edit" asp-route-id="@p.PromocionId" class="btn btn-sm btn-outline-primary mr-1"><i class="fa fa-edit"></i></a>
-                                                <form asp-action="Inactivate" method="post" class="d-inline"
-                                                      data-s3-confirm="¿Inactivar la promoción '@p.Nombre'? Dejará de aplicarse en el carrito inmediatamente."
-                                                      data-s3-confirm-title="Inactivar promoción"
-                                                      data-s3-confirm-type="danger"
-                                                      data-s3-confirm-ok="Sí, inactivar"
-                                                      data-s3-confirm-cancel="Cancelar">
-                                                    @Html.AntiForgeryToken()
-                                                    <input type="hidden" name="promocionId" value="@p.PromocionId" />
-                                                    <input type="hidden" name="motivo" value="Inactivación manual (contingencia)" />
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fa fa-ban"></i></button>
-                                                </form>
-                                            }
-                                            else
-                                            {
-                                                <span class="text-muted">—</span>
-                                            }
-                                        </td>
-                                    </tr>
-                                }
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+<header class="djj-page-header"><div class="djj-page-header__copy"><span class="djj-page-header__eyebrow">Comercial · Promociones</span><h1>Promociones</h1><p>Descuentos y regalías por volumen, dirigidos al segmento adecuado.</p></div><a asp-action="Create" class="djj-button djj-button--primary">Nueva promoción</a></header>
+<partial name="_PromotionNavigation" />
+<section class="djj-card djj-filter-card" aria-labelledby="promotion-filters"><h2 id="promotion-filters">Buscar promociones</h2><form asp-action="Index" method="get" class="djj-filter-bar">
+    <div class="djj-field"><label for="promotion-search">Nombre o producto</label><input id="promotion-search" type="search" name="buscar" value="@buscar" class="djj-input" /></div>
+    <div class="djj-field"><label for="promotion-status">Estado técnico</label><select id="promotion-status" name="estado" class="djj-select"><option value="">Todos los estados</option><option value="Activa" selected="@(estado == "Activa")">Activa</option><option value="Inactiva" selected="@(estado == "Inactiva")">Inactiva</option><option value="Vencida" selected="@(estado == "Vencida")">Vencida</option></select></div>
+    <div class="djj-filter-bar__actions"><button type="submit" class="djj-button djj-button--neutral">Buscar</button><a asp-action="Index" class="djj-button djj-button--ghost">Limpiar</a></div>
+</form></section>
+<section class="djj-card djj-data-section" aria-labelledby="promotion-list"><header><div><h2 id="promotion-list">Listado de promociones</h2><p>@promotions.Count promoción(es). El estado técnico y la vigencia comercial se muestran por separado.</p></div></header>
+    @if (promotions.Count == 0) { <div class="djj-empty-state"><h3>Sin promociones para mostrar</h3><p>@(string.IsNullOrWhiteSpace(buscar) && string.IsNullOrWhiteSpace(estado) ? "Todavía no hay promociones registradas." : "Probá con otro nombre, producto o estado.")</p></div> }
+    else {
+        <div class="djj-table-wrap" tabindex="0" role="region" aria-labelledby="promotion-list"><table class="djj-table djj-table--compact"><caption class="djj-sr-only">Beneficios, productos, segmentos, fechas, estados y acciones de promociones</caption><thead><tr><th scope="col">Promoción</th><th scope="col">Tipo y beneficio</th><th scope="col">Producto</th><th scope="col">Segmento</th><th scope="col">Vigencia</th><th scope="col">Estado</th><th scope="col">Acciones</th></tr></thead><tbody>
+            @foreach (var p in promotions) {
+                var commercial = PromotionStatusPresentation.From(p, today);
+                <tr><td><strong class="djj-table__primary">@p.Nombre</strong><small class="djj-table__note">Prioridad: @p.Prioridad</small></td>
+                    <td>@(p.Tipo == "DescuentoPorcentual" ? "Descuento porcentual" : "Regalía por volumen")<small class="djj-table__note">@if (p.Tipo == "DescuentoPorcentual") { <text>@p.PorcentajeDescuento% desde @p.CantidadMinima u.</text> } else { <text>@p.CantidadRegalo @p.ProductoRegaloNombre por cada @p.CantidadMinima u.</text> }</small></td>
+                    <td>@p.ProductoNombre</td><td><span class="djj-badge djj-badge--info">@p.SegmentoCliente</span></td>
+                    <td><span class="djj-table__nowrap">@p.FechaInicio.ToString("dd/MM/yyyy")</span><small class="djj-table__note djj-table__nowrap">al @p.FechaFin.ToString("dd/MM/yyyy")</small></td>
+                    <td><span class="djj-badge djj-badge--@commercial.Tone">@commercial.Label</span><small class="djj-table__note">Técnico: @p.Estado</small></td>
+                    <td>@if (p.Estado == "Activa") {
+                        <div class="djj-row-actions"><a asp-action="Edit" asp-route-id="@p.PromocionId" class="djj-button djj-button--outline djj-button--sm" aria-label="Editar @p.Nombre">Editar</a>
+                            <form asp-action="Inactivate" method="post" data-djj-confirm="¿Inactivar la promoción '@p.Nombre'? Dejará de aplicarse en el carrito inmediatamente.">
+                                @Html.AntiForgeryToken()<input type="hidden" name="promocionId" value="@p.PromocionId" /><input type="hidden" name="motivo" value="Inactivación manual (contingencia)" /><button type="submit" class="djj-button djj-button--danger-outline djj-button--sm" aria-label="Inactivar @p.Nombre">Inactivar</button>
+                            </form>
+                        </div>
+                    } else { <span class="djj-table__note">Sin acciones disponibles</span> }</td>
+                </tr>
+            }
+        </tbody></table></div>
+    }
+</section>

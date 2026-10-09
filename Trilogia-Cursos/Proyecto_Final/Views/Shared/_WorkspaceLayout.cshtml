@@ -15,6 +15,8 @@
     bool Can(string code) => isAdmin || permissions.Contains(code);
     bool IsCurrent(params string[] controllers) => controllers.Any(value => string.Equals(controller, value, StringComparison.OrdinalIgnoreCase));
     var canInventory = Can("INVENTARIO_VER");
+    var canCombos = Can("COMBOS_VER");
+    var canPromotions = Can("PROMOCIONES_GESTIONAR");
     var canPurchases = Can("COMPRAS_ORDENES_VER");
     var canClients = Can("CLIENTES_VER");
     var canCredits = Can("CREDITOS_VER");
@@ -67,7 +69,7 @@
                         <li class="djj-workspace-nav__label">Resumen</li>
                         <li><a asp-controller="Admin" asp-action="Index" aria-current="@(IsCurrent("Admin") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-chart"></use></svg><span class="djj-workspace-nav__text">Panel general</span></a></li>
                     }
-                    @if (isAdmin || canBilling)
+                    @if (isAdmin || canBilling || canPromotions)
                     {
                         <li class="djj-workspace-nav__label">Ventas y pedidos</li>
                         @if (isAdmin)
@@ -78,6 +80,15 @@
                         {
                             <li><a asp-controller="Billing" asp-action="Index" aria-current="@(IsCurrent("Billing") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-receipt"></use></svg><span class="djj-workspace-nav__text">Facturación</span></a></li>
                         }
+                    }
+                    @if (canPromotions)
+                    {
+                        <li><a asp-controller="Promotions" asp-action="Index" aria-current="@(IsCurrent("Promotions") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-package"></use></svg><span class="djj-workspace-nav__text">Promociones y segmentos</span></a></li>
+                    }
+                    @if (canCombos && !canInventory)
+                    {
+                        <li class="djj-workspace-nav__label">Inventario</li>
+                        <li><a asp-controller="Combos" asp-action="Index" aria-current="@(IsCurrent("Combos") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-package"></use></svg><span class="djj-workspace-nav__text">Combos</span></a></li>
                     }
                     @if (canInventory)
                     {
