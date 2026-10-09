@@ -341,3 +341,52 @@
 /* Keep workflow cards and text-only alerts within their mobile grid tracks. */
 .djj-order-sections > * { min-width: 0; }
 .djj-workspace-content:has(.djj-order-sections) > .djj-alert { grid-template-columns: minmax(0, 1fr); }
+
+/* Administrative logistics: isolated from Field and previous modules. */
+.djj-logistics, .djj-logistics-grid, .djj-logistics-split, .djj-logistics-grid > *, .djj-logistics-split > * { min-width: 0; }
+.djj-logistics-grid, .djj-logistics-split { display: grid; gap: var(--djj-space-5); }
+.djj-logistics-grid:has(> :only-child) { gap: 0; }
+.djj-logistics-split { align-items: start; }
+.djj-logistics .djj-card { margin-bottom: var(--djj-space-4); }
+.djj-logistics .djj-alert { grid-template-columns: minmax(0, 1fr); }
+.djj-logistics .djj-card h2 { font-size: var(--djj-font-size-lg); }
+.djj-logistics-pad { padding: var(--djj-space-5); }
+.djj-logistics-divider { border-bottom: 1px solid var(--djj-color-border); }
+.djj-logistics-center { text-align: center; }
+.djj-logistics-strong { font-weight: var(--djj-weight-bold); }
+.djj-logistics-success { color: var(--djj-color-success); }
+.djj-logistics-danger { color: var(--djj-color-danger); }
+.djj-logistics-between { justify-content: space-between; }
+.djj-logistics .djj-table { min-width: 44rem; }
+.djj-logistics .djj-table td { overflow-wrap: anywhere; }
+.djj-logistics .djj-table caption { text-align: left; }
+.djj-logistics .djj-table tbody th { text-transform: none; font-size: inherit; letter-spacing: normal; }
+.djj-logistics .djj-table-wrap { position: relative; max-width: 100%; }
+.djj-logistics form > .djj-field { margin-bottom: var(--djj-space-4); }
+.djj-logistics #diasAviso { width: 6rem; }
+.djj-logistics .djj-button { min-height: var(--djj-control-height); white-space: nowrap; }
+.djj-logistics .djj-badge { white-space: nowrap; overflow-wrap: normal; }
+.djj-logistics-filter { display: flex; flex-wrap: wrap; align-items: end; gap: var(--djj-space-3); }
+.djj-logistics-filter > .djj-field { flex: 1 1 12rem; }
+.djj-logistics-check { width: 1.25rem; height: 1.25rem; accent-color: var(--djj-color-primary); }
+.djj-logistics-facts { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); gap: var(--djj-space-3); }
+.djj-logistics-facts dd { margin: 0; overflow-wrap: anywhere; }
+.djj-logistics-nav { display: flex; flex-wrap: wrap; gap: var(--djj-space-2); }
+.djj-logistics-nav a { display: inline-flex; align-items: center; min-height: var(--djj-control-height); border: 1px solid var(--djj-color-border); border-radius: var(--djj-radius-md); padding: var(--djj-space-2) var(--djj-space-3); text-decoration: none; }
+.djj-logistics-nav a[aria-current="page"] { background: var(--djj-color-surface-subtle); color: var(--djj-color-primary); font-weight: var(--djj-weight-bold); border-color: var(--djj-color-primary); }
+.djj-logistics-disclosure { border-top: 1px solid var(--djj-color-border); margin-top: var(--djj-space-4); padding-top: var(--djj-space-4); }
+.djj-logistics-evidence-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); gap: var(--djj-space-4); }
+.djj-logistics-evidence { min-width: 0; border: 1px solid var(--djj-color-border); border-radius: var(--djj-radius-md); padding: var(--djj-space-4); overflow-wrap: anywhere; }
+.djj-logistics-evidence h3 { font-size: var(--djj-font-size-base); }
+.djj-logistics-evidence figure { margin: 0; }
+.djj-logistics-evidence img { width: 100%; height: 12.5rem; object-fit: contain; background: var(--djj-color-surface-subtle); }
+.djj-logistics #routePickerMap { height: 20rem; border-radius: var(--djj-radius-md); z-index: 0; margin-bottom: var(--djj-space-4); }
+.djj-logistics .route-pin { display: grid; place-items: center; width: 1.75rem; height: 1.75rem; border: 2px solid var(--djj-color-on-primary); border-radius: var(--djj-radius-pill); background: var(--djj-color-primary); color: var(--djj-color-on-primary); font-weight: var(--djj-weight-bold); }
+.djj-logistics .seq-row.active { background: var(--djj-color-surface-subtle); }
+.djj-logistics .btn-locate[aria-pressed="true"] { border-color: var(--djj-color-primary); color: var(--djj-color-primary); }
+.djj-logistics #seqForm .djj-input { min-width: 8rem; }
+@media (min-width: 80rem) {
+  .djj-logistics-split { grid-template-columns: minmax(0, 2fr) minmax(18rem, 1fr); }
+  .djj-logistics-split--form-first { grid-template-columns: minmax(18rem, 1fr) minmax(0, 2fr); }
+}
+@media (max-width: 35.99rem) { .djj-logistics-filter { align-items: stretch; } .djj-logistics-filter > * { width: 100%; } }

@@ -1,17 +1,19 @@
 @model Proyecto_Final.Models.Admin.RouteDetailViewModel
+@using Proyecto_Final.Models.Presentation
 @{
+    Layout = "_WorkspaceLayout";
     ViewData["Title"] = $"Ruta {Model.Cabecera.Codigo}";
     var c = Model.Cabecera;
     var esPlanificada = c.Estado == "Planificada";
     var puedeCancelar = c.Estado == "Planificada" || c.Estado == "Despachada";
 
-    string BadgeRuta(string e) => e switch { "Planificada" => "warning", "Despachada" => "dark", "Completada" => "success", "Cancelada" => "danger", _ => "dark" };
-    string BadgeEntrega(string e) => e switch { "EnRuta" => "dark", "Entregado" => "success", "Fallido" => "danger", _ => "warning" };
+    string BadgeRuta(string e) => LogisticsStatusPresentation.RouteTone(e);
+    string BadgeEntrega(string e) => LogisticsStatusPresentation.DeliveryTone(e);
     string TextoEntrega(string e) => e switch { "EnRuta" => "En ruta", _ => e };
 
     // Enlace de verificación del recorrido en Google Maps (paradas con coordenada, en orden).
     var invD = System.Globalization.CultureInfo.InvariantCulture;
-    var paradasConCoord = Model.Pedidos.Where(x => x.Latitud.HasValue && x.Longitud.HasValue).ToList();
+    var paradasConCoord = Model.Pedidos.Where(x => x.Latitud is >= -90 and <= 90 && x.Longitud is >= -180 and <= 180).ToList();
     string? rutaMapsUrl = null;
     if (paradasConCoord.Count > 0)
     {
@@ -27,181 +29,156 @@
 }
 
 @section Styles {
-    <link href="~/css/custom-theme.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <style>
-        #routePickerMap { height: 320px; border-radius: 10px; z-index: 0; }
-        .route-pin { background:#0b5ed7; color:#fff; border-radius:50%; width:26px; height:26px; display:flex; align-items:center; justify-content:center; font-weight:700; border:2px solid #fff; box-shadow:0 0 4px rgba(0,0,0,.4); }
-        .seq-row.active { background:#eef4ff; }
-        .btn-locate.active { background:#0b5ed7; color:#fff; }
-    </style>
 }
 
-<div class="container-fluid pt-4 backoffice-page">
-    <div class="row px-xl-5">
-        <div class="col-12">
-            <div class="admin-page-header d-flex justify-content-between align-items-center flex-wrap">
+<div class="djj-logistics djj-stack">
+    <partial name="_LogisticsNavigation" />
+    <div class="djj-logistics-grid">
+        <div>
+            <div class="djj-page-header djj-cluster djj-logistics-between">
                 <div>
-                    <h2 class="mb-2">Ruta @c.Codigo <span class="admin-badge-soft @BadgeRuta(c.Estado)">@c.Estado</span></h2>
-                    <p class="mb-0">Zona: <strong>@c.Zona</strong></p>
+                    <h1>Ruta @c.Codigo <span class="djj-badge djj-badge--@BadgeRuta(c.Estado)">@c.Estado</span></h1>
+                    <p>Zona: <strong>@c.Zona</strong></p>
                 </div>
-                <div class="mt-2 mt-md-0">
-                    <a asp-action="Evidences" asp-route-id="@c.RutaId" class="btn btn-outline-secondary mr-1"><i class="fa fa-camera mr-2"></i>Evidencias</a>
-                    <a asp-action="Index" class="btn btn-outline-secondary"><i class="fa fa-arrow-left mr-2"></i>Volver</a>
+                <div>
+                    <a asp-action="Evidences" asp-route-id="@c.RutaId" class="djj-button djj-button--outline">Evidencias</a>
+                    <a asp-action="Index" class="djj-button djj-button--outline">Volver</a>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row px-xl-5">
-        <div class="col-lg-4 mb-4">
-            <div class="admin-table-wrapper p-4">
-                <h5 class="mb-3">Detalle de la ruta</h5>
-                <dl class="row mb-0">
-                    <dt class="col-5">Chofer</dt><dd class="col-7">@c.Chofer</dd>
-                    <dt class="col-5">Vehículo</dt><dd class="col-7">@c.VehiculoPlaca<br /><small class="text-muted">@c.VehiculoDescripcion</small></dd>
-                    <dt class="col-5">Creada</dt><dd class="col-7">@c.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</dd>
+    <div class="djj-logistics-split djj-logistics-split--form-first">
+        <div>
+            <div class="djj-card djj-logistics-pad">
+                <h2>Detalle de la ruta</h2>
+                <dl class="djj-logistics-facts">
+                    <dt>Chofer</dt><dd>@c.Chofer</dd>
+                    <dt>Vehículo</dt><dd>@c.VehiculoPlaca<br /><small class="djj-text-secondary">@c.VehiculoDescripcion</small></dd>
+                    <dt>Creada por</dt><dd>@c.CreadaPorNombre</dd><dt>Creada</dt><dd>@c.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</dd>
                     @if (c.FechaDespacho.HasValue)
                     {
-                        <dt class="col-5">Despachada</dt><dd class="col-7">@c.FechaDespacho.Value.ToString("dd/MM/yyyy HH:mm")</dd>
+                        <dt>Despachada</dt><dd>@c.FechaDespacho.Value.ToString("dd/MM/yyyy HH:mm")</dd>
                     }
                     @if (!string.IsNullOrWhiteSpace(c.Observaciones))
                     {
-                        <dt class="col-5">Observaciones</dt><dd class="col-7">@c.Observaciones</dd>
+                        <dt>Observaciones</dt><dd>@c.Observaciones</dd>
                     }
                 </dl>
 
+                @if (c.FechaCierre.HasValue) { <p>Cierre: @c.FechaCierre.Value.ToString("dd/MM/yyyy HH:mm")</p> }
                 <hr />
-                <div class="d-flex flex-wrap">
+                <div class="djj-cluster">
                     @if (esPlanificada)
                     {
-                        <form asp-action="Sequence" method="post" class="mr-2 mb-2"
-                              data-s3-confirm="¿Generar automáticamente el orden óptimo de entregas?"
-                              data-s3-confirm-title="Secuenciar ruta"
-                              data-s3-confirm-type="info"
-                              data-s3-confirm-ok="Sí, secuenciar"
-                              data-s3-confirm-cancel="Cancelar">
+                        <form asp-action="Sequence" method="post"
+                              data-djj-confirm="¿Generar automáticamente el orden óptimo de entregas?">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="rutaId" value="@c.RutaId" />
-                            <button type="submit" class="btn btn-outline-primary"><i class="fa fa-route mr-2"></i>Secuenciar automáticamente</button>
+                            <button type="submit" class="djj-button djj-button--outline">Secuenciar automáticamente</button>
                         </form>
-                        <form asp-action="Dispatch" method="post" class="mr-2 mb-2"
-                              data-s3-confirm="¿Despachar la ruta? Los pedidos pasarán a En ruta y se notificará a los clientes."
-                              data-s3-confirm-title="Despachar ruta"
-                              data-s3-confirm-type="warning"
-                              data-s3-confirm-ok="Sí, despachar"
-                              data-s3-confirm-cancel="Cancelar">
+                        <form asp-action="Dispatch" method="post"
+                              data-djj-confirm="¿Despachar la ruta? Los pedidos pasarán a En ruta y se notificará a los clientes.">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="rutaId" value="@c.RutaId" />
-                            <button type="submit" class="btn btn-primary"><i class="fa fa-truck mr-2"></i>Despachar ruta</button>
+                            <button type="submit" class="djj-button djj-button--primary">Despachar ruta</button>
                         </form>
                     }
                     @if (c.Estado == "Despachada")
                     {
-                        <button type="button" class="btn btn-outline-warning mr-2 mb-2" data-toggle="collapse" data-target="#recalcBox">
-                            <i class="fa fa-sync mr-2"></i>Recalcular ruta
+                        <button type="button" class="djj-button djj-button--outline" data-djj-toggle="recalcBox" aria-controls="recalcBox" aria-expanded="false">
+                            Recalcular ruta
                         </button>
                     }
                     @if (c.Estado == "Despachada")
                     {
-                        <form asp-action="Liquidate" method="post" class="mr-2 mb-2"
-                              data-s3-confirm="¿Liquidar la ruta al final del día? La mercadería de los pedidos NO entregados se reingresará al inventario."
-                              data-s3-confirm-title="Liquidar ruta"
-                              data-s3-confirm-type="warning"
-                              data-s3-confirm-ok="Sí, liquidar"
-                              data-s3-confirm-cancel="Cancelar">
+                        <form asp-action="Liquidate" method="post"
+                              data-djj-confirm="¿Liquidar la ruta al final del día? La mercadería de los pedidos NO entregados se reingresará al inventario.">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="rutaId" value="@c.RutaId" />
-                            <button type="submit" class="btn btn-outline-primary"><i class="fa fa-clipboard-check mr-2"></i>Liquidar ruta</button>
+                            <button type="submit" class="djj-button djj-button--outline">Liquidar ruta</button>
                         </form>
                     }
                     @if (puedeCancelar)
                     {
-                        <button type="button" class="btn btn-outline-danger mb-2" data-toggle="collapse" data-target="#cancelBox">
-                            <i class="fa fa-ban mr-2"></i>Cancelar ruta
+                        <button type="button" class="djj-button djj-button--danger-outline" data-djj-toggle="cancelBox" aria-controls="cancelBox" aria-expanded="false">
+                            Cancelar ruta
                         </button>
                     }
                 </div>
 
                 @if (puedeCancelar)
                 {
-                    <div class="collapse mt-2" id="cancelBox">
+                    <div class="djj-logistics-disclosure" id="cancelBox" hidden>
                         <form asp-action="Cancel" method="post"
-                              data-s3-confirm="¿Confirma cancelar la ruta?"
-                              data-s3-confirm-title="Cancelar ruta"
-                              data-s3-confirm-type="danger"
-                              data-s3-confirm-ok="Sí, cancelar"
-                              data-s3-confirm-cancel="Volver">
+                              data-djj-confirm="¿Confirma cancelar la ruta?">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="rutaId" value="@c.RutaId" />
-                            <div class="form-group">
-                                <label class="font-weight-bold">Motivo</label>
-                                <input type="text" name="motivo" class="form-control" maxlength="300" placeholder="Motivo de la cancelación" />
+                            <div class="djj-field">
+                                <label for="cancel-reason">Motivo</label>
+                                <input type="text" id="cancel-reason" name="motivo" class="djj-input" maxlength="300" placeholder="Motivo de la cancelación" />
                             </div>
-                            <button type="submit" class="btn btn-danger btn-sm">Confirmar cancelación</button>
+                            <button type="submit" class="djj-button djj-button--danger">Confirmar cancelación</button>
                         </form>
                     </div>
                 }
 
                 @if (c.Estado == "Despachada")
                 {
-                    <div class="collapse mt-2" id="recalcBox">
+                    <div class="djj-logistics-disclosure" id="recalcBox" hidden>
                         <form asp-action="Recalculate" method="post"
-                              data-s3-confirm="¿Recalcular la ruta? Se reordenarán los puntos pendientes."
-                              data-s3-confirm-title="Recalcular ruta"
-                              data-s3-confirm-type="warning"
-                              data-s3-confirm-ok="Sí, recalcular"
-                              data-s3-confirm-cancel="Cancelar">
+                              data-djj-confirm="¿Recalcular la ruta? Se reordenarán los puntos pendientes.">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="rutaId" value="@c.RutaId" />
-                            <div class="form-group">
-                                <label class="font-weight-bold">Punto afectado (opcional)</label>
-                                <select name="excluirRutaPedidoId" class="form-control">
+                            <div class="djj-field">
+                                <label for="recalc-stop">Punto afectado (opcional)</label>
+                                <select id="recalc-stop" name="excluirRutaPedidoId" class="djj-input">
                                     <option value="">— Solo reordenar los pendientes —</option>
                                     @foreach (var p in Model.Pedidos.Where(x => x.EstadoEntrega == "Pendiente" || x.EstadoEntrega == "EnRuta"))
                                     {
                                         <option value="@p.RutaPedidoId">#@p.PedidoId - @p.Cliente</option>
                                     }
                                 </select>
-                                <small class="text-muted">Si un cliente está cerrado o hubo un imprevisto, selecciónelo para excluirlo.</small>
+                                <small class="djj-text-secondary">Si un cliente está cerrado o hubo un imprevisto, selecciónelo para excluirlo.</small>
                             </div>
-                            <div class="form-group">
-                                <input type="text" name="motivoFallo" class="form-control" maxlength="300" placeholder="Motivo (ej: cliente cerrado)" />
+                            <div class="djj-field">
+                                <label for="recalc-reason">Motivo del imprevisto</label><input id="recalc-reason" type="text" name="motivoFallo" class="djj-input" maxlength="300" placeholder="Motivo (ej: cliente cerrado)" />
                             </div>
-                            <button type="submit" class="btn btn-warning btn-sm"><i class="fa fa-sync mr-1"></i>Recalcular</button>
+                            <button type="submit" class="djj-button djj-button--outline">Recalcular</button>
                         </form>
                     </div>
                 }
             </div>
         </div>
 
-        <div class="col-lg-8 mb-4">
-            <div class="admin-table-wrapper">
-                <div class="p-4 border-bottom d-flex justify-content-between align-items-center flex-wrap">
-                    <h5 class="mb-0">Pedidos de la ruta</h5>
-                    <div class="d-flex align-items-center">
+        <div>
+            <div class="djj-card">
+                <div class="djj-logistics-pad djj-logistics-divider djj-cluster djj-logistics-between">
+                    <h2>Pedidos de la ruta</h2>
+                    <div class="djj-cluster">
                         @if (rutaMapsUrl != null)
                         {
-                            <a href="@rutaMapsUrl" target="_blank" rel="noopener" class="btn btn-sm btn-outline-success mr-3" title="Verificar el recorrido en Google Maps">
-                                <i class="fas fa-directions mr-1"></i>Ver recorrido en Maps
+                            <a href="@rutaMapsUrl" target="_blank" rel="noopener" class="djj-button djj-button--outline" title="Verificar el recorrido en Google Maps">
+                                Ver recorrido en Maps
                             </a>
                         }
-                        <span class="text-muted">Total: @Model.Pedidos.Count</span>
+                        <span class="djj-text-secondary">Total: @Model.Pedidos.Count</span>
                     </div>
                 </div>
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="thead-light">
+                <div class="djj-table-wrap" tabindex="0" aria-label="Tabla desplazable">
+                    <table class="djj-table"><caption class="djj-sr-only">RoutesAdmin/Detail · registros operativos</caption>
+                        <thead>
                             <tr>
-                                <th>#</th>
-                                <th># Pedido</th>
-                                <th>Cliente</th>
-                                <th>Dirección</th>
-                                <th>Entrega</th>
-                                <th class="text-center">Evidencias</th>
+                                <th scope="col">#</th>
+                                <th scope="col"># Pedido</th>
+                                <th scope="col">Cliente</th>
+                                <th scope="col">Dirección</th>
+                                <th scope="col">Entrega</th>
+                                <th scope="col" class="djj-logistics-center">Evidencias</th>
                                 @if (esPlanificada)
                                 {
-                                    <th class="text-center">Quitar</th>
+                                    <th scope="col" class="djj-logistics-center">Quitar</th>
                                 }
                             </tr>
                         </thead>
@@ -210,30 +187,26 @@
                             {
                                 <tr>
                                     <td>@p.Secuencia</td>
-                                    <td class="font-weight-bold">#@p.PedidoId</td>
-                                    <td>@p.Cliente</td>
-                                    <td><small>@p.DireccionEntrega</small></td>
+                                    <td class="djj-logistics-strong">#@p.PedidoId</td>
+                                    <td>@p.Cliente<small class="djj-table__note">@p.ClienteCorreo</small></td>
+                                    <td><small>@p.DireccionEntrega</small><small class="djj-table__note">₡@p.Total.ToString("N2") · Pedido: @p.EstadoPedido</small></td>
                                     <td>
-                                        <span class="admin-badge-soft @BadgeEntrega(p.EstadoEntrega)">@TextoEntrega(p.EstadoEntrega)</span>
+                                        <span class="djj-badge djj-badge--@BadgeEntrega(p.EstadoEntrega)">@TextoEntrega(p.EstadoEntrega)</span><small class="djj-table__note">@(p.FechaEntrega?.ToString("dd/MM/yyyy HH:mm") ?? "Sin fecha de entrega")</small>
                                         @if (p.EstadoEntrega == "Fallido" && !string.IsNullOrWhiteSpace(p.MotivoFallo))
                                         {
-                                            <br /><small class="text-danger">@p.MotivoFallo</small>
+                                            <br /><small class="djj-logistics-danger">@p.MotivoFallo</small>
                                         }
                                     </td>
-                                    <td class="text-center">@p.TotalEvidencias</td>
+                                    <td class="djj-logistics-center">@p.TotalEvidencias</td>
                                     @if (esPlanificada)
                                     {
-                                        <td class="text-center">
-                                            <form asp-action="RemoveOrder" method="post" class="d-inline"
-                                                  data-s3-confirm="¿Quitar el pedido de la ruta?"
-                                                  data-s3-confirm-title="Quitar pedido"
-                                                  data-s3-confirm-type="warning"
-                                                  data-s3-confirm-ok="Sí, quitar"
-                                                  data-s3-confirm-cancel="Cancelar">
+                                        <td class="djj-logistics-center">
+                                            <form asp-action="RemoveOrder" method="post" class="djj-inline-action"
+                                                  data-djj-confirm="¿Quitar el pedido de la ruta?">
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="rutaId" value="@c.RutaId" />
                                                 <input type="hidden" name="pedidoId" value="@p.PedidoId" />
-                                                <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fa fa-times"></i></button>
+                                                <button type="submit" class="djj-button djj-button--danger-outline" aria-label="Quitar pedido @p.PedidoId">Quitar</button>
                                             </form>
                                         </td>
                                     }
@@ -246,25 +219,25 @@
 
             @if (esPlanificada)
             {
-                <div class="admin-table-wrapper mt-3">
-                    <div class="p-3 border-bottom"><h6 class="mb-0">Agregar pedido a la ruta</h6></div>
-                    <div class="p-3">
+                <div class="djj-card">
+                    <div class="djj-logistics-pad djj-logistics-divider"><h2>Agregar pedido a la ruta</h2></div>
+                    <div class="djj-logistics-pad">
                         @if (!Model.PedidosDisponibles.Any())
                         {
-                            <p class="text-muted mb-0">No hay más pedidos por asignar.</p>
+                            <p class="djj-text-secondary">No hay más pedidos por asignar.</p>
                         }
                         else
                         {
-                            <form asp-action="AddOrder" method="post" class="form-inline">
+                            <form asp-action="AddOrder" method="post" class="djj-logistics-filter">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="rutaId" value="@c.RutaId" />
-                                <select name="pedidoId" class="form-control mr-2 mb-2">
+                                <label for="add-order">Pedido disponible</label><select id="add-order" name="pedidoId" class="djj-input">
                                     @foreach (var d in Model.PedidosDisponibles)
                                     {
                                         <option value="@d.PedidoId">#@d.PedidoId - @d.Cliente (@d.DireccionEntrega)</option>
                                     }
                                 </select>
-                                <button type="submit" class="btn btn-outline-primary mb-2"><i class="fa fa-plus mr-2"></i>Agregar</button>
+                                <button type="submit" class="djj-button djj-button--outline">Agregar</button>
                             </form>
                         }
                     </div>
@@ -272,19 +245,19 @@
 
                 @if (Model.Pedidos.Any())
                 {
-                    <div class="admin-table-wrapper mt-3">
-                        <div class="p-3 border-bottom">
-                            <h6 class="mb-0">Orden manual y ubicación en mapa (CU-251)</h6>
-                            <small class="text-muted">Pulse <strong>Ubicar</strong> en una parada y haga clic en el mapa para fijar su coordenada (o arrastre el pin). Guarde antes de despachar. La ubicación se recuerda para ese cliente.</small>
+                    <div class="djj-card">
+                        <div class="djj-logistics-pad djj-logistics-divider">
+                            <h2>Orden manual y ubicación en mapa (CU-251)</h2>
+                            <small class="djj-text-secondary">Pulse <strong>Ubicar</strong> en una parada y haga clic en el mapa para fijar su coordenada (o arrastre el pin). Guarde antes de despachar. La ubicación se recuerda para ese cliente.</small>
                         </div>
-                        <div class="p-3">
-                            <div id="routePickerMap" class="mb-3"></div>
+                        <div class="djj-logistics-pad">
+                            <p id="route-map-status" role="status">El mapa es opcional. Podés ingresar coordenadas y orden en la tabla.</p><div id="routePickerMap" aria-label="Mapa de paradas"></div>
                             <form asp-action="SaveSequence" method="post" id="seqForm">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="rutaId" value="@c.RutaId" />
-                                <table class="table table-sm mb-3">
-                                    <thead class="thead-light">
-                                        <tr><th style="width:80px">Orden</th><th># Pedido</th><th>Latitud</th><th>Longitud</th><th></th></tr>
+                                <div class="djj-table-wrap" tabindex="0" aria-label="Orden y coordenadas desplazables"><table class="djj-table djj-table--compact"><caption class="djj-sr-only">RoutesAdmin/Detail · registros operativos</caption>
+                                    <thead>
+                                        <tr><th scope="col">Orden</th><th scope="col"># Pedido</th><th scope="col">Latitud</th><th scope="col">Longitud</th><th scope="col">Ubicación</th></tr>
                                     </thead>
                                     <tbody>
                                         @foreach (var p in Model.Pedidos)
@@ -292,19 +265,19 @@
                                             <tr class="seq-row" data-rutapedidoid="@p.RutaPedidoId" data-label="#@p.PedidoId @p.Cliente">
                                                 <td>
                                                     <input type="hidden" name="rutaPedidoId" value="@p.RutaPedidoId" />
-                                                    <input type="number" name="secuencia" value="@p.Secuencia" class="form-control form-control-sm seq-input" min="1" />
+                                                    <input type="number" aria-label="Orden del pedido @p.PedidoId" name="secuencia" value="@p.Secuencia" class="djj-input seq-input" min="1" />
                                                 </td>
-                                                <td class="align-middle font-weight-bold">#@p.PedidoId<br /><small class="text-muted">@p.Cliente</small></td>
-                                                <td><input type="number" step="0.000001" name="lat" value="@(p.Latitud?.ToString(System.Globalization.CultureInfo.InvariantCulture))" class="form-control form-control-sm lat-input" placeholder="9.93" /></td>
-                                                <td><input type="number" step="0.000001" name="lng" value="@(p.Longitud?.ToString(System.Globalization.CultureInfo.InvariantCulture))" class="form-control form-control-sm lng-input" placeholder="-84.08" /></td>
-                                                <td class="align-middle text-center">
-                                                    <button type="button" class="btn btn-sm btn-outline-primary btn-locate" title="Ubicar en el mapa"><i class="fa fa-map-marker-alt"></i></button>
+                                                <td class="djj-logistics-strong">#@p.PedidoId<br /><small class="djj-text-secondary">@p.Cliente</small></td>
+                                                <td><input type="number" step="0.000001" aria-label="Latitud del pedido @p.PedidoId" min="-90" max="90" name="lat" value="@(p.Latitud?.ToString(System.Globalization.CultureInfo.InvariantCulture))" class="djj-input lat-input" placeholder="9.93" /></td>
+                                                <td><input type="number" step="0.000001" aria-label="Longitud del pedido @p.PedidoId" min="-180" max="180" name="lng" value="@(p.Longitud?.ToString(System.Globalization.CultureInfo.InvariantCulture))" class="djj-input lng-input" placeholder="-84.08" /></td>
+                                                <td class="djj-logistics-center">
+                                                    <button type="button" class="djj-button djj-button--outline btn-locate" aria-label="Ubicar pedido @p.PedidoId en el mapa" aria-pressed="false">Ubicar</button>
                                                 </td>
                                             </tr>
                                         }
                                     </tbody>
-                                </table>
-                                <button type="submit" class="btn btn-outline-secondary btn-sm"><i class="fa fa-save mr-1"></i>Guardar orden y ubicaciones</button>
+                                </table></div>
+                                <button type="submit" class="djj-button djj-button--outline">Guardar orden y ubicaciones</button>
                             </form>
                         </div>
                     </div>
@@ -314,70 +287,10 @@
     </div>
 </div>
 
-@if (esPlanificada && Model.Pedidos.Any())
-{
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
-        // CU-251 — Selector visual de coordenadas por parada (Leaflet + OSM).
-        (function () {
-            var mapEl = document.getElementById('routePickerMap');
-            if (!mapEl || typeof L === 'undefined') return;
-
-            var rows = Array.prototype.slice.call(document.querySelectorAll('#seqForm .seq-row'));
-            var activeRow = null;
-            var markers = {};
-
-            var map = L.map('routePickerMap').setView([9.9333, -84.0833], 9);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
-
-            function pin(n) { return L.divIcon({ className: '', html: '<div class="route-pin">' + n + '</div>', iconSize: [26, 26], iconAnchor: [13, 13] }); }
-
-            function setActive(row) {
-                rows.forEach(function (r) { r.classList.remove('active'); r.querySelector('.btn-locate').classList.remove('active'); });
-                activeRow = row;
-                if (row) { row.classList.add('active'); row.querySelector('.btn-locate').classList.add('active'); }
-            }
-
-            function placeMarker(row) {
-                var id = row.getAttribute('data-rutapedidoid');
-                var lat = parseFloat(row.querySelector('.lat-input').value);
-                var lng = parseFloat(row.querySelector('.lng-input').value);
-                var seq = row.querySelector('.seq-input').value || '?';
-                if (isNaN(lat) || isNaN(lng)) return;
-
-                if (markers[id]) {
-                    markers[id].setLatLng([lat, lng]).setIcon(pin(seq));
-                } else {
-                    var m = L.marker([lat, lng], { icon: pin(seq), draggable: true }).addTo(map);
-                    m.bindTooltip(row.getAttribute('data-label'));
-                    m.on('dragend', function (e) {
-                        var ll = e.target.getLatLng();
-                        row.querySelector('.lat-input').value = ll.lat.toFixed(6);
-                        row.querySelector('.lng-input').value = ll.lng.toFixed(6);
-                    });
-                    markers[id] = m;
-                }
-            }
-
-            // Pines iniciales + centrar
-            var bounds = [];
-            rows.forEach(function (row) {
-                var lat = parseFloat(row.querySelector('.lat-input').value);
-                var lng = parseFloat(row.querySelector('.lng-input').value);
-                if (!isNaN(lat) && !isNaN(lng)) { placeMarker(row); bounds.push([lat, lng]); }
-                row.querySelector('.btn-locate').addEventListener('click', function () { setActive(row); });
-                row.querySelector('.seq-input').addEventListener('change', function () { placeMarker(row); });
-            });
-            if (bounds.length) { map.fitBounds(L.latLngBounds(bounds).pad(0.3)); }
-
-            map.on('click', function (e) {
-                if (!activeRow) { if (window.S3Modal) { S3Modal.info('Pulse "Ubicar" en una parada y luego haga clic en el mapa.'); } return; }
-                activeRow.querySelector('.lat-input').value = e.latlng.lat.toFixed(6);
-                activeRow.querySelector('.lng-input').value = e.latlng.lng.toFixed(6);
-                placeMarker(activeRow);
-            });
-
-            setTimeout(function () { map.invalidateSize(); }, 200);
-        })();
-    </script>
+@section Scripts {
+    <script src="~/js/stage2/logistics-ui.js" asp-append-version="true"></script>
+    @if (esPlanificada && Model.Pedidos.Any()) {
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <script src="~/js/stage2/route-admin-map.js" asp-append-version="true"></script>
+    }
 }
