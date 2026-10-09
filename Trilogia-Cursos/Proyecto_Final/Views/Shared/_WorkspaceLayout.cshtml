@@ -16,6 +16,10 @@
     bool IsCurrent(params string[] controllers) => controllers.Any(value => string.Equals(controller, value, StringComparison.OrdinalIgnoreCase));
     var canInventory = Can("INVENTARIO_VER");
     var canCombos = Can("COMBOS_VER");
+    var canSellerOrders = Can("VENTA_MOVIL_CREAR");
+    var canManagerOrders = Can("PEDIDOS_AUTORIZAR_RECHAZAR");
+    var workspaceController = IsCurrent("SellerOrders") && canSellerOrders ? "SellerOrders"
+        : IsCurrent("ManagerOrders") && canManagerOrders ? "ManagerOrders" : "Admin";
     var canPromotions = Can("PROMOCIONES_GESTIONAR");
     var canPurchases = Can("COMPRAS_ORDENES_VER");
     var canClients = Can("CLIENTES_VER");
@@ -69,12 +73,20 @@
                         <li class="djj-workspace-nav__label">Resumen</li>
                         <li><a asp-controller="Admin" asp-action="Index" aria-current="@(IsCurrent("Admin") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-chart"></use></svg><span class="djj-workspace-nav__text">Panel general</span></a></li>
                     }
-                    @if (isAdmin || canBilling || canPromotions)
+                    @if (isAdmin || canBilling || canPromotions || canSellerOrders || canManagerOrders)
                     {
                         <li class="djj-workspace-nav__label">Ventas y pedidos</li>
                         @if (isAdmin)
                         {
                             <li><a asp-controller="OrdersAdmin" asp-action="Index" aria-current="@(IsCurrent("OrdersAdmin") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-orders"></use></svg><span class="djj-workspace-nav__text">Pedidos</span></a></li>
+                        }
+                        @if (canSellerOrders)
+                        {
+                            <li><a asp-controller="SellerOrders" asp-action="Index" aria-current="@(IsCurrent("SellerOrders") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-orders"></use></svg><span class="djj-workspace-nav__text">Venta móvil y mis pedidos</span></a></li>
+                        }
+                        @if (canManagerOrders)
+                        {
+                            <li><a asp-controller="ManagerOrders" asp-action="Index" aria-current="@(IsCurrent("ManagerOrders") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-orders"></use></svg><span class="djj-workspace-nav__text">Revisar pedidos retenidos</span></a></li>
                         }
                         @if (canBilling)
                         {
@@ -233,7 +245,7 @@
             <main id="djj-main-content" class="djj-workspace-content" tabindex="-1">
                 <nav aria-label="Migas de pan">
                     <ol class="djj-breadcrumb">
-                        <li><a asp-controller="Admin" asp-action="Index">Workspace</a></li>
+                        <li><a asp-controller="@workspaceController" asp-action="Index">Workspace</a></li>
                         <li aria-hidden="true"><svg class="djj-icon djj-icon--sm"><use href="#djj-icon-caret-right"></use></svg></li>
                         <li aria-current="page">@pageTitle</li>
                     </ol>

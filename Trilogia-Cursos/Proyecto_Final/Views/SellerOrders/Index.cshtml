@@ -1,289 +1,41 @@
 @model Proyecto_Final.Models.Admin.SellerOrderCreateViewModel
-@{
-    ViewData["Title"] = "Venta móvil";
-}
-
-@section Styles {
-    <style>
-        .seller-mobile-summary {
-            position: sticky;
-            bottom: 0;
-            z-index: 20;
-            border-radius: 18px 18px 0 0;
-            box-shadow: 0 -8px 24px rgba(0,0,0,.12);
-        }
-
-        .seller-product-card {
-            border: 1px solid #e8e8e8;
-            border-radius: 16px;
-            padding: 14px;
-            background: #fff;
-            height: 100%;
-            box-shadow: 0 8px 20px rgba(17,17,17,.04);
-        }
-
-        .seller-product-card__title {
-            min-height: 42px;
-            font-weight: 700;
-            color: #1b1b1b;
-        }
-
-        .seller-qty {
-            max-width: 110px;
-            margin-left: auto;
-        }
-
-        .offline-status-card {
-            border: 1px solid rgba(255,255,255,.18);
-            border-radius: 18px;
-            padding: 16px;
-            background: linear-gradient(135deg, #171717, #2b2b2b);
-            color: #fff;
-            box-shadow: 0 12px 28px rgba(0,0,0,.12);
-        }
-
-        .offline-status-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            border-radius: 999px;
-            padding: 7px 12px;
-            font-weight: 700;
-            background: rgba(255,255,255,.12);
-        }
-
-        .offline-status-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #28a745;
-            box-shadow: 0 0 0 4px rgba(40,167,69,.18);
-        }
-
-        .offline-status-pill.is-offline .offline-status-dot {
-            background: #ffc107;
-            box-shadow: 0 0 0 4px rgba(255,193,7,.20);
-        }
-
-        .pending-orders-panel {
-            display: none;
-        }
-
-        .pending-orders-panel.is-visible {
-            display: block;
-        }
-
-        .offline-order-card {
-            border: 1px solid #ececec;
-            border-radius: 14px;
-            padding: 12px;
-            background: #fff;
-            margin-bottom: 10px;
-        }
-
-        .offline-order-card small {
-            display: block;
-        }
-
-        @@media (max-width: 767.98px) {
-            .seller-qty {
-                max-width: 100%;
-                margin-left: 0;
-            }
-        }
-    </style>
-}
-
-<div class="container-fluid pt-4 backoffice-page seller-orders-page">
-    <div class="row px-xl-5">
-        <div class="col-12">
-            <div class="admin-page-header d-flex flex-column flex-md-row justify-content-between align-items-md-center">
-                <div>
-                    <h2 class="mb-1">Venta móvil</h2>
-                    <p class="mb-0">Registrar pedidos de clientes desde celular o tablet, incluso si se pierde la conexión.</p>
-                </div>
-                <a asp-controller="SellerOrders" asp-action="MyOrders" class="btn btn-outline-light mt-3 mt-md-0">
-                    <i class="fa fa-clipboard-list mr-1"></i> Ver pedidos
-                </a>
-            </div>
+@{ Layout = "_WorkspaceLayout"; ViewData["Title"] = "Venta móvil"; }
+<header class="djj-page-header"><div class="djj-page-header__copy"><span class="djj-page-header__eyebrow">Ventas · Pedidos del vendedor</span><h1>Venta móvil</h1><p>Seleccioná un cliente y las cantidades del pedido. El servidor valida precios, disponibilidad y autorización al registrar.</p></div><a asp-action="MyOrders" class="djj-button djj-button--ghost">Mis pedidos</a></header>
+<section class="djj-card djj-form-card djj-order-offline" aria-labelledby="offline-title">
+    <div class="djj-order-queue-row"><div><span id="connectionStatus" class="djj-badge djj-order-connection" role="status"><span id="connectionStatusText">En línea</span></span><h2 id="offline-title">Pedidos sin conexión</h2><p>Los pedidos se guardan en este navegador por hasta 24 horas para el usuario actual. Al recuperar conexión, la cola intenta sincronizarse automáticamente.</p></div><div class="djj-row-actions"><span class="djj-badge djj-badge--warning" role="status" aria-live="polite" aria-atomic="true">Pendientes: <span id="pendingOrdersCount">0</span></span><button type="button" id="togglePendingOrders" class="djj-button djj-button--ghost" aria-controls="pendingOrdersPanel" aria-expanded="false">Ver pendientes</button><button type="button" id="syncPendingOrders" class="djj-button djj-button--neutral">Sincronizar ahora</button></div></div>
+</section>
+<div id="sellerOfflineMessage" class="djj-alert" role="alert" hidden></div>
+<section id="pendingOrdersPanel" class="djj-card djj-form-card" aria-labelledby="pending-title" hidden><div class="djj-order-queue-row"><div><h2 id="pending-title">Guardados en este navegador</h2><p>Los pedidos con error se pueden reintentar cuando haya conexión.</p></div><button type="button" id="clearSyncedOrders" class="djj-button djj-button--ghost djj-button--sm">Limpiar sincronizados</button></div><div id="pendingOrdersList"></div></section>
+<form asp-controller="SellerOrders" asp-action="Create" method="post" id="sellerOrderForm" class="djj-order-create">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="All" class="djj-validation-summary" data-djj-validation-summary role="alert" tabindex="-1"></div>
+    <div class="djj-order-create-grid">
+        <div class="djj-order-sections">
+            <section class="djj-card djj-form-card" aria-labelledby="order-client-title"><h2 id="order-client-title">Cliente y entrega</h2><div class="djj-form-grid">
+                <div class="djj-field"><label asp-for="ClienteUsuarioId"></label><select asp-for="ClienteUsuarioId" class="djj-select" aria-describedby="client-error"><option value="0">Seleccione un cliente...</option>@foreach (var cliente in Model.Clientes) { <option value="@cliente.UsuarioId" data-address="@cliente.Direccion">@cliente.DisplayText</option> }</select><span id="client-error" asp-validation-for="ClienteUsuarioId" class="djj-field-error"></span></div>
+                <div class="djj-field"><label asp-for="IdentificacionCliente"></label><input asp-for="IdentificacionCliente" class="djj-input" placeholder="Cédula física o jurídica" aria-describedby="identification-error" /><span id="identification-error" asp-validation-for="IdentificacionCliente" class="djj-field-error"></span></div>
+                <div class="djj-field"><label asp-for="TipoEntrega"></label><select asp-for="TipoEntrega" class="djj-select" aria-describedby="delivery-error"><option>Entrega por vendedor</option><option>Retiro en local</option><option>Envío a domicilio</option></select><span id="delivery-error" asp-validation-for="TipoEntrega" class="djj-field-error"></span></div>
+                <div class="djj-field"><label asp-for="DireccionEntrega"></label><textarea asp-for="DireccionEntrega" class="djj-textarea" rows="4" placeholder="Dirección, señas o punto de entrega" aria-describedby="address-error"></textarea><span id="address-error" asp-validation-for="DireccionEntrega" class="djj-field-error"></span></div>
+            </div></section>
+            <section class="djj-card djj-form-card" aria-labelledby="order-notes-title"><h2 id="order-notes-title">Observaciones</h2><div class="djj-field"><label asp-for="Observaciones">Notas para despacho o facturación <span>(opcional)</span></label><textarea asp-for="Observaciones" class="djj-textarea" rows="3" aria-describedby="notes-error"></textarea><span id="notes-error" asp-validation-for="Observaciones" class="djj-field-error"></span></div></section>
         </div>
+        <section class="djj-order-sections" aria-labelledby="products-title">
+            <div class="djj-card djj-form-card"><h2 id="products-title">Productos disponibles</h2><p>Solo se registran productos con cantidad mayor a cero. La disponibilidad se vuelve a validar al procesar el pedido.</p><div class="djj-field"><label for="productSearch">Buscar producto o categoría</label><input type="search" id="productSearch" class="djj-input" /></div><span asp-validation-for="Productos" class="djj-field-error"></span></div>
+            <div class="djj-order-products" id="productsGrid">
+                @for (var i = 0; i < Model.Productos.Count; i++)
+                {
+                    <article class="djj-card djj-order-product seller-product-item" data-product-id="@Model.Productos[i].ProductoId" data-name="@Model.Productos[i].Nombre.ToLower()" data-category="@Model.Productos[i].Categoria.ToLower()" data-display-name="@Model.Productos[i].Nombre" data-display-category="@Model.Productos[i].Categoria" data-price="@Model.Productos[i].Precio.ToString(System.Globalization.CultureInfo.InvariantCulture)" data-stock="@Model.Productos[i].Stock">
+                        <input type="hidden" asp-for="Productos[i].ProductoId" /><input type="hidden" asp-for="Productos[i].Nombre" /><input type="hidden" asp-for="Productos[i].Categoria" /><input type="hidden" asp-for="Productos[i].Precio" /><input type="hidden" asp-for="Productos[i].Stock" />
+                        <h3>@Model.Productos[i].Nombre</h3><p>@Model.Productos[i].Categoria</p><div class="djj-order-product-price"><strong class="djj-order-money">₡@Model.Productos[i].Precio.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("es-CR"))</strong><span class="djj-badge">Stock: @Model.Productos[i].Stock</span></div>
+                        <div class="djj-field"><label asp-for="Productos[i].Cantidad">Cantidad de @Model.Productos[i].Nombre</label><input asp-for="Productos[i].Cantidad" type="number" min="0" max="@Model.Productos[i].Stock" class="djj-input seller-quantity" aria-describedby="quantity-error-@i" data-price="@Model.Productos[i].Precio.ToString(System.Globalization.CultureInfo.InvariantCulture)" data-stock="@Model.Productos[i].Stock" /><span id="quantity-error-@i" asp-validation-for="Productos[i].Cantidad" class="djj-field-error"></span></div>
+                    </article>
+                }
+                @if (!Model.Productos.Any()) { <div class="djj-card djj-empty-state"><h3>Sin productos disponibles</h3><p>No hay productos para agregar a este pedido.</p></div> }
+            </div>
+        </section>
     </div>
-
-    <div class="row px-xl-5 mb-3">
-        <div class="col-12">
-            <div class="offline-status-card">
-                <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center" style="gap:14px;">
-                    <div>
-                        <span id="connectionStatus" class="offline-status-pill">
-                            <span class="offline-status-dot"></span>
-                            <span id="connectionStatusText">En línea</span>
-                        </span>
-                        <h5 class="mt-3 mb-1 text-white">Modo pedidos offline</h5>
-                        <p class="mb-0 text-white-50">
-                            Si se pierde internet, el pedido se guarda en este navegador y luego se sincroniza al volver la conexión.
-                        </p>
-                    </div>
-                    <div class="d-flex flex-column flex-md-row align-items-md-center" style="gap:10px;">
-                        <span class="badge badge-warning p-2">Pendientes: <span id="pendingOrdersCount">0</span></span>
-                        <button type="button" id="togglePendingOrders" class="btn btn-outline-light">
-                            <i class="fa fa-list mr-1"></i> Ver pendientes
-                        </button>
-                        <button type="button" id="syncPendingOrders" class="btn btn-primary">
-                            <i class="fa fa-sync mr-1"></i> Sincronizar ahora
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row px-xl-5">
-        <div class="col-12">
-            <div id="sellerOfflineMessage" class="alert d-none" role="alert"></div>
-            <div id="pendingOrdersPanel" class="admin-card pending-orders-panel mb-3">
-                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3" style="gap:10px;">
-                    <div>
-                        <h5 class="mb-1">Pedidos guardados en este navegador</h5>
-                        <p class="text-muted mb-0">Los pedidos con error se pueden reintentar cuando haya conexión.</p>
-                    </div>
-                    <button type="button" id="clearSyncedOrders" class="btn btn-outline-secondary btn-sm">
-                        Limpiar sincronizados
-                    </button>
-                </div>
-                <div id="pendingOrdersList"></div>
-            </div>
-        </div>
-    </div>
-
-    <form asp-controller="SellerOrders" asp-action="Create" method="post" id="sellerOrderForm">
-        @Html.AntiForgeryToken()
-
-        <div class="row px-xl-5">
-            <div class="col-12">
-                <div asp-validation-summary="All" class="text-danger mb-3"></div>
-            </div>
-        </div>
-
-        <div class="row px-xl-5">
-            <div class="col-lg-4 mb-4">
-                <div class="admin-card h-100">
-                    <h5 class="mb-3">Cliente y entrega</h5>
-
-                    <div class="form-group">
-                        <label asp-for="ClienteUsuarioId" class="font-weight-bold"></label>
-                        <select asp-for="ClienteUsuarioId" class="form-control">
-                            <option value="0">Seleccione un cliente...</option>
-                            @foreach (var cliente in Model.Clientes)
-                            {
-                                <option value="@cliente.UsuarioId" data-address="@cliente.Direccion">
-                                    @cliente.DisplayText
-                                </option>
-                            }
-                        </select>
-                        <span asp-validation-for="ClienteUsuarioId" class="text-danger"></span>
-                    </div>
-
-                    <div class="form-group">
-                        <label asp-for="IdentificacionCliente" class="font-weight-bold"></label>
-                        <input asp-for="IdentificacionCliente" class="form-control" placeholder="Cédula física o jurídica" />
-                        <span asp-validation-for="IdentificacionCliente" class="text-danger"></span>
-                    </div>
-
-                    <div class="form-group">
-                        <label asp-for="TipoEntrega" class="font-weight-bold"></label>
-                        <select asp-for="TipoEntrega" class="form-control">
-                            <option>Entrega por vendedor</option>
-                            <option>Retiro en local</option>
-                            <option>Envío a domicilio</option>
-                        </select>
-                        <span asp-validation-for="TipoEntrega" class="text-danger"></span>
-                    </div>
-
-                    <div class="form-group">
-                        <label asp-for="DireccionEntrega" class="font-weight-bold"></label>
-                        <textarea asp-for="DireccionEntrega" class="form-control" rows="4" placeholder="Dirección, señas o punto de entrega"></textarea>
-                        <span asp-validation-for="DireccionEntrega" class="text-danger"></span>
-                    </div>
-
-                    <div class="form-group mb-0">
-                        <label asp-for="Observaciones" class="font-weight-bold"></label>
-                        <textarea asp-for="Observaciones" class="form-control" rows="3" placeholder="Notas para despacho o facturación"></textarea>
-                        <span asp-validation-for="Observaciones" class="text-danger"></span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-8 mb-4">
-                <div class="admin-card mb-3">
-                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center" style="gap:12px;">
-                        <div>
-                            <h5 class="mb-1">Productos disponibles</h5>
-                            <p class="text-muted mb-0">Digite cantidades. Solo se guardan productos con cantidad mayor a cero.</p>
-                        </div>
-                        <input type="text" id="productSearch" class="form-control" style="max-width:320px;" placeholder="Buscar producto o categoría..." />
-                    </div>
-                </div>
-
-                <div class="row" id="productsGrid">
-                    @for (var i = 0; i < Model.Productos.Count; i++)
-                    {
-                        <div class="col-md-6 col-xl-4 mb-3 seller-product-item"
-                             data-product-id="@Model.Productos[i].ProductoId"
-                             data-name="@Model.Productos[i].Nombre.ToLower()"
-                             data-category="@Model.Productos[i].Categoria.ToLower()"
-                             data-display-name="@Model.Productos[i].Nombre"
-                             data-display-category="@Model.Productos[i].Categoria"
-                             data-price="@Model.Productos[i].Precio.ToString(System.Globalization.CultureInfo.InvariantCulture)"
-                             data-stock="@Model.Productos[i].Stock">
-                            <div class="seller-product-card">
-                                <input type="hidden" asp-for="Productos[i].ProductoId" />
-                                <input type="hidden" asp-for="Productos[i].Nombre" />
-                                <input type="hidden" asp-for="Productos[i].Categoria" />
-                                <input type="hidden" asp-for="Productos[i].Precio" />
-                                <input type="hidden" asp-for="Productos[i].Stock" />
-
-                                <div class="seller-product-card__title">@Model.Productos[i].Nombre</div>
-                                <div class="text-muted small mb-2">@Model.Productos[i].Categoria</div>
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <span class="font-weight-bold">₡@Model.Productos[i].Precio.ToString("N2")</span>
-                                    <span class="badge badge-light">Stock: @Model.Productos[i].Stock</span>
-                                </div>
-
-                                <label class="small text-muted mb-1">Cantidad</label>
-                                <input asp-for="Productos[i].Cantidad"
-                                       type="number"
-                                       min="0"
-                                       max="@Model.Productos[i].Stock"
-                                       class="form-control seller-quantity"
-                                       data-price="@Model.Productos[i].Precio.ToString(System.Globalization.CultureInfo.InvariantCulture)"
-                                       data-stock="@Model.Productos[i].Stock" />
-                            </div>
-                        </div>
-                    }
-                </div>
-            </div>
-        </div>
-
-        <div class="container-fluid px-xl-5 seller-mobile-summary">
-            <div class="admin-card d-flex flex-column flex-md-row justify-content-between align-items-md-center" style="gap:12px;">
-                <div>
-                    <strong>Total seleccionado:</strong>
-                    <span id="selectedItems">0</span> producto(s) / <span id="selectedUnits">0</span> unidad(es)
-                    <div class="text-muted small">Total estimado: <strong id="selectedTotal">₡0,00</strong></div>
-                </div>
-                <div class="d-flex flex-column flex-md-row" style="gap:10px;">
-                    <button type="button" id="saveOfflineOrder" class="btn btn-outline-secondary btn-lg">
-                        <i class="fa fa-cloud-download-alt mr-1"></i> Guardar sin conexión
-                    </button>
-                    <button type="submit" class="btn btn-primary btn-lg">
-                        <i class="fa fa-save mr-1"></i> Registrar pedido
-                    </button>
-                </div>
-            </div>
-        </div>
-    </form>
-</div>
-
+    <section class="djj-card djj-form-card" aria-labelledby="order-total-title"><div class="djj-order-queue-row"><div><h2 id="order-total-title">Resumen económico</h2><p><span id="selectedItems">@Model.Productos.Count(p => p.Cantidad > 0)</span> producto(s) · <span id="selectedUnits">@Model.TotalItems</span> unidad(es)</p><p>Total estimado: <strong id="selectedTotal" class="djj-order-money djj-money--dominant">₡@Model.Total.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("es-CR"))</strong></p><p class="djj-table__note">Estimación de la selección actual. El total definitivo y la retención para revisión se determinan en el servidor.</p></div><div class="djj-row-actions"><button type="button" id="saveOfflineOrder" class="djj-button djj-button--ghost">Guardar sin conexión</button><button type="submit" class="djj-button djj-button--primary">Registrar pedido</button></div></div></section>
+</form>
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
@@ -312,7 +64,6 @@
             const offlineStorage = window.DistribuidoraJJOfflineStorage;
             const syncUrl = '@Url.Action("SyncOffline", "SellerOrders")';
             let isSyncing = false;
-
             function formatCurrency(value) {
                 return '₡' + value.toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             }
@@ -344,13 +95,14 @@
             }
 
             function showMessage(type, message) {
-                offlineMessage.className = 'alert alert-' + type;
+                offlineMessage.className = 'djj-alert djj-alert--' + type;
+                offlineMessage.hidden = false;
                 offlineMessage.textContent = message;
-                offlineMessage.classList.remove('d-none');
+
             }
 
             function hideMessage() {
-                offlineMessage.classList.add('d-none');
+                offlineMessage.hidden = true;
                 offlineMessage.textContent = '';
             }
 
@@ -372,8 +124,8 @@
                 const online = navigator.onLine;
                 connectionStatus.classList.toggle('is-offline', !online);
                 connectionStatusText.textContent = online ? 'En línea' : 'Sin conexión';
-                saveOfflineButton.classList.toggle('btn-warning', !online);
-                saveOfflineButton.classList.toggle('btn-outline-secondary', online);
+                saveOfflineButton.classList.toggle('djj-button--neutral', !online);
+                saveOfflineButton.classList.toggle('djj-button--ghost', online);
 
                 if (!online) {
                     showMessage('warning', 'Sin conexión. El pedido se guardará localmente y se sincronizará cuando vuelva internet.');
@@ -494,17 +246,18 @@
                 orders.push(result.order);
                 saveOrders(orders);
                 clearCurrentOrderForm();
-                pendingOrdersPanel.classList.add('is-visible');
+                pendingOrdersPanel.hidden = false;
+                togglePendingOrders.setAttribute('aria-expanded', 'true');
                 showMessage('success', 'Pedido guardado sin conexión. Quedó pendiente para sincronizar.');
                 return true;
             }
 
             function getStatusBadgeClass(status) {
                 switch (status) {
-                    case 'Sincronizado': return 'badge-success';
-                    case 'Sincronizando': return 'badge-info';
-                    case 'Error': return 'badge-danger';
-                    default: return 'badge-warning';
+                    case 'Sincronizado': return 'djj-badge--success';
+                    case 'Sincronizando': return 'djj-badge--info';
+                    case 'Error': return 'djj-badge--danger';
+                    default: return 'djj-badge--warning';
                 }
             }
 
@@ -514,7 +267,7 @@
                 pendingOrdersCount.textContent = pendingCount;
 
                 if (orders.length === 0) {
-                    pendingOrdersList.innerHTML = '<div class="text-muted">No hay pedidos offline guardados en este navegador.</div>';
+                    pendingOrdersList.innerHTML = '<div class="djj-table__note">No hay pedidos offline guardados en este navegador.</div>';
                     return;
                 }
 
@@ -523,25 +276,25 @@
                     const createdAt = new Date(order.creadoEn).toLocaleString('es-CR');
                     const status = order.estadoOffline || 'Pendiente';
                     const badgeClass = getStatusBadgeClass(status);
-                    const errorHtml = order.mensajeError ? '<small class="text-danger mt-1">' + escapeHtml(order.mensajeError) + '</small>' : '';
+                    const errorHtml = order.mensajeError ? '<small class="djj-field-error">' + escapeHtml(order.mensajeError) + '</small>' : '';
                     const detailLink = order.redirectUrl
-                        ? '<a class="btn btn-sm btn-outline-primary" href="' + escapeHtml(order.redirectUrl) + '">Ver pedido</a>'
+                        ? '<a class="djj-button djj-button--ghost djj-button--sm" href="' + escapeHtml(order.redirectUrl) + '">Ver pedido</a>'
                         : '';
 
-                    return '<div class="offline-order-card" data-guid="' + escapeHtml(order.pedidoOfflineGuid) + '">' +
-                        '<div class="d-flex flex-column flex-md-row justify-content-between" style="gap:8px;">' +
+                    return '<div class="djj-order-offline-card" data-guid="' + escapeHtml(order.pedidoOfflineGuid) + '">' +
+                        '<div class="djj-order-queue-row">' +
                             '<div>' +
                                 '<strong>Cliente #' + escapeHtml(order.clienteUsuarioId) + '</strong>' +
-                                '<small class="text-muted">Guardado: ' + createdAt + '</small>' +
-                                '<small class="text-muted">Productos: ' + productsText + '</small>' +
-                                '<small class="text-muted">Unidades: ' + escapeHtml(order.totalItems || 0) + '</small>' +
+                                '<small class="djj-table__note">Guardado: ' + createdAt + '</small>' +
+                                '<small class="djj-table__note">Productos: ' + productsText + '</small>' +
+                                '<small class="djj-table__note">Unidades: ' + escapeHtml(order.totalItems || 0) + '</small>' +
                                 errorHtml +
                             '</div>' +
-                            '<div class="text-md-right">' +
-                                '<span class="badge ' + badgeClass + ' mb-2">' + escapeHtml(status) + '</span>' +
-                                '<div class="d-flex justify-content-md-end" style="gap:6px;">' +
+                            '<div class="djj-order-queue-actions">' +
+                                '<span class="djj-badge ' + badgeClass + '">' + escapeHtml(status) + '</span>' +
+                                '<div class="djj-row-actions">' +
                                     detailLink +
-                                    '<button type="button" class="btn btn-sm btn-outline-danger" data-remove-offline="' + escapeHtml(order.pedidoOfflineGuid) + '">Eliminar</button>' +
+                                    '<button type="button" class="djj-button djj-button--danger-outline djj-button--sm" data-remove-offline="' + escapeHtml(order.pedidoOfflineGuid) + '">Eliminar</button>' +
                                 '</div>' +
                             '</div>' +
                         '</div>' +
@@ -675,7 +428,8 @@
             });
 
             togglePendingOrders.addEventListener('click', function () {
-                pendingOrdersPanel.classList.toggle('is-visible');
+                pendingOrdersPanel.hidden = !pendingOrdersPanel.hidden;
+                togglePendingOrders.setAttribute('aria-expanded', String(!pendingOrdersPanel.hidden));
             });
 
             syncPendingOrdersButton.addEventListener('click', syncPendingOrders);

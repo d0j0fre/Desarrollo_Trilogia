@@ -313,3 +313,31 @@
   .djj-commerce-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .djj-commerce-grid .djj-form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* Seller and manager order workflows */
+.djj-order-sections, .djj-order-create, .djj-order-create-grid, .djj-order-products, .djj-order-decisions { display: grid; min-width: 0; gap: var(--djj-space-5); }
+.djj-order-create, .djj-order-sections, .djj-order-decisions { margin-bottom: var(--djj-space-5); }
+.djj-order-create-grid > *, .djj-order-products > *, .djj-order-decisions > * { min-width: 0; }
+.djj-order-product { display: grid; align-content: start; gap: var(--djj-space-3); padding: var(--djj-space-4); }
+.djj-order-product h3 { margin: 0; font-size: var(--djj-font-size-base); overflow-wrap: anywhere; }
+.djj-order-product p { margin: 0; color: var(--djj-color-text-secondary); font-size: var(--djj-font-size-sm); }
+.djj-order-product-price, .djj-order-queue-row { display: flex; flex-wrap: wrap; align-items: start; justify-content: space-between; gap: var(--djj-space-3); }
+.djj-order-queue-row > * { min-width: 0; }
+.djj-order-queue-row > div:first-child { flex: 1 1 20rem; }
+.djj-order-queue-row > .djj-row-actions { flex: 1 1 18rem; flex-wrap: wrap; justify-content: flex-start; white-space: normal; }
+.djj-order-offline-card .djj-row-actions { flex-wrap: wrap; white-space: normal; }
+.djj-order-offline { margin-bottom: var(--djj-space-5); }
+.djj-order-connection { margin-bottom: var(--djj-space-3); background: var(--djj-color-success-surface); color: var(--djj-color-success); }
+.djj-order-connection.is-offline { background: var(--djj-color-warning-surface); color: var(--djj-color-warning); }
+.djj-order-offline-card { margin-top: var(--djj-space-3); border: 1px solid var(--djj-color-border); border-radius: var(--djj-radius-md); padding: var(--djj-space-4); overflow-wrap: anywhere; }
+.djj-order-offline-card small { display: block; }
+.djj-order-queue-actions { display: grid; gap: var(--djj-space-2); justify-items: start; }
+.djj-order-money { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.djj-order-notes { white-space: pre-wrap; }
+.djj-order-navigation { display: flex; flex-wrap: wrap; gap: var(--djj-space-3); margin-block: var(--djj-space-5); }
+@media (min-width: 48rem) { .djj-order-products, .djj-order-decisions { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 80rem) { .djj-order-create-grid { grid-template-columns: minmax(17rem, 1fr) minmax(0, 2fr); } }
+
+/* Keep workflow cards and text-only alerts within their mobile grid tracks. */
+.djj-order-sections > * { min-width: 0; }
+.djj-workspace-content:has(.djj-order-sections) > .djj-alert { grid-template-columns: minmax(0, 1fr); }
