@@ -1,95 +1,24 @@
 @model Proyecto_Final.Models.Admin.RoleFormViewModel
+@using Microsoft.AspNetCore.Http
+@inject IRolePermissionService PermissionService
 @{
+    Layout = "_WorkspaceLayout";
     ViewData["Title"] = "Editar rol";
+    var role = Context.Session.GetString("UserRole") ?? string.Empty;
+    var admin = string.Equals(role, "Administrador", StringComparison.OrdinalIgnoreCase);
+    var canManage = admin || await PermissionService.HasCodePermissionAsync(role, "ROLES_CREAR_EDITAR");
 }
-
-@section Styles {
-    <link href="~/css/custom-theme.css" rel="stylesheet" />
-}
-
-<div class="container-fluid pt-4 backoffice-page access-admin-page roles-admin-page">
-    <div class="row px-xl-5">
-        <div class="col-12">
-            <div class="admin-page-header d-flex justify-content-between align-items-center">
-                <div>
-                    <h2 class="mb-1">Editar rol</h2>
-                    <p class="text-muted mb-0">Modifica la información general del rol seleccionado.</p>
-                </div>
-                <a asp-controller="Roles" asp-action="Index" class="btn btn-outline-secondary">← Volver</a>
-            </div>
-        </div>
-    </div>
-
-    <div class="row px-xl-5 pb-5">
-        <div class="col-lg-8">
-            <div class="admin-card">
-                <form asp-controller="Roles" asp-action="Edit" method="post">
-                    @Html.AntiForgeryToken()
-                    <input asp-for="PerfilId" type="hidden" />
-                    <input asp-for="FechaCreacion" type="hidden" />
-                    <input asp-for="TotalUsuarios" type="hidden" />
-                    <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3"></div>
-
-                    <div class="form-group">
-                        <label class="font-weight-bold">ID del rol</label>
-                        <input type="text" class="form-control" value="ROL-@Model.PerfilId.ToString("D4")" readonly />
-                    </div>
-
-                    <div class="form-group">
-                        <label asp-for="Nombre" class="font-weight-bold">Nombre del rol <span class="text-danger">*</span></label>
-                        <input asp-for="Nombre" class="form-control" placeholder="Nombre del rol" readonly="@(Model.EsRolBase ? "readonly" : null)" />
-                        @if (Model.EsRolBase)
-                        {
-                            <small class="text-muted">Este es un rol base del sistema. Su nombre no debe modificarse para evitar errores en autenticación y registro.</small>
-                        }
-                        <span asp-validation-for="Nombre" class="text-danger small"></span>
-                    </div>
-
-                    <div class="form-group">
-                        <label asp-for="Descripcion" class="font-weight-bold">Descripción</label>
-                        <textarea asp-for="Descripcion" class="form-control" rows="3"></textarea>
-                        <span asp-validation-for="Descripcion" class="text-danger small"></span>
-                    </div>
-
-                    <div class="form-check mb-4">
-                        <input asp-for="Activo" class="form-check-input" disabled="@(Model.BloqueaInactivacion ? "disabled" : null)" />
-                        @if (Model.BloqueaInactivacion)
-                        {
-                            <input type="hidden" asp-for="Activo" />
-                        }
-                        <label asp-for="Activo" class="form-check-label">Rol activo</label>
-                        @if (Model.BloqueaInactivacion)
-                        {
-                            <small class="d-block text-muted">Este rol se mantiene activo porque es requerido por el sistema.</small>
-                        }
-                    </div>
-
-                    <div class="alert alert-light border">
-                        <strong>Usuarios asociados:</strong> @Model.TotalUsuarios<br />
-                        <strong>Fecha de creación:</strong> @Model.FechaCreacion.ToString("dd/MM/yyyy")
-                    </div>
-
-                    <div class="d-flex" style="gap:10px;">
-                        <button type="submit" class="btn btn-primary">Guardar cambios</button>
-                        <a asp-controller="Roles" asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <div class="col-lg-4 mt-4 mt-lg-0">
-            <div class="admin-card">
-                <h5 class="mb-3">ℹ️ Información</h5>
-                <ul class="contact-list">
-                    <li>Los cambios realizados aquí quedan registrados en Auditoría.</li>
-                    <li>Los roles base no se renombran para no afectar login, registro y autorización.</li>
-                    <li>El rol Administrador y Cliente no se pueden inactivar desde este módulo.</li>
-                </ul>
-            </div>
-        </div>
-    </div>
-</div>
-
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
+<section class="djj-security"><partial name="_SecurityNavigation" />
+<header class="djj-page-header"><div class="djj-page-header__copy"><h1>Editar rol</h1><p>Los datos del rol y su asignación de permisos se administran por separado.</p></div><a asp-action="Index" class="djj-button djj-button--secondary">Volver a roles</a></header>
+@if (!canManage) { <p class="djj-alert djj-alert--info" role="status">Vista de consulta. Tu perfil no permite guardar cambios de roles.</p> }
+<form asp-controller="Roles" asp-action="Edit" method="post" class="djj-form-card">@Html.AntiForgeryToken()
+<input asp-for="PerfilId" type="hidden" /><input asp-for="FechaCreacion" type="hidden" /><input asp-for="TotalUsuarios" type="hidden" />
+<dl class="djj-security-facts"><div><dt>Identificador</dt><dd>ROL-@Model.PerfilId.ToString("D4")</dd></div><div><dt>Usuarios asociados</dt><dd>@Model.TotalUsuarios</dd></div><div><dt>Fecha de creación</dt><dd>@Model.FechaCreacion.ToString("dd/MM/yyyy")</dd></div></dl>
+<div asp-validation-summary="ModelOnly" class="djj-validation-summary" role="alert" tabindex="-1"></div>
+<fieldset class="djj-security-fieldset" disabled="@(!canManage)"><legend>Información general</legend><div class="djj-field"><label asp-for="Nombre">Nombre del rol</label><input asp-for="Nombre" class="djj-input" maxlength="50" aria-describedby="nombre-help nombre-error" readonly="@(Model.EsRolBase ? "readonly" : null)" /><small id="nombre-help" class="djj-field__hint">Máximo 50 caracteres. El nombre debe ser único.</small><span asp-validation-for="Nombre" id="nombre-error" class="djj-field__error"></span></div>
+@if (Model.EsRolBase) { <p class="djj-field__hint">El nombre de este rol base se conserva para mantener el contrato del sistema.</p> }
+<div class="djj-field"><label asp-for="Descripcion"></label><textarea asp-for="Descripcion" class="djj-textarea" rows="4" maxlength="255" aria-describedby="descripcion-error"></textarea><span asp-validation-for="Descripcion" id="descripcion-error" class="djj-field__error"></span></div>
+<label class="djj-choice"><input asp-for="Activo" class="djj-checkbox" disabled="@(Model.BloqueaInactivacion ? "disabled" : null)" /> Rol activo</label>
+@if (Model.BloqueaInactivacion) { <input type="hidden" asp-for="Activo" /><p class="djj-field__hint">Este rol mantiene su estado protegido desde este módulo.</p> }
+</fieldset><div class="djj-row-actions">@if (canManage) { <button type="submit" class="djj-button djj-button--primary">Guardar cambios</button> }<a asp-action="Index" class="djj-button djj-button--secondary">Cancelar</a></div></form><p class="djj-field__hint">La asignación de capacidades se revisa en Permisos. Esta pantalla no añade permisos automáticamente.</p></section>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

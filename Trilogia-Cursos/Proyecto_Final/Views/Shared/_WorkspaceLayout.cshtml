@@ -24,7 +24,12 @@
     var canWarranties = Can("GARANTIAS_GESTIONAR");
     var canAssets = Can("ACTIVOS_GESTIONAR");
     var canAssetProfitability = Can("COMODATOS_CONSULTAR");
-    var workspaceController = IsCurrent("SellerOrders") && canSellerOrders ? "SellerOrders"
+    var canSecurity = isAdmin || await PermissionService.HasModulePermissionAsync(userRole, "Seguridad");
+    var canAudit = isAdmin || await PermissionService.HasModulePermissionAsync(userRole, "Auditoria");
+    var workspaceController = IsCurrent("Assistant") ? "Assistant"
+        : IsCurrent("Roles", "Permissions") && canSecurity ? controller
+        : IsCurrent("Audit") && canAudit ? "Audit"
+        : IsCurrent("SellerOrders") && canSellerOrders ? "SellerOrders"
         : IsCurrent("ManagerOrders") && canManagerOrders ? "ManagerOrders"
         : IsCurrent("RoutesAdmin") && Can("RUTAS_GESTIONAR") ? "RoutesAdmin"
         : IsCurrent("DeliveryBoard") && Can("ENTREGAS_TABLERO_VER") ? "DeliveryBoard"
@@ -233,9 +238,13 @@
                         <li><a asp-controller="Chat" asp-action="Index" aria-current="@(IsCurrent("Chat") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-chat"></use></svg><span class="djj-workspace-nav__text">Chat</span></a></li>
                     }
                     <li><a asp-controller="Assistant" asp-action="Index" aria-current="@(IsCurrent("Assistant") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-robot"></use></svg><span class="djj-workspace-nav__text">Asistente</span></a></li>
-                    @if (isAdmin)
+                    @if (canSecurity)
                     {
-                        <li><a asp-controller="Audit" asp-action="Index" aria-current="@(IsCurrent("Audit", "Roles", "Permissions") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-shield"></use></svg><span class="djj-workspace-nav__text">Seguridad y auditoría</span></a></li>
+                        <li><a asp-controller="Roles" asp-action="Index" aria-current="@(IsCurrent("Roles", "Permissions") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-shield"></use></svg><span class="djj-workspace-nav__text">Roles y permisos</span></a></li>
+                    }
+                    @if (canAudit)
+                    {
+                        <li><a asp-controller="Audit" asp-action="Index" aria-current="@(IsCurrent("Audit") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-shield"></use></svg><span class="djj-workspace-nav__text">Auditoría</span></a></li>
                     }
                 </ul>
             </nav>
