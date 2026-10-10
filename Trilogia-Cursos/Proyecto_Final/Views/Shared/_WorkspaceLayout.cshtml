@@ -18,10 +18,14 @@
     var canCombos = Can("COMBOS_VER");
     var canSellerOrders = Can("VENTA_MOVIL_CREAR");
     var canManagerOrders = Can("PEDIDOS_AUTORIZAR_RECHAZAR");
+    var canAssets = Can("ACTIVOS_GESTIONAR");
+    var canAssetProfitability = Can("COMODATOS_CONSULTAR");
     var workspaceController = IsCurrent("SellerOrders") && canSellerOrders ? "SellerOrders"
         : IsCurrent("ManagerOrders") && canManagerOrders ? "ManagerOrders"
         : IsCurrent("RoutesAdmin") && Can("RUTAS_GESTIONAR") ? "RoutesAdmin"
-        : IsCurrent("DeliveryBoard") && Can("ENTREGAS_TABLERO_VER") ? "DeliveryBoard" : "Admin";
+        : IsCurrent("DeliveryBoard") && Can("ENTREGAS_TABLERO_VER") ? "DeliveryBoard"
+        : IsCurrent("Assets") && canAssets ? "Assets"
+        : IsCurrent("Comodatos") && canAssets ? "Comodatos" : "Admin";
     var canPromotions = Can("PROMOCIONES_GESTIONAR");
     var canPurchases = Can("COMPRAS_ORDENES_VER");
     var canClients = Can("CLIENTES_VER");
@@ -204,6 +208,9 @@
                     @if (Can("FLOTA_MANTENIMIENTO")) { <li><a asp-controller="Fleet" asp-action="Alerts" aria-current="@(IsCurrent("Fleet") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-truck"></use></svg><span class="djj-workspace-nav__text">Flota y mantenimiento</span></a></li> }
                     @if (Can("RUTAS_GESTIONAR")) { <li><a asp-controller="RoutesAdmin" asp-action="Index" aria-current="@(IsCurrent("RoutesAdmin") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-truck"></use></svg><span class="djj-workspace-nav__text">Rutas</span></a></li> }
                     @if (Can("ENTREGAS_TABLERO_VER")) { <li><a asp-controller="DeliveryBoard" asp-action="Index" aria-current="@(IsCurrent("DeliveryBoard") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-chart"></use></svg><span class="djj-workspace-nav__text">Tablero de entregas</span></a></li> }
+                    @if (canAssets || canAssetProfitability) { <li class="djj-workspace-nav__label">Activos y comodatos</li> }
+                    @if (canAssets) { <li><a asp-controller="Assets" asp-action="Index" aria-current="@(IsCurrent("Assets", "Comodatos") && ViewContext.RouteData.Values["action"]?.ToString() != "Profitability" ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-package"></use></svg><span class="djj-workspace-nav__text">Activos y préstamos</span></a></li> }
+                    @if (canAssetProfitability) { <li><a asp-controller="Comodatos" asp-action="Profitability" aria-current="@(IsCurrent("Comodatos") && ViewContext.RouteData.Values["action"]?.ToString() == "Profitability" ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-chart"></use></svg><span class="djj-workspace-nav__text">Rentabilidad</span></a></li> }
                     <li class="djj-workspace-nav__label">Herramientas</li>
                     @if (canChat)
                     {
@@ -252,6 +259,7 @@
                 <nav aria-label="Migas de pan">
                     <ol class="djj-breadcrumb">
                         @if (IsCurrent("Fleet") && Can("FLOTA_MANTENIMIENTO")) { <li><a asp-controller="Fleet" asp-action="Alerts">Workspace</a></li> }
+                        else if (IsCurrent("Comodatos") && ViewContext.RouteData.Values["action"]?.ToString() == "Profitability" && canAssetProfitability) { <li><a asp-controller="Comodatos" asp-action="Profitability">Workspace</a></li> }
                         else { <li><a asp-controller="@workspaceController" asp-action="Index">Workspace</a></li> }
                         <li aria-hidden="true"><svg class="djj-icon djj-icon--sm"><use href="#djj-icon-caret-right"></use></svg></li>
                         <li aria-current="page">@pageTitle</li>

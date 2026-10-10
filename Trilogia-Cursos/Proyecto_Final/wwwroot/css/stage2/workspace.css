@@ -390,3 +390,31 @@
   .djj-logistics-split--form-first { grid-template-columns: minmax(18rem, 1fr) minmax(0, 2fr); }
 }
 @media (max-width: 35.99rem) { .djj-logistics-filter { align-items: stretch; } .djj-logistics-filter > * { width: 100%; } }
+
+/* Assets and comodatos: shared forms and operational tables. */
+.djj-assets, .djj-assets > *, .djj-assets .djj-field, .djj-assets .djj-form-grid > * { min-width: 0; }
+.djj-assets .djj-field { align-content: start; }
+.djj-assets .djj-table-wrap { position: relative; }
+.djj-assets .djj-table { min-width: 48rem; }
+.djj-assets .djj-table td { overflow-wrap: anywhere; }
+.djj-assets .djj-table tbody th { text-transform: none; font-size: inherit; letter-spacing: normal; }
+.djj-assets .djj-badge, .djj-assets .djj-button { white-space: nowrap; overflow-wrap: normal; }
+.djj-assets .djj-alert { grid-template-columns: minmax(0, 1fr); }
+.djj-assets .djj-domain-nav { margin: 0; }
+.djj-assets .djj-row-actions form { margin: 0; }
+.djj-assets-form { display: grid; gap: var(--djj-space-5); }
+.djj-assets-fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+.djj-assets-fieldset legend { margin-bottom: var(--djj-space-4); font-size: var(--djj-font-size-lg); font-weight: var(--djj-weight-bold); }
+.djj-assets-fieldset .djj-alert { margin-top: var(--djj-space-4); }
+.djj-assets-error { color: var(--djj-color-danger); }
+.djj-assets-error:empty, .djj-assets .validation-summary-valid { display: none; }
+.djj-assets-facts { display: grid; gap: var(--djj-space-5); margin: 0; }
+.djj-assets-facts > div { min-width: 0; }
+.djj-assets-facts dt { color: var(--djj-color-text-secondary); font-size: var(--djj-font-size-sm); }
+.djj-assets-facts dd { margin: var(--djj-space-1) 0 0; overflow-wrap: anywhere; }
+.djj-assets .djj-padded h2 { font-size: var(--djj-font-size-lg); }
+.djj-assets-return { display: grid; align-items: end; gap: var(--djj-space-4); padding-block: var(--djj-space-3); }
+@media (min-width: 48rem) {
+  .djj-assets-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .djj-assets-return { grid-template-columns: minmax(12rem, 1fr) minmax(14rem, 2fr) auto; }
+}

@@ -1,33 +1,13 @@
 @model Proyecto_Final.Models.Admin.AssetFormViewModel
-@{
-    ViewData["Title"] = "Editar activo";
-}
-
-@section Styles {
-    <link href="~/css/custom-theme.css" rel="stylesheet" />
-}
-
-<div class="container-fluid pt-4 backoffice-page">
-    <div class="row px-xl-5">
-        <div class="col-lg-6 offset-lg-3">
-            <div class="admin-page-header">
-                <h2 class="mb-2">Editar activo</h2>
-                <p class="mb-0">Actualiza los datos y el estado de préstamo del activo.</p>
-            </div>
-            <div class="admin-table-wrapper p-4">
-                <form asp-action="Edit" method="post">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" asp-for="ActivoId" />
-                    <div asp-validation-summary="All" class="text-danger"></div>
-                    <partial name="_AssetFields" model="Model" />
-                    <button type="submit" class="btn btn-primary"><i class="fa fa-save mr-2"></i>Guardar cambios</button>
-                    <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
-                </form>
-            </div>
-        </div>
-    </div>
+@{ Layout = "_WorkspaceLayout"; ViewData["Title"] = "Editar activo"; }
+<div class="djj-assets djj-stack">
+    <partial name="_AssetsNavigation" />
+    <header class="djj-page-header"><div><h1>Editar activo</h1><p>Identificá y describí el equipo de la empresa.</p></div><a asp-action="Index" class="djj-button djj-button--outline">Volver</a></header>
+    <form asp-action="Edit" method="post" class="djj-card djj-padded djj-assets-form">
+        @Html.AntiForgeryToken()<input type="hidden" asp-for="ActivoId" />
+        <div asp-validation-summary="All" class="djj-assets-error" role="alert"></div>
+        <partial name="_AssetFields" model="Model" />
+        <div class="djj-filter-bar__actions"><button type="submit" class="djj-button djj-button--primary">Guardar cambios</button><a asp-action="Index" class="djj-button djj-button--outline">Cancelar</a></div>
+    </form>
 </div>
-
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }
