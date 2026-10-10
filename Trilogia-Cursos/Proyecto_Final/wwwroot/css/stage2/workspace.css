@@ -447,3 +447,25 @@
 .djj-documents .djj-page-header__copy { min-width: 0; max-width: min(100%, 48rem); overflow-wrap: anywhere; }
 .djj-workspace-content:has(.djj-documents) .djj-breadcrumb li { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
 .djj-documents .djj-badge--warning { color: var(--djj-gold-800); }
+
+/* Customer service: separate contracts, shared administrative presentation. */
+.djj-customer-service { display: grid; gap: var(--djj-space-5); min-width: 0; }
+.djj-customer-service > *, .djj-customer-service .djj-field { min-width: 0; }
+.djj-customer-service .djj-page-header, .djj-customer-service .djj-domain-nav { margin: 0; }
+.djj-customer-service .djj-page-header__copy { min-width: 0; max-width: min(100%, 48rem); }
+.djj-customer-service h1, .djj-customer-service h2, .djj-customer-service dd, .djj-customer-service td { overflow-wrap: anywhere; }
+.djj-customer-service form { display: grid; gap: var(--djj-space-4); }
+.djj-customer-service .djj-filter-bar { grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); }
+.djj-customer-service .djj-field { align-content: start; }
+.djj-service-table { min-width: 62rem; }
+.djj-service-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.djj-service-metadata { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--djj-space-2); margin-block: var(--djj-space-4); }
+.djj-service-metadata dt { color: var(--djj-color-text-secondary); font-weight: var(--djj-weight-medium); }
+.djj-service-metadata dd { margin: 0 0 var(--djj-space-3); min-width: 0; }
+.djj-service-fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.djj-service-fieldset legend { font-size: var(--djj-font-size-lg); font-weight: var(--djj-weight-bold); margin-bottom: var(--djj-space-3); }
+.djj-service-warranty-form { min-width: 16rem; }
+.djj-customer-service .djj-badge--warning { color: var(--djj-gold-800); }
+.djj-workspace-content:has(.djj-customer-service) .djj-breadcrumb li { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+@media (min-width: 48rem) { .djj-service-metadata { grid-template-columns: minmax(8rem, 1fr) minmax(0, 3fr); } }
+.djj-customer-service .djj-badge { white-space: nowrap; overflow-wrap: normal; }

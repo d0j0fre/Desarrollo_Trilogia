@@ -19,12 +19,18 @@
     var canSellerOrders = Can("VENTA_MOVIL_CREAR");
     var canManagerOrders = Can("PEDIDOS_AUTORIZAR_RECHAZAR");
     var canDocuments = Can("DOCUMENTOS_VER");
+    var canConsultations = Can("CONSULTAS_VER");
+    var canComplaints = Can("RECLAMOS_GESTIONAR");
+    var canWarranties = Can("GARANTIAS_GESTIONAR");
     var canAssets = Can("ACTIVOS_GESTIONAR");
     var canAssetProfitability = Can("COMODATOS_CONSULTAR");
     var workspaceController = IsCurrent("SellerOrders") && canSellerOrders ? "SellerOrders"
         : IsCurrent("ManagerOrders") && canManagerOrders ? "ManagerOrders"
         : IsCurrent("RoutesAdmin") && Can("RUTAS_GESTIONAR") ? "RoutesAdmin"
         : IsCurrent("DeliveryBoard") && Can("ENTREGAS_TABLERO_VER") ? "DeliveryBoard"
+        : IsCurrent("Consultations") && canConsultations ? "Consultations"
+        : IsCurrent("Reclamos") && canComplaints ? "Reclamos"
+        : IsCurrent("WarrantyRequestsAdmin") && canWarranties ? "WarrantyRequestsAdmin"
         : IsCurrent("Documents") && canDocuments ? "Documents"
         : IsCurrent("Assets") && canAssets ? "Assets"
         : IsCurrent("Comodatos") && canAssets ? "Comodatos" : "Admin";
@@ -213,6 +219,10 @@
                     @if (canAssets || canAssetProfitability) { <li class="djj-workspace-nav__label">Activos y comodatos</li> }
                     @if (canAssets) { <li><a asp-controller="Assets" asp-action="Index" aria-current="@(IsCurrent("Assets", "Comodatos") && ViewContext.RouteData.Values["action"]?.ToString() != "Profitability" ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-package"></use></svg><span class="djj-workspace-nav__text">Activos y préstamos</span></a></li> }
                     @if (canAssetProfitability) { <li><a asp-controller="Comodatos" asp-action="Profitability" aria-current="@(IsCurrent("Comodatos") && ViewContext.RouteData.Values["action"]?.ToString() == "Profitability" ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-chart"></use></svg><span class="djj-workspace-nav__text">Rentabilidad</span></a></li> }
+                    @if (canConsultations || canComplaints || canWarranties) { <li class="djj-workspace-nav__label">Servicio al cliente</li> }
+                    @if (canConsultations) { <li><a asp-controller="Consultations" asp-action="Index" aria-current="@(IsCurrent("Consultations") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-chat"></use></svg><span class="djj-workspace-nav__text">Consultas</span></a></li> }
+                    @if (canComplaints) { <li><a asp-controller="Reclamos" asp-action="Index" aria-current="@(IsCurrent("Reclamos") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-warning"></use></svg><span class="djj-workspace-nav__text">Reclamos</span></a></li> }
+                    @if (canWarranties) { <li><a asp-controller="WarrantyRequestsAdmin" asp-action="Index" aria-current="@(IsCurrent("WarrantyRequestsAdmin") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-shield"></use></svg><span class="djj-workspace-nav__text">Garantías</span></a></li> }
                     <li class="djj-workspace-nav__label">Herramientas</li>
                     @if (canDocuments)
                     {

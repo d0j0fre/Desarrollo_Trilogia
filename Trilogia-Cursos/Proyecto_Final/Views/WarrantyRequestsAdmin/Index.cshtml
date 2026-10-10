@@ -1,83 +1,32 @@
 @model List<Proyecto_Final.Models.Admin.WarrantyRequestViewModel>
+@using Microsoft.AspNetCore.Http
+@using Proyecto_Final.Models.Presentation
+@inject IRolePermissionService PermissionService
 @{
-    ViewData["Title"] = "Solicitudes de garantía";
+    Layout = "_WorkspaceLayout"; ViewData["Title"] = "Solicitudes de garantía";
+    var role = Context.Session.GetString("UserRole") ?? string.Empty;
+    var admin = string.Equals(role, "Administrador", StringComparison.OrdinalIgnoreCase);
+    var canManage = admin || await PermissionService.HasCodePermissionAsync(role, "GARANTIAS_GESTIONAR");
 }
-
-<div class="container-fluid py-4">
-    <div class="card shadow-sm border-0">
-        <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
-            <div>
-                <h3 class="mb-0"><i class="fa fa-shield-alt mr-2"></i>Solicitudes de garantía</h3>
-                <small>Revisión, resolución y trazabilidad de solicitudes de clientes.</small>
-            </div>
-            <span class="badge badge-dark">Total: @Model.Count</span>
-        </div>
-        <div class="card-body">
-            @if (!Model.Any())
-            {
-                <div class="alert alert-info mb-0">No existen solicitudes de garantía registradas.</div>
-            }
-            else
-            {
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead class="thead-light">
-                            <tr><th>#</th><th>Pedido / producto</th><th>Cliente</th><th>Solicitud</th><th>Estado</th><th>Gestión</th></tr>
-                        </thead>
-                        <tbody>
-                        @foreach (var item in Model)
-                        {
-                            var terminal = item.Estado is "Aprobada" or "Rechazada";
-                            <tr>
-                                <td><strong>#@item.GarantiaId</strong></td>
-                                <td>
-                                    <strong>Pedido #@item.PedidoId</strong><br />
-                                    @item.Producto
-                                </td>
-                                <td>
-                                    @item.Cliente<br />
-                                    <a asp-controller="Clients" asp-action="Details" asp-route-id="@item.UsuarioId" class="small">Ver cliente</a>
-                                </td>
-                                <td style="min-width:230px">
-                                    <strong>@item.Motivo</strong><br />
-                                    @if (!string.IsNullOrWhiteSpace(item.Descripcion)) { <span>@item.Descripcion<br /></span> }
-                                    <small class="text-muted">@item.FechaSolicitud.ToString("dd/MM/yyyy HH:mm")</small>
-                                </td>
-                                <td>
-                                    <span class="badge @(item.Estado == "Aprobada" ? "badge-success" : item.Estado == "Rechazada" ? "badge-danger" : item.Estado == "En revisión" ? "badge-info" : "badge-warning")">
-                                        @item.Estado
-                                    </span>
-                                    @if (!string.IsNullOrWhiteSpace(item.Resolucion))
-                                    {
-                                        <p class="small mt-2 mb-0">@item.Resolucion</p>
-                                    }
-                                </td>
-                                <td style="min-width:280px">
-                                    @if (!terminal)
-                                    {
-                                        <form asp-action="UpdateStatus" method="post">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="garantiaId" value="@item.GarantiaId" />
-                                            <select name="estado" class="form-control form-control-sm mb-2" required>
-                                                <option value="En revisión">En revisión</option>
-                                                <option value="Aprobada">Aprobada</option>
-                                                <option value="Rechazada">Rechazada</option>
-                                            </select>
-                                            <textarea name="resolucion" class="form-control form-control-sm mb-2" maxlength="1000" rows="2" placeholder="Resolución obligatoria al cerrar"></textarea>
-                                            <button type="submit" class="btn btn-sm btn-primary">Actualizar</button>
-                                        </form>
-                                    }
-                                    else
-                                    {
-                                        <small class="text-muted">Solicitud cerrada.</small>
-                                    }
-                                </td>
-                            </tr>
-                        }
-                        </tbody>
-                    </table>
-                </div>
-            }
-        </div>
-    </div>
+<div class="djj-customer-service">
+@{ var canClients = admin || await PermissionService.HasCodePermissionAsync(role, "CLIENTES_VER"); }
+<header class="djj-page-header"><div class="djj-page-header__copy"><span class="djj-page-header__eyebrow">Servicio al cliente</span><h1>Solicitudes de garantía</h1><p>Revisión y resolución de solicitudes de productos comprados.</p></div></header>
+<partial name="_CustomerServiceNavigation" />
+<section class="djj-card djj-data-section"><header><h2>Garantías registradas</h2><p>@Model.Count registro(s).</p></header><div class="djj-table-wrap" tabindex="0" role="region" aria-label="Garantías registradas: tabla desplazable"><table class="djj-table djj-table--compact djj-service-table"><caption class="djj-sr-only">Garantías registradas</caption><thead><tr><th scope="col">Solicitud / fecha</th><th scope="col">Pedido / producto</th><th scope="col">Cliente</th><th scope="col">Motivo / descripción</th><th scope="col">Estado / resolución</th><th scope="col">Gestión</th></tr></thead><tbody>
+@if (!Model.Any()) { <tr><td colspan="6"><div class="djj-empty-state"><h3>Sin solicitudes de garantía</h3><p>Las solicitudes registradas aparecerán aquí.</p></div></td></tr> }
+@foreach (var item in Model)
+{
+<tr><td><strong>#@item.GarantiaId</strong><small class="djj-table__note">@item.FechaSolicitud.ToString("dd/MM/yyyy HH:mm") UTC</small></td><td>Pedido #@item.PedidoId<small class="djj-table__note">@item.Producto</small></td><td>@item.Cliente @if (canClients) { <a asp-controller="Clients" asp-action="Details" asp-route-id="@item.UsuarioId" class="djj-table__note">Ver cliente</a> }</td><td><strong>@item.Motivo</strong><p class="djj-service-text">@item.Descripcion</p></td><td><span class="djj-badge djj-badge--@CustomerServicePresentation.WarrantyTone(item.Estado)">@item.Estado</span><p class="djj-service-text">@(string.IsNullOrWhiteSpace(item.Resolucion) ? "Sin resolución registrada." : item.Resolucion)</p><small class="djj-table__note">Resolución: @(item.FechaResolucion?.ToString("dd/MM/yyyy HH:mm") ?? "Sin fecha") @(item.FechaResolucion.HasValue ? "UTC" : "")</small></td><td>
+@if (CustomerServicePresentation.WarrantyClosed(item.Estado)) { <span class="djj-table__note">Solicitud cerrada.</span> }
+else if (canManage)
+{
+<form asp-action="UpdateStatus" method="post" class="djj-service-warranty-form" data-djj-service-form data-djj-confirm="¿Actualizar esta garantía? Aprobar o rechazar deja una resolución terminal.">
+@Html.AntiForgeryToken()<input type="hidden" name="garantiaId" value="@item.GarantiaId" />
+<div class="djj-field"><label for="warranty-state-@item.GarantiaId">Estado de garantía #@item.GarantiaId</label><select id="warranty-state-@item.GarantiaId" name="estado" class="djj-select" required>@foreach (var state in new[] { "En revisión", "Aprobada", "Rechazada" }) { <option selected="@(item.Estado == state)">@state</option> }</select></div>
+<div class="djj-field"><label for="warranty-resolution-@item.GarantiaId">Resolución de garantía #@item.GarantiaId</label><textarea id="warranty-resolution-@item.GarantiaId" name="resolucion" class="djj-textarea" maxlength="1000" rows="3" aria-describedby="warranty-help-@item.GarantiaId"></textarea><small id="warranty-help-@item.GarantiaId">Obligatoria al aprobar o rechazar.</small></div><button type="submit" class="djj-button djj-button--neutral djj-button--sm">Actualizar garantía</button></form>
+}
+</td></tr>
+}
+</tbody></table></div></section>
 </div>
+@section Scripts { <script src="~/js/stage2/customer-service.js" asp-append-version="true"></script> }
