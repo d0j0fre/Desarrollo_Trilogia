@@ -1,104 +1,71 @@
 @model Proyecto_Final.Models.Admin.DocumentDetailsViewModel
+@using Microsoft.AspNetCore.Http
+@using Proyecto_Final.Models.Presentation
+@inject IRolePermissionService PermissionService
 @{
-    ViewData["Title"] = Model.Document.Title;
+    Layout = "_WorkspaceLayout"; ViewData["Title"] = Model.Document.Title;
     var focusHistory = ViewData["FocusHistory"] as bool? == true;
-    var expirationClass = Model.Document.ExpirationStatus == "Vencido" ? "danger" : Model.Document.ExpirationStatus == "Por vencer" ? "warning" : "success";
+    var role = Context.Session.GetString("UserRole") ?? string.Empty;
+    var canManage = string.Equals(role, "Administrador", StringComparison.OrdinalIgnoreCase) || await PermissionService.HasCodePermissionAsync(role, "DOCUMENTOS_GESTIONAR");
+    var currentVersion = Model.Versions.FirstOrDefault(item => item.Version == Model.Document.Version);
 }
-
-<div class="container py-4 s4-admin-page">
-    <header class="d-flex flex-wrap justify-content-between align-items-start mb-4">
-        <div class="s4-page-header">
-            <span class="s4-eyebrow"><i class="fa fa-file-alt"></i> @Model.Document.TypeName</span>
-            <h2>@Model.Document.Title</h2>
-            <p class="text-muted mb-0">@(Model.Document.DepartmentName ?? "General") · referencia @(Model.Document.ReferenceNumber ?? "no indicada")</p>
-        </div>
-        <div class="d-flex flex-wrap">
-            <a asp-action="Index" class="btn btn-outline-secondary mr-2 mb-2">Volver</a>
-            <a asp-action="History" asp-route-id="@Model.Document.DocumentId" class="btn btn-outline-dark mr-2 mb-2">Historial</a>
-            <a asp-action="Edit" asp-route-id="@Model.Document.DocumentId" class="btn btn-outline-primary mb-2"><i class="fa fa-pen mr-1"></i>Editar</a>
-        </div>
-    </header>
-
-    @if (TempData["SuccessMessage"] is string success) { <div class="alert alert-success" role="status">@success</div> }
-    @if (TempData["ErrorMessage"] is string error) { <div class="alert alert-danger" role="alert">@error</div> }
-
-    <div class="row">
-        <div class="col-lg-7">
-            <section class="card mb-4" aria-labelledby="document-summary-title">
-                <div class="card-header" id="document-summary-title">Resumen del documento</div>
-                <div class="card-body">
-                    <div class="d-flex flex-wrap mb-3">
-                        <span class="badge badge-@(Model.Document.Active ? "success" : "secondary") mr-2 mb-2">@(Model.Document.Active ? Model.Document.Status : "Inactivo")</span>
-                        <span class="badge badge-@expirationClass mb-2">@Model.Document.ExpirationStatus</span>
-                    </div>
-                    <dl class="row mb-0">
-                        <dt class="col-sm-4">Emisión</dt><dd class="col-sm-8">@(Model.Document.IssueDate?.ToString("dd/MM/yyyy") ?? "No indicada")</dd>
-                        <dt class="col-sm-4">Vencimiento</dt><dd class="col-sm-8">@(Model.Document.DoesNotExpire ? "No vence" : Model.Document.ExpirationDate?.ToString("dd/MM/yyyy"))</dd>
-                        <dt class="col-sm-4">Descripción</dt><dd class="col-sm-8">@(Model.Description ?? "Sin descripción")</dd>
-                        <dt class="col-sm-4">Archivo actual</dt><dd class="col-sm-8">@Model.OriginalName <small class="d-block text-muted">@((Model.SizeBytes / 1024m).ToString("N1")) KB · @Model.MimeType</small></dd>
-                        <dt class="col-sm-4">Integridad</dt><dd class="col-sm-8"><code class="text-break">@Model.Sha256</code></dd>
-                    </dl>
-                    <a asp-action="Download" asp-route-id="@Model.Document.DocumentId" class="btn btn-primary mt-3"><i class="fa fa-lock mr-1"></i>Descarga autorizada</a>
-                </div>
-            </section>
-        </div>
-        <div class="col-lg-5">
-            <section class="card mb-4" aria-labelledby="replace-title">
-                <div class="card-header" id="replace-title">Publicar nueva versión</div>
-                <div class="card-body">
-                    <form asp-action="ReplaceFile" method="post" enctype="multipart/form-data">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="id" value="@Model.Document.DocumentId" />
-                        <div class="s4-file-zone mb-3">
-                            <label for="replacement-file">Archivo PDF, JPG o PNG</label>
-                            <input id="replacement-file" type="file" name="file" accept=".pdf,.jpg,.jpeg,.png" class="form-control-file" required data-file-label="replacement-file-name" />
-                            <span id="replacement-file-name" class="s4-file-note" aria-live="polite">Ningún archivo seleccionado</span>
-                            <small class="s4-file-note">Máximo 10 MB; la versión anterior permanece en el historial.</small>
-                        </div>
-                        <button class="btn btn-warning btn-block" type="submit"><i class="fa fa-code-branch mr-1"></i>Guardar nueva versión</button>
-                    </form>
-                </div>
-            </section>
-            <section class="card s4-danger-zone" aria-labelledby="document-status-title">
-                <div class="card-header" id="document-status-title">Estado operativo</div>
-                <div class="card-body">
-                    <p class="text-muted">La desactivación es lógica y conserva todas las versiones.</p>
-                    <form asp-action="SetActive" method="post" data-confirm="@(Model.Document.Active ? "¿Confirma que desea inactivar este documento? Su historial se conservará." : "¿Confirma que desea reactivar este documento?")">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="id" value="@Model.Document.DocumentId" />
-                        <input type="hidden" name="active" value="@(!Model.Document.Active ? "true" : "false")" />
-                        <button class="btn btn-outline-danger btn-block" type="submit">@(Model.Document.Active ? "Inactivar documento" : "Reactivar documento")</button>
-                    </form>
-                </div>
-            </section>
-        </div>
+<div class="djj-documents">
+<header class="djj-page-header"><div class="djj-page-header__copy"><span class="djj-page-header__eyebrow">Gestión documental · @Model.Document.TypeName</span><h1>@Model.Document.Title</h1><p>@(Model.Document.DepartmentName ?? "General") · referencia @(Model.Document.ReferenceNumber ?? "no indicada")</p></div>
+<div class="djj-row-actions"><a asp-action="History" asp-route-id="@Model.Document.DocumentId" asp-fragment="history" class="djj-button djj-button--ghost">Historial</a>@if (canManage) { <a asp-action="Edit" asp-route-id="@Model.Document.DocumentId" class="djj-button djj-button--primary">Editar metadatos</a> }</div></header>
+<partial name="_DocumentsNavigation" />
+<section class="djj-card djj-form-card" aria-labelledby="document-summary-title">
+    <h2 id="document-summary-title">Resumen del documento</h2>
+    <div class="djj-row-actions"><span class="djj-badge djj-badge--@DocumentPresentation.DocumentTone(Model.Document.Active, Model.Document.Status)">@(Model.Document.Active ? Model.Document.Status : "Inactivo")</span><span class="djj-badge djj-badge--@DocumentPresentation.ExpirationTone(Model.Document.ExpirationStatus)">@Model.Document.ExpirationStatus</span></div>
+    <dl class="djj-document-metadata">
+        <dt>Tipo</dt><dd>@Model.Document.TypeName</dd>
+        <dt>Departamento</dt><dd>@(Model.Document.DepartmentName ?? "General")</dd>
+        <dt>Referencia</dt><dd>@(Model.Document.ReferenceNumber ?? "No indicada")</dd>
+        <dt>Emisión</dt><dd>@(Model.Document.IssueDate?.ToString("dd/MM/yyyy") ?? "No indicada")</dd>
+        <dt>Vencimiento</dt><dd>@(Model.Document.DoesNotExpire ? "No vence" : Model.Document.ExpirationDate?.ToString("dd/MM/yyyy") ?? "No indicado")</dd>
+        <dt>Descripción</dt><dd>@(Model.Description ?? "Sin descripción")</dd>
+        <dt>Autor</dt><dd>@Model.CreatedByName</dd>
+        <dt>Registro</dt><dd>@Model.CreatedUtc.ToString("dd/MM/yyyy HH:mm") UTC</dd>
+        <dt>Actualización</dt><dd>@Model.Document.UpdatedUtc.ToString("dd/MM/yyyy HH:mm") UTC</dd>
+        <dt>Versión actual</dt><dd>v@(Model.Document.Version)</dd>
+        <dt>Archivo actual</dt><dd>@Model.OriginalName <small class="djj-table__note">@((Model.SizeBytes / 1024m).ToString("N1")) KB · @Model.MimeType</small></dd>
+        <dt>Almacenamiento</dt><dd><span class="djj-badge djj-badge--@DocumentPresentation.StorageTone(currentVersion?.StorageStatus)">@DocumentPresentation.StorageLabel(currentVersion?.StorageStatus)</span></dd>
+        <dt>Integridad SHA-256</dt><dd><code>@Model.Sha256</code></dd>
+    </dl>
+    @if (DocumentPresentation.ShowDownload(currentVersion?.StorageStatus, Model.Document.Active, canManage))
+    { <a asp-action="Download" asp-route-id="@Model.Document.DocumentId" class="djj-button djj-button--primary">Descarga autorizada</a> }
+    else { <p class="djj-table__note">La descarga no está disponible para el estado actual del documento o archivo.</p> }
+</section>
+@if (canManage)
+{
+    <div class="djj-workspace-split">
+        <section class="djj-card djj-form-card" aria-labelledby="replace-title">
+            <h2 id="replace-title">Publicar nueva versión</h2><p>El archivo anterior permanece en el historial. El servidor asigna la versión.</p>
+            <form asp-action="ReplaceFile" method="post" enctype="multipart/form-data" data-djj-document-form data-djj-confirm="¿Guardar una nueva versión de este documento?">
+                @Html.AntiForgeryToken()<input type="hidden" name="id" value="@Model.Document.DocumentId" />
+                <div class="djj-field djj-document-upload"><label for="replacement-file">Archivo PDF, JPG, JPEG o PNG</label><input id="replacement-file" type="file" name="file" accept=".pdf,.jpg,.jpeg,.png" class="djj-input" required data-file-label="replacement-file-name" aria-describedby="replacement-file-help replacement-file-name" /><span id="replacement-file-name" class="djj-table__note" aria-live="polite">Ningún archivo seleccionado</span><small id="replacement-file-help">Máximo 10 MB. La descarga requiere autorización.</small></div>
+                <div class="djj-form-actions"><button class="djj-button djj-button--neutral" type="submit">Guardar nueva versión</button></div>
+            </form>
+        </section>
+        <section class="djj-card djj-form-card" aria-labelledby="document-status-title">
+            <h2 id="document-status-title">Estado operativo</h2><p>La desactivación es lógica y conserva todas las versiones.</p>
+            <form asp-action="SetActive" method="post" data-djj-confirm="@(Model.Document.Active ? "¿Confirma que desea inactivar este documento? Su historial se conservará." : "¿Confirma que desea reactivar este documento?")">
+                @Html.AntiForgeryToken()<input type="hidden" name="id" value="@Model.Document.DocumentId" /><input type="hidden" name="active" value="@(!Model.Document.Active ? "true" : "false")" />
+                <button class="djj-button djj-button--@(Model.Document.Active ? "danger-outline" : "neutral")" type="submit">@(Model.Document.Active ? "Inactivar documento" : "Reactivar documento")</button>
+            </form>
+        </section>
     </div>
-
-    <section id="history" class="card" tabindex="@(focusHistory ? "-1" : null)" aria-labelledby="history-title">
-        <div class="card-header" id="history-title">Historial de versiones</div>
-        <div class="card-body">
-            @if (!Model.Versions.Any())
-            {
-                <div class="s4-empty"><i class="fa fa-history"></i><p class="mb-0">Aún no existen versiones registradas.</p></div>
-            }
-            else
-            {
-                <ol class="s4-timeline">
-                    @foreach (var version in Model.Versions.OrderByDescending(item => item.Version))
-                    {
-                        <li class="s4-timeline__item">
-                            <div class="d-flex flex-wrap justify-content-between align-items-start">
-                                <div>
-                                    <strong>Versión @version.Version · @version.OriginalName</strong>
-                                    <small class="d-block text-muted">@version.CreatedUtc.ToString("dd/MM/yyyy HH:mm") UTC · @version.CreatedByName · @((version.SizeBytes / 1024m).ToString("N1")) KB</small>
-                                    <code class="d-block text-break mt-1">@version.Sha256</code>
-                                </div>
-                                <div><span class="badge badge-light mr-2">@version.StorageStatus</span><a asp-action="Download" asp-route-id="@Model.Document.DocumentId" asp-route-versionId="@version.VersionId" class="btn btn-sm btn-outline-primary">Descargar</a></div>
-                            </div>
-                        </li>
-                    }
-                </ol>
-            }
-        </div>
-    </section>
+}
+<section id="history" class="djj-card djj-data-section" tabindex="@(focusHistory ? "-1" : null)" data-djj-document-history="@(focusHistory ? "true" : "false")" aria-labelledby="history-title">
+    <header><div><h2 id="history-title">Historial de versiones</h2><p>@Model.Versions.Count versión(es) registrada(s).</p></div></header>
+    <div class="djj-table-wrap" tabindex="0" role="region" aria-label="Versiones: tabla desplazable"><table class="djj-table djj-table--compact djj-document-table"><caption class="djj-sr-only">Versiones, integridad y disponibilidad de archivos</caption><thead><tr><th scope="col">Versión / archivo</th><th scope="col">Autor / fecha</th><th scope="col">Tamaño / tipo</th><th scope="col">Integridad SHA-256</th><th scope="col">Almacenamiento</th><th scope="col">Acciones</th></tr></thead><tbody>
+    @if (!Model.Versions.Any()) { <tr><td colspan="6"><div class="djj-empty-state"><h3>Sin versiones registradas</h3><p>El historial aparecerá cuando esté disponible.</p></div></td></tr> }
+    @foreach (var version in Model.Versions.OrderByDescending(item => item.Version))
+    {
+        <tr><td><strong class="djj-table__primary">Versión @version.Version</strong><small class="djj-table__note">@version.OriginalName</small></td><td>@version.CreatedByName<small class="djj-table__note">@version.CreatedUtc.ToString("dd/MM/yyyy HH:mm") UTC</small></td><td>@((version.SizeBytes / 1024m).ToString("N1")) KB<small class="djj-table__note">@version.MimeType</small></td><td><code>@version.Sha256</code></td><td><span class="djj-badge djj-badge--@DocumentPresentation.StorageTone(version.StorageStatus)">@DocumentPresentation.StorageLabel(version.StorageStatus)</span></td><td>
+        @if (DocumentPresentation.ShowDownload(version.StorageStatus, Model.Document.Active, canManage)) { <a asp-action="Download" asp-route-id="@Model.Document.DocumentId" asp-route-versionId="@version.VersionId" class="djj-button djj-button--ghost djj-button--sm" aria-label="Descargar versión @version.Version">Descargar</a> }
+        else { <span class="djj-table__note">No disponible</span> }</td></tr>
+    }
+    </tbody></table></div>
+</section>
 </div>
+@section Scripts { <script src="~/js/stage2/documents.js" asp-append-version="true"></script> }

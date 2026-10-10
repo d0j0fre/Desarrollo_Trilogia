@@ -1,112 +1,45 @@
 @model Proyecto_Final.Models.Admin.DocumentAlertsIndexViewModel
+@using Microsoft.AspNetCore.Http
+@using Proyecto_Final.Models.Presentation
+@inject IRolePermissionService PermissionService
 @{
-    ViewData["Title"] = "Alertas documentales";
-    var groups = new[]
-    {
-        new { Key = "expired", Title = "Vencidas", Description = "Requieren atención inmediata", Items = Model.Alerts.Items.Where(item => item.DaysRemaining < 0).ToList() },
-        new { Key = "today", Title = "Vencen hoy", Description = "Prioridad del día", Items = Model.Alerts.Items.Where(item => item.DaysRemaining == 0).ToList() },
-        new { Key = "seven", Title = "Próximos 7 días", Description = "Atender esta semana", Items = Model.Alerts.Items.Where(item => item.DaysRemaining is >= 1 and <= 7).ToList() },
-        new { Key = "fifteen", Title = "Entre 8 y 15 días", Description = "Planificar renovación", Items = Model.Alerts.Items.Where(item => item.DaysRemaining is >= 8 and <= 15).ToList() },
-        new { Key = "thirty", Title = "Entre 16 y 30 días", Description = "Seguimiento preventivo", Items = Model.Alerts.Items.Where(item => item.DaysRemaining is >= 16 and <= 30).ToList() }
-    };
-    string PriorityClass(int days) => days < 0 ? "danger" : days <= 7 ? "warning" : "info";
+    Layout = "_WorkspaceLayout"; ViewData["Title"] = "Alertas documentales";
+    var role = Context.Session.GetString("UserRole") ?? string.Empty;
+    var admin = string.Equals(role, "Administrador", StringComparison.OrdinalIgnoreCase);
+    var canGenerate = admin || await PermissionService.HasCodePermissionAsync(role, "DOCUMENTOS_ALERTAS_GENERAR");
+    var canHandle = admin || await PermissionService.HasCodePermissionAsync(role, "DOCUMENTOS_ALERTAS_ATENDER");
 }
-
-<div class="container-fluid py-4 px-xl-5 s4-admin-page">
-    <header class="d-flex flex-wrap justify-content-between align-items-start mb-4">
-        <div class="s4-page-header">
-            <span class="s4-eyebrow"><i class="fa fa-bell"></i> CU-202</span>
-            <h2>Alertas de vencimiento</h2>
-            <p class="text-muted mb-0">Agrupadas por prioridad con fecha de negocio de Costa Rica.</p>
-        </div>
-        <div class="d-flex flex-wrap">
-            <a asp-action="Index" class="btn btn-outline-secondary mr-2 mb-2">Documentos</a>
-            <form asp-action="GenerateAlerts" method="post" class="mb-2">
-                @Html.AntiForgeryToken()
-                <button class="btn btn-warning" type="submit"><i class="fa fa-sync mr-1"></i>Generar sin duplicar</button>
-            </form>
-        </div>
-    </header>
-
-    @if (TempData["SuccessMessage"] is string success) { <div class="alert alert-success" role="status">@success</div> }
-    @if (TempData["ErrorMessage"] is string error) { <div class="alert alert-danger" role="alert">@error</div> }
-
-    <div class="s4-kpi-grid mb-4">
-        <article class="s4-kpi s4-kpi--warning"><span class="s4-kpi__label">Alertas activas</span><strong class="s4-kpi__value">@Model.ActiveCount</strong></article>
-        <article class="s4-kpi s4-kpi--danger"><span class="s4-kpi__label">Documentos vencidos</span><strong class="s4-kpi__value">@Model.ExpiredCount</strong></article>
-        <article class="s4-kpi"><span class="s4-kpi__label">En esta página</span><strong class="s4-kpi__value">@Model.Alerts.Items.Count</strong></article>
-    </div>
-
-    <section class="card mb-4" aria-labelledby="alert-filter-title">
-        <div class="card-header" id="alert-filter-title">Filtrar alertas</div>
-        <div class="card-body">
-            <form method="get" class="s4-filters">
-                <div class="s4-filter">
-                    <label asp-for="Filter.Status">Estado</label>
-                    <select asp-for="Filter.Status" name="Status" class="form-control"><option value="">Todos</option><option>Activa</option><option>Atendida</option></select>
-                </div>
-                <div class="s4-filter--wide">
-                    <label asp-for="Filter.DepartmentId">Departamento</label>
-                    <select asp-for="Filter.DepartmentId" name="DepartmentId" class="form-control"><option value="">Todos</option>@foreach (var department in Model.Departments) { <option value="@department.Id">@department.Name</option> }</select>
-                </div>
-                <div class="s4-filter">
-                    <label asp-for="Filter.MaxDays">Horizonte máximo</label>
-                    <input asp-for="Filter.MaxDays" name="MaxDays" type="number" min="0" max="365" class="form-control" placeholder="30 días" />
-                </div>
-                <div class="s4-filter--action"><button class="btn btn-dark btn-block" type="submit">Aplicar</button></div>
-            </form>
-        </div>
-    </section>
-
-    @if (!Model.Alerts.Items.Any())
-    {
-        <div class="card"><div class="s4-empty"><i class="fa fa-check-circle"></i><h3>Sin alertas para estos filtros</h3><p class="mb-0">No hay vencimientos que requieran acción en el período seleccionado.</p></div></div>
-    }
-    else
-    {
-        @foreach (var group in groups.Where(group => group.Items.Any()))
-        {
-            <section class="card s4-alert-group" aria-labelledby="group-@group.Key">
-                <div class="card-header s4-alert-group__title">
-                    <div><strong id="group-@group.Key">@group.Title</strong><small class="d-block text-muted">@group.Description</small></div>
-                    <span class="badge badge-@(group.Key == "expired" ? "danger" : group.Key == "today" || group.Key == "seven" ? "warning" : "info")">@group.Items.Count</span>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead><tr><th>Documento</th><th>Responsable</th><th>Vencimiento</th><th>Prioridad</th><th>Estado</th><th><span class="sr-only">Acción</span></th></tr></thead>
-                        <tbody>
-                        @foreach (var alert in group.Items)
-                        {
-                            <tr>
-                                <td><a asp-action="Detail" asp-route-id="@alert.DocumentId"><strong>@alert.DocumentTitle</strong></a><small class="d-block text-muted">@alert.TypeName · @(alert.DepartmentName ?? "General")</small></td>
-                                <td>@alert.ResponsibleName</td>
-                                <td>@alert.ExpirationDate.ToString("dd/MM/yyyy")</td>
-                                <td><span class="badge badge-@PriorityClass(alert.DaysRemaining)">@(alert.DaysRemaining < 0 ? $"{Math.Abs(alert.DaysRemaining)} días vencido" : alert.DaysRemaining == 0 ? "Hoy" : $"{alert.DaysRemaining} días")</span></td>
-                                <td>@alert.Status <small class="d-block text-muted">@alert.ExpirationStatus</small></td>
-                                <td>
-                                    @if (alert.Status == "Activa")
-                                    {
-                                        <form asp-action="MarkAlertHandled" method="post">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="id" value="@alert.AlertId" />
-                                            <button class="btn btn-sm btn-outline-success" type="submit"><i class="fa fa-check mr-1"></i>Atender</button>
-                                        </form>
-                                    }
-                                </td>
-                            </tr>
-                        }
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-        }
-    }
-
-    <nav class="d-flex justify-content-between align-items-center mt-3" aria-label="Paginación de alertas">
-        <span class="text-muted">@Model.Alerts.Total alerta(s)</span>
-        <div>
-            @if (Model.Alerts.Page > 1) { <a asp-route-Page="@(Model.Alerts.Page - 1)" asp-route-Status="@Model.Filter.Status" asp-route-DepartmentId="@Model.Filter.DepartmentId" asp-route-MaxDays="@Model.Filter.MaxDays" class="btn btn-sm btn-outline-secondary">Anterior</a> }
-            @if (Model.Alerts.Page < Model.Alerts.TotalPages) { <a asp-route-Page="@(Model.Alerts.Page + 1)" asp-route-Status="@Model.Filter.Status" asp-route-DepartmentId="@Model.Filter.DepartmentId" asp-route-MaxDays="@Model.Filter.MaxDays" class="btn btn-sm btn-outline-secondary">Siguiente</a> }
-        </div>
-    </nav>
+<div class="djj-documents">
+<header class="djj-page-header"><div class="djj-page-header__copy"><span class="djj-page-header__eyebrow">Gestión documental</span><h1>Alertas de vencimiento</h1><p>Vencimientos y responsables según la fecha de negocio de Costa Rica.</p></div>
+@if (canGenerate) { <form asp-action="GenerateAlerts" method="post" data-djj-confirm="¿Generar las alertas de vencimiento? El proceso puede enviar notificaciones.">@Html.AntiForgeryToken()<button class="djj-button djj-button--primary" type="submit">Generar sin duplicar</button></form> }</header>
+<partial name="_DocumentsNavigation" />
+<section class="djj-document-kpis" aria-label="Resumen de alertas">
+    <article class="djj-kpi-card"><div><p class="djj-kpi-card__label">Alertas activas</p><p class="djj-kpi-card__value">@Model.ActiveCount</p></div></article>
+    <article class="djj-kpi-card"><div><p class="djj-kpi-card__label">Documentos vencidos</p><p class="djj-kpi-card__value">@Model.ExpiredCount</p></div></article>
+    <article class="djj-kpi-card"><div><p class="djj-kpi-card__label">En esta página</p><p class="djj-kpi-card__value">@Model.Alerts.Items.Count</p></div></article>
+</section>
+<section class="djj-card djj-filter-card" aria-labelledby="alert-filter-title"><h2 id="alert-filter-title">Filtrar alertas</h2>
+<form asp-action="Alerts" method="get" class="djj-filter-bar">
+    <div class="djj-field"><label asp-for="Filter.Status">Estado</label><select asp-for="Filter.Status" name="Status" class="djj-select"><option value="">Todos</option><option>Activa</option><option>Atendida</option></select></div>
+    <div class="djj-field"><label asp-for="Filter.DepartmentId">Departamento</label><select asp-for="Filter.DepartmentId" name="DepartmentId" class="djj-select"><option value="">Todos</option>@foreach (var department in Model.Departments) { <option value="@department.Id">@department.Name</option> }</select></div>
+    <div class="djj-field"><label asp-for="Filter.MaxDays">Horizonte máximo (días)</label><input asp-for="Filter.MaxDays" name="MaxDays" type="number" min="0" max="365" class="djj-input" placeholder="Sin límite" /></div>
+    <div class="djj-filter-bar__actions"><button class="djj-button djj-button--neutral" type="submit">Aplicar</button><a asp-action="Alerts" class="djj-button djj-button--ghost">Limpiar</a></div>
+</form></section>
+<section class="djj-card djj-data-section" aria-labelledby="alert-list-title"><header><div><h2 id="alert-list-title">Bandeja de atención</h2><p>@Model.Alerts.Total alerta(s) para estos filtros.</p></div></header>
+<div class="djj-table-wrap" tabindex="0" role="region" aria-label="Alertas: tabla desplazable"><table class="djj-table djj-table--compact djj-document-table"><caption class="djj-sr-only">Alertas documentales y responsables</caption><thead><tr><th scope="col">Documento / tipo</th><th scope="col">Departamento / responsable</th><th scope="col">Vencimiento</th><th scope="col">Días restantes</th><th scope="col">Estado</th><th scope="col">Acciones</th></tr></thead><tbody>
+@if (!Model.Alerts.Items.Any()) { <tr><td colspan="6"><div class="djj-empty-state"><h3>Sin alertas para estos filtros</h3><p>Cambiá los filtros para consultar otro período o estado.</p></div></td></tr> }
+@foreach (var alert in Model.Alerts.Items)
+{
+    <tr><td><a asp-action="Detail" asp-route-id="@alert.DocumentId" class="djj-table__primary">@alert.DocumentTitle</a><small class="djj-table__note">@alert.TypeName</small></td><td>@(alert.DepartmentName ?? "General")<small class="djj-table__note">@alert.ResponsibleName</small></td>
+    <td>@alert.ExpirationDate.ToString("dd/MM/yyyy")<small class="djj-table__note"><span class="djj-badge djj-badge--@DocumentPresentation.ExpirationTone(alert.ExpirationStatus)">@alert.ExpirationStatus</span></small></td>
+    <td>@alert.DaysRemaining día(s)<small class="djj-table__note">@(alert.DaysRemaining < 0 ? "Después del vencimiento" : alert.DaysRemaining == 0 ? "Vence hoy" : "Hasta el vencimiento")</small></td>
+    <td><span class="djj-badge djj-badge--@(alert.Status == "Activa" ? "info" : "neutral")">@alert.Status</span><small class="djj-table__note">@alert.CreatedUtc.ToString("dd/MM/yyyy HH:mm") UTC</small></td>
+    <td><div class="djj-row-actions"><a asp-action="Details" asp-route-id="@alert.DocumentId" class="djj-button djj-button--ghost djj-button--sm" aria-label="Ver documento @alert.DocumentTitle">Ver</a>
+    @if (canHandle && alert.Status == "Activa") { <form asp-action="MarkAlertHandled" method="post" data-djj-confirm="¿Marcar esta alerta como atendida?">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@alert.AlertId" /><button class="djj-button djj-button--success djj-button--sm" type="submit" aria-label="Atender alerta de @alert.DocumentTitle">Atender</button></form> }</div></td></tr>
+}
+</tbody></table></div>
+<nav class="djj-document-pagination" aria-label="Paginación de alertas"><span>Página @Model.Alerts.Page de @Model.Alerts.TotalPages · @Model.Alerts.Total alerta(s)</span><div class="djj-row-actions">
+@if (Model.Alerts.Page > 1) { <a asp-action="Alerts" asp-route-Page="@(Model.Alerts.Page-1)" asp-route-PageSize="@Model.Filter.PageSize" asp-route-Status="@Model.Filter.Status" asp-route-DepartmentId="@Model.Filter.DepartmentId" asp-route-MaxDays="@Model.Filter.MaxDays" class="djj-button djj-button--ghost djj-button--sm">Anterior</a> }
+@if (Model.Alerts.Page < Model.Alerts.TotalPages) { <a asp-action="Alerts" asp-route-Page="@(Model.Alerts.Page+1)" asp-route-PageSize="@Model.Filter.PageSize" asp-route-Status="@Model.Filter.Status" asp-route-DepartmentId="@Model.Filter.DepartmentId" asp-route-MaxDays="@Model.Filter.MaxDays" class="djj-button djj-button--ghost djj-button--sm">Siguiente</a> }
+</div></nav></section>
 </div>

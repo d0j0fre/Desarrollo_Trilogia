@@ -1,5 +1,15 @@
 @model Proyecto_Final.Models.Admin.DocumentFormViewModel
-@{ ViewData["Title"] = "Editar documento"; }
-<div class="container py-4 s4-admin-page"><div class="d-flex justify-content-between align-items-center mb-3"><h2>Editar metadatos</h2><a asp-action="Details" asp-route-id="@Model.DocumentId" class="btn btn-outline-secondary">Volver</a></div>
-<div class="card shadow-sm"><div class="card-body"><form asp-action="Edit" method="post">@Html.AntiForgeryToken()<partial name="_Form" model="Model" /><button class="btn btn-primary">Guardar cambios</button></form></div></div></div>
-@section Scripts { <partial name="_ValidationScriptsPartial" /> }
+@{ Layout = "_WorkspaceLayout"; ViewData["Title"] = "Editar metadatos"; }
+<div class="djj-documents">
+<header class="djj-page-header"><div class="djj-page-header__copy"><span class="djj-page-header__eyebrow">Gestión documental</span><h1>Editar metadatos</h1><p>Estos cambios conservan el archivo y su historial de versiones.</p></div></header>
+<partial name="_DocumentsNavigation" />
+<section class="djj-card djj-form-card" aria-labelledby="document-edit-title">
+    <h2 id="document-edit-title">Datos del documento</h2>
+    <form asp-action="Edit" method="post" data-djj-document-form>
+        @Html.AntiForgeryToken()
+        <partial name="_Form" model="Model" />
+        <div class="djj-form-actions"><button type="submit" class="djj-button djj-button--primary">Guardar cambios</button></div>
+    </form>
+</section>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /><script src="~/js/stage2/documents.js" asp-append-version="true"></script> }
