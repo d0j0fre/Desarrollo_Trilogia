@@ -80,7 +80,8 @@ public sealed class Stage2DesignSystemTests
         var cssRoot = ProjectPath("wwwroot", "css", "stage2");
         var files = Directory.EnumerateFiles(cssRoot, "*.css").ToArray();
 
-        Assert.Equal(7, files.Length);
+        Assert.Equal(new[] { "base.css", "components.css", "field.css", "public-surfaces.css", "storefront.css", "tokens.css", "utilities.css", "workspace.css" },
+            files.Select(Path.GetFileName).OrderBy(name => name, StringComparer.Ordinal));
         Assert.All(files, path => Assert.DoesNotContain("!important", File.ReadAllText(path), StringComparison.OrdinalIgnoreCase));
         Assert.All(files, path => Assert.DoesNotMatch(new Regex(@"(?m)^\s*--(?!djj-)[a-zA-Z]", RegexOptions.CultureInvariant), File.ReadAllText(path)));
     }

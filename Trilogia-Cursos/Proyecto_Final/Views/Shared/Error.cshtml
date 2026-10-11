@@ -1,15 +1,9 @@
-﻿@model ErrorViewModel
-@{
-    ViewData["Title"] = "Servicio temporalmente no disponible";
-}
-
-<div class="container py-5 text-center">
-<h1 class="h3">No podemos completar esta solicitud en este momento.</h1>
-<p class="text-muted">El incidente fue registrado. Intente nuevamente en unos minutos.</p>
-
-@if (Model.ShowRequestId)
-{
-    <p class="text-muted"><small>Identificador de seguimiento: <code>@Model.RequestId</code></small></p>
-}
-<a asp-controller="Home" asp-action="Index" class="btn btn-primary">Ir al inicio</a>
-</div>
+@model ErrorViewModel
+@using Proyecto_Final.Models.Presentation
+@{ Layout = "_StatusLayout"; ViewData["Title"] = "No pudimos completar la solicitud"; var requestId = PublicSurfacePresentation.SafeRequestId(Model?.RequestId); }
+<section class="djj-card djj-state-card" aria-labelledby="error-title">
+    <h1 id="error-title">No pudimos completar la solicitud</h1>
+    <p>Intentalo nuevamente en unos minutos.</p>
+    @if (requestId is not null) { <p>Identificador de seguimiento: <code class="djj-trace-id">@requestId</code></p> }
+    <div class="djj-surface-actions"><a asp-controller="Home" asp-action="Index" class="djj-button djj-button--primary">Ir al inicio</a></div>
+</section>
