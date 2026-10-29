@@ -1,17 +1,17 @@
 @model Proyecto_Final.Models.Admin.DocumentDetailsViewModel
 @using Microsoft.AspNetCore.Http
 @using Proyecto_Final.Models.Presentation
-@inject IRolePermissionService PermissionService
 @{
     Layout = "_WorkspaceLayout"; ViewData["Title"] = Model.Document.Title;
     var focusHistory = ViewData["FocusHistory"] as bool? == true;
-    var role = Context.Session.GetString("UserRole") ?? string.Empty;
-    var canManage = string.Equals(role, "Administrador", StringComparison.OrdinalIgnoreCase) || await PermissionService.HasCodePermissionAsync(role, "DOCUMENTOS_GESTIONAR");
+    var canEdit = Model.Document.CanEdit;
+    var canVersion = Model.Document.CanVersion;
+    var canDownload = Model.Document.CanDownload;
     var currentVersion = Model.Versions.FirstOrDefault(item => item.Version == Model.Document.Version);
 }
 <div class="djj-documents">
 <header class="djj-page-header"><div class="djj-page-header__copy"><span class="djj-page-header__eyebrow">Gestión documental · @Model.Document.TypeName</span><h1>@Model.Document.Title</h1><p>@(Model.Document.DepartmentName ?? "General") · referencia @(Model.Document.ReferenceNumber ?? "no indicada")</p></div>
-<div class="djj-row-actions"><a asp-action="History" asp-route-id="@Model.Document.DocumentId" asp-fragment="history" class="djj-button djj-button--ghost">Historial</a>@if (canManage) { <a asp-action="Edit" asp-route-id="@Model.Document.DocumentId" class="djj-button djj-button--primary">Editar metadatos</a> }</div></header>
+<div class="djj-row-actions"><a asp-action="History" asp-route-id="@Model.Document.DocumentId" asp-fragment="history" class="djj-button djj-button--ghost">Historial</a>@if (canEdit) { <a asp-action="Edit" asp-route-id="@Model.Document.DocumentId" class="djj-button djj-button--primary">Editar metadatos</a> }</div></header>
 <partial name="_DocumentsNavigation" />
 <section class="djj-card djj-form-card" aria-labelledby="document-summary-title">
     <h2 id="document-summary-title">Resumen del documento</h2>
@@ -31,13 +31,15 @@
         <dt>Almacenamiento</dt><dd><span class="djj-badge djj-badge--@DocumentPresentation.StorageTone(currentVersion?.StorageStatus)">@DocumentPresentation.StorageLabel(currentVersion?.StorageStatus)</span></dd>
         <dt>Integridad SHA-256</dt><dd><code>@Model.Sha256</code></dd>
     </dl>
-    @if (DocumentPresentation.ShowDownload(currentVersion?.StorageStatus, Model.Document.Active, canManage))
+    @if (canDownload && DocumentPresentation.ShowDownload(currentVersion?.StorageStatus, Model.Document.Active, false))
     { <a asp-action="Download" asp-route-id="@Model.Document.DocumentId" class="djj-button djj-button--primary">Descarga autorizada</a> }
-    else { <p class="djj-table__note">La descarga no está disponible para el estado actual del documento o archivo.</p> }
+    else { <p class="djj-table__note">@(canDownload ? "La descarga no está disponible para el estado actual del documento o archivo." : "Tu autorización permite consultar esta ficha; descargar archivos requiere un permiso adicional.")</p> }
 </section>
-@if (canManage)
+@if (canEdit || canVersion)
 {
     <div class="djj-workspace-split">
+        @if (canVersion)
+        {
         <section class="djj-card djj-form-card" aria-labelledby="replace-title">
             <h2 id="replace-title">Publicar nueva versión</h2><p>El archivo anterior permanece en el historial. El servidor asigna la versión.</p>
             <form asp-action="ReplaceFile" method="post" enctype="multipart/form-data" data-djj-document-form data-djj-confirm="¿Guardar una nueva versión de este documento?">
@@ -46,6 +48,9 @@
                 <div class="djj-form-actions"><button class="djj-button djj-button--neutral" type="submit">Guardar nueva versión</button></div>
             </form>
         </section>
+        }
+        @if (canEdit)
+        {
         <section class="djj-card djj-form-card" aria-labelledby="document-status-title">
             <h2 id="document-status-title">Estado operativo</h2><p>La desactivación es lógica y conserva todas las versiones.</p>
             <form asp-action="SetActive" method="post" data-djj-confirm="@(Model.Document.Active ? "¿Confirma que desea inactivar este documento? Su historial se conservará." : "¿Confirma que desea reactivar este documento?")">
@@ -53,6 +58,7 @@
                 <button class="djj-button djj-button--@(Model.Document.Active ? "danger-outline" : "neutral")" type="submit">@(Model.Document.Active ? "Inactivar documento" : "Reactivar documento")</button>
             </form>
         </section>
+        }
     </div>
 }
 <section id="history" class="djj-card djj-data-section" tabindex="@(focusHistory ? "-1" : null)" data-djj-document-history="@(focusHistory ? "true" : "false")" aria-labelledby="history-title">
@@ -62,7 +68,7 @@
     @foreach (var version in Model.Versions.OrderByDescending(item => item.Version))
     {
         <tr><td><strong class="djj-table__primary">Versión @version.Version</strong><small class="djj-table__note">@version.OriginalName</small></td><td>@version.CreatedByName<small class="djj-table__note">@version.CreatedUtc.ToString("dd/MM/yyyy HH:mm") UTC</small></td><td>@((version.SizeBytes / 1024m).ToString("N1")) KB<small class="djj-table__note">@version.MimeType</small></td><td><code>@version.Sha256</code></td><td><span class="djj-badge djj-badge--@DocumentPresentation.StorageTone(version.StorageStatus)">@DocumentPresentation.StorageLabel(version.StorageStatus)</span></td><td>
-        @if (DocumentPresentation.ShowDownload(version.StorageStatus, Model.Document.Active, canManage)) { <a asp-action="Download" asp-route-id="@Model.Document.DocumentId" asp-route-versionId="@version.VersionId" class="djj-button djj-button--ghost djj-button--sm" aria-label="Descargar versión @version.Version">Descargar</a> }
+        @if (canDownload && DocumentPresentation.ShowDownload(version.StorageStatus, Model.Document.Active, false)) { <a asp-action="Download" asp-route-id="@Model.Document.DocumentId" asp-route-versionId="@version.VersionId" class="djj-button djj-button--ghost djj-button--sm" aria-label="Descargar versión @version.Version">Descargar</a> }
         else { <span class="djj-table__note">No disponible</span> }</td></tr>
     }
     </tbody></table></div>

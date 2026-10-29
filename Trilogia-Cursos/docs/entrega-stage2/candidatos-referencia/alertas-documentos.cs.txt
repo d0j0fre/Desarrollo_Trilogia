@@ -1,0 +1,150 @@
+using System.Diagnostics;
+using System.Net.Mail;
+using System.Security.Cryptography;
+using System.Text.Json.Serialization;
+
+namespace JJ.DocumentAlerts.Candidate;
+
+// Maps the existing CommerceSession/OriginalLoginContext. This is not a new credential.
+[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
+public sealed record DocumentAlertContext(Guid LoginId, int UserId, int ProfileId, Guid SecurityStamp,
+    byte[] BindingHash, DateTime IssuedUtc, DateTime ExpiresUtc)
+{
+    public bool IsValid(DateTime utc) => LoginId != Guid.Empty && UserId > 0 && ProfileId > 0
+        && SecurityStamp != Guid.Empty && BindingHash is { Length: 32 } && BindingHash.Any(x => x != 0)
+        && IssuedUtc.Kind == DateTimeKind.Utc && ExpiresUtc.Kind == DateTimeKind.Utc
+        && IssuedUtc <= utc && ExpiresUtc > utc && ExpiresUtc - IssuedUtc == TimeSpan.FromHours(8);
+    public override string ToString() => nameof(DocumentAlertContext);
+}
+
+[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
+public sealed record DocumentAlertSendCommand(DocumentAlertContext Session, int AlertId, Guid OperationId);
+[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
+public sealed record DocumentAlertReceiptCommand(DocumentAlertContext Session, int AlertId, Guid OperationId);
+[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
+public sealed record DocumentAlertReceipt(Guid OperationId, string State)
+{
+    [JsonIgnore] public bool IsValid => OperationId != Guid.Empty && State is "Pending" or "Sending" or "SmtpAccepted" or "Unknown";
+}
+
+// Internal API-only snapshot, never an HTTP response. No title, body, filenames or business content.
+public sealed record DocumentAlertSnapshot(int AlertId, int DocumentId, int RecipientUserId, string Recipient);
+public sealed record DocumentAlertClaim(DocumentAlertReceipt Receipt, bool ShouldSend, DocumentAlertSnapshot? Snapshot);
+// Only IDs and an OWN operation may be returned. No other session's UUID is disclosed.
+public sealed record DocumentAlertPending(int AlertId, Guid? OwnOperationId, string State);
+
+public interface IDocumentAlertNotificationStore
+{
+    // All session-bound methods require original login + Alert access in a SQL transaction.
+    // Discover covers existing internal alerts as well as freshly generated alerts.
+    Task<IReadOnlyList<DocumentAlertPending>> DiscoverAsync(DocumentAlertContext session, int limit, CancellationToken ct);
+    Task<DocumentAlertReceipt> RequestAsync(DocumentAlertSendCommand command, CancellationToken ct);
+    // Must commit its exclusive claim and drain all resultsets/errors before returning a sendable snapshot.
+    Task<DocumentAlertClaim> ClaimAsync(DocumentAlertSendCommand command, byte[] token, CancellationToken ct);
+    Task<DocumentAlertReceipt> CompleteAsync(Guid operation, byte[] token, string state, CancellationToken ct);
+    Task<DocumentAlertReceipt> ReceiptAsync(DocumentAlertReceiptCommand command, CancellationToken ct);
+}
+
+public interface IDocumentAlertNotificationEmail
+{
+    // The implementation receives only a store-derived recipient and a fixed private portal URL.
+    Task SendLinkAsync(string recipient, Uri privateLink, CancellationToken ct);
+}
+
+public sealed class DocumentAlertNotificationSender(
+    IDocumentAlertNotificationStore store, IDocumentAlertNotificationEmail email, Uri portalBase, TimeProvider clock)
+{
+    private static readonly TimeSpan TotalBudget = TimeSpan.FromSeconds(15);
+
+    public async Task<DocumentAlertReceipt> SendAsync(DocumentAlertSendCommand command, CancellationToken ct)
+    {
+        Validate(command.Session, command.AlertId, command.OperationId);
+        ValidatePortalBase();
+        var elapsed = Stopwatch.StartNew();
+        using var work = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        work.CancelAfter(TotalBudget);
+        var requested = Check(await store.RequestAsync(command, work.Token), command.OperationId);
+        // Sending/Unknown includes a lost acknowledgement; NEVER replay SMTP after a claim.
+        if (requested.State != "Pending") return requested;
+        byte[] token = RandomNumberGenerator.GetBytes(32);
+        try
+        {
+            var claim = await store.ClaimAsync(command, token, work.Token);
+            Check(claim.Receipt, command.OperationId);
+            if (!claim.ShouldSend)
+            {
+                if (claim.Snapshot is not null || claim.Receipt.State == "Pending") throw Contract();
+                return claim.Receipt;
+            }
+            if (claim.Receipt.State != "Sending") throw Contract();
+            string state = "Unknown";
+            try
+            {
+                var snapshot = claim.Snapshot ?? throw Contract();
+                if (snapshot.AlertId != command.AlertId || snapshot.DocumentId <= 0 || snapshot.RecipientUserId <= 0
+                    || snapshot.Recipient.Any(char.IsControl)
+                    || !MailAddress.TryCreate(snapshot.Recipient, out var address) || address.Address != snapshot.Recipient)
+                    throw Contract();
+                var link = new Uri(portalBase, "Documents/Details/" + snapshot.DocumentId.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                work.Token.ThrowIfCancellationRequested();
+                await email.SendLinkAsync(snapshot.Recipient, link, work.Token);
+                state = "SmtpAccepted";
+            }
+            catch (Exception error) when (error is IOException or SmtpException or InvalidOperationException or ArgumentException or OperationCanceledException)
+            {
+                // Cancellation/SMTP failure may happen after acceptance. Never record a retryable failure.
+            }
+            var remaining = TotalBudget - elapsed.Elapsed;
+            using var finish = new CancellationTokenSource(remaining > TimeSpan.Zero
+                ? TimeSpan.FromSeconds(Math.Min(5, remaining.TotalSeconds)) : TimeSpan.Zero);
+            var receipt = Check(await store.CompleteAsync(command.OperationId, token, state, finish.Token), command.OperationId);
+            if (receipt.State != state) throw Contract();
+            return receipt;
+        }
+        finally { CryptographicOperations.ZeroMemory(token); }
+    }
+
+    public async Task<DocumentAlertReceipt> ReceiptAsync(DocumentAlertReceiptCommand command, CancellationToken ct)
+    {
+        Validate(command.Session, command.AlertId, command.OperationId);
+        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        deadline.CancelAfter(TotalBudget);
+        return Check(await store.ReceiptAsync(command, deadline.Token), command.OperationId);
+    }
+
+    public async Task<IReadOnlyList<DocumentAlertPending>> DiscoverAsync(DocumentAlertContext session, int limit, CancellationToken ct)
+    {
+        ValidateSession(session);
+        if (limit is < 1 or > 100) throw new ArgumentOutOfRangeException(nameof(limit));
+        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        deadline.CancelAfter(TotalBudget);
+        var rows = await store.DiscoverAsync(session, limit, deadline.Token);
+        if (rows.Count > limit || rows.Select(x => x.AlertId).Distinct().Count() != rows.Count
+            || rows.Any(x => x.AlertId <= 0 || (x.OwnOperationId is null ? x.State != "Unrequested"
+                : x.OwnOperationId == Guid.Empty || x.State is not ("Pending" or "Sending" or "SmtpAccepted" or "Unknown"))))
+            throw Contract();
+        return rows;
+    }
+
+    private void Validate(DocumentAlertContext session, int alert, Guid operation)
+    {
+        ValidateSession(session);
+        if (alert <= 0 || operation == Guid.Empty) throw new ArgumentException("Original alert attempt required.");
+    }
+    private void ValidateSession(DocumentAlertContext session)
+    {
+        if (session is null || !session.IsValid(clock.GetUtcNow().UtcDateTime)) throw new UnauthorizedAccessException();
+    }
+    private void ValidatePortalBase()
+    {
+        if (!portalBase.IsAbsoluteUri || portalBase.Scheme != Uri.UriSchemeHttps || portalBase.UserInfo.Length != 0
+            || portalBase.Query.Length != 0 || portalBase.Fragment.Length != 0 || !portalBase.AbsolutePath.EndsWith('/'))
+            throw new InvalidOperationException("Trusted HTTPS portal base required.");
+    }
+    private static DocumentAlertReceipt Check(DocumentAlertReceipt receipt, Guid expected)
+    {
+        if (receipt is null || !receipt.IsValid || receipt.OperationId != expected) throw Contract();
+        return receipt;
+    }
+    private static InvalidOperationException Contract() => new("Document alert notification contract unavailable.");
+}

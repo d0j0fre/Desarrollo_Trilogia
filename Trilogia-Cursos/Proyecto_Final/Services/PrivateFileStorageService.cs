@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
+using System.Text.Json;
 
 namespace Proyecto_Final.Services;
 
@@ -31,6 +32,8 @@ public interface IPrivateFileStorageService
     Task DeleteStageAsync(StagedPrivateFile file);
     Task DeleteCommittedAsync(PrivateStorageArea area, string storageKey);
     Task<Stream?> OpenReadAsync(PrivateStorageArea area, string storageKey, CancellationToken cancellationToken = default);
+    Task PreserveForReconciliationAsync(StagedPrivateFile file, int documentId, int? versionId, int publisher) =>
+        throw new NotSupportedException("El almacenamiento no ofrece registro privado de conciliación.");
 }
 
 public sealed class PrivateFileStorageService : IPrivateFileStorageService
@@ -160,6 +163,23 @@ public sealed class PrivateFileStorageService : IPrivateFileStorageService
     }
 
     public static bool IsSafeStorageKey(string? key) => !string.IsNullOrWhiteSpace(key) && SafeKey.IsMatch(key);
+
+    public async Task PreserveForReconciliationAsync(StagedPrivateFile file, int documentId, int? versionId, int publisher)
+    {
+        if (file.Area != PrivateStorageArea.Documents || documentId <= 0 || versionId is <= 0 || publisher <= 0)
+            throw new ArgumentException("La referencia de conciliación no corresponde a una carga documental.");
+        _ = TemporaryPath(file.Area, file.TemporaryKey);
+        _ = FinalPath(file.Area, file.StorageKey);
+        var directory = Path.Combine(_root, "documents", "recovery");
+        Directory.CreateDirectory(directory);
+        await using var output = new FileStream(Path.Combine(directory, Guid.NewGuid().ToString("N") + ".json"),
+            FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, true);
+        await JsonSerializer.SerializeAsync(output, new
+        {
+            schema = 1, documentId, versionId, publisher, file.TemporaryKey, file.StorageKey, file.Length, file.Sha256,
+            recordedUtc = DateTime.UtcNow, state = "ReviewRequired", automaticDeletion = false, automaticResend = false
+        });
+    }
 
     public static bool HasExpectedSignature(ReadOnlySpan<byte> header, string mimeType) => mimeType switch
     {

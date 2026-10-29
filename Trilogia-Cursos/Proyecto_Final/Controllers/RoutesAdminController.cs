@@ -1,34 +1,31 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Data.SqlClient;
 using Proyecto_Final.Filters;
 using Proyecto_Final.Models.Admin;
 using Proyecto_Final.Services;
-using Microsoft.Extensions.Options;
 
 namespace Proyecto_Final.Controllers
 {
     // CU-081 (rutas de entrega) + CU-083 E3 (consulta de evidencias por ruta).
-    [AdminAuthorize("Rutas", "RUTAS_GESTIONAR")]
+    [AdminAuthorize("Rutas", "RUTAS_GESTIONAR", allowAdministratorBypass: false)]
     public class RoutesAdminController : Controller
     {
         private readonly LogisticsDbService _logistics;
         private readonly AdminDbService _adminDbService;
-        private readonly EmailService _emailService;
+        private readonly IRouteDispatchNotificationClient _notifications;
         private readonly ILogger<RoutesAdminController> _logger;
-        private readonly CompanyOptions _company;
 
         public RoutesAdminController(
             LogisticsDbService logistics,
             AdminDbService adminDbService,
-            EmailService emailService,
-            ILogger<RoutesAdminController> logger,
-            IOptions<CompanyOptions> company)
+            IRouteDispatchNotificationClient notifications,
+            ILogger<RoutesAdminController> logger)
         {
             _logistics = logistics;
             _adminDbService = adminDbService;
-            _emailService = emailService;
+            _notifications = notifications;
             _logger = logger;
-            _company = company.Value;
         }
 
         [HttpGet]
@@ -73,10 +70,6 @@ namespace Proyecto_Final.Controllers
                     model.Zona, model.ChoferUsuarioId, model.VehiculoId, model.Observaciones,
                     model.PedidosSeleccionados, usuarioId, usuarioNombre);
 
-                await RegistrarAuditoriaAsync(
-                    "Crear ruta", "Rutas",
-                    $"Se creó la ruta {codigo} (zona {model.Zona}) con {model.PedidosSeleccionados.Count} pedido(s).");
-
                 TempData["SuccessMessage"] = $"Ruta {codigo} creada correctamente.";
                 return RedirectToAction(nameof(Detail), new { id = rutaId });
             }
@@ -97,7 +90,7 @@ namespace Proyecto_Final.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Detail(int id)
+        public async Task<IActionResult> Detail(int id, Guid? dispatchId = null)
         {
             var cabecera = await _logistics.GetRouteHeaderAsync(id);
             if (cabecera == null)
@@ -109,8 +102,24 @@ namespace Proyecto_Final.Controllers
             var vm = new RouteDetailViewModel
             {
                 Cabecera = cabecera,
-                Pedidos = await _logistics.GetRouteOrdersAsync(id)
+                Pedidos = await _logistics.GetRouteOrdersAsync(id),
+                DispatchOperationId = cabecera.Estado == "Planificada" ? Guid.NewGuid() : Guid.Empty
             };
+
+            if (dispatchId is { } original && original != Guid.Empty)
+            {
+                try
+                {
+                    vm.DispatchNotifications = await _logistics.GetOwnedRouteDispatchAsync(id, original, HttpContext.RequestAborted);
+                    vm.DispatchOperationId = original;
+                }
+                catch (Exception error) when (error is SqlException or UnauthorizedAccessException or InvalidOperationException or OperationCanceledException)
+                {
+                    _logger.LogWarning("No se confirmó el recibo de despacho. Tipo {Type}; código {Code}.",
+                        error.GetType().Name, (error as SqlException)?.Number);
+                    TempData["ErrorMessage"] = "No fue posible recuperar el recibo de este despacho con la sesión vigente.";
+                }
+            }
 
             // Solo se pueden agregar pedidos mientras la ruta está en planificación.
             if (cabecera.Estado == "Planificada")
@@ -128,7 +137,6 @@ namespace Proyecto_Final.Controllers
             try
             {
                 await _logistics.AddOrderToRouteAsync(rutaId, pedidoId);
-                await RegistrarAuditoriaAsync("Modificar ruta", "Rutas", $"Se agregó el pedido #{pedidoId} a la ruta #{rutaId}.");
                 TempData["SuccessMessage"] = "Pedido agregado a la ruta.";
             }
             catch (SqlException ex) when (ex.Number >= 50000)
@@ -151,7 +159,6 @@ namespace Proyecto_Final.Controllers
             try
             {
                 await _logistics.RemoveOrderFromRouteAsync(rutaId, pedidoId);
-                await RegistrarAuditoriaAsync("Modificar ruta", "Rutas", $"Se quitó el pedido #{pedidoId} de la ruta #{rutaId}.");
                 TempData["SuccessMessage"] = "Pedido quitado de la ruta.";
             }
             catch (SqlException ex) when (ex.Number >= 50000)
@@ -169,25 +176,37 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Dispatch(int rutaId)
+        public async Task<IActionResult> Dispatch(int rutaId, Guid dispatchId)
         {
+            if (rutaId <= 0 || dispatchId == Guid.Empty) return BadRequest();
             var usuarioId = HttpContext.Session.GetInt32("UserId") ?? 0;
             var usuarioNombre = HttpContext.Session.GetString("UserFullName") ?? "Administrador";
 
             try
             {
-                var destinatarios = await _logistics.DispatchRouteAsync(rutaId, usuarioId, usuarioNombre);
-
-                await RegistrarAuditoriaAsync("Despachar ruta", "Rutas",
-                    $"Se despachó la ruta #{rutaId}. {destinatarios.Count} pedido(s) pasaron a En ruta.");
-
-                // CU-082 E3: notificación al cliente (mejor esfuerzo, no bloquea el despacho).
-                foreach (var (pedidoId, nombre, correo) in destinatarios)
-                {
-                    NotificarClienteSeguro(correo, nombre, pedidoId, "En ruta");
-                }
-
+                var result = await _logistics.DispatchRouteAsync(rutaId, dispatchId, usuarioId, usuarioNombre, HttpContext.RequestAborted);
                 TempData["SuccessMessage"] = "Ruta despachada. Los pedidos están En ruta.";
+                // DispatchRouteAsync returns only after SQL COMMIT is confirmed.
+                try
+                {
+                    var notices = await RouteDispatchNotificationBatch.SendOnceAsync(result.Items,
+                        async (item, token) => (await _notifications.NotifyAsync(rutaId, result.DispatchId,
+                            item.EventId, item.EventGuid, token)).State, HttpContext.RequestAborted);
+                    if (notices.Unconfirmed > 0)
+                        TempData["ErrorMessage"] = "El despacho quedó confirmado. Hay avisos cuyo resultado no se confirmó; consultá sus recibos antes de continuar.";
+                    else if (notices.Eligible > 0)
+                        TempData["SuccessMessage"] = "Ruta despachada. El servidor de correo aceptó sus avisos; esto no acredita la entrega al buzón.";
+                }
+                catch (Exception error)
+                {
+                    LogNotification(error);
+                    TempData["ErrorMessage"] = "El despacho quedó confirmado. No se confirmó el estado de los avisos; consultá sus recibos.";
+                }
+            }
+            catch (RouteDispatchCommitUnconfirmedException error)
+            {
+                _logger.LogWarning("Commit de despacho sin confirmar. Tipo {Type}.", error.InnerException?.GetType().Name);
+                TempData["ErrorMessage"] = "No se confirmó el resultado del despacho. Consultá el recibo de esta operación antes de repetirla. No se inició ningún correo.";
             }
             catch (SqlException ex) when (ex.Number >= 50000)
             {
@@ -199,7 +218,40 @@ namespace Proyecto_Final.Controllers
                 _logger.LogError(ex, "Error al despachar ruta.");
                 TempData["ErrorMessage"] = "No fue posible despachar la ruta.";
             }
-            return RedirectToAction(nameof(Detail), new { id = rutaId });
+            return RedirectToAction(nameof(Detail), new { id = rutaId, dispatchId });
+        }
+
+        [HttpPost, ValidateAntiForgeryToken]
+        [EnableRateLimiting("route-dispatch-notification")]
+        public Task<IActionResult> NotifyEmail(int rutaId, Guid dispatchId, long eventId, Guid eventGuid) =>
+            DispatchNotice(rutaId, dispatchId, eventId, eventGuid, false);
+
+        [HttpPost, ValidateAntiForgeryToken]
+        [EnableRateLimiting("route-dispatch-notification")]
+        public Task<IActionResult> EmailReceipt(int rutaId, Guid dispatchId, long eventId, Guid eventGuid) =>
+            DispatchNotice(rutaId, dispatchId, eventId, eventGuid, true);
+
+        private async Task<IActionResult> DispatchNotice(int route, Guid dispatch, long item, Guid eventGuid, bool receiptOnly)
+        {
+            if (route <= 0 || dispatch == Guid.Empty || item <= 0 || eventGuid == Guid.Empty) return BadRequest();
+            try
+            {
+                var result = receiptOnly
+                    ? await _notifications.ReceiptAsync(route, dispatch, item, eventGuid, Guid.Empty, HttpContext.RequestAborted)
+                    : await _notifications.NotifyAsync(route, dispatch, item, eventGuid, HttpContext.RequestAborted);
+                return Json(new { ok = true, state = result.State, message = NotificationMessage(result.State) });
+            }
+            catch (UnauthorizedAccessException error)
+            {
+                LogNotification(error);
+                return Unauthorized(new { ok = false, message = "La sesión no está vigente. Iniciá sesión nuevamente." });
+            }
+            catch (Exception error) when (error is RouteDispatchNotificationTransportException or HttpRequestException or OperationCanceledException)
+            {
+                LogNotification(error);
+                return StatusCode(error is RouteDispatchNotificationTransportException { Status: 403 or 404 } transport ? transport.Status : 503,
+                    new { ok = false, message = NotificationMessage("Unconfirmed") });
+            }
         }
 
         [HttpPost]
@@ -212,7 +264,6 @@ namespace Proyecto_Final.Controllers
             try
             {
                 await _logistics.CancelRouteAsync(rutaId, motivo, usuarioId, usuarioNombre);
-                await RegistrarAuditoriaAsync("Cancelar ruta", "Rutas", $"Se canceló la ruta #{rutaId}. Motivo: {motivo}.");
                 TempData["SuccessMessage"] = "Ruta cancelada correctamente.";
             }
             catch (SqlException ex) when (ex.Number >= 50000)
@@ -242,7 +293,6 @@ namespace Proyecto_Final.Controllers
                 }
                 else
                 {
-                    await RegistrarAuditoriaAsync("Secuenciar ruta", "Rutas", $"Se secuenciaron automáticamente {puntos} punto(s) de la ruta #{rutaId}.");
                     if (sinCoord > 0)
                     {
                         TempData["ErrorMessage"] = $"{sinCoord} de {puntos} punto(s) no tienen coordenada y quedaron al final. Ubícalos en el mapa para que aparezcan en la app del chofer.";
@@ -294,7 +344,6 @@ namespace Proyecto_Final.Controllers
                 }
                 var json = System.Text.Json.JsonSerializer.Serialize(items);
                 await _logistics.SaveSequenceAsync(rutaId, json);
-                await RegistrarAuditoriaAsync("Reordenar ruta", "Rutas", $"Se guardó el orden manual de la ruta #{rutaId}.");
                 TempData["SuccessMessage"] = "Orden de entregas actualizado.";
             }
             catch (SqlException ex) when (ex.Number >= 50000)
@@ -324,7 +373,6 @@ namespace Proyecto_Final.Controllers
                 }
                 else
                 {
-                    await RegistrarAuditoriaAsync("Recalcular ruta", "Rutas", $"Se recalculó la ruta #{rutaId} ({puntos} punto(s) reordenados).");
                     TempData["SuccessMessage"] = $"Ruta recalculada. {puntos} punto(s) reordenados. El chofer verá la ruta actualizada.";
                 }
             }
@@ -352,8 +400,6 @@ namespace Proyecto_Final.Controllers
             try
             {
                 var (pedidos, unidades) = await _logistics.LiquidateRouteAsync(rutaId, usuarioId, usuarioNombre);
-                await RegistrarAuditoriaAsync("Liquidar ruta", "Rutas",
-                    $"Se liquidó la ruta #{rutaId}. {pedidos} pedido(s) y {unidades} unidad(es) reingresadas al inventario.");
                 TempData["SuccessMessage"] = pedidos > 0
                     ? $"Ruta liquidada. Se reingresaron {unidades} unidad(es) de {pedidos} pedido(s) no entregado(s)."
                     : "Ruta liquidada. No había mercadería pendiente por reingresar.";
@@ -373,7 +419,7 @@ namespace Proyecto_Final.Controllers
 
         // CU-083 E3 — historial de evidencias por ruta.
         [HttpGet]
-        [AdminAuthorize("Entregas", "ENTREGAS_EVIDENCIA_VER")]
+        [AdminAuthorize("Entregas", "ENTREGAS_EVIDENCIA_VER", allowAdministratorBypass: false)]
         public async Task<IActionResult> Evidences(int id)
         {
             var cabecera = await _logistics.GetRouteHeaderAsync(id);
@@ -402,26 +448,22 @@ namespace Proyecto_Final.Controllers
             vm.Vehiculos = await _logistics.GetAvailableVehiclesAsync();
         }
 
-        private void NotificarClienteSeguro(string correo, string nombre, int pedidoId, string estado)
-        {
-            if (string.IsNullOrWhiteSpace(correo)) return;
+        private void LogNotification(Exception error) => _logger.LogWarning(
+            "Aviso de despacho sin confirmar. Tipo {Type}; estado {Status}.", error.GetType().Name,
+            (error as RouteDispatchNotificationTransportException)?.Status);
 
-            try
-            {
-                var asunto = $"Actualización de su pedido #{pedidoId} - {estado}";
-                var cuerpo =
-                    $"<p>Hola {System.Net.WebUtility.HtmlEncode(nombre)},</p>" +
-                    $"<p>Le informamos que su pedido <strong>#{pedidoId}</strong> ahora está en estado " +
-                    $"<strong>{System.Net.WebUtility.HtmlEncode(estado)}</strong>.</p>" +
-                    $"<p>Gracias por su preferencia.<br/>{System.Net.WebUtility.HtmlEncode(_company.BrandName)}</p>";
-                _emailService.SendEmail(correo, asunto, cuerpo);
-            }
-            catch (Exception ex)
-            {
-                // Mejor esfuerzo: un fallo de correo no debe afectar la operación.
-                _logger.LogWarning(ex, "No se pudo enviar la notificación de entrega al cliente del pedido #{PedidoId}.", pedidoId);
-            }
-        }
+        private static string NotificationMessage(string state) => state switch
+        {
+            "SmtpAccepted" => "El servidor de correo aceptó el aviso. Esto no acredita su entrega al buzón.",
+            "Pending" => "El aviso está registrado y todavía no se inició su envío. Podés continuar el mismo intento.",
+            "Sending" => "Hay un aviso en curso. Consultá su estado antes de realizar otra acción.",
+            "Unknown" => "El resultado del aviso es desconocido. No se reenviará automáticamente para evitar duplicados.",
+            "AlreadyRequested" => "Este evento ya tiene un aviso registrado. No se generó otro envío ni se recuperó un intento de otra sesión.",
+            "None" => "Esta sesión no tiene un intento para el evento. Podés solicitar su primer aviso.",
+            "NoRecipient" => "El despacho está confirmado, pero este evento no tiene un destinatario de correo válido acreditado.",
+            "NoEvent" => "No se acreditó un evento de despacho para notificar.",
+            _ => "El despacho y el correo son operaciones separadas. No se confirmó el aviso; consultá su recibo antes de continuar."
+        };
 
         private async Task RegistrarAuditoriaAsync(string accion, string modulo, string descripcion)
         {

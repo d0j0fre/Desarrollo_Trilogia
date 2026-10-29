@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Data.SqlClient;
 using Proyecto_Final.Filters;
 using Proyecto_Final.Services;
-using Microsoft.Extensions.Options;
 
 namespace Proyecto_Final.Controllers
 {
@@ -12,25 +11,22 @@ namespace Proyecto_Final.Controllers
     {
         private readonly LogisticsDbService _logistics;
         private readonly AdminDbService _adminDbService;
-        private readonly EmailService _emailService;
+        private readonly IDeliveryNotificationClient _notifications;
         private readonly IEvidenceStorageService _evidenceStorage;
         private readonly ILogger<DriverDeliveriesController> _logger;
-        private readonly CompanyOptions _company;
 
         public DriverDeliveriesController(
             LogisticsDbService logistics,
             AdminDbService adminDbService,
-            EmailService emailService,
             IEvidenceStorageService evidenceStorage,
             ILogger<DriverDeliveriesController> logger,
-            IOptions<CompanyOptions> company)
+            IDeliveryNotificationClient notifications)
         {
             _logistics = logistics;
             _adminDbService = adminDbService;
-            _emailService = emailService;
+            _notifications = notifications;
             _evidenceStorage = evidenceStorage;
             _logger = logger;
-            _company = company.Value;
         }
 
         [HttpGet]
@@ -68,7 +64,10 @@ namespace Proyecto_Final.Controllers
         {
             var userId = CurrentUserId();
             var userName = CurrentUserName();
-            if (!Guid.TryParse(syncGuid, out var guid)) guid = Guid.NewGuid();
+            if (!Guid.TryParse(syncGuid, out var guid) || guid == Guid.Empty)
+                return BadRequest(new { ok = false, message = "El identificador de sincronización no es válido. Volvé a abrir la entrega." });
+            if (!Guid.TryParse(HttpContext.Session.GetString("SecurityStamp"), out _))
+                return Unauthorized(new { ok = false, message = "La sesión no está vigente. Iniciá sesión nuevamente." });
 
             try
             {
@@ -78,26 +77,22 @@ namespace Proyecto_Final.Controllers
                     guid,
                     motivoFallo,
                     userId,
-                    userName);
+                    userName,
+                    OriginalLoginSession.ValidatedRequest(HttpContext), HttpContext.RequestAborted);
 
                 if (result is null)
                     return Json(new { ok = false, message = "No se pudo actualizar la entrega." });
 
-                if (!result.Duplicado)
-                {
-                    await RegisterAuditAsync(
-                        "Actualizar entrega",
-                        "Entregas",
-                        $"Pedido #{result.PedidoId}: estado de entrega {result.EstadoEntrega}.");
+                // A duplicate business receipt can be the first response the caller receives.
+                // Recover/request the event notification too; SQL prevents a second SMTP claim.
+                string? notification = null;
+                if (nuevoEstado is "EnRuta" or "Entregado")
+                    notification = (await NotifyDeliverySafely(rutaPedidoId, guid))?.State ?? "Unconfirmed";
 
-                    if (result.Notificar)
-                    {
-                        NotifyClientSafely(
-                            result.ClienteCorreo,
-                            result.ClienteNombre,
-                            result.PedidoId,
-                            result.EstadoEntrega == "Entregado" ? "Entregado" : "En ruta");
-                    }
+                if (notification is not null)
+                {
+                    var key = notification == "SmtpAccepted" ? "SuccessMessage" : "ErrorMessage";
+                    TempData[key] = NotificationMessage(notification);
                 }
 
                 return Json(new
@@ -106,7 +101,9 @@ namespace Proyecto_Final.Controllers
                     estado = result.EstadoEntrega,
                     pedidoId = result.PedidoId,
                     rutaCompletada = result.RutaCompletada,
-                    duplicado = result.Duplicado
+                    duplicado = result.Duplicado,
+                    notificationState = notification,
+                    notificationMessage = notification is null ? null : NotificationMessage(notification)
                 });
             }
             catch (SqlException exception) when (exception.Number >= 50000)
@@ -116,12 +113,18 @@ namespace Proyecto_Final.Controllers
                     "Cambio de estado rechazado para RutaPedido {RouteOrderId} por usuario {UserId}.",
                     rutaPedidoId,
                     userId);
-                return Json(new { ok = false, message = "No fue posible aplicar el estado solicitado." });
+                var status = exception.Number switch
+                {
+                    56801 or 56802 or 56328 => StatusCodes.Status401Unauthorized,
+                    52074 => StatusCodes.Status404NotFound,
+                    _ => StatusCodes.Status409Conflict
+                };
+                return StatusCode(status, new { ok = false, message = "No fue posible aplicar el estado solicitado." });
             }
             catch (Exception exception)
             {
                 _logger.LogError(exception, "Error al actualizar el estado de RutaPedido {RouteOrderId}.", rutaPedidoId);
-                return Json(new { ok = false, message = "No fue posible actualizar la entrega." });
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, new { ok = false, message = "No fue posible actualizar la entrega." });
             }
         }
 
@@ -143,6 +146,7 @@ namespace Proyecto_Final.Controllers
             StagedEvidence? staged = null;
             var evidenceId = 0;
             var committed = false;
+            var moved = false;
 
             try
             {
@@ -167,13 +171,9 @@ namespace Proyecto_Final.Controllers
                     CurrentUserName());
 
                 await _evidenceStorage.CommitAsync(staged, cancellationToken);
+                moved = true;
+                await _logistics.MarkEvidenceReadyAsync(evidenceId, userId, staged.Sha256 ?? throw new EvidenceValidationException("Integridad del archivo no acreditada."), staged.Length);
                 committed = true;
-                await _logistics.MarkEvidenceReadyAsync(evidenceId, userId);
-
-                await RegisterAuditAsync(
-                    "Registrar evidencia",
-                    "Entregas",
-                    $"Evidencia ({normalizedType}) registrada para el pedido #{pedidoId}. ID: {evidenceId}.");
                 TempData["SuccessMessage"] = "Evidencia registrada correctamente.";
             }
             catch (EvidenceValidationException exception)
@@ -203,7 +203,11 @@ namespace Proyecto_Final.Controllers
             {
                 if (staged is not null && !committed)
                 {
-                    try { await _evidenceStorage.DeleteStageAsync(staged); }
+                    try
+                    {
+                        if (moved) await _evidenceStorage.DeleteUnpublishedAsync(staged, cancellationToken);
+                        else await _evidenceStorage.DeleteStageAsync(staged);
+                    }
                     catch (Exception exception) { _logger.LogWarning(exception, "No se pudo limpiar un archivo temporal de evidencia."); }
                 }
 
@@ -221,24 +225,70 @@ namespace Proyecto_Final.Controllers
 
         private string CurrentUserName() => HttpContext.Session.GetString("UserFullName") ?? "Usuario";
 
-        private void NotifyClientSafely(string email, string name, int orderId, string status)
+        [HttpPost, ValidateAntiForgeryToken]
+        [EnableRateLimiting("delivery-notification")]
+        public async Task<IActionResult> NotifyEmail(int rutaPedidoId)
         {
-            if (string.IsNullOrWhiteSpace(email)) return;
+            if (rutaPedidoId <= 0) return BadRequest();
             try
             {
-                var subject = $"Actualización de su pedido #{orderId} - {status}";
-                var body =
-                    $"<p>Hola {System.Net.WebUtility.HtmlEncode(name)},</p>" +
-                    $"<p>Su pedido <strong>#{orderId}</strong> ahora está <strong>{System.Net.WebUtility.HtmlEncode(status)}</strong>.</p>" +
-                    $"<p>Gracias por su preferencia.<br/>{System.Net.WebUtility.HtmlEncode(_company.BrandName)}</p>";
-                _emailService.SendEmail(email, subject, body);
+                var receipt = await _notifications.NotifyAsync(rutaPedidoId, Guid.Empty, HttpContext.RequestAborted);
+                return Json(new { ok = true, state = receipt.State, message = NotificationMessage(receipt.State) });
             }
-            catch (Exception exception)
+            catch (UnauthorizedAccessException error)
             {
-                _logger.LogWarning(exception, "No se pudo notificar al cliente del pedido {OrderId}.", orderId);
+                LogNotification(error);
+                return Unauthorized(new { ok = false, message = "La sesión no está vigente. Iniciá sesión nuevamente." });
+            }
+            catch (Exception error) when (error is DeliveryNotificationTransportException or HttpRequestException or OperationCanceledException)
+            {
+                LogNotification(error);
+                return StatusCode(error is DeliveryNotificationTransportException { Status: 403 or 404 } transport ? transport.Status : 503,
+                    new { ok = false, message = NotificationMessage("Unconfirmed") });
             }
         }
 
+        [HttpPost, ValidateAntiForgeryToken]
+        [EnableRateLimiting("delivery-notification")]
+        public async Task<IActionResult> EmailReceipt(int rutaPedidoId)
+        {
+            if (rutaPedidoId <= 0) return BadRequest();
+            try
+            {
+                var receipt = await _notifications.ReceiptAsync(rutaPedidoId, Guid.Empty, Guid.Empty, HttpContext.RequestAborted);
+                return Json(new { ok = true, state = receipt.State, message = NotificationMessage(receipt.State) });
+            }
+            catch (UnauthorizedAccessException error)
+            {
+                LogNotification(error);
+                return Unauthorized(new { ok = false, message = "La sesión no está vigente. Iniciá sesión nuevamente." });
+            }
+            catch (Exception error) when (error is DeliveryNotificationTransportException or HttpRequestException or OperationCanceledException)
+            {
+                LogNotification(error);
+                return StatusCode(error is DeliveryNotificationTransportException { Status: 403 or 404 } transport ? transport.Status : 503,
+                    new { ok = false, message = NotificationMessage("Unconfirmed") });
+            }
+        }
+
+        private async Task<JJ.Commerce.DeliveryNotificationReceipt?> NotifyDeliverySafely(int routeOrder, Guid sync)
+        {
+            try { return await _notifications.NotifyAsync(routeOrder, sync, HttpContext.RequestAborted); }
+            catch (Exception error) { LogNotification(error); return null; }
+        }
+        private void LogNotification(Exception error) => _logger.LogWarning("Delivery notification unconfirmed. Type {Type}; status {Status}.",
+            error.GetType().Name, (error as DeliveryNotificationTransportException)?.Status);
+        private static string NotificationMessage(string state) => state switch
+        {
+            "SmtpAccepted" => "El servidor de correo aceptó el aviso. Esto no acredita su entrega al buzón.",
+            "Pending" => "El aviso quedó registrado y todavía no se inició el envío. Puede continuar el mismo intento.",
+            "Sending" => "Hay un aviso en curso. Consulte su estado antes de realizar otra acción.",
+            "Unknown" => "El resultado del aviso es desconocido. No se reenviará automáticamente para evitar duplicados.",
+            "AlreadyRequested" => "Ya existe una solicitud para este evento. No se generó otro envío ni se recuperó un intento de otra sesión.",
+            "None" => "Esta sesión no tiene un intento de correo para el evento. Puede solicitar el primer aviso; un envío previo de otra sesión no se repetirá.",
+            "NoEvent" => "Todavía no hay una actualización de entrega confirmada para notificar.",
+            _ => "La entrega y el correo son operaciones separadas. No se pudo confirmar el estado del aviso; consulte su recibo antes de intentarlo otra vez."
+        };
         private Task RegisterAuditAsync(string action, string module, string description) =>
             _adminDbService.CreateAuditLogAsync(
                 HttpContext.Session.GetInt32("UserId"),

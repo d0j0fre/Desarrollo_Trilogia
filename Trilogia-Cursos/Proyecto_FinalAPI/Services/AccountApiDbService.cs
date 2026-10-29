@@ -70,6 +70,14 @@ namespace Proyecto_FinalAPI.Services
                 if (!verified || !user.Activo)
                     return null;
 
+                // The historical credential result omits the profile key/state.
+                // Re-read authoritative rows after hash verification, without guessing
+                // a profile ID from its name or accepting a stale credential snapshot.
+                await using var profileCommand = CreateCurrentProfileCommand(connection, user.UsuarioId);
+                await using var profileReader = await profileCommand.ExecuteReaderAsync(cancellationToken);
+                if (!await profileReader.ReadAsync(cancellationToken) || !ApplyCurrentProfile(profileReader, user))
+                    return null;
+
                 return user;
             }
             catch (SqlException exception)
@@ -105,6 +113,36 @@ namespace Proyecto_FinalAPI.Services
                 Activo = reader.GetBoolean(reader.GetOrdinal("Activo")),
                 SecurityStamp = reader.GetGuid(reader.GetOrdinal("SecurityStamp")).ToString("D")
             };
+        }
+
+        internal static SqlCommand CreateCurrentProfileCommand(SqlConnection connection, int userId)
+        {
+            var command = new SqlCommand("""
+                SELECT u.UsuarioId, u.PerfilId, u.Activo, u.SecurityStamp,
+                       p.Nombre AS PerfilNombre, p.Activo AS PerfilActivo
+                FROM dbo.Usuarios AS u
+                INNER JOIN dbo.Perfiles AS p ON p.PerfilId = u.PerfilId
+                WHERE u.UsuarioId = @UsuarioId;
+                """, connection);
+            command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = userId;
+            return command;
+        }
+
+        internal static bool ApplyCurrentProfile(DbDataReader reader, ApiUser user)
+        {
+            var profileId = reader.GetInt32(reader.GetOrdinal("PerfilId"));
+            if (reader.GetInt32(reader.GetOrdinal("UsuarioId")) != user.UsuarioId
+                || profileId <= 0
+                || !reader.GetBoolean(reader.GetOrdinal("Activo"))
+                || !reader.GetBoolean(reader.GetOrdinal("PerfilActivo"))
+                || !string.Equals(reader.GetString(reader.GetOrdinal("PerfilNombre")), user.PerfilNombre, StringComparison.Ordinal)
+                || !Guid.TryParse(user.SecurityStamp, out var expectedStamp)
+                || reader.GetGuid(reader.GetOrdinal("SecurityStamp")) != expectedStamp)
+                return false;
+
+            user.PerfilId = profileId;
+            user.PerfilActivo = true;
+            return true;
         }
 
         public async Task<bool> EmailExistsAsync(string email)
@@ -207,10 +245,35 @@ namespace Proyecto_FinalAPI.Services
         {
             await using var connection = new SqlConnection(_connectionString);
             await connection.OpenAsync();
-            await using var transaction = await connection.BeginTransactionAsync();
+            // Keep the token read locked through consumption; an earlier controller
+            // lookup cannot authorize a write after another request consumes it.
+            await using var transaction = await connection.BeginTransactionAsync(IsolationLevel.Serializable);
 
             try
             {
+                // Serialize recovery for this account before taking shared token/user
+                // locks, avoiding two readers deadlocking while upgrading to writers.
+                await using (var accountLock = CreatePasswordResetLockCommand(connection, (SqlTransaction)transaction, usuarioId))
+                {
+                    if (await accountLock.ExecuteScalarAsync() is not int result || result < 0)
+                        throw new PasswordResetBusyException();
+                }
+                await using (var verification = new SqlCommand("dbo.sp_Auth_GetValidResetToken", connection, (SqlTransaction)transaction))
+                {
+                    verification.CommandType = CommandType.StoredProcedure;
+                    verification.Parameters.Add("@Token", SqlDbType.NVarChar, 200).Value = token;
+                    await using var reader = await verification.ExecuteReaderAsync();
+                    var info = await reader.ReadAsync() ? new PasswordResetTokenInfo
+                    {
+                        UsuarioId = reader.GetInt32(reader.GetOrdinal("UsuarioId")),
+                        Token = reader.GetString(reader.GetOrdinal("Token")),
+                        FechaExpiracion = reader.GetDateTime(reader.GetOrdinal("FechaExpiracion")),
+                        Usado = reader.GetBoolean(reader.GetOrdinal("Usado"))
+                    } : null;
+                    if (!IsResetTokenUsable(info, usuarioId, token, DateTime.Now))
+                        throw new InvalidPasswordResetTokenException();
+                }
+
                 await using (var passwordCommand = new SqlCommand("dbo.sp_Auth_UpdatePassword", connection, (SqlTransaction)transaction))
                 {
                     passwordCommand.CommandType = CommandType.StoredProcedure;
@@ -235,5 +298,29 @@ namespace Proyecto_FinalAPI.Services
             }
         }
 
+        internal static bool IsResetTokenUsable(PasswordResetTokenInfo? info, int userId, string token, DateTime now) =>
+            info is not null && userId > 0 && info.UsuarioId == userId && !info.Usado &&
+            !string.IsNullOrWhiteSpace(token) && string.Equals(info.Token, token, StringComparison.Ordinal) &&
+            info.FechaExpiracion > now;
+
+        internal static SqlCommand CreatePasswordResetLockCommand(SqlConnection connection, SqlTransaction? transaction, int userId)
+        {
+            if (userId <= 0) throw new ArgumentOutOfRangeException(nameof(userId));
+            var command = new SqlCommand("""
+                DECLARE @Result int;
+                EXEC @Result=sys.sp_getapplock @Resource=@LockResource,
+                    @LockMode=N'Exclusive', @LockOwner=N'Transaction',
+                    @LockTimeout=5000, @DbPrincipal=N'public';
+                SELECT @Result;
+                """, connection, transaction);
+            command.Parameters.Add("@LockResource", SqlDbType.NVarChar, 255).Value =
+                "Stage2:PasswordReset:User:" + userId.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            return command;
+        }
     }
+
+    internal sealed class InvalidPasswordResetTokenException() : InvalidOperationException(
+        "El enlace de recuperación no es válido o ya venció.");
+    internal sealed class PasswordResetBusyException() : InvalidOperationException(
+        "No fue posible procesar la solicitud en este momento.");
 }

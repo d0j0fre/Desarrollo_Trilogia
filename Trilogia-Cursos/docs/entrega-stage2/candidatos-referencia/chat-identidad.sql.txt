@@ -1,0 +1,65 @@
+-- PRIVATE CANDIDATE. No official migration ID, ledger mutation, grants or data import.
+-- Requires a separately accredited disposable target before execution.
+SET NOCOUNT ON; SET XACT_ABORT ON;
+DECLARE @RunId uniqueidentifier=TRY_CONVERT(uniqueidentifier,SESSION_CONTEXT(N'JJ.Private.RunId'));
+IF @RunId IS NULL OR @RunId='00000000-0000-0000-0000-000000000000'
+ OR NOT EXISTS(SELECT 1 FROM sys.extended_properties WHERE class=0 AND name=N'JJ.Private.RunId' AND TRY_CONVERT(uniqueidentifier,value)=@RunId)
+ THROW 59710,N'Private target ownership unavailable.',1;
+IF DB_NAME() IN(N'DistribuidoraJJ_DB',N'master',N'model',N'msdb',N'tempdb')
+ THROW 59710,N'Operational target prohibited.',1;
+IF SESSIONPROPERTY('QUOTED_IDENTIFIER')<>1 OR SESSIONPROPERTY('ANSI_NULLS')<>1
+ THROW 59710,N'SQL options unavailable.',1;
+IF OBJECT_ID(N'dbo.sp_Stage2_RequireOriginalLogin',N'P') IS NULL
+ OR COL_LENGTH(N'dbo.Usuarios',N'ChatV2Revision')<>8
+ OR NOT EXISTS(SELECT 1 FROM dbo.SchemaMigrationHistory WHERE MigrationId=N'0030_stage2_authorization_invalidation' AND Status=N'Applied' AND FileSha256=N'90AFC1B036ED72525FE319B77A6CE44826C1F9EF8CBD413B258F398B9B695C66')
+ OR NOT EXISTS(SELECT 1 FROM dbo.SchemaMigrationHistory WHERE MigrationId=N'0036_stage2_transactional_login' AND Status=N'Applied' AND FileSha256=N'98816A77160064B6B86579A25C9A6B41962197C60E38FE32FE2BAC58A7C02FDC')
+ THROW 59710,N'Canonical original-login source unavailable.',1;
+IF HASHBYTES('SHA2_256',CONVERT(varbinary(max),OBJECT_DEFINITION(OBJECT_ID(N'dbo.sp_Stage2_RequireOriginalLogin'))))<>0x8C8515B2D2DD516A737A548EE7A03AB3E12D101BB8D6B27A1FBDC8846E31479C
+ OR OBJECT_DEFINITION(OBJECT_ID(N'dbo.sp_Stage2_RequireOriginalLogin')) IS NULL
+ THROW 59710,N'Canonical original-login guard differs.',1;
+IF NOT EXISTS(SELECT 1 FROM sys.triggers WHERE object_id=OBJECT_ID(N'dbo.tr_Stage2_ProfileGrants_RevokeSessions') AND is_disabled=0)
+ OR ISNULL(HASHBYTES('SHA2_256',CONVERT(varbinary(max),OBJECT_DEFINITION(OBJECT_ID(N'dbo.tr_Stage2_ProfileGrants_RevokeSessions')))),0x)<>0x906A58BE327EF368FA6AF3A3D5A6541229827D8B729E6B5BAD8A501369A7D5A1
+ OR NOT EXISTS(SELECT 1 FROM sys.triggers WHERE object_id=OBJECT_ID(N'dbo.tr_Stage2_Permissions_RevokeSessions') AND is_disabled=0)
+ OR ISNULL(HASHBYTES('SHA2_256',CONVERT(varbinary(max),OBJECT_DEFINITION(OBJECT_ID(N'dbo.tr_Stage2_Permissions_RevokeSessions')))),0x)<>0x0D7113A3862F32EC82EE99DCE1E696BD37A68810E5A5C7B2262E1209E7C6A50C
+ OR NOT EXISTS(SELECT 1 FROM sys.triggers WHERE object_id=OBJECT_ID(N'dbo.tr_Stage2_Profiles_RevokeSessions') AND is_disabled=0)
+ OR ISNULL(HASHBYTES('SHA2_256',CONVERT(varbinary(max),OBJECT_DEFINITION(OBJECT_ID(N'dbo.tr_Stage2_Profiles_RevokeSessions')))),0x)<>0xB49FBBBC82B6E3126506B522FEC94EB296AA8639A73B50856DA69E78FA17D301
+ THROW 59710,N'Canonical revocation writers differ.',1;
+IF SCHEMA_ID(N'ChatV2DC') IS NOT NULL THROW 59710,N'Existing namespace requires reconciliation.',1;
+BEGIN TRY
+ BEGIN TRANSACTION;
+ EXEC(N'CREATE SCHEMA ChatV2DC AUTHORIZATION dbo;');
+ EXEC(N'
+ CREATE PROCEDURE ChatV2DC.Resolve
+  @LoginId uniqueidentifier,@UsuarioId int,@PerfilId int,@SecurityStamp uniqueidentifier,@BindingHash binary(32),
+  @IssuedUtc datetime2(7),@ExpiresUtc datetime2(7)
+ AS
+ BEGIN
+  SET NOCOUNT ON; SET XACT_ABORT ON;
+  BEGIN TRY BEGIN TRANSACTION;
+  -- Same canonical lock order as the guard: profile, grants/capabilities, then user/login.
+  IF NOT EXISTS(SELECT 1 FROM dbo.Perfiles WITH(UPDLOCK,HOLDLOCK) WHERE PerfilId=@PerfilId AND Activo=1)
+   THROW 56801,N''Original context unavailable.'',1;
+  DECLARE @Codes table(Code nvarchar(100) NOT NULL PRIMARY KEY);
+  INSERT @Codes(Code)
+   SELECT DISTINCT p.Codigo FROM dbo.PerfilPermisos pp WITH(UPDLOCK,HOLDLOCK)
+    JOIN dbo.Permisos p WITH(UPDLOCK,HOLDLOCK) ON p.PermisoId=pp.PermisoId
+   WHERE pp.PerfilId=@PerfilId AND p.Activo=1
+    AND p.Codigo IN(N''CHAT_USAR'',N''CHAT_CLIENTE_USAR'',N''CHAT_CLIENTES_ATENDER'',N''CHAT_ATENCION_GESTIONAR'',N''CHAT_DEPARTAMENTOS_GESTIONAR'');
+  EXEC dbo.sp_Stage2_RequireOriginalLogin @LoginId,@UsuarioId,@PerfilId,@SecurityStamp,@BindingHash,@IssuedUtc,@ExpiresUtc,NULL;
+  DECLARE @IsClient bit=(SELECT CONVERT(bit,CASE WHEN Nombre=N''Cliente'' THEN 1 ELSE 0 END) FROM dbo.Perfiles WHERE PerfilId=@PerfilId);
+  SELECT CONVERT(bigint,u.ChatV2Revision) AS ActorEpoch,@IsClient AS IsClient,
+   CONVERT(bit,CASE WHEN @IsClient=0 AND EXISTS(SELECT 1 FROM @Codes WHERE Code=N''CHAT_USAR'') THEN 1 ELSE 0 END) AS InternalUse,
+   CONVERT(bit,CASE WHEN @IsClient=1 AND EXISTS(SELECT 1 FROM @Codes WHERE Code=N''CHAT_CLIENTE_USAR'') THEN 1 ELSE 0 END) AS CustomerUse,
+   CONVERT(bit,CASE WHEN @IsClient=0 AND EXISTS(SELECT 1 FROM @Codes WHERE Code=N''CHAT_CLIENTES_ATENDER'') THEN 1 ELSE 0 END) AS AttendCustomers,
+   CONVERT(bit,CASE WHEN @IsClient=0 AND EXISTS(SELECT 1 FROM @Codes WHERE Code=N''CHAT_ATENCION_GESTIONAR'') THEN 1 ELSE 0 END) AS ManageAttention,
+   CONVERT(bit,CASE WHEN @IsClient=0 AND EXISTS(SELECT 1 FROM @Codes WHERE Code=N''CHAT_DEPARTAMENTOS_GESTIONAR'') THEN 1 ELSE 0 END) AS ManageDepartments
+  FROM dbo.Usuarios u WHERE u.UsuarioId=@UsuarioId;
+  COMMIT;
+  END TRY BEGIN CATCH IF XACT_STATE()<>0 ROLLBACK; THROW; END CATCH;
+ END;');
+ COMMIT;
+END TRY
+BEGIN CATCH
+ IF XACT_STATE()<>0 ROLLBACK;
+ THROW;
+END CATCH;

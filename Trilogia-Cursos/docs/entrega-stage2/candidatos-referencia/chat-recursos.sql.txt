@@ -1,0 +1,243 @@
+-- PRIVATE RESOURCE/AUTHORIZATION CANDIDATE. No official ledger, grants, data import or message sender.
+SET NOCOUNT ON; SET XACT_ABORT ON;
+DECLARE @RunId uniqueidentifier=TRY_CONVERT(uniqueidentifier,SESSION_CONTEXT(N'JJ.Private.RunId'));
+IF @RunId IS NULL OR @RunId='00000000-0000-0000-0000-000000000000'
+ OR NOT EXISTS(SELECT 1 FROM sys.extended_properties WHERE class=0 AND name=N'JJ.Private.RunId' AND TRY_CONVERT(uniqueidentifier,value)=@RunId)
+ THROW 59710,N'Private target ownership unavailable.',1;
+IF DB_NAME() IN(N'DistribuidoraJJ_DB',N'master',N'model',N'msdb',N'tempdb') THROW 59710,N'Operational target prohibited.',1;
+IF SESSIONPROPERTY('QUOTED_IDENTIFIER')<>1 OR SESSIONPROPERTY('ANSI_NULLS')<>1 THROW 59710,N'SQL options unavailable.',1;
+IF OBJECT_ID(N'ChatV2DC.Resolve',N'P') IS NULL OR OBJECT_ID(N'dbo.sp_Stage2_RequireOriginalLogin',N'P') IS NULL
+ OR COL_LENGTH(N'dbo.Usuarios',N'ChatV2Revision')<>8 THROW 59710,N'Canonical identity prerequisite unavailable.',1;
+IF HASHBYTES('SHA2_256',CONVERT(varbinary(max),OBJECT_DEFINITION(OBJECT_ID(N'dbo.sp_Stage2_RequireOriginalLogin'))))<>0x8C8515B2D2DD516A737A548EE7A03AB3E12D101BB8D6B27A1FBDC8846E31479C
+ OR OBJECT_DEFINITION(OBJECT_ID(N'dbo.sp_Stage2_RequireOriginalLogin')) IS NULL THROW 59710,N'Canonical guard differs.',1;
+IF OBJECT_ID(N'ChatV2DC.Resources') IS NOT NULL OR OBJECT_ID(N'ChatV2DC.RequireResource') IS NOT NULL
+ THROW 59710,N'Existing candidate requires reconciliation.',1;
+BEGIN TRY
+ BEGIN TRANSACTION;
+ EXEC(N'
+ CREATE TABLE ChatV2DC.Resources(
+  ResourceId int IDENTITY NOT NULL CONSTRAINT PK_ChatV2DC_Resources PRIMARY KEY,
+  Domain char(1) NOT NULL,
+  Label nvarchar(120) NULL,
+  ClientUserId int NULL REFERENCES dbo.Usuarios(UsuarioId),
+  AgentUserId int NULL REFERENCES dbo.Usuarios(UsuarioId),
+  Active bit NOT NULL CONSTRAINT DF_ChatV2DC_Active DEFAULT 1,
+  State varchar(10) NOT NULL CONSTRAINT DF_ChatV2DC_State DEFAULT ''OPEN'',
+  AccessVersion bigint NOT NULL CONSTRAINT DF_ChatV2DC_Version DEFAULT 1,
+  LastSequence bigint NOT NULL CONSTRAINT DF_ChatV2DC_Sequence DEFAULT 0,
+  CONSTRAINT UQ_ChatV2DC_ResourceDomain UNIQUE(ResourceId,Domain),
+  CONSTRAINT CK_ChatV2DC_ResourceShape CHECK(
+   (Domain=''D'' AND Label IS NOT NULL AND LEN(LTRIM(RTRIM(Label)))>0 AND ClientUserId IS NULL AND AgentUserId IS NULL) OR
+   (Domain=''C'' AND Label IS NULL AND ClientUserId IS NOT NULL AND (AgentUserId IS NULL OR AgentUserId<>ClientUserId))),
+  CONSTRAINT CK_ChatV2DC_ResourceState CHECK(State IN(''OPEN'',''CLOSED'')),
+  CONSTRAINT CK_ChatV2DC_ResourceVersion CHECK(AccessVersion>0 AND LastSequence>=0));
+ CREATE INDEX IX_ChatV2DC_Client ON ChatV2DC.Resources(ClientUserId,Active,ResourceId) WHERE Domain=''C'';
+ CREATE INDEX IX_ChatV2DC_Agent ON ChatV2DC.Resources(AgentUserId,Active,ResourceId) WHERE Domain=''C'';
+ CREATE TABLE ChatV2DC.Members(
+  ResourceId int NOT NULL, Domain char(1) NOT NULL CONSTRAINT DF_ChatV2DC_MemberDomain DEFAULT ''D'',
+  UserId int NOT NULL REFERENCES dbo.Usuarios(UsuarioId), CanRead bit NOT NULL,CanPost bit NOT NULL,
+  CONSTRAINT PK_ChatV2DC_Members PRIMARY KEY(ResourceId,UserId),
+  CONSTRAINT FK_ChatV2DC_MemberDomain FOREIGN KEY(ResourceId,Domain) REFERENCES ChatV2DC.Resources(ResourceId,Domain),
+  CONSTRAINT CK_ChatV2DC_MemberDomain CHECK(Domain=''D''),
+  CONSTRAINT CK_ChatV2DC_MemberRights CHECK(CanPost=0 OR CanRead=1));
+ CREATE TABLE ChatV2DC.AccessAudit(
+  EventId bigint IDENTITY NOT NULL CONSTRAINT PK_ChatV2DC_AccessAudit PRIMARY KEY,
+  ResourceId int NOT NULL REFERENCES ChatV2DC.Resources(ResourceId),
+  Actor int NOT NULL REFERENCES dbo.Usuarios(UsuarioId),
+  OriginalLoginId uniqueidentifier NOT NULL REFERENCES dbo.Stage2OriginalLogins(LoginId),
+  TargetUserId int NULL REFERENCES dbo.Usuarios(UsuarioId),
+  Operation varchar(12) NOT NULL, AccessVersion bigint NOT NULL,
+  CreatedUtc datetime2(7) NOT NULL CONSTRAINT DF_ChatV2DC_AuditUtc DEFAULT SYSUTCDATETIME(),
+  CONSTRAINT CK_ChatV2DC_AuditVersion CHECK(AccessVersion>0),
+  CONSTRAINT CK_ChatV2DC_AuditOperation CHECK(Operation IN(''CREATE_D'',''CREATE_C'',''MEMBER'',''ACTIVE'',''TRANSFER'')));
+ ');
+ EXEC(N'CREATE TRIGGER ChatV2DC.ImmutableAccessAudit ON ChatV2DC.AccessAudit AFTER UPDATE,DELETE AS
+ BEGIN SET NOCOUNT ON; THROW 59703,N''Immutable access audit.'',1; END;');
+ EXEC(N'
+ CREATE PROCEDURE ChatV2DC.RequireResource
+  @LoginId uniqueidentifier,@UsuarioId int,@PerfilId int,@SecurityStamp uniqueidentifier,@BindingHash binary(32),
+  @IssuedUtc datetime2(7),@ExpiresUtc datetime2(7),@Domain char(1),@ResourceId int,
+  @ExpectedActor bigint=NULL,@ExpectedResource bigint=NULL,@RequirePost bit=0,
+  @CanPost bit OUTPUT,@ResourceVersion bigint OUTPUT
+ AS
+ BEGIN
+  SET NOCOUNT ON;
+  IF @@TRANCOUNT=0 THROW 59700,N''Resource guard requires business transaction.'',1;
+  IF @Domain NOT IN(''D'',''C'') OR @ResourceId<=0 THROW 59702,N''Invalid resource.'',1;
+  DECLARE @KindClient bit,@Permission nvarchar(100),@Client int,@Agent int,@Version bigint,@State varchar(10),@Readable bit=0;
+  SELECT @KindClient=CONVERT(bit,CASE WHEN Nombre=N''Cliente'' THEN 1 ELSE 0 END) FROM dbo.Perfiles WITH(UPDLOCK,HOLDLOCK) WHERE PerfilId=@PerfilId AND Activo=1;
+  IF @KindClient IS NULL THROW 56801,N''Original context unavailable.'',1;
+  IF @Domain=''D'' AND @KindClient=1 THROW 59701,N''Unavailable.'',1;
+  SET @Permission=CASE WHEN @Domain=''D'' THEN N''CHAT_USAR'' WHEN @KindClient=1 THEN N''CHAT_CLIENTE_USAR'' ELSE N''CHAT_CLIENTES_ATENDER'' END;
+  EXEC dbo.sp_Stage2_RequireOriginalLogin @LoginId,@UsuarioId,@PerfilId,@SecurityStamp,@BindingHash,@IssuedUtc,@ExpiresUtc,@Permission;
+  IF @ExpectedActor IS NOT NULL AND NOT EXISTS(SELECT 1 FROM dbo.Usuarios WHERE UsuarioId=@UsuarioId AND CONVERT(bigint,ChatV2Revision)=@ExpectedActor)
+   THROW 59703,N''Authorization changed.'',1;
+  SELECT @Client=ClientUserId,@Agent=AgentUserId,@Version=AccessVersion,@State=State
+   FROM ChatV2DC.Resources WITH(UPDLOCK,HOLDLOCK) WHERE ResourceId=@ResourceId AND Domain=@Domain AND Active=1;
+  SET @CanPost=0; SET @ResourceVersion=NULL;
+  IF @Version IS NULL THROW 59704,N''Unavailable.'',1;
+  IF @ExpectedResource IS NOT NULL AND @ExpectedResource<>@Version THROW 59704,N''Unavailable.'',1;
+  IF @Domain=''D''
+   SELECT @Readable=CanRead,@CanPost=CanPost FROM ChatV2DC.Members WITH(UPDLOCK,HOLDLOCK) WHERE ResourceId=@ResourceId AND UserId=@UsuarioId;
+  ELSE IF (@KindClient=1 AND @Client=@UsuarioId) OR (@KindClient=0 AND @Agent=@UsuarioId)
+   SELECT @Readable=1,@CanPost=CONVERT(bit,CASE WHEN @State=''OPEN'' THEN 1 ELSE 0 END);
+  IF @Readable<>1 OR (@RequirePost=1 AND @CanPost<>1) THROW 59704,N''Unavailable.'',1;
+  SET @ResourceVersion=@Version;
+ END;');
+ EXEC(N'
+ CREATE PROCEDURE ChatV2DC.Membership
+  @LoginId uniqueidentifier,@UsuarioId int,@PerfilId int,@SecurityStamp uniqueidentifier,@BindingHash binary(32),
+  @IssuedUtc datetime2(7),@ExpiresUtc datetime2(7),@Domain char(1),@ResourceId int
+ AS
+ BEGIN
+  SET NOCOUNT ON; SET XACT_ABORT ON;
+  BEGIN TRY BEGIN TRANSACTION;
+  DECLARE @Post bit,@Version bigint;
+  EXEC ChatV2DC.RequireResource @LoginId,@UsuarioId,@PerfilId,@SecurityStamp,@BindingHash,@IssuedUtc,@ExpiresUtc,@Domain,@ResourceId,NULL,NULL,0,@Post OUTPUT,@Version OUTPUT;
+  SELECT CONVERT(bit,1) AS CanRead,@Post AS CanSend,@Version AS AuthorizationVersion;
+  COMMIT; END TRY BEGIN CATCH IF XACT_STATE()<>0 ROLLBACK; THROW; END CATCH;
+ END;');
+ EXEC(N'
+ CREATE PROCEDURE ChatV2DC.Own
+  @LoginId uniqueidentifier,@UsuarioId int,@PerfilId int,@SecurityStamp uniqueidentifier,@BindingHash binary(32),
+  @IssuedUtc datetime2(7),@ExpiresUtc datetime2(7),@Domain char(1)
+ AS
+ BEGIN
+  SET NOCOUNT ON; SET XACT_ABORT ON;
+  BEGIN TRY BEGIN TRANSACTION;
+  DECLARE @Client bit,@Permission nvarchar(100);
+  IF @Domain NOT IN(''D'',''C'') THROW 59702,N''Invalid domain.'',1;
+  SELECT @Client=CONVERT(bit,CASE WHEN Nombre=N''Cliente'' THEN 1 ELSE 0 END) FROM dbo.Perfiles WITH(UPDLOCK,HOLDLOCK) WHERE PerfilId=@PerfilId AND Activo=1;
+  IF @Client IS NULL THROW 56801,N''Original context unavailable.'',1;
+  IF @Domain=''D'' AND @Client=1 THROW 59701,N''Unavailable.'',1;
+  SET @Permission=CASE WHEN @Domain=''D'' THEN N''CHAT_USAR'' WHEN @Client=1 THEN N''CHAT_CLIENTE_USAR'' ELSE N''CHAT_CLIENTES_ATENDER'' END;
+  EXEC dbo.sp_Stage2_RequireOriginalLogin @LoginId,@UsuarioId,@PerfilId,@SecurityStamp,@BindingHash,@IssuedUtc,@ExpiresUtc,@Permission;
+  SELECT r.Domain,r.ResourceId,r.AccessVersion AS AuthorizationVersion FROM ChatV2DC.Resources r WITH(UPDLOCK,HOLDLOCK)
+  WHERE r.Domain=@Domain AND r.Active=1 AND
+   ((@Domain=''D'' AND EXISTS(SELECT 1 FROM ChatV2DC.Members m WITH(UPDLOCK,HOLDLOCK) WHERE m.ResourceId=r.ResourceId AND m.UserId=@UsuarioId AND m.CanRead=1))
+    OR (@Domain=''C'' AND ((@Client=1 AND r.ClientUserId=@UsuarioId) OR (@Client=0 AND r.AgentUserId=@UsuarioId))))
+  ORDER BY r.ResourceId;
+  COMMIT; END TRY BEGIN CATCH IF XACT_STATE()<>0 ROLLBACK; THROW; END CATCH;
+ END;');
+ EXEC(N'
+ CREATE PROCEDURE ChatV2DC.Queue
+  @LoginId uniqueidentifier,@UsuarioId int,@PerfilId int,@SecurityStamp uniqueidentifier,@BindingHash binary(32),
+  @IssuedUtc datetime2(7),@ExpiresUtc datetime2(7)
+ AS
+ BEGIN
+  SET NOCOUNT ON; SET XACT_ABORT ON;
+  BEGIN TRY BEGIN TRANSACTION;
+  EXEC dbo.sp_Stage2_RequireOriginalLogin @LoginId,@UsuarioId,@PerfilId,@SecurityStamp,@BindingHash,@IssuedUtc,@ExpiresUtc,N''CHAT_ATENCION_GESTIONAR'';
+  IF EXISTS(SELECT 1 FROM dbo.Perfiles WHERE PerfilId=@PerfilId AND Nombre=N''Cliente'') THROW 59701,N''Unavailable.'',1;
+  -- Queue is technical metadata only, never owner identity, label or message content.
+  SELECT ResourceId AS CaseId,CONVERT(bit,CASE WHEN AgentUserId IS NULL THEN 0 ELSE 1 END) AS Assigned,
+   AccessVersion AS AssignmentVersion,State
+  FROM ChatV2DC.Resources WITH(UPDLOCK,HOLDLOCK) WHERE Domain=''C'' AND Active=1 ORDER BY ResourceId;
+  COMMIT; END TRY BEGIN CATCH IF XACT_STATE()<>0 ROLLBACK; THROW; END CATCH;
+ END;');
+ EXEC(N'
+ CREATE PROCEDURE ChatV2DC.CreateDepartment
+  @LoginId uniqueidentifier,@UsuarioId int,@PerfilId int,@SecurityStamp uniqueidentifier,@BindingHash binary(32),
+  @IssuedUtc datetime2(7),@ExpiresUtc datetime2(7),@Label nvarchar(120)
+ AS
+ BEGIN
+  SET NOCOUNT ON; SET XACT_ABORT ON;
+  BEGIN TRY BEGIN TRANSACTION;
+  EXEC dbo.sp_Stage2_RequireOriginalLogin @LoginId,@UsuarioId,@PerfilId,@SecurityStamp,@BindingHash,@IssuedUtc,@ExpiresUtc,N''CHAT_DEPARTAMENTOS_GESTIONAR'';
+  IF EXISTS(SELECT 1 FROM dbo.Perfiles WHERE PerfilId=@PerfilId AND Nombre=N''Cliente'') THROW 59701,N''Unavailable.'',1;
+  IF NULLIF(LTRIM(RTRIM(@Label)),N'''') IS NULL THROW 59702,N''Invalid label.'',1;
+  INSERT ChatV2DC.Resources(Domain,Label) VALUES(''D'',@Label);
+  DECLARE @Id int=CONVERT(int,SCOPE_IDENTITY());
+  INSERT ChatV2DC.AccessAudit(ResourceId,Actor,OriginalLoginId,Operation,AccessVersion) VALUES(@Id,@UsuarioId,@LoginId,''CREATE_D'',1);
+  SELECT @Id AS ResourceId;
+  COMMIT; END TRY BEGIN CATCH IF XACT_STATE()<>0 ROLLBACK; THROW; END CATCH;
+ END;');
+ EXEC(N'
+ CREATE PROCEDURE ChatV2DC.CreateCase
+  @LoginId uniqueidentifier,@UsuarioId int,@PerfilId int,@SecurityStamp uniqueidentifier,@BindingHash binary(32),
+  @IssuedUtc datetime2(7),@ExpiresUtc datetime2(7)
+ AS
+ BEGIN
+  SET NOCOUNT ON; SET XACT_ABORT ON;
+  BEGIN TRY BEGIN TRANSACTION;
+  EXEC dbo.sp_Stage2_RequireOriginalLogin @LoginId,@UsuarioId,@PerfilId,@SecurityStamp,@BindingHash,@IssuedUtc,@ExpiresUtc,N''CHAT_CLIENTE_USAR'';
+  IF NOT EXISTS(SELECT 1 FROM dbo.Perfiles WHERE PerfilId=@PerfilId AND Nombre=N''Cliente'') THROW 59701,N''Unavailable.'',1;
+  INSERT ChatV2DC.Resources(Domain,ClientUserId) VALUES(''C'',@UsuarioId);
+  DECLARE @Id int=CONVERT(int,SCOPE_IDENTITY());
+  INSERT ChatV2DC.AccessAudit(ResourceId,Actor,OriginalLoginId,Operation,AccessVersion) VALUES(@Id,@UsuarioId,@LoginId,''CREATE_C'',1);
+  SELECT @Id AS ResourceId;
+  COMMIT; END TRY BEGIN CATCH IF XACT_STATE()<>0 ROLLBACK; THROW; END CATCH;
+ END;');
+ EXEC(N'
+ CREATE PROCEDURE ChatV2DC.SetMember
+  @LoginId uniqueidentifier,@UsuarioId int,@PerfilId int,@SecurityStamp uniqueidentifier,@BindingHash binary(32),
+  @IssuedUtc datetime2(7),@ExpiresUtc datetime2(7),@ResourceId int,@TargetUser int,@CanRead bit,@CanPost bit,@ExpectedVersion bigint
+ AS
+ BEGIN
+  SET NOCOUNT ON; SET XACT_ABORT ON;
+  BEGIN TRY BEGIN TRANSACTION;
+  EXEC dbo.sp_Stage2_RequireOriginalLogin @LoginId,@UsuarioId,@PerfilId,@SecurityStamp,@BindingHash,@IssuedUtc,@ExpiresUtc,N''CHAT_DEPARTAMENTOS_GESTIONAR'';
+  IF EXISTS(SELECT 1 FROM dbo.Perfiles WHERE PerfilId=@PerfilId AND Nombre=N''Cliente'') THROW 59701,N''Unavailable.'',1;
+  IF @TargetUser<=0 OR @ExpectedVersion<=0 OR (@CanPost=1 AND @CanRead=0) THROW 59702,N''Invalid membership.'',1;
+  DECLARE @Version bigint;
+  SELECT @Version=AccessVersion FROM ChatV2DC.Resources WITH(UPDLOCK,HOLDLOCK) WHERE ResourceId=@ResourceId AND Domain=''D'' AND Active=1;
+  IF @Version IS NULL THROW 59704,N''Unavailable.'',1;
+  IF @ExpectedVersion<>@Version OR @Version=9223372036854775807 THROW 59703,N''Version changed.'',1;
+  IF @CanRead=1 AND NOT EXISTS(SELECT 1 FROM dbo.Usuarios u WITH(UPDLOCK,HOLDLOCK) JOIN dbo.Perfiles p WITH(UPDLOCK,HOLDLOCK) ON p.PerfilId=u.PerfilId
+   JOIN dbo.PerfilPermisos pp WITH(UPDLOCK,HOLDLOCK) ON pp.PerfilId=p.PerfilId JOIN dbo.Permisos pe WITH(UPDLOCK,HOLDLOCK) ON pe.PermisoId=pp.PermisoId
+   WHERE u.UsuarioId=@TargetUser AND u.Activo=1 AND p.Activo=1 AND p.Nombre<>N''Cliente'' AND pe.Codigo=N''CHAT_USAR'' AND pe.Activo=1)
+   THROW 59701,N''Unavailable.'',1;
+  IF @TargetUser=@UsuarioId AND @CanRead=1 AND NOT EXISTS(SELECT 1 FROM ChatV2DC.Members WITH(UPDLOCK,HOLDLOCK) WHERE ResourceId=@ResourceId AND UserId=@UsuarioId AND CanRead=1)
+   THROW 59701,N''Self elevation unavailable.'',1;
+  UPDATE ChatV2DC.Members SET CanRead=@CanRead,CanPost=@CanPost WHERE ResourceId=@ResourceId AND UserId=@TargetUser;
+  IF @@ROWCOUNT=0 INSERT ChatV2DC.Members(ResourceId,UserId,CanRead,CanPost) VALUES(@ResourceId,@TargetUser,@CanRead,@CanPost);
+  UPDATE ChatV2DC.Resources SET AccessVersion=AccessVersion+1 WHERE ResourceId=@ResourceId;
+  INSERT ChatV2DC.AccessAudit(ResourceId,Actor,OriginalLoginId,TargetUserId,Operation,AccessVersion) VALUES(@ResourceId,@UsuarioId,@LoginId,@TargetUser,''MEMBER'',@Version+1);
+  SELECT @Version+1 AS AuthorizationVersion;
+  COMMIT; END TRY BEGIN CATCH IF XACT_STATE()<>0 ROLLBACK; THROW; END CATCH;
+ END;');
+ EXEC(N'
+ CREATE PROCEDURE ChatV2DC.Transfer
+  @LoginId uniqueidentifier,@UsuarioId int,@PerfilId int,@SecurityStamp uniqueidentifier,@BindingHash binary(32),
+  @IssuedUtc datetime2(7),@ExpiresUtc datetime2(7),@CaseId int,@NewAgent int,@ExpectedVersion bigint
+ AS
+ BEGIN
+  SET NOCOUNT ON; SET XACT_ABORT ON;
+  BEGIN TRY BEGIN TRANSACTION;
+  EXEC dbo.sp_Stage2_RequireOriginalLogin @LoginId,@UsuarioId,@PerfilId,@SecurityStamp,@BindingHash,@IssuedUtc,@ExpiresUtc,N''CHAT_ATENCION_GESTIONAR'';
+  IF EXISTS(SELECT 1 FROM dbo.Perfiles WHERE PerfilId=@PerfilId AND Nombre=N''Cliente'') OR @NewAgent=@UsuarioId THROW 59701,N''Unavailable.'',1;
+  IF @CaseId<=0 OR @NewAgent<=0 OR @ExpectedVersion<=0 THROW 59702,N''Invalid assignment.'',1;
+  DECLARE @Version bigint,@Current int;
+  SELECT @Version=AccessVersion,@Current=AgentUserId FROM ChatV2DC.Resources WITH(UPDLOCK,HOLDLOCK) WHERE ResourceId=@CaseId AND Domain=''C'' AND Active=1 AND State=''OPEN'';
+  IF @Version IS NULL THROW 59704,N''Unavailable.'',1;
+  IF @ExpectedVersion<>@Version OR @Version=9223372036854775807 THROW 59703,N''Version changed.'',1;
+  IF NOT EXISTS(SELECT 1 FROM dbo.Usuarios u WITH(UPDLOCK,HOLDLOCK) JOIN dbo.Perfiles p WITH(UPDLOCK,HOLDLOCK) ON p.PerfilId=u.PerfilId
+   JOIN dbo.PerfilPermisos pp WITH(UPDLOCK,HOLDLOCK) ON pp.PerfilId=p.PerfilId JOIN dbo.Permisos pe WITH(UPDLOCK,HOLDLOCK) ON pe.PermisoId=pp.PermisoId
+   WHERE u.UsuarioId=@NewAgent AND u.Activo=1 AND p.Activo=1 AND p.Nombre<>N''Cliente'' AND pe.Codigo=N''CHAT_CLIENTES_ATENDER'' AND pe.Activo=1)
+   THROW 59701,N''Unavailable.'',1;
+  UPDATE ChatV2DC.Resources SET AgentUserId=@NewAgent,AccessVersion=AccessVersion+1 WHERE ResourceId=@CaseId;
+  INSERT ChatV2DC.AccessAudit(ResourceId,Actor,OriginalLoginId,TargetUserId,Operation,AccessVersion) VALUES(@CaseId,@UsuarioId,@LoginId,@NewAgent,''TRANSFER'',@Version+1);
+  SELECT @Version+1 AS AssignmentVersion;
+  COMMIT; END TRY BEGIN CATCH IF XACT_STATE()<>0 ROLLBACK; THROW; END CATCH;
+ END;');
+ EXEC(N'
+ CREATE PROCEDURE ChatV2DC.SetDepartmentActive
+  @LoginId uniqueidentifier,@UsuarioId int,@PerfilId int,@SecurityStamp uniqueidentifier,@BindingHash binary(32),
+  @IssuedUtc datetime2(7),@ExpiresUtc datetime2(7),@ResourceId int,@Active bit,@ExpectedVersion bigint
+ AS
+ BEGIN
+  SET NOCOUNT ON; SET XACT_ABORT ON;
+  BEGIN TRY BEGIN TRANSACTION;
+  EXEC dbo.sp_Stage2_RequireOriginalLogin @LoginId,@UsuarioId,@PerfilId,@SecurityStamp,@BindingHash,@IssuedUtc,@ExpiresUtc,N''CHAT_DEPARTAMENTOS_GESTIONAR'';
+  IF EXISTS(SELECT 1 FROM dbo.Perfiles WHERE PerfilId=@PerfilId AND Nombre=N''Cliente'') THROW 59701,N''Unavailable.'',1;
+  DECLARE @Version bigint;
+  SELECT @Version=AccessVersion FROM ChatV2DC.Resources WITH(UPDLOCK,HOLDLOCK) WHERE ResourceId=@ResourceId AND Domain=''D'';
+  IF @Version IS NULL THROW 59704,N''Unavailable.'',1;
+  IF @ExpectedVersion<>@Version OR @Version=9223372036854775807 THROW 59703,N''Version changed.'',1;
+  UPDATE ChatV2DC.Resources SET Active=@Active,AccessVersion=AccessVersion+1 WHERE ResourceId=@ResourceId;
+  INSERT ChatV2DC.AccessAudit(ResourceId,Actor,OriginalLoginId,Operation,AccessVersion) VALUES(@ResourceId,@UsuarioId,@LoginId,''ACTIVE'',@Version+1);
+  SELECT @Version+1 AS AuthorizationVersion;
+  COMMIT; END TRY BEGIN CATCH IF XACT_STATE()<>0 ROLLBACK; THROW; END CATCH;
+ END;');
+ COMMIT;
+END TRY BEGIN CATCH IF XACT_STATE()<>0 ROLLBACK; THROW; END CATCH;

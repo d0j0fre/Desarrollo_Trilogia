@@ -19,7 +19,7 @@ public sealed class DocumentsDownloadTests
         var db = new Mock<IDocumentManagementDbService>(MockBehavior.Strict);
         var storage = new Mock<IPrivateFileStorageService>(MockBehavior.Strict);
         const string key = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.pdf";
-        db.Setup(x => x.GetAuthorizedFileAsync(42, versionId, 999, true)).ReturnsAsync(new PrivateFileMetadata
+        db.Setup(x => x.GetAuthorizedFileAsync(42, versionId, 999, false)).ReturnsAsync(new PrivateFileMetadata
         { OwnerId = 42, VersionId = versionId, StorageKey = key, OriginalName = "informe sintético.pdf", MimeType = "application/pdf" });
         var bytes = "%PDF-1.7 synthetic"u8.ToArray();
         using var stream = new MemoryStream(bytes);
@@ -38,7 +38,7 @@ public sealed class DocumentsDownloadTests
     public async Task DeniedOrNonReadyMetadataNeverOpensStorage()
     {
         var db = new Mock<IDocumentManagementDbService>(MockBehavior.Strict);
-        db.Setup(x => x.GetAuthorizedFileAsync(42, null, 999, true)).ReturnsAsync((PrivateFileMetadata?)null);
+        db.Setup(x => x.GetAuthorizedFileAsync(42, null, 999, false)).ReturnsAsync((PrivateFileMetadata?)null);
         var storage = new Mock<IPrivateFileStorageService>(MockBehavior.Strict);
         Assert.IsType<NotFoundResult>(await Controller(db.Object, storage.Object).Download(42, null, CancellationToken.None));
         storage.VerifyNoOtherCalls(); db.VerifyAll();
@@ -48,7 +48,7 @@ public sealed class DocumentsDownloadTests
     public async Task MissingPrivateFileReturnsNotFoundWithoutPublicFallback()
     {
         var db = new Mock<IDocumentManagementDbService>(MockBehavior.Strict);
-        db.Setup(x => x.GetAuthorizedFileAsync(42, null, 999, true)).ReturnsAsync(new PrivateFileMetadata { StorageKey = "synthetic.pdf" });
+        db.Setup(x => x.GetAuthorizedFileAsync(42, null, 999, false)).ReturnsAsync(new PrivateFileMetadata { StorageKey = "synthetic.pdf" });
         var storage = new Mock<IPrivateFileStorageService>(MockBehavior.Strict);
         storage.Setup(x => x.OpenReadAsync(PrivateStorageArea.Documents, "synthetic.pdf", CancellationToken.None)).ReturnsAsync((Stream?)null);
         Assert.IsType<NotFoundResult>(await Controller(db.Object, storage.Object).Download(42, null, CancellationToken.None));

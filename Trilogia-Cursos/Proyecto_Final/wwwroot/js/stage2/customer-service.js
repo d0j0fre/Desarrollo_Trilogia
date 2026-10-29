@@ -1,6 +1,26 @@
 "use strict";
 (() => {
   document.querySelectorAll("[data-djj-service-form]").forEach(form => {
+    let submitting = false;
+    const buttons = Array.from(form.querySelectorAll('button[type="submit"], input[type="submit"]'));
+    const disabledBefore = buttons.map(button => button.disabled);
+    form.addEventListener("submit", event => {
+      if (submitting) { event.preventDefault(); return; }
+      if (event.defaultPrevented) return;
+      submitting = true;
+      // Observe cancellation by validation/confirmation handlers before latching.
+      queueMicrotask(() => {
+        if (event.defaultPrevented) { submitting = false; return; }
+        form.setAttribute("aria-busy", "true");
+        buttons.forEach(button => { button.disabled = true; });
+      });
+    });
+    window.addEventListener("pageshow", event => {
+      if (!event.persisted) return;
+      submitting = false;
+      form.removeAttribute("aria-busy");
+      buttons.forEach((button, index) => { button.disabled = disabledBefore[index]; });
+    });
     if (window.jQuery) window.jQuery(form).on("invalid-form.validate", () => {
       const summary = form.querySelector("[data-djj-validation-summary]");
       if (summary) window.requestAnimationFrame(() => summary.focus());

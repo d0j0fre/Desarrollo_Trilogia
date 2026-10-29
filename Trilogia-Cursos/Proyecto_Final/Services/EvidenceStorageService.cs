@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using System.Security.Cryptography;
 
 namespace Proyecto_Final.Services
 {
@@ -7,7 +8,8 @@ namespace Proyecto_Final.Services
         string StorageKey,
         string ContentType,
         string Extension,
-        long Length);
+        long Length,
+        string? Sha256 = null);
 
     public sealed class EvidenceValidationException : Exception
     {
@@ -20,6 +22,7 @@ namespace Proyecto_Final.Services
         Task<StagedEvidence?> StageSignatureAsync(string? dataUrl, CancellationToken cancellationToken = default);
         Task CommitAsync(StagedEvidence evidence, CancellationToken cancellationToken = default);
         Task DeleteStageAsync(StagedEvidence evidence);
+        Task DeleteUnpublishedAsync(StagedEvidence evidence, CancellationToken cancellationToken = default);
         Task<Stream?> OpenReadAsync(string storageKey, CancellationToken cancellationToken = default);
     }
 
@@ -105,13 +108,15 @@ namespace Proyecto_Final.Services
             return await StageStreamAsync(stream, "image/png", ".png", bytes.Length, cancellationToken);
         }
 
-        public Task CommitAsync(StagedEvidence evidence, CancellationToken cancellationToken = default)
+        public async Task CommitAsync(StagedEvidence evidence, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
             var source = GetTemporaryPath(evidence.TemporaryKey);
             var destination = GetFinalPath(evidence.StorageKey);
+            await using (var stream = new FileStream(source, FileMode.Open, FileAccess.Read, FileShare.None, 64 * 1024, true))
+                if (evidence.Sha256 is null || !await EvidenceIntegrity.VerifyAsync(stream, evidence.Sha256, evidence.Length, cancellationToken))
+                    throw new EvidenceValidationException("El archivo temporal cambió; volvé a cargar la evidencia.");
             File.Move(source, destination, overwrite: false);
-            return Task.CompletedTask;
         }
 
         public Task DeleteStageAsync(StagedEvidence evidence)
@@ -119,6 +124,16 @@ namespace Proyecto_Final.Services
             var path = GetTemporaryPath(evidence.TemporaryKey);
             if (File.Exists(path)) File.Delete(path);
             return Task.CompletedTask;
+        }
+
+        public async Task DeleteUnpublishedAsync(StagedEvidence evidence, CancellationToken cancellationToken = default)
+        {
+            var path = GetFinalPath(evidence.StorageKey);
+            if (!File.Exists(path)) return;
+            await using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.None, 64 * 1024, true))
+                if (evidence.Sha256 is null || !await EvidenceIntegrity.VerifyAsync(stream, evidence.Sha256, evidence.Length, cancellationToken))
+                    throw new EvidenceValidationException("No se puede compensar un archivo cuya propiedad e integridad no coinciden.");
+            File.Delete(path); // Only the newly staged, unpublished GUID and matching bytes.
         }
 
         public Task<Stream?> OpenReadAsync(string storageKey, CancellationToken cancellationToken = default)
@@ -168,12 +183,35 @@ namespace Proyecto_Final.Services
             await using var destination = new FileStream(
                 temporaryPath,
                 FileMode.CreateNew,
-                FileAccess.Write,
+                FileAccess.ReadWrite,
                 FileShare.None,
                 64 * 1024,
                 useAsync: true);
-            await source.CopyToAsync(destination, cancellationToken);
-            return new StagedEvidence(temporaryKey, key, contentType, normalizedExtension, length);
+            try
+            {
+            var buffer = new byte[64 * 1024];
+            long actualLength = 0;
+            int count;
+            while ((count = await source.ReadAsync(buffer.AsMemory(), cancellationToken)) > 0)
+            {
+                actualLength = checked(actualLength + count);
+                if (actualLength > MaximumBytes || actualLength > length)
+                    throw new EvidenceValidationException("El tamaño real del archivo no coincide con el permitido.");
+                await destination.WriteAsync(buffer.AsMemory(0, count), cancellationToken);
+            }
+            if (actualLength != length)
+                throw new EvidenceValidationException("El archivo cargado está incompleto.");
+            await destination.FlushAsync(cancellationToken);
+            destination.Position = 0;
+            var hash = Convert.ToHexString(await SHA256.HashDataAsync(destination, cancellationToken));
+            return new StagedEvidence(temporaryKey, key, contentType, normalizedExtension, actualLength, hash);
+            }
+            catch
+            {
+                await destination.DisposeAsync();
+                File.Delete(temporaryPath); // This method created the unique temporary file.
+                throw;
+            }
         }
 
         private string GetTemporaryPath(string temporaryKey)

@@ -13,7 +13,7 @@ public sealed class SessionValidationMiddleware
         _logger = logger;
     }
 
-    public async Task InvokeAsync(HttpContext context, IUserSessionValidationService validationService)
+    public async Task InvokeAsync(HttpContext context, IOriginalLoginService originalLogins)
     {
         var userId = context.Session.GetInt32("UserId");
         if (!userId.HasValue || userId.Value <= 0)
@@ -24,11 +24,13 @@ public sealed class SessionValidationMiddleware
 
         var expectedStamp = context.Session.GetString("SecurityStamp");
         var expectedRole = context.Session.GetString("UserRole");
+        var originalLogin = OriginalLoginSession.Read(context.Session);
         UserSessionState? current;
 
         try
         {
-            current = await validationService.GetCurrentStateAsync(userId.Value, context.RequestAborted);
+            current = originalLogin is null ? null
+                : await originalLogins.ValidateAsync(originalLogin, context.RequestAborted);
         }
         catch (Exception exception)
         {
@@ -37,7 +39,7 @@ public sealed class SessionValidationMiddleware
             return;
         }
 
-        if (!IsCurrent(current, expectedRole, expectedStamp))
+        if (!IsCurrent(current, expectedRole, expectedStamp, context.Session.GetInt32("ProfileId")))
         {
             _logger.LogInformation("Se revocó una sesión desactualizada del usuario {UserId}.", userId.Value);
             if (context.Request.Path.StartsWithSegments("/Account/Login"))
@@ -51,11 +53,14 @@ public sealed class SessionValidationMiddleware
             return;
         }
 
+        context.Items[OriginalLoginSession.ValidatedContextItem] = originalLogin;
         await _next(context);
     }
 
-    public static bool IsCurrent(UserSessionState? current, string? expectedRole, string? expectedStamp) =>
-        current is { Active: true }
+    public static bool IsCurrent(UserSessionState? current, string? expectedRole, string? expectedStamp, int? expectedProfileId = null) =>
+        current is { Active: true, ProfileActive: true, ProfileId: > 0 }
+        && expectedProfileId is > 0
+        && current.ProfileId == expectedProfileId
         && !string.IsNullOrWhiteSpace(expectedStamp)
         && string.Equals(current.Role, expectedRole, StringComparison.OrdinalIgnoreCase)
         && string.Equals(current.SecurityStamp, expectedStamp, StringComparison.OrdinalIgnoreCase);
@@ -65,7 +70,8 @@ public sealed class SessionValidationMiddleware
         context.Session.Clear();
 
         if (context.Request.Headers.Accept.Any(value => value?.Contains("application/json", StringComparison.OrdinalIgnoreCase) == true)
-            || context.Request.Path.StartsWithSegments("/chatHub"))
+            || context.Request.Path.StartsWithSegments("/chatHub")
+            || context.Request.Path.StartsWithSegments("/hubs/chat-v2-personal"))
         {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             return;

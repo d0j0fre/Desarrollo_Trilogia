@@ -3,8 +3,8 @@
 @{
     var role = Context.Session.GetString("UserRole") ?? string.Empty;
     var admin = string.Equals(role, "Administrador", StringComparison.OrdinalIgnoreCase);
-    var codes = admin ? new HashSet<string>() : await PermissionService.GetPermissionCodesAsync(role);
-    bool Can(string code) => admin || codes.Contains(code);
+    var codes = await PermissionService.GetPermissionCodesAsync(role);
+    bool Can(string code) => code is "RUTAS_GESTIONAR" or "ENTREGAS_TABLERO_VER" or "ENTREGAS_EVIDENCIA_VER" ? codes.Contains(code) : admin || codes.Contains(code);
     var controller = ViewContext.RouteData.Values["controller"]?.ToString();
     var action = ViewContext.RouteData.Values["action"]?.ToString();
     bool Current(string c, string a) => controller == c && action == a;

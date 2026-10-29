@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Data.SqlClient;
 using Proyecto_Final.Filters;
 using Proyecto_Final.Models.Admin;
@@ -7,7 +8,8 @@ using Proyecto_Final.Services;
 
 namespace Proyecto_Final.Controllers;
 
-[AdminAuthorize("Documentos", "DOCUMENTOS_VER")]
+[SessionAuthorize]
+[DocumentAccessExceptionFilter]
 public sealed class DocumentsController : Controller
 {
     private static readonly string[] AllowedStatuses = ["Vigente", "Suspendido", "Archivado"];
@@ -21,6 +23,14 @@ public sealed class DocumentsController : Controller
         IDocumentAlertService alerts, AdminDbService admin, ILogger<DocumentsController> logger)
     {
         _documents = documents; _storage = storage; _alerts = alerts; _admin = admin; _logger = logger;
+    }
+
+    public override void OnActionExecuted(ActionExecutedContext context)
+    {
+        // Per-document actions come from SQL rights, never from a caller role or this navigation flag.
+        ViewData["DocumentAccessScope"] = context.Exception is null && context.Result is ViewResult
+            && HttpContext.Items[OriginalLoginSession.ValidatedContextItem] is OriginalLoginContext { HasCanonicalLifetime: true };
+        base.OnActionExecuted(context);
     }
 
     [HttpGet]
@@ -64,7 +74,6 @@ public sealed class DocumentsController : Controller
     }
 
     [HttpGet]
-    [AdminAuthorize("Documentos", "DOCUMENTOS_GESTIONAR")]
     public async Task<IActionResult> Create()
     {
         await LoadOptionsAsync();
@@ -74,7 +83,6 @@ public sealed class DocumentsController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [EnableRateLimiting("private-file-upload")]
-    [AdminAuthorize("Documentos", "DOCUMENTOS_GESTIONAR")]
     public async Task<IActionResult> Create(DocumentFormViewModel model, CancellationToken cancellationToken)
     {
         ValidateDocument(model, requireFile: true);
@@ -83,6 +91,7 @@ public sealed class DocumentsController : Controller
         var documentId = 0;
         var committed = false;
         var ready = false;
+        var publicationAttempted = false;
         try
         {
             staged = await _storage.StageAsync(model.File, PrivateStorageArea.Documents, cancellationToken)
@@ -90,11 +99,15 @@ public sealed class DocumentsController : Controller
             documentId = await _documents.CreatePendingAsync(model, staged, UserId(), UserName());
             await _storage.CommitAsync(staged, cancellationToken);
             committed = true;
+            publicationAttempted = true;
             await _documents.MarkDocumentReadyAsync(documentId, UserId(), UserName());
             ready = true;
-            await AuditAsync("CREAR_DOCUMENTO", $"Documento #{documentId} creado con hash SHA-256 {staged.Sha256}.");
             TempData["SuccessMessage"] = "Documento almacenado de forma privada.";
             return RedirectToAction(nameof(Details), new { id = documentId });
+        }
+        catch (DocumentPendingCommitUnconfirmedException exception)
+        {
+            return await RecoverPendingCommitAsync(exception, staged, null, cancellationToken);
         }
         catch (PrivateFileValidationException exception)
         {
@@ -105,18 +118,32 @@ public sealed class DocumentsController : Controller
             _logger.LogError(exception, "No se pudo crear el documento privado.");
             ModelState.AddModelError(string.Empty, "No fue posible guardar el documento.");
         }
+        if (staged is not null && committed && publicationAttempted && !ready)
+        {
+            var confirmed = !cancellationToken.IsCancellationRequested
+                && await PublicationConfirmedAsync(documentId, null, staged);
+            TempData[confirmed ? "SuccessMessage" : "ErrorMessage"] = confirmed
+                ? "Documento conservado; su publicación quedó confirmada."
+                : "La confirmación de publicación sigue pendiente. El archivo se conservó; revisá el historial antes de repetir la carga.";
+            if (!confirmed) await PreserveUploadAsync(staged, documentId, null);
+            return RedirectToAction(nameof(Details), new { id = documentId });
+        }
+        if (staged is not null && documentId > 0 && !ready)
+        {
+            await PreserveUploadAsync(staged, documentId, null);
+            TempData["ErrorMessage"] = "El archivo se conservó para revisar una carga pendiente. No repitás la carga hasta comprobar su estado.";
+            return RedirectToAction(nameof(Details), new { id = documentId });
+        }
         if (staged is not null && !ready)
         {
             if (committed) await _storage.DeleteCommittedAsync(PrivateStorageArea.Documents, staged.StorageKey);
             else await _storage.DeleteStageAsync(staged);
         }
-        if (documentId > 0 && !ready) await TryDeletePendingAsync(documentId);
         await LoadOptionsAsync();
         return InvalidDocumentForm(model);
     }
 
     [HttpGet]
-    [AdminAuthorize("Documentos", "DOCUMENTOS_GESTIONAR")]
     public async Task<IActionResult> Edit(int id)
     {
         var model = await _documents.GetFormAsync(id);
@@ -127,7 +154,6 @@ public sealed class DocumentsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [AdminAuthorize("Documentos", "DOCUMENTOS_GESTIONAR")]
     public async Task<IActionResult> Edit(DocumentFormViewModel model)
     {
         ValidateDocument(model, requireFile: false);
@@ -135,7 +161,6 @@ public sealed class DocumentsController : Controller
         try
         {
             await _documents.UpdateMetadataAsync(model, UserId(), UserName());
-            await AuditAsync("EDITAR_DOCUMENTO", $"Metadatos del documento #{model.DocumentId} actualizados.");
             TempData["SuccessMessage"] = "Documento actualizado.";
             return RedirectToAction(nameof(Details), new { id = model.DocumentId });
         }
@@ -150,13 +175,13 @@ public sealed class DocumentsController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [EnableRateLimiting("private-file-upload")]
-    [AdminAuthorize("Documentos", "DOCUMENTOS_GESTIONAR")]
     public async Task<IActionResult> ReplaceFile(int id, IFormFile? file, CancellationToken cancellationToken)
     {
         StagedPrivateFile? staged = null;
         var versionId = 0;
         var committed = false;
         var ready = false;
+        var publicationAttempted = false;
         try
         {
             staged = await _storage.StageAsync(file, PrivateStorageArea.Documents, cancellationToken)
@@ -164,10 +189,14 @@ public sealed class DocumentsController : Controller
             versionId = await _documents.ReplaceFilePendingAsync(id, staged, UserId(), UserName());
             await _storage.CommitAsync(staged, cancellationToken);
             committed = true;
+            publicationAttempted = true;
             await _documents.MarkVersionReadyAsync(id, versionId, UserId(), UserName());
             ready = true;
-            await AuditAsync("REEMPLAZAR_ARCHIVO_DOCUMENTO", $"Documento #{id}, versión #{versionId}, hash {staged.Sha256}.");
             TempData["SuccessMessage"] = "Nueva versión almacenada.";
+        }
+        catch (DocumentPendingCommitUnconfirmedException exception)
+        {
+            return await RecoverPendingCommitAsync(exception, staged, id, cancellationToken);
         }
         catch (PrivateFileValidationException exception) { TempData["ErrorMessage"] = exception.Message; }
         catch (Exception exception)
@@ -175,7 +204,22 @@ public sealed class DocumentsController : Controller
             _logger.LogError(exception, "No se pudo reemplazar el archivo del documento {DocumentId}.", id);
             TempData["ErrorMessage"] = "No fue posible reemplazar el archivo.";
         }
-        if (versionId > 0 && !ready) await TryDeletePendingVersionAsync(id, versionId);
+        if (staged is not null && committed && publicationAttempted && !ready)
+        {
+            var confirmed = !cancellationToken.IsCancellationRequested
+                && await PublicationConfirmedAsync(id, versionId, staged);
+            TempData[confirmed ? "SuccessMessage" : "ErrorMessage"] = confirmed
+                ? "Nueva versión conservada; su publicación quedó confirmada."
+                : "La confirmación de la versión sigue pendiente. El archivo se conservó; revisá el historial antes de repetir la carga.";
+            if (!confirmed) await PreserveUploadAsync(staged, id, versionId);
+            return RedirectToAction(nameof(Details), new { id });
+        }
+        if (staged is not null && versionId > 0 && !ready)
+        {
+            await PreserveUploadAsync(staged, id, versionId);
+            TempData["ErrorMessage"] = "La versión pendiente y el archivo se conservaron para revisión. No repitás la carga hasta comprobar su estado.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
         if (staged is not null && !ready)
         {
             if (committed) await _storage.DeleteCommittedAsync(PrivateStorageArea.Documents, staged.StorageKey);
@@ -192,19 +236,19 @@ public sealed class DocumentsController : Controller
         if (metadata is null) return NotFound();
         var stream = await _storage.OpenReadAsync(PrivateStorageArea.Documents, metadata.StorageKey, cancellationToken);
         if (stream is null) { _logger.LogWarning("Archivo privado ausente para documento {DocumentId}.", id); return NotFound(); }
+        Response.Headers.CacheControl = "private, no-store, max-age=0";
+        Response.Headers["X-Content-Type-Options"] = "nosniff";
         Response.Headers.ContentDisposition = $"attachment; filename*=UTF-8''{Uri.EscapeDataString(metadata.OriginalName)}";
         return File(stream, metadata.MimeType);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [AdminAuthorize("Documentos", "DOCUMENTOS_GESTIONAR")]
     public async Task<IActionResult> SetActive(int id, bool active)
     {
         try
         {
             await _documents.SetActiveAsync(id, active, UserId(), UserName());
-            await AuditAsync(active ? "REACTIVAR_DOCUMENTO" : "ELIMINAR_LOGICO_DOCUMENTO", $"Documento #{id}.");
             TempData["SuccessMessage"] = active ? "Documento reactivado." : "Documento desactivado sin borrar su historial.";
         }
         catch (Exception exception) { HandleDatabaseError(exception, "cambiar el estado del documento"); }
@@ -227,13 +271,11 @@ public sealed class DocumentsController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [EnableRateLimiting("document-alert-generation")]
-    [AdminAuthorize("Documentos", "DOCUMENTOS_ALERTAS_GENERAR")]
     public async Task<IActionResult> GenerateAlerts(CancellationToken cancellationToken)
     {
         try
         {
             var count = await _alerts.GenerateAsync(UserId(), cancellationToken);
-            await AuditAsync("GENERAR_ALERTAS_DOCUMENTO", $"Generación idempotente: {count} alertas candidatas.");
             TempData["SuccessMessage"] = $"Proceso completado: {count} alerta(s) nueva(s) o pendiente(s) de notificación.";
         }
         catch (Exception exception) { HandleDatabaseError(exception, "generar alertas"); }
@@ -242,7 +284,6 @@ public sealed class DocumentsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [AdminAuthorize("Documentos", "DOCUMENTOS_ALERTAS_ATENDER")]
     public async Task<IActionResult> MarkAlertHandled(int id)
     {
         try { await _documents.MarkAlertHandledAsync(id, UserId()); TempData["SuccessMessage"] = "Alerta marcada como atendida."; }
@@ -265,13 +306,72 @@ public sealed class DocumentsController : Controller
     }
     private int UserId() => HttpContext.Session.GetInt32("UserId") ?? 0;
     private string UserName() => HttpContext.Session.GetString("UserFullName") ?? "Usuario";
-    private async Task<bool> CanManageAsync() => string.Equals(HttpContext.Session.GetString("UserRole"), "Administrador", StringComparison.OrdinalIgnoreCase)
-        || await _admin.TienePermisoCodigoPorRolAsync(HttpContext.Session.GetString("UserRole") ?? string.Empty, "DOCUMENTOS_GESTIONAR");
+    private static Task<bool> CanManageAsync() => Task.FromResult(false); // A caller flag never grants ownership.
+    private async Task<IActionResult> RecoverPendingCommitAsync(DocumentPendingCommitUnconfirmedException outcome,
+        StagedPrivateFile? staged, int? expectedDocument, CancellationToken cancellationToken)
+    {
+        // Only a server-captured result can enter this path; never replay the metadata INSERT.
+        var sameAttempt = staged is not null && staged.StorageKey == outcome.StorageKey
+            && (expectedDocument is null ? outcome.VersionId is null
+                : expectedDocument == outcome.DocumentId && outcome.VersionId is > 0);
+        if (sameAttempt && !cancellationToken.IsCancellationRequested)
+        {
+            try
+            {
+                await _storage.CommitAsync(staged!, cancellationToken);
+                try
+                {
+                    if (outcome.VersionId is int version)
+                        await _documents.MarkVersionReadyAsync(outcome.DocumentId, version, UserId(), UserName());
+                    else await _documents.MarkDocumentReadyAsync(outcome.DocumentId, UserId(), UserName());
+                }
+                catch (Exception exception)
+                { _logger.LogWarning("Publicación documental pendiente; tipo {Type}.", exception.GetType().Name); }
+                if (!cancellationToken.IsCancellationRequested
+                    && await PublicationConfirmedAsync(outcome.DocumentId, outcome.VersionId, staged!))
+                {
+                    TempData["SuccessMessage"] = "El archivo se conservó y su publicación quedó confirmada, sin repetir la carga.";
+                    return RedirectToAction(nameof(Details), new { id = outcome.DocumentId });
+                }
+            }
+            catch (Exception exception)
+            { _logger.LogWarning("Resultado de carga documental sin confirmar; tipo {Type}.", exception.GetType().Name); }
+        }
+        if (staged is not null && sameAttempt)
+        {
+            await PreserveUploadAsync(staged, outcome.DocumentId, outcome.VersionId);
+        }
+        TempData["ErrorMessage"] = "No se confirmó el resultado de la carga. El archivo se conservó; no repitás la carga hasta revisar su estado.";
+        return expectedDocument is int id ? RedirectToAction(nameof(Details), new { id }) : RedirectToAction(nameof(Index));
+    }
+    private async Task PreserveUploadAsync(StagedPrivateFile staged, int documentId, int? versionId)
+    {
+        try { await _storage.PreserveForReconciliationAsync(staged, documentId, versionId, UserId()); }
+        catch (Exception exception)
+        { _logger.LogWarning("No se pudo registrar conciliación documental; tipo {Type}. Se conservan los archivos.", exception.GetType().Name); }
+    }
+    private async Task<bool> PublicationConfirmedAsync(int documentId, int? versionId, StagedPrivateFile staged)
+    {
+        try
+        {
+            // This receipt returns only Ready versions published by this actor, under
+            // current ownership/version permission. It does not authorize a download. A lost
+            // acknowledgement is never permission to delete committed storage.
+            var receipt = await _documents.GetPublicationReceiptAsync(documentId, versionId, UserId(), staged.StorageKey);
+            return receipt is not null && receipt.OwnerId == documentId
+                && string.Equals(receipt.StorageKey, staged.StorageKey, StringComparison.Ordinal)
+                && (!versionId.HasValue || receipt.VersionId == versionId);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning("No se pudo acreditar la publicación del documento {DocumentId}; tipo {ExceptionType}. Se conservan archivo y metadata.",
+                documentId, exception.GetType().Name);
+            return false;
+        }
+    }
     private Task AuditAsync(string action, string detail) => _admin.CreateAuditLogAsync(UserId(), UserName(),
         HttpContext.Session.GetString("UserEmail"), HttpContext.Session.GetString("UserRole"), action, "Documentos", detail,
         HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString());
-    private async Task TryDeletePendingAsync(int id) { try { await _documents.DeletePendingDocumentAsync(id, UserId()); } catch (Exception ex) { _logger.LogWarning(ex, "No se pudo compensar documento pendiente {DocumentId}.", id); } }
-    private async Task TryDeletePendingVersionAsync(int id, int versionId) { try { await _documents.DeletePendingVersionAsync(id, versionId, UserId()); } catch (Exception ex) { _logger.LogWarning(ex, "No se pudo compensar versión pendiente {VersionId}.", versionId); } }
     private void HandleDatabaseError(Exception exception, string operation)
     {
         if (exception is SqlException sql && sql.Number >= 50000) _logger.LogWarning(exception, "Regla de negocio al {Operation}.", operation);

@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Proyecto_Final.Validation;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace Proyecto_Final.Models.Admin
 {
@@ -27,10 +28,10 @@ namespace Proyecto_Final.Models.Admin
     public class SellerOrderProductInputViewModel
     {
         public int ProductoId { get; set; }
-        public string Nombre { get; set; } = string.Empty;
-        public string Categoria { get; set; } = string.Empty;
-        public decimal Precio { get; set; }
-        public int Stock { get; set; }
+        [BindNever] public string Nombre { get; set; } = string.Empty;
+        [BindNever] public string Categoria { get; set; } = string.Empty;
+        [BindNever] public decimal Precio { get; set; }
+        [BindNever] public int Stock { get; set; }
 
         [Range(0, 9999, ErrorMessage = "La cantidad no es válida.")]
         public int Cantidad { get; set; }
@@ -40,18 +41,21 @@ namespace Proyecto_Final.Models.Admin
 
     public class SellerOrderCreateViewModel
     {
+        public Guid RequestId { get; set; }
+        [StringLength(64, MinimumLength = 64)] public string? QuoteFingerprint { get; set; }
+        [StringLength(64, MinimumLength = 64)] public string? QuoteSourceHash { get; set; }
         [Display(Name = "Cliente")]
         [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un cliente.")]
         public int ClienteUsuarioId { get; set; }
 
         [Display(Name = "Tipo de entrega")]
         [Required(ErrorMessage = "El tipo de entrega es obligatorio.")]
-        [StringLength(100)]
+        [StringLength(50)]
         public string TipoEntrega { get; set; } = "Entrega por vendedor";
 
         [Display(Name = "Dirección de entrega")]
         [Required(ErrorMessage = "La dirección de entrega es obligatoria.")]
-        [StringLength(500)]
+        [StringLength(255)]
         public string? DireccionEntrega { get; set; }
 
         [Display(Name = "Identificación del cliente")]
@@ -60,10 +64,10 @@ namespace Proyecto_Final.Models.Admin
         public string? IdentificacionCliente { get; set; }
 
         [Display(Name = "Observaciones")]
-        [StringLength(500)]
+        [StringLength(255)]
         public string? Observaciones { get; set; }
 
-        public List<SellerOrderClientViewModel> Clientes { get; set; } = new();
+        [BindNever] public List<SellerOrderClientViewModel> Clientes { get; set; } = new();
         public List<SellerOrderProductInputViewModel> Productos { get; set; } = new();
 
         public int TotalItems => Productos.Sum(x => x.Cantidad);
@@ -88,18 +92,18 @@ namespace Proyecto_Final.Models.Admin
         public int ClienteUsuarioId { get; set; }
 
         [Required(ErrorMessage = "El tipo de entrega es obligatorio.")]
-        [StringLength(100)]
+        [StringLength(50)]
         public string TipoEntrega { get; set; } = "Entrega por vendedor";
 
         [Required(ErrorMessage = "La dirección de entrega es obligatoria.")]
-        [StringLength(500)]
+        [StringLength(255)]
         public string? DireccionEntrega { get; set; }
 
         [StringLength(100)]
         [CostaRicanIdentification]
         public string? IdentificacionCliente { get; set; }
 
-        [StringLength(500)]
+        [StringLength(255)]
         public string? Observaciones { get; set; }
 
         public List<SellerOfflineOrderProductViewModel> Productos { get; set; } = new();
@@ -141,4 +145,7 @@ namespace Proyecto_Final.Models.Admin
         public bool EsLiberado => Estado == "Liberado";
         public bool TieneFactura => !string.IsNullOrWhiteSpace(NumeroFactura);
     }
+
+    public sealed record SellerOrderReviewViewModel(SellerOrderCreateViewModel Draft,
+        JJ.Commerce.ServerQuoteResult Quote, string CustomerName);
 }

@@ -138,8 +138,7 @@ public sealed class PublicSurfacePresentationTests
         Assert.Contains("SafeRequestId", view);
     }
 
-    private static HomeController Home() => new(null!, null!, null!, null!, NullLogger<HomeController>.Instance,
-        new ConfigurationBuilder().Build(), Options.Create(new CompanyOptions()))
+    private static HomeController Home() => new(null!, null!, null!, null!, NullLogger<HomeController>.Instance)
         { ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() } };
 
     private static string Read(string path)

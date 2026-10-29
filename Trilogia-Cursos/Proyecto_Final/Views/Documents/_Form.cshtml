@@ -17,7 +17,7 @@
     <legend>Clasificación y departamento</legend>
     <div class="djj-form-grid">
         <div class="djj-field"><label asp-for="TypeId">Tipo</label><select asp-for="TypeId" class="djj-select"><option value="">Seleccione</option>@foreach (var item in types) { <option value="@item.Id">@item.Name</option> }</select><span asp-validation-for="TypeId" class="djj-field-error"></span></div>
-        <div class="djj-field"><label asp-for="DepartmentId">Departamento responsable</label><select asp-for="DepartmentId" class="djj-select"><option value="">General</option>@foreach (var item in departments) { <option value="@item.Id">@item.Name</option> }</select><span asp-validation-for="DepartmentId" class="djj-field-error"></span></div>
+        <div class="djj-field"><span>Departamento responsable</span><input asp-for="DepartmentId" type="hidden" /><p class="djj-muted">@(Model.DepartmentId.HasValue ? departments.FirstOrDefault(item => item.Id == Model.DepartmentId)?.Name ?? "Departamento registrado" : "Documento personal")</p><small>El cambio de departamento requiere una fuente de autorización acreditada y permanece bloqueado.</small><span asp-validation-for="DepartmentId" class="djj-field-error"></span></div>
     </div>
 </fieldset>
 <fieldset class="djj-document-fieldset">

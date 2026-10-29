@@ -5,15 +5,16 @@ using Proyecto_Final.Services;
 
 namespace Proyecto_Final.Controllers
 {
-    [AdminAuthorize("Pedidos", "PEDIDOS_AUTORIZAR_RECHAZAR")]
+    [AdminAuthorize("Pedidos", "PEDIDOS_AUTORIZAR_RECHAZAR", allowAdministratorBypass: false)]
+    [CommercialAssignmentsRequired]
     public class ManagerOrdersController : Controller
     {
-        private readonly AdminDbService _adminDbService;
+        private readonly ICommercialOrderService _orders;
         private readonly ILogger<ManagerOrdersController> _logger;
 
-        public ManagerOrdersController(AdminDbService adminDbService, ILogger<ManagerOrdersController> logger)
+        public ManagerOrdersController(ICommercialOrderService orders, ILogger<ManagerOrdersController> logger)
         {
-            _adminDbService = adminDbService;
+            _orders = orders;
             _logger = logger;
         }
 
@@ -21,14 +22,17 @@ namespace Proyecto_Final.Controllers
         public async Task<IActionResult> Index(string? buscar)
         {
             ViewBag.Buscar = buscar;
-            var pedidos = await _adminDbService.GetRetainedOrdersAsync(buscar);
+            var pedidos = await _orders.RetainedAsync(buscar, HttpContext.RequestAborted);
             return View(pedidos);
         }
 
         [HttpGet]
         public async Task<IActionResult> Review(int id)
         {
-            var pedido = await _adminDbService.GetOrderDetailAsync(id);
+            (OrderDetailViewModel Order, long Revision)? detail;
+            try { detail = await _orders.DetailsAsync(id, true, HttpContext.RequestAborted); }
+            catch (Microsoft.Data.SqlClient.SqlException error) when (error.Number is 58702 or 58908) { return NotFound(); }
+            var pedido = detail?.Order;
 
             if (pedido == null)
             {
@@ -42,10 +46,13 @@ namespace Proyecto_Final.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            var operationId = Guid.NewGuid();
             var vm = new ManagerOrderReviewViewModel
             {
+                OperationId = operationId,
+                ExpectedRevision = detail!.Value.Revision,
                 Pedido       = pedido,
-                RechazarForm = new ManagerRejectOrderViewModel { PedidoId = id }
+                RechazarForm = new ManagerRejectOrderViewModel { PedidoId = id, OperationId = operationId, ExpectedRevision = detail.Value.Revision }
             };
 
             return View(vm);
@@ -53,9 +60,10 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Approve(int pedidoId)
+        [RequestSizeLimit(128 * 1024)]
+        public async Task<IActionResult> Approve(int pedidoId, Guid operationId, long expectedRevision)
         {
-            if (pedidoId <= 0)
+            if (pedidoId <= 0 || operationId == Guid.Empty || expectedRevision <= 0)
             {
                 TempData["ErrorMessage"] = "La solicitud de aprobación no es válida.";
                 return RedirectToAction(nameof(Index));
@@ -66,12 +74,7 @@ namespace Proyecto_Final.Controllers
 
             try
             {
-                var result = await _adminDbService.ApproveRetainedOrderAsync(pedidoId, usuarioId, usuarioNombre);
-
-                await RegistrarAuditoriaAsync(
-                    "Aprobar pedido retenido",
-                    "Pedidos",
-                    $"{usuarioNombre} aprobó el pedido #{pedidoId}. Factura generada: {result.NumeroFactura}.");
+                var result = await _orders.DecideAsync(pedidoId, operationId, expectedRevision, true, null, HttpContext.RequestAborted);
 
                 TempData["Confirm_PedidoId"]      = result.PedidoId;
                 TempData["Confirm_NumeroFactura"]  = result.NumeroFactura;
@@ -79,7 +82,7 @@ namespace Proyecto_Final.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "No se pudo aprobar el pedido retenido {OrderId}.", pedidoId);
+                _logger.LogWarning("No se pudo aprobar el pedido retenido {OrderId}; código {Code}.", pedidoId, (ex as Microsoft.Data.SqlClient.SqlException)?.Number);
                 TempData["ErrorMessage"] = "No fue posible aprobar el pedido en este momento.";
                 return RedirectToAction(nameof(Review), new { id = pedidoId });
             }
@@ -97,7 +100,7 @@ namespace Proyecto_Final.Controllers
             var vm = new ManagerApproveResultViewModel
             {
                 PedidoId      = pedidoId,
-                Estado        = "Liberado",
+                Estado        = "Facturado",
                 NumeroFactura = numeroFactura
             };
 
@@ -106,14 +109,21 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [RequestSizeLimit(128 * 1024)]
         public async Task<IActionResult> Reject([Bind(Prefix = "RechazarForm")] ManagerRejectOrderViewModel model)
         {
+            if (model.OperationId == Guid.Empty || model.ExpectedRevision <= 0)
+                ModelState.AddModelError(string.Empty, "La revisión no es válida. Volvé a abrir el pedido antes de decidir.");
             if (!ModelState.IsValid)
             {
-                var pedido = await _adminDbService.GetOrderDetailAsync(model.PedidoId);
+                (OrderDetailViewModel Order, long Revision)? detail;
+                try { detail = await _orders.DetailsAsync(model.PedidoId, true, HttpContext.RequestAborted); }
+                catch (Microsoft.Data.SqlClient.SqlException error) when (error.Number is 58702 or 58908) { return NotFound(); }
+                var pedido = detail?.Order;
                 if (pedido == null) return RedirectToAction(nameof(Index));
 
-                var vm = new ManagerOrderReviewViewModel { Pedido = pedido, RechazarForm = model };
+                var vm = new ManagerOrderReviewViewModel { Pedido = pedido, RechazarForm = model,
+                    OperationId = model.OperationId, ExpectedRevision = model.ExpectedRevision };
                 return View("Review", vm);
             }
 
@@ -122,35 +132,19 @@ namespace Proyecto_Final.Controllers
 
             try
             {
-                await _adminDbService.RejectRetainedOrderAsync(
-                    model.PedidoId, model.MotivoRechazo, usuarioId, usuarioNombre);
-
-                await RegistrarAuditoriaAsync(
-                    "Rechazar pedido retenido",
-                    "Pedidos",
-                    $"{usuarioNombre} rechazó el pedido #{model.PedidoId}. Motivo: {model.MotivoRechazo}.");
+                await _orders.DecideAsync(model.PedidoId, model.OperationId, model.ExpectedRevision, false,
+                    model.MotivoRechazo, HttpContext.RequestAborted);
 
                 TempData["SuccessMessage"] = $"Pedido #{model.PedidoId} rechazado correctamente.";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "No se pudo rechazar el pedido retenido {OrderId}.", model.PedidoId);
+                _logger.LogWarning("No se pudo rechazar el pedido retenido {OrderId}; código {Code}.", model.PedidoId, (ex as Microsoft.Data.SqlClient.SqlException)?.Number);
                 TempData["ErrorMessage"] = "No fue posible rechazar el pedido en este momento.";
                 return RedirectToAction(nameof(Review), new { id = model.PedidoId });
             }
         }
 
-        private async Task RegistrarAuditoriaAsync(string accion, string modulo, string descripcion)
-        {
-            await _adminDbService.CreateAuditLogAsync(
-                HttpContext.Session.GetInt32("UserId"),
-                HttpContext.Session.GetString("UserFullName"),
-                HttpContext.Session.GetString("UserEmail"),
-                HttpContext.Session.GetString("UserRole"),
-                accion, modulo, descripcion,
-                HttpContext.Connection.RemoteIpAddress?.ToString(),
-                Request.Headers.UserAgent.ToString());
-        }
     }
 }

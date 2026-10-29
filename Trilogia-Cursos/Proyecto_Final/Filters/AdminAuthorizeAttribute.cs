@@ -7,9 +7,9 @@ namespace Proyecto_Final.Filters
 {
     public class AdminAuthorizeAttribute : TypeFilterAttribute
     {
-        public AdminAuthorizeAttribute(string modulo, string? permisoCodigo = null) : base(typeof(AdminAuthorizeFilter))
+        public AdminAuthorizeAttribute(string modulo, string? permisoCodigo = null, bool allowAdministratorBypass = true) : base(typeof(AdminAuthorizeFilter))
         {
-            Arguments = new object[] { modulo, permisoCodigo ?? string.Empty };
+            Arguments = new object[] { modulo, permisoCodigo ?? string.Empty, allowAdministratorBypass };
         }
     }
 
@@ -18,12 +18,14 @@ namespace Proyecto_Final.Filters
         private readonly string _modulo;
         private readonly string? _permisoCodigo;
         private readonly IRolePermissionService _permissionService;
+        private readonly bool _allowAdministratorBypass;
 
-        public AdminAuthorizeFilter(string modulo, string? permisoCodigo, IRolePermissionService permissionService)
+        public AdminAuthorizeFilter(string modulo, string? permisoCodigo, IRolePermissionService permissionService, bool allowAdministratorBypass = true)
         {
             _modulo = modulo;
             _permisoCodigo = permisoCodigo;
             _permissionService = permissionService;
+            _allowAdministratorBypass = allowAdministratorBypass;
         }
 
         public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
@@ -38,7 +40,7 @@ namespace Proyecto_Final.Filters
                 return;
             }
 
-            if (string.Equals(userRole, "Administrador", StringComparison.OrdinalIgnoreCase))
+            if (_allowAdministratorBypass && string.Equals(userRole, "Administrador", StringComparison.OrdinalIgnoreCase))
             {
                 return;
             }
@@ -49,7 +51,10 @@ namespace Proyecto_Final.Filters
             if (IsOverriddenByActionPolicy(context))
                 return;
 
-            var tienePermiso = string.IsNullOrWhiteSpace(_permisoCodigo)
+            var tienePermiso = !_allowAdministratorBypass
+                ? !string.IsNullOrWhiteSpace(_permisoCodigo)
+                    && (await _permissionService.GetPermissionCodesAsync(userRole)).Contains(_permisoCodigo)
+                : string.IsNullOrWhiteSpace(_permisoCodigo)
                 ? await _permissionService.HasModulePermissionAsync(userRole, _modulo)
                 : await _permissionService.HasCodePermissionAsync(userRole ?? string.Empty, _permisoCodigo);
 

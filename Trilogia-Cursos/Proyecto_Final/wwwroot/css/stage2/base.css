@@ -1,7 +1,7 @@
 *, *::before, *::after { box-sizing: border-box; }
 
 html {
-  min-width: 20rem;
+  min-width: 0;
   scroll-behavior: smooth;
   scroll-padding-top: calc(var(--djj-header-height) + var(--djj-space-4));
 }
@@ -9,7 +9,7 @@ html {
 html[data-djj-scroll-locked] { overflow: hidden; }
 
 body.djj-stage2 {
-  min-width: 20rem;
+  min-width: 0;
   min-height: 100dvh;
   margin: 0;
   overflow-x: clip;

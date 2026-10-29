@@ -1,6 +1,7 @@
 using Microsoft.Data.SqlClient;
 using Proyecto_Final.Models.Admin;
 using System.Data;
+using System.Data.Common;
 
 namespace Proyecto_Final.Services
 {
@@ -132,33 +133,73 @@ namespace Proyecto_Final.Services
 
         // ── CU-173 Promociones vigentes (motor del carrito) ──
         public async Task<List<ActivePromotionViewModel>> GetActivePromotionsAsync(string segmento)
+            => (await GetActivePromotionSnapshotAsync(segmento)).Promotions;
+
+        public sealed record ActivePromotionSnapshot(DateTime EvaluationDate, List<ActivePromotionViewModel> Promotions);
+
+        public async Task<ActivePromotionSnapshot> GetActivePromotionSnapshotAsync(string segmento, CancellationToken cancellationToken = default)
         {
+            if (segmento is not ("Minorista" or "Mayorista"))
+                throw new ArgumentException("El segmento de cliente no está acreditado.", nameof(segmento));
             var lista = new List<ActivePromotionViewModel>();
             await using var connection = new SqlConnection(_connectionString);
-            await using var command = new SqlCommand("dbo.sp_Promociones_Vigentes", connection) { CommandType = CommandType.StoredProcedure };
-            command.Parameters.Add("@SegmentoCliente", SqlDbType.NVarChar, 20).Value = string.IsNullOrWhiteSpace(segmento) ? "Minorista" : segmento;
-            await connection.OpenAsync();
-            await using var reader = await command.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
+            await using var command = CreateActivePromotionCommand(connection, segmento);
+            await connection.OpenAsync(cancellationToken);
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+            if (!await reader.ReadAsync(cancellationToken))
+                throw new InvalidOperationException("No se recibió el día de evaluación de promociones.");
+            var evaluationDate = reader.GetDateTime(reader.GetOrdinal("EvaluationDate"));
+            if (!await reader.NextResultAsync(cancellationToken))
+                throw new InvalidOperationException("No se recibió el conjunto de promociones.");
+            while (await reader.ReadAsync(cancellationToken))
             {
-                lista.Add(new ActivePromotionViewModel
-                {
-                    PromocionId = reader.GetInt32(0),
-                    Nombre = reader.GetString(1),
-                    Tipo = reader.GetString(2),
-                    ProductoId = reader.GetInt32(3),
-                    CantidadMinima = reader.GetInt32(4),
-                    PorcentajeDescuento = reader.IsDBNull(5) ? null : reader.GetDecimal(5),
-                    ProductoRegaloId = reader.IsDBNull(6) ? null : reader.GetInt32(6),
-                    ProductoRegaloNombre = reader.IsDBNull(7) ? null : reader.GetString(7),
-                    ProductoRegaloPrecio = reader.IsDBNull(8) ? 0m : reader.GetDecimal(8),
-                    ProductoRegaloStock = reader.IsDBNull(9) ? 0 : reader.GetInt32(9),
-                    CantidadRegalo = reader.IsDBNull(10) ? null : reader.GetInt32(10),
-                    Prioridad = reader.GetInt32(11)
-                });
+                lista.Add(ReadActivePromotion(reader));
             }
-            return lista;
+            return new(evaluationDate, lista);
         }
+
+        internal static SqlCommand CreateActivePromotionCommand(SqlConnection connection, string segmento)
+        {
+            // Preserve the historical eligibility/gift projection and add original
+            // dates/segment. This is cart presentation, not an issued price quote.
+            var command = new SqlCommand("""
+                DECLARE @Hoy date = CONVERT(date, SYSDATETIME());
+                SELECT @Hoy AS EvaluationDate;
+                SELECT pr.PromocionId, pr.Nombre, pr.Tipo, pr.ProductoId, pr.CantidadMinima,
+                       pr.PorcentajeDescuento, pr.ProductoRegaloId, pg.Nombre AS ProductoRegaloNombre,
+                       pg.Precio AS ProductoRegaloPrecio, pg.Stock AS ProductoRegaloStock,
+                       pr.CantidadRegalo, pr.Prioridad, pr.SegmentoCliente, pr.FechaInicio, pr.FechaFin
+                FROM dbo.Promociones AS pr
+                LEFT JOIN dbo.Productos AS pg ON pg.ProductoId = pr.ProductoRegaloId
+                WHERE pr.Estado = N'Activa' AND @Hoy BETWEEN pr.FechaInicio AND pr.FechaFin
+                  AND (pr.SegmentoCliente = N'Todos' OR pr.SegmentoCliente = @SegmentoCliente)
+                ORDER BY pr.Prioridad DESC, pr.PromocionId;
+                """, connection);
+            command.Parameters.Add("@SegmentoCliente", SqlDbType.NVarChar, 20).Value = segmento;
+            return command;
+        }
+
+        internal static ActivePromotionViewModel ReadActivePromotion(DbDataReader reader) => new()
+        {
+            PromocionId = reader.GetInt32(reader.GetOrdinal("PromocionId")),
+            Nombre = reader.GetString(reader.GetOrdinal("Nombre")),
+            Tipo = reader.GetString(reader.GetOrdinal("Tipo")),
+            ProductoId = reader.GetInt32(reader.GetOrdinal("ProductoId")),
+            CantidadMinima = reader.GetInt32(reader.GetOrdinal("CantidadMinima")),
+            PorcentajeDescuento = Nullable<decimal>(reader, "PorcentajeDescuento"),
+            ProductoRegaloId = Nullable<int>(reader, "ProductoRegaloId"),
+            ProductoRegaloNombre = reader.IsDBNull(reader.GetOrdinal("ProductoRegaloNombre")) ? null : reader.GetString(reader.GetOrdinal("ProductoRegaloNombre")),
+            ProductoRegaloPrecio = Nullable<decimal>(reader, "ProductoRegaloPrecio") ?? 0m,
+            ProductoRegaloStock = Nullable<int>(reader, "ProductoRegaloStock") ?? 0,
+            CantidadRegalo = Nullable<int>(reader, "CantidadRegalo"),
+            Prioridad = reader.GetInt32(reader.GetOrdinal("Prioridad")),
+            SegmentoCliente = reader.GetString(reader.GetOrdinal("SegmentoCliente")),
+            FechaInicio = reader.GetDateTime(reader.GetOrdinal("FechaInicio")),
+            FechaFin = reader.GetDateTime(reader.GetOrdinal("FechaFin"))
+        };
+
+        private static T? Nullable<T>(DbDataReader reader, string name) where T : struct =>
+            reader.IsDBNull(reader.GetOrdinal(name)) ? null : reader.GetFieldValue<T>(reader.GetOrdinal(name));
 
         // ── CU-172 Segmentos de cliente ─────────────────────
         public async Task<List<ClientSegmentViewModel>> GetClientSegmentsAsync(string? buscar)

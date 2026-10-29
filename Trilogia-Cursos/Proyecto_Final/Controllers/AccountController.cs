@@ -1,3 +1,4 @@
+﻿using Proyecto_Final.Services.ChatV2;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Proyecto_Final.Filters;
@@ -11,17 +12,23 @@ namespace Proyecto_Final.Controllers
         private readonly AdminDbService _adminDbService;
         private readonly IWorkspaceResolver _workspaceResolver;
         private readonly ILogger<AccountController> _logger;
+        private readonly IOriginalLoginService _originalLogins;
+        private readonly ChatV2Continuity? _chatContinuity;
 
         public AccountController(
             AccountApiService accountApiService,
             AdminDbService adminDbService,
             IWorkspaceResolver workspaceResolver,
-            ILogger<AccountController> logger)
+            ILogger<AccountController> logger,
+            IOriginalLoginService originalLogins,
+            ChatV2Continuity? chatContinuity = null)
         {
             _accountApiService = accountApiService;
             _adminDbService = adminDbService;
             _workspaceResolver = workspaceResolver;
             _logger = logger;
+            _originalLogins = originalLogins;
+            _chatContinuity = chatContinuity;
         }
 
         [HttpGet]
@@ -58,35 +65,48 @@ namespace Proyecto_Final.Controllers
 
             try
             {
-                var response = await _accountApiService.LoginAsync(model);
+                var nonce = OriginalLoginSession.NewNonce();
+                var binding = OriginalLoginSession.Binding(HttpContext.Session.Id, nonce);
+                var response = await _accountApiService.LoginAsync(model, binding);
 
-                if (response == null || !response.Success)
+                if (response == null || !response.Success || response.UserId is not > 0 || response.ProfileId is not > 0)
                 {
                     ModelState.AddModelError(string.Empty, response?.Message ?? "No fue posible iniciar sesión.");
                     return View(model);
                 }
 
+                if (!Guid.TryParse(response.SecurityStamp, out var stamp) || stamp == Guid.Empty)
+                    throw new InvalidOperationException("No se acreditó el contexto de autenticación.");
+                // A successful account switch retires the previous login before
+                // installing a new server-issued identity; it never adopts it.
+                if (OriginalLoginSession.Read(HttpContext.Session) is { } previous)
+                {
+                    await _originalLogins.RevokeAsync(previous, HttpContext.RequestAborted);
+                    _chatContinuity?.Purge(previous.LoginId);
+                }
+                var login = _accountApiService.RemoteOriginalLogin
+                    ? OriginalLoginService.AcceptRemoteTicket(response, binding)
+                    : await _originalLogins.CreateAsync(response.UserId.Value, response.ProfileId.Value,
+                        stamp, binding, HttpContext.RequestAborted);
+                if (_accountApiService.RemoteOriginalLogin
+                    && await _originalLogins.ValidateAsync(login, HttpContext.RequestAborted) is null)
+                    throw new InvalidOperationException("El login emitido no coincide con el vínculo canónico.");
+                HttpContext.Session.Clear();
                 HttpContext.Session.SetInt32("UserId", response.UserId ?? 0);
+                HttpContext.Session.SetInt32("ProfileId", response.ProfileId!.Value);
                 HttpContext.Session.SetString("UserEmail", response.Email ?? string.Empty);
                 HttpContext.Session.SetString("UserFullName", response.FullName ?? string.Empty);
                 HttpContext.Session.SetString("UserRole", response.Role ?? string.Empty);
                 HttpContext.Session.SetString("SecurityStamp", response.SecurityStamp ?? string.Empty);
-
-                await RegistrarAuditoriaAsync(
-                    response.UserId ?? 0,
-                    response.FullName,
-                    response.Email,
-                    response.Role,
-                    "Login",
-                    "Autenticación",
-                    "El usuario inició sesión correctamente.");
+                OriginalLoginSession.Store(HttpContext.Session, login, nonce);
 
                 TempData["LoginSuccess"] = $"Bienvenido, {response.FullName}.";
                 return await RedirectAfterLoginAsync(returnUrl, response.Role);
             }
             catch (Exception exception)
             {
-                _logger.LogError(exception, "Falló el inicio de sesión mediante el API de autenticación.");
+                _logger.LogError("Falló el inicio de sesión. Tipo {ExceptionType}; código SQL {SqlCode}.",
+                    exception.GetType().Name, (exception as Microsoft.Data.SqlClient.SqlException)?.Number);
                 ModelState.AddModelError(string.Empty, "No fue posible iniciar sesión en este momento. Intentá nuevamente.");
                 return View(model);
             }
@@ -251,21 +271,23 @@ namespace Proyecto_Final.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
-            var usuarioId = HttpContext.Session.GetInt32("UserId");
-            var usuarioNombre = HttpContext.Session.GetString("UserFullName");
-            var usuarioCorreo = HttpContext.Session.GetString("UserEmail");
-            var rol = HttpContext.Session.GetString("UserRole");
-
-            await RegistrarAuditoriaAsync(
-                usuarioId,
-                usuarioNombre,
-                usuarioCorreo,
-                rol,
-                "Logout",
-                "Autenticación",
-                "El usuario cerró sesión correctamente.");
-
-            HttpContext.Session.Clear();
+            try
+            {
+                if (OriginalLoginSession.Read(HttpContext.Session) is { } login)
+                    await _originalLogins.RevokeAsync(login, HttpContext.RequestAborted);
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError("No fue posible acreditar la revocación del login. Tipo {ExceptionType}; código SQL {SqlCode}.",
+                    exception.GetType().Name, (exception as Microsoft.Data.SqlClient.SqlException)?.Number);
+                return StatusCode(StatusCodes.Status503ServiceUnavailable,
+                    "La sesión local se cerró, pero no fue posible confirmar su revocación. Intentá nuevamente más tarde.");
+            }
+            finally
+            {
+                if (OriginalLoginSession.Read(HttpContext.Session) is { } closedLogin) _chatContinuity?.Purge(closedLogin.LoginId);
+                HttpContext.Session.Clear();
+            }
             TempData["SuccessMessage"] = "Sesión cerrada correctamente.";
             return RedirectToAction("Index", "Home");
         }

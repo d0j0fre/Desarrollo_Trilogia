@@ -11,6 +11,7 @@ public class OrderDetailLineViewModel
 
     public int StockActual { get; set; }
     public bool IsCombo { get; set; }
+    public bool CanRequestWarranty { get; set; }
 
 
 }

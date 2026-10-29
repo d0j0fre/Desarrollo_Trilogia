@@ -3,8 +3,7 @@
 @inject IRolePermissionService PermissionService
 @{
     var role = Context.Session.GetString("UserRole");
-    var canViewOrders = string.Equals(role, "Administrador", StringComparison.OrdinalIgnoreCase)
-        || await PermissionService.HasModulePermissionAsync(role, "Pedidos");
+    var canViewOrders = (await PermissionService.GetPermissionCodesAsync(role)).Contains("PEDIDOS_VER");
 }
 @if (canViewOrders)
 {

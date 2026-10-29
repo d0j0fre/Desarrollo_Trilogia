@@ -8,6 +8,10 @@ namespace Proyecto_Final.Models
         public string? FullName { get; set; }
         public string? Email { get; set; }
         public string? Role { get; set; }
+        public int? ProfileId { get; set; }
         public string? SecurityStamp { get; set; }
+        public RemoteOriginalLoginTicket? OriginalLogin { get; set; }
     }
+
+    public sealed record RemoteOriginalLoginTicket(Guid LoginId, DateTime IssuedUtc, DateTime ExpiresUtc);
 }

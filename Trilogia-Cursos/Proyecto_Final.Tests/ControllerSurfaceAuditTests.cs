@@ -13,10 +13,21 @@ public sealed class ControllerSurfaceAuditTests
         var controllers = GetControllers();
         var apiControllers = typeof(Proyecto_FinalAPI.Controllers.AuthController).Assembly
             .GetTypes()
-            .Count(type => IsControllerInNamespace(type, typeof(Proyecto_FinalAPI.Controllers.AuthController).Namespace!));
+            .Where(type => IsControllerInNamespace(type, typeof(Proyecto_FinalAPI.Controllers.AuthController).Namespace!))
+            .ToArray();
 
         Assert.True(controllers.Count >= 57);
-        Assert.Equal(2, apiControllers);
+        Assert.True(apiControllers.Length >= 7);
+        Assert.All(new[]
+        {
+            typeof(Proyecto_FinalAPI.Controllers.AuthController),
+            typeof(Proyecto_FinalAPI.Controllers.ProductsController),
+            typeof(Proyecto_FinalAPI.Controllers.CommercialQuotesController),
+            typeof(Proyecto_FinalAPI.Controllers.ContactNotificationsController),
+            typeof(Proyecto_FinalAPI.Controllers.InvoiceNotificationsController),
+            typeof(Proyecto_FinalAPI.Controllers.DeliveryNotificationsController),
+            typeof(Proyecto_FinalAPI.Controllers.RouteDispatchNotificationsController)
+        }, expected => Assert.Contains(expected, apiControllers));
         Assert.Contains(typeof(BudgetsController), controllers);
         Assert.Contains(typeof(ChatController), controllers);
         Assert.Contains(typeof(PayrollController), controllers);

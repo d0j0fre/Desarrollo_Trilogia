@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Proyecto_Final.Filters;
 using Proyecto_Final.Services;
-using Microsoft.Extensions.Options;
 
 namespace Proyecto_Final.Controllers
 {
@@ -9,14 +8,16 @@ namespace Proyecto_Final.Controllers
     public class BillingController : Controller
     {
         private readonly AdminDbService _adminDbService;
-        private readonly EmailService _emailService;
-        private readonly CompanyOptions _company;
+        private readonly IInvoiceNotificationClient _notifications;
+        private readonly IConfiguration _configuration;
+        private readonly ILogger<BillingController> _logger;
 
-        public BillingController(AdminDbService adminDbService, EmailService emailService, IOptions<CompanyOptions> company)
+        public BillingController(AdminDbService adminDbService, IInvoiceNotificationClient notifications, IConfiguration configuration, ILogger<BillingController> logger)
         {
             _adminDbService = adminDbService;
-            _emailService = emailService;
-            _company = company.Value;
+            _logger = logger;
+            _notifications = notifications;
+            _configuration = configuration;
         }
 
         [HttpGet]
@@ -37,12 +38,37 @@ namespace Proyecto_Final.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            ViewData["MailState"] = "Unavailable";
+            if (_configuration.GetValue<bool>("InvoiceNotifications:Enabled"))
+            {
+                try
+                {
+                    var login = OriginalLoginSession.ValidatedRequest(HttpContext);
+                    var receipt = await _notifications.ReceiptAsync(id, Guid.Empty, HttpContext.RequestAborted);
+                    var unsubmitted = InvoiceNotificationAttempt.Peek(HttpContext.Session, login, id);
+                    // If the unsubmitted UUID reached SQL, the durable receipt takes precedence.
+                    if (unsubmitted == receipt.OperationId)
+                    { InvoiceNotificationAttempt.Confirmed(HttpContext.Session, id); unsubmitted = null; }
+                    if (receipt.State == "None" || unsubmitted.HasValue)
+                    {
+                        ViewData["MailOperation"] = unsubmitted ?? InvoiceNotificationAttempt.ForInvoice(HttpContext.Session, login, id);
+                        ViewData["MailState"] = "Ready";
+                    }
+                    else
+                    {
+                        ViewData["MailOperation"] = receipt.OperationId;
+                        ViewData["MailState"] = receipt.State;
+                    }
+                }
+                catch (Exception e) when (e is InvoiceNotificationTransportException or HttpRequestException or OperationCanceledException or InvalidOperationException)
+                { LogNotification(e); }
+            }
             return View(factura);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [AdminAuthorize("Facturacion", "FACTURACION_GENERAR")]
+        [AdminAuthorize("Facturacion", "FACTURACION_GENERAR", false)]
         public async Task<IActionResult> GenerateFromOrder(int pedidoId)
         {
             if (pedidoId <= 0)
@@ -56,19 +82,26 @@ namespace Proyecto_Final.Controllers
 
             try
             {
-                var result = await _adminDbService.GenerateInvoiceFromOrderAsync(pedidoId, usuarioId, usuarioNombre);
+                var result = await _adminDbService.GenerateInvoiceFromOrderAsync(pedidoId, usuarioId, usuarioNombre, OriginalLoginSession.ValidatedRequest(HttpContext));
 
-                await RegistrarAuditoriaAsync(
-                    "Generar factura",
-                    "Facturacion",
-                    $"Se genero la factura {result.NumeroFactura} para el pedido #{pedidoId}.");
+                // The SQL workflow commits invoice, states and canonical audit together.
 
                 TempData["SuccessMessage"] = $"Factura {result.NumeroFactura} generada correctamente.";
-                await EnviarComprobantePorCorreoAsync(result.FacturaId);
+                if (_configuration.GetValue<bool>("InvoiceNotifications:Enabled"))
+                {
+                    try
+                    {
+                        var receipt = await _notifications.SendAsync(result.FacturaId, Guid.NewGuid(), true, HttpContext.RequestAborted);
+                        TempData["InfoMessage"] = NotificationMessage(receipt.State);
+                    }
+                    catch (Exception e)
+                    { LogNotification(e); TempData["ErrorMessage"] = "La factura está emitida. El correo no quedó confirmado; consulte su estado antes de solicitar otra copia."; }
+                }
                 return RedirectToAction(nameof(Detail), new { id = result.FacturaId });
             }
-            catch (Exception)
+            catch (Exception exception)
             {
+                _logger.LogWarning("Operación rechazada. Tipo {ExceptionType}; código SQL {SqlError}.", exception.GetType().Name, exception is Microsoft.Data.SqlClient.SqlException sql ? sql.Number : (int?)null);
                 TempData["ErrorMessage"] = "No fue posible generar la factura del pedido. Verifique que no este cancelado ni facturado previamente.";
                 return RedirectToAction("Detail", "OrdersAdmin", new { id = pedidoId });
             }
@@ -76,65 +109,60 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [AdminAuthorize("Facturacion", "FACTURACION_GENERAR")]
-        public async Task<IActionResult> ResendEmail(int id)
+        [AdminAuthorize("Facturacion", "FACTURACION_GENERAR", false)]
+        public async Task<IActionResult> ResendEmail(int id, Guid operationId)
         {
-            var enviado = await EnviarComprobantePorCorreoAsync(id);
-
-            TempData[enviado ? "SuccessMessage" : "ErrorMessage"] = enviado
-                ? "Comprobante reenviado correctamente al correo del cliente."
-                : "No fue posible reenviar el comprobante. Intente nuevamente.";
-
+            if (id <= 0 || operationId == Guid.Empty) return BadRequest();
+            var login = OriginalLoginSession.ValidatedRequest(HttpContext);
+            try
+            {
+                if (!InvoiceNotificationAttempt.Matches(HttpContext.Session, login, id, operationId))
+                    _ = await _notifications.ReceiptAsync(id, operationId, HttpContext.RequestAborted);
+                var receipt = await _notifications.SendAsync(id, operationId, false, HttpContext.RequestAborted);
+                InvoiceNotificationAttempt.Confirmed(HttpContext.Session, id);
+                TempData[receipt.State == "SmtpAccepted" ? "SuccessMessage" : "ErrorMessage"] = NotificationMessage(receipt.State);
+            }
+            catch (Exception e) when (e is InvoiceNotificationTransportException or HttpRequestException or OperationCanceledException)
+            {
+                LogNotification(e);
+                TempData["ErrorMessage"] = "El correo no quedó confirmado. Consulte el estado del mismo intento; no solicite otra copia a ciegas.";
+            }
             return RedirectToAction(nameof(Detail), new { id });
         }
 
-        // Envia el comprobante por correo; no interrumpe el flujo si el envio falla (CU-092).
-        private async Task<bool> EnviarComprobantePorCorreoAsync(int facturaId)
+        [HttpPost, ValidateAntiForgeryToken]
+        [AdminAuthorize("Facturacion", "FACTURACION_GENERAR", false)]
+        public async Task<IActionResult> NewEmailAttempt(int id, Guid previousOperationId)
         {
+            if (id <= 0 || previousOperationId == Guid.Empty) return BadRequest();
             try
             {
-                var factura = await _adminDbService.GetInvoiceDetailAsync(facturaId);
-                if (factura == null || string.IsNullOrWhiteSpace(factura.Correo))
-                {
-                    return false;
-                }
-
-                var contenido = EmailTemplateBuilder.BuildInvoiceEmail(
-                    factura.Cliente,
-                    factura.NumeroFactura,
-                    factura.PedidoId,
-                    factura.FechaFactura,
-                    factura.Total,
-                    _company);
-
-                _emailService.SendEmail(factura.Correo, $"Comprobante {factura.NumeroFactura}", contenido);
-
-                await RegistrarAuditoriaAsync(
-                    "Enviar comprobante por correo",
-                    "Facturacion",
-                    $"Se envio el comprobante {factura.NumeroFactura} al correo {factura.Correo}.");
-
-                return true;
+                var receipt = await _notifications.ReceiptAsync(id, Guid.Empty, HttpContext.RequestAborted);
+                if (receipt.OperationId != previousOperationId || receipt.State != "SmtpAccepted") return Conflict();
+                var login = OriginalLoginSession.ValidatedRequest(HttpContext);
+                if (InvoiceNotificationAttempt.Matches(HttpContext.Session, login, id, receipt.OperationId))
+                    InvoiceNotificationAttempt.Confirmed(HttpContext.Session, id);
+                // Double-clicks prepare the same unsubmitted UUID. This endpoint never sends mail.
+                _ = InvoiceNotificationAttempt.ForInvoice(HttpContext.Session, login, id);
             }
-            catch (Exception)
+            catch (Exception e) when (e is InvoiceNotificationTransportException or HttpRequestException or OperationCanceledException or InvalidOperationException)
             {
-                TempData["ErrorMessage"] = "La factura se genero correctamente, pero no fue posible enviar el comprobante por correo.";
-                return false;
+                LogNotification(e);
+                TempData["ErrorMessage"] = "No fue posible preparar otra copia. Verifique el estado del envío anterior.";
             }
+            return RedirectToAction(nameof(Detail), new { id });
         }
 
-        private async Task RegistrarAuditoriaAsync(string accion, string modulo, string descripcion)
+        private void LogNotification(Exception e) => _logger.LogWarning("Invoice notification unconfirmed. Type {Type}; status {Status}.",
+            e.GetType().Name, (e as InvoiceNotificationTransportException)?.Status);
+
+        private static string NotificationMessage(string state) => state switch
         {
-            await _adminDbService.CreateAuditLogAsync(
-                HttpContext.Session.GetInt32("UserId"),
-                HttpContext.Session.GetString("UserFullName"),
-                HttpContext.Session.GetString("UserEmail"),
-                HttpContext.Session.GetString("UserRole"),
-                accion,
-                modulo,
-                descripcion,
-                HttpContext.Connection.RemoteIpAddress?.ToString(),
-                Request.Headers.UserAgent.ToString());
-        }
+            "SmtpAccepted" => "El servidor de correo aceptó el comprobante. Esto no acredita su entrega al buzón.",
+            "AlreadyRequested" => "Ya existe una solicitud inicial para esta factura. No se envió otra copia.",
+            "Pending" => "Solicitud registrada. Continúe con el mismo intento para enviar el comprobante.",
+            "Sending" => "Envío en curso. Consulte su estado antes de solicitar otra copia.",
+            _ => "Resultado de correo desconocido. No se reintentará automáticamente para evitar duplicados."
+        };
     }
 }

@@ -1,9 +1,8 @@
 @using Microsoft.AspNetCore.Http
-@inject IRolePermissionService PermissionService
+@inject IRolePermissionService DocumentPermissions
 @{
-    var role = Context.Session.GetString("UserRole") ?? string.Empty;
-    var admin = string.Equals(role, "Administrador", StringComparison.OrdinalIgnoreCase);
-    var canView = admin || await PermissionService.HasCodePermissionAsync(role, "DOCUMENTOS_VER");
+    var canView = ViewData["DocumentAccessScope"] is true;
+    var canDelegate = (await DocumentPermissions.GetPermissionCodesAsync(Context.Session.GetString("UserRole") ?? "")).Contains("DOCUMENTOS_DELEGAR");
     var action = ViewContext.RouteData.Values["action"]?.ToString();
 }
 @if (canView)
@@ -11,5 +10,6 @@
     <nav class="djj-domain-nav" aria-label="Gestión documental">
         <a asp-controller="Documents" asp-action="Index" aria-current="@(action == "Index" ? "page" : null)">Documentos</a>
         <a asp-controller="Documents" asp-action="Alerts" aria-current="@(action == "Alerts" ? "page" : null)">Alertas de vencimiento</a>
+        @if (canDelegate) { <a asp-controller="DocumentDelegations" asp-action="Index" aria-current="@(ViewContext.RouteData.Values["controller"]?.ToString() == "DocumentDelegations" ? "page" : null)">Autorizaciones</a> }
     </nav>
 }

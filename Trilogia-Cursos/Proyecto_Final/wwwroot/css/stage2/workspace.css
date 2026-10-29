@@ -355,6 +355,31 @@
 .djj-logistics-center { text-align: center; }
 .djj-logistics-strong { font-weight: var(--djj-weight-bold); }
 .djj-logistics-success { color: var(--djj-color-success); }
+
+/* Durable dispatch notices: explicit status lookup and manual continuation. */
+.djj-route-dispatch-notifications { min-width: 0; }
+.djj-route-dispatch-notification {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--djj-space-4);
+  min-width: 0;
+  padding: var(--djj-space-4);
+  border: 1px solid var(--djj-color-border);
+  border-radius: var(--djj-radius-md);
+  background: var(--djj-color-surface);
+}
+.djj-route-dispatch-notification__title { margin: 0; font-size: var(--djj-font-size-base); }
+.djj-route-dispatch-notification__status { margin: var(--djj-space-2) 0 0; overflow-wrap: anywhere; }
+.djj-route-dispatch-notification__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--djj-space-2); }
+.djj-route-dispatch-notification__actions .djj-button { min-height: var(--djj-button-height); }
+.djj-route-dispatch-toast { color: var(--djj-color-text); }
+.djj-route-dispatch-toast[hidden] { display: none; }
+@media (max-width: 35.99rem) {
+  .djj-route-dispatch-notification { grid-template-columns: minmax(0, 1fr); align-items: stretch; }
+  .djj-route-dispatch-notification__actions { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .djj-route-dispatch-notification__actions .djj-button { width: 100%; }
+}
 .djj-logistics-danger { color: var(--djj-color-danger); }
 .djj-logistics-between { justify-content: space-between; }
 .djj-logistics .djj-table { min-width: 44rem; }

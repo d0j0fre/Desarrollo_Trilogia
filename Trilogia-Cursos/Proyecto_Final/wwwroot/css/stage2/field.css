@@ -111,6 +111,13 @@
 .djj-field-delivery-details a { color: var(--djj-color-primary); }
 .djj-field-delivery-actions { display: grid; grid-template-columns: 1fr; gap: var(--djj-space-2); }
 .djj-field-inline-form { display: grid; gap: var(--djj-space-2); border-top: 1px solid var(--djj-color-border); padding-top: var(--djj-space-3); }
+.djj-field-delivery-notice { display: grid; gap: var(--djj-space-2); border-top: 1px solid var(--djj-color-border); padding-top: var(--djj-space-3); }
+.djj-field-delivery-notice h4,
+.djj-field-delivery-notice p { margin: 0; }
+.djj-field-delivery-notice [data-delivery-receipt],
+.djj-field-delivery-notice [data-delivery-send] { min-height: 2.75rem; }
+.djj-field-notice-status { color: var(--djj-color-text-secondary); font-size: var(--djj-font-size-sm); line-height: 1.5; }
+.djj-field-delivery-notice [hidden] { display: none; }
 .djj-field-helper { display: flex; align-items: flex-start; gap: var(--djj-space-2); margin: 0; color: var(--djj-color-text-secondary); font-size: var(--djj-font-size-sm); }
 .djj-field-helper--danger { color: var(--djj-color-danger); }
 .djj-field-helper--success { color: var(--djj-color-success); }

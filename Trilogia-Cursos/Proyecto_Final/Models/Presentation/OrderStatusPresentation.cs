@@ -8,7 +8,7 @@ public static class OrderStatusPresentation
         "Retenido" => "warning",
         "Rechazado" => "danger",
         "Liberado" or "Aprobado" or "Entregado" => "success",
-        "Pendiente" or "EnProceso" => "info",
+        "Pendiente" or "EnProceso" or "Facturado" => "info",
         _ => "neutral"
     };
 }

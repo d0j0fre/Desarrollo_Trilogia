@@ -1,13 +1,10 @@
 @model Proyecto_Final.Models.Admin.DocumentAlertsIndexViewModel
 @using Microsoft.AspNetCore.Http
 @using Proyecto_Final.Models.Presentation
-@inject IRolePermissionService PermissionService
 @{
     Layout = "_WorkspaceLayout"; ViewData["Title"] = "Alertas documentales";
-    var role = Context.Session.GetString("UserRole") ?? string.Empty;
-    var admin = string.Equals(role, "Administrador", StringComparison.OrdinalIgnoreCase);
-    var canGenerate = admin || await PermissionService.HasCodePermissionAsync(role, "DOCUMENTOS_ALERTAS_GENERAR");
-    var canHandle = admin || await PermissionService.HasCodePermissionAsync(role, "DOCUMENTOS_ALERTAS_ATENDER");
+    var canGenerate = ViewData["DocumentAccessScope"] is true;
+    var canHandle = ViewData["DocumentAccessScope"] is true;
 }
 <div class="djj-documents">
 <header class="djj-page-header"><div class="djj-page-header__copy"><span class="djj-page-header__eyebrow">Gestión documental</span><h1>Alertas de vencimiento</h1><p>Vencimientos y responsables según la fecha de negocio de Costa Rica.</p></div>

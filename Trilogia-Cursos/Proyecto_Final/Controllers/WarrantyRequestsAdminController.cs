@@ -5,7 +5,7 @@ using Proyecto_Final.Services;
 
 namespace Proyecto_Final.Controllers.Admin
 {
-    [AdminAuthorize("Garantias", "GARANTIAS_GESTIONAR")]
+    [AdminAuthorize("Garantias", "GARANTIAS_GESTIONAR", false)]
     public sealed class WarrantyRequestsAdminController : Controller
     {
         private static readonly HashSet<string> AllowedStatuses = new(StringComparer.OrdinalIgnoreCase)
@@ -49,13 +49,16 @@ namespace Proyecto_Final.Controllers.Admin
 
             try
             {
+                if (!Guid.TryParse(HttpContext.Session.GetString("SecurityStamp"), out var stamp) || stamp == Guid.Empty)
+                    return Unauthorized();
                 var userId = HttpContext.Session.GetInt32("UserId") ?? 0;
                 await _adminDbService.UpdateWarrantyStatusAsync(
                     garantiaId,
                     estado,
                     resolucion,
                     userId,
-                    HttpContext.Session.GetString("UserFullName") ?? "Administrador");
+                    HttpContext.Session.GetString("UserFullName") ?? string.Empty,
+                    OriginalLoginSession.ValidatedRequest(HttpContext));
                 TempData["SuccessMessage"] = "La garantía se actualizó correctamente.";
             }
             catch (SqlException exception) when (exception.Number >= 50000)

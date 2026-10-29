@@ -1,4 +1,4 @@
-using System.Data;
+﻿using System.Data;
 using Microsoft.Data.SqlClient;
 using Proyecto_Final.Models.Admin;
 
@@ -97,7 +97,45 @@ public sealed class InventoryIntelligenceDbService : IInventoryIntelligenceServi
         InventoryIntelligenceViewModel model,
         CancellationToken cancellationToken)
     {
-        await using var command = Procedure("dbo.sp_Admin_GetSeasonalSalesTrend", connection);
+        await using var command = new SqlCommand("""
+                SET NOCOUNT ON;
+                IF @AnioInicio NOT BETWEEN 2000 AND 2100 OR @AnioFin NOT BETWEEN 2000 AND 2100
+                   OR @AnioInicio > @AnioFin OR @AnioFin - @AnioInicio > 9
+                    THROW 54542, N'El período estacional no es válido.', 1;
+
+                ;WITH Months AS
+                (
+                    SELECT number AS NumeroMes,
+                           CHOOSE(number, N'Enero', N'Febrero', N'Marzo', N'Abril', N'Mayo', N'Junio',
+                                  N'Julio', N'Agosto', N'Septiembre', N'Octubre', N'Noviembre', N'Diciembre') AS NombreMes
+                    FROM (VALUES (1),(2),(3),(4),(5),(6),(7),(8),(9),(10),(11),(12)) valuesTable(number)
+                ), Sales AS
+                (
+                    SELECT MONTH(orders.FechaPedido) AS NumeroMes,
+                           COALESCE(amount.Neto,CONVERT(DECIMAL(18,2), detail.Cantidad * detail.PrecioUnitario)) AS Total,
+                           detail.Cantidad AS Units
+                    FROM dbo.PedidoDetalle detail
+                    LEFT JOIN dbo.Stage2OrderAmountLines amount ON amount.PedidoId=detail.PedidoId AND amount.LineKind=N'Producto' AND amount.LineId=detail.PedidoDetalleId
+                    INNER JOIN dbo.Pedidos orders ON orders.PedidoId = detail.PedidoId
+                    WHERE YEAR(orders.FechaPedido) BETWEEN @AnioInicio AND @AnioFin
+                      AND orders.Estado NOT IN (N'Cancelado', N'Rechazado')
+                      AND detail.PedidoComboId IS NULL
+                    UNION ALL
+                    SELECT MONTH(orders.FechaPedido), combo.Subtotal, combo.Cantidad
+                    FROM dbo.PedidoCombos combo
+                    INNER JOIN dbo.Pedidos orders ON orders.PedidoId = combo.PedidoId
+                    WHERE YEAR(orders.FechaPedido) BETWEEN @AnioInicio AND @AnioFin
+                      AND orders.Estado NOT IN (N'Cancelado', N'Rechazado')
+                )
+                SELECT months.NumeroMes,
+                       months.NombreMes,
+                       CONVERT(DECIMAL(18,2), SUM(ISNULL(sales.Total, 0))) AS TotalVendido,
+                       CONVERT(INT, SUM(ISNULL(sales.Units, 0))) AS UnidadesVendidas
+                FROM Months months
+                LEFT JOIN Sales sales ON sales.NumeroMes = months.NumeroMes
+                GROUP BY months.NumeroMes, months.NombreMes
+                ORDER BY months.NumeroMes;
+            """, connection);
         command.Parameters.Add("@AnioInicio", SqlDbType.Int).Value = model.Filter.StartYear;
         command.Parameters.Add("@AnioFin", SqlDbType.Int).Value = model.Filter.EndYear;
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);

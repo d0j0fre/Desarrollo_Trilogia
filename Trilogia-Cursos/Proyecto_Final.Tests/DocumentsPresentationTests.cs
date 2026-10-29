@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
 using Proyecto_Final.Controllers;
@@ -84,22 +84,26 @@ public sealed class DocumentsPresentationTests
     }
 
     [Fact]
-    public void ManagementControlsUseTheSamePermissionCodesAsEndpoints()
+    public void PerOperationControlsCannotRestoreTheFormerAdministratorBypass()
     {
         Assert.Contains("if (canManage)", Read("Views/Documents/Index.cshtml"));
-        Assert.Contains("if (canManage)", Read("Views/Documents/Details.cshtml"));
+        var details = Read("Views/Documents/Details.cshtml");
+        Assert.Contains("Model.Document.CanEdit", details);
+        Assert.Contains("Model.Document.CanVersion", details);
+        Assert.Contains("Model.Document.CanDownload", details);
+        Assert.Contains("if (canEdit)", details);
+        Assert.Contains("if (canVersion)", details);
+        Assert.Contains("canDownload && DocumentPresentation.ShowDownload", details);
         Assert.Contains("if (canGenerate)", Read("Views/Documents/Alerts.cshtml"));
         Assert.Contains("canHandle && alert.Status == \"Activa\"", Read("Views/Documents/Alerts.cshtml"));
-        AssertPolicy("Create", "DOCUMENTOS_GESTIONAR");
-        AssertPolicy("Edit", "DOCUMENTOS_GESTIONAR");
-        AssertPolicy("ReplaceFile", "DOCUMENTOS_GESTIONAR");
-        AssertPolicy("SetActive", "DOCUMENTOS_GESTIONAR");
-        AssertPolicy("GenerateAlerts", "DOCUMENTOS_ALERTAS_GENERAR");
-        AssertPolicy("MarkAlertHandled", "DOCUMENTOS_ALERTAS_ATENDER");
-        var controllerPolicy = typeof(DocumentsController).GetCustomAttribute<AdminAuthorizeAttribute>()!;
-        Assert.Equal("DOCUMENTOS_VER", controllerPolicy.Arguments![1]);
-        Assert.Contains("DOCUMENTOS_VER", Read("Views/Shared/_DocumentsNavigation.cshtml"));
-        Assert.Contains("var canDocuments = Can(\"DOCUMENTOS_VER\")", Read("Views/Shared/_WorkspaceLayout.cshtml"));
+        Assert.NotNull(typeof(DocumentsController).GetCustomAttribute<SessionAuthorizeAttribute>());
+        Assert.NotNull(typeof(DocumentsController).GetCustomAttribute<DocumentAccessExceptionFilterAttribute>());
+        Assert.Null(typeof(DocumentsController).GetCustomAttribute<AdminAuthorizeAttribute>());
+        foreach (var path in new[] { "Views/Documents/Index.cshtml", "Views/Documents/Details.cshtml", "Views/Documents/Alerts.cshtml", "Views/Shared/_DocumentsNavigation.cshtml" })
+        {
+            Assert.DoesNotContain("DocumentOwnerScope", Read(path));
+            Assert.DoesNotContain("Administrador", Read(path));
+        }
     }
 
     [Fact]
@@ -116,15 +120,19 @@ public sealed class DocumentsPresentationTests
         Assert.Contains("id=\"replacement-file\"", details); Assert.Contains("name=\"file\"", details);
     }
 
-    private static void AssertPolicy(string action, string code)
+    [Fact]
+    public void EveryDocumentMutationRetainsAntiforgeryWithoutRoleBypass()
     {
-        foreach (var method in typeof(DocumentsController).GetMethods().Where(m => m.Name == action))
+        var posts = typeof(DocumentsController).GetMethods()
+            .Where(method => method.GetCustomAttribute<HttpPostAttribute>() is not null).ToArray();
+        Assert.Equal(6, posts.Length);
+        foreach (var method in posts)
         {
-            Assert.Contains(method.GetCustomAttributes<AdminAuthorizeAttribute>(), p => Equals(p.Arguments![1], code));
-            if (method.GetCustomAttribute<HttpPostAttribute>() is not null)
-                Assert.NotNull(method.GetCustomAttribute<ValidateAntiForgeryTokenAttribute>());
+            Assert.NotNull(method.GetCustomAttribute<ValidateAntiForgeryTokenAttribute>());
+            Assert.Empty(method.GetCustomAttributes<AdminAuthorizeAttribute>());
         }
     }
+
     private static string Read(string path)
     {
         var root = new DirectoryInfo(AppContext.BaseDirectory);

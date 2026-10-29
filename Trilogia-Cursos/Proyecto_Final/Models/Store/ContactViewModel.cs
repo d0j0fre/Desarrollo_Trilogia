@@ -10,6 +10,7 @@ namespace Proyecto_Final.Models.Store
 
         [Required(ErrorMessage = "El correo es obligatorio.")]
         [EmailAddress(ErrorMessage = "Ingresa un correo válido.")]
+        [StringLength(150, ErrorMessage = "El correo no puede superar los 150 caracteres.")]
         public string Correo { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "El asunto es obligatorio.")]

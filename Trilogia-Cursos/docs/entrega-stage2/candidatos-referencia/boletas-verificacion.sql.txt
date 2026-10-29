@@ -1,0 +1,127 @@
+-- PRIVATE exact metadata verifier. The expected manifest must be independently reviewed and pinned outside SQL.
+-- SQLCMD replacements are data: ExpectedManifestUtf16Hex must contain HEX ONLY, validated by the caller BEFORE SQL.
+-- Never copy a captured hash into the trusted catalog automatically. No business procedure or DML executes.
+SET NOCOUNT ON; SET XACT_ABORT ON;
+DECLARE @RunId uniqueidentifier=TRY_CONVERT(uniqueidentifier,SESSION_CONTEXT(N'JJ.Private.Candidate.RunId'));
+DECLARE @Authority sysname=N'$(AuthorityUser)',@App sysname=N'$(AppUser)';
+IF @RunId IS NULL OR NOT EXISTS(SELECT 1 FROM sys.extended_properties WHERE class=0 AND name=N'JJ.Private.RunId' AND TRY_CONVERT(uniqueidentifier,value)=@RunId)
+ OR DB_NAME() IN(N'DistribuidoraJJ_DB',N'master',N'model',N'msdb',N'tempdb') THROW 59610,N'Private target ownership unaccredited.',1;
+IF @Authority=@App OR @Authority IN(N'dbo',N'guest',N'public') OR @App IN(N'dbo',N'guest',N'public')
+ OR @Authority LIKE N'%$(%' OR @App LIKE N'%$(%'
+ OR NOT EXISTS(SELECT 1 FROM sys.database_principals WHERE name=@Authority AND type IN('S','U') AND principal_id>4)
+ OR NOT EXISTS(SELECT 1 FROM sys.database_principals WHERE name=@App AND type IN('S','U') AND principal_id>4)
+ THROW 59610,N'Restricted identities unaccredited.',1;
+IF SCHEMA_ID(N'PaySlipNotifications') IS NULL OR OBJECT_ID(N'dbo.tr_PaySlipNotifications_BlockLegacyWrites',N'TR') IS NULL
+ THROW 59610,N'Candidate schema unavailable.',1;
+DECLARE @Owned table(ObjectId int NOT NULL PRIMARY KEY);
+INSERT @Owned SELECT object_id FROM sys.objects WHERE schema_id=SCHEMA_ID(N'PaySlipNotifications')
+ UNION SELECT OBJECT_ID(N'dbo.tr_PaySlipNotifications_BlockLegacyWrites');
+DECLARE @Canonical table(ObjectId int NOT NULL PRIMARY KEY);
+INSERT @Canonical SELECT OBJECT_ID(Name) FROM (VALUES(N'dbo.sp_Stage2_RequireOriginalLogin'),(N'dbo.tr_Stage2_ProfileGrants_RevokeSessions'),(N'dbo.tr_Stage2_Permissions_RevokeSessions'),(N'dbo.tr_Stage2_Profiles_RevokeSessions')) x(Name);
+-- SQL Server does not grant VIEW DEFINITION on a DML trigger as an object.
+-- The authority may inspect the three trigger parent tables, without SELECT.
+DECLARE @CanonicalMetadataParents table(ObjectId int NOT NULL PRIMARY KEY);
+INSERT @CanonicalMetadataParents SELECT OBJECT_ID(Name) FROM (VALUES(N'dbo.PerfilPermisos'),(N'dbo.Permisos'),(N'dbo.Perfiles'),(N'dbo.PlanillaBoletaEnvios')) x(Name);
+-- Metadata-only effective checks under the two actual database users. No DML or product procedure executes.
+DECLARE @AuthorityEffective nvarchar(max),@AppEffective nvarchar(max),@Probe nvarchar(max);
+DECLARE @ProbeBody nvarchar(max)=N'
+BEGIN TRY
+ EXECUTE AS USER = __USER__;
+ SET @Result=(SELECT ScopeName,Securable,PermissionName,HAS_PERMS_BY_NAME(Securable,ScopeName,PermissionName) AS Allowed
+ FROM (VALUES
+ (N''DATABASE'',DB_NAME(),N''CONTROL''),(N''DATABASE'',DB_NAME(),N''ALTER''),(N''DATABASE'',DB_NAME(),N''CREATE TABLE''),(N''DATABASE'',DB_NAME(),N''CREATE PROCEDURE''),(N''DATABASE'',DB_NAME(),N''CREATE USER''),
+ (N''OBJECT'',N''PaySlipNotifications.Request'',N''EXECUTE''),(N''OBJECT'',N''PaySlipNotifications.Claim'',N''EXECUTE''),(N''OBJECT'',N''PaySlipNotifications.Complete'',N''EXECUTE''),(N''OBJECT'',N''PaySlipNotifications.Receipt'',N''EXECUTE''),
+ (N''OBJECT'',N''PaySlipNotifications.RequireAccess'',N''EXECUTE''),(N''OBJECT'',N''PaySlipNotifications.Snapshot'',N''EXECUTE''),
+ (N''OBJECT'',N''PaySlipNotifications.Requests'',N''SELECT''),(N''OBJECT'',N''PaySlipNotifications.Requests'',N''INSERT''),(N''OBJECT'',N''PaySlipNotifications.Requests'',N''UPDATE''),(N''OBJECT'',N''PaySlipNotifications.Requests'',N''DELETE''),
+ (N''OBJECT'',N''PaySlipNotifications.Attempts'',N''SELECT''),(N''OBJECT'',N''PaySlipNotifications.Attempts'',N''INSERT''),(N''OBJECT'',N''PaySlipNotifications.Attempts'',N''UPDATE''),(N''OBJECT'',N''PaySlipNotifications.Attempts'',N''DELETE''),
+ (N''OBJECT'',N''PaySlipNotifications.Events'',N''INSERT''),(N''OBJECT'',N''PaySlipNotifications.Artifact'',N''UPDATE''),
+ (N''OBJECT'',N''dbo.sp_PaySlip_PrepararEnvio'',N''EXECUTE''),(N''OBJECT'',N''dbo.sp_PaySlip_CompletarEnvio'',N''EXECUTE''),
+ (N''OBJECT'',N''dbo.PlanillaBoletaEnvios'',N''INSERT''),(N''OBJECT'',N''dbo.PlanillaBoletaEnvios'',N''UPDATE''),(N''OBJECT'',N''dbo.PlanillaBoletaEnvios'',N''DELETE'')
+ ) p(ScopeName,Securable,PermissionName) ORDER BY ScopeName,Securable,PermissionName FOR JSON PATH,INCLUDE_NULL_VALUES);
+ REVERT;
+END TRY BEGIN CATCH
+ IF USER_NAME()<>@Verifier REVERT;
+ THROW;
+END CATCH;';
+SET @Probe=REPLACE(@ProbeBody,N'__USER__',QUOTENAME(@Authority,''''));
+DECLARE @Verifier sysname=USER_NAME();
+EXEC sys.sp_executesql @Probe,N'@Result nvarchar(max) OUTPUT,@Verifier sysname',@AuthorityEffective OUTPUT,@Verifier;
+SET @Probe=REPLACE(@ProbeBody,N'__USER__',QUOTENAME(@App,''''));
+EXEC sys.sp_executesql @Probe,N'@Result nvarchar(max) OUTPUT,@Verifier sysname',@AppEffective OUTPUT,@Verifier;
+IF EXISTS(SELECT 1 FROM OPENJSON(@AuthorityEffective) WITH(ScopeName nvarchar(20),Securable nvarchar(256),PermissionName nvarchar(100),Allowed int)
+ WHERE Allowed IS NULL OR Allowed<>CASE WHEN ScopeName=N'OBJECT' AND Securable IN(N'PaySlipNotifications.Request',N'PaySlipNotifications.Claim',N'PaySlipNotifications.Complete',N'PaySlipNotifications.Receipt') AND PermissionName=N'EXECUTE' THEN 1 ELSE 0 END)
+ THROW 59610,N'Authority effective boundary differs.',1;
+IF EXISTS(SELECT 1 FROM OPENJSON(@AppEffective) WITH(ScopeName nvarchar(20),Securable nvarchar(256),PermissionName nvarchar(100),Allowed int)
+ WHERE Allowed IS NULL OR Allowed<>0) THROW 59610,N'APP effective boundary differs.',1;
+IF EXISTS(SELECT 1 FROM sys.database_role_members WHERE member_principal_id IN(USER_ID(@Authority),USER_ID(@App)))
+ THROW 59610,N'Restricted identities must not inherit database roles.',1;
+IF EXISTS(SELECT 1 FROM sys.database_permissions WHERE grantee_principal_id=USER_ID(N'public') AND permission_name=N'IMPERSONATE' AND state IN('G','W'))
+ THROW 59610,N'Public impersonation is not allowed.',1;
+-- The dedicated authority has a closed direct-grant allowlist. APP's existing
+-- unrelated permissions are inventoried in the manifest rather than removed.
+IF EXISTS(SELECT 1 FROM sys.database_permissions p WHERE p.grantee_principal_id=USER_ID(@Authority)
+ AND (p.state='W' OR (p.state='G' AND NOT (
+  (p.class=0 AND p.permission_name=N'CONNECT') OR
+  (p.class=1 AND p.minor_id=0 AND p.permission_name=N'EXECUTE'
+   AND p.major_id IN(OBJECT_ID(N'PaySlipNotifications.Request'),OBJECT_ID(N'PaySlipNotifications.Claim'),OBJECT_ID(N'PaySlipNotifications.Complete'),OBJECT_ID(N'PaySlipNotifications.Receipt'))) OR
+  (p.class=1 AND p.minor_id=0 AND p.permission_name=N'VIEW DEFINITION'
+   AND p.major_id IN(SELECT ObjectId FROM @Canonical UNION SELECT ObjectId FROM @CanonicalMetadataParents))))))
+ THROW 59610,N'Authority has an unapproved direct grant.',1;
+DECLARE @Actual nvarchar(max)=(SELECT
+ JSON_QUERY((SELECT name,USER_NAME(principal_id) AS OwnerName FROM sys.schemas WHERE name=N'PaySlipNotifications' ORDER BY name FOR JSON PATH,INCLUDE_NULL_VALUES)) AS Schemas,
+ JSON_QUERY((SELECT name,type_desc,authentication_type_desc,default_schema_name,CONVERT(varchar(172),sid,1) AS Sid FROM sys.database_principals WHERE name IN(@Authority,@App) ORDER BY name FOR JSON PATH,INCLUDE_NULL_VALUES)) AS Principals,
+ JSON_QUERY((SELECT OBJECT_SCHEMA_NAME(o.object_id) AS SchemaName,o.name,o.type,USER_NAME(o.principal_id) AS OwnerName,o.is_ms_shipped,OBJECT_SCHEMA_NAME(o.parent_object_id) AS ParentSchema,OBJECT_NAME(o.parent_object_id) AS ParentName FROM sys.objects o JOIN @Owned x ON x.ObjectId=o.object_id ORDER BY SchemaName,o.type,o.name FOR JSON PATH,INCLUDE_NULL_VALUES)) AS Objects,
+ JSON_QUERY((SELECT OBJECT_SCHEMA_NAME(m.object_id) AS SchemaName,OBJECT_NAME(m.object_id) AS Name,m.uses_ansi_nulls,m.uses_quoted_identifier,m.is_schema_bound,m.execute_as_principal_id,CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),m.definition)),2) AS DefinitionSha256 FROM sys.sql_modules m WHERE m.object_id IN(SELECT ObjectId FROM @Owned UNION SELECT ObjectId FROM @Canonical) ORDER BY SchemaName,Name FOR JSON PATH,INCLUDE_NULL_VALUES)) AS Modules,
+ JSON_QUERY((SELECT OBJECT_SCHEMA_NAME(p.object_id) AS SchemaName,OBJECT_NAME(p.object_id) AS Name,p.parameter_id,p.name AS ParameterName,TYPE_NAME(p.user_type_id) AS SqlType,p.max_length,p.precision,p.scale,p.is_output,p.is_readonly FROM sys.parameters p JOIN @Owned x ON x.ObjectId=p.object_id ORDER BY SchemaName,Name,p.parameter_id FOR JSON PATH,INCLUDE_NULL_VALUES)) AS Parameters,
+ JSON_QUERY((SELECT OBJECT_SCHEMA_NAME(c.object_id) AS SchemaName,OBJECT_NAME(c.object_id) AS Name,c.column_id,c.name AS ColumnName,TYPE_NAME(c.user_type_id) AS SqlType,c.max_length,c.precision,c.scale,c.is_nullable,c.is_identity,c.is_computed,c.collation_name FROM sys.columns c JOIN @Owned x ON x.ObjectId=c.object_id ORDER BY SchemaName,Name,c.column_id FOR JSON PATH,INCLUDE_NULL_VALUES)) AS Columns,
+ JSON_QUERY((SELECT OBJECT_SCHEMA_NAME(c.parent_object_id) AS SchemaName,OBJECT_NAME(c.parent_object_id) AS Name,c.name AS ConstraintName,c.definition,c.is_disabled,c.is_not_trusted,c.is_not_for_replication FROM sys.check_constraints c JOIN @Owned x ON x.ObjectId=c.parent_object_id ORDER BY SchemaName,Name,c.name FOR JSON PATH,INCLUDE_NULL_VALUES)) AS Checks,
+ JSON_QUERY((SELECT OBJECT_SCHEMA_NAME(c.parent_object_id) AS SchemaName,OBJECT_NAME(c.parent_object_id) AS Name,COL_NAME(c.parent_object_id,c.parent_column_id) AS ColumnName,c.definition FROM sys.default_constraints c JOIN @Owned x ON x.ObjectId=c.parent_object_id ORDER BY SchemaName,Name,ColumnName FOR JSON PATH,INCLUDE_NULL_VALUES)) AS Defaults,
+ JSON_QUERY((SELECT OBJECT_SCHEMA_NAME(f.parent_object_id) AS SchemaName,OBJECT_NAME(f.parent_object_id) AS Name,OBJECT_SCHEMA_NAME(f.referenced_object_id) AS RefSchema,OBJECT_NAME(f.referenced_object_id) AS RefName,f.delete_referential_action,f.update_referential_action,f.is_disabled,f.is_not_trusted,f.is_not_for_replication,
+ JSON_QUERY((SELECT fc.constraint_column_id,COL_NAME(fc.parent_object_id,fc.parent_column_id) AS ParentColumn,COL_NAME(fc.referenced_object_id,fc.referenced_column_id) AS RefColumn FROM sys.foreign_key_columns fc WHERE fc.constraint_object_id=f.object_id ORDER BY fc.constraint_column_id FOR JSON PATH)) AS Columns FROM sys.foreign_keys f JOIN @Owned x ON x.ObjectId=f.parent_object_id ORDER BY SchemaName,Name,RefSchema,RefName,f.object_id FOR JSON PATH,INCLUDE_NULL_VALUES)) AS ForeignKeys,
+ JSON_QUERY((SELECT OBJECT_SCHEMA_NAME(i.object_id) AS SchemaName,OBJECT_NAME(i.object_id) AS Name,CASE WHEN i.is_primary_key=1 THEN N'<PK>' WHEN i.is_unique_constraint=1 THEN N'<UQ>' ELSE i.name END AS IndexName,i.type,i.is_unique,i.is_primary_key,i.is_unique_constraint,i.is_disabled,i.has_filter,i.filter_definition,
+ JSON_QUERY((SELECT ic.index_column_id,ic.key_ordinal,COL_NAME(ic.object_id,ic.column_id) AS ColumnName,ic.is_descending_key,ic.is_included_column FROM sys.index_columns ic WHERE ic.object_id=i.object_id AND ic.index_id=i.index_id ORDER BY ic.index_column_id FOR JSON PATH)) AS Columns FROM sys.indexes i JOIN @Owned x ON x.ObjectId=i.object_id WHERE i.index_id>0 ORDER BY SchemaName,Name,IndexName,i.index_id FOR JSON PATH,INCLUDE_NULL_VALUES)) AS Indexes,
+ JSON_QUERY((SELECT OBJECT_SCHEMA_NAME(t.object_id) AS SchemaName,t.name,OBJECT_SCHEMA_NAME(t.parent_id) AS ParentSchema,OBJECT_NAME(t.parent_id) AS ParentName,t.is_disabled,t.is_not_for_replication,t.is_instead_of_trigger FROM sys.triggers t JOIN @Owned x ON x.ObjectId=t.object_id ORDER BY SchemaName,t.name FOR JSON PATH,INCLUDE_NULL_VALUES)) AS Triggers,
+ JSON_QUERY((SELECT OBJECT_SCHEMA_NAME(c.major_id) AS SchemaName,OBJECT_NAME(c.major_id) AS ObjectName,c.crypt_type,CONVERT(varchar(256),c.thumbprint,1) AS Thumbprint FROM sys.crypt_properties c WHERE c.class=1 AND c.major_id IN(SELECT ObjectId FROM @Owned) ORDER BY SchemaName,ObjectName,c.crypt_type,Thumbprint FOR JSON PATH,INCLUDE_NULL_VALUES)) AS Signatures,
+ JSON_QUERY((SELECT USER_NAME(p.grantee_principal_id) AS Grantee,p.state_desc,p.permission_name,p.class_desc,p.major_id,CASE WHEN p.class=3 THEN SCHEMA_NAME(p.major_id) ELSE OBJECT_SCHEMA_NAME(p.major_id) END AS SchemaName,CASE WHEN p.class=1 THEN OBJECT_NAME(p.major_id) END AS ObjectName,p.minor_id FROM sys.database_permissions p WHERE
+ (p.class=1 AND p.major_id IN(SELECT ObjectId FROM @Owned)) OR (p.class=3 AND p.major_id=SCHEMA_ID(N'PaySlipNotifications')) OR p.grantee_principal_id IN(USER_ID(@Authority),USER_ID(@App))
+ ORDER BY Grantee,p.class_desc,p.major_id,SchemaName,ObjectName,p.minor_id,p.permission_name,p.state_desc FOR JSON PATH,INCLUDE_NULL_VALUES)) AS Permissions,
+ JSON_QUERY(@AuthorityEffective) AS AuthorityEffective,JSON_QUERY(@AppEffective) AS AppEffective
+ FOR JSON PATH,WITHOUT_ARRAY_WRAPPER,INCLUDE_NULL_VALUES);
+IF @Actual IS NULL OR ISJSON(@Actual)<>1 THROW 59610,N'Metadata unavailable.',1;
+DECLARE @ActualSha256 varchar(64)=CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),@Actual)),2);
+
+DECLARE @ExpectedManifest nvarchar(max)=CONVERT(nvarchar(max),0x$(ExpectedManifestUtf16Hex));
+DECLARE @ExpectedManifestSha256 varchar(64)='$(ExpectedManifestSha256)',@ExpectedCandidateSha256 varchar(64)='$(CandidateSha256)';
+IF @ExpectedManifestSha256 IS NULL OR LEN(@ExpectedManifestSha256)<>64 OR @ExpectedManifestSha256 LIKE '%[^0-9A-Fa-f]%'
+ OR @ExpectedCandidateSha256 IS NULL OR LEN(@ExpectedCandidateSha256)<>64 OR @ExpectedCandidateSha256 LIKE '%[^0-9A-Fa-f]%'
+ OR CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),@ExpectedManifest)),2)<>UPPER(@ExpectedManifestSha256)
+ OR ISJSON(@ExpectedManifest)<>1 THROW 59610,N'Trusted manifest hash unavailable or different.',1;
+IF EXISTS(SELECT 1 FROM (VALUES(N'kind',1),(N'independentlyReviewed',3),(N'candidateSha256',1),(N'authorityUser',1),(N'appUser',1),(N'metadataSha256',1)) e(Name,JsonType)
+ OUTER APPLY(SELECT COUNT(*) AS Matches,MAX(j.type) AS JsonType FROM OPENJSON(@ExpectedManifest) j WHERE j.[key] COLLATE Latin1_General_100_BIN2=e.Name COLLATE Latin1_General_100_BIN2) a
+ WHERE a.Matches<>1 OR a.JsonType IS NULL OR a.JsonType<>e.JsonType)
+ OR EXISTS(SELECT 1 FROM OPENJSON(@ExpectedManifest) GROUP BY [key] COLLATE Latin1_General_100_BIN2 HAVING COUNT(*)<>1)
+ THROW 59610,N'Trusted manifest required fields or types unavailable.',1;
+IF JSON_VALUE(@ExpectedManifest,'$.kind') IS NULL
+ OR JSON_VALUE(@ExpectedManifest,'$.independentlyReviewed') IS NULL
+ OR JSON_VALUE(@ExpectedManifest,'$.candidateSha256') IS NULL
+ OR JSON_VALUE(@ExpectedManifest,'$.authorityUser') IS NULL
+ OR JSON_VALUE(@ExpectedManifest,'$.appUser') IS NULL
+ OR JSON_VALUE(@ExpectedManifest,'$.metadataSha256') IS NULL
+ OR LEN(JSON_VALUE(@ExpectedManifest,'$.metadataSha256'))<>64
+ OR JSON_VALUE(@ExpectedManifest,'$.metadataSha256') LIKE '%[^0-9A-Fa-f]%'
+ OR JSON_VALUE(@ExpectedManifest,'$.kind')<>N'JJ-PaySlip-Engine-v2'
+ OR JSON_VALUE(@ExpectedManifest,'$.independentlyReviewed')<>N'true'
+ OR JSON_VALUE(@ExpectedManifest,'$.candidateSha256')<>UPPER(@ExpectedCandidateSha256)
+ OR JSON_VALUE(@ExpectedManifest,'$.authorityUser')<>@Authority OR JSON_VALUE(@ExpectedManifest,'$.appUser')<>@App
+ OR JSON_VALUE(@ExpectedManifest,'$.metadataSha256')<>@ActualSha256
+ THROW 59610,N'Expected metadata, source or identity differs.',1;
+IF NOT EXISTS(SELECT 1 FROM PaySlipNotifications.Artifact WHERE CandidateId=N'PRIVATE_PAYSLIP_V2'
+ AND ArtifactSha256=UPPER(@ExpectedCandidateSha256) AND RunId=@RunId) THROW 59610,N'Installed artifact differs.',1;
+DECLARE @ExpectedSource nvarchar(max)=N'[{"objectName":"PaySlipNotifications.AttemptTransitions","type":"TR","definitionSha256":"CE522918A976533721D117F6A27A0CEBE6645B90CA3E944C9D849A0FCD494139"},{"objectName":"PaySlipNotifications.Claim","type":"P","definitionSha256":"812B882035BB4051642BF106FA1A33C1A0047D29505B2300466904AF2E87BA27"},{"objectName":"PaySlipNotifications.Complete","type":"P","definitionSha256":"F4E72B51734F5050BC02D666D91F7E448E8E78193885E8CF7830D6BEF58B25F1"},{"objectName":"PaySlipNotifications.ImmutableArtifact","type":"TR","definitionSha256":"BA3649AB682EAE78F19953B7CB618EBFDBCC82E8D3A600E7DA308FBC0FBEBE3D"},{"objectName":"PaySlipNotifications.ImmutableEvents","type":"TR","definitionSha256":"C3DDCAC3F459E20563D486517C6CB94D833A6D92E68BEA8265B950A55FE60CFA"},{"objectName":"PaySlipNotifications.ImmutableRequests","type":"TR","definitionSha256":"7507107C415C9CEBC244AB3D076FB0EB0F9DB06CF86BB51D069A1A443DF5F722"},{"objectName":"PaySlipNotifications.Receipt","type":"P","definitionSha256":"B9D2F0CF65D714955303E87F1D958AF557728792B79D790D06E9DD6F1796D8D0"},{"objectName":"PaySlipNotifications.Request","type":"P","definitionSha256":"777FCB98825BDFDF0B348F45A19EF610E8252BAAF56578A394062563B4E2B7C5"},{"objectName":"PaySlipNotifications.RequireAccess","type":"P","definitionSha256":"4C941A5EF0A50C188A2765AF6F10A921DB698397B2EC90394D570D3606E224DB"},{"objectName":"PaySlipNotifications.Snapshot","type":"P","definitionSha256":"E91F7398D6C0E62E1F308F4C7B5C8FA467F8AFB3F44E52BA2F35EA5A9C2E6E2B"},{"objectName":"dbo.tr_PaySlipNotifications_BlockLegacyWrites","type":"TR","definitionSha256":"AA8552E32ED6DD319DC4287DEDBF23D9D8FBED01AEB5C31595E5A737495C32F2"}]';
+IF EXISTS(SELECT objectName,definitionSha256 FROM OPENJSON(@ExpectedSource) WITH(objectName nvarchar(256),definitionSha256 varchar(64))
+ EXCEPT SELECT OBJECT_SCHEMA_NAME(m.object_id)+N'.'+OBJECT_NAME(m.object_id),CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),m.definition)),2) FROM sys.sql_modules m JOIN @Owned x ON x.ObjectId=m.object_id)
+ OR EXISTS(SELECT OBJECT_SCHEMA_NAME(m.object_id)+N'.'+OBJECT_NAME(m.object_id),CONVERT(varchar(64),HASHBYTES('SHA2_256',CONVERT(varbinary(max),m.definition)),2) FROM sys.sql_modules m JOIN @Owned x ON x.ObjectId=m.object_id
+ EXCEPT SELECT objectName,definitionSha256 FROM OPENJSON(@ExpectedSource) WITH(objectName nvarchar(256),definitionSha256 varchar(64)))
+ THROW 59610,N'Reviewed source modules differ.',1;
+SELECT CONVERT(bit,1) AS MetadataVerified,@ActualSha256 AS MetadataSha256;
+-- This proves database-user metadata/effective object checks only. Restricted login/HTTP/SMTP integration remains separate.

@@ -2,6 +2,7 @@
 @using Proyecto_Final.Services
 @inject AdminDbService AdminDbService
 @inject IRolePermissionService PermissionService
+@inject Microsoft.Extensions.Configuration.IConfiguration ChatConfiguration
 @{
     var SiteBrandName = Company.Value.BrandName;
     var SiteBrandSubtitle = Company.Value.BrandSubtitle;
@@ -414,7 +415,7 @@
 
                                         @if (canManageChat)
                                         {
-                                            <a asp-controller="Chat" asp-action="Index" class="dropdown-item">
+                                            <a asp-controller="@(ChatConfiguration.GetValue<bool>("ChatV2:PersonalSqlEnabled") ? "ChatV2" : "Chat")" asp-action="Index" class="dropdown-item">
                                                 <i class="fa fa-cog"></i>
                                                 Administrar departamentos
                                             </a>

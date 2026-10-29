@@ -1,4 +1,4 @@
-using Microsoft.Data.SqlClient;
+﻿using Microsoft.Data.SqlClient;
 using Proyecto_Final.Models.Admin;
 using System.Data;
 
@@ -72,7 +72,7 @@ namespace Proyecto_Final.Services
             CancellationToken cancellationToken = default)
         {
             await using var connection = new SqlConnection(_connectionString);
-            await using var command = new SqlCommand("dbo.sp_Reportes_VentasDetallado", connection) { CommandType = CommandType.StoredProcedure };
+            await using var command = new SqlCommand("dbo.sp_Stage2_ReportSalesAmountsV2", connection) { CommandType = CommandType.StoredProcedure };
             command.Parameters.Add("@Desde", SqlDbType.Date).Value = filter.Desde.Date;
             command.Parameters.Add("@Hasta", SqlDbType.Date).Value = filter.Hasta.Date;
             command.Parameters.Add("@Agrupacion", SqlDbType.NVarChar, 20).Value = filter.Agrupacion;

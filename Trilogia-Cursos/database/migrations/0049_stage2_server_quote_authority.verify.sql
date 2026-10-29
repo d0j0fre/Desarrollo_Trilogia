@@ -1,0 +1,12 @@
+SET NOCOUNT ON;
+DECLARE @Hash nvarchar(128)=N'$(MigrationSha256)';
+IF LEN(@Hash)<>64 OR @Hash LIKE N'%[^0-9a-fA-F]%' THROW 58800,N'Invalid migration hash.',1;
+IF NOT EXISTS(SELECT 1 FROM dbo.SchemaMigrationHistory WHERE MigrationId=N'0049_stage2_server_quote_authority' AND FileSha256=UPPER(@Hash) AND Status=N'Applied') THROW 58800,N'Quote ledger/hash missing.',1;
+IF (SELECT COUNT(*) FROM sys.tables WHERE schema_id=SCHEMA_ID(N'CommerceQuotes') AND name IN(N'Owners',N'Quotes',N'Lines',N'SourceRevision'))<>4 THROW 58800,N'Quote storage missing.',1;
+IF NOT EXISTS(SELECT 1 FROM CommerceQuotes.SourceRevision WHERE Singleton=1 AND Revision>0) THROW 58800,N'Pricing revision missing.',1;
+IF (SELECT COUNT(*) FROM sys.procedures WHERE schema_id=SCHEMA_ID(N'CommerceQuotes') AND name IN(N'CaptureSource',N'RequireOwner',N'Capture',N'Publish',N'ReadOwn'))<>5 THROW 58800,N'Quote contracts missing.',1;
+IF (SELECT COUNT(*) FROM sys.triggers WHERE parent_id IN(OBJECT_ID(N'CommerceQuotes.Owners'),OBJECT_ID(N'CommerceQuotes.Quotes'),OBJECT_ID(N'CommerceQuotes.Lines')) AND is_disabled=0)<>3 THROW 58800,N'Quote immutability not accredited.',1;
+IF (SELECT COUNT(*) FROM sys.triggers WHERE name IN(N'tr_CommerceQuote_ProductRevision',N'tr_CommerceQuote_PromotionRevision',N'tr_CommerceQuote_SegmentRevision') AND is_disabled=0)<>3 THROW 58800,N'Pricing revision writers missing.',1;
+IF EXISTS(SELECT 1 FROM sys.check_constraints WHERE parent_object_id IN(OBJECT_ID(N'CommerceQuotes.Owners'),OBJECT_ID(N'CommerceQuotes.Quotes'),OBJECT_ID(N'CommerceQuotes.Lines')) AND (is_disabled=1 OR is_not_trusted=1)) THROW 58800,N'Untrusted quote checks.',1;
+IF EXISTS(SELECT 1 FROM sys.foreign_keys WHERE parent_object_id IN(OBJECT_ID(N'CommerceQuotes.Owners'),OBJECT_ID(N'CommerceQuotes.Quotes'),OBJECT_ID(N'CommerceQuotes.Lines')) AND (is_disabled=1 OR is_not_trusted=1)) THROW 58800,N'Untrusted quote foreign keys.',1;
+SELECT N'PASS' AS QuoteAuthorityVerification;

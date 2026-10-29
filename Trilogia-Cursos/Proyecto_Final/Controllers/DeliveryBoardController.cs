@@ -6,7 +6,7 @@ using Proyecto_Final.Services;
 
 namespace Proyecto_Final.Controllers;
 
-[AdminAuthorize("Entregas", "ENTREGAS_TABLERO_VER")]
+[AdminAuthorize("Entregas", "ENTREGAS_TABLERO_VER", allowAdministratorBypass: false)]
 public sealed class DeliveryBoardController : Controller
 {
     private readonly LogisticsDbService _logistics;

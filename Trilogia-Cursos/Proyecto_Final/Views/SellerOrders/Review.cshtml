@@ -1,0 +1,24 @@
+@model Proyecto_Final.Models.Admin.SellerOrderReviewViewModel
+@inject Proyecto_Final.Services.BusinessClock Clock
+@{
+    Layout = "_WorkspaceLayout";
+    ViewData["Title"] = "Revisar pedido";
+    var culture = System.Globalization.CultureInfo.GetCultureInfo("es-CR");
+    var draft = Model.Draft;
+}
+<header class="djj-page-header"><div class="djj-page-header__copy"><span class="djj-page-header__eyebrow">Ventas · Confirmación</span><h1>Revisar pedido</h1><p>Verificá el total final calculado antes de registrar.</p></div><a asp-action="MyOrders" class="djj-button djj-button--ghost">Mis pedidos</a></header>
+<div class="djj-order-sections">
+    <section class="djj-card djj-form-card" aria-labelledby="quote-customer-title"><h2 id="quote-customer-title">Cliente y entrega</h2><dl class="djj-detail-grid"><div><dt>Cliente</dt><dd>@Model.CustomerName</dd></div><div><dt>Entrega</dt><dd>@draft.TipoEntrega</dd></div><div><dt>Dirección</dt><dd>@draft.DireccionEntrega</dd></div>@if (!string.IsNullOrWhiteSpace(draft.Observaciones)) { <div><dt>Observaciones</dt><dd>@draft.Observaciones</dd></div> }</dl></section>
+    <section class="djj-card djj-data-section" aria-labelledby="quote-lines-title"><h2 id="quote-lines-title">Productos e importes</h2><div class="djj-table-wrap" tabindex="0" role="region" aria-label="Productos del pedido; desplazamiento horizontal"><table class="djj-table"><caption class="djj-sr-only">Importes calculados con descuentos e impuesto</caption><thead><tr><th scope="col">Producto</th><th scope="col" class="djj-align-right">Cantidad</th><th scope="col" class="djj-align-right">Precio</th><th scope="col" class="djj-align-right">Descuento</th><th scope="col" class="djj-align-right">Neto</th></tr></thead><tbody>@foreach (var line in Model.Quote.Lines) { <tr><th scope="row">@line.ProductName</th><td class="djj-align-right">@line.Quantity</td><td class="djj-align-right">₡@line.Price.ToString("N2", culture)</td><td class="djj-align-right">₡@line.Discount.ToString("N2", culture)</td><td class="djj-align-right">₡@((line.Quantity * line.Price - line.Discount).ToString("N2", culture))</td></tr> }</tbody></table></div></section>
+    <section class="djj-card djj-form-card" aria-labelledby="quote-money-title"><h2 id="quote-money-title">Total final</h2><dl class="djj-detail-grid"><div><dt>Subtotal bruto</dt><dd>₡@Model.Quote.Money.Gross.ToString("N2", culture)</dd></div><div><dt>Descuento</dt><dd>₡@Model.Quote.Money.Discount.ToString("N2", culture)</dd></div><div><dt>Subtotal neto</dt><dd>₡@Model.Quote.Money.Net.ToString("N2", culture)</dd></div><div><dt>Impuesto</dt><dd>₡@Model.Quote.Money.Tax.ToString("N2", culture)</dd></div><div><dt>Total final</dt><dd class="djj-order-money djj-money--dominant">₡@Model.Quote.Money.FinalTotal.ToString("N2", culture)</dd></div></dl><p>Válido hasta @Clock.ToLocalTime(Model.Quote.ExpiresUtc).ToString("dd/MM/yyyy HH:mm") (Costa Rica). Si cambia el precio o la autorización, el servidor detendrá la confirmación.</p></section>
+    @if (Model.Quote.Money.RequiresSupervisor) { <div class="djj-alert djj-alert--warning" role="status">Este total supera ₡2.000.000. El pedido quedará retenido hasta la aprobación de tu supervisor asignado; no se facturará ni descontará stock al registrarlo.</div> }
+    else { <div class="djj-alert djj-alert--info" role="status">Al confirmar se descontará stock y se emitirá la factura en una misma operación. La factura no acredita entrega física.</div> }
+    <form asp-action="Create" method="post" class="djj-card djj-form-card">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="RequestId" value="@draft.RequestId" /><input type="hidden" name="QuoteFingerprint" value="@Model.Quote.IntentFingerprint" /><input type="hidden" name="QuoteSourceHash" value="@Model.Quote.SourceHash" />
+        <input type="hidden" name="ClienteUsuarioId" value="@draft.ClienteUsuarioId" /><input type="hidden" name="TipoEntrega" value="@draft.TipoEntrega" /><input type="hidden" name="DireccionEntrega" value="@draft.DireccionEntrega" /><input type="hidden" name="Observaciones" value="@draft.Observaciones" /><input type="hidden" name="IdentificacionCliente" value="@draft.IdentificacionCliente" />
+        @for (var i = 0; i < Model.Quote.Lines.Count; i++) { <input type="hidden" name="Productos[@i].ProductoId" value="@Model.Quote.Lines[i].Product" /><input type="hidden" name="Productos[@i].Cantidad" value="@Model.Quote.Lines[i].Quantity" /> }
+        <div class="djj-form-actions"><a asp-action="Index" class="djj-button djj-button--ghost">Cambiar selección</a><button type="submit" class="djj-button djj-button--primary">Confirmar y registrar</button></div>
+        <p class="djj-table__note">Si no recibís confirmación, revisá Mis pedidos o reintentá este mismo envío. No iniciés otro pedido para repetirlo.</p>
+    </form>
+</div>

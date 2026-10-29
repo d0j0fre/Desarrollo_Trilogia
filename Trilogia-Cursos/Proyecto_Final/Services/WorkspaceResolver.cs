@@ -19,7 +19,8 @@ public interface IWorkspaceResolver
 
 public sealed class WorkspaceResolver(
     IRolePermissionService permissionService,
-    IEmployeeRelationshipService employeeRelationship) : IWorkspaceResolver
+    IEmployeeRelationshipService employeeRelationship,
+    IConfiguration? configuration = null) : IWorkspaceResolver
 {
     private static readonly WorkspaceDestination Home = new("Index", "Home");
 
@@ -32,6 +33,7 @@ public sealed class WorkspaceResolver(
             return Home;
 
         var permissions = await permissionService.GetPermissionCodesAsync(role);
+        if (permissions.Contains("RELACIONES_COMERCIALES_GESTIONAR")) return new("Index", "CommercialAssignments");
         if (permissions.Contains("VENTA_MOVIL_CREAR")) return new("Index", "SellerOrders");
         if (string.Equals(role, "Chofer", StringComparison.OrdinalIgnoreCase)) return new("Index", "DriverDeliveries");
         if (permissions.Contains("INVENTARIO_VER")) return new("Index", "Inventory");
@@ -45,6 +47,8 @@ public sealed class WorkspaceResolver(
         if (await permissionService.HasModulePermissionAsync(role, "Creditos")) return new("Index", "AccountsReceivableAdmin");
         if (await permissionService.HasModulePermissionAsync(role, "Auditoria")) return new("Index", "Audit");
         if (await permissionService.HasModulePermissionAsync(role, "Pedidos")) return new("Index", "OrdersAdmin");
+        if (permissions.Contains("CHAT_USAR") && configuration?.GetValue<bool>("ChatV2:PersonalSqlEnabled") == true)
+            return new("Index", "ChatV2");
         if (userId > 0 && await employeeRelationship.IsEmployeeAsync(userId)) return new("Index", "EmployeePortal");
 
         return Home;

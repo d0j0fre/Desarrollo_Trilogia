@@ -11,6 +11,13 @@
         <div><dt>Cliente</dt><dd>@Model.Cliente<small class="djj-table__note">@Model.Correo</small></dd></div>
         <div><dt>Fecha</dt><dd>@Model.FechaPedido.ToString("dd/MM/yyyy HH:mm")</dd></div>
         <div><dt>Entrega</dt><dd>@(Model.TipoEntrega ?? "—")</dd></div>
+        @if (Model.ServerAmounts is { } amounts)
+        {
+            <div><dt>Subtotal bruto</dt><dd>₡@amounts.Gross.ToString("N2", culture)</dd></div>
+            <div><dt>Descuento</dt><dd>₡@amounts.Discount.ToString("N2", culture)</dd></div>
+            <div><dt>Subtotal neto</dt><dd>₡@amounts.Net.ToString("N2", culture)</dd></div>
+            <div><dt>Impuesto</dt><dd>₡@amounts.Tax.ToString("N2", culture)</dd></div>
+        }
         <div><dt>Total del pedido</dt><dd><strong class="djj-order-money djj-money--dominant">₡@Model.Total.ToString("N2", culture)</strong></dd></div>
         @if (!string.IsNullOrWhiteSpace(Model.DireccionEntrega))
         {

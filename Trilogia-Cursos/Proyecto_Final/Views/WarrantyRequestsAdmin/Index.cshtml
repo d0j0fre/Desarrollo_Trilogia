@@ -6,7 +6,7 @@
     Layout = "_WorkspaceLayout"; ViewData["Title"] = "Solicitudes de garantía";
     var role = Context.Session.GetString("UserRole") ?? string.Empty;
     var admin = string.Equals(role, "Administrador", StringComparison.OrdinalIgnoreCase);
-    var canManage = admin || await PermissionService.HasCodePermissionAsync(role, "GARANTIAS_GESTIONAR");
+    var canManage = (await PermissionService.GetPermissionCodesAsync(role)).Contains("GARANTIAS_GESTIONAR");
 }
 <div class="djj-customer-service">
 @{ var canClients = admin || await PermissionService.HasCodePermissionAsync(role, "CLIENTES_VER"); }

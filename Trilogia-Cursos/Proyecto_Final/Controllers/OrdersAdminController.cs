@@ -8,10 +8,12 @@ namespace Proyecto_Final.Controllers
     public class OrdersAdminController : Controller
     {
         private readonly AdminDbService _adminDbService;
+        private readonly ILogger<OrdersAdminController> _logger;
 
-        public OrdersAdminController(AdminDbService adminDbService)
+        public OrdersAdminController(AdminDbService adminDbService, ILogger<OrdersAdminController> logger)
         {
             _adminDbService = adminDbService;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -42,7 +44,7 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [AdminAuthorize("Pedidos", "PEDIDOS_CAMBIAR_ESTADO")]
+        [AdminAuthorize("Pedidos", "PEDIDOS_CAMBIAR_ESTADO", false)]
         public async Task<IActionResult> UpdateStatus(int pedidoId, string nuevoEstado)
         {
             if (pedidoId <= 0 || string.IsNullOrWhiteSpace(nuevoEstado))
@@ -56,35 +58,20 @@ namespace Proyecto_Final.Controllers
 
             try
             {
-                await _adminDbService.UpdateOrderStatusAsync(pedidoId, nuevoEstado.Trim(), usuarioId, usuarioNombre);
+                await _adminDbService.UpdateOrderStatusAsync(pedidoId, nuevoEstado.Trim(), usuarioId, usuarioNombre, OriginalLoginSession.ValidatedRequest(HttpContext));
 
-                await RegistrarAuditoriaAsync(
-                    "Cambio de estado",
-                    "Pedidos",
-                    $"Se cambió el estado del pedido #{pedidoId} a {nuevoEstado.Trim()}.");
+                // The SQL workflow commits the state and canonical audit together.
 
                 TempData["SuccessMessage"] = "Estado del pedido actualizado correctamente.";
             }
-            catch (Exception)
+            catch (Exception exception)
             {
+                _logger.LogWarning("Operación rechazada. Tipo {ExceptionType}; código SQL {SqlError}.", exception.GetType().Name, exception is Microsoft.Data.SqlClient.SqlException sql ? sql.Number : (int?)null);
                 TempData["ErrorMessage"] = "No fue posible actualizar el estado del pedido en este momento. Intente nuevamente.";
             }
 
             return RedirectToAction(nameof(Detail), new { id = pedidoId });
         }
 
-        private async Task RegistrarAuditoriaAsync(string accion, string modulo, string descripcion)
-        {
-            await _adminDbService.CreateAuditLogAsync(
-                HttpContext.Session.GetInt32("UserId"),
-                HttpContext.Session.GetString("UserFullName"),
-                HttpContext.Session.GetString("UserEmail"),
-                HttpContext.Session.GetString("UserRole"),
-                accion,
-                modulo,
-                descripcion,
-                HttpContext.Connection.RemoteIpAddress?.ToString(),
-                Request.Headers.UserAgent.ToString());
-        }
     }
 }

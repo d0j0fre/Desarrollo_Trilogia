@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc;
+using Proyecto_Final.ModelBinders;
 
 namespace Proyecto_Final.Models.Admin
 {
@@ -36,6 +38,7 @@ namespace Proyecto_Final.Models.Admin
 
         [Required(ErrorMessage = "El precio es obligatorio.")]
         [Range(0.01, 999999999, ErrorMessage = "El precio debe ser mayor a cero.")]
+        [ModelBinder(BinderType = typeof(FlexibleDecimalModelBinder))]
         public decimal Precio { get; set; }
 
         [Required(ErrorMessage = "El stock es obligatorio.")]

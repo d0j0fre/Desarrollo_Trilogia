@@ -11,11 +11,13 @@ namespace Proyecto_Final.Controllers
     {
         private readonly AdminDbService _adminDbService;
         private readonly ILogger<ClientPortalController> _logger;
+        private readonly IClientBillingSummaryService? _billing;
 
-        public ClientPortalController(AdminDbService adminDbService, ILogger<ClientPortalController> logger)
+        public ClientPortalController(AdminDbService adminDbService, ILogger<ClientPortalController> logger, IClientBillingSummaryService? billing = null)
         {
             _adminDbService = adminDbService;
             _logger = logger;
+            _billing = billing;
         }
 
         [HttpGet]
@@ -37,6 +39,7 @@ namespace Proyecto_Final.Controllers
             var model = new ClientPortalIndexViewModel
             {
                 Cliente = MapClientSummary(cliente),
+                Billing = _billing is null ? null : await _billing.ReadOwnAsync(HttpContext.RequestAborted),
 
                 Credito = await TryGetCreditSummaryAsync(usuarioId),
 
@@ -67,6 +70,7 @@ namespace Proyecto_Final.Controllers
             var model = new ClientPortalStatementViewModel
             {
                 Cliente = MapClientSummary(cliente),
+                Billing = _billing is null ? null : await _billing.ReadOwnAsync(HttpContext.RequestAborted),
 
                 Credito = await TryGetCreditSummaryAsync(usuarioId),
 
@@ -112,7 +116,11 @@ namespace Proyecto_Final.Controllers
             var hasInvoice = await _adminDbService
                 .OrderHasInvoiceAsync(id);
 
-            return View(MapOrderDetail(pedido, hasInvoice));
+            var model = MapOrderDetail(pedido, hasInvoice);
+            var eligibleLines = await _adminDbService.GetWarrantyEligibleLineIdsAsync(id, usuarioId);
+            foreach (var line in model.Lineas)
+                line.CanRequestWarranty = eligibleLines.Contains(line.PedidoDetalleId);
+            return View(model);
         }
 
         [HttpGet]
@@ -241,7 +249,7 @@ namespace Proyecto_Final.Controllers
                 .GetOrderDetailLineAsync(id);
 
             if (detalle == null ||
-                detalle.UsuarioId != usuarioId)
+                detalle.UsuarioId != usuarioId || !detalle.CanRequestWarranty)
             {
                 TempData["ErrorMessage"] =
                     "No fue posible cargar el producto solicitado.";
@@ -281,7 +289,7 @@ namespace Proyecto_Final.Controllers
                 .GetOrderDetailLineAsync(model.PedidoDetalleId);
 
             if (detalle == null ||
-                detalle.UsuarioId != usuarioId)
+                detalle.UsuarioId != usuarioId || !detalle.CanRequestWarranty)
             {
                 TempData["ErrorMessage"] =
                     "El producto seleccionado no pertenece a su cuenta.";
@@ -301,12 +309,15 @@ namespace Proyecto_Final.Controllers
 
             try
             {
+                if (!Guid.TryParse(HttpContext.Session.GetString("SecurityStamp"), out var stamp) || stamp == Guid.Empty)
+                    return Unauthorized();
                 var creado = await _adminDbService
                     .CreateWarrantyRequestAsync(
                         model.PedidoDetalleId,
                         usuarioId,
                         model.Motivo,
-                        model.Descripcion
+                        model.Descripcion,
+                        OriginalLoginSession.ValidatedRequest(HttpContext)
                     );
 
                 if (!creado)
@@ -319,11 +330,7 @@ namespace Proyecto_Final.Controllers
                     return View(model);
                 }
 
-                await RegistrarAuditoriaAsync(
-                    "Solicitar garantía",
-                    "Portal cliente",
-                    $"El cliente solicitó una garantía para el producto {model.Producto}."
-                );
+                // Creation and canonical audit are committed together by SQL.
 
                 TempData["SuccessMessage"] =
                     "Solicitud de garantía registrada correctamente.";

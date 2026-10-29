@@ -8,7 +8,7 @@
     <div class="djj-table-wrap" tabindex="0" role="region" aria-label="Productos del pedido; desplazamiento horizontal">
         <table class="djj-table djj-table--compact">
             <caption class="djj-sr-only">Detalle e importes del pedido #@Model.PedidoId</caption>
-            <thead><tr><th scope="col">Producto</th><th scope="col" class="djj-align-right">Cantidad</th><th scope="col" class="djj-align-right">Precio unitario</th><th scope="col" class="djj-align-right">Subtotal de línea</th>@if (showStock) { <th scope="col">Disponibilidad actual</th> }</tr></thead>
+            <thead><tr><th scope="col">Producto</th><th scope="col" class="djj-align-right">Cantidad</th><th scope="col" class="djj-align-right">Precio unitario</th><th scope="col" class="djj-align-right">@(Model.ServerAmounts is null ? "Subtotal de línea" : "Subtotal neto")</th>@if (showStock) { <th scope="col">Disponibilidad actual</th> }</tr></thead>
             <tbody>
                 @if (!Model.Detalles.Any())
                 {

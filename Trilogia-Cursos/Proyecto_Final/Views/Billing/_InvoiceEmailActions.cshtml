@@ -1,0 +1,35 @@
+@model Proyecto_Final.Models.Admin.InvoiceDetailViewModel
+@{
+    var state = ViewData["MailState"] as string ?? "Unavailable";
+    var operation = ViewData["MailOperation"] is Guid id ? id : Guid.Empty;
+}
+<aside class="djj-card djj-invoice-actions">
+    <div class="djj-card__header"><div><h2>Comprobante por correo</h2><p>Se utiliza la dirección registrada al emitir esta factura.</p></div></div>
+    @if (state is "Ready" or "Pending")
+    {
+        <p>@(state == "Pending" ? "La solicitud quedó registrada y todavía no se inició el envío." : "Puede solicitar una copia del comprobante.")</p>
+        <form asp-action="ResendEmail" asp-route-id="@Model.FacturaId" method="post" data-djj-confirm="Enviar una copia del comprobante al correo registrado en esta factura.">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="operationId" value="@operation" />
+            <button type="submit" class="djj-button djj-button--outline">@(state == "Pending" ? "Continuar el mismo envío" : "Enviar comprobante")</button>
+        </form>
+    }
+    else if (state == "SmtpAccepted")
+    {
+        <p role="status">El servidor de correo aceptó el comprobante. Esto no confirma su entrega al buzón.</p>
+        <form asp-action="NewEmailAttempt" asp-route-id="@Model.FacturaId" method="post" data-djj-confirm="El servidor ya aceptó una copia. ¿Preparar expresamente otro envío del mismo comprobante?">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="previousOperationId" value="@operation" />
+            <button type="submit" class="djj-button djj-button--outline">Preparar otra copia</button>
+        </form>
+    }
+    else
+    {
+        <p role="status">@(state switch {
+            "Sending" => "Hay un envío en curso. Espere y consulte el estado del mismo intento.",
+            "Unknown" => "El resultado del envío es desconocido. No se enviará otra copia automáticamente; verifique el buzón antes de una revisión operativa.",
+            "AlreadyRequested" => "Ya existe una solicitud inicial. No se inició otra copia.",
+            _ => "No fue posible acreditar el estado del correo. La factura permanece disponible." })</p>
+    }
+    <a asp-action="Detail" asp-route-id="@Model.FacturaId" class="djj-button djj-button--ghost">Consultar estado</a>
+</aside>

@@ -1,0 +1,69 @@
+using System.Data;
+using System.Data.Common;
+using Microsoft.Data.SqlClient;
+using Proyecto_Final.Services;
+using Proyecto_Final.Services.ChatV2;
+
+namespace JJ.Private.ChatDc;
+
+/// <summary>The provider must accredit destination, exact manifest and restricted identity before opening.
+/// No implementation is supplied by this private candidate; no fallback to an owner connection is permitted.</summary>
+public interface IChatV2DcReaderConnections
+{
+    ValueTask<SqlConnection> OpenAccreditedAsync(CancellationToken cancellationToken);
+}
+
+public sealed class SqlChatV2DcOriginalIdentitySource(IChatV2DcReaderConnections connections, TimeProvider clock)
+{
+    public async ValueTask<ChatV2LiveIdentity> ResolveAsync(OriginalLoginContext login, CancellationToken ct)
+    {
+        if (!login.HasCanonicalLifetime || login.ExpiresUtc <= clock.GetUtcNow().UtcDateTime)
+            throw new ChatV2Exception(ChatV2Failure.Session);
+        try
+        {
+            await using var connection = await connections.OpenAccreditedAsync(ct);
+            if (connection.State != ConnectionState.Open) throw new ChatV2Exception(ChatV2Failure.Dependency);
+            using var command = new SqlCommand("ChatV2DC.Resolve", connection)
+            { CommandType = CommandType.StoredProcedure, CommandTimeout = 15 };
+            command.Parameters.Add("@LoginId", SqlDbType.UniqueIdentifier).Value = login.LoginId;
+            command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = login.UserId;
+            command.Parameters.Add("@PerfilId", SqlDbType.Int).Value = login.ProfileId;
+            command.Parameters.Add("@SecurityStamp", SqlDbType.UniqueIdentifier).Value = login.SecurityStamp;
+            command.Parameters.Add("@BindingHash", SqlDbType.Binary, 32).Value = login.BindingHash.ToArray();
+            command.Parameters.Add(new SqlParameter("@IssuedUtc", SqlDbType.DateTime2) { Scale = 7, Value = login.IssuedUtc });
+            command.Parameters.Add(new SqlParameter("@ExpiresUtc", SqlDbType.DateTime2) { Scale = 7, Value = login.ExpiresUtc });
+            await using var reader = await command.ExecuteReaderAsync(ct);
+            var result = await ReadIdentityAsync(reader, login, ct);
+            // Observe completion/COMMIT failures rather than trusting a result row alone.
+            if (await reader.NextResultAsync(ct)) throw new ChatV2Exception(ChatV2Failure.Contract);
+            return result;
+        }
+        catch (SqlException error)
+        {
+            throw new ChatV2Exception(error.Number switch
+            { 56801 or 56601 => ChatV2Failure.Session, 56802 => ChatV2Failure.Forbidden, _ => ChatV2Failure.Dependency });
+        }
+    }
+
+    internal static async Task<ChatV2LiveIdentity> ReadIdentityAsync(DbDataReader reader, OriginalLoginContext login, CancellationToken ct)
+    {
+        string[] names = ["ActorEpoch", "IsClient", "InternalUse", "CustomerUse", "AttendCustomers", "ManageAttention", "ManageDepartments"];
+        if (reader.FieldCount != names.Length || names.Where((name, index) => reader.GetName(index) != name
+            || reader.GetFieldType(index) != (index == 0 ? typeof(long) : typeof(bool))).Any())
+            throw new ChatV2Exception(ChatV2Failure.Contract);
+        if (!await reader.ReadAsync(ct)) throw new ChatV2Exception(ChatV2Failure.Session);
+        for (int index = 0; index < names.Length; index++)
+            if (await reader.IsDBNullAsync(index, ct)) throw new ChatV2Exception(ChatV2Failure.Contract);
+        long epoch = reader.GetInt64(0);
+        bool client = reader.GetBoolean(1);
+        var capabilities = ChatV2Capabilities.None;
+        ChatV2Capabilities[] bits = [ChatV2Capabilities.InternalUse, ChatV2Capabilities.CustomerUse,
+            ChatV2Capabilities.AttendCustomers, ChatV2Capabilities.ManageAttention, ChatV2Capabilities.ManageDepartments];
+        for (int i = 0; i < bits.Length; i++) if (reader.GetBoolean(i + 2)) capabilities |= bits[i];
+        if (epoch <= 0 || (client && (capabilities & ~ChatV2Capabilities.CustomerUse) != 0)
+            || (!client && capabilities.HasFlag(ChatV2Capabilities.CustomerUse)) || await reader.ReadAsync(ct))
+            throw new ChatV2Exception(ChatV2Failure.Contract);
+        return new(login.LoginId, login.LoginId, login.UserId, login.ProfileId,
+            client ? ChatV2Kind.Client : ChatV2Kind.Internal, login.SecurityStamp, epoch, new(login.ExpiresUtc), capabilities);
+    }
+}

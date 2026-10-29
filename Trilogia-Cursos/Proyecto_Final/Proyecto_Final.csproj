@@ -14,7 +14,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../shared/JJ.Commerce/JJ.Commerce.csproj" />
+    <Compile Remove="Services/PromotionEngine.cs" />
+    <Compile Remove="Validation/CostaRicanIdentificationAttribute.cs" />
     <InternalsVisibleTo Include="Proyecto_Final.Tests" />
+    <InternalsVisibleTo Include="JJ.ChatBroker.BoundaryProbe" />
+    <InternalsVisibleTo Include="JJ.ChatBroker" />
+    <InternalsVisibleTo Include="JJ.ChatBroker.IntegrationProbe" />
+    <Compile Include="..\shared\Security\RestrictedSqlGate.cs" Link="Security\RestrictedSqlGate.cs" />
+    <Compile Include="..\shared\Runtime\LocalRuntimeControl.cs" Link="Runtime\LocalRuntimeControl.cs" />
   </ItemGroup>
 
 </Project>

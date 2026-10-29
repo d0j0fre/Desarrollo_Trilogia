@@ -1,0 +1,42 @@
+@model Proyecto_Final.Models.Chat.LegacyPersonalArchiveViewModel
+@{
+    Layout = "_WorkspaceLayout";
+    ViewData["Title"] = "Historial anterior";
+}
+<section class="djj-page">
+    <header class="djj-page-header">
+        <div class="djj-page-header__copy"><h1>Historial anterior</h1><p>Consultá tus conversaciones personales anteriores. Los mensajes se conservan en modo de lectura.</p></div>
+        <a class="djj-button djj-button--secondary" asp-action="Index">Volver al chat</a>
+    </header>
+    @if (Model.Conversations.Count == 0 && !Model.SelectedConversation.HasValue)
+    {
+        <div class="djj-card"><p>No tenés conversaciones personales anteriores.</p></div>
+    }
+    else
+    {
+        <form method="get" class="djj-card">
+            <div class="djj-field"><label for="archive-conversation">Conversación anterior</label>
+                <select id="archive-conversation" name="conversationId" class="djj-select">
+                    @foreach (var id in Model.Conversations)
+                    {
+                        <option value="@id" selected="@(id == Model.SelectedConversation)">Conversación #@id</option>
+                    }
+                </select>
+            </div>
+            <button type="submit" class="djj-button djj-button--secondary">Consultar historial</button>
+        </form>
+        <div class="djj-card">
+            <h2>Mensajes anteriores</h2>
+            @if (Model.Messages.Count == 0) { <p>No hay mensajes en esta página.</p> }
+            @foreach (var message in Model.Messages.Reverse())
+            {
+                <article class="djj-card"><p><strong>Usuario #@message.RemitenteId</strong> · <time>@message.FechaEnvio.ToString("dd/MM/yyyy HH:mm")</time></p><p class="djj-chat-v2-message">@message.Contenido</p></article>
+            }
+            <nav aria-label="Páginas del historial">
+                @if (Model.Page > 1) { <a class="djj-button djj-button--secondary" asp-route-conversationId="@Model.SelectedConversation" asp-route-page="@(Model.Page - 1)">Página anterior</a> }
+                @if (Model.Messages.Count == 50) { <a class="djj-button djj-button--secondary" asp-route-conversationId="@Model.SelectedConversation" asp-route-page="@(Model.Page + 1)">Página siguiente</a> }
+            </nav>
+        </div>
+    }
+</section>
+@section Styles { <link rel="stylesheet" href="~/css/stage2/chat-v2.css" asp-append-version="true" /> }

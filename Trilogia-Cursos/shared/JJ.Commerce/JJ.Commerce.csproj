@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- One unchanged engine, shared by the storefront and the pricing authority. -->
+    <Compile Include="../../Proyecto_Final/Services/PromotionEngine.cs" Link="PromotionEngine.cs" />
+    <Compile Include="../../Proyecto_Final/Validation/CostaRicanIdentificationAttribute.cs" Link="CostaRicanIdentificationAttribute.cs" />
+  </ItemGroup>
+</Project>

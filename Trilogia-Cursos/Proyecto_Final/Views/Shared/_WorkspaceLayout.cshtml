@@ -1,6 +1,7 @@
-@using Microsoft.AspNetCore.Http
+﻿@using Microsoft.AspNetCore.Http
 @inject IRolePermissionService PermissionService
 @inject IEmployeeRelationshipService EmployeeRelationshipService
+@inject Microsoft.Extensions.Configuration.IConfiguration ChatConfiguration
 @{
     ViewData["Stage2Layout"] = true;
     var brandName = Company.Value.BrandName;
@@ -11,14 +12,18 @@
     var userId = Context.Session.GetInt32("UserId") ?? 0;
     var isEmployeePortalUser = userId > 0 && await EmployeeRelationshipService.IsEmployeeAsync(userId);
     var isAdmin = string.Equals(userRole, "Administrador", StringComparison.OrdinalIgnoreCase);
-    var permissions = isAdmin ? new HashSet<string>(StringComparer.OrdinalIgnoreCase) : await PermissionService.GetPermissionCodesAsync(userRole);
+    var permissions = await PermissionService.GetPermissionCodesAsync(userRole);
+    bool CanExplicit(string code) => permissions.Contains(code);
+    var canAdminPanel = isAdmin || await PermissionService.HasModulePermissionAsync(userRole, "Admin");
     bool Can(string code) => isAdmin || permissions.Contains(code);
     bool IsCurrent(params string[] controllers) => controllers.Any(value => string.Equals(controller, value, StringComparison.OrdinalIgnoreCase));
     var canInventory = Can("INVENTARIO_VER");
     var canCombos = Can("COMBOS_VER");
-    var canSellerOrders = Can("VENTA_MOVIL_CREAR");
-    var canManagerOrders = Can("PEDIDOS_AUTORIZAR_RECHAZAR");
-    var canDocuments = Can("DOCUMENTOS_VER");
+    var canSellerOrders = CanExplicit("VENTA_MOVIL_CREAR");
+    var canManagerOrders = CanExplicit("PEDIDOS_AUTORIZAR_RECHAZAR");
+    var canCommercialRelations = CanExplicit("RELACIONES_COMERCIALES_GESTIONAR");
+    var canDocuments = userId > 0; // Every operation requires ownership or an explicit department authorization.
+    var canDelegateDocuments = CanExplicit("DOCUMENTOS_DELEGAR");
     var canConsultations = Can("CONSULTAS_VER");
     var canComplaints = Can("RECLAMOS_GESTIONAR");
     var canWarranties = Can("GARANTIAS_GESTIONAR");
@@ -27,18 +32,22 @@
     var canSecurity = isAdmin || await PermissionService.HasModulePermissionAsync(userRole, "Seguridad");
     var canAudit = isAdmin || await PermissionService.HasModulePermissionAsync(userRole, "Auditoria");
     var workspaceController = IsCurrent("Assistant") ? "Assistant"
+        : IsCurrent("ChatV2") && CanExplicit("CHAT_USAR") ? "ChatV2"
+        : IsCurrent("CommercialAssignments") && canCommercialRelations ? "CommercialAssignments"
         : IsCurrent("Roles", "Permissions") && canSecurity ? controller
         : IsCurrent("Audit") && canAudit ? "Audit"
         : IsCurrent("SellerOrders") && canSellerOrders ? "SellerOrders"
         : IsCurrent("ManagerOrders") && canManagerOrders ? "ManagerOrders"
-        : IsCurrent("RoutesAdmin") && Can("RUTAS_GESTIONAR") ? "RoutesAdmin"
-        : IsCurrent("DeliveryBoard") && Can("ENTREGAS_TABLERO_VER") ? "DeliveryBoard"
+        : IsCurrent("RoutesAdmin") && CanExplicit("RUTAS_GESTIONAR") ? "RoutesAdmin"
+        : IsCurrent("DeliveryBoard") && CanExplicit("ENTREGAS_TABLERO_VER") ? "DeliveryBoard"
         : IsCurrent("Consultations") && canConsultations ? "Consultations"
         : IsCurrent("Reclamos") && canComplaints ? "Reclamos"
         : IsCurrent("WarrantyRequestsAdmin") && canWarranties ? "WarrantyRequestsAdmin"
         : IsCurrent("Documents") && canDocuments ? "Documents"
+        : IsCurrent("DocumentDelegations") && canDelegateDocuments ? "DocumentDelegations"
         : IsCurrent("Assets") && canAssets ? "Assets"
-        : IsCurrent("Comodatos") && canAssets ? "Comodatos" : "Admin";
+        : IsCurrent("Comodatos") && canAssets ? "Comodatos"
+        : !canAdminPanel && CanExplicit("CHAT_USAR") ? "ChatV2" : "Admin";
     var canPromotions = Can("PROMOCIONES_GESTIONAR");
     var canPurchases = Can("COMPRAS_ORDENES_VER");
     var canClients = Can("CLIENTES_VER");
@@ -52,7 +61,9 @@
     var canApproveAttendance = Can("RRHH_JORNADAS_APROBAR");
     var canPayroll = Can("PLANILLA_VER");
     var canManagePaySlips = Can("PLANILLA_BOLETAS_GESTIONAR");
-    var canChat = Can("CHAT_USAR");
+    var canChat = CanExplicit("CHAT_USAR");
+    var personalChatEnabled = ChatConfiguration.GetValue<bool>("ChatV2:PersonalSqlEnabled");
+    var chatController = personalChatEnabled ? "ChatV2" : "Chat";
 }
 <!DOCTYPE html>
 <html lang="es">
@@ -89,10 +100,12 @@
                 <ul class="djj-workspace-nav">
                     @if (isAdmin)
                     {
+                        @if (canAdminPanel) {
                         <li class="djj-workspace-nav__label">Resumen</li>
                         <li><a asp-controller="Admin" asp-action="Index" aria-current="@(IsCurrent("Admin") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-chart"></use></svg><span class="djj-workspace-nav__text">Panel general</span></a></li>
+                        }
                     }
-                    @if (isAdmin || canBilling || canPromotions || canSellerOrders || canManagerOrders)
+                    @if (isAdmin || canBilling || canPromotions || canSellerOrders || canManagerOrders || canCommercialRelations)
                     {
                         <li class="djj-workspace-nav__label">Ventas y pedidos</li>
                         @if (isAdmin)
@@ -106,6 +119,10 @@
                         @if (canManagerOrders)
                         {
                             <li><a asp-controller="ManagerOrders" asp-action="Index" aria-current="@(IsCurrent("ManagerOrders") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-orders"></use></svg><span class="djj-workspace-nav__text">Revisar pedidos retenidos</span></a></li>
+                        }
+                        @if (canCommercialRelations)
+                        {
+                            <li><a asp-controller="CommercialAssignments" asp-action="Index" aria-current="@(IsCurrent("CommercialAssignments") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-users"></use></svg><span class="djj-workspace-nav__text">Relaciones comerciales</span></a></li>
                         }
                         @if (canBilling)
                         {
@@ -217,10 +234,10 @@
                     {
                         <li><a asp-controller="MyGoal" asp-action="Index" aria-current="@(IsCurrent("MyGoal") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-user"></use></svg><span class="djj-workspace-nav__text">Mi meta</span></a></li>
                     }
-                    @if (Can("FLOTA_MANTENIMIENTO") || Can("RUTAS_GESTIONAR") || Can("ENTREGAS_TABLERO_VER")) { <li class="djj-workspace-nav__label">Logística</li> }
+                    @if (Can("FLOTA_MANTENIMIENTO") || CanExplicit("RUTAS_GESTIONAR") || CanExplicit("ENTREGAS_TABLERO_VER")) { <li class="djj-workspace-nav__label">Logística</li> }
                     @if (Can("FLOTA_MANTENIMIENTO")) { <li><a asp-controller="Fleet" asp-action="Alerts" aria-current="@(IsCurrent("Fleet") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-truck"></use></svg><span class="djj-workspace-nav__text">Flota y mantenimiento</span></a></li> }
-                    @if (Can("RUTAS_GESTIONAR")) { <li><a asp-controller="RoutesAdmin" asp-action="Index" aria-current="@(IsCurrent("RoutesAdmin") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-truck"></use></svg><span class="djj-workspace-nav__text">Rutas</span></a></li> }
-                    @if (Can("ENTREGAS_TABLERO_VER")) { <li><a asp-controller="DeliveryBoard" asp-action="Index" aria-current="@(IsCurrent("DeliveryBoard") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-chart"></use></svg><span class="djj-workspace-nav__text">Tablero de entregas</span></a></li> }
+                    @if (CanExplicit("RUTAS_GESTIONAR")) { <li><a asp-controller="RoutesAdmin" asp-action="Index" aria-current="@(IsCurrent("RoutesAdmin") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-truck"></use></svg><span class="djj-workspace-nav__text">Rutas</span></a></li> }
+                    @if (CanExplicit("ENTREGAS_TABLERO_VER")) { <li><a asp-controller="DeliveryBoard" asp-action="Index" aria-current="@(IsCurrent("DeliveryBoard") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-chart"></use></svg><span class="djj-workspace-nav__text">Tablero de entregas</span></a></li> }
                     @if (canAssets || canAssetProfitability) { <li class="djj-workspace-nav__label">Activos y comodatos</li> }
                     @if (canAssets) { <li><a asp-controller="Assets" asp-action="Index" aria-current="@(IsCurrent("Assets", "Comodatos") && ViewContext.RouteData.Values["action"]?.ToString() != "Profitability" ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-package"></use></svg><span class="djj-workspace-nav__text">Activos y préstamos</span></a></li> }
                     @if (canAssetProfitability) { <li><a asp-controller="Comodatos" asp-action="Profitability" aria-current="@(IsCurrent("Comodatos") && ViewContext.RouteData.Values["action"]?.ToString() == "Profitability" ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-chart"></use></svg><span class="djj-workspace-nav__text">Rentabilidad</span></a></li> }
@@ -233,9 +250,17 @@
                     {
                         <li><a asp-controller="Documents" asp-action="Index" aria-current="@(IsCurrent("Documents") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-folders"></use></svg><span class="djj-workspace-nav__text">Documentos</span></a></li>
                     }
+                    @if (canDelegateDocuments)
+                    {
+                        <li><a asp-controller="DocumentDelegations" asp-action="Index" aria-current="@(IsCurrent("DocumentDelegations") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-shield"></use></svg><span class="djj-workspace-nav__text">Autorizaciones documentales</span></a></li>
+                    }
                     @if (canChat)
                     {
-                        <li><a asp-controller="Chat" asp-action="Index" aria-current="@(IsCurrent("Chat") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-chat"></use></svg><span class="djj-workspace-nav__text">Chat</span></a></li>
+                        <li><a asp-controller="@chatController" asp-action="Index" aria-current="@(IsCurrent(chatController) ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-chat"></use></svg><span class="djj-workspace-nav__text">Chat</span></a></li>
+                    }
+                    @if (CanExplicit("CHAT_USAR") && !personalChatEnabled)
+                    {
+                        <li><a asp-controller="ChatV2" asp-action="Index" aria-current="@(IsCurrent("ChatV2") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-chat"></use></svg><span class="djj-workspace-nav__text">Chat V2 · disponibilidad</span></a></li>
                     }
                     <li><a asp-controller="Assistant" asp-action="Index" aria-current="@(IsCurrent("Assistant") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-robot"></use></svg><span class="djj-workspace-nav__text">Asistente</span></a></li>
                     @if (canSecurity)
@@ -267,7 +292,7 @@
                 <div class="djj-workspace-topbar__actions">
                     @if (canChat)
                     {
-                        <a class="djj-icon-button" asp-controller="Chat" asp-action="Index" aria-label="Abrir chat"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-chat"></use></svg></a>
+                        <a class="djj-icon-button" asp-controller="@chatController" asp-action="Index" aria-label="Abrir chat"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-chat"></use></svg></a>
                     }
                     <a class="djj-workspace-user" asp-controller="Profile" asp-action="Edit">
                         <svg class="djj-icon djj-icon--lg" aria-hidden="true"><use href="#djj-icon-user"></use></svg>

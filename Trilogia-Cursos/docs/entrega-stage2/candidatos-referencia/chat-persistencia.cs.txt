@@ -1,0 +1,193 @@
+using System.Data;
+using System.Security.Cryptography;
+using System.Text.Json;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Data.SqlClient;
+using Proyecto_Final.Services;
+using Proyecto_Final.Services.ChatV2;
+
+namespace JJ.Private.ChatDc;
+
+// A separate provider must validate the destination, SQL manifest and writer identity.
+// No implementation or owner-credential fallback is supplied by this candidate.
+public interface IChatV2DcWriterConnections
+{
+    ValueTask<SqlConnection> OpenAccreditedAsync(CancellationToken cancellationToken);
+}
+
+public sealed class SqlChatV2DcPersistence(IChatV2DcReaderConnections reads, IChatV2DcWriterConnections writes,
+    SqlChatV2DcOriginalIdentitySource identities, IDataProtectionProvider protection, TimeProvider clock) : IChatV2IntentPersistence
+{
+    public bool SupportsDepartment => true;
+    public bool SupportsCustomer => true;
+    private readonly IDataProtector _cursors = protection.CreateProtector("ChatV2DC.History.v1");
+    private sealed record Cursor(Guid Login, int Actor, ChatV2Domain Domain, int Resource, long ActorEpoch,
+        long ResourceEpoch, long After, long Upper, DateTimeOffset Expires);
+
+    private static string Domain(ChatV2Domain domain) => domain switch
+    {
+        ChatV2Domain.Department => "D", ChatV2Domain.Customer => "C",
+        _ => throw new ChatV2Exception(ChatV2Failure.Validation)
+    };
+    private static void Resource(SqlCommand command, ChatV2Resource resource)
+    {
+        resource.Validate();
+        command.Parameters.Add("@Domain", SqlDbType.Char, 1).Value = Domain(resource.Domain);
+        command.Parameters.Add("@ResourceId", SqlDbType.Int).Value = resource.Id;
+    }
+    private static DateTime Utc(SqlDataReader reader, int column) => DateTime.SpecifyKind(reader.GetDateTime(column), DateTimeKind.Utc);
+    private static ChatV2Exception Failure(SqlException exception) => new(exception.Number switch
+    {
+        56801 or 56601 => ChatV2Failure.Session, 56802 or 59701 => ChatV2Failure.Forbidden,
+        59704 => ChatV2Failure.Resource, 59703 or 2601 or 2627 => ChatV2Failure.Conflict,
+        59702 => ChatV2Failure.Validation, _ => ChatV2Failure.Dependency
+    });
+
+    private async ValueTask<T> Query<T>(OriginalLoginContext login, string operation, bool write,
+        Action<SqlCommand>? parameters, Func<SqlDataReader, CancellationToken, Task<T>> map, CancellationToken ct)
+    {
+        if (!login.HasCanonicalLifetime || login.ExpiresUtc <= clock.GetUtcNow().UtcDateTime)
+            throw new ChatV2Exception(ChatV2Failure.Session);
+        try
+        {
+            await using var connection = write ? await writes.OpenAccreditedAsync(ct) : await reads.OpenAccreditedAsync(ct);
+            if (connection.State != ConnectionState.Open) throw new ChatV2Exception(ChatV2Failure.Dependency);
+            await using var command = new SqlCommand("ChatV2DC." + operation, connection) { CommandType = CommandType.StoredProcedure, CommandTimeout = 15 };
+            command.Parameters.Add("@LoginId", SqlDbType.UniqueIdentifier).Value = login.LoginId;
+            command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = login.UserId;
+            command.Parameters.Add("@PerfilId", SqlDbType.Int).Value = login.ProfileId;
+            command.Parameters.Add("@SecurityStamp", SqlDbType.UniqueIdentifier).Value = login.SecurityStamp;
+            command.Parameters.Add("@BindingHash", SqlDbType.Binary, 32).Value = login.BindingHash.ToArray();
+            command.Parameters.Add(new SqlParameter("@IssuedUtc", SqlDbType.DateTime2) { Scale = 7, Value = login.IssuedUtc });
+            command.Parameters.Add(new SqlParameter("@ExpiresUtc", SqlDbType.DateTime2) { Scale = 7, Value = login.ExpiresUtc });
+            parameters?.Invoke(command);
+            await using var reader = await command.ExecuteReaderAsync(ct);
+            var result = await map(reader, ct);
+            if (await reader.ReadAsync(ct) || await reader.NextResultAsync(ct)) throw new ChatV2Exception(ChatV2Failure.Contract);
+            return result;
+        }
+        catch (SqlException error) { throw Failure(error); }
+    }
+
+    public ValueTask<ChatV2LiveIdentity> ResolveAsync(OriginalLoginContext login, CancellationToken ct) => identities.ResolveAsync(login, ct);
+    public ValueTask<ChatV2IntentEpochs> PrepareAsync(OriginalLoginContext login, ChatV2LiveIdentity identity,
+        ChatV2Resource resource, Guid request, string contentHash, CancellationToken ct) => Query(login, "Prepare", true, c =>
+        {
+            Resource(c, resource); c.Parameters.Add("@RequestId", SqlDbType.UniqueIdentifier).Value = request;
+            c.Parameters.Add("@ContentHash", SqlDbType.Binary, 32).Value = Convert.FromHexString(contentHash);
+            c.Parameters.Add("@ActorEpoch", SqlDbType.BigInt).Value = identity.ActorEpoch;
+        }, async (r, token) =>
+        {
+            if (r.FieldCount != 3 || !await r.ReadAsync(token)) throw new ChatV2Exception(ChatV2Failure.Contract);
+            var result = new ChatV2IntentEpochs(r.GetInt64(0), r.GetInt64(1), new DateTimeOffset(Utc(r, 2)));
+            if (result.ActorEpoch != identity.ActorEpoch || result.ResourceEpoch <= 0 || result.ExpiresUtc.UtcDateTime > login.ExpiresUtc)
+                throw new ChatV2Exception(ChatV2Failure.Contract);
+            return result;
+        }, ct);
+
+    public ValueTask<ChatV2Receipt> ExecuteAsync(ChatV2BoundIntent intent, string? content, bool receiptOnly, CancellationToken ct) => Query(intent.Login, "ExecuteIntent", true, c =>
+        {
+            Resource(c, intent.Resource); c.Parameters.Add("@RequestId", SqlDbType.UniqueIdentifier).Value = intent.Request;
+            c.Parameters.Add("@ContentHash", SqlDbType.Binary, 32).Value = Convert.FromHexString(intent.ContentHash);
+            c.Parameters.Add("@ActorEpoch", SqlDbType.BigInt).Value = intent.Identity.ActorEpoch;
+            c.Parameters.Add("@ResourceEpoch", SqlDbType.BigInt).Value = intent.ResourceEpoch;
+            c.Parameters.Add(new SqlParameter("@IntentExpiresUtc", SqlDbType.DateTime2) { Scale = 7, Value = intent.ExpiresUtc.UtcDateTime });
+            c.Parameters.Add("@ReceiptOnly", SqlDbType.Bit).Value = receiptOnly;
+            c.Parameters.Add("@Content", SqlDbType.NVarChar, 1000).Value = content is null ? DBNull.Value : content;
+        }, async (r, token) =>
+        {
+            if (r.FieldCount != 4 || !await r.ReadAsync(token)) throw new ChatV2Exception(ChatV2Failure.Contract);
+            return new ChatV2Receipt(intent.Request, intent.Resource.Domain, intent.Resource.Id, r.GetInt64(0), r.GetInt64(1),
+                Utc(r, 2), "PERSISTED", r.GetString(3), intent.ResourceEpoch);
+        }, ct);
+
+    public ValueTask<IReadOnlyList<ChatV2OwnedResource>> ListAsync(OriginalLoginContext login, ChatV2Domain domain, CancellationToken ct) =>
+        Query<IReadOnlyList<ChatV2OwnedResource>>(login, "Own", false, c => c.Parameters.Add("@Domain", SqlDbType.Char, 1).Value = Domain(domain),
+            async (r, token) =>
+            {
+                if (r.FieldCount != 3) throw new ChatV2Exception(ChatV2Failure.Contract);
+                var rows = new List<ChatV2OwnedResource>();
+                while (await r.ReadAsync(token))
+                {
+                    if (r.GetString(0) != Domain(domain) || r.GetInt32(1) <= 0 || r.GetInt64(2) <= 0) throw new ChatV2Exception(ChatV2Failure.Contract);
+                    rows.Add(new(domain, r.GetInt32(1), r.GetInt64(2)));
+                }
+                return rows;
+            }, ct);
+
+    public ValueTask<ChatV2ResourceAccess> MembershipAsync(OriginalLoginContext login, ChatV2Resource resource, CancellationToken ct) =>
+        Query(login, "Membership", false, c => Resource(c, resource), async (r, token) =>
+        {
+            if (r.FieldCount != 3 || !await r.ReadAsync(token)) throw new ChatV2Exception(ChatV2Failure.Resource);
+            var result = new ChatV2ResourceAccess(r.GetBoolean(0), r.GetBoolean(1), r.GetInt64(2));
+            if (!result.CanRead || result.AuthorizationVersion <= 0 || (result.CanSend && !result.CanRead)) throw new ChatV2Exception(ChatV2Failure.Contract);
+            return result;
+        }, ct);
+
+    public ValueTask<IReadOnlyList<ChatV2QueueItem>> QueueAsync(OriginalLoginContext login, CancellationToken ct) =>
+        Query<IReadOnlyList<ChatV2QueueItem>>(login, "Queue", false, null, async (r, token) =>
+        {
+            if (r.FieldCount != 4) throw new ChatV2Exception(ChatV2Failure.Contract);
+            var rows = new List<ChatV2QueueItem>();
+            while (await r.ReadAsync(token))
+            {
+                var item = new ChatV2QueueItem(r.GetInt32(0), r.GetBoolean(1), r.GetInt64(2), r.GetString(3));
+                if (item.CaseId <= 0 || item.AssignmentVersion <= 0 || item.State is not ("OPEN" or "CLOSED")) throw new ChatV2Exception(ChatV2Failure.Contract);
+                rows.Add(item);
+            }
+            return rows;
+        }, ct);
+
+    public ValueTask<long> TransferAsync(OriginalLoginContext login, int caseId, int newAgent, long expectedVersion, CancellationToken ct) =>
+        Query(login, "Transfer", true, c =>
+        {
+            if (caseId <= 0 || newAgent <= 0 || newAgent == login.UserId || expectedVersion <= 0 || expectedVersion == long.MaxValue)
+                throw new ChatV2Exception(ChatV2Failure.Validation);
+            c.Parameters.Add("@CaseId", SqlDbType.Int).Value = caseId; c.Parameters.Add("@NewAgent", SqlDbType.Int).Value = newAgent;
+            c.Parameters.Add("@ExpectedVersion", SqlDbType.BigInt).Value = expectedVersion;
+        }, async (r, token) =>
+        {
+            if (r.FieldCount != 1 || !await r.ReadAsync(token) || r.GetInt64(0) != expectedVersion + 1) throw new ChatV2Exception(ChatV2Failure.Contract);
+            return r.GetInt64(0);
+        }, ct);
+
+    public async ValueTask<ChatV2HistoryResponse> HistoryAsync(OriginalLoginContext login, ChatV2Resource resource, string? cursor, CancellationToken ct)
+    {
+        resource.Validate(); _ = Domain(resource.Domain);
+        var actor = await ResolveAsync(login, ct); Cursor? previous = null;
+        if (cursor is not null)
+        {
+            if (cursor.Length > 2048) throw new ChatV2Exception(ChatV2Failure.Validation);
+            try { previous = JsonSerializer.Deserialize<Cursor>(_cursors.Unprotect(cursor)); }
+            catch (Exception e) when (e is CryptographicException or JsonException or FormatException) { throw new ChatV2Exception(ChatV2Failure.Conflict); }
+            if (previous is null || previous.Login != login.LoginId || previous.Actor != login.UserId || previous.Domain != resource.Domain ||
+                previous.Resource != resource.Id || previous.ActorEpoch != actor.ActorEpoch || previous.Expires <= clock.GetUtcNow())
+                throw new ChatV2Exception(ChatV2Failure.Conflict);
+        }
+        var page = await Query(login, "History", false, c =>
+        {
+            Resource(c, resource); c.Parameters.Add("@After", SqlDbType.BigInt).Value = previous?.After ?? 0L;
+            c.Parameters.Add("@Upper", SqlDbType.BigInt).Value = previous is null ? DBNull.Value : previous.Upper;
+            c.Parameters.Add("@ActorEpoch", SqlDbType.BigInt).Value = actor.ActorEpoch;
+            c.Parameters.Add("@ResourceEpoch", SqlDbType.BigInt).Value = previous is null ? DBNull.Value : previous.ResourceEpoch;
+        }, async (r, token) =>
+        {
+            if (r.FieldCount != 5) throw new ChatV2Exception(ChatV2Failure.Contract);
+            var rows = new List<ChatV2Message>();
+            while (await r.ReadAsync(token))
+            {
+                if (rows.Count >= 51) throw new ChatV2Exception(ChatV2Failure.Contract);
+                rows.Add(new(r.GetInt64(0), r.GetInt64(1), r.GetInt32(2), r.GetString(3), null, Utc(r, 4), null, null));
+            }
+            if (!await r.NextResultAsync(token) || r.FieldCount != 2 || !await r.ReadAsync(token)) throw new ChatV2Exception(ChatV2Failure.Contract);
+            return (Rows: rows, Upper: r.GetInt64(0), Version: r.GetInt64(1));
+        }, ct);
+        var after = await ResolveAsync(login, ct); var access = await MembershipAsync(login, resource, ct);
+        if (after.ActorEpoch != actor.ActorEpoch || access.AuthorizationVersion != page.Version) throw new ChatV2Exception(ChatV2Failure.Resource);
+        var result = page.Rows.Take(50).ToArray(); var expires = clock.GetUtcNow().AddMinutes(15);
+        if (expires.UtcDateTime > login.ExpiresUtc) expires = new(login.ExpiresUtc);
+        string? next = page.Rows.Count > 50 ? _cursors.Protect(JsonSerializer.Serialize(new Cursor(login.LoginId, login.UserId,
+            resource.Domain, resource.Id, actor.ActorEpoch, page.Version, result[^1].StreamSequence, page.Upper, expires))) : null;
+        return new(result, next);
+    }
+}

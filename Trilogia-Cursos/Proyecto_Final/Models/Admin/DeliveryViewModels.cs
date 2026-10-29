@@ -1,5 +1,11 @@
 namespace Proyecto_Final.Models.Admin
 {
+    public sealed record RouteDispatchNotificationItemViewModel(
+        Guid DispatchId, long EventId, Guid EventGuid, int RutaPedidoId, int PedidoId, bool NotifyEligible);
+
+    public sealed record RouteDispatchResultViewModel(
+        int RutaId, Guid DispatchId, IReadOnlyList<RouteDispatchNotificationItemViewModel> Items);
+
     // ── Portal del chofer: listado de rutas ─────────────────
     public class DriverRouteItemViewModel
     {
@@ -59,6 +65,7 @@ namespace Proyecto_Final.Models.Admin
     // ── Evidencias (CU-083) ─────────────────────────────────
     public class EvidenceItemViewModel
     {
+        public bool HasPrivateFile => !string.IsNullOrWhiteSpace(StorageKey);
         public int EvidenciaId { get; set; }
         public int PedidoId { get; set; }
         public int? RutaId { get; set; }
@@ -88,6 +95,8 @@ namespace Proyecto_Final.Models.Admin
 
     public sealed class AuthorizedEvidenceViewModel
     {
+        public string? Sha256 { get; set; }
+        public long? LengthBytes { get; set; }
         public int EvidenciaId { get; set; }
         public int PedidoId { get; set; }
         public string StorageKey { get; set; } = string.Empty;

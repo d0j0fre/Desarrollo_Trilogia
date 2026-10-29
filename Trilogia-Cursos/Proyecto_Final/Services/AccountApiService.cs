@@ -7,15 +7,23 @@ namespace Proyecto_Final.Services
     public class AccountApiService
     {
         private readonly HttpClient _httpClient;
+        public bool RemoteOriginalLogin { get; }
 
-        public AccountApiService(HttpClient httpClient)
+        public AccountApiService(HttpClient httpClient, IConfiguration? configuration = null)
         {
             _httpClient = httpClient;
+            RemoteOriginalLogin = configuration?.GetValue<bool>("OriginalLogin:RemoteAuthority") == true;
         }
 
-        public async Task<AuthResult> LoginAsync(LoginViewModel model)
+        public async Task<AuthResult> LoginAsync(LoginViewModel model, byte[]? bindingHash = null)
         {
-            var response = await _httpClient.PostAsJsonAsync("api/auth/login", new { Email = model.Email, Password = model.Password });
+            if (RemoteOriginalLogin && (bindingHash is null || bindingHash.Length != 32))
+                throw new InvalidOperationException("Falta el vínculo de sesión de MVC.");
+            using var response = await _httpClient.PostAsJsonAsync("api/auth/login", new
+            {
+                Email = model.Email, Password = model.Password,
+                BindingHash = RemoteOriginalLogin ? Convert.ToBase64String(bindingHash!) : null
+            });
 
             if (response.StatusCode == HttpStatusCode.Unauthorized)
                 return new AuthResult { Success = false, Message = "Correo o contraseña incorrectos." };

@@ -25,6 +25,8 @@ namespace Proyecto_Final.Models.Admin
 
     public class ManagerRejectOrderViewModel
     {
+        public Guid OperationId { get; set; }
+        [Range(1, long.MaxValue)] public long ExpectedRevision { get; set; }
         [Required]
         public int PedidoId { get; set; }
 
@@ -36,6 +38,8 @@ namespace Proyecto_Final.Models.Admin
 
     public class ManagerOrderReviewViewModel
     {
+        public Guid OperationId { get; set; }
+        public long ExpectedRevision { get; set; }
         public OrderDetailViewModel Pedido { get; set; } = new();
         public ManagerRejectOrderViewModel RechazarForm { get; set; } = new();
     }

@@ -9,9 +9,11 @@ namespace Proyecto_Final.Services
     public class LogisticsDbService
     {
         private readonly string _connectionString;
+        private readonly IHttpContextAccessor? _contextAccessor;
 
-        public LogisticsDbService(IConfiguration configuration)
+        public LogisticsDbService(IConfiguration configuration, IHttpContextAccessor? contextAccessor = null)
         {
+            _contextAccessor = contextAccessor;
             _connectionString = configuration.GetConnectionString("DefaultConnection")
                 ?? throw new InvalidOperationException("No se encontró la cadena de conexión DefaultConnection.");
         }
@@ -111,7 +113,7 @@ namespace Proyecto_Final.Services
         {
             var lista = new List<AssignableOrderViewModel>();
             await using var connection = new SqlConnection(_connectionString);
-            await using var command = new SqlCommand("dbo.sp_Rutas_GetAssignableOrders", connection) { CommandType = CommandType.StoredProcedure };
+            await using var command = new SqlCommand("dbo.sp_Stage2_GetAssignableOrders", connection) { CommandType = CommandType.StoredProcedure };
             command.Parameters.Add("@Buscar", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(buscar) ? DBNull.Value : buscar.Trim();
             await connection.OpenAsync();
             await using var reader = await command.ExecuteReaderAsync();
@@ -190,13 +192,15 @@ namespace Proyecto_Final.Services
             command.Parameters.Add("@PedidosJson", SqlDbType.NVarChar, -1).Value = pedidosJson;
             command.Parameters.Add("@CreadaPorUsuarioId", SqlDbType.Int).Value = creadaPorUsuarioId > 0 ? creadaPorUsuarioId : DBNull.Value;
             command.Parameters.Add("@CreadaPorNombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(creadaPorNombre) ? DBNull.Value : creadaPorNombre.Trim();
-            await connection.OpenAsync();
+            return await ExecuteLogisticsAsync<(int RutaId, string Codigo)>(connection, command, "Create", async () =>
+            {
             await using var reader = await command.ExecuteReaderAsync();
             if (await reader.ReadAsync())
             {
                 return (reader.GetInt32(0), reader.IsDBNull(1) ? string.Empty : reader.GetString(1));
             }
             return (0, string.Empty);
+            });
         }
 
         public async Task<List<RouteListItemViewModel>> GetRoutesAsync(string? estado, string? buscar)
@@ -296,8 +300,10 @@ namespace Proyecto_Final.Services
             await using var command = new SqlCommand("dbo.sp_Rutas_AddOrder", connection) { CommandType = CommandType.StoredProcedure };
             command.Parameters.Add("@RutaId", SqlDbType.Int).Value = rutaId;
             command.Parameters.Add("@PedidoId", SqlDbType.Int).Value = pedidoId;
-            await connection.OpenAsync();
+            await ExecuteLogisticsAsync(connection, command, "AddOrder", async () =>
+            {
             await command.ExecuteNonQueryAsync();
+            });
         }
 
         public async Task RemoveOrderFromRouteAsync(int rutaId, int pedidoId)
@@ -306,28 +312,65 @@ namespace Proyecto_Final.Services
             await using var command = new SqlCommand("dbo.sp_Rutas_RemoveOrder", connection) { CommandType = CommandType.StoredProcedure };
             command.Parameters.Add("@RutaId", SqlDbType.Int).Value = rutaId;
             command.Parameters.Add("@PedidoId", SqlDbType.Int).Value = pedidoId;
-            await connection.OpenAsync();
+            await ExecuteLogisticsAsync(connection, command, "RemoveOrder", async () =>
+            {
             await command.ExecuteNonQueryAsync();
+            });
         }
 
-        public async Task<List<(int PedidoId, string Nombre, string Correo)>> DispatchRouteAsync(int rutaId, int usuarioId, string usuarioNombre)
+        public async Task<RouteDispatchResultViewModel> DispatchRouteAsync(int rutaId, Guid dispatchId,
+            int usuarioId, string usuarioNombre, CancellationToken cancellationToken = default)
         {
-            var destinatarios = new List<(int, string, string)>();
+            if (rutaId <= 0 || dispatchId == Guid.Empty) throw new ArgumentException("Falta el despacho original.");
+            var login = OriginalLoginSession.ValidatedRequest(_contextAccessor?.HttpContext
+                ?? throw new UnauthorizedAccessException("Falta el contexto original."));
+            if (usuarioId != login.UserId) throw new UnauthorizedAccessException("El actor no corresponde al login original.");
             await using var connection = new SqlConnection(_connectionString);
-            await using var command = new SqlCommand("dbo.sp_Rutas_Dispatch", connection) { CommandType = CommandType.StoredProcedure };
+            await using var command = OriginalLoginService.ContextCommand(connection, "RouteDispatch.Dispatch", login);
             command.Parameters.Add("@RutaId", SqlDbType.Int).Value = rutaId;
-            command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId > 0 ? usuarioId : DBNull.Value;
+            command.Parameters.Add("@DispatchId", SqlDbType.UniqueIdentifier).Value = dispatchId;
             command.Parameters.Add("@UsuarioNombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(usuarioNombre) ? DBNull.Value : usuarioNombre.Trim();
-            await connection.OpenAsync();
-            await using var reader = await command.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
+            return await OriginalLoginTransaction.ExecuteAsync(connection, command, login, login.UserId, "RUTAS_GESTIONAR", async () =>
             {
-                destinatarios.Add((
-                    reader.GetInt32(0),
-                    reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
-                    reader.IsDBNull(2) ? string.Empty : reader.GetString(2)));
+                var items = await ReadDispatchItems(command, dispatchId, cancellationToken);
+                return new RouteDispatchResultViewModel(rutaId, dispatchId, items);
+            }, cancellationToken, (result, error) => new RouteDispatchCommitUnconfirmedException(result, error));
+        }
+
+        public async Task<IReadOnlyList<RouteDispatchNotificationItemViewModel>> GetOwnedRouteDispatchAsync(
+            int rutaId, Guid dispatchId, CancellationToken cancellationToken = default)
+        {
+            if (rutaId <= 0 || dispatchId == Guid.Empty) throw new ArgumentException("Falta el despacho original.");
+            var login = OriginalLoginSession.ValidatedRequest(_contextAccessor?.HttpContext
+                ?? throw new UnauthorizedAccessException("Falta el contexto original."));
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = OriginalLoginService.ContextCommand(connection, "RouteDispatch.GetOwned", login);
+            command.Parameters.Add("@RutaId", SqlDbType.Int).Value = rutaId;
+            command.Parameters.Add("@DispatchId", SqlDbType.UniqueIdentifier).Value = dispatchId;
+            return await OriginalLoginTransaction.ExecuteAsync(connection, command, login, login.UserId, "RUTAS_GESTIONAR",
+                () => ReadDispatchItems(command, dispatchId, cancellationToken), cancellationToken);
+        }
+
+        internal static async Task<IReadOnlyList<RouteDispatchNotificationItemViewModel>> ReadDispatchItems(
+            SqlCommand command, Guid expectedDispatch, CancellationToken cancellationToken)
+        {
+            var items = new List<RouteDispatchNotificationItemViewModel>();
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+            while (await reader.ReadAsync(cancellationToken))
+            {
+                var item = new RouteDispatchNotificationItemViewModel(reader.GetGuid(reader.GetOrdinal("DispatchId")),
+                    reader.GetInt64(reader.GetOrdinal("EventId")), reader.GetGuid(reader.GetOrdinal("EventGuid")),
+                    reader.GetInt32(reader.GetOrdinal("RutaPedidoId")), reader.GetInt32(reader.GetOrdinal("PedidoId")),
+                    reader.GetBoolean(reader.GetOrdinal("NotifyEligible")));
+                if (item.DispatchId != expectedDispatch || item.EventId <= 0 || item.EventGuid == Guid.Empty ||
+                    item.RutaPedidoId <= 0 || item.PedidoId <= 0 || items.Any(x => x.EventId == item.EventId || x.EventGuid == item.EventGuid || x.RutaPedidoId == item.RutaPedidoId))
+                    throw new InvalidOperationException("El resultado de despacho no corresponde al contrato.");
+                items.Add(item);
             }
-            return destinatarios;
+            while (await reader.NextResultAsync(cancellationToken))
+                while (await reader.ReadAsync(cancellationToken)) { }
+            if (items.Count == 0) throw new InvalidOperationException("El despacho no acreditó sus eventos.");
+            return items;
         }
 
         // CU-251 E1 — Secuenciar automáticamente (vecino más cercano).
@@ -337,13 +380,15 @@ namespace Proyecto_Final.Services
             await using var connection = new SqlConnection(_connectionString);
             await using var command = new SqlCommand("dbo.sp_Rutas_Secuenciar", connection) { CommandType = CommandType.StoredProcedure };
             command.Parameters.Add("@RutaId", SqlDbType.Int).Value = rutaId;
-            await connection.OpenAsync();
+            return await ExecuteLogisticsAsync<(int Secuenciados, int SinCoordenadas)>(connection, command, "Sequence", async () =>
+            {
             await using var reader = await command.ExecuteReaderAsync();
             if (await reader.ReadAsync())
             {
                 return (reader.IsDBNull(0) ? 0 : reader.GetInt32(0), reader.IsDBNull(1) ? 0 : reader.GetInt32(1));
             }
             return (0, 0);
+            });
         }
 
         // CU-251 E3 — Guardar secuencia manual + coordenadas.
@@ -353,8 +398,10 @@ namespace Proyecto_Final.Services
             await using var command = new SqlCommand("dbo.sp_Rutas_GuardarSecuencia", connection) { CommandType = CommandType.StoredProcedure };
             command.Parameters.Add("@RutaId", SqlDbType.Int).Value = rutaId;
             command.Parameters.Add("@ItemsJson", SqlDbType.NVarChar, -1).Value = itemsJson;
-            await connection.OpenAsync();
+            await ExecuteLogisticsAsync(connection, command, "SaveSequence", async () =>
+            {
             await command.ExecuteNonQueryAsync();
+            });
         }
 
         // CU-253 — Recalcular ruta despachada. Devuelve puntos re-secuenciados.
@@ -365,27 +412,18 @@ namespace Proyecto_Final.Services
             command.Parameters.Add("@RutaId", SqlDbType.Int).Value = rutaId;
             command.Parameters.Add("@ExcluirRutaPedidoId", SqlDbType.Int).Value = excluirRutaPedidoId.HasValue && excluirRutaPedidoId > 0 ? excluirRutaPedidoId.Value : DBNull.Value;
             command.Parameters.Add("@MotivoFallo", SqlDbType.NVarChar, 300).Value = string.IsNullOrWhiteSpace(motivoFallo) ? DBNull.Value : motivoFallo.Trim();
-            await connection.OpenAsync();
+            return await ExecuteLogisticsAsync<int>(connection, command, "Recalculate", async () =>
+            {
             var result = await command.ExecuteScalarAsync();
             return result is int n ? n : Convert.ToInt32(result ?? 0);
+            });
         }
 
         // CU-105 — Liquidar ruta: reingresa al inventario la mercadería no entregada
         // y cierra la ruta. Devuelve (pedidos reingresados, unidades reingresadas).
         public async Task<(int PedidosReingresados, int UnidadesReingresadas)> LiquidateRouteAsync(int rutaId, int usuarioId, string usuarioNombre)
         {
-            await using var connection = new SqlConnection(_connectionString);
-            await using var command = new SqlCommand("dbo.sp_Rutas_Liquidar", connection) { CommandType = CommandType.StoredProcedure };
-            command.Parameters.Add("@RutaId", SqlDbType.Int).Value = rutaId;
-            command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId > 0 ? usuarioId : DBNull.Value;
-            command.Parameters.Add("@Nombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(usuarioNombre) ? DBNull.Value : usuarioNombre.Trim();
-            await connection.OpenAsync();
-            await using var reader = await command.ExecuteReaderAsync();
-            if (await reader.ReadAsync())
-            {
-                return (reader.IsDBNull(0) ? 0 : reader.GetInt32(0), reader.IsDBNull(1) ? 0 : reader.GetInt32(1));
-            }
-            return (0, 0);
+            return await Task.FromException<(int, int)>(new LogisticsSettlementUnavailableException());
         }
 
         // ── CU-106 Liquidación financiera de cobros de ruta ──
@@ -488,8 +526,10 @@ namespace Proyecto_Final.Services
             command.Parameters.Add("@Motivo", SqlDbType.NVarChar, 300).Value = string.IsNullOrWhiteSpace(motivo) ? DBNull.Value : motivo.Trim();
             command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId > 0 ? usuarioId : DBNull.Value;
             command.Parameters.Add("@UsuarioNombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(usuarioNombre) ? DBNull.Value : usuarioNombre.Trim();
-            await connection.OpenAsync();
+            await ExecuteLogisticsAsync(connection, command, "Cancel", async () =>
+            {
             await command.ExecuteNonQueryAsync();
+            });
         }
 
         // ────────────────────────────────────────────────────
@@ -571,20 +611,22 @@ namespace Proyecto_Final.Services
 
         public async Task<UpdateDeliveryStatusResultViewModel?> UpdateDeliveryStatusAsync(
             int rutaPedidoId, string nuevoEstado, Guid syncGuid, string? motivoFallo,
-            int choferUsuarioId, string choferNombre)
+            int choferUsuarioId, string choferNombre, OriginalLoginContext originalLogin, CancellationToken cancellationToken = default)
         {
             await using var connection = new SqlConnection(_connectionString);
-            await using var command = new SqlCommand("dbo.sp_Chofer_UpdateDeliveryStatus", connection) { CommandType = CommandType.StoredProcedure };
+            await using var command = new SqlCommand("dbo.sp_Stage2_ConfirmDelivery", connection) { CommandType = CommandType.StoredProcedure };
             command.Parameters.Add("@RutaPedidoId", SqlDbType.Int).Value = rutaPedidoId;
             command.Parameters.Add("@NuevoEstado", SqlDbType.NVarChar, 20).Value = nuevoEstado.Trim();
             command.Parameters.Add("@SyncGuid", SqlDbType.UniqueIdentifier).Value = syncGuid;
             command.Parameters.Add("@MotivoFallo", SqlDbType.NVarChar, 300).Value = string.IsNullOrWhiteSpace(motivoFallo) ? DBNull.Value : motivoFallo.Trim();
             command.Parameters.Add("@ChoferUsuarioId", SqlDbType.Int).Value = choferUsuarioId;
             command.Parameters.Add("@ChoferNombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(choferNombre) ? DBNull.Value : choferNombre.Trim();
-            await connection.OpenAsync();
-            await using var reader = await command.ExecuteReaderAsync();
-            if (await reader.ReadAsync())
+            command.Parameters.Add("@ExpectedSecurityStamp", SqlDbType.UniqueIdentifier).Value = originalLogin.SecurityStamp;
+            return await OriginalLoginTransaction.ExecuteAsync(connection, command, originalLogin, choferUsuarioId, null, async () =>
             {
+                await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+                if (await reader.ReadAsync(cancellationToken))
+                {
                 return new UpdateDeliveryStatusResultViewModel
                 {
                     RutaPedidoId = reader.GetInt32(0),
@@ -596,8 +638,9 @@ namespace Proyecto_Final.Services
                     RutaCompletada = !reader.IsDBNull(6) && reader.GetBoolean(6),
                     Duplicado = !reader.IsDBNull(7) && reader.GetBoolean(7)
                 };
-            }
-            return null;
+                }
+                return null;
+            }, cancellationToken);
         }
 
         // ────────────────────────────────────────────────────
@@ -608,7 +651,7 @@ namespace Proyecto_Final.Services
             string? observaciones, int registradoPorUsuarioId, string registradoPorNombre)
         {
             await using var connection = new SqlConnection(_connectionString);
-            await using var command = new SqlCommand("dbo.sp_Entrega_RegisterEvidence", connection) { CommandType = CommandType.StoredProcedure };
+            await using var command = new SqlCommand("dbo.sp_Stage2_RegisterEvidence", connection) { CommandType = CommandType.StoredProcedure };
             command.Parameters.Add("@PedidoId", SqlDbType.Int).Value = pedidoId;
             command.Parameters.Add("@RutaId", SqlDbType.Int).Value = rutaId.HasValue && rutaId.Value > 0 ? rutaId.Value : DBNull.Value;
             command.Parameters.Add("@TipoEvidencia", SqlDbType.NVarChar, 20).Value = tipoEvidencia.Trim();
@@ -617,35 +660,43 @@ namespace Proyecto_Final.Services
             command.Parameters.Add("@Observaciones", SqlDbType.NVarChar, 300).Value = string.IsNullOrWhiteSpace(observaciones) ? DBNull.Value : observaciones.Trim();
             command.Parameters.Add("@RegistradoPorUsuarioId", SqlDbType.Int).Value = registradoPorUsuarioId > 0 ? registradoPorUsuarioId : DBNull.Value;
             command.Parameters.Add("@RegistradoPorNombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(registradoPorNombre) ? DBNull.Value : registradoPorNombre.Trim();
-            await connection.OpenAsync();
+            return await ExecuteLogisticsAsync<int>(connection, command, "Evidence", async () =>
+            {
             var result = await command.ExecuteScalarAsync();
             return result is int id ? id : Convert.ToInt32(result);
+            });
         }
 
-        public async Task MarkEvidenceReadyAsync(int evidenciaId, int registradoPorUsuarioId)
+        public async Task MarkEvidenceReadyAsync(int evidenciaId, int registradoPorUsuarioId, string sha256, long length)
         {
             await using var connection = new SqlConnection(_connectionString);
-            await using var command = new SqlCommand("dbo.sp_Entrega_MarkEvidenceReady", connection)
+            await using var command = new SqlCommand("dbo.sp_Stage2_MarkEvidenceReady", connection)
             {
                 CommandType = CommandType.StoredProcedure
             };
             command.Parameters.Add("@EvidenciaId", SqlDbType.Int).Value = evidenciaId;
             command.Parameters.Add("@RegistradoPorUsuarioId", SqlDbType.Int).Value = registradoPorUsuarioId;
-            await connection.OpenAsync();
+            command.Parameters.Add("@Sha256", SqlDbType.Char, 64).Value = sha256;
+            command.Parameters.Add("@Length", SqlDbType.BigInt).Value = length;
+            await ExecuteLogisticsAsync(connection, command, "Evidence", async () =>
+            {
             await command.ExecuteNonQueryAsync();
+            });
         }
 
         public async Task DeletePendingEvidenceAsync(int evidenciaId, int registradoPorUsuarioId)
         {
             await using var connection = new SqlConnection(_connectionString);
-            await using var command = new SqlCommand("dbo.sp_Entrega_DeletePendingEvidence", connection)
+            await using var command = new SqlCommand("dbo.sp_Stage2_DeletePendingEvidence", connection)
             {
                 CommandType = CommandType.StoredProcedure
             };
             command.Parameters.Add("@EvidenciaId", SqlDbType.Int).Value = evidenciaId;
             command.Parameters.Add("@RegistradoPorUsuarioId", SqlDbType.Int).Value = registradoPorUsuarioId;
-            await connection.OpenAsync();
+            await ExecuteLogisticsAsync(connection, command, "Evidence", async () =>
+            {
             await command.ExecuteNonQueryAsync();
+            });
         }
 
         public async Task<AuthorizedEvidenceViewModel?> GetAuthorizedEvidenceAsync(
@@ -653,13 +704,14 @@ namespace Proyecto_Final.Services
             int usuarioId)
         {
             await using var connection = new SqlConnection(_connectionString);
-            await using var command = new SqlCommand("dbo.sp_Entrega_GetAuthorizedEvidence", connection)
+            await using var command = new SqlCommand("dbo.sp_Stage2_GetAuthorizedEvidence", connection)
             {
                 CommandType = CommandType.StoredProcedure
             };
             command.Parameters.Add("@EvidenciaId", SqlDbType.Int).Value = evidenciaId;
             command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId;
-            await connection.OpenAsync();
+            return await ExecuteLogisticsAsync<AuthorizedEvidenceViewModel?>(connection, command, "Evidence", async () =>
+            {
             await using var reader = await command.ExecuteReaderAsync(CommandBehavior.SingleRow);
             if (!await reader.ReadAsync()) return null;
             return new AuthorizedEvidenceViewModel
@@ -668,32 +720,40 @@ namespace Proyecto_Final.Services
                 PedidoId = reader.GetInt32(1),
                 StorageKey = reader.GetString(2),
                 MimeType = reader.GetString(3),
-                TipoEvidencia = reader.GetString(4)
+                TipoEvidencia = reader.GetString(4),
+                Sha256 = reader.IsDBNull(5) ? null : reader.GetString(5),
+                LengthBytes = reader.IsDBNull(6) ? null : reader.GetInt64(6)
             };
+            });
         }
 
         public async Task<List<EvidenceItemViewModel>> GetEvidencesByOrderAsync(int pedidoId)
         {
             var lista = new List<EvidenceItemViewModel>();
             await using var connection = new SqlConnection(_connectionString);
-            await using var command = new SqlCommand("dbo.sp_Entrega_GetEvidencesByOrder", connection) { CommandType = CommandType.StoredProcedure };
+            await using var command = new SqlCommand("dbo.sp_Stage2_GetEvidencesByOrder", connection) { CommandType = CommandType.StoredProcedure };
             command.Parameters.Add("@PedidoId", SqlDbType.Int).Value = pedidoId;
-            await connection.OpenAsync();
+            command.Parameters.Add("@Actor", SqlDbType.Int).Value = OriginalLoginSession.ValidatedRequest(_contextAccessor?.HttpContext ?? throw new UnauthorizedAccessException()).UserId;
+            return await ExecuteLogisticsAsync<List<EvidenceItemViewModel>>(connection, command, "Evidence", async () =>
+            {
             await using var reader = await command.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {
                 lista.Add(ReadEvidence(reader));
             }
             return lista;
+            });
         }
 
         public async Task<RouteEvidencesViewModel> GetRouteEvidencesAsync(int rutaId, RouteHeaderViewModel cabecera)
         {
             var vm = new RouteEvidencesViewModel { Cabecera = cabecera };
             await using var connection = new SqlConnection(_connectionString);
-            await using var command = new SqlCommand("dbo.sp_Entrega_GetEvidencesByRoute", connection) { CommandType = CommandType.StoredProcedure };
+            await using var command = new SqlCommand("dbo.sp_Stage2_GetEvidencesByRoute", connection) { CommandType = CommandType.StoredProcedure };
             command.Parameters.Add("@RutaId", SqlDbType.Int).Value = rutaId;
-            await connection.OpenAsync();
+            command.Parameters.Add("@Actor", SqlDbType.Int).Value = OriginalLoginSession.ValidatedRequest(_contextAccessor?.HttpContext ?? throw new UnauthorizedAccessException()).UserId;
+            return await ExecuteLogisticsAsync<RouteEvidencesViewModel>(connection, command, "Evidence", async () =>
+            {
             await using var reader = await command.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {
@@ -724,6 +784,7 @@ namespace Proyecto_Final.Services
                 }
             }
             return vm;
+            });
         }
 
         private static EvidenceItemViewModel ReadEvidence(SqlDataReader reader) => new EvidenceItemViewModel
@@ -738,5 +799,30 @@ namespace Proyecto_Final.Services
             RegistradoPorNombre = reader.IsDBNull(7) ? string.Empty : reader.GetString(7),
             FechaRegistro = reader.GetDateTime(8)
         };
+        private Task<T> ExecuteLogisticsAsync<T>(SqlConnection connection, SqlCommand command, string operation, Func<Task<T>> work)
+        {
+            var login = OriginalLoginSession.ValidatedRequest(_contextAccessor?.HttpContext
+                ?? throw new UnauthorizedAccessException("Falta el contexto original de la solicitud."));
+            foreach (var name in new[] { "@UsuarioId", "@CreadaPorUsuarioId", "@RegistradoPorUsuarioId" })
+                if (command.Parameters.Contains(name) && command.Parameters[name].Value is int actor && actor != login.UserId)
+                    throw new UnauthorizedAccessException("El actor no corresponde al login original.");
+            if (operation == "Create")
+            {
+                command.CommandText = "dbo.sp_Stage2_CreateRoute";
+                command.Parameters.Add("@Actor", SqlDbType.Int).Value = login.UserId;
+            }
+            else if (operation != "Evidence")
+            {
+                command.CommandText = "dbo.sp_Stage2_RouteOperation";
+                command.Parameters.Add("@Actor", SqlDbType.Int).Value = login.UserId;
+                command.Parameters.Add("@Operation", SqlDbType.NVarChar, 20).Value = operation;
+            }
+            return OriginalLoginTransaction.ExecuteAsync(connection, command, login, login.UserId,
+                operation == "Evidence" ? null : "RUTAS_GESTIONAR", work);
+        }
+
+        private Task ExecuteLogisticsAsync(SqlConnection connection, SqlCommand command, string operation, Func<Task> work) =>
+            ExecuteLogisticsAsync(connection, command, operation, async () => { await work(); return 0; });
+
     }
 }

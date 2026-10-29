@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Proyecto_Final.Models.Store;
@@ -61,6 +61,7 @@ namespace Proyecto_Final.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            CheckoutAttemptState.NewCart(HttpContext.Session);
             var items = GetCartItems();
             var item = items.FirstOrDefault(x => x.ProductoId == productoId);
             if (item is null)
@@ -104,6 +105,7 @@ namespace Proyecto_Final.Controllers
                 return UnprocessableEntity(new { message = "El combo no está disponible en este momento." });
             }
 
+            CheckoutAttemptState.NewCart(HttpContext.Session);
             var items = GetCartItems();
             var item = items.FirstOrDefault(candidate =>
                 candidate.ItemType == CartItemTypes.Combo && candidate.ComboId == comboId);
@@ -225,6 +227,13 @@ namespace Proyecto_Final.Controllers
                 return RedirectToAction("Login", "Account", new { returnUrl = Url.Action(nameof(Checkout), "Cart") });
             }
 
+            var original = OriginalLoginSession.ValidatedRequest(HttpContext);
+            var attempt = CheckoutAttemptState.Get(HttpContext.Session, original);
+            if (attempt.Request is not null)
+            {
+                ViewData["CheckoutRecovery"] = true;
+                return View(attempt.Request);
+            }
             var cart = await BuildCartViewModelAsync();
             if (cart.Items.Count == 0)
             {
@@ -234,7 +243,7 @@ namespace Proyecto_Final.Controllers
 
             var model = new CheckoutViewModel
             {
-                OperationToken = Guid.NewGuid(),
+                OperationToken = attempt.OperationId,
                 Cart = cart,
                 CorreoElectronico = HttpContext.Session.GetString("UserEmail"),
                 TipoEntrega = "Envío a domicilio",
@@ -247,7 +256,11 @@ namespace Proyecto_Final.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Checkout(CheckoutViewModel model)
         {
-            model.Cart = await BuildCartViewModelAsync();
+            if (!IsLoggedIn())
+                return RedirectToAction("Login", "Account", new { returnUrl = Url.Action(nameof(Checkout), "Cart") });
+            var original = OriginalLoginSession.ValidatedRequest(HttpContext);
+            var attempt = CheckoutAttemptState.Get(HttpContext.Session, original);
+            model.Cart = attempt.Request?.Cart ?? await BuildCartViewModelAsync();
             model.TipoEntrega = "Envío a domicilio";
             model.Identificacion = CostaRicanIdentificationAttribute.Normalize(model.Identificacion);
 
@@ -321,10 +334,7 @@ namespace Proyecto_Final.Controllers
                     "Seleccione un método de pago válido.");
             }
 
-            model.CorreoElectronico =
-                string.IsNullOrWhiteSpace(model.CorreoElectronico)
-                    ? HttpContext.Session.GetString("UserEmail")
-                    : model.CorreoElectronico.Trim();
+            model.CorreoElectronico = HttpContext.Session.GetString("UserEmail");
 
             if (string.IsNullOrWhiteSpace(model.CorreoElectronico))
             {
@@ -352,20 +362,25 @@ namespace Proyecto_Final.Controllers
                 var usuarioId =
                     HttpContext.Session.GetInt32("UserId") ?? 0;
 
+                var frozen = CheckoutAttemptState.Freeze(HttpContext.Session, original, model, model.Cart.Items);
                 var order = await _storeDbService.CreateOrderWithPromotionsAsync(
                     usuarioId,
                     model,
-                    model.Cart.Items,
+                    frozen.Items!,
+                    original,
                     HttpContext.RequestAborted);
 
                 var confirmedItems = order.Items.Concat(order.Gifts).ToList();
 
                 var confirmacion = new OrderConfirmationViewModel
                 {
+                    OwnerLoginId = original.LoginId,
+                    OwnerUserId = original.UserId,
                     PedidoId = order.PedidoId,
                     TipoEntrega = model.TipoEntrega,
                     DireccionEntrega = model.DireccionEntrega,
                     Total = order.Total,
+                    Amounts = order.Amounts,
                     Items = confirmedItems
                 };
 
@@ -378,6 +393,8 @@ namespace Proyecto_Final.Controllers
                     HttpContext.Session.GetString("UserFullName")
                     ?? "Cliente";
 
+                if (!order.IsReplay)
+                {
                 try
                 {
                     _emailService.SendOrderReceipt(
@@ -397,6 +414,8 @@ namespace Proyecto_Final.Controllers
                     TempData["ErrorMessage"] = "El pedido fue confirmado, pero no fue posible enviar el comprobante por correo.";
                 }
 
+                }
+                CheckoutAttemptState.Complete(HttpContext.Session, frozen);
                 HttpContext.Session.Remove(CartSessionKey);
 
                 TempData["OrderConfirmation"] =
@@ -407,8 +426,22 @@ namespace Proyecto_Final.Controllers
 
                 return RedirectToAction(nameof(Confirmation));
             }
-            catch (SqlException ex)
-                when (ex.Number is 51106 or 51107 or 53101 or 54615 or 54616)
+            catch (CheckoutPricingMismatchException)
+            {
+                ModelState.AddModelError(string.Empty, "No se confirmó la compra porque el cálculo de precios requiere reconciliación. No se descontaron existencias.");
+                return InvalidCheckout(model);
+            }
+            catch (CommercialAssignmentsUnavailableException)
+            {
+                ModelState.AddModelError(string.Empty, "Este importe requiere aprobación supervisora. Esa operación no está habilitada; no se registró la compra.");
+                return InvalidCheckout(model);
+            }
+            catch (CheckoutAttemptConflictException)
+            {
+                ModelState.AddModelError(string.Empty, "Hay un intento pendiente con otros datos. Volvé a abrir el checkout para recuperar el original.");
+                return InvalidCheckout(model);
+            }
+            catch (SqlException ex)                when (ex.Number is 51106 or 51107 or 53101 or 54615 or 54616)
             {
                 _logger.LogWarning(ex, "El checkout fue rechazado por falta de inventario para el usuario {UserId}.", HttpContext.Session.GetInt32("UserId"));
                 ModelState.AddModelError(
@@ -425,13 +458,20 @@ namespace Proyecto_Final.Controllers
         }
 
         [HttpGet]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
         public IActionResult Confirmation()
         {
             if (TempData["OrderConfirmation"] is not string raw || string.IsNullOrWhiteSpace(raw))
                 return RedirectToAction(nameof(Index));
 
-            var model = JsonSerializer.Deserialize<OrderConfirmationViewModel>(raw);
-            return View(model ?? new OrderConfirmationViewModel());
+            OrderConfirmationViewModel? model;
+            try { model = JsonSerializer.Deserialize<OrderConfirmationViewModel>(raw); }
+            catch (JsonException) { return RedirectToAction(nameof(Index)); }
+            if (model is null || model.PedidoId <= 0
+                || HttpContext.Items[OriginalLoginSession.ValidatedContextItem] is not OriginalLoginContext login
+                || !login.HasCanonicalLifetime || model.OwnerLoginId != login.LoginId || model.OwnerUserId != login.UserId)
+                return RedirectToAction(nameof(Index));
+            return View(model);
         }
 
         private bool IsLoggedIn() => !string.IsNullOrWhiteSpace(HttpContext.Session.GetString("UserEmail"));
@@ -464,10 +504,10 @@ namespace Proyecto_Final.Controllers
             {
                 var usuarioId = HttpContext.Session.GetInt32("UserId") ?? 0;
                 var segmento = await _storeDbService.GetUserSegmentAsync(usuarioId, HttpContext.RequestAborted);
-                var vigentes = await _promotions.GetActivePromotionsAsync(segmento);
+                var snapshot = await _promotions.GetActivePromotionSnapshotAsync(segmento, HttpContext.RequestAborted);
                 var resultado = PromotionEngine.Apply(
                     cart.Items.Where(item => item.ItemType == CartItemTypes.Product).ToList(),
-                    vigentes);
+                    snapshot.Promotions, segmento, snapshot.EvaluationDate);
                 cart.Regalias = resultado.Gifts;
             }
             catch (Exception exception)

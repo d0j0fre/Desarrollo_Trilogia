@@ -80,6 +80,22 @@ public sealed class AuthorizationFilterTests
         Assert.Equal("~/Views/Account/AccesoDenegado.cshtml", view.ViewName);
     }
 
+    [Theory]
+    [InlineData("Administrador", false)]
+    [InlineData("Supervisor", false)]
+    [InlineData("Supervisor", true)]
+    public async Task OrderApproval_AlwaysRequiresEffectiveCapabilityWithoutAdministrativeBypass(string role, bool granted)
+    {
+        var permissions = new Mock<IRolePermissionService>(MockBehavior.Strict);
+        permissions.Setup(service => service.GetPermissionCodesAsync(role))
+            .ReturnsAsync(new HashSet<string>(granted ? ["PEDIDOS_AUTORIZAR_RECHAZAR"] : []));
+        var context = CreateContext(12,"actor@example.invalid",role);
+        await new AdminAuthorizeFilter("Pedidos","PEDIDOS_AUTORIZAR_RECHAZAR",permissions.Object,allowAdministratorBypass:false)
+            .OnAuthorizationAsync(context);
+        if (granted) Assert.Null(context.Result); else AssertAccessDenied(context.Result);
+        permissions.Verify(service => service.GetPermissionCodesAsync(role),Times.Once);
+    }
+
     private static AuthorizationFilterContext CreateContext(
         int? userId = null,
         string? email = null,

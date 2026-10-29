@@ -9,23 +9,30 @@ using Proyecto_Final.Services;
 namespace Proyecto_Final.Controllers
 {
     [AdminAuthorize("Chat", "CHAT_USAR")]
+    [ServiceFilter(typeof(Proyecto_Final.Services.ChatV2.LegacyChatWriteGuard))]
     public sealed class ChatController : Controller
     {
         private readonly IChatDbService _chat;
         private readonly IChatAuthorizationService _authorization;
         private readonly IHubContext<ChatHub> _hubContext;
         private readonly ILogger<ChatController> _logger;
+        private readonly IConfiguration? _configuration;
+        private readonly Proyecto_Final.Services.ChatV2.SqlLegacyPersonalArchive? _archive;
 
         public ChatController(
             IChatDbService chat,
             IChatAuthorizationService authorization,
             IHubContext<ChatHub> hubContext,
-            ILogger<ChatController> logger)
+            ILogger<ChatController> logger,
+            IConfiguration? configuration = null,
+            Proyecto_Final.Services.ChatV2.SqlLegacyPersonalArchive? archive = null)
         {
             _chat = chat;
             _authorization = authorization;
             _hubContext = hubContext;
             _logger = logger;
+            _configuration = configuration;
+            _archive = archive;
         }
 
         [HttpGet]
@@ -155,6 +162,22 @@ namespace Proyecto_Final.Controllers
         public async Task<IActionResult> GetMessages(int conversationId, int page = 1, int pageSize = 50)
         {
             var userId = CurrentUserId();
+            if (_configuration?.GetValue<bool>("ChatV2:PersonalSqlEnabled") == true
+                || _configuration?.GetValue<bool>("ChatV2:LegacyReadOnly") == true)
+            {
+                try
+                {
+                    if (_archive is null) return StatusCode(503, ChatError("El historial no está disponible."));
+                    var messages = await _archive.ReadAsync(OriginalLoginSession.ValidatedRequest(HttpContext),
+                        conversationId, page, pageSize, HttpContext.RequestAborted);
+                    return Json(new { success = true, currentUserId = userId, page = Math.Max(page, 1), messages });
+                }
+                catch (Proyecto_Final.Services.ChatV2.ChatV2Exception ex)
+                {
+                    return StatusCode(Proyecto_Final.Services.ChatV2.ChatV2Errors.Status(ex.Failure),
+                        ChatError("El historial solicitado no está disponible."));
+                }
+            }
             if (!await _authorization.CanAccessConversationAsync(userId, conversationId))
             {
                 return StatusCode(403, ChatError("No tiene acceso a la conversación."));

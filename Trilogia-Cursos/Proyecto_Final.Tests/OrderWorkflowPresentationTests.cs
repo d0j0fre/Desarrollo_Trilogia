@@ -56,15 +56,22 @@ public sealed class OrderWorkflowPresentationTests
     public void SellerCapture_PreservesIndexedFieldsStockAndInlineValidation()
     {
         var view = Read("Views/SellerOrders/Index.cshtml");
-        Assert.Contains("asp-controller=\"SellerOrders\" asp-action=\"Create\" method=\"post\"", view);
+        Assert.Contains("asp-controller=\"SellerOrders\" asp-action=\"Review\" method=\"post\"", view);
+        Assert.Contains("asp-for=\"RequestId\"", view);
         foreach (var field in new[] { "ClienteUsuarioId", "TipoEntrega", "DireccionEntrega", "IdentificacionCliente", "Observaciones" })
         {
             Assert.Matches($"<(?:input|select|textarea)[^>]*asp-for=\"{field}\"", view);
             Assert.Contains($"asp-validation-for=\"{field}\"", view);
             Assert.Contains($"label asp-for=\"{field}\"", view);
         }
-        foreach (var field in new[] { "ProductoId", "Nombre", "Categoria", "Precio", "Stock", "Cantidad" })
+        foreach (var field in new[] { "ProductoId", "Cantidad" })
             Assert.Contains($"asp-for=\"Productos[i].{field}\"", view);
+        foreach (var field in new[] { "Nombre", "Categoria", "Precio", "Stock" })
+        {
+            Assert.DoesNotContain($"asp-for=\"Productos[i].{field}\"", view);
+            Assert.NotNull(typeof(SellerOrderProductInputViewModel).GetProperty(field)!
+                .GetCustomAttribute<Microsoft.AspNetCore.Mvc.ModelBinding.BindNeverAttribute>());
+        }
         Assert.Contains("label asp-for=\"Productos[i].Cantidad\"", view);
         Assert.Contains("asp-validation-for=\"Productos[i].Cantidad\"", view);
         Assert.Contains("max=\"@Model.Productos[i].Stock\"", view);
@@ -116,7 +123,9 @@ public sealed class OrderWorkflowPresentationTests
         foreach (var field in new[] { "Cliente", "Correo", "FechaPedido", "Estado", "Total", "TipoEntrega", "DireccionEntrega", "Observaciones", "MotivoRechazo" })
             Assert.Contains("Model." + field, summary);
         Assert.DoesNotContain("VendedorNombre", summary); // Not available in this contract.
-        Assert.DoesNotContain("Impuesto", summary);
+        Assert.Contains("Model.ServerAmounts is { } amounts", summary);
+        Assert.Contains("amounts.Tax", summary);
+        Assert.DoesNotContain("Math.Round", summary);
     }
 
     [Fact]
@@ -141,8 +150,8 @@ public sealed class OrderWorkflowPresentationTests
                 Assert.NotNull(method.GetCustomAttribute<ValidateAntiForgeryTokenAttribute>());
         }
         var layout = Read("Views/Shared/_WorkspaceLayout.cshtml");
-        Assert.Contains("Can(\"VENTA_MOVIL_CREAR\")", layout);
-        Assert.Contains("Can(\"PEDIDOS_AUTORIZAR_RECHAZAR\")", layout);
+        Assert.Contains("CanExplicit(\"VENTA_MOVIL_CREAR\")", layout);
+        Assert.Contains("CanExplicit(\"PEDIDOS_AUTORIZAR_RECHAZAR\")", layout);
         Assert.Contains("if (canSellerOrders)", layout);
         Assert.Contains("if (canManagerOrders)", layout);
         Assert.Contains("asp-controller=\"@workspaceController\"", layout);
@@ -150,7 +159,7 @@ public sealed class OrderWorkflowPresentationTests
         Assert.Contains("IsCurrent(\"ManagerOrders\") && canManagerOrders ? \"ManagerOrders\"", layout);
         Assert.Single(Regex.Matches(layout, "asp-controller=\"SellerOrders\"").Cast<Match>());
         Assert.Single(Regex.Matches(layout, "asp-controller=\"ManagerOrders\"").Cast<Match>());
-        Assert.Contains("HasModulePermissionAsync(role, \"Pedidos\")", Read("Views/Shared/_OrderWorkflowDetailLink.cshtml"));
+        Assert.Contains("GetPermissionCodesAsync(role)).Contains(\"PEDIDOS_VER\")", Read("Views/Shared/_OrderWorkflowDetailLink.cshtml"));
         Assert.Contains("SellerOwnsOrderAsync(id, vendedorId)", Read("Controllers/SellerOrdersController.cs"));
     }
 
@@ -168,7 +177,7 @@ public sealed class OrderWorkflowPresentationTests
         var model = Assert.IsType<ManagerApproveResultViewModel>(Assert.IsType<ViewResult>(result).Model);
         Assert.Equal(id, model.PedidoId);
         Assert.Equal(invoice, model.NumeroFactura);
-        Assert.Equal("Liberado", model.Estado);
+        Assert.Equal("Facturado", model.Estado);
     }
 
     private static string Read(string path)

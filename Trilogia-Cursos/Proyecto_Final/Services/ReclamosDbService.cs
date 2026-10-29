@@ -16,17 +16,20 @@ namespace Proyecto_Final.Services
         }
 
         // ── CU-191/192 Listado ──────────────────────────────
-        public async Task<List<ReclamoListItemViewModel>> GetReclamosAsync(string? estado, string? buscar)
+        public async Task<List<ReclamoListItemViewModel>> GetReclamosAsync(string? estado, string? buscar, int actorUsuarioId, OriginalLoginContext originalLogin)
         {
             var lista = new List<ReclamoListItemViewModel>();
             await using var connection = new SqlConnection(_connectionString);
             await using var command = new SqlCommand("dbo.sp_Reclamos_List", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.Add("@ActorUsuarioId", SqlDbType.Int).Value = actorUsuarioId;
             command.Parameters.Add("@Estado", SqlDbType.NVarChar, 20).Value = string.IsNullOrWhiteSpace(estado) ? DBNull.Value : estado.Trim();
             command.Parameters.Add("@Buscar", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(buscar) ? DBNull.Value : buscar.Trim();
-            await connection.OpenAsync();
-            await using var reader = await command.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
+            command.Parameters.Add("@ExpectedSecurityStamp", SqlDbType.UniqueIdentifier).Value = originalLogin.SecurityStamp;
+            return await OriginalLoginTransaction.ExecuteAsync(connection, command, originalLogin, actorUsuarioId, "RECLAMOS_GESTIONAR", async () =>
             {
+                await using var reader = await command.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
                 lista.Add(new ReclamoListItemViewModel
                 {
                     ReclamoId = reader.GetInt32(0),
@@ -41,20 +44,24 @@ namespace Proyecto_Final.Services
                     ClienteCorreo = reader.GetString(9),
                     NumeroFactura = reader.IsDBNull(10) ? null : reader.GetString(10)
                 });
-            }
-            return lista;
+                }
+                return lista;
+            });
         }
 
         // ── CU-191 Detalle ──────────────────────────────────
-        public async Task<ReclamoDetailViewModel?> GetReclamoByIdAsync(int reclamoId)
+        public async Task<ReclamoDetailViewModel?> GetReclamoByIdAsync(int reclamoId, int actorUsuarioId, OriginalLoginContext originalLogin)
         {
             await using var connection = new SqlConnection(_connectionString);
             await using var command = new SqlCommand("dbo.sp_Reclamos_GetById", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.Add("@ActorUsuarioId", SqlDbType.Int).Value = actorUsuarioId;
             command.Parameters.Add("@ReclamoId", SqlDbType.Int).Value = reclamoId;
-            await connection.OpenAsync();
-            await using var reader = await command.ExecuteReaderAsync();
-            if (await reader.ReadAsync())
+            command.Parameters.Add("@ExpectedSecurityStamp", SqlDbType.UniqueIdentifier).Value = originalLogin.SecurityStamp;
+            return await OriginalLoginTransaction.ExecuteAsync(connection, command, originalLogin, actorUsuarioId, "RECLAMOS_GESTIONAR", async () =>
             {
+                await using var reader = await command.ExecuteReaderAsync();
+                if (await reader.ReadAsync())
+                {
                 return new ReclamoDetailViewModel
                 {
                     ReclamoId = reader.GetInt32(0),
@@ -79,31 +86,49 @@ namespace Proyecto_Final.Services
                     FacturaTotal = reader.IsDBNull(19) ? null : reader.GetDecimal(19),
                     FechaFactura = reader.IsDBNull(20) ? null : reader.GetDateTime(20)
                 };
-            }
-            return null;
+                }
+                return null;
+            });
         }
 
         // ── CU-191 Registrar ────────────────────────────────
-        public async Task<int> CreateReclamoAsync(ReclamoFormViewModel model, int agenteId, string agenteNombre)
+        public async Task<int> CreateReclamoAsync(ReclamoFormViewModel model, int agenteId, OriginalLoginContext originalLogin)
         {
             await using var connection = new SqlConnection(_connectionString);
-            await using var command = new SqlCommand("dbo.sp_Reclamos_Create", connection) { CommandType = CommandType.StoredProcedure };
-            command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = model.UsuarioId;
+            await using var command = BuildCreateCommand(connection, model, agenteId, originalLogin);
+            return await OriginalLoginTransaction.ExecuteAsync(connection, command, originalLogin, agenteId, "RECLAMOS_GESTIONAR", async () =>
+            {
+                var result = await command.ExecuteScalarAsync();
+                return ReadCreatedId(result);
+            });
+        }
+
+        internal static SqlCommand BuildCreateCommand(SqlConnection connection, ReclamoFormViewModel model,
+            int agenteId, OriginalLoginContext originalLogin)
+        {
+            ArgumentNullException.ThrowIfNull(model);
+            if (model.RequestId == Guid.Empty)
+                throw new ArgumentException("Falta la solicitud original del reclamo.", nameof(model));
+            if (!originalLogin.HasCanonicalLifetime || originalLogin.UserId != agenteId)
+                throw new UnauthorizedAccessException("El contexto original no corresponde al agente.");
+
+            var command = OriginalLoginService.ContextCommand(connection, "dbo.sp_Reclamos_Create", originalLogin);
+            command.Parameters.Add("@RequestId", SqlDbType.UniqueIdentifier).Value = model.RequestId;
+            command.Parameters.Add("@ClienteUsuarioId", SqlDbType.Int).Value = model.UsuarioId;
             command.Parameters.Add("@FacturaId", SqlDbType.Int).Value = model.FacturaId.HasValue ? model.FacturaId.Value : DBNull.Value;
             command.Parameters.Add("@PedidoId", SqlDbType.Int).Value = model.PedidoId.HasValue ? model.PedidoId.Value : DBNull.Value;
             command.Parameters.Add("@Asunto", SqlDbType.NVarChar, 150).Value = model.Asunto.Trim();
             command.Parameters.Add("@Descripcion", SqlDbType.NVarChar, 1000).Value = model.Descripcion.Trim();
             command.Parameters.Add("@Categoria", SqlDbType.NVarChar, 40).Value = model.Categoria;
             command.Parameters.Add("@Prioridad", SqlDbType.NVarChar, 20).Value = model.Prioridad;
-            command.Parameters.Add("@AgenteId", SqlDbType.Int).Value = agenteId > 0 ? agenteId : DBNull.Value;
-            command.Parameters.Add("@AgenteNombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(agenteNombre) ? DBNull.Value : agenteNombre;
-            await connection.OpenAsync();
-            var result = await command.ExecuteScalarAsync();
-            return result is int id ? id : Convert.ToInt32(result);
+            return command;
         }
 
+        internal static int ReadCreatedId(object? result) => result is int id && id > 0
+            ? id : throw new InvalidOperationException("No se confirmó el reclamo registrado.");
+
         // ── CU-192 Cambiar estado ───────────────────────────
-        public async Task ChangeStatusAsync(int reclamoId, string estado, string? resolucion, int usuarioId, string usuarioNombre)
+        public async Task ChangeStatusAsync(int reclamoId, string estado, string? resolucion, int usuarioId, string usuarioNombre, OriginalLoginContext originalLogin)
         {
             await using var connection = new SqlConnection(_connectionString);
             await using var command = new SqlCommand("dbo.sp_Reclamos_CambiarEstado", connection) { CommandType = CommandType.StoredProcedure };
@@ -112,41 +137,52 @@ namespace Proyecto_Final.Services
             command.Parameters.Add("@Resolucion", SqlDbType.NVarChar, 1000).Value = string.IsNullOrWhiteSpace(resolucion) ? DBNull.Value : resolucion.Trim();
             command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId > 0 ? usuarioId : DBNull.Value;
             command.Parameters.Add("@Nombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(usuarioNombre) ? DBNull.Value : usuarioNombre;
-            await connection.OpenAsync();
-            await command.ExecuteNonQueryAsync();
+            command.Parameters.Add("@ExpectedSecurityStamp", SqlDbType.UniqueIdentifier).Value = originalLogin.SecurityStamp;
+            await OriginalLoginTransaction.ExecuteAsync(connection, command, originalLogin, usuarioId, "RECLAMOS_GESTIONAR", async () =>
+            {
+                await command.ExecuteNonQueryAsync();
+                return 0;
+            });
         }
 
         // ── Combos de apoyo ─────────────────────────────────
-        public async Task<List<ClienteOptionViewModel>> SearchClientsAsync(string? buscar)
+        public async Task<List<ClienteOptionViewModel>> SearchClientsAsync(string? buscar, int actorUsuarioId, OriginalLoginContext originalLogin)
         {
             var lista = new List<ClienteOptionViewModel>();
             await using var connection = new SqlConnection(_connectionString);
             await using var command = new SqlCommand("dbo.sp_Reclamos_Clientes_Buscar", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.Add("@ActorUsuarioId", SqlDbType.Int).Value = actorUsuarioId;
             command.Parameters.Add("@Buscar", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(buscar) ? DBNull.Value : buscar.Trim();
-            await connection.OpenAsync();
-            await using var reader = await command.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
+            command.Parameters.Add("@ExpectedSecurityStamp", SqlDbType.UniqueIdentifier).Value = originalLogin.SecurityStamp;
+            return await OriginalLoginTransaction.ExecuteAsync(connection, command, originalLogin, actorUsuarioId, "RECLAMOS_GESTIONAR", async () =>
             {
+                await using var reader = await command.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
                 lista.Add(new ClienteOptionViewModel
                 {
                     UsuarioId = reader.GetInt32(0),
                     NombreCompleto = reader.GetString(1),
                     Correo = reader.GetString(2)
                 });
-            }
-            return lista;
+                }
+                return lista;
+            });
         }
 
-        public async Task<List<FacturaOptionViewModel>> GetInvoicesByClientAsync(int usuarioId)
+        public async Task<List<FacturaOptionViewModel>> GetInvoicesByClientAsync(int usuarioId, int actorUsuarioId, OriginalLoginContext originalLogin)
         {
             var lista = new List<FacturaOptionViewModel>();
             await using var connection = new SqlConnection(_connectionString);
             await using var command = new SqlCommand("dbo.sp_Reclamos_FacturasPorCliente", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.Add("@ActorUsuarioId", SqlDbType.Int).Value = actorUsuarioId;
             command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId;
-            await connection.OpenAsync();
-            await using var reader = await command.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
+            command.Parameters.Add("@ExpectedSecurityStamp", SqlDbType.UniqueIdentifier).Value = originalLogin.SecurityStamp;
+            return await OriginalLoginTransaction.ExecuteAsync(connection, command, originalLogin, actorUsuarioId, "RECLAMOS_GESTIONAR", async () =>
             {
+                await using var reader = await command.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
                 lista.Add(new FacturaOptionViewModel
                 {
                     FacturaId = reader.GetInt32(0),
@@ -154,8 +190,9 @@ namespace Proyecto_Final.Services
                     FechaFactura = reader.GetDateTime(2),
                     Total = reader.GetDecimal(3)
                 });
-            }
-            return lista;
+                }
+                return lista;
+            });
         }
     }
 }

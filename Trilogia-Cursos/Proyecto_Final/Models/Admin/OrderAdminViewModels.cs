@@ -33,16 +33,18 @@ namespace Proyecto_Final.Models.Admin
         public bool HasInvoice { get; set; }
         public int? FacturaId { get; set; }
         public string NumeroFactura { get; set; } = string.Empty;
+        public bool InventoryDebited { get; set; }
+        public JJ.Commerce.QuoteMoney? ServerAmounts { get; set; }
+        public decimal InvoiceNet => ServerAmounts?.Net ?? Detalles.Sum(line => line.Subtotal);
+        public decimal InvoiceTax => ServerAmounts?.Tax ?? Math.Round(InvoiceNet * 0.13m, 2, MidpointRounding.AwayFromZero);
+        public decimal InvoiceTotal => ServerAmounts?.FinalTotal ?? InvoiceNet + InvoiceTax;
         public bool CanGenerateInvoice => !HasInvoice
-            && Detalles.Any()
+            && InventoryDebited && Detalles.Any() && InvoiceNet >= 0 && InvoiceTotal <= 2_000_000m
             && (Estado == "Pendiente" || Estado == "Aprobado" || Estado == "EnProceso"
-                || Estado == "Entregado" || Estado == "Liberado");
+                || Estado == "Liberado");
         public List<OrderDetailLineViewModel> Detalles { get; set; } = new();
-        public List<string> EstadosDisponibles { get; set; } = new()
-        {
-            "Pendiente", "Aprobado", "EnProceso", "Entregado", "Cancelado",
-            "Retenido", "Liberado", "Rechazado"
-        };
+        public IReadOnlyList<string> EstadosDisponibles =>
+            Presentation.OrderActions.ManualStates(Estado, HasInvoice);
     }
 
 

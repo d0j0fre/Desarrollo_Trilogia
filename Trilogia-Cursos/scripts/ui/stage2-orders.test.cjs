@@ -81,7 +81,7 @@ test('offline submit prevents POST and retains GUID, 24-hour TTL and minimal pro
 test('sync mock preserves antiforgery, idempotency GUID and server response destination', async () => {
   const app = setup({ orders: [pending()] }); await app.elements.get('syncPendingOrders').handlers.click();
   assert.equal(app.requests.length, 1); const request = app.requests[0]; assert.equal(request.url, '/mock-sync'); assert.equal(request.method, 'POST');
-  assert.equal(request.headers.RequestVerificationToken, 'fake-antiforgery');
+  assert.equal(request.headers["X-CSRF-TOKEN"], 'fake-antiforgery');
   const body = JSON.parse(request.body); assert.equal(body.pedidoOfflineGuid, 'existing-guid'); assert.deepEqual(body.productos, [{ productoId: 8, cantidad: 2 }]);
   assert.equal(body.total, undefined); assert.equal(app.stored()[0].estadoOffline, 'Sincronizado'); assert.equal(app.stored()[0].pedidoId, 42);
   assert.equal(app.stored()[0].redirectUrl, '/SellerOrders/Confirmation/42'); assert.equal(app.elements.get('syncPendingOrders').disabled, false);

@@ -6,27 +6,64 @@ using Proyecto_Final.Validation;
 
 namespace Proyecto_Final.Controllers
 {
-    [AdminAuthorize("Venta móvil", "VENTA_MOVIL_CREAR")]
+    [AdminAuthorize("Venta móvil", "VENTA_MOVIL_CREAR", false)]
     public class SellerOrdersController : Controller
     {
         private readonly AdminDbService _adminDbService;
+        private readonly ICommercialOrderService _orders;
 
-        public SellerOrdersController(AdminDbService adminDbService)
+        public SellerOrdersController(AdminDbService adminDbService, ICommercialOrderService orders)
         {
             _adminDbService = adminDbService;
+            _orders = orders;
         }
 
         [HttpGet]
+        [CommercialAssignmentsRequired]
         public async Task<IActionResult> Index()
         {
-            var model = await BuildCreateModelAsync(new SellerOrderCreateViewModel());
+            var model = await BuildCreateModelAsync(new SellerOrderCreateViewModel { RequestId = Guid.NewGuid() });
             return View(model);
+        }
+
+        [HttpPost, ValidateAntiForgeryToken, CommercialAssignmentsRequired]
+        [RequestSizeLimit(128 * 1024)]
+        public async Task<IActionResult> Review(SellerOrderCreateViewModel model)
+        {
+            if (model.RequestId == Guid.Empty) ModelState.AddModelError(nameof(model.RequestId), "El intento del pedido no es válido. Volvé a Mis pedidos antes de iniciar otro.");
+            if (!model.Productos.Any(x => x.Cantidad > 0)) ModelState.AddModelError(nameof(model.Productos), "Seleccioná al menos un producto.");
+            if (!ModelState.IsValid) return View("Index", await BuildCreateModelAsync(model));
+            try
+            {
+                var quote = await _orders.ReviewAsync(model, HttpContext.RequestAborted);
+                var clients = await _orders.ClientsAsync(HttpContext.RequestAborted);
+                var customer = clients.SingleOrDefault(x => x.UsuarioId == model.ClienteUsuarioId);
+                if (customer is null) return NotFound();
+                model.QuoteFingerprint = quote.IntentFingerprint;
+                model.QuoteSourceHash = quote.SourceHash;
+                return View(new SellerOrderReviewViewModel(model, quote, customer.NombreCompleto));
+            }
+            catch (UnauthorizedAccessException) { return Unauthorized(); }
+            catch (CommercialQuoteTransportException error) when (error.Status == 401) { return Unauthorized(); }
+            catch (Microsoft.Data.SqlClient.SqlException error) when (error.Number == 56801) { return Unauthorized(); }
+            catch (CommercialQuoteTransportException error) when (error.Status == 403) { return StatusCode(403); }
+            catch (Microsoft.Data.SqlClient.SqlException error) when (error.Number == 56802) { return StatusCode(403); }
+            catch (Exception error) when (error is ArgumentException or CommercialQuoteTransportException or Microsoft.Data.SqlClient.SqlException or HttpRequestException or InvalidOperationException)
+            {
+                ModelState.AddModelError(string.Empty, "No se pudo confirmar el total final. Se conserva este intento: revisá Mis pedidos o reintentá con los mismos datos.");
+                return View("Index", await BuildCreateModelAsync(model));
+            }
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [CommercialAssignmentsRequired]
+        [RequestSizeLimit(128 * 1024)]
         public async Task<IActionResult> Create(SellerOrderCreateViewModel model)
         {
+            if (model.RequestId == Guid.Empty) ModelState.AddModelError(nameof(model.RequestId), "Falta el intento original del pedido.");
+            if (string.IsNullOrEmpty(model.QuoteFingerprint) || string.IsNullOrEmpty(model.QuoteSourceHash))
+                ModelState.AddModelError(string.Empty, "Revisá el total final antes de confirmar el pedido.");
             model.IdentificacionCliente = CostaRicanIdentificationAttribute.Normalize(model.IdentificacionCliente);
 
             var productosSeleccionados = model.Productos
@@ -51,18 +88,25 @@ namespace Proyecto_Final.Controllers
 
             try
             {
-                var result = await _adminDbService.CreateSellerOrderAsync(model, vendedorId, vendedorNombre);
-
-                await RegistrarAuditoriaAsync(
-                    result.EsRetenido ? "Registrar pedido retenido" : "Registrar pedido móvil",
-                    "Venta móvil",
-                    $"El usuario {vendedorNombre} registró el pedido #{result.PedidoId} para el cliente #{model.ClienteUsuarioId}. Estado: {result.Estado}.");
+                // SQL commits order, monetary snapshot, stock, invoice and audit together.
+                // A later non-transactional audit must not turn a committed result into failure.
+                var result = await _orders.CreateAsync(model, false, HttpContext.RequestAborted);
 
                 if (result.EsRetenido)
                     return RedirectToAction(nameof(RetainedConfirmation), new { id = result.PedidoId });
 
                 TempData["ConfirmNumeroFactura"] = result.NumeroFactura;
                 return RedirectToAction(nameof(Confirmation), new { id = result.PedidoId });
+            }
+            catch (CommercialQuoteTransportException error) when (error.Status == 401) { return Unauthorized(); }
+            catch (Microsoft.Data.SqlClient.SqlException error) when (error.Number == 56801) { return Unauthorized(); }
+            catch (CommercialQuoteTransportException error) when (error.Status == 403) { return StatusCode(403); }
+            catch (Microsoft.Data.SqlClient.SqlException error) when (error.Number == 56802) { return StatusCode(403); }
+            catch (Microsoft.Data.SqlClient.SqlException error) when (error.Number == 58906)
+            {
+                ModelState.AddModelError(string.Empty, "El catálogo cambió antes de registrar. Revisá Mis pedidos y abrí una nueva selección para actualizar el total.");
+                Response.StatusCode = 409;
+                return View("Index", await BuildCreateModelAsync(model));
             }
             catch (Exception)
             {
@@ -73,9 +117,11 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [CommercialAssignmentsRequired]
+        [RequestSizeLimit(128 * 1024)]
         public async Task<IActionResult> SyncOffline([FromBody] SellerOfflineOrderSyncRequestViewModel request)
         {
-            if (request == null)
+            if (request == null || request.Productos is null || request.Productos.Count > 100 || !ModelState.IsValid)
             {
                 return Json(new SellerOfflineOrderSyncResponseViewModel
                 {
@@ -137,6 +183,7 @@ namespace Proyecto_Final.Controllers
 
             var model = new SellerOrderCreateViewModel
             {
+                RequestId = pedidoOfflineGuid,
                 ClienteUsuarioId = request.ClienteUsuarioId,
                 TipoEntrega = request.TipoEntrega.Trim(),
                 DireccionEntrega = request.DireccionEntrega?.Trim(),
@@ -147,17 +194,7 @@ namespace Proyecto_Final.Controllers
 
             try
             {
-                var result = await _adminDbService.CreateSellerOrderAsync(
-                    model,
-                    vendedorId,
-                    vendedorNombre,
-                    pedidoOfflineGuid,
-                    "Venta móvil offline");
-
-                await RegistrarAuditoriaAsync(
-                    result.EsRetenido ? "Sincronizar pedido offline retenido" : "Sincronizar pedido offline",
-                    "Venta móvil",
-                    $"El usuario {vendedorNombre} sincronizó el pedido offline {pedidoOfflineGuid} como pedido #{result.PedidoId}. Estado: {result.Estado}.");
+                var result = await _orders.CreateAsync(model, true, HttpContext.RequestAborted);
 
                 var redirectUrl = result.EsRetenido
                     ? Url.Action(nameof(RetainedConfirmation), "SellerOrders", new { id = result.PedidoId }) ?? string.Empty
@@ -194,11 +231,12 @@ namespace Proyecto_Final.Controllers
             if (!await _adminDbService.SellerOwnsOrderAsync(id, vendedorId))
                 return NotFound();
 
-            var pedido = await _adminDbService.GetOrderDetailAsync(id);
+            var pedido = _orders.Enabled ? (await _orders.DetailsAsync(id, false, HttpContext.RequestAborted))?.Order
+                : await _adminDbService.GetOrderDetailAsync(id);
             if (pedido == null)
                 return RedirectToAction(nameof(Index));
 
-            var factura = await _adminDbService.GetInvoiceSummaryByOrderAsync(id);
+            var factura = _orders.Enabled ? null : await _adminDbService.GetInvoiceSummaryByOrderAsync(id);
             if (factura.HasValue)
             {
                 pedido.FacturaId      = factura.Value.FacturaId;
@@ -217,7 +255,8 @@ namespace Proyecto_Final.Controllers
             if (!await _adminDbService.SellerOwnsOrderAsync(id, vendedorId))
                 return NotFound();
 
-            var pedido = await _adminDbService.GetOrderDetailAsync(id);
+            var pedido = _orders.Enabled ? (await _orders.DetailsAsync(id, false, HttpContext.RequestAborted))?.Order
+                : await _adminDbService.GetOrderDetailAsync(id);
             if (pedido == null)
                 return RedirectToAction(nameof(Index));
 
@@ -228,13 +267,14 @@ namespace Proyecto_Final.Controllers
         public async Task<IActionResult> MyOrders()
         {
             var vendedorId = HttpContext.Session.GetInt32("UserId") ?? 0;
-            var pedidos = await _adminDbService.GetSellerMyOrdersAsync(vendedorId);
+            var pedidos = _orders.Enabled ? await _orders.HistoryAsync(HttpContext.RequestAborted)
+                : await _adminDbService.GetSellerMyOrdersAsync(vendedorId);
             return View(pedidos);
         }
 
         private async Task<SellerOrderCreateViewModel> BuildCreateModelAsync(SellerOrderCreateViewModel model)
         {
-            model.Clientes = await _adminDbService.GetSellerOrderClientsAsync();
+            model.Clientes = await _orders.ClientsAsync(HttpContext.RequestAborted);
 
             var productosDisponibles = await _adminDbService.GetSellerOrderProductsAsync();
             model.Productos = MergeSelectedProducts(productosDisponibles, model.Productos);

@@ -71,7 +71,7 @@ public sealed class CustomerServicePresentationTests
     public void CreatePreservesBindingAndInvoiceLookup()
     {
         var text = Read("Views/Reclamos/Create.cshtml");
-        foreach (var field in new[] { "UsuarioId", "FacturaId", "PedidoId", "Categoria", "Prioridad", "Asunto", "Descripcion" })
+        foreach (var field in new[] { "RequestId", "UsuarioId", "FacturaId", "PedidoId", "Categoria", "Prioridad", "Asunto", "Descripcion" })
             Assert.Contains("asp-for=\"" + field + "\"", text);
         Assert.Contains("InvoicesByClient", text); Assert.Contains("_ValidationScriptsPartial", text);
         Assert.Contains("asp-validation-summary=\"All\"", text);

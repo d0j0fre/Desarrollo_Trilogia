@@ -7,7 +7,7 @@
     <section class="djj-card djj-data-section"><header><h2>Resumen por pedido</h2><p>Las evidencias se consultan mediante acceso autorizado.</p></header>
         <div class="djj-table-wrap" tabindex="0" aria-label="Resumen de evidencias desplazable"><table class="djj-table"><caption class="djj-sr-only">Entregas y cantidad de evidencias por pedido</caption><thead><tr><th scope="col">Pedido</th><th scope="col">Cliente</th><th scope="col">Entrega</th><th scope="col">Evidencias</th></tr></thead><tbody>
         @if (!Model.Resumen.Any()) { <tr><td colspan="4">No hay pedidos con resumen de evidencias.</td></tr> }
-        @foreach (var s in Model.Resumen) { <tr><th scope="row">#@s.PedidoId</th><td>@s.Cliente</td><td><span class="djj-badge djj-badge--@LogisticsStatusPresentation.DeliveryTone(s.EstadoEntrega)">@s.EstadoEntrega</span></td><td>@if (s.SinEvidencia) { <span class="djj-badge djj-badge--warning">Sin evidencia</span> } else { <span>@s.TotalEvidencias adjunta(s)</span> }</td></tr> }
+        @foreach (var s in Model.Resumen) { <tr><th scope="row">#@s.PedidoId</th><td>@s.Cliente</td><td><span class="djj-badge djj-badge--@LogisticsStatusPresentation.DeliveryTone(s.EstadoEntrega)">@s.EstadoEntrega</span></td><td>@if (s.SinEvidencia) { <span class="djj-badge djj-badge--warning">Sin evidencia</span> } else { <span>@s.TotalEvidencias registro(s)</span> }</td></tr> }
         </tbody></table></div>
     </section>
     <section class="djj-card djj-logistics-pad"><h2>Archivos de evidencia</h2>
@@ -22,7 +22,7 @@
                 <p><time datetime="@e.FechaRegistro.ToString("O")">@e.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</time></p>
                 <p class="djj-text-secondary">Registrada por @e.RegistradoPorNombre</p>
                 @if (!string.IsNullOrWhiteSpace(e.Observaciones)) { <p>@e.Observaciones</p> }
-                <a asp-controller="DeliveryEvidence" asp-action="View" asp-route-id="@e.EvidenciaId" target="_blank" rel="noopener" class="djj-button djj-button--outline">Ver archivo autorizado<span class="djj-sr-only"> del pedido @e.PedidoId, nueva pestaña</span></a>
+                @if (e.HasPrivateFile) { <a asp-controller="DeliveryEvidence" asp-action="View" asp-route-id="@e.EvidenciaId" target="_blank" rel="noopener" class="djj-button djj-button--outline">Ver archivo autorizado<span class="djj-sr-only"> del pedido @e.PedidoId, nueva pestaña</span></a> } else { <p class="djj-table__note">Referencia histórica; archivo pendiente de reconciliación privada.</p> }
             </article>
         }
     </div> }

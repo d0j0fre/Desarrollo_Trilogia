@@ -1,0 +1,105 @@
+-- PRIVATE COPY ONLY. The UUID registry changes P's table triggers and its manifest;
+-- production requires coordinated writer drain, new manifest and separate review.
+SET QUOTED_IDENTIFIER ON; SET ANSI_NULLS ON; SET XACT_ABORT ON; SET NOCOUNT ON;
+IF DB_NAME()<>N'ChatDcCopy_5a2b031991124fb7' OR NOT EXISTS(SELECT 1 FROM sys.extended_properties WHERE class=0 AND name=N'JJ.Private.RunId' AND TRY_CONVERT(uniqueidentifier,value)='5a2b0319-9112-4fb7-bf7a-83d707bbe83d') THROW 59710,N'Unaccredited copy.',1;
+IF OBJECT_ID(N'ChatV2P.Intents',N'U') IS NULL OR OBJECT_ID(N'ChatV2DC.RequireResource',N'P') IS NULL OR OBJECT_ID(N'ChatV2DC.IntentRegistry') IS NOT NULL THROW 59710,N'Candidate prerequisites unavailable.',1;
+BEGIN TRAN;
+-- TABLOCKX holds existing P writers until their UUIDs are seeded and the trigger exists.
+DECLARE @count bigint; SELECT @count=COUNT_BIG(*) FROM ChatV2P.Intents WITH(TABLOCKX,HOLDLOCK);
+CREATE TABLE ChatV2DC.IntentRegistry(RequestId uniqueidentifier NOT NULL PRIMARY KEY,Domain char(1) NOT NULL CHECK(Domain IN('P','D','C')), CHECK(RequestId<>'00000000-0000-0000-0000-000000000000'));
+INSERT ChatV2DC.IntentRegistry(RequestId,Domain) SELECT RequestId,'P' FROM ChatV2P.Intents;
+IF (SELECT COUNT_BIG(*) FROM ChatV2DC.IntentRegistry WHERE Domain='P')<>@count THROW 59710,N'Personal UUID seed mismatch.',1;
+EXEC(N'CREATE TRIGGER ChatV2P.ReserveDomainUuid ON ChatV2P.Intents AFTER INSERT AS BEGIN SET NOCOUNT ON; INSERT ChatV2DC.IntentRegistry(RequestId,Domain) SELECT RequestId,''P'' FROM inserted; END;');
+EXEC(N'CREATE TRIGGER ChatV2DC.ImmutableIntentRegistry ON ChatV2DC.IntentRegistry AFTER UPDATE,DELETE AS BEGIN SET NOCOUNT ON; THROW 59703,N''Immutable UUID registry.'',1; END;');
+CREATE TABLE ChatV2DC.Intents(
+ RequestId uniqueidentifier NOT NULL PRIMARY KEY REFERENCES ChatV2DC.IntentRegistry(RequestId),
+ LoginId uniqueidentifier NOT NULL REFERENCES dbo.Stage2OriginalLogins(LoginId), Actor int NOT NULL REFERENCES dbo.Usuarios(UsuarioId),
+ Domain char(1) NOT NULL CHECK(Domain IN('D','C')),ResourceId int NOT NULL,
+ ContentHash binary(32) NOT NULL,ActorEpoch bigint NOT NULL CHECK(ActorEpoch>0),ResourceEpoch bigint NOT NULL CHECK(ResourceEpoch>0),
+ IssuedUtc datetime2(7) NOT NULL,ExpiresUtc datetime2(7) NOT NULL,
+ FOREIGN KEY(ResourceId,Domain) REFERENCES ChatV2DC.Resources(ResourceId,Domain),
+ CHECK(ExpiresUtc>IssuedUtc AND ExpiresUtc<=DATEADD(minute,15,IssuedUtc)));
+CREATE TABLE ChatV2DC.Messages(
+ MessageId bigint IDENTITY PRIMARY KEY,RequestId uniqueidentifier NOT NULL UNIQUE REFERENCES ChatV2DC.Intents(RequestId),
+ Domain char(1) NOT NULL,ResourceId int NOT NULL,StreamSequence bigint NOT NULL CHECK(StreamSequence>0),Sender int NOT NULL REFERENCES dbo.Usuarios(UsuarioId),
+ Content nvarchar(1000) NOT NULL CHECK(DATALENGTH(Content)>0),TimestampUtc datetime2(7) NOT NULL,
+ FOREIGN KEY(ResourceId,Domain) REFERENCES ChatV2DC.Resources(ResourceId,Domain),UNIQUE(ResourceId,StreamSequence));
+CREATE TABLE ChatV2DC.Requests(RequestId uniqueidentifier NOT NULL PRIMARY KEY REFERENCES ChatV2DC.Intents(RequestId),MessageId bigint NOT NULL UNIQUE REFERENCES ChatV2DC.Messages(MessageId));
+CREATE TABLE ChatV2DC.Outbox(EventId bigint IDENTITY PRIMARY KEY,RequestId uniqueidentifier NOT NULL UNIQUE REFERENCES ChatV2DC.Requests(RequestId),Domain char(1) NOT NULL,ResourceId int NOT NULL,CreatedUtc datetime2(7) NOT NULL,FOREIGN KEY(ResourceId,Domain) REFERENCES ChatV2DC.Resources(ResourceId,Domain));
+EXEC(N'CREATE TRIGGER ChatV2DC.ImmutableIntents ON ChatV2DC.Intents AFTER UPDATE,DELETE AS BEGIN SET NOCOUNT ON; THROW 59703,N''Immutable intent.'',1; END;');
+EXEC(N'CREATE TRIGGER ChatV2DC.ImmutableMessages ON ChatV2DC.Messages AFTER UPDATE,DELETE AS BEGIN SET NOCOUNT ON; THROW 59703,N''Immutable message.'',1; END;');
+EXEC(N'CREATE TRIGGER ChatV2DC.ImmutableRequests ON ChatV2DC.Requests AFTER UPDATE,DELETE AS BEGIN SET NOCOUNT ON; THROW 59703,N''Immutable receipt.'',1; END;');
+EXEC(N'
+CREATE PROCEDURE ChatV2DC.Prepare
+ @LoginId uniqueidentifier,@UsuarioId int,@PerfilId int,@SecurityStamp uniqueidentifier,@BindingHash binary(32),@IssuedUtc datetime2(7),@ExpiresUtc datetime2(7),
+ @Domain char(1),@ResourceId int,@RequestId uniqueidentifier,@ContentHash binary(32),@ActorEpoch bigint
+AS
+BEGIN SET NOCOUNT ON; SET XACT_ABORT ON;
+ DECLARE @Now datetime2(7),@Until datetime2(7),@ResourceEpoch bigint,@Post bit,@ExistingDomain char(1);
+ BEGIN TRY BEGIN TRAN;
+ EXEC ChatV2DC.RequireResource @LoginId,@UsuarioId,@PerfilId,@SecurityStamp,@BindingHash,@IssuedUtc,@ExpiresUtc,@Domain,@ResourceId,@ActorEpoch,NULL,1,@Post OUTPUT,@ResourceEpoch OUTPUT;
+ SET @Now=SYSUTCDATETIME();
+ IF @RequestId IS NULL OR @RequestId=''00000000-0000-0000-0000-000000000000'' OR @ContentHash IS NULL THROW 59703,N''Invalid intent.'',1;
+ SELECT @ExistingDomain=Domain FROM ChatV2DC.IntentRegistry WITH(UPDLOCK,HOLDLOCK) WHERE RequestId=@RequestId;
+ IF @ExistingDomain IS NULL
+ BEGIN
+  SET @Until=CASE WHEN DATEADD(minute,15,@Now)<@ExpiresUtc THEN DATEADD(minute,15,@Now) ELSE @ExpiresUtc END;
+  INSERT ChatV2DC.IntentRegistry(RequestId,Domain) VALUES(@RequestId,@Domain);
+  INSERT ChatV2DC.Intents(RequestId,LoginId,Actor,Domain,ResourceId,ContentHash,ActorEpoch,ResourceEpoch,IssuedUtc,ExpiresUtc)
+   VALUES(@RequestId,@LoginId,@UsuarioId,@Domain,@ResourceId,@ContentHash,@ActorEpoch,@ResourceEpoch,@Now,@Until);
+ END
+ ELSE IF @ExistingDomain<>@Domain OR NOT EXISTS(SELECT 1 FROM ChatV2DC.Intents WHERE RequestId=@RequestId AND LoginId=@LoginId AND Actor=@UsuarioId AND Domain=@Domain AND ResourceId=@ResourceId AND ContentHash=@ContentHash AND ActorEpoch=@ActorEpoch AND ResourceEpoch=@ResourceEpoch AND ExpiresUtc>@Now)
+  THROW 59703,N''Intent unavailable.'',1;
+ EXEC ChatV2DC.RequireResource @LoginId,@UsuarioId,@PerfilId,@SecurityStamp,@BindingHash,@IssuedUtc,@ExpiresUtc,@Domain,@ResourceId,@ActorEpoch,@ResourceEpoch,1,@Post OUTPUT,@ResourceEpoch OUTPUT;
+ IF NOT EXISTS(SELECT 1 FROM ChatV2DC.Intents WHERE RequestId=@RequestId AND ExpiresUtc>SYSUTCDATETIME()) THROW 59703,N''Intent expired.'',1;
+ SELECT ActorEpoch,ResourceEpoch,ExpiresUtc FROM ChatV2DC.Intents WHERE RequestId=@RequestId;
+ COMMIT; END TRY BEGIN CATCH IF XACT_STATE()<>0 ROLLBACK; THROW; END CATCH;
+END;');
+EXEC(N'
+CREATE PROCEDURE ChatV2DC.ExecuteIntent
+ @LoginId uniqueidentifier,@UsuarioId int,@PerfilId int,@SecurityStamp uniqueidentifier,@BindingHash binary(32),@IssuedUtc datetime2(7),@ExpiresUtc datetime2(7),
+ @Domain char(1),@ResourceId int,@RequestId uniqueidentifier,@ContentHash binary(32),@ActorEpoch bigint,@ResourceEpoch bigint,@IntentExpiresUtc datetime2(7),@ReceiptOnly bit,@Content nvarchar(1000)=NULL
+AS
+BEGIN SET NOCOUNT ON; SET XACT_ABORT ON;
+ DECLARE @Now datetime2(7),@Sequence bigint,@Message bigint,@Post bit,@ActualResource bigint;
+ BEGIN TRY BEGIN TRAN;
+ IF @ReceiptOnly IS NULL THROW 59703,N''Invalid request.'',1;
+ EXEC ChatV2DC.RequireResource @LoginId,@UsuarioId,@PerfilId,@SecurityStamp,@BindingHash,@IssuedUtc,@ExpiresUtc,@Domain,@ResourceId,@ActorEpoch,@ResourceEpoch,0,@Post OUTPUT,@ActualResource OUTPUT;
+ SET @Now=SYSUTCDATETIME();
+ IF NOT EXISTS(SELECT 1 FROM ChatV2DC.Intents WITH(UPDLOCK,HOLDLOCK) WHERE RequestId=@RequestId AND LoginId=@LoginId AND Actor=@UsuarioId AND Domain=@Domain AND ResourceId=@ResourceId AND ContentHash=@ContentHash AND ActorEpoch=@ActorEpoch AND ResourceEpoch=@ResourceEpoch AND ExpiresUtc=@IntentExpiresUtc AND ExpiresUtc>@Now)
+ BEGIN IF @ReceiptOnly=1 THROW 59704,N''Unavailable.'',1; THROW 59703,N''Intent unavailable.'',1; END;
+ IF @ReceiptOnly=0 AND (@Post<>1 OR @Content IS NULL OR DATALENGTH(@Content)=0 OR HASHBYTES(''SHA2_256'',@Content)<>@ContentHash) THROW 59703,N''Content changed or unavailable.'',1;
+ IF NOT EXISTS(SELECT 1 FROM ChatV2DC.Requests WHERE RequestId=@RequestId)
+ BEGIN
+  IF @ReceiptOnly=1 THROW 59704,N''Unavailable.'',1;
+  UPDATE ChatV2DC.Resources SET LastSequence=LastSequence+1 WHERE ResourceId=@ResourceId AND Domain=@Domain;
+  SELECT @Sequence=LastSequence FROM ChatV2DC.Resources WHERE ResourceId=@ResourceId AND Domain=@Domain;
+  INSERT ChatV2DC.Messages(RequestId,Domain,ResourceId,StreamSequence,Sender,Content,TimestampUtc) VALUES(@RequestId,@Domain,@ResourceId,@Sequence,@UsuarioId,@Content,@Now);
+  SET @Message=CONVERT(bigint,SCOPE_IDENTITY());
+  INSERT ChatV2DC.Requests(RequestId,MessageId) VALUES(@RequestId,@Message);
+  INSERT ChatV2DC.Outbox(RequestId,Domain,ResourceId,CreatedUtc) VALUES(@RequestId,@Domain,@ResourceId,@Now);
+ END;
+ EXEC ChatV2DC.RequireResource @LoginId,@UsuarioId,@PerfilId,@SecurityStamp,@BindingHash,@IssuedUtc,@ExpiresUtc,@Domain,@ResourceId,@ActorEpoch,@ResourceEpoch,0,@Post OUTPUT,@ActualResource OUTPUT;
+ IF @IntentExpiresUtc<=SYSUTCDATETIME() THROW 59703,N''Intent expired.'',1;
+ SELECT m.MessageId,m.StreamSequence,m.TimestampUtc,m.Content FROM ChatV2DC.Requests r JOIN ChatV2DC.Messages m ON m.MessageId=r.MessageId WHERE r.RequestId=@RequestId;
+ COMMIT; END TRY BEGIN CATCH IF XACT_STATE()<>0 ROLLBACK; THROW; END CATCH;
+END;');
+EXEC(N'
+CREATE PROCEDURE ChatV2DC.History
+ @LoginId uniqueidentifier,@UsuarioId int,@PerfilId int,@SecurityStamp uniqueidentifier,@BindingHash binary(32),@IssuedUtc datetime2(7),@ExpiresUtc datetime2(7),
+ @Domain char(1),@ResourceId int,@After bigint=0,@Upper bigint=NULL,@ActorEpoch bigint,@ResourceEpoch bigint=NULL
+AS
+BEGIN SET NOCOUNT ON; SET XACT_ABORT ON;
+ DECLARE @Post bit,@Version bigint,@ActualUpper bigint;
+ BEGIN TRY BEGIN TRAN;
+ EXEC ChatV2DC.RequireResource @LoginId,@UsuarioId,@PerfilId,@SecurityStamp,@BindingHash,@IssuedUtc,@ExpiresUtc,@Domain,@ResourceId,@ActorEpoch,@ResourceEpoch,0,@Post OUTPUT,@Version OUTPUT;
+ IF @After IS NULL OR @After<0 OR @Upper<@After THROW 59703,N''Invalid cursor.'',1;
+ SELECT @ActualUpper=LastSequence FROM ChatV2DC.Resources WHERE ResourceId=@ResourceId AND Domain=@Domain;
+ IF @Upper IS NULL SET @Upper=@ActualUpper;
+ IF @Upper>@ActualUpper THROW 59703,N''Invalid cursor.'',1;
+ SELECT TOP(51) MessageId,StreamSequence,Sender,Content,TimestampUtc FROM ChatV2DC.Messages WHERE ResourceId=@ResourceId AND Domain=@Domain AND StreamSequence>@After AND StreamSequence<=@Upper ORDER BY StreamSequence;
+ SELECT @Upper AS UpperBound,@Version AS ResourceEpoch;
+ COMMIT; END TRY BEGIN CATCH IF XACT_STATE()<>0 ROLLBACK; THROW; END CATCH;
+END;');
+COMMIT;
+SELECT N'Private message candidate installed.' AS Result;

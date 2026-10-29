@@ -1,0 +1,230 @@
+-- PRIVATE CANDIDATE ONLY. No official migration ID or ledger write.
+-- Execute only after a separate synthetic-run authorization and bootstrap marker.
+-- Raw files fail closed. No grants, accounts, SMTP, payroll changes or historical rewrite.
+SET NOCOUNT ON; SET XACT_ABORT ON;
+DECLARE @RunId uniqueidentifier=TRY_CONVERT(uniqueidentifier,SESSION_CONTEXT(N'JJ.Private.Candidate.RunId'));
+DECLARE @ArtifactHash nvarchar(128)=N'$(CandidateSha256)';
+IF @RunId IS NULL OR @RunId='00000000-0000-0000-0000-000000000000'
+ OR NOT EXISTS(SELECT 1 FROM sys.extended_properties WHERE class=0 AND name=N'JJ.Private.RunId' AND TRY_CONVERT(uniqueidentifier,value)=@RunId)
+ THROW 59610,N'Private target ownership unaccredited.',1;
+IF LEN(@ArtifactHash)<>64 OR @ArtifactHash LIKE N'%[^0-9A-Fa-f]%' THROW 59610,N'Candidate hash unavailable.',1;
+IF DB_NAME() IN(N'DistribuidoraJJ_DB',N'master',N'model',N'msdb',N'tempdb') THROW 59610,N'Operational target prohibited.',1;
+IF SESSIONPROPERTY('QUOTED_IDENTIFIER')<>1 OR SESSIONPROPERTY('ANSI_NULLS')<>1 THROW 59610,N'SQL options unavailable.',1;
+IF OBJECT_ID(N'dbo.SchemaMigrationHistory',N'U') IS NULL OR NOT EXISTS(SELECT 1 FROM dbo.SchemaMigrationHistory WHERE MigrationId=N'0020_private_pay_slips' AND Status=N'Applied' AND FileSha256=N'2C46EBE09E48117A4F1ABFBB7C4A0F9B1EAF8BCA9112EDF419619BF107889451')
+ OR NOT EXISTS(SELECT 1 FROM dbo.SchemaMigrationHistory WHERE MigrationId=N'0030_stage2_authorization_invalidation' AND Status=N'Applied' AND FileSha256=N'90AFC1B036ED72525FE319B77A6CE44826C1F9EF8CBD413B258F398B9B695C66')
+ THROW 59610,N'Canonical source history unaccredited.',1;
+IF ISNULL(HASHBYTES('SHA2_256',CONVERT(varbinary(max),OBJECT_DEFINITION(OBJECT_ID(N'dbo.sp_Stage2_RequireOriginalLogin')))),0x)<>0x8C8515B2D2DD516A737A548EE7A03AB3E12D101BB8D6B27A1FBDC8846E31479C THROW 59610,N'Canonical login guard differs.',1;
+IF OBJECT_ID(N'dbo.PlanillaCalculos',N'U') IS NULL OR OBJECT_ID(N'dbo.Empleados',N'U') IS NULL OR OBJECT_ID(N'dbo.PlanillaBoletaEnvios',N'U') IS NULL
+ OR COL_LENGTH(N'dbo.PlanillaCalculos',N'Fingerprint')<>32 OR COL_LENGTH(N'dbo.PlanillaCalculos',N'VersionFila')<>8
+ OR COL_LENGTH(N'dbo.Usuarios',N'Correo') IS NULL OR COL_LENGTH(N'dbo.Empleados',N'UsuarioId') IS NULL
+ THROW 59610,N'Payroll source unavailable.',1;
+IF EXISTS(SELECT 1 FROM (VALUES
+ (N'dbo.PlanillaCalculos',N'CalculoId',N'bigint',8),(N'dbo.PlanillaCalculos',N'EmpleadoId',N'int',4),
+ (N'dbo.PlanillaCalculos',N'Fingerprint',N'binary',32),(N'dbo.PlanillaCalculos',N'VersionFila',N'timestamp',8),
+ (N'dbo.PlanillaCalculos',N'FechaPagoUtc',N'datetime2',6),(N'dbo.Empleados',N'EmpleadoId',N'int',4),
+ (N'dbo.Empleados',N'UsuarioId',N'int',4),(N'dbo.Usuarios',N'UsuarioId',N'int',4),(N'dbo.Usuarios',N'Activo',N'bit',1)) x(ObjectName,ColumnName,TypeName,Bytes)
+ LEFT JOIN sys.columns c ON c.object_id=OBJECT_ID(x.ObjectName) AND c.name=x.ColumnName
+ WHERE c.column_id IS NULL OR TYPE_NAME(c.user_type_id)<>x.TypeName OR c.max_length<>x.Bytes OR c.is_computed<>0)
+ OR NOT EXISTS(SELECT 1 FROM sys.columns WHERE object_id=OBJECT_ID(N'dbo.Usuarios') AND name=N'Correo' AND TYPE_NAME(user_type_id)=N'nvarchar' AND max_length BETWEEN 8 AND 640 AND is_computed=0)
+ THROW 59610,N'Payroll source types unaccredited.',1;
+IF SCHEMA_ID(N'PaySlipNotifications') IS NOT NULL OR OBJECT_ID(N'dbo.tr_PaySlipNotifications_BlockLegacyWrites') IS NOT NULL THROW 59610,N'Candidate namespace already exists; no replacement.',1;
+BEGIN TRY BEGIN TRAN;
+EXEC(N'CREATE SCHEMA PaySlipNotifications AUTHORIZATION dbo;');
+EXEC(N'
+CREATE TABLE PaySlipNotifications.Artifact(
+ CandidateId nvarchar(100) NOT NULL CONSTRAINT PK_PaySlipNotification_Artifact PRIMARY KEY,
+ ArtifactSha256 char(64) NOT NULL,
+ RunId uniqueidentifier NOT NULL,
+ CreatedUtc datetime2(7) NOT NULL CONSTRAINT DF_PaySlipNotification_ArtifactCreated DEFAULT SYSUTCDATETIME());
+CREATE TABLE PaySlipNotifications.Requests(
+ OperationId uniqueidentifier NOT NULL CONSTRAINT PK_PaySlipNotification_Requests PRIMARY KEY,
+ RequestNumber bigint IDENTITY NOT NULL CONSTRAINT UQ_PaySlipNotification_RequestNumber UNIQUE,
+ CalculationId bigint NOT NULL CONSTRAINT FK_PaySlipNotification_Calculation REFERENCES dbo.PlanillaCalculos(CalculoId),
+ OriginalLoginId uniqueidentifier NOT NULL CONSTRAINT FK_PaySlipNotification_Login REFERENCES dbo.Stage2OriginalLogins(LoginId),
+ Actor int NOT NULL CONSTRAINT FK_PaySlipNotification_Actor REFERENCES dbo.Usuarios(UsuarioId),
+ OwnerProfileId int NOT NULL CONSTRAINT FK_PaySlipNotification_Profile REFERENCES dbo.Perfiles(PerfilId),
+ OwnerSecurityStamp uniqueidentifier NOT NULL,
+ RecipientUserId int NOT NULL CONSTRAINT FK_PaySlipNotification_Recipient REFERENCES dbo.Usuarios(UsuarioId),
+ Recipient nvarchar(320) NOT NULL,
+ SourceHash binary(32) NOT NULL,
+ CreatedUtc datetime2(7) NOT NULL CONSTRAINT DF_PaySlipNotification_RequestCreated DEFAULT SYSUTCDATETIME(),
+ CONSTRAINT CK_PaySlipNotification_Operation CHECK(OperationId<>''00000000-0000-0000-0000-000000000000''),
+ CONSTRAINT CK_PaySlipNotification_Recipient CHECK(LEN(LTRIM(RTRIM(Recipient))) BETWEEN 4 AND 320));
+CREATE INDEX IX_PaySlipNotification_Owner ON PaySlipNotifications.Requests(OriginalLoginId,Actor,CalculationId);
+CREATE INDEX IX_PaySlipNotification_Order ON PaySlipNotifications.Requests(CalculationId,RequestNumber DESC);
+CREATE TABLE PaySlipNotifications.Attempts(
+ OperationId uniqueidentifier NOT NULL CONSTRAINT PK_PaySlipNotification_Attempts PRIMARY KEY CONSTRAINT FK_PaySlipNotification_AttemptRequest REFERENCES PaySlipNotifications.Requests(OperationId),
+ State nvarchar(20) NOT NULL,
+ ClaimHash binary(32) NULL,
+ AttemptedUtc datetime2(7) NULL,
+ CompletedUtc datetime2(7) NULL,
+ CONSTRAINT CK_PaySlipNotification_State CHECK(
+  (State=N''Pending'' AND ClaimHash IS NULL AND AttemptedUtc IS NULL AND CompletedUtc IS NULL) OR
+  (State=N''Sending'' AND ClaimHash IS NOT NULL AND AttemptedUtc IS NOT NULL AND CompletedUtc IS NULL) OR
+  (State IN(N''SmtpAccepted'',N''Unknown'') AND ClaimHash IS NOT NULL AND AttemptedUtc IS NOT NULL AND CompletedUtc IS NOT NULL)));
+CREATE TABLE PaySlipNotifications.Events(
+ EventId bigint IDENTITY NOT NULL CONSTRAINT PK_PaySlipNotification_Events PRIMARY KEY,
+ OperationId uniqueidentifier NOT NULL CONSTRAINT FK_PaySlipNotification_EventRequest REFERENCES PaySlipNotifications.Requests(OperationId),
+ State nvarchar(20) NOT NULL,
+ CreatedUtc datetime2(7) NOT NULL CONSTRAINT DF_PaySlipNotification_EventCreated DEFAULT SYSUTCDATETIME());');
+EXEC(N'CREATE TRIGGER PaySlipNotifications.ImmutableRequests ON PaySlipNotifications.Requests AFTER UPDATE,DELETE AS
+BEGIN SET NOCOUNT ON; THROW 59603,N''Immutable notification owner and snapshot.'',1; END;');
+EXEC(N'CREATE TRIGGER PaySlipNotifications.ImmutableEvents ON PaySlipNotifications.Events AFTER UPDATE,DELETE AS
+BEGIN SET NOCOUNT ON; THROW 59603,N''Immutable notification audit.'',1; END;');
+EXEC(N'CREATE TRIGGER PaySlipNotifications.ImmutableArtifact ON PaySlipNotifications.Artifact AFTER UPDATE,DELETE AS
+BEGIN SET NOCOUNT ON; THROW 59603,N''Immutable candidate identity.'',1; END;');
+-- Additive cutover barrier: legacy history remains readable, but the old sender
+-- cannot create or restart an SMTP operation alongside the new authority.
+EXEC(N'CREATE TRIGGER dbo.tr_PaySlipNotifications_BlockLegacyWrites ON dbo.PlanillaBoletaEnvios AFTER INSERT,UPDATE,DELETE AS
+BEGIN SET NOCOUNT ON; THROW 59604,N''Legacy notification writes unavailable.'',1; END;');
+EXEC(N'CREATE TRIGGER PaySlipNotifications.AttemptTransitions ON PaySlipNotifications.Attempts AFTER UPDATE,DELETE AS
+BEGIN SET NOCOUNT ON;
+ IF EXISTS(SELECT 1 FROM deleted d LEFT JOIN inserted i ON i.OperationId=d.OperationId WHERE i.OperationId IS NULL
+ OR NOT((d.State=N''Pending'' AND i.State=N''Sending'') OR
+ (d.State=N''Sending'' AND i.State IN(N''SmtpAccepted'',N''Unknown'') AND d.ClaimHash=i.ClaimHash AND d.AttemptedUtc=i.AttemptedUtc)))
+ THROW 59603,N''Invalid notification transition.'',1;
+END;');
+EXEC(N'
+CREATE PROCEDURE PaySlipNotifications.RequireAccess
+ @LoginId uniqueidentifier,@UsuarioId int,@PerfilId int,@SecurityStamp uniqueidentifier,@BindingHash binary(32),
+ @IssuedUtc datetime2(7),@ExpiresUtc datetime2(7),@CalculationId bigint
+AS
+BEGIN SET NOCOUNT ON;
+ IF @@TRANCOUNT=0 THROW 59601,N''Transaction unavailable.'',1;
+ IF NOT EXISTS(SELECT 1 FROM sys.triggers WHERE object_id=OBJECT_ID(N''dbo.tr_PaySlipNotifications_BlockLegacyWrites'') AND is_disabled=0)
+ OR ISNULL(HASHBYTES(''SHA2_256'',CONVERT(varbinary(max),OBJECT_DEFINITION(OBJECT_ID(N''dbo.tr_PaySlipNotifications_BlockLegacyWrites'')))),0x)<>0xAA8552E32ED6DD319DC4287DEDBF23D9D8FBED01AEB5C31595E5A737495C32F2
+ THROW 59610,N''Legacy writer barrier unaccredited.'',1;
+ -- SecurityStamp is the canonical authorization revision: 0030 changes it on
+ -- revoke AND regrant. A current grant alone never restores an old login.
+ IF NOT EXISTS(SELECT 1 FROM sys.triggers WHERE object_id=OBJECT_ID(N''dbo.tr_Stage2_ProfileGrants_RevokeSessions'') AND is_disabled=0)
+ OR ISNULL(HASHBYTES(''SHA2_256'',CONVERT(varbinary(max),OBJECT_DEFINITION(OBJECT_ID(N''dbo.tr_Stage2_ProfileGrants_RevokeSessions'')))),0x)<>0x906A58BE327EF368FA6AF3A3D5A6541229827D8B729E6B5BAD8A501369A7D5A1
+ OR NOT EXISTS(SELECT 1 FROM sys.triggers WHERE object_id=OBJECT_ID(N''dbo.tr_Stage2_Permissions_RevokeSessions'') AND is_disabled=0)
+ OR ISNULL(HASHBYTES(''SHA2_256'',CONVERT(varbinary(max),OBJECT_DEFINITION(OBJECT_ID(N''dbo.tr_Stage2_Permissions_RevokeSessions'')))),0x)<>0x0D7113A3862F32EC82EE99DCE1E696BD37A68810E5A5C7B2262E1209E7C6A50C
+ OR NOT EXISTS(SELECT 1 FROM sys.triggers WHERE object_id=OBJECT_ID(N''dbo.tr_Stage2_Profiles_RevokeSessions'') AND is_disabled=0)
+ OR ISNULL(HASHBYTES(''SHA2_256'',CONVERT(varbinary(max),OBJECT_DEFINITION(OBJECT_ID(N''dbo.tr_Stage2_Profiles_RevokeSessions'')))),0x)<>0xB49FBBBC82B6E3126506B522FEC94EB296AA8639A73B50856DA69E78FA17D301
+ THROW 59610,N''Revocation source unaccredited.'',1;
+ EXEC dbo.sp_Stage2_RequireOriginalLogin @LoginId,@UsuarioId,@PerfilId,@SecurityStamp,@BindingHash,@IssuedUtc,@ExpiresUtc,N''PLANILLA_BOLETAS_GESTIONAR'';
+ IF @CalculationId<=0 OR NOT EXISTS(SELECT 1 FROM dbo.PlanillaCalculos WITH(UPDLOCK,HOLDLOCK) WHERE CalculoId=@CalculationId AND Estado=N''Pagada'' AND FechaPagoUtc IS NOT NULL)
+ THROW 59604,N''Unavailable.'',1;
+ -- Legacy results cannot be adopted, retried or silently interpreted as not sent.
+ IF EXISTS(SELECT 1 FROM dbo.PlanillaBoletaEnvios WITH(UPDLOCK,HOLDLOCK) WHERE CalculoId=@CalculationId)
+ THROW 59604,N''Unavailable.'',1;
+END;');
+EXEC(N'
+CREATE PROCEDURE PaySlipNotifications.Snapshot
+ @CalculationId bigint,@RecipientUserId int OUTPUT,@Recipient nvarchar(320) OUTPUT,@SourceHash binary(32) OUTPUT
+AS
+BEGIN SET NOCOUNT ON;
+ IF @@TRANCOUNT=0 THROW 59601,N''Transaction unavailable.'',1;
+ DECLARE @Rows int,@Fingerprint binary(32),@Version binary(8),@PaidUtc datetime2(0),@Json nvarchar(max);
+ SELECT @Rows=COUNT(*) FROM dbo.PlanillaCalculos c WITH(UPDLOCK,HOLDLOCK)
+ JOIN dbo.Empleados e WITH(UPDLOCK,HOLDLOCK) ON e.EmpleadoId=c.EmpleadoId
+ JOIN dbo.Usuarios u WITH(UPDLOCK,HOLDLOCK) ON u.UsuarioId=e.UsuarioId
+ WHERE c.CalculoId=@CalculationId AND c.Estado=N''Pagada'' AND c.FechaPagoUtc IS NOT NULL AND u.Activo=1;
+ IF @Rows<>1 THROW 59604,N''Unavailable.'',1;
+ SELECT @RecipientUserId=u.UsuarioId,@Recipient=u.Correo,@Fingerprint=c.Fingerprint,@Version=c.VersionFila,@PaidUtc=c.FechaPagoUtc
+ FROM dbo.PlanillaCalculos c JOIN dbo.Empleados e ON e.EmpleadoId=c.EmpleadoId JOIN dbo.Usuarios u ON u.UsuarioId=e.UsuarioId WHERE c.CalculoId=@CalculationId;
+ IF @Recipient IS NULL OR LEN(LTRIM(RTRIM(@Recipient))) NOT BETWEEN 4 AND 320 OR @Recipient LIKE N''%''+NCHAR(13)+N''%'' OR @Recipient LIKE N''%''+NCHAR(10)+N''%'' THROW 59604,N''Unavailable.'',1;
+ SET @Json=(SELECT N''PaySlipLink.v1'' AS Purpose,@CalculationId AS CalculationId,@RecipientUserId AS RecipientUserId,@Recipient AS Recipient,@Fingerprint AS Fingerprint,@Version AS Version,@PaidUtc AS PaidUtc FOR JSON PATH,WITHOUT_ARRAY_WRAPPER,INCLUDE_NULL_VALUES);
+ SET @SourceHash=HASHBYTES(''SHA2_256'',CONVERT(varbinary(max),@Json));
+END;');
+EXEC(N'
+CREATE PROCEDURE PaySlipNotifications.Request
+ @LoginId uniqueidentifier,@UsuarioId int,@PerfilId int,@SecurityStamp uniqueidentifier,@BindingHash binary(32),
+ @IssuedUtc datetime2(7),@ExpiresUtc datetime2(7),@CalculationId bigint,@OperationId uniqueidentifier
+AS
+BEGIN SET NOCOUNT ON; SET XACT_ABORT ON;
+ IF @@TRANCOUNT<>0 THROW 59601,N''Independent transaction required.'',1;
+ BEGIN TRY BEGIN TRAN;
+ EXEC PaySlipNotifications.RequireAccess @LoginId,@UsuarioId,@PerfilId,@SecurityStamp,@BindingHash,@IssuedUtc,@ExpiresUtc,@CalculationId;
+ IF @OperationId IS NULL OR @OperationId=''00000000-0000-0000-0000-000000000000'' THROW 59601,N''Invalid operation.'',1;
+ DECLARE @User int,@Email nvarchar(320),@Hash binary(32);
+ EXEC PaySlipNotifications.Snapshot @CalculationId,@User OUTPUT,@Email OUTPUT,@Hash OUTPUT;
+ IF EXISTS(SELECT 1 FROM PaySlipNotifications.Requests WITH(UPDLOCK,HOLDLOCK) WHERE OperationId=@OperationId)
+ BEGIN
+  IF NOT EXISTS(SELECT 1 FROM PaySlipNotifications.Requests WHERE OperationId=@OperationId AND CalculationId=@CalculationId AND OriginalLoginId=@LoginId AND Actor=@UsuarioId AND OwnerProfileId=@PerfilId AND OwnerSecurityStamp=@SecurityStamp) THROW 59604,N''Unavailable.'',1;
+  IF NOT EXISTS(SELECT 1 FROM PaySlipNotifications.Requests WHERE OperationId=@OperationId AND SourceHash=@Hash AND RecipientUserId=@User AND Recipient=@Email) THROW 59603,N''Snapshot differs.'',1;
+ END
+ ELSE
+ BEGIN
+  DECLARE @Latest uniqueidentifier,@LatestState nvarchar(20);
+  SELECT TOP(1) @Latest=r.OperationId,@LatestState=a.State FROM PaySlipNotifications.Requests r WITH(UPDLOCK,HOLDLOCK) JOIN PaySlipNotifications.Attempts a WITH(UPDLOCK,HOLDLOCK) ON a.OperationId=r.OperationId WHERE r.CalculationId=@CalculationId ORDER BY r.RequestNumber DESC;
+  -- A new UUID represents an explicit manual command. Never create it during
+  -- refresh/recovery. Uncertain prior handoff blocks every new UUID for this calculation.
+  IF @Latest IS NOT NULL AND (@LatestState IS NULL OR @LatestState<>N''SmtpAccepted'') THROW 59603,N''Prior notification result unconfirmed.'',1;
+  INSERT PaySlipNotifications.Requests(OperationId,CalculationId,OriginalLoginId,Actor,OwnerProfileId,OwnerSecurityStamp,RecipientUserId,Recipient,SourceHash) VALUES(@OperationId,@CalculationId,@LoginId,@UsuarioId,@PerfilId,@SecurityStamp,@User,@Email,@Hash);
+  INSERT PaySlipNotifications.Attempts(OperationId,State) VALUES(@OperationId,N''Pending'');
+  INSERT PaySlipNotifications.Events(OperationId,State) VALUES(@OperationId,N''Pending'');
+ END;
+ DECLARE @State nvarchar(20)=(SELECT State FROM PaySlipNotifications.Attempts WHERE OperationId=@OperationId);
+ COMMIT; SELECT @OperationId AS OperationId,@State AS State;
+ END TRY BEGIN CATCH IF XACT_STATE()<>0 ROLLBACK; THROW; END CATCH;
+END;');
+EXEC(N'
+CREATE PROCEDURE PaySlipNotifications.Claim
+ @LoginId uniqueidentifier,@UsuarioId int,@PerfilId int,@SecurityStamp uniqueidentifier,@BindingHash binary(32),
+ @IssuedUtc datetime2(7),@ExpiresUtc datetime2(7),@CalculationId bigint,@OperationId uniqueidentifier,@ClaimToken binary(32)
+AS
+BEGIN SET NOCOUNT ON; SET XACT_ABORT ON;
+ IF @@TRANCOUNT<>0 THROW 59601,N''Independent durable claim required.'',1;
+ BEGIN TRY BEGIN TRAN;
+ EXEC PaySlipNotifications.RequireAccess @LoginId,@UsuarioId,@PerfilId,@SecurityStamp,@BindingHash,@IssuedUtc,@ExpiresUtc,@CalculationId;
+ IF @ClaimToken IS NULL OR @ClaimToken=0x0000000000000000000000000000000000000000000000000000000000000000 THROW 59601,N''Invalid claim.'',1;
+ DECLARE @Expected binary(32),@User int,@Email nvarchar(320),@Source binary(32),@State nvarchar(20),@ShouldSend bit=0;
+ SELECT @Expected=SourceHash FROM PaySlipNotifications.Requests WITH(UPDLOCK,HOLDLOCK) WHERE OperationId=@OperationId AND CalculationId=@CalculationId AND OriginalLoginId=@LoginId AND Actor=@UsuarioId AND OwnerProfileId=@PerfilId AND OwnerSecurityStamp=@SecurityStamp;
+ IF @Expected IS NULL THROW 59604,N''Unavailable.'',1;
+ EXEC PaySlipNotifications.Snapshot @CalculationId,@User OUTPUT,@Email OUTPUT,@Source OUTPUT;
+ IF @Expected<>@Source THROW 59603,N''Snapshot differs.'',1;
+ SELECT @State=State FROM PaySlipNotifications.Attempts WITH(UPDLOCK,HOLDLOCK) WHERE OperationId=@OperationId;
+ IF @State IS NULL THROW 59604,N''Unavailable.'',1;
+ IF @State=N''Pending''
+ BEGIN
+  UPDATE PaySlipNotifications.Attempts SET State=N''Sending'',ClaimHash=HASHBYTES(''SHA2_256'',@ClaimToken),AttemptedUtc=SYSUTCDATETIME() WHERE OperationId=@OperationId AND State=N''Pending'';
+  IF @@ROWCOUNT<>1 THROW 59603,N''Concurrent claim.'',1;
+  INSERT PaySlipNotifications.Events(OperationId,State) VALUES(@OperationId,N''Sending''); SET @ShouldSend=1; SET @State=N''Sending'';
+ END;
+ -- No query after COMMIT: never expose a sendable snapshot from an uncommitted claim.
+ IF @ShouldSend=0 BEGIN SET @User=NULL; SET @Email=NULL; END;
+ COMMIT;
+ SELECT @OperationId AS OperationId,@ShouldSend AS ShouldSend,@State AS State,@CalculationId AS CalculationId,@User AS RecipientUserId,@Email AS Recipient;
+ END TRY BEGIN CATCH IF XACT_STATE()<>0 ROLLBACK; THROW; END CATCH;
+END;');
+EXEC(N'
+CREATE PROCEDURE PaySlipNotifications.Complete @OperationId uniqueidentifier,@ClaimToken binary(32),@State nvarchar(20)
+AS
+BEGIN SET NOCOUNT ON; SET XACT_ABORT ON;
+ IF @@TRANCOUNT<>0 THROW 59601,N''Independent completion required.'',1;
+ BEGIN TRY BEGIN TRAN;
+ IF @State NOT IN(N''SmtpAccepted'',N''Unknown'') OR @State IS NULL OR @ClaimToken IS NULL THROW 59601,N''Invalid result.'',1;
+ DECLARE @Current nvarchar(20);
+ SELECT @Current=State FROM PaySlipNotifications.Attempts WITH(UPDLOCK,HOLDLOCK) WHERE OperationId=@OperationId AND ClaimHash=HASHBYTES(''SHA2_256'',@ClaimToken);
+ IF @Current IS NULL THROW 59604,N''Unavailable.'',1;
+ IF @Current=N''Sending''
+ BEGIN
+  UPDATE PaySlipNotifications.Attempts SET State=@State,CompletedUtc=SYSUTCDATETIME() WHERE OperationId=@OperationId AND State=N''Sending'';
+  INSERT PaySlipNotifications.Events(OperationId,State) VALUES(@OperationId,@State);
+ END
+ ELSE IF @Current<>@State THROW 59603,N''Immutable completion.'',1;
+ COMMIT; SELECT @OperationId AS OperationId,@State AS State;
+ END TRY BEGIN CATCH IF XACT_STATE()<>0 ROLLBACK; THROW; END CATCH;
+END;');
+EXEC(N'
+CREATE PROCEDURE PaySlipNotifications.Receipt
+ @LoginId uniqueidentifier,@UsuarioId int,@PerfilId int,@SecurityStamp uniqueidentifier,@BindingHash binary(32),
+ @IssuedUtc datetime2(7),@ExpiresUtc datetime2(7),@CalculationId bigint,@OperationId uniqueidentifier
+AS
+BEGIN SET NOCOUNT ON; SET XACT_ABORT ON;
+ IF @@TRANCOUNT<>0 THROW 59601,N''Independent receipt required.'',1;
+ BEGIN TRY BEGIN TRAN;
+ EXEC PaySlipNotifications.RequireAccess @LoginId,@UsuarioId,@PerfilId,@SecurityStamp,@BindingHash,@IssuedUtc,@ExpiresUtc,@CalculationId;
+ -- Exact receipt only. A different login never discovers or adopts an older UUID.
+ IF @OperationId IS NULL OR @OperationId=''00000000-0000-0000-0000-000000000000'' THROW 59601,N''Invalid operation.'',1;
+ IF NOT EXISTS(SELECT 1 FROM PaySlipNotifications.Requests WITH(HOLDLOCK) WHERE OperationId=@OperationId AND CalculationId=@CalculationId AND OriginalLoginId=@LoginId AND Actor=@UsuarioId AND OwnerProfileId=@PerfilId AND OwnerSecurityStamp=@SecurityStamp) THROW 59604,N''Unavailable.'',1;
+ DECLARE @State nvarchar(20)=(SELECT State FROM PaySlipNotifications.Attempts WITH(HOLDLOCK) WHERE OperationId=@OperationId);
+ IF @State IS NULL THROW 59604,N''Unavailable.'',1;
+ COMMIT; SELECT @OperationId AS OperationId,@State AS State;
+ END TRY BEGIN CATCH IF XACT_STATE()<>0 ROLLBACK; THROW; END CATCH;
+END;');
+INSERT PaySlipNotifications.Artifact(CandidateId,ArtifactSha256,RunId) VALUES(N'PRIVATE_PAYSLIP_V2',UPPER(@ArtifactHash),@RunId);
+COMMIT;
+END TRY BEGIN CATCH IF XACT_STATE()<>0 ROLLBACK; THROW; END CATCH;

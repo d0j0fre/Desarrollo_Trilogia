@@ -89,7 +89,9 @@ public sealed class LogisticsPresentationTests
     public void RouteDetailRetainsEveryMutationContractAndKeyboardMapAlternative()
     {
         var view = Read("Views/RoutesAdmin/Detail.cshtml");
-        foreach (var action in new[] { "Sequence", "Dispatch", "Liquidate", "Cancel", "Recalculate", "RemoveOrder", "AddOrder", "SaveSequence" }) Assert.Contains($"asp-action=\"{action}\"", view);
+        foreach (var action in new[] { "Sequence", "Dispatch", "Cancel", "Recalculate", "RemoveOrder", "AddOrder", "SaveSequence" }) Assert.Contains($"asp-action=\"{action}\"", view);
+        Assert.DoesNotContain("asp-action=\"Liquidate\"", view);
+        Assert.Contains("Liquidación y devoluciones bloqueadas", view);
         foreach (var name in new[] { "rutaId", "pedidoId", "motivo", "motivoFallo", "excluirRutaPedidoId", "rutaPedidoId", "secuencia", "lat", "lng" }) Assert.Contains($"name=\"{name}\"", view);
         Assert.Contains("data-djj-toggle=\"cancelBox\"", view);
         Assert.Contains("id=\"cancelBox\" hidden", view);

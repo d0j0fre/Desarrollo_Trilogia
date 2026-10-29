@@ -213,7 +213,7 @@ public sealed class ExpensesController : Controller
 
     // Compatibilidad temporal: las cuentas mensuales legadas quedan sólo para consulta durante la migración.
     [HttpGet]
-    [AdminAuthorize("Gastos", "GASTOS_LEGADO_VER")]
+    [AdminAuthorize("Gastos", "GASTOS_LEGADO_VER", allowAdministratorBypass: false)]
     public async Task<IActionResult> Accounts() => View(new AccountsViewModel { Cuentas = await _expenses.GetAccountsAsync(), Nueva = new() });
 
     private async Task<IActionResult> Transition(int id, string action, string? reason, bool overrideBudget, string success)

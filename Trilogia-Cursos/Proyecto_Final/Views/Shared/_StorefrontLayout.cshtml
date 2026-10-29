@@ -1,4 +1,6 @@
-@using Microsoft.AspNetCore.Http
+﻿@using Microsoft.AspNetCore.Http
+@inject IRolePermissionService ChatPermissions
+@inject Microsoft.Extensions.Configuration.IConfiguration ChatConfiguration
 @{
     ViewData["Stage2Layout"] = true;
     var brandName = Company.Value.BrandName;
@@ -12,6 +14,8 @@
     var userRole = Context.Session.GetString("UserRole") ?? string.Empty;
     var bodyClass = ViewData["BodyClass"]?.ToString() ?? string.Empty;
     var isClient = string.Equals(userRole, "Cliente", StringComparison.OrdinalIgnoreCase);
+    var canPersonalChat = isLoggedIn && !isClient && ChatConfiguration.GetValue<bool>("ChatV2:PersonalSqlEnabled")
+        && (await ChatPermissions.GetPermissionCodesAsync(userRole)).Contains("CHAT_USAR");
     bool IsCurrent(string expectedController, string? expectedAction = null) =>
         string.Equals(controller, expectedController, StringComparison.OrdinalIgnoreCase)
         && (expectedAction is null || string.Equals(action, expectedAction, StringComparison.OrdinalIgnoreCase));
@@ -95,7 +99,10 @@
                     @if (isClient)
                     {
                         <li><a asp-controller="ClientPortal" asp-action="Index" aria-current="@(IsCurrent("ClientPortal") ? "page" : null)">Mi cuenta</a></li>
+                        <li><a asp-controller="Documents" asp-action="Index">Mis documentos</a></li>
+                        <li><a asp-controller="ChatV2" asp-action="Index">Chat V2 · disponibilidad</a></li>
                     }
+                    @if (canPersonalChat) { <li><a asp-controller="ChatV2" asp-action="Index" aria-current="@(IsCurrent("ChatV2") ? "page" : null)">Chat</a></li> }
                     <li><a asp-controller="Assistant" asp-action="Index" aria-current="@(IsCurrent("Assistant") ? "page" : null)">Asistente</a></li>
                 }
             </ul>
@@ -123,6 +130,7 @@
                             <li><a asp-controller="ClientPortal" asp-action="Index" aria-current="@(IsCurrent("ClientPortal") ? "page" : null)"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-orders"></use></svg>Mi cuenta</a></li>
                         }
                         <li><a asp-controller="Profile" asp-action="Edit"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-user"></use></svg>@userName <span class="djj-sr-only">(@userRole)</span></a></li>
+                        @if (canPersonalChat) { <li><a asp-controller="ChatV2" asp-action="Index"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-chat"></use></svg>Chat</a></li> }
                         <li><a asp-controller="Assistant" asp-action="Index"><svg class="djj-icon" aria-hidden="true"><use href="#djj-icon-robot"></use></svg>Asistente</a></li>
                     }
                     else

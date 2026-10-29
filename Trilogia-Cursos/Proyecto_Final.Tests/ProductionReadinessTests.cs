@@ -70,7 +70,14 @@ public sealed class ProductionReadinessTests
 
         var source = File.ReadAllText(SourcePath("Controllers", "HomeController.cs"));
         Assert.DoesNotContain("@gmail.com", source, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("Contact:NotificationRecipient", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("Contact:NotificationRecipient", source, StringComparison.Ordinal);
+        Assert.Contains("_contactNotifications.NotifyAsync", source, StringComparison.Ordinal);
+
+        var apiConfiguration = File.ReadAllText(RepositoryPath("Proyecto_FinalAPI", "Services", "ContactNotificationConfiguration.cs"));
+        var apiProgram = File.ReadAllText(RepositoryPath("Proyecto_FinalAPI", "Program.cs"));
+        Assert.Contains("Contact:NotificationRecipient", apiConfiguration, StringComparison.Ordinal);
+        Assert.Contains("MailAddress.TryCreate", apiConfiguration, StringComparison.Ordinal);
+        Assert.Contains("ContactNotificationConfiguration.Validate", apiProgram, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -92,12 +99,15 @@ public sealed class ProductionReadinessTests
         Assert.IsType<InvalidOperationException>(exception);
     }
 
-    private static string SourcePath(params string[] segments)
+    private static string RepositoryPath(params string[] segments)
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
         while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "Proyecto_Final.slnx"))) directory = directory.Parent;
-        return Path.Combine(new[] { directory?.FullName ?? throw new DirectoryNotFoundException(), "Proyecto_Final" }.Concat(segments).ToArray());
+        return Path.Combine(new[] { directory?.FullName ?? throw new DirectoryNotFoundException() }.Concat(segments).ToArray());
     }
+
+    private static string SourcePath(params string[] segments) =>
+        RepositoryPath(new[] { "Proyecto_Final" }.Concat(segments).ToArray());
 
     private sealed class FixedTimeProvider(DateTimeOffset utcNow) : TimeProvider
     {

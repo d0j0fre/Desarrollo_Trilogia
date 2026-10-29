@@ -7,7 +7,7 @@ using Proyecto_Final.Services;
 namespace Proyecto_Final.Controllers
 {
     // CU-191/192 — Registro y seguimiento de reclamos de clientes.
-    [AdminAuthorize("Servicio al cliente", "RECLAMOS_GESTIONAR")]
+    [AdminAuthorize("Servicio al cliente", "RECLAMOS_GESTIONAR", false)]
     public class ReclamosController : Controller
     {
         private readonly ReclamosDbService _reclamos;
@@ -28,7 +28,7 @@ namespace Proyecto_Final.Controllers
             {
                 Estado = estado,
                 Buscar = buscar,
-                Reclamos = await _reclamos.GetReclamosAsync(estado, buscar)
+                Reclamos = await _reclamos.GetReclamosAsync(estado, buscar, ActorId, OriginalLoginSession.ValidatedRequest(HttpContext))
             };
             return View(model);
         }
@@ -39,7 +39,8 @@ namespace Proyecto_Final.Controllers
         {
             var model = new ReclamoFormViewModel
             {
-                Clientes = await _reclamos.SearchClientsAsync(buscarCliente)
+                RequestId = Guid.NewGuid(),
+                Clientes = await _reclamos.SearchClientsAsync(buscarCliente, ActorId, OriginalLoginSession.ValidatedRequest(HttpContext))
             };
             ViewBag.BuscarCliente = buscarCliente;
             return View(model);
@@ -51,20 +52,24 @@ namespace Proyecto_Final.Controllers
         {
             if (!ModelState.IsValid)
             {
-                model.Clientes = await _reclamos.SearchClientsAsync(null);
-                if (model.UsuarioId > 0) model.Facturas = await _reclamos.GetInvoicesByClientAsync(model.UsuarioId);
+                model.Clientes = await _reclamos.SearchClientsAsync(null, ActorId, OriginalLoginSession.ValidatedRequest(HttpContext));
+                if (model.UsuarioId > 0) model.Facturas = await _reclamos.GetInvoicesByClientAsync(model.UsuarioId, ActorId, OriginalLoginSession.ValidatedRequest(HttpContext));
                 return View(model);
             }
 
             var agenteId = HttpContext.Session.GetInt32("UserId") ?? 0;
-            var agenteNombre = HttpContext.Session.GetString("UserFullName") ?? "Agente";
             try
             {
-                var id = await _reclamos.CreateReclamoAsync(model, agenteId, agenteNombre);
-                await RegistrarAuditoriaAsync("Registrar reclamo", "Servicio al cliente",
-                    $"Reclamo #{id} '{model.Asunto}' para el cliente #{model.UsuarioId}.");
+                var id = await _reclamos.CreateReclamoAsync(model, agenteId, OriginalLoginSession.ValidatedRequest(HttpContext));
+                // Canonical audit is committed in the same SQL transaction.
                 TempData["SuccessMessage"] = "Reclamo registrado correctamente.";
                 return RedirectToAction(nameof(Details), new { id });
+            }
+            catch (SqlException ex) when (ex.Number == 59602)
+            {
+                _logger.LogWarning("Se rechazó un reintento de reclamo con contexto o contenido diferente.");
+                ModelState.AddModelError(string.Empty,
+                    "Este intento ya fue recibido con datos distintos. Reenviá el contenido original o abrí un formulario nuevo.");
             }
             catch (SqlException ex) when (ex.Number >= 50000)
             {
@@ -76,8 +81,8 @@ namespace Proyecto_Final.Controllers
                 _logger.LogError(ex, "Error al registrar reclamo.");
                 ModelState.AddModelError(string.Empty, "No fue posible registrar el reclamo.");
             }
-            model.Clientes = await _reclamos.SearchClientsAsync(null);
-            if (model.UsuarioId > 0) model.Facturas = await _reclamos.GetInvoicesByClientAsync(model.UsuarioId);
+            model.Clientes = await _reclamos.SearchClientsAsync(null, ActorId, OriginalLoginSession.ValidatedRequest(HttpContext));
+            if (model.UsuarioId > 0) model.Facturas = await _reclamos.GetInvoicesByClientAsync(model.UsuarioId, ActorId, OriginalLoginSession.ValidatedRequest(HttpContext));
             return View(model);
         }
 
@@ -85,7 +90,7 @@ namespace Proyecto_Final.Controllers
         [HttpGet]
         public async Task<IActionResult> InvoicesByClient(int usuarioId)
         {
-            var facturas = await _reclamos.GetInvoicesByClientAsync(usuarioId);
+            var facturas = await _reclamos.GetInvoicesByClientAsync(usuarioId, ActorId, OriginalLoginSession.ValidatedRequest(HttpContext));
             return Json(facturas.Select(f => new
             {
                 f.FacturaId,
@@ -96,7 +101,7 @@ namespace Proyecto_Final.Controllers
         [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
-            var reclamo = await _reclamos.GetReclamoByIdAsync(id);
+            var reclamo = await _reclamos.GetReclamoByIdAsync(id, ActorId, OriginalLoginSession.ValidatedRequest(HttpContext));
             if (reclamo == null)
             {
                 TempData["ErrorMessage"] = "No se encontró el reclamo solicitado.";
@@ -120,9 +125,8 @@ namespace Proyecto_Final.Controllers
             var usuarioNombre = HttpContext.Session.GetString("UserFullName") ?? "Agente";
             try
             {
-                await _reclamos.ChangeStatusAsync(model.ReclamoId, model.Estado, model.Resolucion, usuarioId, usuarioNombre);
-                await RegistrarAuditoriaAsync("Actualizar reclamo", "Servicio al cliente",
-                    $"Reclamo #{model.ReclamoId} cambiado a estado {model.Estado}.");
+                await _reclamos.ChangeStatusAsync(model.ReclamoId, model.Estado, model.Resolucion, usuarioId, usuarioNombre, OriginalLoginSession.ValidatedRequest(HttpContext));
+                // Canonical audit is committed in the same SQL transaction.
                 TempData["SuccessMessage"] = model.Estado == "Cerrado"
                     ? "Reclamo cerrado y resolución documentada."
                     : "Estado del reclamo actualizado.";
@@ -140,16 +144,6 @@ namespace Proyecto_Final.Controllers
             return RedirectToAction(nameof(Details), new { id = model.ReclamoId });
         }
 
-        private async Task RegistrarAuditoriaAsync(string accion, string modulo, string descripcion)
-        {
-            await _adminDbService.CreateAuditLogAsync(
-                HttpContext.Session.GetInt32("UserId"),
-                HttpContext.Session.GetString("UserFullName"),
-                HttpContext.Session.GetString("UserEmail"),
-                HttpContext.Session.GetString("UserRole"),
-                accion, modulo, descripcion,
-                HttpContext.Connection.RemoteIpAddress?.ToString(),
-                Request.Headers.UserAgent.ToString());
-        }
+        private int ActorId => HttpContext.Session.GetInt32("UserId") ?? 0;
     }
 }

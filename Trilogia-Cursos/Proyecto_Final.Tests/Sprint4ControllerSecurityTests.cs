@@ -8,12 +8,20 @@ namespace Proyecto_Final.Tests;
 public sealed class Sprint4ControllerSecurityTests
 {
     [Theory]
-    [InlineData(typeof(DocumentsController))]
     [InlineData(typeof(BudgetsController))]
     [InlineData(typeof(ExpensesController))]
     [InlineData(typeof(BudgetComparisonController))]
     public void Sprint4Controllers_RequirePermissionAuthorization(Type type) =>
         Assert.NotNull(type.GetCustomAttributes(typeof(AdminAuthorizeAttribute), true).SingleOrDefault());
+
+    [Fact]
+    public void Documents_UsesSessionAndSqlScopedAuthorizationWithoutAdminBypass()
+    {
+        var type = typeof(DocumentsController);
+        Assert.NotNull(type.GetCustomAttributes(typeof(SessionAuthorizeAttribute), true).SingleOrDefault());
+        Assert.NotNull(type.GetCustomAttributes(typeof(DocumentAccessExceptionFilterAttribute), true).SingleOrDefault());
+        Assert.Empty(type.GetCustomAttributes(typeof(AdminAuthorizeAttribute), true));
+    }
 
     [Theory]
     [InlineData(typeof(DocumentsController), "Create")]

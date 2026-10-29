@@ -1,0 +1,32 @@
+using Proyecto_Final.Services;
+using Proyecto_Final.Services.ChatV2;
+
+namespace JJ.Private.ChatDc;
+
+// Composition only; callers must supply independently accredited restricted providers.
+// There is deliberately no DI registration, credentials, fallback or product activation here.
+public sealed class ChatV2CompositePersistence(IChatV2IntentPersistence personal, IChatV2IntentPersistence domains) : IChatV2IntentPersistence
+{
+    public bool SupportsDepartment => domains.SupportsDepartment;
+    public bool SupportsCustomer => domains.SupportsCustomer;
+    public ValueTask<ChatV2LiveIdentity> ResolveAsync(OriginalLoginContext login, CancellationToken ct) => domains.ResolveAsync(login, ct);
+    private IChatV2IntentPersistence Provider(ChatV2Domain domain) => domain switch
+    {
+        ChatV2Domain.Private => personal,
+        ChatV2Domain.Department when SupportsDepartment => domains,
+        ChatV2Domain.Customer when SupportsCustomer => domains,
+        _ => throw new ChatV2Exception(ChatV2Failure.Dependency)
+    };
+    public ValueTask<IReadOnlyList<ChatV2Contact>> DirectoryAsync(OriginalLoginContext login, CancellationToken ct) => personal.DirectoryAsync(login, ct);
+    public ValueTask<int> OpenPrivateAsync(OriginalLoginContext login, int otherUser, CancellationToken ct) => personal.OpenPrivateAsync(login, otherUser, ct);
+    public ValueTask LeaveAsync(OriginalLoginContext login, ChatV2Resource resource, CancellationToken ct) => Provider(resource.Domain).LeaveAsync(login, resource, ct);
+    public ValueTask<ChatV2IntentEpochs> PrepareAsync(OriginalLoginContext login, ChatV2LiveIdentity identity, ChatV2Resource resource, Guid request, string contentHash, CancellationToken ct) =>
+        Provider(resource.Domain).PrepareAsync(login, identity, resource, request, contentHash, ct);
+    public ValueTask<ChatV2Receipt> ExecuteAsync(ChatV2BoundIntent intent, string? content, bool receiptOnly, CancellationToken ct) =>
+        Provider(intent.Resource.Domain).ExecuteAsync(intent, content, receiptOnly, ct);
+    public ValueTask<IReadOnlyList<ChatV2OwnedResource>> ListAsync(OriginalLoginContext login, ChatV2Domain domain, CancellationToken ct) => Provider(domain).ListAsync(login, domain, ct);
+    public ValueTask<ChatV2ResourceAccess> MembershipAsync(OriginalLoginContext login, ChatV2Resource resource, CancellationToken ct) => Provider(resource.Domain).MembershipAsync(login, resource, ct);
+    public ValueTask<ChatV2HistoryResponse> HistoryAsync(OriginalLoginContext login, ChatV2Resource resource, string? cursor, CancellationToken ct) => Provider(resource.Domain).HistoryAsync(login, resource, cursor, ct);
+    public ValueTask<IReadOnlyList<ChatV2QueueItem>> QueueAsync(OriginalLoginContext login, CancellationToken ct) => SupportsCustomer ? domains.QueueAsync(login, ct) : throw new ChatV2Exception(ChatV2Failure.Dependency);
+    public ValueTask<long> TransferAsync(OriginalLoginContext login, int caseId, int newAgent, long expectedVersion, CancellationToken ct) => SupportsCustomer ? domains.TransferAsync(login, caseId, newAgent, expectedVersion, ct) : throw new ChatV2Exception(ChatV2Failure.Dependency);
+}

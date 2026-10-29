@@ -5,7 +5,7 @@
 @{
     Layout = "_WorkspaceLayout"; ViewData["Title"] = "Tablero de entregas";
     var role = Context.Session.GetString("UserRole") ?? string.Empty;
-    var canRoutes = string.Equals(role, "Administrador", StringComparison.OrdinalIgnoreCase) || await PermissionService.HasCodePermissionAsync(role, "RUTAS_GESTIONAR");
+    var canRoutes = await PermissionService.HasCodePermissionAsync(role, "RUTAS_GESTIONAR");
 }
 <div class="djj-logistics djj-stack" data-snapshot-url="@Url.Action("Snapshot", "DeliveryBoard")" data-route-detail-base="@Url.Action("Detail", "RoutesAdmin")" data-can-view-routes="@canRoutes.ToString().ToLowerInvariant()">
     <partial name="_LogisticsNavigation" />

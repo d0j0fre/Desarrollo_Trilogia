@@ -5,7 +5,6 @@ using System.Diagnostics;
 using Proyecto_Final.Models;
 using Proyecto_Final.Models.Store;
 using Proyecto_Final.Services;
-using Microsoft.Extensions.Options;
 
 namespace Proyecto_Final.Controllers
 {
@@ -13,28 +12,22 @@ namespace Proyecto_Final.Controllers
     {
         private readonly AdminDbService _adminDbService;
         private readonly StoreDbService _storeDbService;
-        private readonly EmailService _emailService;
+        private readonly IContactNotificationClient _contactNotifications;
         private readonly IComboDbService _combos;
         private readonly ILogger<HomeController> _logger;
-        private readonly string? _contactNotificationRecipient;
-        private readonly CompanyOptions _company;
 
         public HomeController(
             AdminDbService adminDbService,
             StoreDbService storeDbService,
-            EmailService emailService,
+            IContactNotificationClient contactNotifications,
             IComboDbService combos,
-            ILogger<HomeController> logger,
-            IConfiguration configuration,
-            IOptions<CompanyOptions> company)
+            ILogger<HomeController> logger)
         {
             _adminDbService = adminDbService;
             _storeDbService = storeDbService;
-            _emailService = emailService;
+            _contactNotifications = contactNotifications;
             _combos = combos;
             _logger = logger;
-            _contactNotificationRecipient = configuration["Contact:NotificationRecipient"]?.Trim();
-            _company = company.Value;
         }
 
         [HttpGet]
@@ -132,33 +125,21 @@ namespace Proyecto_Final.Controllers
 
             try
             {
-                await _adminDbService.CreateConsultationAsync(
+                var consultationId = await _adminDbService.CreateConsultationAsync(
                     model.Nombre,
                     model.Correo,
                     model.Asunto,
                     model.Mensaje);
 
-                string asunto = $"Consulta Web - {model.Asunto}";
-
-                string contenido = EmailTemplateBuilder.BuildContactNotificationEmail(
-                    model.Nombre,
-                    model.Correo,
-                    model.Asunto,
-                    model.Mensaje,
-                    _company);
-
-                if (!string.IsNullOrWhiteSpace(_contactNotificationRecipient))
+                try
                 {
-                    try
-                    {
-                        _emailService.SendEmail(_contactNotificationRecipient, asunto, contenido);
-                    }
-                    catch (Exception exception)
-                    {
-                        _logger.LogWarning(exception, "La consulta se guardó, pero no se pudo notificar por correo. Solicitud {TraceId}.", HttpContext.TraceIdentifier);
-                        TempData["ErrorMessage"] = "La consulta fue guardada, pero no fue posible enviar la notificación por correo.";
-                        return RedirectToAction(nameof(Contact));
-                    }
+                    await _contactNotifications.NotifyAsync(consultationId, model, HttpContext.RequestAborted);
+                }
+                catch (Exception exception)
+                {
+                    _logger.LogWarning("Consulta guardada; notificación sin confirmar. Tipo {Type}; Solicitud {TraceId}.", exception.GetType().Name, HttpContext.TraceIdentifier);
+                    TempData["ErrorMessage"] = $"La consulta #{consultationId} quedó guardada. No se pudo confirmar el correo; no necesitás volver a enviarla.";
+                    return RedirectToAction(nameof(Contact));
                 }
 
                 TempData["SuccessMessage"] = "Se guardó correctamente.";

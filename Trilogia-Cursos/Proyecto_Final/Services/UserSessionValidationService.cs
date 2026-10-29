@@ -1,9 +1,10 @@
 using Microsoft.Data.SqlClient;
 using System.Data;
+using System.Data.Common;
 
 namespace Proyecto_Final.Services;
 
-public sealed record UserSessionState(bool Active, string Role, string SecurityStamp);
+public sealed record UserSessionState(bool Active, string Role, string SecurityStamp, int ProfileId = 0, bool ProfileActive = false);
 
 public interface IUserSessionValidationService
 {
@@ -26,19 +27,35 @@ public sealed class UserSessionValidationService : IUserSessionValidationService
             return null;
 
         await using var connection = new SqlConnection(_connectionString);
-        await using var command = new SqlCommand("dbo.sp_Auth_GetSessionState", connection)
-        {
-            CommandType = CommandType.StoredProcedure
-        };
-        command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = userId;
+        await using var command = CreateStateCommand(connection, userId);
         await connection.OpenAsync(cancellationToken);
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         if (!await reader.ReadAsync(cancellationToken))
             return null;
 
-        return new UserSessionState(
+        return ReadState(reader);
+    }
+
+    internal static SqlCommand CreateStateCommand(SqlConnection connection, int userId)
+    {
+        // Canonical FK/state in one read; the historical SP omits profile identity
+        // and activity. No authorization revision is inferred from this snapshot.
+        var command = new SqlCommand("""
+            SELECT u.Activo, p.Nombre AS PerfilNombre, u.SecurityStamp,
+                   u.PerfilId, p.Activo AS PerfilActivo
+            FROM dbo.Usuarios AS u
+            INNER JOIN dbo.Perfiles AS p ON p.PerfilId = u.PerfilId
+            WHERE u.UsuarioId = @UsuarioId;
+            """, connection);
+        command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = userId;
+        return command;
+    }
+
+    internal static UserSessionState ReadState(DbDataReader reader) =>
+        new(
             reader.GetBoolean(reader.GetOrdinal("Activo")),
             reader.GetString(reader.GetOrdinal("PerfilNombre")),
-            reader.GetGuid(reader.GetOrdinal("SecurityStamp")).ToString("D"));
-    }
+            reader.GetGuid(reader.GetOrdinal("SecurityStamp")).ToString("D"),
+            reader.GetInt32(reader.GetOrdinal("PerfilId")),
+            reader.GetBoolean(reader.GetOrdinal("PerfilActivo")));
 }

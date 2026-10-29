@@ -85,6 +85,8 @@ public sealed class AuthenticationContractTests
             .ReturnsAsync(new ApiUser
             {
                 UsuarioId = 42,
+                PerfilId = 3,
+                PerfilActivo = true,
                 NombreCompleto = "Admin de prueba",
                 Correo = "admin@example.com",
                 PerfilNombre = "Administrador",

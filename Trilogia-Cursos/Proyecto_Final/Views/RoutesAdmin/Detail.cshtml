@@ -1,11 +1,12 @@
 @model Proyecto_Final.Models.Admin.RouteDetailViewModel
 @using Proyecto_Final.Models.Presentation
+@inject IConfiguration Configuration
 @{
     Layout = "_WorkspaceLayout";
     ViewData["Title"] = $"Ruta {Model.Cabecera.Codigo}";
     var c = Model.Cabecera;
     var esPlanificada = c.Estado == "Planificada";
-    var puedeCancelar = c.Estado == "Planificada" || c.Estado == "Despachada";
+    var puedeCancelar = c.Estado == "Planificada";
 
     string BadgeRuta(string e) => LogisticsStatusPresentation.RouteTone(e);
     string BadgeEntrega(string e) => LogisticsStatusPresentation.DeliveryTone(e);
@@ -79,9 +80,10 @@
                             <button type="submit" class="djj-button djj-button--outline">Secuenciar automáticamente</button>
                         </form>
                         <form asp-action="Dispatch" method="post"
-                              data-djj-confirm="¿Despachar la ruta? Los pedidos pasarán a En ruta y se notificará a los clientes.">
+                              data-djj-confirm="¿Despachar la ruta? Los pedidos pasarán a En ruta. Los avisos a clientes se gestionan después de confirmar el despacho.">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="rutaId" value="@c.RutaId" />
+                            <input type="hidden" name="dispatchId" value="@Model.DispatchOperationId" />
                             <button type="submit" class="djj-button djj-button--primary">Despachar ruta</button>
                         </form>
                     }
@@ -93,12 +95,7 @@
                     }
                     @if (c.Estado == "Despachada")
                     {
-                        <form asp-action="Liquidate" method="post"
-                              data-djj-confirm="¿Liquidar la ruta al final del día? La mercadería de los pedidos NO entregados se reingresará al inventario.">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="rutaId" value="@c.RutaId" />
-                            <button type="submit" class="djj-button djj-button--outline">Liquidar ruta</button>
-                        </form>
+                        <p class="djj-table__note">Liquidación y devoluciones bloqueadas: falta aprobar la conciliación de stock, facturas y notas de crédito.</p>
                     }
                     @if (puedeCancelar)
                     {
@@ -150,6 +147,45 @@
                     </div>
                 }
             </div>
+
+            @if (Model.DispatchNotifications.Count > 0)
+            {
+                <section class="djj-card djj-route-dispatch-notifications" aria-labelledby="dispatch-notifications-title">
+                    <div class="djj-logistics-pad djj-logistics-divider">
+                        <h2 id="dispatch-notifications-title">Avisos del despacho</h2>
+                        <p class="djj-text-secondary">El despacho ya está registrado. Consultá primero el estado de cada aviso; un resultado incierto no se reenvía automáticamente.</p>
+                    </div>
+                    <div class="djj-logistics-pad djj-stack" data-route-dispatch-notice-list>
+                        @foreach (var item in Model.DispatchNotifications)
+                        {
+                            <article class="djj-route-dispatch-notification"
+                                     data-route-dispatch-notice
+                                     data-route-id="@c.RutaId"
+                                     data-dispatch-id="@item.DispatchId"
+                                     data-event-id="@item.EventId"
+                                     data-event-guid="@item.EventGuid"
+                                     data-notify-eligible="@(item.NotifyEligible ? "true" : "false")">
+                                @Html.AntiForgeryToken()
+                                <div>
+                                    <h3 class="djj-route-dispatch-notification__title">Pedido #@item.PedidoId</h3>
+                                    <p class="djj-route-dispatch-notification__status djj-text-secondary" data-route-dispatch-notice-status tabindex="-1">
+                                        Consultá el estado antes de continuar.
+                                    </p>
+                                </div>
+                                <div class="djj-route-dispatch-notification__actions">
+                                    <button type="button" class="djj-button djj-button--outline" data-route-dispatch-receipt>
+                                        Consultar estado
+                                    </button>
+                                    <button type="button" class="djj-button djj-button--primary" data-route-dispatch-notify hidden disabled>
+                                        Continuar mismo intento
+                                    </button>
+                                </div>
+                            </article>
+                        }
+                    </div>
+                    <div class="djj-logistics-pad djj-route-dispatch-toast" data-route-dispatch-toast role="status" aria-live="polite" aria-atomic="true" hidden></div>
+                </section>
+            }
         </div>
 
         <div>
@@ -288,6 +324,16 @@
 </div>
 
 @section Scripts {
+    @{
+        var routeDispatchConfig = new
+        {
+            enabled = Configuration.GetValue<bool>("RouteDispatchNotifications:Enabled"),
+            receiptUrl = Url.Action("EmailReceipt", "RoutesAdmin"),
+            notifyUrl = Url.Action("NotifyEmail", "RoutesAdmin")
+        };
+    }
+    <script>window.routeDispatchMailConfig = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(routeDispatchConfig));</script>
+    <script src="~/js/route-dispatch-mail.js" asp-append-version="true"></script>
     <script src="~/js/stage2/logistics-ui.js" asp-append-version="true"></script>
     @if (esPlanificada && Model.Pedidos.Any()) {
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

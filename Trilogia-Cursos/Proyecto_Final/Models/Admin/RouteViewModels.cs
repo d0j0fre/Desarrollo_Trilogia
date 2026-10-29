@@ -119,6 +119,8 @@ namespace Proyecto_Final.Models.Admin
     // ── Detalle de ruta ─────────────────────────────────────
     public class RouteDetailViewModel
     {
+        public Guid DispatchOperationId { get; set; }
+        public IReadOnlyList<RouteDispatchNotificationItemViewModel> DispatchNotifications { get; set; } = [];
         public RouteHeaderViewModel Cabecera { get; set; } = new();
         public List<RouteOrderItemViewModel> Pedidos { get; set; } = new();
         public List<AssignableOrderViewModel> PedidosDisponibles { get; set; } = new();

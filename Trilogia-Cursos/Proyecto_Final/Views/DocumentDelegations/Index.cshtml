@@ -1,0 +1,50 @@
+@model Proyecto_Final.Models.Admin.DocumentDelegationsViewModel
+@using Proyecto_Final.Models.Admin
+@using Microsoft.AspNetCore.Mvc.Rendering
+@inject BusinessClock Clock
+@{
+    Layout = "_WorkspaceLayout"; ViewData["Title"] = "Autorizaciones documentales";
+    ViewData["DocumentAccessScope"] = true;
+    var current = Model.Grants.SingleOrDefault(x => x.Department == Model.Form.Department && x.Grantee == Model.Form.Grantee && x.Operation == Model.Form.Operation);
+}
+<div class="djj-documents">
+<header class="djj-page-header"><div class="djj-page-header__copy"><span class="djj-page-header__eyebrow">Gestión documental · Autorizaciones</span><h1>Autorizaciones documentales</h1><p>Concedé una operación concreta en un departamento, con motivo y fecha de vencimiento.</p></div><a asp-action="Index" class="djj-button djj-button--ghost">Nueva autorización</a></header>
+<partial name="_DocumentsNavigation" />
+<div asp-validation-summary="All" class="djj-validation-summary" role="alert" tabindex="-1"></div>
+<form asp-action="Save" method="post" class="djj-card djj-form-card" data-djj-service-form>
+    @Html.AntiForgeryToken()<input asp-for="Form.ExpectedRevision" type="hidden" />
+    <h2>@(Model.Form.ExpectedRevision > 0 ? "Modificar autorización" : "Nueva autorización")</h2>
+    <p>Seleccioná una operación. Agregá otra autorización si la persona también necesita descargar archivos o publicar versiones. La gestión de permisos se mantiene separada del acceso al contenido.</p>
+    @if (Model.Form.ExpectedRevision > 0)
+    {
+        <input asp-for="Form.Department" type="hidden" /><input asp-for="Form.Grantee" type="hidden" /><input asp-for="Form.Operation" type="hidden" />
+        <dl class="djj-document-metadata"><dt>Departamento</dt><dd>@(current?.DepartmentName ?? "Departamento registrado") · #@Model.Form.Department</dd><dt>Persona</dt><dd>@(current?.GranteeName ?? "Persona registrada") · #@Model.Form.Grantee</dd><dt>Operación</dt><dd>@DocumentOperations.Label(Model.Form.Operation)</dd></dl>
+    }
+    else
+    {
+        <div class="djj-form-grid">
+            <div class="djj-field"><label asp-for="Form.Department">Departamento</label><select asp-for="Form.Department" asp-items="@(Model.Departments.Select(x => new SelectListItem(x.Name, x.Id.ToString())))" class="djj-select"><option value="">Seleccionar departamento</option></select><span asp-validation-for="Form.Department" class="djj-field-error"></span></div>
+            <div class="djj-field"><label asp-for="Form.Grantee">Persona</label><select asp-for="Form.Grantee" asp-items="@(Model.People.Select(x => new SelectListItem($"{x.Name} · #{x.Id}", x.Id.ToString())))" class="djj-select"><option value="">Seleccionar persona</option></select><span asp-validation-for="Form.Grantee" class="djj-field-error"></span></div>
+            <div class="djj-field"><label asp-for="Form.Operation">Operación autorizada</label><select asp-for="Form.Operation" asp-items="@(DocumentOperations.Labels.Select(x => new SelectListItem(x.Value, x.Key)))" class="djj-select"></select><span asp-validation-for="Form.Operation" class="djj-field-error"></span></div>
+        </div>
+    }
+    <div class="djj-form-grid">
+        <div class="djj-field"><label asp-for="Form.ValidThrough">Vigente hasta</label><input asp-for="Form.ValidThrough" type="date" class="djj-input" aria-describedby="delegation-expiry-help" /><small id="delegation-expiry-help">Incluye el día indicado, según la hora de Costa Rica. Es obligatorio al habilitar.</small><span asp-validation-for="Form.ValidThrough" class="djj-field-error"></span></div>
+        <div class="djj-field"><label class="djj-check"><input asp-for="Form.Enabled" /><span>Habilitar autorización</span></label><small>Desmarcá para revocar y conservar la auditoría.</small></div>
+    </div>
+    <div class="djj-field"><label asp-for="Form.Reason">Motivo</label><textarea asp-for="Form.Reason" maxlength="250" rows="3" class="djj-textarea"></textarea><span asp-validation-for="Form.Reason" class="djj-field-error"></span></div>
+    <div class="djj-form-actions"><button type="submit" class="djj-button djj-button--primary">Guardar autorización</button><a asp-controller="Documents" asp-action="Index" class="djj-button djj-button--ghost">Volver a documentos</a></div>
+</form>
+<section class="djj-card djj-data-section" aria-labelledby="document-grants-title">
+    <header><div><h2 id="document-grants-title">Autorizaciones registradas</h2><p>@Model.Total registro(s). Una autorización vencida o revocada deja de habilitar la operación.</p></div></header>
+    <div class="djj-table-wrap" tabindex="0" role="region" aria-label="Autorizaciones documentales: tabla desplazable"><table class="djj-table djj-table--compact"><caption class="djj-sr-only">Departamento, persona, operación y vigencia autorizada</caption><thead><tr><th scope="col">Departamento</th><th scope="col">Persona</th><th scope="col">Operación</th><th scope="col">Vigente hasta</th><th scope="col">Estado</th><th scope="col">Acciones</th></tr></thead><tbody>
+    @if (Model.Grants.Count == 0) { <tr><td colspan="6"><div class="djj-empty-state"><h3>Sin autorizaciones departamentales</h3><p>Las personas conservan el acceso a sus documentos propios. Registrá aquí únicamente los accesos adicionales necesarios.</p></div></td></tr> }
+    @foreach (var grant in Model.Grants)
+    {
+        <tr><td>@grant.DepartmentName</td><td>@grant.GranteeName<small class="djj-table__note">#@grant.Grantee</small></td><td>@DocumentOperations.Label(grant.Operation)</td><td>@Clock.ToLocalDate(grant.ExpiresUtc.AddTicks(-1)).ToString("dd/MM/yyyy")</td><td><span class="djj-badge djj-badge--@(grant.Effective ? "success" : "neutral")">@(grant.Effective ? "Vigente" : grant.Enabled ? "Sin autorización vigente" : "Revocada")</span></td><td><a asp-action="Index" asp-route-page="@Model.Page" asp-route-department="@grant.Department" asp-route-grantee="@grant.Grantee" asp-route-operation="@grant.Operation" class="djj-button djj-button--ghost djj-button--sm">Modificar o revocar</a></td></tr>
+    }
+    </tbody></table></div>
+    <nav class="djj-document-pagination" aria-label="Paginación de autorizaciones"><span>Página @Model.Page</span><div class="djj-row-actions">@if (Model.Page > 1) { <a asp-action="Index" asp-route-page="@(Model.Page-1)" class="djj-button djj-button--ghost">Anterior</a> }@if (Model.HasNext) { <a asp-action="Index" asp-route-page="@(Model.Page+1)" class="djj-button djj-button--ghost">Siguiente</a> }</div></nav>
+</section>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /><script src="~/js/stage2/customer-service.js" asp-append-version="true"></script> }

@@ -6,8 +6,9 @@
 </section>
 <div id="sellerOfflineMessage" class="djj-alert" role="alert" hidden></div>
 <section id="pendingOrdersPanel" class="djj-card djj-form-card" aria-labelledby="pending-title" hidden><div class="djj-order-queue-row"><div><h2 id="pending-title">Guardados en este navegador</h2><p>Los pedidos con error se pueden reintentar cuando haya conexión.</p></div><button type="button" id="clearSyncedOrders" class="djj-button djj-button--ghost djj-button--sm">Limpiar sincronizados</button></div><div id="pendingOrdersList"></div></section>
-<form asp-controller="SellerOrders" asp-action="Create" method="post" id="sellerOrderForm" class="djj-order-create">
+<form asp-controller="SellerOrders" asp-action="Review" method="post" id="sellerOrderForm" class="djj-order-create">
     @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="RequestId" />
     <div asp-validation-summary="All" class="djj-validation-summary" data-djj-validation-summary role="alert" tabindex="-1"></div>
     <div class="djj-order-create-grid">
         <div class="djj-order-sections">
@@ -25,7 +26,7 @@
                 @for (var i = 0; i < Model.Productos.Count; i++)
                 {
                     <article class="djj-card djj-order-product seller-product-item" data-product-id="@Model.Productos[i].ProductoId" data-name="@Model.Productos[i].Nombre.ToLower()" data-category="@Model.Productos[i].Categoria.ToLower()" data-display-name="@Model.Productos[i].Nombre" data-display-category="@Model.Productos[i].Categoria" data-price="@Model.Productos[i].Precio.ToString(System.Globalization.CultureInfo.InvariantCulture)" data-stock="@Model.Productos[i].Stock">
-                        <input type="hidden" asp-for="Productos[i].ProductoId" /><input type="hidden" asp-for="Productos[i].Nombre" /><input type="hidden" asp-for="Productos[i].Categoria" /><input type="hidden" asp-for="Productos[i].Precio" /><input type="hidden" asp-for="Productos[i].Stock" />
+                        <input type="hidden" asp-for="Productos[i].ProductoId" />
                         <h3>@Model.Productos[i].Nombre</h3><p>@Model.Productos[i].Categoria</p><div class="djj-order-product-price"><strong class="djj-order-money">₡@Model.Productos[i].Precio.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("es-CR"))</strong><span class="djj-badge">Stock: @Model.Productos[i].Stock</span></div>
                         <div class="djj-field"><label asp-for="Productos[i].Cantidad">Cantidad de @Model.Productos[i].Nombre</label><input asp-for="Productos[i].Cantidad" type="number" min="0" max="@Model.Productos[i].Stock" class="djj-input seller-quantity" aria-describedby="quantity-error-@i" data-price="@Model.Productos[i].Precio.ToString(System.Globalization.CultureInfo.InvariantCulture)" data-stock="@Model.Productos[i].Stock" /><span id="quantity-error-@i" asp-validation-for="Productos[i].Cantidad" class="djj-field-error"></span></div>
                     </article>
@@ -34,7 +35,7 @@
             </div>
         </section>
     </div>
-    <section class="djj-card djj-form-card" aria-labelledby="order-total-title"><div class="djj-order-queue-row"><div><h2 id="order-total-title">Resumen económico</h2><p><span id="selectedItems">@Model.Productos.Count(p => p.Cantidad > 0)</span> producto(s) · <span id="selectedUnits">@Model.TotalItems</span> unidad(es)</p><p>Total estimado: <strong id="selectedTotal" class="djj-order-money djj-money--dominant">₡@Model.Total.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("es-CR"))</strong></p><p class="djj-table__note">Estimación de la selección actual. El total definitivo y la retención para revisión se determinan en el servidor.</p></div><div class="djj-row-actions"><button type="button" id="saveOfflineOrder" class="djj-button djj-button--ghost">Guardar sin conexión</button><button type="submit" class="djj-button djj-button--primary">Registrar pedido</button></div></div></section>
+    <section class="djj-card djj-form-card" aria-labelledby="order-total-title"><div class="djj-order-queue-row"><div><h2 id="order-total-title">Resumen económico</h2><p><span id="selectedItems">@Model.Productos.Count(p => p.Cantidad > 0)</span> producto(s) · <span id="selectedUnits">@Model.TotalItems</span> unidad(es)</p><p>Total estimado: <strong id="selectedTotal" class="djj-order-money djj-money--dominant">₡@Model.Total.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("es-CR"))</strong></p><p class="djj-table__note">Estimación de la selección actual. El total definitivo y la retención para revisión se determinan en el servidor.</p></div><div class="djj-row-actions"><button type="button" id="saveOfflineOrder" class="djj-button djj-button--ghost">Guardar sin conexión</button><button type="submit" class="djj-button djj-button--primary">Revisar total final</button></div></div></section>
 </form>
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
@@ -342,7 +343,7 @@
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
-                                'RequestVerificationToken': token
+                                'X-CSRF-TOKEN': token
                             },
                             body: JSON.stringify({
                                 pedidoOfflineGuid: orders[index].pedidoOfflineGuid,

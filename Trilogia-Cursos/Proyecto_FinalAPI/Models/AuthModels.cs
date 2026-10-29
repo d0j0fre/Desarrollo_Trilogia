@@ -37,6 +37,8 @@ namespace Proyecto_FinalAPI.Models
     public class ApiUser
     {
         public int UsuarioId { get; set; }
+        public int PerfilId { get; set; }
+        public bool PerfilActivo { get; set; }
         public string NombreCompleto { get; set; } = string.Empty;
         public string Correo { get; set; } = string.Empty;
         public string PerfilNombre { get; set; } = string.Empty;

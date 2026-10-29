@@ -17,6 +17,7 @@ namespace Proyecto_FinalAPI.Controllers
         private readonly IConfiguration _configuration;
         private readonly ILogger<AuthController> _logger;
         private readonly CompanyOptions _company;
+        private readonly IOriginalLoginIssuer? _originalLoginIssuer;
 
         public AuthController(
             IAccountApiDbService accountApiDbService,
@@ -25,7 +26,8 @@ namespace Proyecto_FinalAPI.Controllers
             PasswordRecoveryAttemptLimiter passwordRecoveryAttemptLimiter,
             IConfiguration configuration,
             ILogger<AuthController> logger,
-            IOptions<CompanyOptions> company)
+            IOptions<CompanyOptions> company,
+            IOriginalLoginIssuer? originalLoginIssuer = null)
         {
             _accountApiDbService = accountApiDbService;
             _emailService = emailService;
@@ -34,6 +36,7 @@ namespace Proyecto_FinalAPI.Controllers
             _configuration = configuration;
             _logger = logger;
             _company = company.Value;
+            _originalLoginIssuer = originalLoginIssuer;
         }
 
         [HttpPost("login")]
@@ -65,7 +68,7 @@ namespace Proyecto_FinalAPI.Controllers
 
             var user = await _accountApiDbService.ValidateUserAsync(email, request.Password);
 
-            if (user == null)
+            if (user == null || !user.Activo || !user.PerfilActivo || user.PerfilId <= 0)
             {
                 _loginAttemptLimiter.RegisterFailedAttempt(email, ipAddress);
 
@@ -78,6 +81,21 @@ namespace Proyecto_FinalAPI.Controllers
 
             _loginAttemptLimiter.Reset(email, ipAddress);
 
+            OriginalLoginTicket? ticket = null;
+            if (request.BindingHash is not null)
+            {
+                if (!_configuration.GetValue<bool>("OriginalLogin:AuthorityEnabled") || _originalLoginIssuer is null)
+                    return StatusCode(StatusCodes.Status503ServiceUnavailable, new AuthResult { Message = "La autoridad de sesión no está disponible." });
+                byte[] binding;
+                try { binding = Convert.FromBase64String(request.BindingHash); }
+                catch (FormatException) { return BadRequest(new AuthResult { Message = "Contexto de sesión inválido." }); }
+                if (binding.Length != 32 || binding.All(value => value == 0)
+                    || Convert.ToBase64String(binding) != request.BindingHash)
+                    return BadRequest(new AuthResult { Message = "Contexto de sesión inválido." });
+                // Actor/profile/stamp come exclusively from credential verification, never the request DTO.
+                ticket = await _originalLoginIssuer.IssueAsync(user, binding, HttpContext.RequestAborted);
+            }
+
             return Ok(new AuthResult
             {
                 Success = true,
@@ -86,7 +104,9 @@ namespace Proyecto_FinalAPI.Controllers
                 FullName = user.NombreCompleto,
                 Email = user.Correo,
                 Role = user.PerfilNombre,
-                SecurityStamp = user.SecurityStamp
+                ProfileId = user.PerfilId,
+                SecurityStamp = user.SecurityStamp,
+                OriginalLogin = ticket
             });
         }
 
@@ -251,7 +271,26 @@ namespace Proyecto_FinalAPI.Controllers
                 });
             }
 
-            await _accountApiDbService.ResetPasswordAsync(tokenInfo.UsuarioId, token, request.NewPassword);
+            try
+            {
+                await _accountApiDbService.ResetPasswordAsync(tokenInfo.UsuarioId, token, request.NewPassword);
+            }
+            catch (InvalidPasswordResetTokenException)
+            {
+                return BadRequest(new AuthResult
+                {
+                    Success = false,
+                    Message = "El enlace de recuperación no es válido o ya venció."
+                });
+            }
+            catch (PasswordResetBusyException)
+            {
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, new AuthResult
+                {
+                    Success = false,
+                    Message = "No fue posible procesar la solicitud en este momento. Intente nuevamente más tarde."
+                });
+            }
             _passwordRecoveryAttemptLimiter.ResetResetPasswordAttempts(token, ipAddress);
 
             return Ok(new AuthResult
@@ -266,6 +305,8 @@ namespace Proyecto_FinalAPI.Controllers
     {
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
+        [System.ComponentModel.DataAnnotations.StringLength(44)]
+        public string? BindingHash { get; set; }
     }
 
     public class RegisterApiRequest
@@ -294,6 +335,8 @@ namespace Proyecto_FinalAPI.Controllers
         public string? FullName { get; set; }
         public string? Email { get; set; }
         public string? Role { get; set; }
+        public int? ProfileId { get; set; }
         public string? SecurityStamp { get; set; }
+        public OriginalLoginTicket? OriginalLogin { get; set; }
     }
 }

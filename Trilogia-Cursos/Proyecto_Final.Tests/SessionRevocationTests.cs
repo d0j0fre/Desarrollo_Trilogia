@@ -8,14 +8,17 @@ public sealed class SessionRevocationTests
     [Fact]
     public void CurrentSession_RequiresActiveUserSameRoleAndSameStamp()
     {
-        var current = new UserSessionState(true, "Supervisor", "stamp-1");
+        var current = new UserSessionState(true, "Supervisor", "stamp-1", 7, true);
 
-        Assert.True(SessionValidationMiddleware.IsCurrent(current, "supervisor", "STAMP-1"));
-        Assert.False(SessionValidationMiddleware.IsCurrent(current with { Active = false }, "Supervisor", "stamp-1"));
-        Assert.False(SessionValidationMiddleware.IsCurrent(current with { Role = "Gerente" }, "Supervisor", "stamp-1"));
-        Assert.False(SessionValidationMiddleware.IsCurrent(current with { SecurityStamp = "stamp-2" }, "Supervisor", "stamp-1"));
-        Assert.False(SessionValidationMiddleware.IsCurrent(null, "Supervisor", "stamp-1"));
-        Assert.False(SessionValidationMiddleware.IsCurrent(current, "Supervisor", null));
+        Assert.True(SessionValidationMiddleware.IsCurrent(current, "supervisor", "STAMP-1", 7));
+        Assert.False(SessionValidationMiddleware.IsCurrent(current with { ProfileActive = false }, "Supervisor", "stamp-1", 7));
+        Assert.False(SessionValidationMiddleware.IsCurrent(current, "Supervisor", "stamp-1", 8));
+        Assert.False(SessionValidationMiddleware.IsCurrent(current, "Supervisor", "stamp-1"));
+        Assert.False(SessionValidationMiddleware.IsCurrent(current with { Active = false }, "Supervisor", "stamp-1", 7));
+        Assert.False(SessionValidationMiddleware.IsCurrent(current with { Role = "Gerente" }, "Supervisor", "stamp-1", 7));
+        Assert.False(SessionValidationMiddleware.IsCurrent(current with { SecurityStamp = "stamp-2" }, "Supervisor", "stamp-1", 7));
+        Assert.False(SessionValidationMiddleware.IsCurrent(null, "Supervisor", "stamp-1", 7));
+        Assert.False(SessionValidationMiddleware.IsCurrent(current, "Supervisor", null, 7));
     }
 
     [Fact]

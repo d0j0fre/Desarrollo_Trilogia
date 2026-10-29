@@ -87,6 +87,44 @@ namespace Proyecto_FinalAPI.Services
                 company: company);
         }
 
+        public static string BuildInvoiceNotificationEmail(string customer, string number, int order, DateTime date, decimal total, CompanyOptions company)
+        {
+            var culture = System.Globalization.CultureInfo.GetCultureInfo("es-CR");
+            var content = $"<p style='font-size:16px;line-height:1.6'>Hola <strong>{Encode(customer, "Cliente")}</strong>.</p>"
+                + $"<p style='font-size:16px;line-height:1.6'>Compartimos la factura <strong>{Encode(number, string.Empty)}</strong> del pedido #{order.ToString(System.Globalization.CultureInfo.InvariantCulture)}.</p>"
+                + $"<p style='font-size:15px;line-height:1.6'>Fecha de emisión registrada: {date.ToString("dd/MM/yyyy HH:mm", culture)}.</p>"
+                + $"<p style='font-size:22px;font-weight:700;line-height:1.5'>Total: ₡{total.ToString("N2", culture)}</p>"
+                + "<p style='font-size:14px;line-height:1.6'>La facturación no acredita por sí sola la entrega física.</p>";
+            return BuildBaseTemplate("Comprobante de factura", number, "Facturación", content,
+                "Conservá este comprobante para tus registros. El destinatario corresponde a la dirección registrada al emitir la factura.", company);
+        }
+
+        public static string BuildDeliveryNotificationEmail(string customer, int orderId, string eventState, DateTime recordedLocalTime, CompanyOptions company)
+        {
+            if(orderId<=0 || eventState is not ("EnRuta" or "Entregado") || recordedLocalTime.Kind!=DateTimeKind.Unspecified || recordedLocalTime==default)
+                throw new ArgumentException("El evento logístico no es válido.");
+            var state=eventState=="Entregado"?"Entregado":"En ruta";
+            var timestamp=recordedLocalTime.ToString("yyyy-MM-dd HH:mm:ss",System.Globalization.CultureInfo.InvariantCulture);
+            var content=$"<p>Hola {Encode(customer,"Cliente")},</p>"
+                +$"<p>Se registró el estado <strong>{Encode(state,string.Empty)}</strong> para su pedido <strong>#{orderId}</strong> "
+                +$"el <strong>{Encode(timestamp,string.Empty)}</strong> (hora local registrada por el sistema).</p>"
+                +"<p>Esta notificación corresponde a ese evento registrado; no sustituye una consulta del estado actual del pedido.</p>";
+            return BuildBaseTemplate("Actualización registrada del pedido",$"Pedido #{orderId}","Entrega",content,
+                "Correo informativo sobre un evento logístico confirmado. No es una factura ni una nueva confirmación de entrega.",company);
+        }
+
+        public static string BuildRouteDispatchNotificationEmail(string customer, int orderId, DateTime recordedUtc, CompanyOptions company)
+        {
+            if (orderId <= 0 || recordedUtc == default || recordedUtc.Kind != DateTimeKind.Utc)
+                throw new ArgumentException("El evento de despacho no es válido.");
+            var timestamp = recordedUtc.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", System.Globalization.CultureInfo.InvariantCulture);
+            var content = $"<p>Hola {Encode(customer, "Cliente")},</p>"
+                + $"<p>Se registró el despacho de su pedido <strong>#{orderId}</strong> el <strong>{Encode(timestamp, string.Empty)}</strong>.</p>"
+                + "<p>La ruta pasó a despachada y su parada a En ruta. Este aviso acredita el evento registrado, sin sustituir la consulta del estado actual.</p>";
+            return BuildBaseTemplate("Despacho registrado del pedido", $"Pedido #{orderId}", "Logística", content,
+                "El despacho no acredita entrega física. La confirmación de entrega se registra por separado.", company);
+        }
+
         private static string BuildBaseTemplate(string titulo, string subtitulo, string badge, string contenido, string notaInferior, CompanyOptions company)
         {
             ArgumentNullException.ThrowIfNull(company);

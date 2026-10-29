@@ -38,6 +38,13 @@ namespace Proyecto_Final.Controllers
                     _logger.LogWarning("No se encontró el archivo de la evidencia autorizada {EvidenceId}.", id);
                     return NotFound();
                 }
+                if (evidence.Sha256 is not null && (!evidence.LengthBytes.HasValue
+                    || !await EvidenceIntegrity.VerifyAsync(stream, evidence.Sha256, evidence.LengthBytes.Value, cancellationToken)))
+                {
+                    await stream.DisposeAsync();
+                    _logger.LogWarning("Integridad no acreditada para evidencia {EvidenceId}.", id);
+                    return NotFound();
+                }
 
                 Response.Headers.CacheControl = "private, no-store, max-age=0";
                 Response.Headers.Pragma = "no-cache";

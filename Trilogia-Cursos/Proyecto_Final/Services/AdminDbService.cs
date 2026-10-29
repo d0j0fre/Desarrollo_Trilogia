@@ -463,20 +463,30 @@ namespace Proyecto_Final.Services
         {
             await using var connection = new SqlConnection(_connectionString);
             await connection.OpenAsync();
-            return await GetOrderDetailInternalAsync(connection, null, pedidoId);
+            var model = await GetOrderDetailInternalAsync(connection, null, pedidoId);
+            if (model is not null)
+            {
+                await using var command = new SqlCommand("SELECT InventarioDescontado FROM dbo.Pedidos WHERE PedidoId=@PedidoId;", connection);
+                command.Parameters.Add("@PedidoId", SqlDbType.Int).Value = pedidoId;
+                model.InventoryDebited = await command.ExecuteScalarAsync() is true;
+            }
+            return model;
         }
 
-        public async Task UpdateOrderStatusAsync(int pedidoId, string nuevoEstado, int usuarioId, string usuarioNombre)
+        public async Task UpdateOrderStatusAsync(int pedidoId, string nuevoEstado, int usuarioId, string usuarioNombre, OriginalLoginContext originalLogin)
         {
             await using var connection = new SqlConnection(_connectionString);
-            await using var command = new SqlCommand("dbo.sp_Admin_UpdateOrderStatus", connection);
+            await using var command = new SqlCommand("dbo.sp_Stage2_UpdateOrderStatusV2", connection);
             command.CommandType = CommandType.StoredProcedure;
             command.Parameters.AddWithValue("@PedidoId", pedidoId);
             command.Parameters.AddWithValue("@NuevoEstado", nuevoEstado);
             command.Parameters.AddWithValue("@UsuarioId", usuarioId);
             command.Parameters.AddWithValue("@UsuarioNombre", usuarioNombre);
-            await connection.OpenAsync();
+            await OriginalLoginTransaction.ExecuteAsync(connection, command, originalLogin, usuarioId, "PEDIDOS_CAMBIAR_ESTADO", async () =>
+            {
             await command.ExecuteNonQueryAsync();
+                return 0;
+            });
         }
 
         public async Task<bool> CancelClientPendingOrderAsync(int pedidoId, int usuarioId)
@@ -521,10 +531,10 @@ namespace Proyecto_Final.Services
             return Convert.ToInt32(result);
         }
 
-        public async Task<GenerateInvoiceResultViewModel> GenerateInvoiceFromOrderAsync(int pedidoId, int usuarioId, string usuarioNombre)
+        public async Task<GenerateInvoiceResultViewModel> GenerateInvoiceFromOrderAsync(int pedidoId, int usuarioId, string usuarioNombre, OriginalLoginContext originalLogin)
         {
             await using var connection = new SqlConnection(_connectionString);
-            await using var command = new SqlCommand("dbo.sp_Admin_GenerateInvoiceFromOrder", connection);
+            await using var command = new SqlCommand("dbo.sp_Stage2_GenerateInvoiceAmountsV2", connection);
             command.CommandType = CommandType.StoredProcedure;
             command.Parameters.Add("@PedidoId", SqlDbType.Int).Value = pedidoId;
             command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId;
@@ -532,7 +542,8 @@ namespace Proyecto_Final.Services
                 ? DBNull.Value
                 : usuarioNombre.Trim();
 
-            await connection.OpenAsync();
+            return await OriginalLoginTransaction.ExecuteAsync(connection, command, originalLogin, usuarioId, "FACTURACION_GENERAR", async () =>
+            {
             await using var reader = await command.ExecuteReaderAsync();
             if (!await reader.ReadAsync())
             {
@@ -546,6 +557,7 @@ namespace Proyecto_Final.Services
                 NumeroFactura = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
                 EstadoPedido = reader.IsDBNull(3) ? string.Empty : reader.GetString(3)
             };
+            });
         }
 
         public async Task<SalesReportViewModel> GetSalesReportAsync()
@@ -589,9 +601,17 @@ namespace Proyecto_Final.Services
                 }
             }
 
-            await using (var command = new SqlCommand("dbo.sp_Admin_GetTopSellingProducts", connection))
+            await using (var command = new SqlCommand("""
+                SELECT TOP(10) d.ProductoNombre,SUM(d.Cantidad) AS CantidadVendida,
+                  SUM(COALESCE(a.Neto,d.Subtotal)) AS MontoVendido
+                FROM dbo.FacturaDetalle d JOIN dbo.Facturas f ON f.FacturaId=d.FacturaId
+                LEFT JOIN dbo.Stage2OrderAmountLines a ON a.PedidoId=f.PedidoId AND a.LineKind=N'Producto'
+                  AND a.ProductoId=d.ProductoId AND a.Cantidad=d.Cantidad AND d.PrecioUnitario>0
+                WHERE f.Estado=N'Generada' GROUP BY d.ProductoNombre
+                ORDER BY CantidadVendida DESC,MontoVendido DESC;
+                """, connection))
             {
-                command.CommandType = CommandType.StoredProcedure;
+                command.CommandType = CommandType.Text;
                 await using var reader = await command.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
                 {
@@ -652,7 +672,7 @@ namespace Proyecto_Final.Services
 
             if (model == null) return null;
 
-            await using (var command = new SqlCommand("dbo.sp_Admin_GetInvoiceLines", connection))
+            await using (var command = new SqlCommand("dbo.sp_Stage2_GetInvoiceLinesV2", connection))
             {
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.AddWithValue("@FacturaId", facturaId);
@@ -712,7 +732,7 @@ namespace Proyecto_Final.Services
                 return null;
             }
 
-            await using (var command = new SqlCommand("dbo.sp_Client_GetInvoiceLinesByOrder", connection))
+            await using (var command = new SqlCommand("dbo.sp_Stage2_GetClientInvoiceLinesV2", connection))
             {
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.Add("@PedidoId", SqlDbType.Int).Value = pedidoId;
@@ -1072,7 +1092,7 @@ namespace Proyecto_Final.Services
 
             if (model == null) return null;
 
-            await using (var command = new SqlCommand("dbo.sp_Admin_GetOrderDetailLines", connection, transaction))
+            await using (var command = new SqlCommand("dbo.sp_Stage2_GetOrderDetailLinesV2", connection, transaction))
             {
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.AddWithValue("@PedidoId", pedidoId);
@@ -1577,6 +1597,7 @@ namespace Proyecto_Final.Services
 
         public async Task<List<SellerOrderClientViewModel>> GetSellerOrderClientsAsync(string? buscar = null)
         {
+            CommercialAssignmentGuard.RequireAccreditedRelations();
             var clientes = new List<SellerOrderClientViewModel>();
 
             await using var connection = new SqlConnection(_connectionString);
@@ -1636,6 +1657,7 @@ namespace Proyecto_Final.Services
             Guid? pedidoOfflineGuid = null,
             string? canalPedido = null)
         {
+            CommercialAssignmentGuard.RequireAccreditedRelations();
             var itemsPayload = model.Productos
                 .Where(x => x.Cantidad > 0)
                 .Select(x => new { productoId = x.ProductoId, cantidad = x.Cantidad });
@@ -1659,29 +1681,29 @@ namespace Proyecto_Final.Services
                 command.Parameters.Add("@CanalPedido", SqlDbType.NVarChar, 50).Value = string.IsNullOrWhiteSpace(canalPedido) ? "Venta móvil" : canalPedido.Trim();
 
                 await connection.OpenAsync();
+                await using var transaction = (SqlTransaction)await connection.BeginTransactionAsync();
+                command.Transaction = transaction;
                 await using var reader = await command.ExecuteReaderAsync();
 
                 if (await reader.ReadAsync())
                 {
-                    return new SellerOrderResultViewModel
-                    {
-                        PedidoId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
-                        Estado = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
-                        FacturaId = reader.IsDBNull(2) ? 0 : reader.GetInt32(2),
-                        NumeroFactura = reader.IsDBNull(3) ? string.Empty : reader.GetString(3)
-                    };
+                    var result = SellerOrderResultReader.Read(reader);
+                    await reader.DisposeAsync();
+                    await transaction.CommitAsync();
+                    return result;
                 }
 
                 throw new InvalidOperationException("El procedimiento no devolvió resultado.");
             }
             catch (SqlException ex)
             {
-                throw new InvalidOperationException(ex.Message, ex);
+                throw new InvalidOperationException("No fue posible registrar el pedido con el contrato SQL vigente.", ex);
             }
         }
 
         public async Task<List<RetainedOrderListItemViewModel>> GetRetainedOrdersAsync(string? buscar)
         {
+            CommercialAssignmentGuard.RequireAccreditedRelations();
             var pedidos = new List<RetainedOrderListItemViewModel>();
             await using var connection = new SqlConnection(_connectionString);
             await using var command = new SqlCommand("dbo.sp_Manager_GetRetainedOrders", connection);
@@ -1709,6 +1731,7 @@ namespace Proyecto_Final.Services
 
         public async Task<ManagerApproveResultViewModel> ApproveRetainedOrderAsync(int pedidoId, int usuarioId, string usuarioNombre)
         {
+            CommercialAssignmentGuard.RequireAccreditedRelations();
             await using var connection = new SqlConnection(_connectionString);
             await using var command = new SqlCommand("dbo.sp_Manager_ApproveOrder", connection);
             command.CommandType = CommandType.StoredProcedure;
@@ -1735,6 +1758,7 @@ namespace Proyecto_Final.Services
 
         public async Task RejectRetainedOrderAsync(int pedidoId, string motivoRechazo, int usuarioId, string usuarioNombre)
         {
+            CommercialAssignmentGuard.RequireAccreditedRelations();
             await using var connection = new SqlConnection(_connectionString);
             await using var command = new SqlCommand("dbo.sp_Manager_RejectOrder", connection);
             command.CommandType = CommandType.StoredProcedure;
@@ -2204,69 +2228,12 @@ namespace Proyecto_Final.Services
         public async Task<List<WarrantyRequestViewModel>> GetWarrantyRequestsAsync()
         {
             var warranties = new List<WarrantyRequestViewModel>();
-
             await using var connection = new SqlConnection(_connectionString);
-
-            await using var command = new SqlCommand(
-                "dbo.sp_Admin_GetWarrantyRequests",
-                connection);
-
-            command.CommandType = CommandType.StoredProcedure;
-
+            await using var command = new SqlCommand(WarrantyRequestReader.ListSql, connection);
             await connection.OpenAsync();
-
             await using var reader = await command.ExecuteReaderAsync();
-
             while (await reader.ReadAsync())
-            {
-                warranties.Add(new WarrantyRequestViewModel
-                {
-                    GarantiaId = reader.IsDBNull(0)
-                        ? 0
-                        : reader.GetInt32(0),
-
-                    UsuarioId = reader.IsDBNull(1)
-                        ? 0
-                        : reader.GetInt32(1),
-
-                    PedidoId = reader.IsDBNull(2)
-                        ? 0
-                        : reader.GetInt32(2),
-
-                    Producto = reader.IsDBNull(3)
-                        ? string.Empty
-                        : reader.GetString(3),
-
-                    Cliente = reader.IsDBNull(4)
-                        ? string.Empty
-                        : reader.GetString(4),
-
-                    FechaSolicitud = reader.IsDBNull(5)
-                        ? DateTime.MinValue
-                        : reader.GetDateTime(5),
-
-                    Estado = reader.IsDBNull(6)
-                        ? "Pendiente"
-                        : reader.GetString(6),
-
-                    Motivo = reader.IsDBNull(7)
-                        ? string.Empty
-                        : reader.GetString(7),
-
-                    Descripcion = reader.IsDBNull(8)
-                        ? null
-                        : reader.GetString(8),
-
-                    Resolucion = reader.IsDBNull(9)
-                        ? null
-                        : reader.GetString(9),
-
-                    FechaResolucion = reader.IsDBNull(10)
-                        ? null
-                        : reader.GetDateTime(10)
-                });
-            }
-
+                warranties.Add(WarrantyRequestReader.Read(reader));
             return warranties;
         }
 
@@ -2275,7 +2242,8 @@ namespace Proyecto_Final.Services
             string estado,
             string? resolucion,
             int actorUsuarioId,
-            string actorNombre)
+            string actorNombre,
+            OriginalLoginContext originalLogin)
         {
             await using var connection = new SqlConnection(_connectionString);
             await using var command = new SqlCommand("dbo.sp_Admin_UpdateWarrantyStatus", connection)
@@ -2288,8 +2256,12 @@ namespace Proyecto_Final.Services
                 string.IsNullOrWhiteSpace(resolucion) ? DBNull.Value : resolucion.Trim();
             command.Parameters.Add("@ActorUsuarioId", SqlDbType.Int).Value = actorUsuarioId;
             command.Parameters.Add("@ActorNombre", SqlDbType.NVarChar, 150).Value = actorNombre;
-            await connection.OpenAsync();
-            await command.ExecuteNonQueryAsync();
+            command.Parameters.Add("@ExpectedSecurityStamp", SqlDbType.UniqueIdentifier).Value = originalLogin.SecurityStamp;
+            await OriginalLoginTransaction.ExecuteAsync(connection, command, originalLogin, actorUsuarioId, "GARANTIAS_GESTIONAR", async () =>
+            {
+                await command.ExecuteNonQueryAsync();
+                return 0;
+            });
         }
 
         public async Task<OrderDetailLineViewModel?> GetOrderDetailLineAsync(int pedidoDetalleId)
@@ -2300,7 +2272,11 @@ namespace Proyecto_Final.Services
             pd.PedidoDetalleId,
             pd.PedidoId,
             p.UsuarioId,
-            pr.Nombre AS Producto
+            pr.Nombre AS Producto,
+            CONVERT(bit,CASE WHEN pd.PedidoComboId IS NULL AND pd.EsRegalo=0
+                AND EXISTS(SELECT 1 FROM dbo.Stage2PhysicalDeliveries e WHERE e.PedidoId=p.PedidoId)
+                AND NOT EXISTS(SELECT 1 FROM dbo.Garantias g WHERE g.PedidoDetalleId=pd.PedidoDetalleId
+                    AND g.Estado IN(N'Pendiente',N'En revisión')) THEN 1 ELSE 0 END) AS CanRequestWarranty
         FROM PedidoDetalle pd
         INNER JOIN Pedidos p
             ON p.PedidoId = pd.PedidoId
@@ -2324,14 +2300,37 @@ namespace Proyecto_Final.Services
                 PedidoDetalleId = reader.GetInt32(reader.GetOrdinal("PedidoDetalleId")),
                 PedidoId = reader.GetInt32(reader.GetOrdinal("PedidoId")),
                 UsuarioId = reader.GetInt32(reader.GetOrdinal("UsuarioId")),
-                Producto = reader.GetString(reader.GetOrdinal("Producto"))
+                Producto = reader.GetString(reader.GetOrdinal("Producto")),
+                CanRequestWarranty = reader.GetBoolean(reader.GetOrdinal("CanRequestWarranty"))
             };
         }
+        public async Task<HashSet<int>> GetWarrantyEligibleLineIdsAsync(int pedidoId, int usuarioId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("""
+                SELECT d.PedidoDetalleId FROM dbo.PedidoDetalle d
+                INNER JOIN dbo.Pedidos o ON o.PedidoId=d.PedidoId
+                INNER JOIN dbo.Stage2PhysicalDeliveries e ON e.PedidoId=o.PedidoId
+                WHERE o.PedidoId=@PedidoId AND o.UsuarioId=@UsuarioId
+                  AND d.PedidoComboId IS NULL AND d.EsRegalo=0
+                  AND NOT EXISTS(SELECT 1 FROM dbo.Garantias g WHERE g.PedidoDetalleId=d.PedidoDetalleId
+                      AND g.Estado IN(N'Pendiente',N'En revisión'));
+                """, connection);
+            command.Parameters.Add("@PedidoId", SqlDbType.Int).Value = pedidoId;
+            command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId;
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+            var eligible = new HashSet<int>();
+            while (await reader.ReadAsync()) eligible.Add(reader.GetInt32(0));
+            return eligible;
+        }
+
         public async Task<bool> CreateWarrantyRequestAsync(
             int pedidoDetalleId,
             int usuarioId,
             string motivo,
-            string? descripcion)
+            string? descripcion,
+            OriginalLoginContext originalLogin)
         {
             using var connection = new SqlConnection(_connectionString);
 
@@ -2341,29 +2340,20 @@ namespace Proyecto_Final.Services
 
             command.CommandType = CommandType.StoredProcedure;
 
-            command.Parameters.AddWithValue(
-                "@PedidoDetalleId",
-                pedidoDetalleId);
+            command.Parameters.Add("@PedidoDetalleId", SqlDbType.Int).Value = pedidoDetalleId;
+            command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId;
+            command.Parameters.Add("@Motivo", SqlDbType.NVarChar, 250).Value = motivo;
+            command.Parameters.Add("@Descripcion", SqlDbType.NVarChar, 1000).Value =
+                string.IsNullOrWhiteSpace(descripcion) ? DBNull.Value : descripcion;
+            command.Parameters.Add("@ExpectedSecurityStamp", SqlDbType.UniqueIdentifier).Value = originalLogin.SecurityStamp;
 
-            command.Parameters.AddWithValue(
-                "@UsuarioId",
-                usuarioId);
+            return await OriginalLoginTransaction.ExecuteAsync(connection, command, originalLogin, usuarioId, null, async () =>
+            {
 
-            command.Parameters.AddWithValue(
-                "@Motivo",
-                motivo);
+                var result = await command.ExecuteScalarAsync();
 
-            command.Parameters.AddWithValue(
-                "@Descripcion",
-                string.IsNullOrWhiteSpace(descripcion)
-                    ? DBNull.Value
-                    : descripcion);
-
-            await connection.OpenAsync();
-
-            var result = await command.ExecuteScalarAsync();
-
-            return result != null;
+                return result != null;
+            });
         }
 
         public async Task<List<ClientWarrantyListItemViewModel>>
@@ -2383,7 +2373,6 @@ namespace Proyecto_Final.Services
             g.Motivo,
             g.Descripcion,
             g.Estado,
-            g.Telefono,
             g.Resolucion,
             g.FechaResolucion
         FROM Garantias g
@@ -2395,7 +2384,7 @@ namespace Proyecto_Final.Services
         ORDER BY g.FechaSolicitud DESC;",
                 connection);
 
-            command.Parameters.AddWithValue("@UsuarioId", usuarioId);
+            command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId;
 
             await connection.OpenAsync();
 

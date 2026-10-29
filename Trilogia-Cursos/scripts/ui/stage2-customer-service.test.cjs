@@ -6,12 +6,19 @@ const path = require("node:path");
 const code = fs.readFileSync(path.resolve(__dirname,"../../Proyecto_Final/wwwroot/js/stage2/customer-service.js"),"utf8");
 function element(value = "") { return {value, hidden:false, required:false, children:[], handlers:{}, addEventListener(n,f){this.handlers[n]=f;},replaceChildren(...v){this.children=v;},add(v){this.children.push(v);}}; }
 function run({ ids={}, warranty=[], invoiceForm=null, fetchImpl=async()=>{throw Error("No network expected")}, forms=[], jquery=false }={}) {
- const handlers=[],frames=[];
+ const handlers=[],frames=[],microtasks=[],pageShows=[];
+ forms.forEach(form=>{
+  form.handlers ||= {};form.attributes ||= {};
+  form.addEventListener ||= (name,handler)=>{form.handlers[name]=handler;};
+  form.querySelectorAll ||= ()=>[];
+  form.setAttribute ||= (name,value)=>{form.attributes[name]=value;};
+  form.removeAttribute ||= name=>{delete form.attributes[name];};
+ });
  const document={getElementById:id=>ids[id]||null,querySelector:()=>invoiceForm,querySelectorAll:s=>s===".djj-service-warranty-form"?warranty:forms};
- const window={requestAnimationFrame:f=>frames.push(f)};
+ const window={requestAnimationFrame:f=>frames.push(f),addEventListener:(name,f)=>{assert.equal(name,"pageshow");pageShows.push(f);}};
  if(jquery) window.jQuery=form=>({on(n,f){assert.equal(n,"invalid-form.validate");handlers.push(f);}});
- vm.runInNewContext(code,{document,window,fetch:fetchImpl,Option:function(text,value){this.text=text;this.value=value;}});
- return {handlers,frames};
+ vm.runInNewContext(code,{document,window,queueMicrotask:f=>microtasks.push(f),fetch:fetchImpl,Option:function(text,value){this.text=text;this.value=value;}});
+ return {handlers,frames,microtasks,pageShows};
 }
 test("ordinary lists tolerate absent form controls without requests",()=>assert.doesNotThrow(()=>run()));
 test("complaint closing toggles native required and marker without mutating data",()=>{
@@ -41,4 +48,24 @@ test("lookup failure leaves invoice optional and reports failure",async()=>{
 });
 test("invalid client validation focuses updated summary without submitting",()=>{
  let focused=false;const form={querySelector:()=>({focus(){focused=true;}})};const result=run({forms:[form],jquery:true});result.handlers[0]();assert.equal(focused,false);result.frames[0]();assert.equal(focused,true);
+});
+function submission(){return {defaultPrevented:false,preventDefault(){this.defaultPrevented=true;}};}
+test("accepted submission prevents rapid duplicate events and disables only submit controls",()=>{
+ const button={disabled:false},input={disabled:false},form={querySelectorAll:()=>[button]};const runState=run({forms:[form]});
+ const first=submission();form.handlers.submit(first);assert.equal(first.defaultPrevented,false);assert.equal(button.disabled,false);
+ const duplicate=submission();form.handlers.submit(duplicate);assert.equal(duplicate.defaultPrevented,true);
+ runState.microtasks.shift()();assert.equal(button.disabled,true);assert.equal(input.disabled,false);assert.equal(form.attributes['aria-busy'],'true');
+});
+test("cancelled confirmation does not lock a subsequent legitimate submit",()=>{
+ const form={};const state=run({forms:[form]});const cancelled=submission();cancelled.preventDefault();form.handlers.submit(cancelled);assert.equal(state.microtasks.length,0);
+ const next=submission();form.handlers.submit(next);assert.equal(next.defaultPrevented,false);assert.equal(state.microtasks.length,1);
+});
+test("later validation cancellation releases the guard and keeps the button enabled",()=>{
+ const button={disabled:false},form={querySelectorAll:()=>[button]};const state=run({forms:[form]});const invalid=submission();form.handlers.submit(invalid);invalid.preventDefault();state.microtasks.shift()();
+ assert.equal(button.disabled,false);assert.equal(form.attributes['aria-busy'],undefined);const corrected=submission();form.handlers.submit(corrected);assert.equal(corrected.defaultPrevented,false);
+});
+test("history restoration resets pending state and preserves preexisting disabled buttons",()=>{
+ const enabled={disabled:false},disabled={disabled:true},form={querySelectorAll:()=>[enabled,disabled]};const state=run({forms:[form]});form.handlers.submit(submission());state.microtasks.shift()();
+ state.pageShows[0]({persisted:true});assert.equal(enabled.disabled,false);assert.equal(disabled.disabled,true);assert.equal(form.attributes['aria-busy'],undefined);
+ const next=submission();form.handlers.submit(next);assert.equal(next.defaultPrevented,false);
 });

@@ -26,8 +26,16 @@ namespace Proyecto_Final.Models.Admin
         public List<ReclamoListItemViewModel> Reclamos { get; set; } = new();
     }
 
-    public class ReclamoFormViewModel
+    public class ReclamoFormViewModel : IValidatableObject
     {
+        public Guid RequestId { get; set; }
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (RequestId == Guid.Empty)
+                yield return new ValidationResult("La solicitud de registro no es válida. Abrí nuevamente el formulario.", new[] { nameof(RequestId) });
+        }
+
         [Required(ErrorMessage = "Debe seleccionar el cliente.")]
         [Display(Name = "Cliente")]
         public int UsuarioId { get; set; }

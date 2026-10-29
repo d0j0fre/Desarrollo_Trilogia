@@ -1,0 +1,59 @@
+@model Proyecto_Final.Models.Admin.CommercialRelationsViewModel
+@using Microsoft.AspNetCore.Mvc.Rendering
+@inject BusinessClock Clock
+@{
+    Layout = "_WorkspaceLayout";
+    ViewData["Title"] = "Relaciones comerciales";
+    var sellers = Model.Sellers.Select(x => new SelectListItem($"{x.Name} · #{x.UserId}", x.UserId.ToString())).ToList();
+    var customers = Model.Customers.Select(x => new SelectListItem($"{x.Name} · #{x.UserId}", x.UserId.ToString())).ToList();
+    var supervisors = Model.Supervisors.Select(x => new SelectListItem($"{x.Name} · #{x.UserId}", x.UserId.ToString())).ToList();
+}
+<header class="djj-page-header">
+    <div class="djj-page-header__copy"><span class="djj-page-header__eyebrow">Comercial · Autorización</span><h1>Relaciones comerciales</h1><p>Administrá asignaciones explícitas y su vigencia. Cada operación requiere además los permisos vigentes de las personas involucradas.</p></div>
+</header>
+<div asp-validation-summary="All" class="djj-validation-summary" role="alert" tabindex="-1"></div>
+<p class="djj-alert djj-alert--info">Las relaciones no se infieren de departamentos ni cargos. Revocar conserva el historial; restituir genera una revisión nueva.</p>
+<form asp-action="SaveCustomer" method="post" class="djj-form-card">
+    @Html.AntiForgeryToken()
+    <input asp-for="CustomerRelation.ExpectedRevision" type="hidden" />
+    <fieldset class="djj-security-fieldset"><legend>Vendedor y cliente</legend><div class="djj-form-grid">
+        <div class="djj-field"><label asp-for="CustomerRelation.ParentUser">Vendedor</label>@if (Model.CustomerRelation.ExpectedRevision > 0) { <input type="hidden" name="CustomerRelation.ParentUser" value="@Model.CustomerRelation.ParentUser" /><input id="CustomerRelation_ParentUser" class="djj-input" readonly value="@(Model.Relations.FirstOrDefault(x => x.Kind == "SC" && x.ParentUser == Model.CustomerRelation.ParentUser && x.ChildUser == Model.CustomerRelation.ChildUser)?.ParentName ?? ("Persona #" + Model.CustomerRelation.ParentUser))" /> } else { <select asp-for="CustomerRelation.ParentUser" asp-items="sellers" class="djj-select" required aria-describedby="sc-parent-help sc-parent-error"><option value="">Seleccioná un vendedor</option></select> }<small id="sc-parent-help" class="djj-field__hint">Cuenta y perfil activos, con permiso para venta móvil.</small><span asp-validation-for="CustomerRelation.ParentUser" id="sc-parent-error" class="djj-field__error"></span></div>
+        <div class="djj-field"><label asp-for="CustomerRelation.ChildUser">Cliente</label>@if (Model.CustomerRelation.ExpectedRevision > 0) { <input type="hidden" name="CustomerRelation.ChildUser" value="@Model.CustomerRelation.ChildUser" /><input id="CustomerRelation_ChildUser" class="djj-input" readonly value="@(Model.Relations.FirstOrDefault(x => x.Kind == "SC" && x.ParentUser == Model.CustomerRelation.ParentUser && x.ChildUser == Model.CustomerRelation.ChildUser)?.ChildName ?? ("Persona #" + Model.CustomerRelation.ChildUser))" /> } else { <select asp-for="CustomerRelation.ChildUser" asp-items="customers" class="djj-select" required aria-describedby="sc-child-error"><option value="">Seleccioná un cliente</option></select> }<span asp-validation-for="CustomerRelation.ChildUser" id="sc-child-error" class="djj-field__error"></span></div>
+        <div class="djj-field"><label asp-for="CustomerRelation.ValidThrough">Vigente hasta (opcional)</label><input asp-for="CustomerRelation.ValidThrough" type="date" class="djj-input" aria-describedby="sc-until-help sc-until-error" /><small id="sc-until-help" class="djj-field__hint">Hasta el final del día en Costa Rica. Sin fecha, permanece vigente hasta revocación.</small><span asp-validation-for="CustomerRelation.ValidThrough" id="sc-until-error" class="djj-field__error"></span></div>
+        <div class="djj-field"><label class="djj-choice"><input asp-for="CustomerRelation.Enabled" class="djj-checkbox" /> Relación habilitada</label><small class="djj-field__hint">Desmarcar revoca una relación existente.</small></div>
+        <div class="djj-field djj-form-grid__full"><label asp-for="CustomerRelation.Reason">Motivo del cambio</label><textarea asp-for="CustomerRelation.Reason" class="djj-textarea" rows="2" maxlength="250" required aria-describedby="sc-reason-error"></textarea><span asp-validation-for="CustomerRelation.Reason" id="sc-reason-error" class="djj-field__error"></span></div>
+    </div></fieldset>
+    @if (Model.CustomerRelation.ExpectedRevision > 0) { <p class="djj-field__hint">Editando revisión @Model.CustomerRelation.ExpectedRevision. Conservá las personas de la relación; para otra asignación, iniciá un formulario nuevo.</p> }
+    <div class="djj-row-actions"><button type="submit" class="djj-button djj-button--primary" disabled="@(Model.CustomerRelation.ExpectedRevision == 0 && (!Model.Sellers.Any() || !Model.Customers.Any()))">Guardar relación vendedor–cliente</button><a asp-action="Index" class="djj-button djj-button--secondary">Limpiar formulario</a></div>
+    @if (!Model.Sellers.Any() || !Model.Customers.Any()) { <p class="djj-field__hint">Faltan vendedores o clientes elegibles. Revisá sus cuentas y capacidades antes de asignar.</p> }
+</form>
+<form asp-action="SaveSupervisor" method="post" class="djj-form-card">
+    @Html.AntiForgeryToken()
+    <input asp-for="SupervisorRelation.ExpectedRevision" type="hidden" />
+    <fieldset class="djj-security-fieldset"><legend>Supervisor y vendedor</legend><div class="djj-form-grid">
+        <div class="djj-field"><label asp-for="SupervisorRelation.ParentUser">Supervisor</label>@if (Model.SupervisorRelation.ExpectedRevision > 0) { <input type="hidden" name="SupervisorRelation.ParentUser" value="@Model.SupervisorRelation.ParentUser" /><input id="SupervisorRelation_ParentUser" class="djj-input" readonly value="@(Model.Relations.FirstOrDefault(x => x.Kind == "SS" && x.ParentUser == Model.SupervisorRelation.ParentUser && x.ChildUser == Model.SupervisorRelation.ChildUser)?.ParentName ?? ("Persona #" + Model.SupervisorRelation.ParentUser))" /> } else { <select asp-for="SupervisorRelation.ParentUser" asp-items="supervisors" class="djj-select" required aria-describedby="ss-parent-help ss-parent-error"><option value="">Seleccioná un supervisor</option></select> }<small id="ss-parent-help" class="djj-field__hint">Cuenta y perfil activos, con permiso para aprobar o rechazar pedidos.</small><span asp-validation-for="SupervisorRelation.ParentUser" id="ss-parent-error" class="djj-field__error"></span></div>
+        <div class="djj-field"><label asp-for="SupervisorRelation.ChildUser">Vendedor</label>@if (Model.SupervisorRelation.ExpectedRevision > 0) { <input type="hidden" name="SupervisorRelation.ChildUser" value="@Model.SupervisorRelation.ChildUser" /><input id="SupervisorRelation_ChildUser" class="djj-input" readonly value="@(Model.Relations.FirstOrDefault(x => x.Kind == "SS" && x.ParentUser == Model.SupervisorRelation.ParentUser && x.ChildUser == Model.SupervisorRelation.ChildUser)?.ChildName ?? ("Persona #" + Model.SupervisorRelation.ChildUser))" /> } else { <select asp-for="SupervisorRelation.ChildUser" asp-items="sellers" class="djj-select" required aria-describedby="ss-child-error"><option value="">Seleccioná un vendedor</option></select> }<span asp-validation-for="SupervisorRelation.ChildUser" id="ss-child-error" class="djj-field__error"></span></div>
+        <div class="djj-field"><label asp-for="SupervisorRelation.ValidThrough">Vigente hasta (opcional)</label><input asp-for="SupervisorRelation.ValidThrough" type="date" class="djj-input" aria-describedby="ss-until-help ss-until-error" /><small id="ss-until-help" class="djj-field__hint">Hasta el final del día en Costa Rica. Sin fecha, permanece vigente hasta revocación.</small><span asp-validation-for="SupervisorRelation.ValidThrough" id="ss-until-error" class="djj-field__error"></span></div>
+        <div class="djj-field"><label class="djj-choice"><input asp-for="SupervisorRelation.Enabled" class="djj-checkbox" /> Relación habilitada</label><small class="djj-field__hint">Desmarcar revoca una relación existente.</small></div>
+        <div class="djj-field djj-form-grid__full"><label asp-for="SupervisorRelation.Reason">Motivo del cambio</label><textarea asp-for="SupervisorRelation.Reason" class="djj-textarea" rows="2" maxlength="250" required aria-describedby="ss-reason-error"></textarea><span asp-validation-for="SupervisorRelation.Reason" id="ss-reason-error" class="djj-field__error"></span></div>
+    </div></fieldset>
+    @if (Model.SupervisorRelation.ExpectedRevision > 0) { <p class="djj-field__hint">Editando revisión @Model.SupervisorRelation.ExpectedRevision. Conservá las personas de la relación; para otra asignación, iniciá un formulario nuevo.</p> }
+    <div class="djj-row-actions"><button type="submit" class="djj-button djj-button--primary" disabled="@(Model.SupervisorRelation.ExpectedRevision == 0 && (!Model.Supervisors.Any() || !Model.Sellers.Any()))">Guardar relación supervisor–vendedor</button><a asp-action="Index" class="djj-button djj-button--secondary">Limpiar formulario</a></div>
+    @if (!Model.Supervisors.Any() || !Model.Sellers.Any()) { <p class="djj-field__hint">Faltan supervisores o vendedores elegibles. El nombre del perfil no sustituye sus permisos.</p> }
+</form>
+<section class="djj-card djj-data-section" aria-labelledby="relations-title">
+    <div class="djj-section-heading"><h2 id="relations-title">Asignaciones registradas</h2><p>@Model.Total en total. Las relaciones revocadas o vencidas se conservan.</p></div>
+    <div class="djj-table-scroll" role="region" aria-label="Asignaciones comerciales" tabindex="0"><table class="djj-table"><caption class="djj-sr-only">Relaciones, vigencia y acciones; el historial se conserva</caption><thead><tr><th scope="col">Relación</th><th scope="col">Responsable</th><th scope="col">Persona vinculada</th><th scope="col">Vigencia</th><th scope="col">Hasta</th><th scope="col">Acción</th></tr></thead><tbody>
+    @if (!Model.Relations.Any()) { <tr><td colspan="6"><div class="djj-empty-state"><h3>Sin asignaciones registradas</h3><p>Una persona autorizada debe seleccionar explícitamente cada relación.</p></div></td></tr> }
+    @foreach (var item in Model.Relations)
+    {
+        <tr><td>@(item.Kind == "SC" ? "Vendedor–cliente" : "Supervisor–vendedor")</td><td>@item.ParentName <small>#@item.ParentUser</small></td><td>@item.ChildName <small>#@item.ChildUser</small></td><td><span class="djj-badge djj-badge--@(item.WithinValidity ? "success" : "neutral")">@(!item.Enabled ? "Revocada" : item.WithinValidity ? "En plazo" : "Vencida")</span></td><td>@(item.ExpiresUtc is DateTime until ? Clock.ToLocalDate(until.AddTicks(-1)).ToString("dd/MM/yyyy") : "Sin fecha")</td><td><a asp-action="Index" asp-route-page="@Model.Page" asp-route-kind="@item.Kind" asp-route-parent="@item.ParentUser" asp-route-child="@item.ChildUser" class="djj-button djj-button--secondary">Editar</a></td></tr>
+    }
+    </tbody></table></div>
+    <nav class="djj-row-actions" aria-label="Páginas de relaciones comerciales">
+        @if (Model.Page > 1) { <a asp-action="Index" asp-route-page="@(Model.Page - 1)" class="djj-button djj-button--secondary">Anterior</a> }
+        <span>Página @Model.Page</span>
+        @if (Model.HasNext) { <a asp-action="Index" asp-route-page="@(Model.Page + 1)" class="djj-button djj-button--secondary">Siguiente</a> }
+    </nav>
+</section>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

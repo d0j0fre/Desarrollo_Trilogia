@@ -2,6 +2,7 @@ namespace Proyecto_Final.Models.Store
 {
     public class ClientPortalIndexViewModel
     {
+        public Proyecto_Final.Services.ClientBillingSummary? Billing { get; set; }
         public ClientPortalSummaryViewModel Cliente { get; set; } = new();
         public ClientPortalCreditSummaryViewModel? Credito { get; set; }
         public List<ClientPortalOrderListItemViewModel> Pedidos { get; set; } = new();
@@ -66,6 +67,7 @@ namespace Proyecto_Final.Models.Store
         public decimal PrecioUnitario { get; set; }
         public decimal Subtotal { get; set; }
         public bool IsCombo { get; set; }
+        public bool CanRequestWarranty { get; set; }
     }
 
     public class ClientPortalInvoiceViewModel
@@ -93,6 +95,7 @@ namespace Proyecto_Final.Models.Store
     // Estado de cuenta descargable/imprimible del cliente
     public class ClientPortalStatementViewModel
     {
+        public Proyecto_Final.Services.ClientBillingSummary? Billing { get; set; }
         public ClientPortalSummaryViewModel Cliente { get; set; } = new();
         public ClientPortalCreditSummaryViewModel? Credito { get; set; }
         public List<ClientPortalOrderListItemViewModel> Pedidos { get; set; } = new();

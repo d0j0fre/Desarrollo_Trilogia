@@ -8,9 +8,11 @@ namespace Proyecto_Final.Services
     public partial class ExpensesDbService
     {
         private readonly string _connectionString;
+        private readonly IHttpContextAccessor? _httpContext;
 
-        public ExpensesDbService(IConfiguration configuration)
+        public ExpensesDbService(IConfiguration configuration, IHttpContextAccessor? httpContext = null)
         {
+            _httpContext = httpContext;
             _connectionString = configuration.GetConnectionString("DefaultConnection")
                 ?? throw new InvalidOperationException("No se encontró la cadena de conexión DefaultConnection.");
         }
@@ -38,9 +40,12 @@ namespace Proyecto_Final.Services
 
         public async Task<List<CuentaViewModel>> GetAccountsAsync()
         {
+            var context = _httpContext?.HttpContext
+                ?? throw new UnauthorizedAccessException("Falta el contexto original validado.");
+            var login = OriginalLoginSession.ValidatedRequest(context);
             var lista = new List<CuentaViewModel>();
             await using var connection = new SqlConnection(_connectionString);
-            await using var command = new SqlCommand("dbo.sp_CuentasPresupuestarias_List", connection) { CommandType = CommandType.StoredProcedure };
+            await using var command = OriginalLoginService.ContextCommand(connection, "dbo.sp_CuentasPresupuestarias_List", login);
             await connection.OpenAsync();
             await using var reader = await command.ExecuteReaderAsync();
             while (await reader.ReadAsync())
@@ -55,6 +60,8 @@ namespace Proyecto_Final.Services
                     Activo = reader.GetBoolean(5)
                 });
             }
+            // A streamed row is not evidence that the final authorization and COMMIT succeeded.
+            while (await reader.NextResultAsync()) while (await reader.ReadAsync()) { }
             return lista;
         }
 

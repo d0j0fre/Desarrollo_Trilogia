@@ -1,0 +1,10 @@
+SET NOCOUNT ON;
+DECLARE @Hash nvarchar(128)=N'$(MigrationSha256)';
+IF LEN(@Hash)<>64 OR @Hash LIKE N'%[^0-9a-fA-F]%' THROW 58700,N'Invalid migration hash.',1;
+IF NOT EXISTS(SELECT 1 FROM dbo.SchemaMigrationHistory WHERE MigrationId=N'0047_stage2_commercial_relationships' AND Status=N'Applied' AND FileSha256=UPPER(@Hash)) THROW 58700,N'Relationship ledger/hash not accredited.',1;
+IF OBJECT_ID(N'CommercialSecurity.Assignments',N'U') IS NULL OR OBJECT_ID(N'CommercialSecurity.Audit',N'U') IS NULL THROW 58700,N'Relationship storage missing.',1;
+IF (SELECT COUNT(*) FROM sys.procedures WHERE schema_id=SCHEMA_ID(N'CommercialSecurity') AND name IN(N'Options',N'List',N'SetAssignment',N'RequireAssignment'))<>4 THROW 58700,N'Relationship contracts missing.',1;
+IF (SELECT COUNT(*) FROM sys.check_constraints WHERE parent_object_id=OBJECT_ID(N'CommercialSecurity.Assignments') AND is_disabled=0 AND is_not_trusted=0)<>4 THROW 58700,N'Relationship checks not accredited.',1;
+IF EXISTS(SELECT 1 FROM sys.foreign_keys WHERE parent_object_id IN(OBJECT_ID(N'CommercialSecurity.Assignments'),OBJECT_ID(N'CommercialSecurity.Audit')) AND (is_disabled=1 OR is_not_trusted=1)) THROW 58700,N'Relationship foreign keys not accredited.',1;
+IF (SELECT COUNT(*) FROM dbo.Permisos WHERE Codigo=N'RELACIONES_COMERCIALES_GESTIONAR' AND Activo=1)<>1 THROW 58700,N'Relationship capability missing.',1;
+SELECT N'PASS' AS CommercialRelationshipVerification;

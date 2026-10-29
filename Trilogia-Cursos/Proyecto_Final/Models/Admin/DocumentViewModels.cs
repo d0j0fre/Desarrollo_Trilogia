@@ -35,6 +35,11 @@ public sealed class DocumentListItemViewModel
     public DateTime UpdatedUtc { get; set; }
     public string ExpirationStatus { get; set; } = string.Empty;
     public int? DaysToExpiration { get; set; }
+    public bool CanRead { get; set; }
+    public bool CanEdit { get; set; }
+    public bool CanVersion { get; set; }
+    public bool CanDownload { get; set; }
+    public bool CanAlert { get; set; }
 }
 
 public sealed class DocumentVersionViewModel

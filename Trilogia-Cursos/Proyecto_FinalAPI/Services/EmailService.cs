@@ -14,6 +14,14 @@ namespace Proyecto_FinalAPI.Services
 
         public void SendEmail(string destinatario, string asunto, string contenido)
         {
+            // SmtpClient.Timeout does not bound SendMailAsync. Preserve the existing
+            // finite deadline for synchronous historical callers as well.
+            using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+            SendEmailAsync(destinatario, asunto, contenido, deadline.Token).GetAwaiter().GetResult();
+        }
+
+        public virtual async Task SendEmailAsync(string destinatario, string asunto, string contenido, CancellationToken cancellationToken)
+        {
             var host = _configuration.GetValue<string>("ConfiguracionCorreo:Host") ?? string.Empty;
             var puerto = _configuration.GetValue<int>("ConfiguracionCorreo:Puerto");
             var remitente = _configuration.GetValue<string>("ConfiguracionCorreo:Remitente") ?? string.Empty;
@@ -39,10 +47,11 @@ namespace Proyecto_FinalAPI.Services
             using var smtp = new SmtpClient(host, puerto)
             {
                 Credentials = new NetworkCredential(remitente, contrasenna),
-                EnableSsl = true
+                EnableSsl = true,
+                Timeout = 15000
             };
 
-            smtp.Send(mensaje);
+            await smtp.SendMailAsync(mensaje, cancellationToken);
         }
     }
 }
