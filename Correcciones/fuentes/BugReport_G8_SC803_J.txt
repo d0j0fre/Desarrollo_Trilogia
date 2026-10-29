@@ -1,0 +1,4895 @@
+                                                                                   SC-405 Calidad del Software
+                                                                                            Bug Report Template
+
+Bug Title:      BUG-01-01 · [CU-012-01, CU-013-09] No llega el correo con el enlace de
+
+                recuperación de contraseña
+
+Bug Priority: Alto (P2) · Error de Integración (API, correo, tiempo real) · Tiempo de
+
+                atención: 0 a 1 hora
+
+                                 Hardware & Software Details
+
+Environment:
+
+OS & Browser: Google Chrome (sistema operativo y versión no registrados)
+
+Build Version:
+
+                                    Steps to Reproduce
+
+1. Tener un usuario activo con correo registrado y acceso a su buzón.
+
+2. Ir a «Iniciar sesión» (/Account/Login).
+
+3. Presionar «¿Olvidaste tu contraseña?».
+
+4. Ingresar el correo registrado del usuario.
+
+5. Presionar «ENVIAR ENLACE».
+
+6. Revisar el buzón del correo.
+
+                                      Current Behavior
+
+El sistema confirmó la solicitud y regresó al inicio de sesión. Sin embargo, no llegó el correo con
+
+las instrucciones y el enlace de recuperación.
+
+Por esta falla, los casos CU-012-03, CU-012-04 y CU-012-05 quedaron bloqueados (no se
+
+obtuvo el enlace de recuperación).
+
+                                    Expected Behavior
+
+Según CU-012 / casos CU-012-01 y CU-013-09: el sistema muestra un mensaje de confirmación
+
+y envía al correo las instrucciones con el enlace para restablecer la contraseña.
+
+Please take a look at the attached screenshot/video.
+
+(Sin evidencia adjunta)
+                                                               SC-405 Calidad del Software
+                                                                        Bug Report Template
+
+Bug Title:           BUG-01-02 · [CU-012-02] La recuperación de contraseña no indica que el
+
+                     correo no está registrado
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                     horas
+
+                            Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                               Steps to Reproduce
+
+1. Abrir «¿Olvidaste tu contraseña?» (/Account/ForgotPassword) sin iniciar sesión.
+
+2. Escribir el correo no registrado noexiste.qa@labodega.com.
+
+3. Presionar "ENVIAR ENLACE".
+
+                               Current Behavior
+
+El sistema vuelve a Iniciar sesión con el mensaje «Si la solicitud es válida, se procesará la
+
+recuperación de contraseña.», que es el mismo para cualquier correo y no indica que el correo
+
+no está registrado.
+
+                               Expected Behavior
+
+Según CU-012 (escenario 2) / caso CU-012-02: el sistema muestra un mensaje indicando que el
+
+correo no está registrado y no envía ningún correo.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Mensaje genérico tras solicitar recuperación con un correo no registrado (BUG-01-02_1.png)
+                                                                       SC-405 Calidad del Software
+                                                                                Bug Report Template
+
+Bug Title:      BUG-01-03 · [CU-012-07] Al superar el límite de solicitudes de recuperación
+
+                el sistema muestra una página en blanco con error 429
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                horas
+
+                             Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                             Steps to Reproduce
+
+1. Abrir «¿Olvidaste tu contraseña?» (/Account/ForgotPassword) sin iniciar sesión.
+
+2. Enviar varias solicitudes de recuperación seguidas en menos de 15 minutos (por ejemplo
+
+para estebanvf144+qaregistro@gmail.com).
+
+3. Enviar una solicitud más cuando se alcanza el límite.
+
+                             Current Behavior
+
+Al llegar al límite el servidor responde HTTP 429 sin contenido y Chrome muestra «This page
+
+isn't working - HTTP ERROR 429», sin ningún mensaje del sistema ni indicación de cuánto
+
+esperar. No hay error 500 y no se envían más correos. El límite se alcanzó en la 5.ª solicitud
+
+desde el mismo equipo en menos de 15 minutos (4 previas de las pruebas CU-012-02 y CU-012-
+
+06 más 1 para este correo).
+
+                             Expected Behavior
+
+Según CU-012 (escenario 7) / caso CU-012-07: a partir del límite el sistema responde con un
+
+mensaje controlado de espera, sin error 500 y sin enviar más correos.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Página de error HTTP 429 al superar el límite de recuperación (BUG-01-03_1.png)
+                                                                                     SC-405 Calidad del Software
+                                                                                              Bug Report Template
+
+Bug Title:         BUG-02-01 · [CU-021-03, CU-022-03] Ante una falla de conexión, Mi Perfil no
+
+                   muestra una vista ni un mensaje de error controlado
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                   horas
+
+                              Hardware & Software Details
+
+Environment:
+
+OS & Browser: Google Chrome (sistema operativo y versión no registrados)
+
+Build Version:
+
+                              Steps to Reproduce
+
+1. Simular la falla de conexión con la base de datos.
+
+2. Ingresar a Mi Perfil (CU-021-03), o modificar el teléfono y presionar «Guardar cambios» (CU-
+
+022-03).
+
+3. Restablecer la conexión y consultar el perfil.
+
+                              Current Behavior
+
+Ante una falla de conexión, el sistema no presentó una vista ni un mensaje de error controlado al
+
+cargar el perfil.
+
+Ante una falla de conexión durante la actualización, el sistema no presentó una vista ni un
+
+mensaje de error controlado.
+
+                              Expected Behavior
+
+Según CU-021 y CU-022 / casos CU-021-03 y CU-022-03: el sistema muestra un mensaje de
+
+error controlado indicando que no fue posible cargar o guardar la información, sin mostrar
+
+detalles técnicos, y conserva los datos anteriores.
+
+Please take a look at the attached screenshot/video.
+
+                   Figura 1. Captura de la ejecución de CU-021-03 (BUG-02-01_1.png)
+                                                                                                  SC-405 Calidad del Software
+                                                                                                            Bug Report Template
+
+Figura 2. Captura de la ejecución de CU-022-03 (BUG-02-01_2.png)
+                                                                                      SC-405 Calidad del Software
+                                                                                               Bug Report Template
+
+Bug Title:      BUG-02-02 · [CU-022-06] El campo Teléfono de Mi Perfil acepta más de 10
+
+                dígitos
+
+Bug Priority: Medio (P3) · Error de Validación de datos · Tiempo de atención: 2 a 4 horas
+
+                                     Hardware & Software Details
+
+Environment:
+
+OS & Browser: Google Chrome (sistema operativo y versión no registrados)
+
+Build Version:
+
+                                     Steps to Reproduce
+
+1. Iniciar sesión e ir a Mi Perfil.
+
+2. Digitar un Nombre de más de 150 caracteres y guardar.
+
+3. Digitar un Teléfono de más de 30 caracteres y guardar.
+
+                                     Current Behavior
+
+Se reportó que el campo Teléfono aceptó más de 10 dígitos. No se documentó el resultado con
+
+más de 30 caracteres ni con un nombre de más de 150 caracteres.
+
+                                     Expected Behavior
+
+Según CU-022 / caso CU-022-06: el sistema valida la longitud máxima y no guarda datos
+
+inválidos.
+
+Please take a look at the attached screenshot/video.
+
+                Figura 1. Mi Perfil después de guardar los cambios (BUG-02-02_1.png)
+                                                                          SC-405 Calidad del Software
+                                                                                   Bug Report Template
+
+Bug Title:      BUG-03-01 · [CU-031-05, CU-032-03, CU-074-02, CU-121-03, CU-114-01] El
+
+                sistema no envía correos: ni la confirmación de consultas, ni el comprobante
+
+                de pedidos, ni la recuperación de contraseña
+
+Bug Priority: Alto (P2) · Error de Integración (API, correo, tiempo real) · Tiempo de
+
+                atención: 0 a 1 hora
+
+                Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                Steps to Reproduce
+
+1. Abrir Contacto (/Home/Contact) sin iniciar sesión.
+
+2. Enviar una consulta válida con el correo estebanvf144+qacontacto@gmail.com (buzón
+
+revisado por el equipo), Asunto «QA-03 Consulta de pedido».
+
+3. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+4. Ir a Administración > Clientes > Consultas (/Consultations), abrir la consulta n.º 13, escribir
+
+una respuesta, cambiar el estado a Cerrada y presionar "Guardar cambio".
+
+5. Revisar el buzón del correo de contacto durante más de 5 minutos.
+
+                                      Current Behavior
+
+Al enviar la consulta el sistema muestra «La consulta fue guardada, pero no fue posible enviar la
+
+notificación por correo.» y no llega ningún correo al buzón del cliente. Tras cerrar la consulta
+
+tampoco llega ningún aviso de resolución; la pantalla indica que la respuesta «es administrativa
+
+y no se muestra al cliente». El usuario confirmó que no recibió ningún correo en el buzón
+
+revisado (más de 5 minutos de espera). Se asigna Alto por ser una integración de correo que no
+
+funciona, con la alternativa de que la consulta sí queda registrada.
+
+El mismo problema aparece en otros flujos con correo: al comprar en la Tienda (pedidos n.º 52 y
+
+n.º 54) el sistema muestra «El pedido fue confirmado, pero no fue posible enviar el comprobante
+
+por correo.» y no llega ningún comprobante a estebanvf144+qacliente@gmail.com; y al solicitar
+
+la recuperación de contraseña de ese cliente el usuario confirmó que tampoco llegó ningún
+
+correo. Ningún correo del sistema llegó a los buzones de prueba durante la ejecución.
+
+                Expected Behavior
+
+Según CU-031 (escenario 5) y CU-032 (escenario 3) / casos CU-031-05 y CU-032-03: el sistema
+
+envía un correo de confirmación al cliente con el resumen de su consulta y le notifica la
+
+resolución cuando se marca como resuelta.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Detalle de la consulta n.º 13 Cerrada: la respuesta es solo administrativa y no se envía al cliente
+                                                         (BUG-03-01_1.png)
+SC-405 Calidad del Software
+         Bug Report Template
+                                                                                  SC-405 Calidad del Software
+                                                                                           Bug Report Template
+
+Bug Title:      BUG-04-01 · [CU-041-06] El sistema permite inactivar un rol que tiene
+
+                usuarios asignados
+
+Bug Priority: Alto (P2) · Error Funcional / Lógica de negocio · Tiempo de atención: 0 a 1
+
+                hora
+
+                           Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                           Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Ir a Administración > Seguridad > Roles (/Roles) y ubicar el rol «Vendedor» (3 usuarios).
+
+3. Presionar "Inactivar" sobre ese rol.
+
+                                         Current Behavior
+
+El sistema muestra «Estado del rol actualizado correctamente.» y el rol «Vendedor» queda
+
+Inactivo con sus 3 usuarios asignados, sin pedir confirmación ni advertir de ellos (se reactivó de
+
+inmediato). Se asigna Alto porque deja sin acceso a los usuarios reales del rol.
+
+                           Expected Behavior
+
+Según CU-041 (escenario 6) / caso CU-041-06: el sistema bloquea la acción indicando que el rol
+
+tiene usuarios asignados.
+
+Please take a look at the attached screenshot/video.
+
+            Figura 1. Rol «Vendedor» Inactivo con 3 usuarios asignados (BUG-04-01_1.png)
+                                                                                       SC-405 Calidad del Software
+                                                                                                Bug Report Template
+
+Bug Title:      BUG-04-02 · [CU-042-05] El rol Administrador no tiene asignados todos los
+
+                permisos: muestra 98 de 99
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                horas
+
+                        Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                        Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Ir a Seguridad > Permisos (/Permissions) y presionar "Administrar" en el rol Administrador
+
+(/Permissions/Edit/1).
+
+3. Revisar el contador de permisos asignados y la lista de permisos marcados.
+
+                        Current Behavior
+
+Los permisos aparecen deshabilitados y la nota dice «El rol Administrador conserva todos los
+
+permisos para evitar bloqueos del sistema.», pero el contador muestra 98 / 99: el permiso
+
+«Preparar pedidos en bodega» (código 101) aparece sin marcar para el Administrador.
+
+                        Expected Behavior
+
+Según CU-042 (escenario 5) / caso CU-042-05: el rol Administrador conserva todos los
+
+permisos, con los permisos deshabilitados y el aviso de que los mantiene todos por seguridad.
+
+Please take a look at the attached screenshot/video.
+
+            Figura 1. Permisos del Administrador: 98 / 99 asignados (BUG-04-02_1.png)
+                                                                               SC-405 Calidad del Software
+                                                                                        Bug Report Template
+
+Bug Title:      BUG-04-03 · [CU-041-08] Un usuario de un rol inactivo conserva el acceso a
+
+                la Planilla
+
+Bug Priority: Alto (P2) · Error de Seguridad / Permisos · Tiempo de atención: 0 a 1 hora
+
+                             Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                                         Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Ir a Seguridad > Roles (/Roles), editar el rol «Auditor QA» (con permisos PLANILLA_VER y
+
+PLANILLA_APROBAR, Ver auditoría y Ver inventario), desmarcar "Rol activo" y presionar
+
+"Guardar cambios".
+
+3. Cerrar sesión e iniciar sesión con el usuario QA «QA-11 Auditor de prueba»
+
+(estebanvf144+qaempleado@gmail.com), que tiene ese rol.
+
+4. Abrir por URL /Audit, /Inventory y /Payroll.
+
+                                         Current Behavior
+
+El inicio de sesión se permite («Bienvenido, QA-11 Auditor de prueba.»). /Audit y /Inventory
+
+responden «Acceso Denegado», pero /Payroll (Planilla) abre completa con sus formularios de
+
+regla, período y cálculo. El rol está Inactivo en Roles. Se asigna Alto porque la planilla maneja
+
+dinero y el rol inactivo no la bloquea.
+
+                                         Expected Behavior
+
+Según CU-041 (escenario 8) / caso CU-041-08: el usuario no puede acceder a ninguno de los
+
+módulos que otorgaba el rol inactivo.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Planilla accesible para un usuario cuyo rol está inactivo (BUG-04-03_1.png)
+                                                             SC-405 Calidad del Software
+                                                                      Bug Report Template
+
+Bug Title:      BUG-05-01 · [CU-053-01, CU-053-02, CU-053-04, CU-055-01, CU-055-04] Al
+
+                guardar un producto (nuevo o editado) con datos válidos el sistema responde
+
+                HTTP 405 y no guarda
+
+Bug Priority: Crítico (P1) · Error Funcional / Lógica de negocio · Tiempo de atención:
+
+                Inmediato
+
+                           Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                           Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Ir a Administración > Inventario > Inventario (/Inventory) y presionar "Nuevo producto".
+
+3. Completar Nombre «QA-05 Ron QA 750 ml», Categoría Ron, Descripción «QA-05 producto
+
+de prueba», Precio 8500, Stock inicial 10 y Stock mínimo 5.
+
+4. Presionar "Guardar producto" y revisar el inventario.
+
+5. Abrir "Editar" de un producto existente (/Inventory/Edit/13), dejar valores válidos y presionar
+
+"Guardar cambios".
+
+                           Current Behavior
+
+El navegador muestra «This page isn't working · HTTP ERROR 405» en /Inventory/Create y no
+
+aparece el mensaje «Producto creado correctamente.». El producto no se crea: el inventario
+
+sigue con 24 productos. Se reprodujo cuatro veces, incluida una con un clic normal sobre
+
+«Guardar producto» y otra al subir además un archivo PDF; el error corresponde a la solicitud
+
+POST /Inventory/Create, que responde 405 y siempre con datos válidos. Las validaciones de
+
+datos inválidos sí responden con sus mensajes. Se asigna Crítico (P1): detiene un flujo principal
+
+del inventario y no hay alternativa desde la interfaz.
+
+Con el formulario de edición ocurre lo mismo: al presionar "Guardar cambios" con valores
+
+válidos aparece «HTTP ERROR 405» en /Inventory/Edit/13 y los cambios no se guardan (el
+
+precio y el stock mínimo no cambian). Las validaciones con datos inválidos sí responden con su
+
+mensaje.
+
+                           Expected Behavior
+
+Según CU-053 (escenario 1) / caso CU-053-01: el sistema muestra «Producto creado
+
+correctamente.» y el producto aparece activo en el inventario y en el catálogo de la tienda.
+
+Please take a look at the attached screenshot/video.
+
+          Figura 1. Guardar producto con datos válidos: HTTP ERROR 405 (BUG-05-01_1.png)
+                                                                                                                  SC-405 Calidad del Software
+                                                                                                                            Bug Report Template
+
+Figura 2. Guardar cambios de un producto existente: HTTP ERROR 405 (BUG-05-01_2.png)
+                                                                                 SC-405 Calidad del Software
+                                                                                          Bug Report Template
+
+Bug Title:      BUG-05-02 · [CU-052-04, CU-053-05, CU-054-05, CU-055-05] Los productos
+
+                no tienen fecha de vencimiento ni advertencia de productos próximos a
+
+                vencer
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                horas
+
+                        Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                        Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Ir a Inventario > "Nuevo producto" (/Inventory/Create) y revisar los campos.
+
+3. Abrir "Editar" de un producto y revisar el listado de Inventario en busca de advertencias de
+
+vencimiento.
+
+                        Current Behavior
+
+El formulario solo tiene Nombre, Categoría, Descripción, Precio, Stock inicial, Stock mínimo,
+
+Imagen, Activo y Destacado. No existe ningún campo de fecha de vencimiento, ni en Crear ni en
+
+Editar, y el listado solo advierte stock bajo o agotado; no hay advertencia de productos próximos
+
+a vencer.
+
+                        Expected Behavior
+
+Según CU-052 (escenario 4), CU-053 (escenario 5), CU-054 (escenario 5) y CU-055 (escenario
+
+5): el producto puede registrarse con fecha de vencimiento y el sistema muestra la advertencia
+
+de producto próximo a vencer en el inventario y en el detalle.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Formulario Crear producto sin campo de fecha de vencimiento (BUG-05-02_1.png)
+                                                                             SC-405 Calidad del Software
+                                                                                      Bug Report Template
+
+Bug Title:      BUG-05-03 · [CU-054-02] El buscador de inventario no encuentra productos
+
+                por código SKU
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                horas
+
+                               Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                                Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Ir a Inventario (/Inventory) y buscar el código de un producto, por ejemplo «SKU-00003» (el
+
+SKU se asigna automáticamente).
+
+3. Buscar después una categoría, por ejemplo «Ron».
+
+                                 Current Behavior
+
+Al buscar «SKU-00003» el sistema responde «No se encontraron productos para "SKU-
+
+00003".». La búsqueda por categoría («Ron») sí devuelve 3 productos. El buscador solo admite
+
+nombre o categoría («Buscar por nombre o categoría...»).
+
+                                 Expected Behavior
+
+Según CU-054 (escenario 2) / caso CU-054-02: el sistema muestra los productos que coinciden
+
+con el código o la categoría.
+
+Please take a look at the attached screenshot/video.
+
+                Figura 1. Búsqueda por SKU sin resultados (BUG-05-03_1.png)
+                                                                 SC-405 Calidad del Software
+                                                                          Bug Report Template
+
+Bug Title:      BUG-05-04 · [CU-056-02] El sistema permite inactivar un producto que
+
+                todavía tiene stock en bodega
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                horas
+
+                        Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                        Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Ir a Inventario (/Inventory), ubicar un producto con existencias (por ejemplo «Pilsen 6 Pack»,
+
+47 unidades) y presionar "Inactivar".
+
+                        Current Behavior
+
+El sistema muestra «Estado del producto actualizado correctamente.» y el producto queda
+
+Inactivo con 47 unidades de stock, sin advertir que primero debe vaciarse el inventario. Se
+
+reactivó de inmediato.
+
+                        Expected Behavior
+
+Según CU-056 (escenario 2) / caso CU-056-02: el sistema bloquea la acción advirtiendo que
+
+primero debe vaciarse el inventario y el producto sigue activo.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Producto «Pilsen 6 Pack» Inactivo con 47 unidades de stock (BUG-05-04_1.png)
+                                                                      SC-405 Calidad del Software
+                                                                               Bug Report Template
+
+Bug Title:      BUG-06-01 · [CU-063-02] El sistema permite inactivar un cliente que tiene
+
+                deuda pendiente
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                horas
+
+                       Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                                 Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Ir a Administración > Clientes > Créditos (/Credits/Details/53) del cliente «QA-06 Cliente
+
+prueba», con límite ₡500 000, un cargo de ₡100 000 y un abono de ₡40 000 (deuda ₡60
+
+000).
+
+3. Ir a Clientes > Editar el cliente (/Clients/Edit/53), desmarcar «Cliente activo», escribir el
+
+motivo «QA-06 inactivación de prueba» y presionar "Guardar cambios".
+
+                                 Current Behavior
+
+El sistema muestra «Cliente actualizado correctamente.» y el cliente queda Inactivo con una
+
+deuda actual de ₡60 000; no advierte que debe saldarse la cuenta. Se reactivó al terminar.
+
+                                 Expected Behavior
+
+Según CU-063 (escenario 2) / caso CU-063-02: el sistema bloquea la acción e indica que debe
+
+saldarse la cuenta antes de inactivar al cliente.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Crédito del cliente: «Cliente inactivo» con deuda actual de ₡60 000 (BUG-06-01_1.png)
+                                                                                SC-405 Calidad del Software
+                                                                                         Bug Report Template
+
+Bug Title:      BUG-06-02 · [CU-062-01, CU-062-02] El crédito del cliente no se usa en los
+
+                pedidos: no existe pedido a crédito ni validación de pagos vencidos
+
+Bug Priority: Alto (P2) · Error Funcional / Lógica de negocio · Tiempo de atención: 0 a 1
+
+                hora
+
+                      Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                      Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Ir a Clientes > Créditos del cliente QA y revisar las opciones de "Registrar movimiento".
+
+3. Registrar pedidos del cliente en la Tienda o en Venta móvil y revisar si ofrecen pago a
+
+crédito.
+
+                      Current Behavior
+
+Solo se pueden registrar movimientos manuales (Cargo, Abono y Ajustes) en el crédito. Ni el
+
+checkout de la Tienda ni Venta móvil permiten elegir pago a crédito, de modo que un pedido
+
+nunca descuenta el crédito disponible ni valida facturas vencidas del cliente. Se asigna Alto: una
+
+funcionalidad central del módulo de créditos no está conectada con las ventas.
+
+                      Expected Behavior
+
+Según CU-062 (escenarios 1 y 2) / casos CU-062-01 y CU-062-02: el pedido a crédito se
+
+permite y baja el crédito disponible, y se bloquea cuando el cliente tiene pagos pendientes.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Crédito del cliente: solo movimientos manuales, sin pedidos a crédito (BUG-06-02_1.png)
+                                                                                       SC-405 Calidad del Software
+                                                                                                Bug Report Template
+
+Bug Title:      BUG-06-03 · [CU-061-07] El detalle del cliente no muestra sus facturas ni su
+
+                saldo
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                horas
+
+                        Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                        Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Ir a Administración > Clientes > Clientes y abrir el detalle del cliente «QA-06 Cliente prueba»
+
+(/Clients/Details/53).
+
+                        Current Behavior
+
+El detalle muestra la información general, el estado y un «Historial comercial» con la cantidad de
+
+pedidos y el total comprado, pero no tiene facturas ni saldo; el saldo solo se ve en otra pantalla
+
+(Créditos).
+
+                        Expected Behavior
+
+Según CU-061 (escenario 7) / caso CU-061-07: el sistema muestra el historial comercial
+
+actualizado del cliente (pedidos, facturas y saldo).
+
+Please take a look at the attached screenshot/video.
+
+                Figura 1. Detalle del cliente sin facturas ni saldo (BUG-06-03_1.png)
+                                                                       SC-405 Calidad del Software
+                                                                                Bug Report Template
+
+Bug Title:      BUG-06-04 · [CU-063-01] Un cliente inactivo sigue apareciendo con sus
+
+                pedidos pendientes al crear rutas
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                horas
+
+                               Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                               Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Dejar el crédito del cliente «QA-06 Cliente prueba» en saldo cero (abono de ₡60 000) y, en
+
+Clientes > Detalle (/Clients/Details/53), presionar "Inactivar cliente" con un motivo.
+
+3. Abrir Venta móvil (/SellerOrders) y revisar la lista de clientes; luego abrir Rutas y Entregas >
+
+"Nueva ruta" (/RoutesAdmin/Create) y revisar los pedidos disponibles.
+
+                               Current Behavior
+
+El sistema muestra «Cliente inactivado correctamente.» y el cliente ya no aparece en la lista de
+
+Venta móvil, pero en Nueva ruta siguen disponibles sus pedidos pendientes (n.º 52, 54 y 55 de
+
+«QA-06 Cliente prueba») para asignarlos a una ruta.
+
+                               Expected Behavior
+
+Según CU-063 (escenario 1) / caso CU-063-01: el cliente con saldo cero se inactiva y se oculta
+
+de las ventas y de las rutas.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Nueva ruta con pedidos de un cliente inactivo disponibles (BUG-06-04_1.png)
+                                                                    SC-405 Calidad del Software
+                                                                             Bug Report Template
+
+Bug Title:      BUG-07-01 · [CU-071-06] La app móvil del vendedor no permite crear un
+
+                pedido sin conexión: la lista de clientes no carga
+
+Bug Priority: Alto (P2) · Error de Sincronización offline · Tiempo de atención: 0 a 1 hora
+
+                           Hardware & Software Details
+
+Environment:
+
+OS & Browser: Android 17 (emulador Pixel 8) · App Distribuidora JJ 1.2.0 (compilación 4005)
+
+Build Version:
+
+                           Steps to Reproduce
+
+1. En la aplicación móvil iniciar sesión como Vendedor (vendedor@labodega.cr) con internet y
+
+abrir Ventas en campo > Nuevo pedido; el paso Cliente muestra la lista (se registran dos
+
+pedidos con internet).
+
+2. Activar el modo avión en el dispositivo y volver a abrir Ventas en campo > Nuevo pedido.
+
+                           Current Behavior
+
+Con el modo avión la app muestra «Sin conexión · trabajando con lo guardado», pero el paso 1
+
+Cliente responde «No se pudo cargar: No hay conexión con el servidor» y el botón Continuar
+
+queda deshabilitado. Los clientes y productos cargados antes no se reutilizan, por lo que no se
+
+puede registrar el pedido ni guardarlo como «Por enviar»; «Por enviar» sigue vacío («Todo al
+
+día»). Existe la alternativa web (Venta móvil web con «Guardar sin conexión»), por eso se
+
+asigna Alto y no Crítico.
+
+                           Expected Behavior
+
+Según CU-071 (escenario 6) y CU-072 (escenario 1) / caso CU-071-06: la app móvil permite
+
+registrar un pedido y, sin conexión, guardarlo localmente como pendiente de sincronización.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Nuevo pedido sin conexión: la lista de clientes no carga (BUG-07-01_1.png)
+                                                                                SC-405 Calidad del Software
+                                                                                         Bug Report Template
+
+Bug Title:      BUG-07-02 · [CU-072-02, CU-072-04, CU-073-06] Los pedidos guardados sin
+
+                conexión no se sincronizan: «Sincronizar ahora» queda en Error
+
+Bug Priority: Crítico (P1) · Error de Sincronización offline · Tiempo de atención: Inmediato
+
+                Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                Steps to Reproduce
+
+1. Iniciar sesión como Vendedor (vendedor@labodega.cr) en Venta móvil (/SellerOrders), con
+
+cliente «Admin QA Actualizado» y 1 × Red Bull 250ml cargados.
+
+2. Activar el modo avión y presionar "Guardar sin conexión" (queda «Pendientes: 1»).
+
+3. Desactivar el modo avión (el indicador pasa a «En línea») y presionar "Sincronizar ahora"
+
+varias veces; repetir luego en el navegador de escritorio con otra sesión del vendedor.
+
+                Current Behavior
+
+El pedido no se envía nunca: queda en estado Error con «Error de conexión al sincronizar.
+
+Intente nuevamente.» y la pantalla muestra «Algunos pedidos no se pudieron sincronizar.». La
+
+solicitud POST /SellerOrders/SyncOffline responde HTTP 400 aun con datos válidos y con el
+
+token antifalsificación de la página, también estando en línea. Con esto ningún pedido registrado
+
+sin conexión llega al servidor; la creación en línea de pedidos sí funciona. No se puede probar la
+
+no duplicación ni el pedido retenido por umbral sin conexión.
+
+                Expected Behavior
+
+Según CU-072 (escenarios 2 y 4) y CU-073 (escenario 6) / casos CU-072-02, CU-072-04 y CU-
+
+073-06: al recuperar la conexión los pedidos pendientes se envían solos, sin duplicarse, y
+
+quedan Retenidos si superan el umbral.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Venta móvil web: pedido pendiente en Error al sincronizar estando en línea (BUG-07-02_1.png)
+                                    SC-405 Calidad del Software
+                                             Bug Report Template
+
+Bug Title:      BUG-08-01 · [CU-081-04] Al asignar una ruta al chofer no se genera
+Bug Priority:   ninguna notificación; la web no tiene campana ni bandeja de
+                notificaciones
+                Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención:
+                2 a 4 horas
+
+                          Hardware & Software Details
+
+Environment:
+
+OS & Browser:   Microsoft Windows 11 Versión 25H2 (compilación de SO 26200.9550)·
+Build Version:  Google Chrome 154.0.8037.98
+
+                Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+2. Ir a Logística y Flota > Rutas y Entregas > Nueva ruta; Zona = “QA-08 Ruta B”, chofer = Chofer
+
+     Demo, un vehículo y al menos un pedido pendiente; guardar.
+3. En otra sesión, iniciar sesión como Chofer (chofer@labodega.cr) y abrir Mis entregas
+
+     (/DriverDeliveries).
+4. Revisar el encabezado y el resto de la pantalla en busca de notificaciones.
+
+                                                      Current Behavior
+
+La ruta aparece en Mis entregas como Planificada con sus pedidos, pero el chofer no recibe
+ninguna notificación de la asignación. La web no tiene campana, bandeja ni sección de
+notificaciones. Se asigna Medio (base Alto) porque la ruta sí queda visible en Mis entregas y el
+chofer puede trabajar con ella; falta el aviso.
+
+                                                    Expected Behavior
+
+Según CU-081 / caso CU-081-04: el sistema registra la asignación, el chofer ve la ruta en “Mis
+entregas” y recibe la notificación.
+Please take a look at the attached screenshot/video. 
+
+Figura 1, Mis entregas con la ruta y sin ninguna notificación (BUG-08-01_1.png), encabezado del chofer sin
+                                                   campana (BUG-08-01_2.png).
+                                                                                           SC-405 Calidad del Software
+                                                                                                    Bug Report Template
+
+Bug Title:      BUG-09-01 · [CU-092-02] El comprobante no se envía por mensajería digital:
+
+                la factura solo ofrece correo
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                horas
+
+                       Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                               Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Ir a Facturación (/Billing) y abrir el detalle de la factura n.º 47 (pedido n.º 55 del cliente QA,
+
+que tiene teléfono 88880002).
+
+3. Revisar las acciones disponibles y la información de envío.
+
+                               Current Behavior
+
+El detalle de la factura solo ofrece «Imprimir factura» y «Reenviar comprobante por correo». No
+
+muestra el teléfono del cliente ni un canal digital (SMS o mensajería) configurado ni un envío por
+
+ese medio.
+
+                               Expected Behavior
+
+Según CU-092 (escenario 2) / caso CU-092-02: al facturar un pedido de un cliente con número
+
+registrado, el sistema envía el comprobante mediante el canal digital configurado.
+
+Please take a look at the attached screenshot/video.
+
+                Figura 1. Detalle de factura sin canal digital de envío (BUG-09-01_1.png)
+                                                  SC-405 Calidad del Software
+                                                           Bug Report Template
+
+Bug Title:      BUG-09-02 · [CU-094-01, CU-094-04] El Gerente no tiene la opción
+Bug Priority:   Ingresos y Egresos en el menú y los demás accesos de Finanzas
+                devuelven Acceso denegado
+                Alto (P2) · Error de Seguridad / Permisos · Tiempo de atención: 0 a 1
+                hora.
+
+                         Hardware & Software Details
+
+Environment:
+
+OS & Browser:   Microsoft Windows 11 Versión 25H2 (compilación de SO 26200.9550)·
+Build Version:  Google Chrome 154.0.8037.98
+
+                Steps to Reproduce
+
+a. Iniciar sesión como Gerente (gerente@labodega.cr).
+b. Abrir el menú de Finanzas y revisar las opciones.
+c. Presionar cada opción y escribir /FinancialReportAdmin en la barra de direcciones.
+
+                                           Current Behavior
+
+El menú ofrece Presupuestos anuales, Gastos operativos, Presupuesto vs. real, Tablero de
+entregas y Alertas documentales; no existe Ingresos y Egresos. Solo Tablero de entregas abre; las
+demás devuelven Acceso denegado. En /FinancialReportAdmin el resultado fue 403 con acceso
+denegado.
+
+                                                    Expected Behavior
+
+Según CU-094 (casos 094-01 y 094-04, “Usuario Gerente”): el Gerente accede a Finanzas >
+Ingresos y Egresos y el menú solo muestra opciones a las que su rol tiene acceso.
+Please take a look at the attached screenshot/video. 
+
+                Figura 1, BUG-09-02_1.png (menú)
+                                    SC-405 Calidad del Software
+                                             Bug Report Template
+
+Bug Title:      BUG-09-03 · [CU-091-01] El detalle de cualquier pedido en
+Bug Priority:   Administración devuelve "No podemos completar esta solicitud" y no
+                permite generar facturas
+                Crítico (P1) · Error Funcional / Lógica de negocio · Tiempo de atención:
+                Inmediato
+
+                          Hardware & Software Details
+
+Environment:
+
+OS & Browser:   Microsoft Windows 11 Versión 25H2 (compilación de SO 26200.9550)·
+Build Version:  Google Chrome 154.0.8037.98
+
+                Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+2. Ir a Administración > Ventas y Pedidos > Pedidos; el listado carga correctamente.
+3. Presionar sobre cualquier pedido para abrir su detalle (por ejemplo /OrdersAdmin/Detail/53).
+4. Repetir con pedidos en distintos estados, escribiendo la URL directamente y reintentando
+
+     después de varios minutos.
+
+                                                      Current Behavior
+
+5. El listado de pedidos carga, pero el detalle de todos los pedidos probados responde “No
+     podemos completar esta solicitud en este momento. El incidente fue registrado. Intente
+     nuevamente en unos minutos.” con el identificador de seguimiento 00-
+     a1d24346afc9be65de7ed3e570d0fb06-ccdeff070fdad498-00.
+
+6. El error se repite al reintentar, al abrir el pedido desde el listado y al escribir la URL
+     directamente.
+
+7. Como los botones “Generar factura” y “Ver factura” están en el detalle del pedido, no es
+     posible facturar ningún pedido.
+
+8. Se asigna Crítico (P1): detiene el flujo principal de facturación y no existe una alternativa
+     desde la interfaz.
+
+9. El mismo error ocurre con el usuario Gerente, por lo que no depende del rol.
+
+                                                    Expected Behavior
+
+Según CU-091 / caso CU-091-01: el detalle del pedido abre y permite “Generar factura”; el sistema
+genera automáticamente la factura electrónica asociada y muestra “Factura FAC-xxx generada
+correctamente.”
+Please take a look at the attached screenshot/video. 
+                           SC-405 Calidad del Software
+                                    Bug Report Template
+
+Figura 1, BUG-09-03_1.png
+                                    SC-405 Calidad del Software
+                                             Bug Report Template
+
+Bug Title:      BUG-09-04 · [CU-094-01, CU-094-02, CU-094-03, CU-094-04] La pantalla
+Bug Priority:   Ingresos y Egresos (/FinancialReportAdmin) devuelve "No podemos
+                completar esta solicitud" con Administrador y con Gerente
+                Crítico (P1) · Error Funcional / Lógica de negocio · Tiempo de
+                atención: Inmediato
+
+                     Hardware & Software Details
+
+Environment:
+
+OS & Browser:   Microsoft Windows 11 Versión 25H2 (compilación de SO
+Build Version:  26200.9550)· Google Chrome 154.0.8037.98
+
+                Steps to Reproduce
+
+a. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+b. Ir a Finanzas > Ingresos y Egresos o escribir /FinancialReportAdmin en la barra de
+
+     direcciones.
+c. Repetir con Gerente (gerente@labodega.cr).
+
+                                           Current Behavior
+
+1. La pantalla responde “No podemos completar esta solicitud en este momento. El incidente fue
+    registrado. Intente nuevamente en unos minutos.” con el identificador 00-
+    ad01eb6639dbfbf0d08e7e6948707712-d5f9e68301d1e13e-00.
+
+2. El error ocurre con Administrador y con Gerente, por lo que no depende del rol.
+3. Como la pantalla no carga, no se puede consultar ingresos, egresos ni balance ni validar el
+
+    rango de fechas.
+4. Se asigna Crítico (P1): bloquea el módulo de ingresos y egresos sin alternativa en la interfaz.
+
+                                                    Expected Behavior
+
+Según CU-094 / casos CU-094-01 a 094-04: la pantalla carga y permite consultar ingresos,
+egresos y balance por rango de fechas.
+Please take a look at the attached screenshot/video. 
+
+Bug Title:              Figura 1: BUG-09-04_1.png
+                BUG-09-05 · [CU-092-01] Registrar un pedido en Venta móvil
+                devuelve "No podemos completar esta solicitud" e impide generar
+                el comprobante de facturación
+                                                                        SC-405 Calidad del Software
+                                                                                 Bug Report Template
+
+Bug Priority:   Crítico (P1) · Error Funcional / Lógica de negocio · Tiempo de
+                atención: Inmediato
+
+                   Hardware & Software Details
+
+Environment:
+
+OS & Browser:   Microsoft Windows 11 Versión 25H2 (compilación de SO
+Build Version:  26200.9550)· Google Chrome 154.0.8037.98
+
+                Steps to Reproduce
+
+5. Iniciar sesión como Administrador (admin@labodega.cr).
+6. Ir a Venta móvil (/SellerOrders) y seleccionar [cliente].
+7. Agregar [producto y cantidad] y registrar el pedido.
+
+                                                      Current Behavior
+
+Al registrar el pedido responde “No podemos completar esta solicitud en este momento.
+
+                Expected Behavior
+
+Según CU-091 / CU-092: el pedido se registra, se factura y el comprobante se envía al correo del
+cliente.
+Please take a look at the attached screenshot/video. 
+
+                Figura 1,
+                                                                            SC-405 Calidad del Software
+                                                                                     Bug Report Template
+
+Bug Title:        BUG-09-05 · [CU-092-01] Al registrar un pedido en Venta móvil se produce
+
+                  un error de servidor y no se genera la factura
+
+Bug Priority: Alto (P2) · Error Funcional / Lógica de negocio · Tiempo de atención: 0 a 1
+
+                  hora
+
+                         Hardware & Software Details
+
+Environment:
+
+OS & Browser: Microsoft Windows 11 Versión 25H2 (compilación de SO 26200.9550)·
+
+                  Google Chrome 154.0.8037.98
+
+Build Version:
+
+                         Steps to Reproduce
+
+1. Iniciar sesión en el ambiente de pruebas con un usuario que tenga acceso a Venta móvil
+
+(/SellerOrders).
+
+2. Registrar un pedido para un cliente con correo válido, como paso previo para facturarlo.
+
+3. Presionar «Registrar pedido» y revisar si se genera la factura y el comprobante al correo del
+
+cliente.
+
+                         Current Behavior
+
+Al registrar el pedido en Venta móvil se produce un error de servidor; no se genera la factura,
+
+por lo que no se pudo verificar el envío del comprobante al correo del cliente (caso CU-092-01
+
+bloqueado).
+
+Resultado reportado por el responsable de los módulos 8 y 9 en QA02 el 07/10/2026; no se
+
+adjuntó captura.
+
+                         Expected Behavior
+
+Según CU-092 / caso CU-092-01: el pedido se registra y se factura, y el sistema envía el
+
+comprobante al correo registrado del cliente con el detalle de la factura.
+
+Please take a look at the attached screenshot/video.
+
+(Sin evidencia adjunta)
+                                                                         SC-405 Calidad del Software
+                                                                                  Bug Report Template
+
+Bug Title:      BUG-10-01 · [CU-101-01] La secuenciación automática de rutas ordena solo
+
+                por cercanía y no considera la prioridad de los pedidos
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                horas
+
+                        Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                        Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Ir a Rutas y Entregas > "Nueva ruta" (/RoutesAdmin/Create) y crear la ruta «QA-10 Ruta»
+
+con los pedidos n.º 47, 48 y 50 del cliente «Cliente Demo Minorista».
+
+3. En el detalle de la ruta presionar "Secuenciar automáticamente" y revisar el orden.
+
+                        Current Behavior
+
+El sistema muestra «Ruta secuenciada automáticamente (3 punto(s)).» y ordena las paradas 48,
+
+50 y 47 por cercanía. Ni el formulario de la ruta ni los pedidos tienen un campo de prioridad, por
+
+lo que el orden no puede considerar la prioridad de los pedidos.
+
+                        Expected Behavior
+
+Según CU-101 (escenario 1) / caso CU-101-01: la ruta generada organiza las entregas según
+
+ubicación y prioridad.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Ruta QA-10 secuenciada solo por cercanía; sin prioridad de pedidos (BUG-10-01_1.png)
+                                                                                 SC-405 Calidad del Software
+                                                                                          Bug Report Template
+
+Bug Title:      BUG-10-02 · [CU-104-01, CU-104-02] El tablero de entregas lista rutas y
+
+                contadores, no los pedidos En ruta ni los pendientes de entrega
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                horas
+
+                       Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                                   Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Ir a Logística y Flota > Tablero de entregas (/DeliveryBoard) y revisar el contenido.
+
+                                   Current Behavior
+
+El tablero muestra contadores (Rutas activas, Pendientes, Entregadas y Fallidas) y una tabla de
+
+rutas con su progreso. No lista pedidos individuales: no hay una lista de pedidos En ruta ni una
+
+de pedidos pendientes de entrega.
+
+                                   Expected Behavior
+
+Según CU-104 (escenarios 1 y 2) / casos CU-104-01 y CU-104-02: el tablero muestra el listado
+
+de pedidos En ruta y el de pedidos pendientes de entrega.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Tablero de entregas con rutas y contadores, sin lista de pedidos (BUG-10-02_1.png)
+                                                                                        SC-405 Calidad del Software
+                                                                                                 Bug Report Template
+
+Bug Title:      BUG-10-03 · [CU-106-01] La liquidación de cobros cuadrada no genera
+
+                ningún recibo
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                horas
+
+                                   Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                                   Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Ir a Finanzas > Liquidación de cobros (/Finance) y liquidar la ruta RUT-20261007232827 con
+
+efectivo 0 y comprobantes SINPE ₡30 000, Transferencia ₡20 000 y Depósito ₡14 100
+
+(esperado ₡64 100).
+
+                                   Current Behavior
+
+El sistema muestra «Liquidación registrada. Resultado: Cuadrada (diferencia 0.00).» y agrega la
+
+fila en «Liquidaciones registradas», pero no ofrece ningún recibo ni enlace para verlo o
+
+imprimirlo.
+
+                                   Expected Behavior
+
+Según CU-106 (escenario 1) / caso CU-106-01: la ruta se cierra financieramente y se genera el
+
+recibo cuando el dinero coincide.
+
+Please take a look at the attached screenshot/video.
+
+                Figura 1. Liquidación cuadrada registrada sin recibo (BUG-10-03_1.png)
+                                                                SC-405 Calidad del Software
+                                                                         Bug Report Template
+
+Bug Title:      BUG-10-04 · [CU-105-04] El sistema liquida una ruta que sigue Despachada,
+
+                sin haber finalizado
+
+Bug Priority: Alto (P2) · Error Funcional / Lógica de negocio · Tiempo de atención: 0 a 1
+
+                hora
+
+                      Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                      Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Ir a Finanzas > Liquidación de cobros (/Finance), elegir la ruta RUT-20261007233840
+
+(estado Despachada, 0 de 1 entregadas) y presionar "Liquidar".
+
+3. Registrar la liquidación con efectivo 0 y comprobantes 0.
+
+                                      Current Behavior
+
+El sistema muestra «Liquidación registrada. Resultado: Cuadrada (diferencia 0.00).» para una
+
+ruta que sigue Despachada, sin pedidos entregados ni cierre del recorrido. El detalle de la ruta
+
+continúa Despachada.
+
+                      Expected Behavior
+
+Según CU-105 (escenario 4) / caso CU-105-04: no se puede liquidar una ruta que no ha
+
+finalizado.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Ruta RUT-20261007233840 Despachada con liquidación registrada (BUG-10-04_1.png)
+                                                         SC-405 Calidad del Software
+                                                                  Bug Report Template
+
+Bug Title:      BUG-10-05 · [CU-106-02] El faltante de la liquidación no queda asociado al
+
+                chofer
+
+Bug Priority: Alto (P2) · Error Funcional / Lógica de negocio · Tiempo de atención: 0 a 1
+
+                hora
+
+                        Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                                     Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Ir a Finanzas > Liquidación de cobros (/Finance) y liquidar la ruta RUT-20261002183314
+
+(esperado ₡10 200 en otros medios) con un comprobante SINPE de ₡8 000 y efectivo 0.
+
+                                     Current Behavior
+
+El sistema muestra «Resultado: Faltante (diferencia -2200.00).» y lo registra en la liquidación y
+
+en Auditoría («Liquidación financiera #2 ... Faltante»), pero no se crea ningún cargo o deuda a
+
+nombre del chofer: el expediente del chofer y las demás pantallas no muestran el faltante.
+
+                                     Expected Behavior
+
+Según CU-106 (escenario 2) / caso CU-106-02: se registra el faltante asociado al chofer cuando
+
+el efectivo es menor al registrado.
+
+Please take a look at the attached screenshot/video.
+
+            Figura 1. Auditoría: faltante registrado sin asociarlo al chofer (BUG-10-05_1.png)
+                                                                        SC-405 Calidad del Software
+                                                                                 Bug Report Template
+
+Bug Title:      BUG-10-06 · [CU-102-01, CU-102-03] El pedido no cambia de estado cuando
+
+                el chofer lo marca En ruta o No entregado desde la app
+
+Bug Priority: Alto (P2) · Error Funcional / Lógica de negocio · Tiempo de atención: 0 a 1
+
+                hora
+
+                      Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                      Steps to Reproduce
+
+1. En la aplicación móvil iniciar sesión como Chofer (chofer@labodega.cr), abrir la ruta QA-08
+
+Ruta C (Despachada) y revisar la parada del pedido n.º 45 («En ruta»).
+
+2. Presionar "No entregado", elegir el motivo «Cliente ausente» y presionar "Marcar como no
+
+entregado".
+
+3. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+4. Ir a Pedidos (/OrdersAdmin) y revisar el estado del pedido n.º 45.
+
+                      Current Behavior
+
+En la app la parada queda «No entregado» con el motivo, y la ruta pasa a Completada con la
+
+parada Fallida. En Pedidos el n.º 45 sigue «Pendiente»; nunca pasó por «En ruta» ni quedó «No
+
+entregado» ni con retorno a bodega. Pasa igual con el pedido n.º 39 de otra ruta. La entrega
+
+correcta sí funciona: el n.º 44 quedó «Entregado». Al despachar la ruta QA-11, la pantalla dice
+
+«Los pedidos están En ruta» pero Pedidos muestra los n.º 52 y n.º 54 como «Pendiente»; el n.º
+
+52, marcado No entregado desde la app, también queda «Pendiente».
+
+                      Expected Behavior
+
+Según CU-102 (escenarios 1 y 3) / casos CU-102-01 y CU-102-03: el pedido cambia a En ruta al
+
+iniciar el recorrido y queda como No entregado, requiriendo retorno a bodega, cuando la entrega
+
+falla.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Pedidos: el n.º 45 sigue Pendiente tras marcarse No entregado en la app (BUG-10-06_1.png)
+                                                                     SC-405 Calidad del Software
+                                                                              Bug Report Template
+
+Bug Title:         BUG-10-07 · [CU-105-01, CU-105-02] No existe la liquidación de mercadería
+
+                   de una ruta finalizada con pedidos no entregados
+
+Bug Priority: Alto (P2) · Error Funcional / Lógica de negocio · Tiempo de atención: 0 a 1
+
+                   hora
+
+                         Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                         Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Ir a Rutas y Entregas (/RoutesAdmin) y abrir el detalle de la ruta QA-08 Ruta C (Completada,
+
+con el pedido n.º 45 No entregado).
+
+3. Buscar la acción "Liquidar ruta" y una pantalla para validar la mercadería física devuelta.
+
+                         Current Behavior
+
+En una ruta Completada con un pedido No entregado el detalle no ofrece "Liquidar ruta" ni
+
+ningún formulario; ese botón solo existe en rutas Despachadas y solo envía el número de ruta
+
+(sin cantidades físicas). No hay forma de validar la mercadería devuelta, devolverla al stock ni
+
+bloquear el cierre cuando falta mercadería.
+
+                         Expected Behavior
+
+Según CU-105 (escenarios 1 y 2) / casos CU-105-01 y CU-105-02: al liquidar la ruta se
+
+devuelven al stock los productos no entregados y se bloquea el cierre con una alerta cuando
+
+falta mercadería.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Detalle de ruta Completada sin opción de liquidar ruta ni validar mercadería (BUG-10-07_1.png)
+                                                                 SC-405 Calidad del Software
+                                                                          Bug Report Template
+
+Bug Title:      BUG-10-08 · [CU-101-03] Al reasignar el chofer de una ruta, el nuevo chofer
+
+                no recibe ninguna notificación
+
+Bug Priority: Medio (P3) · Error de Integración (API, correo, tiempo real) · Tiempo de
+
+                atención: 2 a 4 horas
+
+                                    Hardware & Software Details
+
+Environment:
+
+OS & Browser: Android 17 (emulador Pixel 8) · App Distribuidora JJ 1.2.0 (compilación 4005)
+
+Build Version:
+
+                                         Steps to Reproduce
+
+1. En la aplicación móvil iniciar sesión como Gerente (gerente@labodega.cr) e ir a Gestión >
+
+Rutas y choferes > Planificadas > ruta QA-10 Ruta.
+
+2. Presionar "Reasignar chofer o vehículo", elegir «Chofer Demo», escribir el motivo «QA lote 3
+
+CU-101-03» y presionar "Reasignar".
+
+3. Cerrar sesión e iniciar sesión en la app como Chofer (chofer@labodega.cr), abrir Mis rutas y
+
+buscar avisos.
+
+                                         Current Behavior
+
+La app registra la reasignación («Ruta reasignada. El chofer nuevo la ve al actualizar su lista.»,
+
+con la nota «Reasignada por Gerente Demo») y el Chofer Demo ve la ruta QA-10 Ruta en Mis
+
+rutas al actualizar. No existe ningún aviso o notificación para el chofer: ni en la app (sin sección
+
+de notificaciones) ni en su portal web.
+
+                                         Expected Behavior
+
+Según CU-101 (escenario 3) / caso CU-101-03: el sistema registra la asignación y el nuevo
+
+chofer ve la ruta y es notificado.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Ruta reasignada en la app: solo indica que el chofer la ve al actualizar, sin notificación (BUG-10-
+                                                                08_1.png)
+                                                                                      SC-405 Calidad del Software
+                                                                                               Bug Report Template
+
+Bug Title:      BUG-11-01 · [CU-111-01] El formulario de empleado no tiene campo de
+
+                identificación
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                horas
+
+                                Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                                    Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Ir a Administración > Personal > Empleados > "Nuevo empleado" (/Employees/Create) y
+
+revisar los campos del formulario.
+
+                                    Current Behavior
+
+El formulario solo tiene Nombre completo, Correo, Teléfono, Rol, Dirección, Contraseña, Puesto,
+
+Departamento, Salario, Fecha de contratación, Motivo de cambio salarial, Responsabilidades,
+
+Observaciones internas y Activo. No existe ningún campo para la identificación del empleado,
+
+por lo que tampoco se valida un empleado duplicado por identificación.
+
+                                    Expected Behavior
+
+Según CU-111 (escenario 1) / caso CU-111-01: el expediente se crea digitando Rol, Nombre,
+
+identificación, Correo, Contraseña, Puesto, Departamento, Salario y Fecha de contratación.
+
+Please take a look at the attached screenshot/video.
+
+              Figura 1. Nuevo empleado sin campo de identificación (BUG-11-01_1.png)
+                                                      SC-405 Calidad del Software
+                                                               Bug Report Template
+
+Bug Title:      BUG-11-02 · [CU-112-01, CU-112-02, CU-112-05] No se puede calcular la
+
+                planilla de un empleado con jornadas aprobadas: responde «Servicio
+
+                temporalmente no disponible»
+
+Bug Priority: Alto (P2) · Error Funcional / Lógica de negocio · Tiempo de atención: 0 a 1
+
+                hora
+
+                      Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                                 Steps to Reproduce
+
+1. Como el empleado «Empleado Demo» registrar en Mis jornadas (/MyAttendance) una
+
+jornada de 8 horas ordinarias y 2 extra, otra de ausencia de 8 horas y otra con 3 horas extra.
+
+2. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+3. Ir a Personal > Aprobar jornadas (/Attendance), aprobar la de 2 horas extra y la de ausencia,
+
+y rechazar la de 3 horas extra.
+
+4. Ir a Planilla (/Payroll), crear el período quincenal 01/10/2026 a 15/10/2026 con factor 0.5 y
+
+una regla de deducción QA_DEDUC_CCSS.
+
+5. En «Calcular empleado» escribir el período 1, el empleado 25 (Empleado Demo),
+
+comisiones 0 y presionar "Calcular planilla".
+
+                                 Current Behavior
+
+La solicitud responde HTTP 503 con la pantalla «Servicio temporalmente no disponible» (con el
+
+texto «No podemos cargar este presupuesto en este momento.», que no corresponde a planilla).
+
+Se repitió 6 veces, también tras cambiar el valor de la regla, con el mismo resultado. En el
+
+mismo período el cálculo de otros 4 empleados sin jornadas (Gerente, Chofer, Bodeguero y
+
+Supervisor Demo) sí funciona (bruto ₡250 000). Por eso no se pueden verificar las horas extra
+
+aprobadas, la ausencia ni las horas rechazadas en la planilla. Se asigna Alto porque impide
+
+calcular la planilla de todo empleado con jornadas.
+
+                                 Expected Behavior
+
+Según CU-112 (escenarios 1, 2 y 5) / casos CU-112-01, CU-112-02 y CU-112-05: la planilla
+
+suma las horas extra aprobadas, aplica la deducción por ausencia y excluye las horas extra
+
+rechazadas.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Pantalla 503 al calcular la planilla de Empleado Demo en /Payroll/Calculate (BUG-11-02_1.png)
+                                                                                     SC-405 Calidad del Software
+                                                                                              Bug Report Template
+
+Bug Title:      BUG-11-03 · [CU-113-02] La planilla no calcula la comisión del vendedor: las
+
+                comisiones se digitan a mano
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                horas
+
+                       Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                       Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Ir a Personal > Planilla (/Payroll) y revisar el formulario «Calcular empleado».
+
+                       Current Behavior
+
+El formulario pide el ID del período, el ID del empleado y «Comisiones confirmadas» (a digitar,
+
+«Ingrese 0 si no hay comisiones»). El sistema no extrae las ventas facturadas del mes del
+
+vendedor ni calcula la comisión con un porcentaje; el monto depende de lo que digite la persona.
+
+                       Expected Behavior
+
+Según CU-113 (escenario 2) / caso CU-113-02: el sistema extrae el total de ventas del mes del
+
+vendedor y calcula automáticamente la comisión a pagar.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Formulario «Calcular empleado» con comisiones digitadas a mano (BUG-11-03_1.png)
+                                                                               SC-405 Calidad del Software
+                                                                                        Bug Report Template
+
+Bug Title:      BUG-11-04 · [CU-113-06] Aprobar, pagar, revertir y notificar planillas no se
+
+                registra en la auditoría
+
+Bug Priority: Alto (P2) · Error Funcional / Lógica de negocio · Tiempo de atención: 0 a 1
+
+                hora
+
+                      Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                                   Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Ir a Planilla (/Payroll), calcular un empleado del período QA y aprobarlo con otro usuario
+
+autorizado, pagarlo con un tercer usuario, enviar su boleta en Boletas de pago (/PaySlips) y
+
+revertirlo escribiendo un motivo.
+
+3. Ir a Seguridad > Auditoría (/Audit) y revisar los registros más recientes.
+
+                                   Current Behavior
+
+La planilla pasa de Borrador a Aprobada, Pagada y Revertida (motivo «QA lote 3 prueba de
+
+reversion»), pero en Auditoría no aparece ningún registro de módulo Planilla: no hay aprobación,
+
+pago, reversión ni envío de boleta. Sí aparecen el inicio y cierre de sesión, la creación del
+
+empleado y la asignación de permisos. Se asigna Alto porque son movimientos de dinero sin
+
+trazabilidad.
+
+                                   Expected Behavior
+
+Según CU-113 (escenario 6) / caso CU-113-06: con motivo la planilla queda Revertida y la
+
+reversión queda registrada en auditoría.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Auditoría sin registros de planilla tras aprobar, pagar y revertir (BUG-11-04_1.png)
+                                                                                      SC-405 Calidad del Software
+                                                                                               Bug Report Template
+
+Bug Title:      BUG-11-05 · [CU-114-01] La boleta de pago se entrega como página HTML y
+
+                no como PDF con el desglose
+
+Bug Priority: Medio (P3) · Error de Reportes / Exportación · Tiempo de atención: 2 a 4
+
+                horas
+
+                       Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                                     Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Con una planilla Pagada ir a Boletas de pago (/PaySlips), presionar "Ver" en la boleta y
+
+revisar la opción de descarga.
+
+                                     Current Behavior
+
+La boleta se muestra en pantalla y la única descarga es «Descargar HTML privado». El correo
+
+solo trae un enlace al portal («el desglose no se adjunta ni se publica»); no se genera ningún
+
+PDF.
+
+                                     Expected Behavior
+
+Según CU-114 (escenario 1) / caso CU-114-01: el sistema envía a cada empleado un PDF
+
+detallado con su desglose salarial.
+
+Please take a look at the attached screenshot/video.
+
+                Figura 1. Boleta de pago con descarga solo en HTML (BUG-11-05_1.png)
+                                                               SC-405 Calidad del Software
+                                                                        Bug Report Template
+
+Bug Title:      BUG-11-06 · [CU-111-05] Un empleado inactivado conserva el acceso
+
+                mientras su sesión sigue abierta
+
+Bug Priority: Alto (P2) · Error de Seguridad / Permisos · Tiempo de atención: 0 a 1 hora
+
+                Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                Steps to Reproduce
+
+1. Iniciar sesión con el usuario QA «QA-11 Auditor de prueba»
+
+(estebanvf144+qaempleado@gmail.com) y dejar la sesión abierta en otro navegador.
+
+2. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+3. Ir a Personal > Empleados (/Employees) y presionar "Inactivar" en «QA-11 Auditor de
+
+prueba».
+
+4. Con la sesión del empleado inactivado, abrir por URL /Payroll, /MyPaySlips y /Audit.
+
+                Current Behavior
+
+El sistema indica «Empleado inactivado correctamente.» y un nuevo inicio de sesión se rechaza
+
+(«Correo o contraseña incorrectos.»), pero la sesión que ya estaba abierta sigue usando la
+
+Planilla, Mis boletas y la Auditoría sin ninguna restricción. Se asigna Alto porque el acceso de un
+
+empleado liquidado sigue vigente hasta que la sesión caduca.
+
+                Expected Behavior
+
+Según CU-111 (escenario 5) / caso CU-111-05: el empleado inactivo pierde el acceso al
+
+sistema.
+
+Please take a look at the attached screenshot/video.
+
+            Figura 1. Auditoría abierta por un empleado ya inactivado (BUG-11-06_1.png)
+                                                       SC-405 Calidad del Software
+                                                                Bug Report Template
+
+Bug Title:      BUG-11-07 · [CU-111-04] El ajuste salarial no permite indicar una fecha de
+
+                vigencia
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                horas
+
+                          Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                                Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Ir a Personal > Empleados (/Employees), presionar "Editar" en «QA-11 Auditor de prueba» y
+
+revisar los campos de salario.
+
+3. Cambiar el Salario de ₡550 000 a ₡600 000, escribir un motivo y presionar "Guardar".
+
+                                Current Behavior
+
+El formulario solo tiene Salario y Motivo del cambio salarial; no existe un campo de fecha de
+
+vigencia. El cambio se aplica de inmediato («Empleado actualizado correctamente.»), el historial
+
+muestra la fecha y hora del guardado (08/10/2026 01:51) y el cálculo del período siguiente usa
+
+₡600 000 (bruto ₡300 000 con factor 0.5).
+
+                                Expected Behavior
+
+Según CU-111 (escenario 4) / caso CU-111-04: el ajuste se guarda con su fecha de vigencia y
+
+se usa en los cálculos posteriores a esa fecha.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Edición del empleado sin campo de fecha de vigencia del salario (BUG-11-07_1.png)
+                                                                                      SC-405 Calidad del Software
+                                                                                               Bug Report Template
+
+Bug Title:      BUG-12-01 · [CU-123-02, CU-124-01, CU-124-04] El portal del cliente no
+
+                tiene lista de facturas ni muestra facturas y pagos en el estado de cuenta
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                horas
+
+                       Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                       Steps to Reproduce
+
+1. Iniciar sesión como Cliente QA (estebanvf144+qacliente@gmail.com) en el ambiente de
+
+pruebas.
+
+2. Ir a Mi cuenta > Mis pedidos (/ClientPortal) y revisar el menú del portal.
+
+3. Abrir Estado de cuenta (/ClientPortal/Statement).
+
+                       Current Behavior
+
+El portal solo ofrece Mis pedidos, Mis garantías y Estado de cuenta. El estado de cuenta
+
+muestra el resumen de compras, el crédito y un historial de pedidos; no muestra facturas ni
+
+pagos, y no existe ninguna lista de facturas del cliente (/ClientPortal/Invoices responde 404).
+
+                       Expected Behavior
+
+Según CU-123 (escenario 2) y CU-124 (escenario 1) / casos CU-123-02, CU-124-01 y CU-124-
+
+04: el historial muestra el detalle de facturas y pagos, y el portal muestra la lista de facturas del
+
+cliente.
+
+Please take a look at the attached screenshot/video.
+
+                Figura 1. Portal del cliente sin lista de facturas (BUG-12-01_1.png)
+                                                                 SC-405 Calidad del Software
+                                                                          Bug Report Template
+
+Bug Title:      BUG-12-02 · [CU-123-03, CU-124-02, CU-124-03] El estado de cuenta y las
+
+                facturas no se pueden descargar: el botón solo imprime la pantalla
+
+Bug Priority: Medio (P3) · Error de Reportes / Exportación · Tiempo de atención: 2 a 4
+
+                horas
+
+                           Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                           Steps to Reproduce
+
+1. Iniciar sesión como Cliente QA (estebanvf144+qacliente@gmail.com) en el ambiente de
+
+pruebas.
+
+2. Ir a Mi cuenta > Estado de cuenta (/ClientPortal/Statement).
+
+3. Presionar "Descargar / Imprimir" y buscar una opción para descargar la factura de un
+
+pedido.
+
+                           Current Behavior
+
+El botón "Descargar / Imprimir" solo abre la impresión del navegador; no genera ni descarga un
+
+archivo del estado de cuenta. Tampoco existe una opción para descargar facturas ni una
+
+confirmación de descarga.
+
+                           Expected Behavior
+
+Según CU-123 (escenario 3) y CU-124 (escenarios 2 y 3) / casos CU-123-03, CU-124-02 y CU-
+
+124-03: el estado de cuenta y la factura se descargan como archivo y se confirma la descarga.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Estado de cuenta con «Descargar / Imprimir» que solo imprime (BUG-12-02_1.png)
+                                                                                  SC-405 Calidad del Software
+                                                                                           Bug Report Template
+
+Bug Title:      BUG-12-03 · [CU-122-07] El checkout acepta un pedido con más unidades
+
+                que el stock disponible y solo descuenta el stock que existe
+
+Bug Priority: Alto (P2) · Error Funcional / Lógica de negocio · Tiempo de atención: 0 a 1
+
+                hora
+
+                              Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                              Steps to Reproduce
+
+1. Iniciar sesión como Cliente QA (estebanvf144+qacliente@gmail.com) en el ambiente de
+
+pruebas.
+
+2. Como Cliente QA, agregar 5 unidades de «Pilsen 6 Pack» al carrito (stock 47).
+
+3. Mientras el carrito sigue abierto, con el Administrador registrar un movimiento de Ajuste que
+
+deje el stock en 2.
+
+4. Como Cliente QA, ir a Finalizar compra con datos de entrega válidos y presionar "Finalizar
+
+compra".
+
+                              Current Behavior
+
+El sistema crea el «Pedido #54 creado correctamente.» por 5 unidades sin ninguna advertencia
+
+de que el stock se agotó, y en Movimientos solo registra una Salida de 2 unidades (stock 2 a 0)
+
+para ese pedido. El pedido queda con 5 unidades vendidas y solo 2 descontadas del inventario.
+
+Se asigna Alto: vende producto que no existe y deja el inventario inconsistente. El stock se
+
+restauró a 47 con un Ajuste.
+
+                              Expected Behavior
+
+Según CU-122 (escenario 7) / caso CU-122-07: si el stock se agota antes de finalizar la compra,
+
+el sistema muestra un mensaje y no crea el pedido con unidades que no existen.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Movimientos: salida de solo 2 unidades para el pedido #54 de 5 unidades (BUG-12-03_1.png)
+                                                                               SC-405 Calidad del Software
+                                                                                        Bug Report Template
+
+Bug Title:      BUG-13-01 · [CU-133-03] No existe exportación del inventario ni un reporte
+
+                de inventario en Reportes
+
+Bug Priority: Medio (P3) · Error de Reportes / Exportación · Tiempo de atención: 2 a 4
+
+                horas
+
+                        Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                        Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Revisar el menú Reportes y Gerencia (Ingresos y Egresos, Tablero gerencial, Reporte de
+
+ventas, Metas y Reporte de KPIs).
+
+3. Ir a Inventario (/Inventory) y buscar un botón para exportar.
+
+                                   Current Behavior
+
+No hay un reporte de inventario en Reportes ni un botón de exportar en Inventario; solo el listado
+
+en pantalla. La exportación a archivo existe en otros reportes (ventas y presupuesto) pero no en
+
+inventario.
+
+                                   Expected Behavior
+
+Según CU-133 (escenario 3) / caso CU-133-03: el sistema genera el archivo descargable del
+
+reporte de inventario.
+
+Please take a look at the attached screenshot/video.
+
+                Figura 1. Inventario sin opción de exportar (BUG-13-01_1.png)
+                                                                         SC-405 Calidad del Software
+                                                                                  Bug Report Template
+
+Bug Title:      BUG-13-02 · [CU-131-03] Los indicadores del tablero gerencial no se pueden
+
+                seleccionar para ver gráficos detallados
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                horas
+
+                           Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                                       Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Ir a Reportes y Gerencia > Tablero gerencial (/ManagementDashboard).
+
+3. Intentar seleccionar o hacer clic en las tarjetas Ventas del período, Stock bajo, Pedidos en
+
+ruta y Cobros pendientes.
+
+                                       Current Behavior
+
+Las tarjetas no son clicables y no abren ningún detalle; el único gráfico disponible es «Ventas
+
+facturadas por día» y los demás indicadores no tienen gráfico.
+
+                                       Expected Behavior
+
+Según CU-131 (escenario 3) / caso CU-131-03: al seleccionar un indicador el sistema muestra
+
+gráficos detallados de ese indicador.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Tablero gerencial con indicadores sin detalle ni gráficos propios (BUG-13-02_1.png)
+                                                                                           SC-405 Calidad del Software
+                                                                                                    Bug Report Template
+
+Bug Title:      BUG-13-03 · [CU-131-04] El tablero gerencial intercambia en silencio un
+
+                rango con la fecha inicial mayor a la final, sin avisar
+
+Bug Priority: Medio (P3) · Error de Validación de datos · Tiempo de atención: 2 a 4 horas
+
+                Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Abrir el Tablero gerencial con un rango personalizado de Desde 09/10/2026 y Hasta
+
+01/10/2026 y presionar "Aplicar" (/ManagementDashboard?desde=2026-10-09&hasta=2026-
+
+10-01).
+
+                Current Behavior
+
+El tablero muestra el período «01/10/2026 – 09/10/2026» e indicadores de ese rango, sin
+
+ninguna advertencia de que las fechas estaban invertidas y se corrigieron.
+
+                Expected Behavior
+
+Según CU-131 (escenario 4) / caso CU-131-04: el rango invertido se valida o se corrige con un
+
+aviso claro.
+
+Please take a look at the attached screenshot/video.
+
+              Figura 1. Tablero con rango invertido corregido sin aviso (BUG-13-03_1.png)
+                                                                                 SC-405 Calidad del Software
+                                                                                          Bug Report Template
+
+Bug Title:      BUG-14-01 · [CU-141-04, CU-143-01] El historial de devoluciones no muestra
+
+                el pedido asociado ni el cliente o referencia
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                horas
+
+                       Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                       Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Ir a Administración > Inventario > Devoluciones (/Returns/Index).
+
+3. Registrar una devolución de 1 unidad de «Red Bull 250ml» con Pedido asociado 2, Cliente /
+
+referencia «QA Cliente A» y Motivo «QA-14 Devolución con pedido» y presionar "Registrar
+
+devolución".
+
+4. Revisar la tabla "Historial de devoluciones" y la pantalla Cuarentena.
+
+                       Current Behavior
+
+El sistema registra la devolución (mensaje «Devolución registrada. El producto quedó en
+
+cuarentena.»), pero la tabla solo muestra las columnas Producto, Cant., Motivo, Estado y Fecha;
+
+la pantalla Cuarentena muestra Producto, Cant., Motivo, Registrado por y Fecha. Ninguna
+
+muestra el número de pedido asociado ni el cliente o referencia capturados en el formulario.
+
+                       Expected Behavior
+
+Según CU-141 (escenario 4) y CU-143 (escenario 1) / casos CU-141-04 y CU-143-01: la
+
+devolución queda vinculada al pedido original y el número de pedido se muestra en el registro; el
+
+listado muestra producto, cantidad, cliente/referencia, motivo, fecha y estado.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Historial de devoluciones sin columnas de pedido ni cliente o referencia (BUG-14-01_1.png)
+                                                                     SC-405 Calidad del Software
+                                                                              Bug Report Template
+
+Bug Title:      BUG-14-02 · [CU-143-04] No existe un reporte ni exportación de
+
+                devoluciones para analizar tendencias
+
+Bug Priority: Medio (P3) · Error de Reportes / Exportación · Tiempo de atención: 2 a 4
+
+                horas
+
+                             Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                             Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Ir a Administración > Inventario > Devoluciones (/Returns/Index) con devoluciones
+
+registradas.
+
+3. Buscar una opción de reporte o exportación de devoluciones del mes actual, también en la
+
+pantalla Cuarentena.
+
+                             Current Behavior
+
+La pantalla solo ofrece el formulario de registro, el buscador, el filtro por estado y los botones
+
+"Buscar" y "Limpiar". No existe ningún botón o enlace para generar un reporte ni para exportar
+
+(ni .xlsx ni otro formato).
+
+                             Expected Behavior
+
+Según CU-143 (escenario 4) / caso CU-143-04: el sistema genera un reporte de devoluciones
+
+por producto, cliente y motivo que puede consultarse o descargarse.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Pantalla de devoluciones sin opción de reporte ni de exportación (BUG-14-02_1.png)
+                                                                                    SC-405 Calidad del Software
+                                                                                             Bug Report Template
+
+Bug Title:      BUG-14-03 · [CU-144-01, CU-144-02, CU-144-03, CU-144-04, CU-144-05,
+
+                CU-144-06, CU-164-03] El detalle de un pedido del portal del cliente
+
+                responde «Servicio temporalmente no disponible» y bloquea la solicitud de
+
+                garantía
+
+Bug Priority: Crítico (P1) · Error Funcional / Lógica de negocio · Tiempo de atención:
+
+                Inmediato
+
+                           Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                                       Steps to Reproduce
+
+1. Iniciar sesión como Cliente (cliente@labodega.cr) en el ambiente de pruebas.
+
+2. Ir a Mi cuenta > Mis pedidos (/ClientPortal) y presionar "Ver detalle" en cualquier pedido (por
+
+ejemplo, el n.º 51).
+
+3. Repetir con otro pedido y abrir también Mis garantías (/ClientPortal/Warranty).
+
+4. Como Administrador (admin@labodega.cr), ir a Administración > Ventas y Pedidos >
+
+Pedidos (/OrdersAdmin) y presionar "Ver" en cualquier pedido.
+
+                                       Current Behavior
+
+Todos los pedidos del cliente (n.º 43 al 51) responden HTTP 503 con la página «No podemos
+
+completar esta solicitud en este momento. El incidente fue registrado. Intente nuevamente en
+
+unos minutos.» (título «Servicio temporalmente no disponible»), con un identificador de
+
+seguimiento distinto en cada intento.
+
+Como el botón "Solicitar garantía" solo existe en el detalle del pedido, el cliente no puede
+
+solicitar una garantía; Mis garantías muestra «No fue posible cargar el producto solicitado.». Por
+
+eso no se pudo ejecutar el flujo de solicitud ni la evaluación de garantías.
+
+Se reintentó en varias ocasiones durante unos 20 minutos (el último intento fue a las 5:59 p. m.,
+
+con los pedidos n.º 51, 50 y 44) y siempre respondió HTTP 503, por lo que no es un arranque en
+
+frío. Se asigna Crítico (P1): detiene un flujo principal del portal del cliente (consultar pedidos y
+
+solicitar garantías) y no existe alternativa desde la interfaz. El mismo error aparece al abrir el
+
+detalle de pedidos con la cuenta de cliente mayorista (mayorista@labodega.cr).
+
+Con el Administrador, el detalle de pedido (/OrdersAdmin/Detail/{id}) responde igualmente HTTP
+
+503 en los seis pedidos probados (n.º 1, 2, 36, 40, 49 y 51), por lo que tampoco se puede
+
+cambiar el estado de un pedido desde la interfaz.
+
+                                       Expected Behavior
+
+Según CU-144 (escenarios 1 al 6) / casos CU-144-01 a CU-144-06: el cliente abre el detalle de
+
+un pedido Entregado, solicita la garantía, y el encargado la aprueba o rechaza con su resolución.
+
+Según CU-164 (escenario 3) / caso CU-164-03 y el flujo de pedidos: el detalle de un pedido abre
+
+sin error, tanto en el portal del cliente como en Administración > Pedidos.
+
+Please take a look at the attached screenshot/video.
+                                                                                                                       SC-405 Calidad del Software
+                                                                                                                                 Bug Report Template
+
+Figura 1. Detalle de un pedido en el portal del cliente: «No podemos completar esta solicitud en este
+                                      momento» (HTTP 503) (BUG-14-03_1.png)
+
+       Figura 2. Detalle de pedido en Administración con el mismo error 503 (BUG-14-03_2.png)
+                                                               SC-405 Calidad del Software
+                                                                        Bug Report Template
+
+Bug Title:      BUG-15-01 · [CU-153-02] Una orden de mantenimiento correctivo En proceso
+
+                no saca el vehículo de circulación
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                horas
+
+                       Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                       Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Ir a Logística y Flota > Mantenimiento (/Fleet/Maintenance) y registrar una orden Correctiva
+
+para el vehículo QA-2026 con Descripción «QA-15 Reparación de frenos», Taller «QA
+
+Taller», Costo ₡20 000 y Estado En proceso.
+
+3. Abrir Rutas y Entregas > Nueva ruta (/RoutesAdmin/Create) sin guardarla y revisar la lista de
+
+vehículos.
+
+4. Ir a Vehículos (/Vehicles) y revisar el estado de QA-2026.
+
+5. En Mantenimiento presionar el botón verde de completar de la orden correctiva.
+
+                       Current Behavior
+
+Con la orden correctiva En proceso, el vehículo QA-2026 sigue en estado Activo en Vehículos y
+
+aparece disponible en la lista de vehículos de Nueva ruta; nunca sale de circulación.
+
+Al completar la orden el sistema muestra «Orden marcada como completada.» sin pedir el costo
+
+final; la orden queda Completada, pero el vehículo no tuvo ningún cambio de estado.
+
+                       Expected Behavior
+
+Según CU-153 (escenario 2) / caso CU-153-02: mientras la orden correctiva está En proceso el
+
+vehículo queda fuera de circulación; al completarla (indicando el costo final) el vehículo vuelve a
+
+estado Activo y aparece disponible para asignar rutas.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Mantenimiento: orden correctiva En proceso del vehículo QA-2026 (BUG-15-01_1.png)
+                                                                                                                      SC-405 Calidad del Software
+                                                                                                                                Bug Report Template
+
+Figura 2. Vehículos: QA-2026 sigue Activo con la orden correctiva En proceso (BUG-15-01_2.png)
+                                                                 SC-405 Calidad del Software
+                                                                          Bug Report Template
+
+Bug Title:      BUG-15-02 · [CU-153-04] El historial de mantenimientos no muestra la fecha
+
+                de cada orden ni el próximo kilometraje
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                horas
+
+                       Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                       Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Ir a Logística y Flota > Mantenimiento (/Fleet/Maintenance).
+
+3. Registrar para QA-2026 una orden Preventiva «QA-15 Cambio de aceite y filtros» (Taller
+
+«QA Taller», Costo ₡45 000, Estado Programada, Próximo km 100) y dos órdenes
+
+correctivas.
+
+4. Revisar la tabla "Historial de mantenimiento".
+
+                       Current Behavior
+
+La tabla solo tiene las columnas Vehículo, Tipo, Descripción (con el taller debajo), Costo, Estado
+
+y Acción. La fecha aparece únicamente en las órdenes Completadas; las órdenes Programada y
+
+En proceso no muestran ninguna fecha y ninguna orden muestra el próximo kilometraje
+
+registrado. Los costos sí coinciden con los registrados (₡45 000, ₡20 000 y ₡30 000).
+
+                       Expected Behavior
+
+Según CU-153 (escenario 4) / caso CU-153-04: se listan todas las órdenes del vehículo con tipo,
+
+fecha, taller, estado y costo con los montos correctos.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Historial de mantenimiento sin fecha en las órdenes abiertas ni próximo kilometraje (BUG-15-
+                                                              02_1.png)
+                                                                                 SC-405 Calidad del Software
+                                                                                          Bug Report Template
+
+Bug Title:      BUG-16-01 · [CU-162-01] Al asignar un comodato no se emite el contrato de
+
+                comodato
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                horas
+
+                          Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                          Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Ir a Administración > Inventario > Activos (/Assets) y crear el activo NEV-QA-001 «QA-16
+
+Nevera vertical 2 puertas» (Tipo Nevera).
+
+3. Ir a Logística y Flota > Comodatos > "Asignar comodato" (/Comodatos/Assign).
+
+4. Seleccionar NEV-QA-001, Cliente «Cliente Demo Minorista», Identificación 1-0123-0456,
+
+Ubicación «QA-16 Local de prueba, San José», fecha de hoy y Condición «QA-16 Buen
+
+estado» y presionar "Registrar comodato".
+
+5. Revisar el listado de Comodatos y el detalle del activo.
+
+                          Current Behavior
+
+El sistema muestra «Comodato registrado correctamente.», el activo pasa a Prestado y queda
+
+vinculado al cliente con la fecha de entrega, pero no se emite ningún contrato: el listado de
+
+Comodatos y el detalle del activo no tienen enlace, botón de descarga ni vista imprimible del
+
+contrato.
+
+                          Expected Behavior
+
+Según CU-162 (escenario 1) / caso CU-162-01: el equipo cambia a Prestado, queda vinculado al
+
+cliente con la fecha de entrega y se emite el contrato de comodato.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Listado de Comodatos sin contrato descargable ni imprimible (BUG-16-01_1.png)
+                                                                                 SC-405 Calidad del Software
+                                                                                          Bug Report Template
+
+Bug Title:      BUG-16-02 · [CU-162-03] El comodato no se bloquea por morosidad: el
+
+                cliente se escribe como texto libre sin validar su deuda
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                horas
+
+                       Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                       Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Ir a Logística y Flota > Comodatos > "Asignar comodato" (/Comodatos/Assign).
+
+3. Revisar los campos del formulario y registrar un comodato a «Cliente Demo Minorista».
+
+                       Current Behavior
+
+El campo Cliente es un texto libre (no se selecciona un cliente registrado) y el formulario no
+
+consulta facturas vencidas ni muestra alertas de riesgo. El comodato se registró sin ninguna
+
+validación de morosidad ni de cuentas por cobrar.
+
+                       Expected Behavior
+
+Según CU-162 (escenario 3) / caso CU-162-03: ante un cliente con facturas vencidas el sistema
+
+lanza una alerta de riesgo y bloquea la asignación hasta que salde su cuenta.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Formulario Asignar comodato con Cliente de texto libre y sin validación de deuda (BUG-16-
+                                                            02_1.png)
+                                                                             SC-405 Calidad del Software
+                                                                                      Bug Report Template
+
+Bug Title:      BUG-16-03 · [CU-163-02] Al devolver un equipo con avería no se genera
+
+                ninguna alerta al área de taller o cobros
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                horas
+
+                       Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                       Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Crear el activo NEV-QA-003 y asignarlo en Comodatos a «QA-16 Cliente B».
+
+3. En Comodatos presionar "Devolver" sobre ese comodato, elegir Destino «Enviar a
+
+mantenimiento», Condición «QA-16 Puerta dañada» y "Registrar devolución".
+
+4. Revisar Activos, Alertas de flota (/Fleet/Alerts) y Comodatos.
+
+                       Current Behavior
+
+El sistema muestra «Comodato cerrado. Equipo enviado a mantenimiento.» y el activo queda en
+
+Mantenimiento, pero no aparece ninguna alerta: Alertas de flota solo muestra documentos de
+
+vehículos y no existe una bandeja de alertas de taller o cobros.
+
+                       Expected Behavior
+
+Según CU-163 (escenario 2) / caso CU-163-02: el equipo ingresa con estado En Reparación y
+
+se genera una alerta al área de taller o cobros.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Activos: NEV-QA-003 en Mantenimiento sin alerta asociada (BUG-16-03_1.png)
+                                                                                  SC-405 Calidad del Software
+                                                                                           Bug Report Template
+
+Bug Title:      BUG-16-04 · [CU-164-02] Rentabilidad de equipos no aplica la regla de 30
+
+                días ni genera una alerta de baja rentabilidad
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                horas
+
+                       Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                       Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Asignar el activo NEV-QA-002 en Comodatos a «Cliente Demo Minorista».
+
+3. Ir a Comodatos > Rentabilidad (/Comodatos/Profitability) y ubicar al cliente.
+
+                       Current Behavior
+
+La pantalla solo lista Activo, Cliente, Días prestado, Pedidos, Total comprado y Última compra, y
+
+resalta en amarillo los comodatos sin compras desde la asignación (aun con 0 días prestado).
+
+No existe la regla de 30 días ni una alerta de auditoría que sugiera retirar el equipo.
+
+                       Expected Behavior
+
+Según CU-164 (escenario 2) / caso CU-164-02: el sistema cruza ventas y activos y genera una
+
+alerta de auditoría que sugiere retirar el equipo del cliente que no compra en 30 días.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Rentabilidad con fila resaltada, sin regla de 30 días ni alerta (BUG-16-04_1.png)
+                                                                                            SC-405 Calidad del Software
+                                                                                                     Bug Report Template
+
+Bug Title:      BUG-16-05 · [CU-163-03] El historial de comodatos del activo no muestra la
+
+                condición de entrega ni de devolución
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                horas
+
+                       Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                       Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Asignar NEV-QA-001 con Condición «QA-16 Buen estado» y devolverlo con Condición
+
+«Buen estado».
+
+3. Ir a Activos y abrir el detalle de NEV-QA-001 (/Assets/Details/1).
+
+                       Current Behavior
+
+El historial de comodatos muestra Cliente, Asignado, Devuelto, Estado y Destino; no muestra la
+
+condición registrada al entregar ni al devolver el equipo.
+
+                       Expected Behavior
+
+Según CU-163 (escenario 3) / caso CU-163-03: se muestran los préstamos anteriores con
+
+cliente, fechas de entrega y devolución y condición.
+
+Please take a look at the attached screenshot/video.
+
+                Figura 1. Detalle del activo con historial sin condición (BUG-16-05_1.png)
+                                                              SC-405 Calidad del Software
+                                                                       Bug Report Template
+
+Bug Title:      BUG-16-06 · [CU-164-01] El reporte de equipos prestados no muestra la
+
+                ubicación ni la fecha de entrega del equipo
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                horas
+
+                       Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                       Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Asignar en Comodatos el activo NEV-QA-002 a «Cliente Demo Minorista» con Ubicación
+
+«QA-16 Local de prueba» y la fecha de hoy.
+
+3. Iniciar sesión como Gerente (gerente@labodega.cr), ir a Comodatos > Rentabilidad
+
+(/Comodatos/Profitability) y revisar las columnas.
+
+                       Current Behavior
+
+El Gerente accede y la tabla muestra solo Activo, Cliente, Días prestado, Pedidos, Total
+
+comprado y Última compra. No aparecen la ubicación del equipo ni la fecha de entrega (solo los
+
+días prestados) que se registraron al asignar el comodato.
+
+                       Expected Behavior
+
+Según CU-164 (escenario 1) / caso CU-164-01: el sistema despliega la lista detallada de
+
+equipos prestados con cliente, ubicación y fecha de entrega.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Rentabilidad con el Gerente: sin columnas de ubicación ni fecha de entrega (BUG-16-06_1.png)
+                                                                                 SC-405 Calidad del Software
+                                                                                          Bug Report Template
+
+Bug Title:      BUG-16-07 · [CU-164-01] El rol Auditor recibe «Acceso denegado» en el
+
+                reporte de equipos prestados que la HU le asigna
+
+Bug Priority: Alto (P2) · Error de Seguridad / Permisos · Tiempo de atención: 0 a 1 hora
+
+                Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                Steps to Reproduce
+
+1. Iniciar sesión como Auditor (auditor@labodega.cr) en el ambiente de pruebas.
+
+2. Abrir Comodatos > Rentabilidad escribiendo /Comodatos/Profitability en la barra de
+
+direcciones.
+
+                Current Behavior
+
+El sistema responde HTTP 403 con «Acceso denegado. No es posible mostrar esta sección con
+
+tu acceso actual.» y no muestra el reporte. Con el Gerente la misma pantalla sí abre. Se asigna
+
+Alto porque un rol nombrado en la historia no puede usar la funcionalidad, aunque no se expone
+
+información.
+
+                Expected Behavior
+
+Según CU-164 (escenario 1) / caso CU-164-01: el Gerente o el Auditor consultan la lista de
+
+equipos prestados con cliente, ubicación y fecha de entrega.
+
+Please take a look at the attached screenshot/video.
+
+            Figura 1. Rentabilidad con el Auditor: «Acceso denegado» (403) (BUG-16-07_1.png)
+                                                                             SC-405 Calidad del Software
+                                                                                      Bug Report Template
+
+Bug Title:      BUG-17-01 · [CU-171-03] El sistema permite crear una segunda promoción
+
+                del mismo producto con vigencia traslapada
+
+Bug Priority: Alto (P2) · Error Funcional / Lógica de negocio · Tiempo de atención: 0 a 1
+
+                hora
+
+                       Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                       Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Ir a Administración > Ventas y Pedidos > Promociones > "Nueva promoción"
+
+(/Promotions/Create).
+
+3. Crear «QA-17 Descuento 10 %»: Descuento porcentual 10 %, producto Red Bull 250ml,
+
+cantidad mínima 1, vigencia del 07/10/2026 al 22/10/2026, y presionar "Guardar".
+
+4. Crear «QA-17 Descuento traslapado»: Descuento porcentual 15 %, el mismo producto Red
+
+Bull 250ml, vigencia del 10/10/2026 al 20/10/2026, y presionar "Guardar".
+
+5. Revisar el listado de promociones.
+
+                                       Current Behavior
+
+El sistema muestra «Promoción creada correctamente.» y el listado muestra las dos
+
+promociones activas sobre Red Bull 250ml (10 % del 07/10 al 22/10 y 15 % del 10/10 al 20/10).
+
+No aparece ninguna alerta de reglas traslapadas. Se asigna Alto por afectar el precio cobrado
+
+(dos descuentos para el mismo producto).
+
+                       Expected Behavior
+
+Según CU-171 (escenario 3) / caso CU-171-03: el sistema bloquea la creación mostrando una
+
+alerta de reglas traslapadas y no guarda la nueva promoción.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Listado con dos promociones activas sobre Red Bull 250ml en fechas traslapadas (BUG-17-
+                                                             01_1.png)
+                                                               SC-405 Calidad del Software
+                                                                        Bug Report Template
+
+Bug Title:      BUG-17-02 · [CU-171-05] Las promociones no tienen límite de unidades ni se
+
+                inactivan al alcanzarlo
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                horas
+
+                       Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                                      Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Ir a Promociones > "Nueva promoción" (/Promotions/Create).
+
+3. Revisar los campos del formulario y los de la pantalla de edición (/Promotions/Edit/{id}).
+
+                                      Current Behavior
+
+El formulario solo tiene Nombre, Descripción, Tipo, Segmento, Producto estratégico, Cantidad
+
+mínima, Porcentaje o regalía, Fecha de inicio, Fecha de fin y Prioridad. No existe ningún campo
+
+de límite de unidades promocionales, por lo que la promoción nunca se inactiva por consumo.
+
+                                      Expected Behavior
+
+Según CU-171 (escenario 5) / caso CU-171-05: la promoción tiene un límite de unidades y se
+
+inactiva automáticamente al alcanzarlo, aunque la fecha de fin no se haya cumplido, y el pedido
+
+adicional se cobra a precio regular.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Formulario Nueva promoción sin campo de límite de unidades (BUG-17-02_1.png)
+                                                                                SC-405 Calidad del Software
+                                                                                         Bug Report Template
+
+Bug Title:      BUG-18-01 · [CU-181-03] Al crear un combo sin productos o con un producto
+
+                repetido no se muestra ningún mensaje de validación
+
+Bug Priority: Medio (P3) · Error de Validación de datos · Tiempo de atención: 2 a 4 horas
+
+                          Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 155.0.8059.40
+
+Build Version:
+
+                          Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Ir a Administración > Inventario > Combos > "Nuevo combo" (/Combos/Create).
+
+3. Escribir Nombre «QA-18 Combo vacío» y Precio 15 000, sin marcar ningún producto, y
+
+presionar "Crear combo".
+
+4. Repetir enviando el mismo producto dos veces en la composición (por ejemplo, Pilsen 6
+
+Pack en dos líneas).
+
+                          Current Behavior
+
+El formulario se vuelve a mostrar sin ningún mensaje de error, ni arriba ni junto al botón "Crear
+
+combo"; el combo no se crea (el catálogo sigue en 0 combos), pero la persona no recibe
+
+indicación de qué corregir. Con el producto repetido ocurre lo mismo.
+
+                          Expected Behavior
+
+Según CU-181 (escenario 3) / caso CU-181-03: el sistema muestra «Debe seleccionar al menos
+
+un producto…» o «Un producto no puede repetirse dentro del mismo combo.» y no guarda.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Formulario Nuevo combo tras enviarlo sin productos: sin mensaje de validación (BUG-18-
+                                                           01_1.png)
+                                                                                     SC-405 Calidad del Software
+                                                                                              Bug Report Template
+
+Bug Title:      BUG-20-01 · [CU-202-01] Las alertas de vencimiento no se generan
+
+                automáticamente: solo aparecen al presionar "Generar sin duplicar"
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                horas
+
+                                  Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 154.0.8037.97
+
+Build Version:
+
+                                  Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Ir a Archivo digital > Documentos y crear un documento con vencimiento dentro de 30 días y
+
+departamento responsable (documento n.º 9 «QA-20 Verificación diaria», creado el
+
+02/10/2026 a las 3:23 p. m.).
+
+3. Abrir Seguridad > Alertas documentales (/Documents/Alerts) unos 45 minutos después y
+
+revisar el listado.
+
+4. Presionar "Generar sin duplicar" y revisar de nuevo el listado.
+
+                                  Current Behavior
+
+Antes de presionar el botón, el listado mostraba 4 alertas activas y ninguna correspondía al
+
+documento «QA-20 Verificación diaria».
+
+Después de presionar "Generar sin duplicar" el sistema mostró «Proceso completado: 1 alerta(s)
+
+nueva(s) o pendiente(s) de notificación.», las alertas activas subieron a 5 y apareció la alerta del
+
+documento «QA-20 Verificación diaria» (30 días, Activa, responsable Admin Demo).
+
+La alerta solo se generó con la acción manual; no se observó la verificación diaria automática
+
+indicada en la historia de usuario (no se pudo comprobar el correo al responsable).
+
+                                  Expected Behavior
+
+Según CU-202 / caso CU-202-01: el sistema emite automáticamente la verificación diaria de
+
+vencimientos, notifica al responsable pidiendo actualizar el documento y la alerta aparece en el
+
+listado sin intervención manual.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Alertas documentales antes de generar: 4 alertas activas, sin el documento «QA-20 Verificación
+                                                    diaria» (BUG-20-01_1.png)
+                                                                                                                           SC-405 Calidad del Software
+                                                                                                                                     Bug Report Template
+
+Figura 2. Después de presionar "Generar sin duplicar": 5 alertas activas y mensaje de proceso completado
+                                                          (BUG-20-01_2.png)
+                                                                           SC-405 Calidad del Software
+                                                                                    Bug Report Template
+
+Bug Title:      BUG-21-01 · [CU-211-03] Una nueva meta del mismo vendedor y mes
+
+                sobrescribe la anterior sin advertencia ni confirmación
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                horas
+
+                           Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 154.0.8037.97
+
+Build Version:
+
+                           Steps to Reproduce
+
+1. Iniciar sesión como Administrador (ADMIN-A) en el ambiente de pruebas.
+
+2. Ir a Reportes y Gerencia > Metas de ventas (/Kpis) con el período Octubre 2026.
+
+3. Seleccionar el vendedor "Vendedor Demo", digitar Meta de ingresos = 2000000 y presionar
+
+"Guardar meta" (queda la meta de ₡2,000,000.00).
+
+4. Seleccionar de nuevo "Vendedor Demo", digitar Meta de ingresos = 2500000 y presionar
+
+"Guardar meta".
+
+                           Current Behavior
+
+El sistema muestra "Meta guardada correctamente." sin ninguna advertencia de solapamiento ni
+
+ventana de confirmación, y la tabla "Metas de Octubre 2026" pasa de ₡2,000,000.00 a
+
+₡2,500,000.00 para Vendedor Demo (sigue "1 vendedor(es)"); la meta anterior se pierde.
+
+Solo existe una nota fija bajo el formulario: "Si ya existe una meta para ese vendedor en el
+
+período, se actualizará."
+
+El nivel baja de Alto (base de Error Funcional) a Medio porque la nota fija informa que la meta se
+
+actualiza y la nueva meta queda visible en la tabla.
+
+                           Expected Behavior
+
+Según CU-211 (escenario 3) / caso CU-211-03: el sistema lanza una advertencia de
+
+solapamiento y pide confirmación antes de sobrescribir la meta existente del vendedor en el
+
+mismo período.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Mensaje "Meta guardada correctamente." y la meta de Vendedor Demo en ₡2,500,000.00, sin
+                                     advertencia ni confirmación (BUG-21-01_1.png)
+                                                                      SC-405 Calidad del Software
+                                                                               Bug Report Template
+
+Bug Title:      BUG-21-02 · [CU-213-04] El Reporte de KPIs no tiene opción para exportar a
+
+                Excel (.xlsx)
+
+Bug Priority: Medio (P3) · Error de Reportes / Exportación · Tiempo de atención: 2 a 4
+
+                horas
+
+                               Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 154.0.8037.97
+
+Build Version:
+
+                               Steps to Reproduce
+
+1. Iniciar sesión como Gerente (gerente@labodega.cr) en el ambiente de pruebas.
+
+2. Ir a Reportes y Gerencia > KPIs (/Kpis/Report), seleccionar Octubre 2026 y presionar
+
+"Generar reporte".
+
+3. Buscar un botón "Exportar" en el encabezado, los filtros o la tabla "Detalle por vendedor".
+
+                               Current Behavior
+
+La pantalla solo ofrece "Gestionar metas" y "Generar reporte"; no existe ningún botón ni enlace
+
+para exportar o descargar el consolidado (ni .xlsx ni otro formato).
+
+                               Expected Behavior
+
+Según CU-213 (escenario 4) / caso CU-213-04: al presionar "Exportar" el sistema descarga el
+
+consolidado en formato Excel (.xlsx) con los mismos datos que se muestran en pantalla.
+
+Please take a look at the attached screenshot/video.
+
+            Figura 1. Reporte de KPIs de octubre 2026 sin botón Exportar (BUG-21-02_1.png)
+                                                                    SC-405 Calidad del Software
+                                                                             Bug Report Template
+
+Bug Title:          BUG-21-03 · [CU-213-01] El cumplimiento global del Reporte de KPIs suma
+
+                    ventas de un vendedor sin meta
+
+Bug Priority: Medio (P3) · Error de Fórmulas · Tiempo de atención: 2 a 4 horas
+
+                    Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 154.0.8037.97
+
+Build Version:
+
+                                  Steps to Reproduce
+
+1. Iniciar sesión como Administrador (ADMIN-A) y registrar en Metas de ventas (/Kpis) una
+
+meta de ₡2 500 000 para "Vendedor Demo" en octubre 2026.
+
+2. Registrar con el usuario "Admin Demo" (que no tiene meta) pedidos en Venta móvil que se
+
+facturen solos: 6 pedidos de ₡3 400.
+
+3. Iniciar sesión como Gerente (gerente@labodega.cr) e ir a Reportes y Gerencia > KPIs
+
+(/Kpis/Report) con Octubre 2026.
+
+4. Revisar las tarjetas "Venta global" y "Cumplimiento" y la tabla "Detalle por vendedor".
+
+                                  Current Behavior
+
+"Venta global" muestra ₡23,052.00 (6 facturas), que corresponden por completo a "Admin
+
+Demo", que figura "Sin meta"; "Meta global" muestra ₡2,500,000.00 (1 vendedor con meta) y
+
+"Cumplimiento" muestra 0.9 % (23,052 ÷ 2,500,000).
+
+En la tabla "Detalle por vendedor" el único vendedor con meta (Vendedor Demo) tiene venta de
+
+₡0.00 y cumplimiento de 0.0 % (Incumplida); el porcentaje global correcto para los vendedores
+
+con meta sería 0.0 %, no 0.9 %, y "Metas cumplidas" indica 0 de 1.
+
+Se asigna Medio (en lugar del Alto base de Error de Fórmulas) porque el detalle por vendedor es
+
+correcto.
+
+                                  Expected Behavior
+
+Según CU-213 / caso CU-213-01: el consolidado muestra el cumplimiento de la meta contra la
+
+venta real de los vendedores con meta; las ventas de quien no tiene meta no deben alterar el
+
+porcentaje global.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Reporte de KPIs de octubre 2026: Venta global ₡23,052.00 contra Meta global ₡2,500,000.00
+                                       con Cumplimiento 0.9 % (BUG-21-03_1.png)
+                                                                             SC-405 Calidad del Software
+                                                                                      Bug Report Template
+
+Bug Title:      BUG-22-01 · [CU-221-01, CU-221-02, CU-221-04, CU-221-05, CU-221-06,
+
+                CU-222-01, CU-222-03, CU-223-01] La pantalla de detalle de cualquier
+
+                presupuesto devuelve HTTP 503 "No podemos cargar este presupuesto"
+
+Bug Priority: Crítico (P1) · Error Funcional / Lógica de negocio · Tiempo de atención:
+
+                Inmediato
+
+                           Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 154.0.8037.97
+
+Build Version:
+
+                           Steps to Reproduce
+
+1. Iniciar sesión como Administrador (ADMIN-A) en el ambiente de pruebas.
+
+2. Ir a Finanzas > Presupuestos anuales (/Budgets).
+
+3. En "Nuevo presupuesto" seleccionar Año = 2026, Departamento = Administración, Categoría
+
+inicial = Suministros, Monto anual = 12000000 y presionar "Crear borrador".
+
+4. Revisar la pantalla a la que se redirige (/Budgets/Details/1).
+
+5. Volver al listado y presionar "Gestionar" en el presupuesto creado.
+
+6. Crear un segundo presupuesto (Departamento = Compras, Categoría = Suministros, Monto
+
+anual = 1000000) y revisar su detalle (/Budgets/Details/2).
+
+                           Current Behavior
+
+Después de "Crear borrador" se muestra "Se creó correctamente. El presupuesto quedó en
+
+borrador y debe enviarse para aprobación.", pero la pantalla de detalle responde HTTP 503 con
+
+el título "Servicio temporalmente no disponible" y el texto "No podemos cargar este presupuesto
+
+en este momento. El incidente fue registrado. Intente nuevamente en unos minutos o vuelva al
+
+listado de presupuestos."
+
+El error se repite con "Gestionar" en el listado y al reintentar durante más de 10 minutos, y
+
+también con el segundo presupuesto (/Budgets/Details/2).
+
+Los presupuestos sí aparecen en el listado como "Borrador" (₡12,000,000.00 y ₡1,000,000.00),
+
+pero no es posible abrirlos, por lo que no se puede distribuir el monto anual, editar las líneas
+
+mensuales, presentar, aprobar ni rechazar.
+
+Se asigna Crítico (P1): detiene el flujo principal del módulo y no existe una alternativa desde la
+
+interfaz.
+
+                           Expected Behavior
+
+Según CU-221 / casos CU-221-01, CU-221-02, CU-221-04, CU-221-05 y CU-221-06: el detalle
+
+del presupuesto muestra las líneas mensuales y las acciones "Distribuir monto anual",
+
+"Presentar", "Aprobar" y "Rechazar", para distribuir y presentar el presupuesto, validar el
+
+descuadre, la segregación de funciones, el rechazo con motivo y la distribución al céntimo.
+
+Please take a look at the attached screenshot/video.
+                                                                                                                           SC-405 Calidad del Software
+                                                                                                                                     Bug Report Template
+
+Figura 1. /Budgets/Details/1: "No podemos cargar este presupuesto en este momento." (HTTP 503) (BUG-
+                                                              22-01_1.png)
+                                                           SC-405 Calidad del Software
+                                                                    Bug Report Template
+
+Bug Title:      BUG-22-02 · [CU-222-01, CU-223-01] El Gerente ve el menú Finanzas pero
+
+                Presupuestos, Gastos y Presupuesto vs. real responden 403 Acceso
+
+                denegado
+
+Bug Priority: Alto (P2) · Error de Seguridad / Permisos · Tiempo de atención: 0 a 1 hora
+
+                          Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 154.0.8037.97
+
+Build Version:
+
+                          Steps to Reproduce
+
+1. Iniciar sesión como Gerente (gerente@labodega.cr) en el ambiente de pruebas.
+
+2. Abrir el menú "Finanzas" del encabezado, que muestra "Presupuestos anuales", "Gastos
+
+operativos" y "Presupuesto vs. real".
+
+3. Presionar cada una de las tres opciones (/Budgets, /Expenses y /BudgetComparison).
+
+                          Current Behavior
+
+Las tres opciones del menú Finanzas (Presupuestos anuales /Budgets, Gastos operativos
+
+/Expenses y Presupuesto vs. real /BudgetComparison) devuelven HTTP 403 con el texto "403
+
+ACCESO DENEGADO. No es posible mostrar esta sección con tu acceso actual."; el detalle de
+
+un presupuesto (/Budgets/Details/1) también responde 403.
+
+El mismo usuario sí abre el Reporte de KPIs (/Kpis/Report) y el Asistente (/Assistant).
+
+El menú ofrece opciones a las que el rol no tiene acceso. Se asigna Alto (en lugar de Crítico)
+
+porque no se expone información; el defecto es el contrario, el rol que debe aprobar
+
+presupuestos y gastos no puede usar el módulo.
+
+                          Expected Behavior
+
+Según CU-222 y CU-223 (casos CU-222-01 y CU-223-01): el menú Finanzas solo debe mostrar
+
+opciones a las que el rol tiene acceso; si el Gerente aprueba presupuestos y consulta el
+
+comparativo presupuesto vs. real, debe poder abrir Presupuestos anuales, Gastos operativos y
+
+Presupuesto vs. real.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Gerente Demo en /Budgets: 403 Acceso denegado, con el menú Finanzas visible (BUG-22-
+                                                             02_1.png)
+                                                                                 SC-405 Calidad del Software
+                                                                                          Bug Report Template
+
+Bug Title:      BUG-22-03 · [CU-222-02] Un gasto sin presupuesto disponible se registra
+
+                con "Nivel: Normal (0.00%)" y sin alerta de Presupuesto Excedido
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                horas
+
+                        Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 154.0.8037.97
+
+Build Version:
+
+                        Steps to Reproduce
+
+1. Iniciar sesión como Administrador (ADMIN-A) en el ambiente de pruebas; no debe existir
+
+ningún presupuesto aprobado para Compras y Suministros 2026.
+
+2. Ir a Finanzas > Gastos operativos (/Expenses) y en "Registrar gasto" digitar Fecha
+
+02/10/2026, Departamento = Compras, Categoría = Suministros, Proveedor = "QA-22
+
+Proveedor X", N.º documento = "F-1001", Tipo = Factura, Descripción = "QA-22 Gasto de
+
+prueba", Subtotal = 10000, Impuesto = 1300 y Método de pago = Transferencia.
+
+3. Presionar "Registrar con token idempotente" y revisar el detalle del gasto
+
+(/Expenses/Details/1).
+
+                        Current Behavior
+
+El sistema muestra "Gasto registrado." y el gasto queda en estado "Registrado".
+
+En "Impacto presupuestario" aparecen "Presupuesto: ₡0.00", "Real: ₡0.00", "Comprometido:
+
+₡11,300.00" y "Nivel: Normal (0.00%)" con la barra en 0.0 %; no se muestra la alerta
+
+"Presupuesto Excedido" ni el estado "Requiere Aprobación", aunque el monto comprometido
+
+supera el presupuesto disponible de la categoría (₡0.00).
+
+Se asigna Medio porque el gasto no se aprueba automáticamente y el Administrador puede
+
+revisarlo, pero el nivel presupuestario mostrado es incorrecto.
+
+Por BUG-22-01 no fue posible aprobar un presupuesto, así que la prueba se hizo con una
+
+categoría sin presupuesto (disponible ₡0).
+
+                        Expected Behavior
+
+Según CU-222 (escenario 2) / caso CU-222-02: cuando el monto del gasto supera el saldo
+
+disponible de la categoría, el sistema muestra la alerta visual "Presupuesto Excedido" y permite
+
+guardar el gasto con estado "Requiere Aprobación".
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Detalle del gasto n.º 1: Presupuesto ₡0.00, Comprometido ₡11,300.00 y Nivel Normal (0.00%) sin
+                                                      alerta (BUG-22-03_1.png)
+                                                                           SC-405 Calidad del Software
+                                                                                    Bug Report Template
+
+Bug Title:      BUG-22-04 · [CU-223-03] El comparativo Presupuesto vs. real exporta un
+
+                CSV solo con el detalle de gastos, no un Excel (.xlsx) con los datos de
+
+                pantalla
+
+Bug Priority: Medio (P3) · Error de Reportes / Exportación · Tiempo de atención: 2 a 4
+
+                horas
+
+                                   Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 154.0.8037.97
+
+Build Version:
+
+                                   Steps to Reproduce
+
+1. Iniciar sesión como Administrador (ADMIN-A) en el ambiente de pruebas.
+
+2. Ir a Finanzas > Presupuesto vs. real (/BudgetComparison) con el año 2026 y, en Gastos
+
+operativos, tener registrado el gasto F-1001 de ₡11 300.
+
+3. Presionar el botón "CSV" del encabezado (la pantalla no ofrece "Exportar" ni Excel).
+
+4. Abrir el archivo descargado "presupuesto-real-2026.csv".
+
+                                   Current Behavior
+
+El único botón de descarga es "CSV" y el archivo descargado es "presupuesto-real-2026.csv"
+
+(188 bytes), no un archivo .xlsx.
+
+El archivo contiene solo una fila de encabezado (Fecha, Departamento, Categoria, Documento,
+
+Proveedor, Descripcion, Estado, Total) y el detalle del gasto F-1001 (₡11300.00); no incluye el
+
+resumen (Presupuesto, Real, Disponible, Ejecución) ni las tablas por departamento y por
+
+categoría que se ven en pantalla, y los encabezados no llevan tilde ("Categoria", "Descripcion").
+
+                                   Expected Behavior
+
+Según CU-223 (escenario 3) / caso CU-223-03: al presionar "Exportar" el sistema descarga el
+
+consolidado en formato Excel (.xlsx) con los mismos datos que se muestran en pantalla.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Presupuesto vs. real con los botones "CSV" e "Imprimir" y sin opción de exportar a Excel (BUG-
+                                                             22-04_1.png)
+                                                                    SC-405 Calidad del Software
+                                                                             Bug Report Template
+
+Bug Title:      BUG-23-01 · [CU-231-01] Los mensajes directos del chat no muestran doble
+
+                check cuando el destinatario los recibe
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                horas
+
+                       Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 154.0.8037.97
+
+Build Version:
+
+                       Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en un navegador y como Empleado
+
+(empleado@labodega.cr) en otro navegador o perfil distinto.
+
+2. Con el Empleado, abrir Chat > Chats privados y seleccionar "Admin Demo"; dejar la
+
+conversación abierta.
+
+3. Con el Administrador, abrir Chat > Chats privados, seleccionar "Empleado Demo", escribir
+
+"Prueba de mensaje directo" y presionar "Enviar".
+
+4. Revisar la conversación del Empleado sin recargar la página y, después, el mensaje enviado
+
+en la conversación del Administrador.
+
+                                       Current Behavior
+
+El Empleado recibe el mensaje al instante, sin recargar la página ("Prueba de mensaje directo",
+
+2/10/26, 9:29 p. m.).
+
+En la conversación del Administrador el mensaje enviado solo muestra el texto y la hora; no
+
+aparece ningún doble check ni indicador de entregado o leído, ni siquiera después de que el
+
+Empleado lo recibió.
+
+Se asigna Medio (en lugar del Alto base) porque el mensaje sí se entrega en tiempo real y el
+
+indicador es un apoyo de seguimiento.
+
+                       Expected Behavior
+
+Según CU-231 (escenario 1) / caso CU-231-01: el destinatario conectado recibe el mensaje
+
+instantáneamente y el mensaje del emisor se marca con doble check.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Conversación del Administrador con el mensaje enviado sin doble check (BUG-23-01_1.png)
+                                                                           SC-405 Calidad del Software
+                                                                                    Bug Report Template
+
+Bug Title:         BUG-23-02 · [CU-231-03] El chat no muestra ningún aviso al enviar un
+
+                   mensaje vacío o solo con espacios
+
+Bug Priority: Medio (P3) · Error de Validación de datos · Tiempo de atención: 2 a 4 horas
+
+                    Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 154.0.8037.97
+
+Build Version:
+
+                    Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas.
+
+2. Abrir Chat > Chats privados y seleccionar "Empleado Demo".
+
+3. Dejar vacío el campo "Escriba un mensaje..." (o escribir solo espacios) y presionar "Enviar".
+
+4. Pegar un texto de 1001 caracteres, presionar "Enviar" y luego vaciar el campo y presionar
+
+"Enviar" otra vez.
+
+                    Current Behavior
+
+Con el campo vacío y con solo espacios el mensaje no se envía, pero no aparece ningún aviso.
+
+Con 1001 caracteres el mensaje no se envía y se muestra "El mensaje no puede superar los
+
+1000 caracteres."
+
+Si después se presiona "Enviar" con el campo vacío, el aviso de 1000 caracteres de la acción
+
+anterior permanece en pantalla, lo que no corresponde a un mensaje vacío.
+
+Se asigna Medio (base de Error de Validación de datos): no se pierde información, pero la
+
+persona no recibe indicación de por qué no se envía el mensaje.
+
+                    Expected Behavior
+
+Según CU-231 (escenario 3) / caso CU-231-03: el sistema no envía los mensajes vacíos o solo
+
+con espacios ni los mayores a 1000 caracteres y muestra el aviso correspondiente en cada
+
+caso.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Chat con el campo vacío después de presionar Enviar: solo permanece el aviso de 1000
+                              caracteres de un intento anterior (BUG-23-02_1.png)
+                                                                             SC-405 Calidad del Software
+                                                                                      Bug Report Template
+
+Bug Title:      BUG-23-03 · [CU-233-03] La búsqueda de un solo carácter muestra "No se
+
+                encontraron coincidencias." en lugar de pedir al menos dos caracteres
+
+Bug Priority: Medio (P3) · Error de Validación de datos · Tiempo de atención: 2 a 4 horas
+
+                           Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 154.0.8037.97
+
+Build Version:
+
+                           Steps to Reproduce
+
+1. Iniciar sesión como Administrador (admin@labodega.cr) en el ambiente de pruebas con al
+
+menos una conversación que contenga mensajes (por ejemplo con "Empleado Demo").
+
+2. Abrir Chat > Chats privados, seleccionar una conversación y presionar "Buscar".
+
+3. Digitar "a" en "Buscar en el historial autorizado...", seleccionar "Todo mi historial" y presionar
+
+"Buscar".
+
+                           Current Behavior
+
+El sistema muestra "No se encontraron coincidencias.", aunque existen mensajes que contienen
+
+la letra "a" (por ejemplo "Prueba de mensaje directo").
+
+No aparece el mensaje de validación sobre la longitud mínima; el resultado induce a pensar que
+
+no existen coincidencias.
+
+Se asigna Medio (base de Error de Validación de datos): la búsqueda no se ejecuta con un
+
+carácter, pero el mensaje mostrado es engañoso.
+
+                           Expected Behavior
+
+Según CU-233 (escenario 3) / caso CU-233-03: al buscar con un solo carácter se muestra
+
+"Escriba al menos dos caracteres para buscar." y no se ejecuta la búsqueda.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Búsqueda de "a" en Todo mi historial con el resultado "No se encontraron coincidencias." (BUG-
+                                                              23-03_1.png)
+                                                                 SC-405 Calidad del Software
+                                                                          Bug Report Template
+
+Bug Title:      BUG-23-04 · [CU-233-05] Los resultados de la búsqueda del chat no tienen
+
+                opción para exportar a Excel (.xlsx)
+
+Bug Priority: Medio (P3) · Error de Reportes / Exportación · Tiempo de atención: 2 a 4
+
+                horas
+
+                       Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 154.0.8037.97
+
+Build Version:
+
+                       Steps to Reproduce
+
+1. Iniciar sesión como Empleado (empleado@labodega.cr) en el ambiente de pruebas.
+
+2. Abrir Chat > Chats privados, seleccionar una conversación y presionar "Buscar".
+
+3. Buscar "confidencialqa" en "Todo mi historial" (el resultado muestra 1 mensaje).
+
+4. Buscar un botón "Exportar" sobre los resultados.
+
+                       Current Behavior
+
+Los resultados se listan con la conversación, el texto y la fecha, pero la ventana de búsqueda
+
+solo ofrece el selector de alcance, "Buscar" y "Volver"; no existe ningún botón ni enlace para
+
+exportar o descargar los resultados (ni .xlsx ni otro formato).
+
+                       Expected Behavior
+
+Según CU-233 (escenario 5) / caso CU-233-05: al presionar "Exportar" sobre los resultados el
+
+sistema descarga los resultados en formato Excel (.xlsx).
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Resultados de la búsqueda "confidencialqa" sin botón Exportar (BUG-23-04_1.png)
+                                                                                  SC-405 Calidad del Software
+                                                                                           Bug Report Template
+
+Bug Title:      BUG-23-05 · [CU-231-02] No se envía notificación push al celular del receptor
+
+                de un mensaje directo (la app móvil no tiene chat ni notificaciones)
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                horas
+
+                            Hardware & Software Details
+
+Environment:
+
+OS & Browser: Android 17 (emulador Pixel 8) · App Distribuidora JJ 1.2.0 (compilación 4005)
+
+Build Version:
+
+                                   Steps to Reproduce
+
+1. Con Empleado (empleado@labodega.cr) sin sesión activa, iniciar sesión como
+
+Administrador en la web y enviar un mensaje directo a Empleado Demo desde Chat > Chats
+
+privados.
+
+2. Abrir la app móvil instalada en el emulador (sesión del Chofer) y revisar su menú principal y
+
+la pantalla Mi cuenta.
+
+3. Revisar los permisos que declara la app con el comando: adb shell dumpsys package
+
+cr.distribuidorajj.proyecto_movil
+
+                                   Current Behavior
+
+El mensaje se guarda y aparece al abrir el chat en la web, pero no se envía ninguna notificación
+
+push.
+
+La app móvil solo ofrece Mis rutas, Kilometraje, Por enviar y Mis jornadas; no tiene chat ni
+
+bandeja de notificaciones.
+
+La app no declara POST_NOTIFICATIONS, permiso necesario en Android 13 o superior para
+
+mostrar notificaciones, así que ningún perfil puede recibir notificaciones push.
+
+                                   Expected Behavior
+
+Según CU-231 (escenario 2) / caso CU-231-02: el sistema guarda el mensaje, envía una
+
+notificación push al celular del receptor desconectado y el mensaje aparece al abrir el chat.
+
+Please take a look at the attached screenshot/video.
+                                                                                                                      SC-405 Calidad del Software
+                                                                                                                                Bug Report Template
+
+Figura 1. Menú principal de la app móvil sin opción de chat ni de notificaciones (BUG-23-05_1.png)
+
+       Figura 2. Pantalla Mi cuenta de la app sin ajustes de notificaciones (BUG-23-05_2.png)
+                                                                                  SC-405 Calidad del Software
+                                                                                           Bug Report Template
+
+Bug Title:       BUG-24-01 · [CU-241-02] Un producto sin historial de ventas se etiqueta "Sin
+
+                 ventas suficientes" y no solicita ingreso manual de la cantidad
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                 horas
+
+                        Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 154.0.8037.97
+
+Build Version:
+
+                        Steps to Reproduce
+
+1. Iniciar sesión como Administrador (ADMIN-A) en el ambiente de pruebas.
+
+2. Ir a Reportes y Gerencia > Inteligencia de inventario (/InventoryIntelligence/Index) con los
+
+parámetros por defecto (Meses para promedio = 3, Meses de cobertura = 2).
+
+3. Ubicar en "Sugerencias de abastecimiento" un producto sin ventas en los últimos meses (por
+
+ejemplo "Vino Tinto Reserva 750ml" o "Whisky Black Label 750ml", ambos con venta de 0
+
+u.).
+
+4. Revisar la etiqueta del producto y la columna "Sugerencia".
+
+                        Current Behavior
+
+Los productos sin ventas muestran la etiqueta "Sin ventas suficientes" y no la etiqueta "Datos
+
+insuficientes".
+
+La columna "Sugerencia" calcula una cantidad automática ("Comprar 5" para Vino Tinto Reserva
+
+750ml y "Comprar 2" para Whisky Black Label 750ml) y no hay ningún campo ni mensaje que
+
+solicite ingresar la cantidad manualmente.
+
+En Finanzas > Órdenes de compra > Sugerencias, los mismos productos sí muestran la nota
+
+"Datos históricos insuficientes" y permiten editar la cantidad; la pantalla de Inteligencia de
+
+inventario no.
+
+El nivel baja de Alto (base de Error Funcional) a Medio porque el sistema sí identifica el producto
+
+y advierte que no tiene ventas suficientes; la sugerencia se basa en el stock mínimo.
+
+                        Expected Behavior
+
+Según CU-241 (escenario 2) / caso CU-241-02: el sistema marca el producto con la etiqueta
+
+"Datos insuficientes" y solicita ingreso manual de la cantidad a pedir.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Sugerencias de abastecimiento con "Sin ventas suficientes" y "Comprar 5" / "Comprar 2" sin
+                                     campo de ingreso manual (BUG-24-01_1.png)
+                                                                              SC-405 Calidad del Software
+                                                                                       Bug Report Template
+
+Bug Title:      BUG-24-02 · [CU-241-03] Las Sugerencias de compra muestran promedio
+
+                mensual 0.0 y cantidad 1 en productos con ventas, contradiciendo
+
+                Inteligencia de inventario
+
+Bug Priority: Alto (P2) · Error de Fórmulas · Tiempo de atención: 0 a 1 hora
+
+                                 Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 154.0.8037.97
+
+Build Version:
+
+                                 Steps to Reproduce
+
+1. Iniciar sesión como Administrador (ADMIN-A) en el ambiente de pruebas.
+
+2. Ir a Reportes y Gerencia > Inteligencia de inventario (/InventoryIntelligence/Index) y anotar,
+
+con los parámetros por defecto, el promedio mensual y la sugerencia de "Red Bull 250ml"
+
+(promedio 32.00, "Comprar 4") y de "Yucas Tostadas 150g" (promedio 19.00, "Comprar 8").
+
+3. Ir a Finanzas > Órdenes de compra y presionar "Sugerencias"
+
+(/PurchaseOrders/Suggestions).
+
+4. Buscar las filas de "Red Bull 250ml" y "Yucas Tostadas 150g".
+
+                                 Current Behavior
+
+En Sugerencias de compra, "Red Bull 250ml" y "Yucas Tostadas 150g" muestran Promedio
+
+mensual "0.0", Cantidad "1" y no están seleccionadas.
+
+Inteligencia de inventario calcula para los mismos productos promedios de 32.00 y 19.00 y
+
+sugiere comprar 4 y 8 unidades.
+
+Solo "Vino Tinto Reserva 750ml" (cantidad 5) y "Whisky Black Label 750ml" (cantidad 2) quedan
+
+seleccionados, con la nota "Datos históricos insuficientes"; los 19 productos aparecen listados,
+
+no solo los que requieren reabastecimiento.
+
+Se mantiene en Alto (base de Error de Fórmulas) porque las cantidades sugeridas alimentan
+
+compras con dinero real; no se crea ninguna orden automáticamente (0 órdenes antes y
+
+después de abrir la pantalla).
+
+                                 Expected Behavior
+
+Según CU-241 (escenario 3) / caso CU-241-03: se muestran las sugerencias de
+
+reabastecimiento con las cantidades calculadas (las mismas que en Inteligencia de inventario) y
+
+no se crea ninguna orden de compra automáticamente.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Sugerencias de compra con promedio 0.0 y cantidad 1 para Red Bull 250ml y Yucas Tostadas
+                                                    150g (BUG-24-02_1.png)
+                                                                           SC-405 Calidad del Software
+                                                                                    Bug Report Template
+
+Bug Title:      BUG-24-03 · [CU-242-01, CU-242-02] No existe la alerta gerencial de
+
+                estancamiento ni la sugerencia de incluir el producto en promociones
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                horas
+
+                       Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 154.0.8037.97
+
+Build Version:
+
+                       Steps to Reproduce
+
+1. Iniciar sesión como Administrador (ADMIN-A) en el ambiente de pruebas.
+
+2. Ir a Reportes y Gerencia > Inteligencia de inventario (/InventoryIntelligence/Index) y revisar
+
+la sección "Productos sin rotación" con Ventana sin rotación = 60 (también con 30 y 365).
+
+3. Revisar el Dashboard (/Admin), el menú Administración y el módulo Promociones
+
+(/Promotions) en busca de una alerta gerencial de productos estancados o de sugerencias
+
+de promoción.
+
+4. Abrir Inventario > Nuevo producto (/Inventory/Create), sin guardar, y revisar los campos
+
+disponibles.
+
+                       Current Behavior
+
+La sección "Productos sin rotación" solo muestra una tabla (hoy vacía: "Sin productos
+
+estancados") y el indicador "Productos estancados: 0"; no existe ninguna alerta gerencial,
+
+notificación ni sugerencia de incluir productos en promociones.
+
+El menú solo ofrece "Alertas de flota" y "Alertas documentales"; "Promociones" no recibe
+
+sugerencias del análisis (0 promociones registradas).
+
+El producto no registra lotes ni fecha de vencimiento (formulario Inventario > Crear producto:
+
+solo Nombre, Categoría, Descripción, Precio, Stock inicial, Stock mínimo, Imagen, Activo y
+
+Destacado), datos que la HU necesita para la alerta.
+
+Los datos del ambiente no incluyen productos maduros con stock y sin ventas (con ventanas de
+
+30, 60 y 365 días no aparece ninguno) ni lotes por vencer, por lo que la alerta no pudo
+
+provocarse; se reporta por la ausencia de cualquier mecanismo de alerta gerencial en el
+
+sistema.
+
+Se asigna Medio (base Alto) porque el análisis puede consultarse manualmente en la pantalla.
+
+                       Expected Behavior
+
+Según CU-242 (escenario 1) / caso CU-242-01: cuando un producto con lote próximo a vencer
+
+no se agotará antes de su vencimiento, el sistema envía una alerta gerencial que sugiere
+
+incluirlo en el módulo de promociones; según CU-242-02 la alerta se retira cuando las ventas
+
+repuntan.
+
+Please take a look at the attached screenshot/video.
+                                                                                                                           SC-405 Calidad del Software
+                                                                                                                                     Bug Report Template
+
+Figura 1. Inteligencia de inventario con "Productos estancados: 0" y sin alertas gerenciales ni sugerencias
+                                                de promoción (BUG-24-03_1.png)
+
+ Figura 2. Formulario Crear producto sin campos de lote ni de fecha de vencimiento (BUG-24-03_2.png)
+                                                                           SC-405 Calidad del Software
+                                                                                    Bug Report Template
+
+Bug Title:      BUG-24-04 · [CU-243-01] La Tendencia estacional no tiene filtro por
+
+                categoría de producto
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                horas
+
+                             Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 154.0.8037.97
+
+Build Version:
+
+                             Steps to Reproduce
+
+1. Iniciar sesión como Administrador (ADMIN-A) en el ambiente de pruebas.
+
+2. Ir a Reportes y Gerencia > Inteligencia de inventario (/InventoryIntelligence/Index).
+
+3. Revisar los campos de "Parámetros del análisis" y la sección "Tendencia estacional".
+
+                             Current Behavior
+
+Los parámetros son solo Año inicial, Año final, Meses para promedio, Meses de cobertura y
+
+Ventana sin rotación; no existe ningún campo para seleccionar la categoría de producto.
+
+La tendencia estacional siempre se calcula con todas las categorías juntas (por ejemplo, Enero
+
+₡237,400.00 y 62 unidades).
+
+                             Expected Behavior
+
+Según CU-243 (escenario 1) / caso CU-243-01: se selecciona Año inicial, Año final y la categoría
+
+de producto, se presiona "Actualizar" y el sistema muestra el gráfico de picos históricos de la
+
+categoría elegida con su tabla de datos.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Sección Tendencia estacional 2024–2026 mostrada como gráfico de barras con su tabla de datos
+                                                          (BUG-24-04_1.png)
+                                                                                                                       SC-405 Calidad del Software
+                                                                                                                                 Bug Report Template
+
+Figura 2. Parámetros del análisis: Año inicial, Año final, Meses para promedio, Meses de cobertura y
+                    Ventana sin rotación; no hay selector de categoría (BUG-24-04_2.png)
+                                                                               SC-405 Calidad del Software
+                                                                                        Bug Report Template
+
+Bug Title:      BUG-24-05 · [CU-243-02] Los totales de la Tendencia estacional no coinciden
+
+                con el Reporte de ventas del mismo mes
+
+Bug Priority: Medio (P3) · Error de Reportes / Exportación · Tiempo de atención: 2 a 4
+
+                horas
+
+                       Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 154.0.8037.97
+
+Build Version:
+
+                       Steps to Reproduce
+
+1. Iniciar sesión como Administrador (ADMIN-A) en el ambiente de pruebas.
+
+2. Ir a Reportes y Gerencia > Inteligencia de inventario (/InventoryIntelligence/Index) y anotar
+
+en la tabla de Tendencia estacional 2024–2026 el total vendido y las unidades de Enero
+
+(₡237,400.00 y 62) y de Septiembre (₡660,950.00 y 186).
+
+3. Ir a Reportes y Gerencia > Reporte de ventas (/SalesReports), con Desde = 01/01/2026,
+
+Hasta = 02/10/2026, Agrupación = Mensual y Categoría de factura = Todas, y presionar
+
+"Consultar".
+
+4. Comparar las filas de January 2026 y September 2026 con las de Enero y Septiembre del
+
+gráfico.
+
+                       Current Behavior
+
+Enero: el gráfico muestra ₡237,400.00 y el reporte ₡268,262.00; ambos con 62 unidades. La
+
+diferencia es exactamente 13 % (237,400.00 × 1.13 = 268,262.00) y la misma proporción se
+
+repite de febrero a agosto (por ejemplo febrero: ₡196,850.00 contra ₡222,440.50), sin que
+
+ninguna pantalla indique que un total incluye impuesto y el otro no.
+
+Septiembre: el gráfico muestra ₡660,950.00 y 186 unidades; el reporte muestra ₡728,002.50 y
+
+182 unidades, por lo que difieren tanto el importe como las unidades.
+
+El Reporte de ventas y el Reporte de KPIs incluyen IVA (6 facturas de ₡3 400 × 1,13 = ₡23
+
+052); la Tendencia estacional parece usar montos sin IVA, lo que explicaría la diferencia de 13
+
+% de enero a agosto; septiembre difiere además en unidades (186 contra 182).
+
+Se asigna Medio (base de Error de Reportes) porque la diferencia sistemática de 13 % tiene una
+
+explicación probable, pero los datos de septiembre no cuadran ni en unidades.
+
+                       Expected Behavior
+
+Según CU-243 (escenario 2) / caso CU-243-02: el valor del gráfico de un mes coincide con el
+
+total del Reporte de ventas del mismo mes.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Tabla de Tendencia estacional con Enero ₡237,400.00 / 62 y Septiembre ₡660,950.00 / 186
+                                                       (BUG-24-05_1.png)
+                                                                                                                           SC-405 Calidad del Software
+                                                                                                                                     Bug Report Template
+
+Figura 2. Reporte de ventas mensual 2026 con January ₡268,262.00 / 62 y September ₡728,002.50 / 182
+                                                          (BUG-24-05_2.png)
+                                                                           SC-405 Calidad del Software
+                                                                                    Bug Report Template
+
+Bug Title:      BUG-24-06 · [CU-243-03] La Tendencia estacional acepta Año inicial mayor
+
+                que Año final y rangos de más de 10 años sin mensaje de validación
+
+Bug Priority: Medio (P3) · Error de Validación de datos · Tiempo de atención: 2 a 4 horas
+
+                      Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 154.0.8037.97
+
+Build Version:
+
+                      Steps to Reproduce
+
+1. Iniciar sesión como Administrador (ADMIN-A) en el ambiente de pruebas.
+
+2. Ir a Reportes y Gerencia > Inteligencia de inventario (/InventoryIntelligence/Index).
+
+3. En "Parámetros del análisis" digitar Año inicial = 2026 y Año final = 2024 y presionar
+
+"Actualizar".
+
+4. Repetir con Año inicial = 2010 y Año final = 2026 (16 años) y presionar "Actualizar".
+
+                      Current Behavior
+
+Con 2026 y 2024 el sistema no muestra ningún mensaje de validación; el encabezado pasa a
+
+"Tendencia estacional 2026–2024" y la sección queda vacía (solo los títulos MES, TOTAL
+
+VENDIDO y UNIDADES).
+
+Con 2010 y 2026 tampoco hay mensaje; aparece "Tendencia estacional 2010–2026" con la
+
+sección vacía, aunque el rango actual 2024–2026 sí tiene datos.
+
+Los campos solo validan en el navegador que el año esté entre 2000 y 2100; no se valida la
+
+relación entre ambos años ni el máximo de 10 años.
+
+                      Expected Behavior
+
+Según CU-243 (escenario 3) / caso CU-243-03: el sistema muestra un mensaje de validación
+
+cuando el Año inicial es mayor que el Año final o el rango supera 10 años, y no genera el
+
+gráfico.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Tendencia estacional 2026–2024 vacía y sin mensaje de validación (parámetros visibles en la
+                                                    URL) (BUG-24-06_1.png)
+                                                                                                                     SC-405 Calidad del Software
+                                                                                                                               Bug Report Template
+
+Figura 2. Tendencia estacional 2010–2026 vacía y sin mensaje de validación (BUG-24-06_2.png)
+                                                                           SC-405 Calidad del Software
+                                                                                    Bug Report Template
+
+Bug Title:      BUG-24-07 · [CU-243-04] La Tendencia estacional no tiene opción para
+
+                exportar a Excel (.xlsx)
+
+Bug Priority: Medio (P3) · Error de Reportes / Exportación · Tiempo de atención: 2 a 4
+
+                horas
+
+                       Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 154.0.8037.97
+
+Build Version:
+
+                       Steps to Reproduce
+
+1. Iniciar sesión como Administrador (ADMIN-A) en el ambiente de pruebas.
+
+2. Ir a Reportes y Gerencia > Inteligencia de inventario (/InventoryIntelligence/Index).
+
+3. Buscar un botón "Exportar" junto a los parámetros o en la sección "Tendencia estacional".
+
+                       Current Behavior
+
+La pantalla solo tiene el botón "Actualizar"; no existe ningún botón ni enlace para exportar o
+
+descargar las tendencias (ni .xlsx ni otro formato).
+
+                       Expected Behavior
+
+Según CU-243 (escenario 4) / caso CU-243-04: al presionar "Exportar" el sistema descarga el
+
+consolidado de tendencias en formato Excel (.xlsx).
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Inteligencia de inventario: los parámetros solo ofrecen el botón "Actualizar"; no hay botón Exportar
+                                                           (BUG-24-07_1.png)
+                                                                           SC-405 Calidad del Software
+                                                                                    Bug Report Template
+
+Bug Title:      BUG-25-01 · [CU-251-02] Secuenciar una ruta con clientes sin coordenadas
+
+                la procesa en lugar de pedir fijar el punto antes
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                horas
+
+                                Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 154.0.8037.97
+
+Build Version:
+
+                                Steps to Reproduce
+
+1. Iniciar sesión como Administrador (ADMIN-A) en el ambiente de pruebas.
+
+2. Registrar en Venta móvil (/SellerOrders), con envío a domicilio, un pedido de ₡3 400 (2 ×
+
+Red Bull 250ml) para cada uno de los clientes Bar y Restaurante El Mirador, Hotel Camino
+
+Verde, La Esquina del Sabor y Licorera Pura Vida.
+
+3. Ir a Logística y Flota > Rutas y Entregas (/RoutesAdmin) y presionar "Nueva ruta"; Zona =
+
+"QA-25 Ruta A", Chofer Demo, vehículo CRJ-002, seleccionar los 4 pedidos y presionar
+
+"Crear ruta".
+
+4. En el detalle de la ruta (Planificada) presionar "Secuenciar automáticamente" y confirmar
+
+con "Sí, secuenciar".
+
+                                Current Behavior
+
+El sistema ordena la ruta de todas formas: pone primero #37 (El Mirador) y #40 (Licorera Pura
+
+Vida), que tienen coordenadas, y deja al final #38 (Hotel Camino Verde) y #39 (La Esquina del
+
+Sabor), que no las tienen.
+
+Solo muestra la alerta "2 de 4 punto(s) no tienen coordenada y quedaron al final. Ubícalos en el
+
+mapa para que aparezcan en la app del chofer." después de haber reordenado la ruta; no se
+
+detiene a solicitar la ubicación antes de procesar.
+
+El nivel baja de Alto (base de Error Funcional) a Medio porque el aviso sí indica qué hacer y la
+
+ruta puede corregirse después.
+
+                                Expected Behavior
+
+Según CU-251 (escenario 2) / caso CU-251-02: el sistema alerta que hay puntos sin coordenada
+
+y solicita fijar el punto en el mapa manualmente antes de procesar la secuenciación.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Ruta QA-25 Ruta A después de secuenciar: alerta de 2 de 4 puntos sin coordenada y el orden ya
+                                                  modificado (BUG-25-01_1.png)
+                                                                             SC-405 Calidad del Software
+                                                                                      Bug Report Template
+
+Bug Title:      BUG-25-02 · [CU-251-01, CU-253-01] Al secuenciar una ruta no se muestra
+
+                el tiempo total estimado
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                horas
+
+                       Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 154.0.8037.97
+
+Build Version:
+
+                                      Steps to Reproduce
+
+1. Iniciar sesión como Administrador (ADMIN-A) en el ambiente de pruebas.
+
+2. Tener una ruta Planificada con 4 pedidos de clientes con coordenadas (por ejemplo "QA-25
+
+Ruta A": #37 Bar y Restaurante El Mirador, #38 Hotel Camino Verde, #39 La Esquina del
+
+Sabor y #40 Licorera Pura Vida).
+
+3. Ir a Logística y Flota > Rutas y Entregas (/RoutesAdmin), abrir el detalle de la ruta con "Ver"
+
+y presionar "Secuenciar automáticamente", confirmando con "Sí, secuenciar".
+
+4. Revisar el mensaje, el orden de las paradas y el resto de la pantalla.
+
+                                      Current Behavior
+
+El sistema muestra "Ruta secuenciada automáticamente (4 punto(s)). Puede reordenar
+
+manualmente antes de despachar." y ordena las paradas por cercanía (#39, #38, #37, #40).
+
+En ningún lugar de la pantalla (mensaje, tabla de pedidos, detalle de la ruta ni sección del mapa)
+
+aparece el tiempo total estimado de la ruta ni tiempos por parada.
+
+Al recalcular la ruta despachada (CU-253-01) con la parada #39 fallida ("Local cerrado"), el
+
+sistema muestra "Ruta recalculada. 3 punto(s) reordenados. El chofer verá la ruta actualizada.",
+
+pero tampoco se muestran tiempos estimados de llegada nuevos ni anteriores.
+
+Se asigna Medio (base Alto) porque el orden por cercanía sí funciona y existe el botón "Ver
+
+recorrido en Maps" como alternativa.
+
+                                      Expected Behavior
+
+Según CU-251 (escenario 1) / caso CU-251-01: el sistema ordena las paradas por cercanía
+
+(lógica geoespacial) y muestra el tiempo total estimado de la ruta.
+
+Según CU-253 (escenario 1) / caso CU-253-01: al recalcular el sistema ajusta la ruta restante,
+
+actualiza los tiempos estimados de llegada y muestra "Ruta recalculada…".
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Ruta secuenciada con las paradas ordenadas y sin ningún tiempo total estimado (BUG-25-
+                                                            02_1.png)
+                                                                                                                         SC-405 Calidad del Software
+                                                                                                                                   Bug Report Template
+
+Figura 2. Ruta despachada recalculada: mensaje "Ruta recalculada. 3 punto(s) reordenados." y ningún
+                                            tiempo estimado (BUG-25-02_2.png)
+                                                                              SC-405 Calidad del Software
+                                                                                       Bug Report Template
+
+Bug Title:      BUG-25-03 · [CU-253-05] El detalle de la ruta no tiene opción para exportar la
+
+                hoja de ruta a Excel (.xlsx)
+
+Bug Priority: Medio (P3) · Error de Reportes / Exportación · Tiempo de atención: 2 a 4
+
+                horas
+
+                       Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 154.0.8037.97
+
+Build Version:
+
+                       Steps to Reproduce
+
+1. Iniciar sesión como Administrador (ADMIN-A) en el ambiente de pruebas.
+
+2. Tener una ruta despachada y recalculada (por ejemplo "QA-25 Ruta A", RUT-
+
+20261002183314, con la parada #39 fallida).
+
+3. Ir a Logística y Flota > Rutas y Entregas (/RoutesAdmin) y abrir el detalle de la ruta con
+
+"Ver".
+
+4. Buscar un botón "Exportar" en el encabezado, el detalle de la ruta o la tabla de pedidos.
+
+                       Current Behavior
+
+El detalle de la ruta recalculada solo ofrece "Evidencias", "Volver", "Recalcular ruta", "Liquidar
+
+ruta", "Cancelar ruta" y "Ver recorrido en Maps"; no existe ningún botón ni enlace para exportar o
+
+descargar la hoja de ruta (ni .xlsx ni otro formato).
+
+                       Expected Behavior
+
+Según CU-253 (escenario 5) / caso CU-253-05: al presionar "Exportar" en el detalle de la ruta el
+
+sistema descarga el consolidado de la ruta en formato Excel (.xlsx).
+
+Please take a look at the attached screenshot/video.
+
+            Figura 1. Detalle de la ruta recalculada sin botón Exportar (BUG-25-03_1.png)
+                                                                    SC-405 Calidad del Software
+                                                                             Bug Report Template
+
+Bug Title:      BUG-25-04 · [CU-252-01] La app móvil del chofer no muestra el mapa
+
+                interactivo con la secuencia de visitas en la ruta
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                horas
+
+                           Hardware & Software Details
+
+Environment:
+
+OS & Browser: Android 17 (emulador Pixel 8) · App Distribuidora JJ 1.2.0 (compilación 4005)
+
+Build Version:
+
+                           Steps to Reproduce
+
+1. Abrir la app móvil (versión 1.2.0, compilación 4005) en el emulador Pixel_8 e iniciar sesión
+
+como Chofer (chofer@labodega.cr).
+
+2. Ir a Operación en ruta > Mis rutas y abrir la ruta «QA-25 Ruta A» (RUT-20261002183314),
+
+en estado Despachada.
+
+3. Revisar la pantalla de la ruta y desplazarla hasta el final.
+
+                           Current Behavior
+
+La pantalla muestra un resumen de avance (por ejemplo «3 paradas pendientes de 4») y una
+
+lista de tarjetas con las paradas numeradas 1, 2 y 3, con los botones Navegar, Llamar,
+
+Entregado y No entregado.
+
+No existe ningún mapa en la pantalla de la ruta ni un botón para abrirlo; la secuencia de visitas
+
+solo se ve como lista.
+
+                           Expected Behavior
+
+Según CU-252 / caso CU-252-01: al abrir la ruta del día se despliega el mapa interactivo con la
+
+secuencia numérica de visitas en el orden definido por logística.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Pantalla de la ruta «QA-25 Ruta A» en la app: lista de paradas, sin mapa (BUG-25-04_1.png)
+                                                                           SC-405 Calidad del Software
+                                                                                    Bug Report Template
+
+Bug Title:      BUG-26-01 · [CU-261-03] El Asistente no muestra el mensaje "Escribe una
+
+                pregunta." al enviar una pregunta vacía
+
+Bug Priority: Medio (P3) · Error de Validación de datos · Tiempo de atención: 2 a 4 horas
+
+                                 Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 154.0.8037.97
+
+Build Version:
+
+                                  Steps to Reproduce
+
+1. Iniciar sesión como Administrador (ADMIN-A) en el ambiente de pruebas.
+
+2. Ir a Asistente (/Assistant).
+
+3. Dejar vacío el campo "Escribe una consulta sobre el negocio o un módulo..." y presionar
+
+"Enviar".
+
+                                  Current Behavior
+
+No ocurre nada: no se muestra ningún mensaje ni en el campo ni en la conversación, y el
+
+registro de red del navegador no muestra ninguna solicitud nueva al servidor. La conversación
+
+queda igual.
+
+Para comparar, la pregunta de 501 caracteres sí produce el mensaje "No fue posible responder"
+
+y "La pregunta no puede superar 500 caracteres."
+
+Se asigna Medio (base de Error de Validación de datos) porque la persona no recibe ninguna
+
+indicación de por qué no se envía la pregunta.
+
+                                  Expected Behavior
+
+Según CU-261 (escenario 3) / caso CU-261-03: al enviar una pregunta vacía se muestra el
+
+mensaje "Escribe una pregunta.".
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Asistente después de presionar Enviar con el campo vacío: no aparece ningún mensaje de
+                                              validación (BUG-26-01_1.png)
+                                                                                  SC-405 Calidad del Software
+                                                                                           Bug Report Template
+
+Bug Title:      BUG-26-02 · [CU-263-01, CU-263-02] El Asistente responde "¿Cómo registro
+
+                una devolución?" y "¿Cómo creo una ruta?" con estadísticas en lugar del
+
+                paso a paso
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                horas
+
+                                 Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 154.0.8037.97
+
+Build Version:
+
+                                 Steps to Reproduce
+
+1. Iniciar sesión como Administrador (ADMIN-A) en el ambiente de pruebas.
+
+2. Ir a Asistente (/Assistant).
+
+3. Escribir "¿Cómo registro una devolución?" y presionar "Enviar".
+
+4. Escribir "¿Cómo creo una ruta?" y presionar "Enviar".
+
+5. Escribir "¿Cómo genero una factura?" y presionar "Enviar".
+
+                                        Current Behavior
+
+"¿Cómo registro una devolución?" se responde con la tarjeta "Cuarentena": "Hay 0
+
+devolución(es) en cuarentena esperando liberarse o descartarse."; no se explica cómo registrar
+
+una devolución ni se ofrece un enlace.
+
+"¿Cómo creo una ruta?" se responde con la tarjeta "Rutas": "Planificadas: 0 · Despachadas: 1.";
+
+no se indican la navegación ni los pasos para crear una ruta.
+
+"¿Cómo genero una factura?" responde "Operación → Facturación genera la factura de un
+
+pedido confirmado. El inventario se descontó en el checkout; no se vuelve a descontar al
+
+facturar.", una sola frase de navegación sin los pasos de la operación.
+
+                                 Expected Behavior
+
+Según CU-263 (escenarios 1 y 2) / casos CU-263-01 y CU-263-02: ante una pregunta de cómo
+
+usar un módulo, el asistente muestra el paso a paso o el enlace al documento correspondiente,
+
+con la navegación y los pasos correctos de cada módulo (devoluciones, rutas y facturas).
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Respuesta "Cuarentena: Hay 0 devolución(es)…" a "¿Cómo registro una devolución?" (BUG-26-
+                                                                02_1.png)
+                                                                                                                            SC-405 Calidad del Software
+                                                                                                                                      Bug Report Template
+
+Figura 2. Respuestas "Rutas: Planificadas: 0 · Despachadas: 1." y "Módulo de Facturación" a las preguntas
+                                             de rutas y facturas (BUG-26-02_2.png)
+                                                                                SC-405 Calidad del Software
+                                                                                         Bug Report Template
+
+Bug Title:      BUG-26-03 · [CU-263-03] El Asistente no tiene opción para exportar la
+
+                conversación a Excel (.xlsx)
+
+Bug Priority: Medio (P3) · Error de Reportes / Exportación · Tiempo de atención: 2 a 4
+
+                horas
+
+                       Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 154.0.8037.97
+
+Build Version:
+
+                       Steps to Reproduce
+
+1. Iniciar sesión como Administrador (ADMIN-A) en el ambiente de pruebas.
+
+2. Ir a Asistente (/Assistant) y enviar "Dame un resumen" y "¿Cómo está el inventario?" para
+
+tener varias respuestas en la conversación.
+
+3. Buscar un botón "Exportar" en la conversación o junto al campo de pregunta.
+
+                       Current Behavior
+
+La pantalla solo ofrece los botones de preguntas sugeridas y "Enviar"; no existe ningún botón ni
+
+enlace para exportar o descargar la conversación (ni .xlsx ni otro formato).
+
+                       Expected Behavior
+
+Según CU-263 (escenario 3) / caso CU-263-03: al presionar "Exportar" el sistema descarga el
+
+consolidado de la conversación en formato Excel (.xlsx).
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Conversación del Asistente con varias respuestas; no hay botón Exportar (solo preguntas
+                                       sugeridas y Enviar) (BUG-26-03_1.png)
+                                                                                  SC-405 Calidad del Software
+                                                                                           Bug Report Template
+
+Bug Title:       BUG-26-04 · [CU-261-06] El resumen del Asistente indica "2 entregas
+
+                 pendientes" cuando las rutas despachadas tienen 6 paradas pendientes
+
+Bug Priority: Medio (P3) · Error de Fórmulas · Tiempo de atención: 2 a 4 horas
+
+                 Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 154.0.8037.97
+
+Build Version:
+
+                 Steps to Reproduce
+
+1. Iniciar sesión como Gerente (gerente@labodega.cr) en el ambiente de pruebas; con ADMIN-
+
+A tener despachada la ruta "QA-25 Ruta A" (4 paradas pendientes) además de la ruta
+
+sembrada RUT-20260916031806 (2 pendientes).
+
+2. Ir a Rutas y Entregas (/RoutesAdmin) y anotar el progreso de las rutas despachadas (0 / 0 /
+
+4 y 1 / 0 / 2).
+
+3. Ir a Asistente (/Assistant), escribir "Dame un resumen" y presionar "Enviar".
+
+4. Comparar la línea "Logística" con el listado de rutas.
+
+                 Current Behavior
+
+El resumen muestra "Pedidos: 8 pendientes · 6 en ruta · 0 retenidos" y "Logística: 2 rutas
+
+despachadas · 2 entregas pendientes · 0 alertas de flota".
+
+El listado de rutas muestra 2 rutas despachadas con 4 y 2 paradas pendientes, es decir 6
+
+entregas pendientes, que además coincide con los 6 pedidos "en ruta" del mismo resumen.
+
+                 Expected Behavior
+
+Según CU-261 (escenario 6) / caso CU-261-06: el asistente muestra un resumen con
+
+indicadores clave (ventas, pedidos, inventario) coherentes con los datos del sistema.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Resumen del negocio con "6 en ruta" y "2 entregas pendientes" (BUG-26-04_1.png)
+                                                                                                                       SC-405 Calidad del Software
+                                                                                                                                 Bug Report Template
+
+Figura 2. Listado de rutas con dos rutas despachadas: 4 y 2 paradas pendientes (BUG-26-04_2.png)
+                                                                                  SC-405 Calidad del Software
+                                                                                           Bug Report Template
+
+Bug Title:      BUG-26-05 · [CU-262-01, CU-262-02] Venta móvil no sugiere ningún artículo
+
+                complementario al agregar un producto al pedido
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                horas
+
+                       Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 154.0.8037.97
+
+Build Version:
+
+                                  Steps to Reproduce
+
+1. Iniciar sesión como Vendedor (vendedor@labodega.cr) en el ambiente de pruebas.
+
+2. Ir a Venta móvil (/SellerOrders) y seleccionar el cliente "Cliente Demo Minorista".
+
+3. En "Productos disponibles" digitar Cantidad = 1 en "Pilsen 6 Pack" (cerveza).
+
+4. Esperar unos segundos y revisar la pantalla (ventanas emergentes, avisos y la barra inferior
+
+de totales).
+
+                                  Current Behavior
+
+No aparece ninguna ventana emergente, aviso ni tarjeta de sugerencia; solo se actualiza la
+
+barra inferior con "Total seleccionado: 1 producto(s) / 1 unidad(es)" y el total estimado.
+
+Al revisar la pantalla no existe ningún elemento de venta cruzada (sugerencias de productos
+
+complementarios) en Venta móvil.
+
+Se asigna Medio (base Alto) porque la sugerencia es un apoyo opcional y no impide registrar el
+
+pedido.
+
+                                  Expected Behavior
+
+Según CU-262 (escenario 1) / caso CU-262-01: al agregar el producto principal (cerveza) el
+
+asistente lanza una ventana emergente discreta que sugiere el artículo complementario; según
+
+CU-262-02, al descartarla no vuelve a insistir en el mismo pedido.
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Venta móvil con "Pilsen 6 Pack" agregado y sin ninguna sugerencia de venta cruzada (BUG-26-
+                                                                05_1.png)
+                                                                               SC-405 Calidad del Software
+                                                                                        Bug Report Template
+
+Bug Title:      BUG-26-06 · [CU-261-04] El Asistente no entiende "¿Cuánto se vendió este
+
+                mes?" y no muestra "Información restringida" al Chofer
+
+Bug Priority: Medio (P3) · Error Funcional / Lógica de negocio · Tiempo de atención: 2 a 4
+
+                horas
+
+                            Hardware & Software Details
+
+Environment:
+
+OS & Browser: Windows 11 Pro 64 bits (10.0.26200) · Google Chrome 154.0.8037.97
+
+Build Version:
+
+                            Steps to Reproduce
+
+1. Iniciar sesión como Chofer (chofer@labodega.cr) en el ambiente de pruebas.
+
+2. Ir a Asistente (/Assistant), escribir "¿Cuánto se vendió este mes?" y presionar "Enviar".
+
+3. Escribir "¿Cuál es el saldo de créditos?" y presionar "Enviar".
+
+                            Current Behavior
+
+"¿Cuánto se vendió este mes?" se responde con "No entendí la solicitud. No pude interpretar tu
+
+pregunta. Prueba con “dame un resumen” o “¿qué puedo preguntar?”..."; no aparece
+
+"Información restringida".
+
+"¿Cuál es el saldo de créditos?" sí responde "Información restringida. La información de
+
+Finanzas no está disponible para tu rol. Puedo ayudarte con lo que sí tienes permitido."
+
+No se entregó información restringida en ninguna de las dos respuestas, pero la frase de ventas
+
+del caso no se interpreta, por lo que el Chofer no recibe el aviso de que esa información no está
+
+disponible para su rol.
+
+                            Expected Behavior
+
+Según CU-261 (escenario 4) / caso CU-261-04: el asistente responde "Información restringida",
+
+indicando que esa información no está disponible para su rol, tanto a "¿Cuánto se vendió este
+
+mes?" como a "¿Cuál es el saldo de créditos?".
+
+Please take a look at the attached screenshot/video.
+
+Figura 1. Asistente con el usuario Chofer: "No entendí la solicitud" para ventas del mes e "Información
+                              restringida" para el saldo de créditos (BUG-26-06_1.png)
+
