@@ -1,0 +1,60 @@
+# Integración de la reestructuración
+
+Un compañero reestructuró el sistema: nuevo diseño visual, módulos migrados a otra interfaz y cambios funcionales. Esa versión **no tiene pruebas QA documentadas**, así que no se adopta tal cual. Estrategia acordada:
+
+1. **Primero** se corrige el sistema base (`main`), que sí está probado (502 casos, 91 bugs).
+2. **Después** se integran de forma selectiva las mejoras de la reestructuración sobre la base corregida, módulo por módulo, re-ejecutando los casos QA de cada módulo como prueba de regresión.
+
+Así se aprovecha lo mejor de las dos versiones sin heredar errores que nadie ha documentado, y no se gasta uso de IA depurando una versión sin mapa de fallos.
+
+## Lo que ya se sabe (GitHub, 29/10/2026)
+
+En GitHub hay una versión publicada de la reestructuración. Puede que el compañero tenga trabajo más reciente solo en su carpeta local.
+
+| Rama | Autor | Fecha | Contenido |
+|---|---|---|---|
+| `codex/saneamiento-etapa1` (PR #127, abierto y en conflicto) | d0j0fre | 19–21/08 | Stage 1: seguridad, capacidades/permisos efectivos, revocación de sesiones, checkout y stock cero, órdenes de compra, kilometraje, datos offline. 137 archivos. |
+| `codex/stage2-design-system` (incluye todo Stage 1) | d0j0fre | 21–31/08 | Stage 2: identidad visual Distribuidora JJ, sistema de diseño y layouts, migración de storefront, portal, admin, inventario, compras, finanzas, crédito, presupuestos, RRHH, planilla y entregas del chofer. 243 archivos (+7 543 / −9 456 líneas), 95 nuevos. Incluye pruebas de contrato y un smoke E2E (Playwright). |
+
+- Parte de `main` del 12/08 (`6e36ae1`). Desde ese punto `main` solo agregó la app móvil y la API JWT (`595b7b2`). La reestructuración no toca `Proyecto_Movil`.
+- **83 archivos fueron modificados en ambos lados**: `Program.cs`, `AdminDbService.cs`, `_Layout.cshtml`, `appsettings.json` y ~70 vistas (Account, Budgets, Cart, ClientPortal, Clients, Employees, Expenses, Inventory, OrdersAdmin, Payroll, etc.). Ahí habrá conflictos de merge.
+- Varios bugs del backlog parecen tocados por Stage 1. Hay que confirmarlo bug por bug antes de escribir código nuevo:
+
+| Bug | Commit de Stage 1 relacionado |
+|---|---|
+| BUG-04-03, BUG-11-06 (acceso tras inactivar rol o empleado) | `fix: revocar sesiones tras cambios de seguridad` |
+| BUG-09-02, BUG-16-07, BUG-22-02 (Gerente/Auditor sin acceso) | `fix: reemplazar autorizacion por capacidades efectivas`, `fix: separar permisos de lectura y mutacion` |
+| BUG-12-03 (checkout acepta más que el stock) | `fix: conservar intencion de login y bloquear stock cero`, `fix: sanear checkout...` |
+| BUG-07-01, BUG-07-02 (offline del vendedor) | `fix: aislar y expirar datos offline por usuario` (solo la parte web) |
+
+## Reglas durante la Etapa 1 (correcciones sobre `main`)
+
+- **Si la reestructuración ya corrige un bug**, se porta ese fragmento (cherry-pick o adaptación) en vez de escribir otra solución. Se anota en `BACKLOG.md` → Nota: `portado de stage2 <commit>`.
+- **Corregir en la capa de lógica** (SP, servicio, controlador, validación del modelo) siempre que se pueda. Las vistas se van a reemplazar por las del nuevo diseño, así que en ellas solo se hace el cambio mínimo.
+- Cada PR lista en la sección **"Re-aplicar en el nuevo diseño"** las vistas que tocó y qué debe conservarse (campo nuevo, mensaje, botón de exportar…). Esa lista es la guía para no perder correcciones al integrar.
+- Nada de cambios cosméticos ni de reformatear archivos durante la Etapa 1.
+
+## Etapa 2 — Integración selectiva (después de cerrar y verificar la Etapa 1)
+
+Se hace en una rama `integracion/reestructuracion` desde `main` ya corregido y por capas, de menor a mayor riesgo. Cada capa se mergea solo si pasa build, tests y los casos QA de los módulos tocados.
+
+| Capa | Qué entra | Riesgo | Verificación |
+|---|---|---|---|
+| 1. Fundamentos visuales | Identidad, tokens CSS, layouts, componentes, `_Layout` | Bajo | Recorrido visual por rol y responsive |
+| 2. Seguridad Stage 1 restante | Lo que no se haya portado en la Etapa 1 | Medio | `dotnet test` + matriz de autorización + casos de módulos 1, 4, 9 y 22 |
+| 3. Vistas por módulo | Storefront → portal → admin/inventario → compras → finanzas/crédito → RRHH/planilla → entregas | Medio | Casos QA del módulo + lista "Re-aplicar en el nuevo diseño" de cada PR de la Etapa 1 |
+| 4. Funcionalidades nuevas | Lo que no existía en `main` | Alto | Casos nuevos escritos para esa funcionalidad |
+
+Para cada cambio de la reestructuración se decide en `MATRIZ_INTEGRACION.md` (se crea al recibir el documento del compañero): **Adoptar** · **Adoptar con ajustes** · **Mantener `main`** · **Descartar**. Criterio: gana la versión que cumple la HU y el caso QA. Si ambas cumplen, gana la del nuevo diseño.
+
+Se descarta o pospone lo que cambie contratos de BD o API que la app móvil usa, renombre rutas que los casos QA referencian sin dar redirección, o no se pueda verificar con un caso.
+
+## Etapa 3 — Re-prueba completa
+
+Re-ejecución de los 502 casos de `G8_SC803_J_CasosQA.xlsx` sobre la versión integrada. Los bugs nuevos se registran con el mismo formato (`BUG-MM-NN`) en un backlog de la ronda 2.
+
+## Insumos pendientes del compañero
+
+1. El documento con el registro de lo que hizo su IA (qué cambió, por qué y qué problemas encontró).
+2. Su versión más reciente **en una rama de GitHub** (`reestructuracion/<nombre>`), creada a partir del commit en que empezó. Sin `bin/`, `obj/`, `.vs/`, secretos ni `appsettings` con cadenas reales. Si trabajó fuera de Git, que indique de qué versión partió y se arma la rama desde ahí.
+3. La lista de errores conocidos que ya detectó en su versión.

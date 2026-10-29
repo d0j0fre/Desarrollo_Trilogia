@@ -10,7 +10,18 @@ Fuente oficial: `Entregas/G8_SC803_J_BugReport.pdf` (91 bugs en 25 módulos), te
 | Medio (P3) | 65 |
 | **Total** | **91** |
 
-Meta: todas las correcciones integradas en `main` en **2 semanas** (al 12/11/2026). Después, ronda completa de re-pruebas.
+Meta: todas las correcciones integradas en `main` en **2 semanas**. Después se hace la ronda completa de re-pruebas.
+
+### Etapas del proyecto
+
+| Etapa | Qué | Detalle |
+|---|---|---|
+| **0. Preparación** | Acordar el plan con el equipo, recibir el documento y la versión de la reestructuración, armar la matriz de integración | Las sesiones de corrección **no arrancan** hasta cerrar esta etapa |
+| **1. Correcciones** | Los 91 bugs sobre `main` (este documento) | ~2 semanas |
+| **2. Integración** | Mejoras visuales y funcionales de la reestructuración, por capas y verificadas con los casos QA | [`REESTRUCTURACION.md`](REESTRUCTURACION.md) |
+| **3. Re-prueba** | Los 502 casos QA sobre la versión integrada | Backlog de la ronda 2 |
+
+**Regla que une las etapas 1 y 2:** si la reestructuración ya corrige un bug, se porta esa corrección. Se corrige en la capa de lógica y en las vistas solo lo mínimo. Cada PR lista las vistas que hay que **re-aplicar en el nuevo diseño**. El detalle está en `REESTRUCTURACION.md`.
 
 ---
 
@@ -49,9 +60,9 @@ Compañeros (David, Danny, Gerald): clonar con `git clone https://github.com/d0j
 1. Una rama por lote desde `main` actualizado: `fix/<lote>-<tema>` (ej. `fix/e1-errores-criticos`, `fix/david-reportes`).
 2. Commits pequeños, uno por bug o grupo de bugs con la misma causa: `fix(BUG-05-01): guardar producto responde 405`.
 3. Antes del PR: `dotnet build Trilogia-Cursos/Proyecto_Final.slnx` sin errores y `dotnet test` en verde. Móvil: `flutter analyze` sin errores.
-4. PR hacia `main` con la lista de bugs cerrados, cómo se verificó y los scripts SQL nuevos. Actualizar las filas del lote en `BACKLOG.md` en el mismo PR.
+4. PR hacia `main` con la lista de bugs cerrados, cómo se verificó, los scripts SQL nuevos y la sección **"Re-aplicar en el nuevo diseño"** (vistas tocadas y qué conservar). Actualizar las filas del lote en `BACKLOG.md` en el mismo PR.
 5. Merge de uno en uno (Esteban revisa). Si `main` avanzó, actualizar la rama antes de mergear.
-6. No mezclar el PR #127 ni la rama `codex/stage2-design-system`: quedan solo como **referencia**. Si un bug ya está resuelto ahí, se porta solo ese fragmento.
+6. No mergear el PR #127 ni la rama `codex/stage2-design-system` (la reestructuración) durante la Etapa 1. Si un bug ya está resuelto ahí, se porta solo ese fragmento y se anota en el backlog. La integración completa es la Etapa 2.
 
 Archivos de alto riesgo de conflicto (tocar solo lo necesario, sin reformatear): `Services/AdminDbService.cs`, `Program.cs`, `Views/Shared/_Layout*.cshtml`, menús por rol, `database/00_todo_en_uno.sql`.
 
@@ -82,7 +93,7 @@ BUG-09-05 aparece dos veces en el PDF (P1 y P2); se trata como un solo bug P1.
 | N | Danny | Activos, comodatos, flota, promociones y combos | 10 | 1–3 |
 | G | Gerald | Cuenta, perfil, chat y búsqueda de inventario | 9 | 1–3 |
 
-Fases: **1** = días 1–4 · **2** = días 4–8 · **3** = días 8–11 · **4** = días 11–14 (integración, smoke test en Azure, actualización de documentación por la sesión "Documentacion").
+Fases de la Etapa 1 (se cuentan desde que el equipo aprueba el plan): **1** = días 1–4 · **2** = días 4–8 · **3** = días 8–11 · **4** = días 11–14 (cierre, smoke test en Azure y documentación con la sesión "Documentacion").
 
 Máximo 3 sesiones de IA en paralelo para cuidar el uso semanal y evitar conflictos de merge. Al cerrar un lote se lanza el siguiente.
 
