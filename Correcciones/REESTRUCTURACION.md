@@ -20,7 +20,7 @@ Así se aprovecha lo mejor de las dos versiones sin heredar errores que nadie ha
 
 - Parte de `main` del 12/08 (`6e36ae1`). Desde ese punto `main` solo agregó la app móvil y la API JWT (`595b7b2`). La reestructuración no toca `Proyecto_Movil`.
 - **83 archivos fueron modificados en ambos lados**: `Program.cs`, `AdminDbService.cs`, `_Layout.cshtml`, `appsettings.json` y ~70 vistas (Account, Budgets, Cart, ClientPortal, Clients, Employees, Expenses, Inventory, OrdersAdmin, Payroll, etc.). Ahí habrá conflictos de merge.
-- Varios bugs del backlog parecen tocados por Stage 1. Hay que confirmarlo bug por bug antes de escribir código nuevo:
+- Varios bugs del backlog parecen tocados por Stage 1 (dato de referencia para la integración, **no se usa durante las correcciones**):
 
 | Bug | Commit de Stage 1 relacionado |
 |---|---|
@@ -29,14 +29,11 @@ Así se aprovecha lo mejor de las dos versiones sin heredar errores que nadie ha
 | BUG-12-03 (checkout acepta más que el stock) | `fix: conservar intencion de login y bloquear stock cero`, `fix: sanear checkout...` |
 | BUG-07-01, BUG-07-02 (offline del vendedor) | `fix: aislar y expirar datos offline por usuario` (solo la parte web) |
 
-## Reglas durante la Etapa 1 (correcciones sobre `main`)
+## Relación con las correcciones
 
-- **Antes de corregir cada bug, se revisa `restructuracion-2.0`.** Si ya lo corrige, se adapta ese fragmento en vez de escribir otra solución. Se anota en `BACKLOG.md` → Nota: `adaptado de restructuracion-2.0 <commit>`.
-- **Corregir en la capa de lógica** (SP, servicio, controlador, validación del modelo) siempre que se pueda. Las vistas se van a reemplazar por las del nuevo diseño, así que en ellas solo se hace el cambio mínimo.
-- Cada PR lista en la sección **"Re-aplicar en el nuevo diseño"** las vistas que tocó y qué debe conservarse (campo nuevo, mensaje, botón de exportar…). Esa lista es la guía para no perder correcciones al integrar.
-- Nada de cambios cosméticos ni de reformatear archivos durante la Etapa 1.
+La reestructuración va **completamente por aparte**. Durante las correcciones no se consulta ni se copia nada de `restructuracion-2.0`: se corrige `main` según el reporte de errores (ver `PLAN_CORRECCIONES.md`). Al integrar, el historial de commits de cada corrección (`fix(BUG-xx-yy): ...`) sirve para saber qué conservar.
 
-## Etapa 3 del plan — Integración selectiva (después de corregir y re-probar `main`)
+## Integración selectiva (después de corregir y re-probar `main`)
 
 Cuánto se integra depende del tiempo que quede antes de la presentación (ver `MATRIZ_INTEGRACION.md` §6). Lo mínimo es la capa 1.
 
@@ -45,15 +42,15 @@ Se hace en una rama `integracion/reestructuracion` desde `main` ya corregido y p
 | Capa | Qué entra | Riesgo | Verificación |
 |---|---|---|---|
 | 1. Fundamentos visuales | Identidad, tokens CSS, layouts, componentes, `_Layout` | Bajo | Recorrido visual por rol y responsive |
-| 2. Seguridad Stage 1 restante | Lo que no se haya portado en la Etapa 1 | Medio | `dotnet test` + matriz de autorización + casos de módulos 1, 4, 9 y 22 |
-| 3. Vistas por módulo | Storefront → portal → admin/inventario → compras → finanzas/crédito → RRHH/planilla → entregas | Medio | Casos QA del módulo + lista "Re-aplicar en el nuevo diseño" de cada PR de la Etapa 1 |
+| 2. Seguridad Stage 1 | Revocación de sesiones, capacidades y permisos (comparar con lo ya corregido en `main`) | Medio | `dotnet test` + matriz de autorización + casos de módulos 1, 4, 9 y 22 |
+| 3. Vistas por módulo | Storefront → portal → admin/inventario → compras → finanzas/crédito → RRHH/planilla → entregas | Medio | Casos QA del módulo + conservar las correcciones (`fix(BUG-xx-yy)`) que tocaron esas vistas |
 | 4. Funcionalidades nuevas | Lo que no existía en `main` | Alto | Casos nuevos escritos para esa funcionalidad |
 
 Para cada cambio de la reestructuración se decide en `MATRIZ_INTEGRACION.md`: **Adoptar** · **Adoptar con ajustes** · **Mantener `main`** · **Descartar**. Criterio: gana la versión que cumple la HU y el caso QA. Si ambas cumplen, gana la del nuevo diseño.
 
 Se descarta o pospone lo que cambie contratos de BD o API que la app móvil usa, renombre rutas que los casos QA referencian sin dar redirección, o no se pueda verificar con un caso.
 
-## Etapa 4 del plan — Regresión final
+## Regresión final de la integración
 
 Se re-ejecutan los casos de `G8_SC803_J_CasosQA.xlsx` de los módulos tocados por la integración. Si una capa no pasa, se revierte y `main` corregido sigue siendo la entrega. Los bugs nuevos se registran con el mismo formato (`BUG-MM-NN`) en un backlog de la ronda 2.
 
