@@ -27,7 +27,7 @@ Cada lote actualiza **solo sus filas** en el mismo PR de la corrección.
 | BUG-03-01 | P2 | E5 | Esteban | [CU-031-05, CU-032-03, CU-074-02, CU-121-03, CU-114-01] El sistema no envía correos: ni la confirmación de consultas, ni el comprobante de pedidos, ni la recuperación de contraseña | Pendiente | | |
 | BUG-04-01 | P2 | E2 | Esteban | [CU-041-06] El sistema permite inactivar un rol que tiene usuarios asignados | Pendiente | | |
 | BUG-04-02 | P3 | E2 | Esteban | [CU-042-05] El rol Administrador no tiene asignados todos los permisos: muestra 98 de 99 | Pendiente | | |
-| BUG-04-03 | P2 | E2 | Esteban | [CU-041-08] Un usuario de un rol inactivo conserva el acceso a la Planilla | Pendiente | | Revisar fix en stage2 antes de codificar |
+| BUG-04-03 | P2 | E2 | Esteban | [CU-041-08] Un usuario de un rol inactivo conserva el acceso a la Planilla | Pendiente | | Probable fix en restructuracion-2.0 |
 | BUG-05-01 | P1 | E1 | Esteban | [CU-053-01, CU-053-02, CU-053-04, CU-055-01, CU-055-04] Al guardar un producto (nuevo o editado) con datos válidos el sistema responde HTTP 405 y no guarda | Pendiente | | |
 | BUG-05-02 | P3 | E8 | Esteban | [CU-052-04, CU-053-05, CU-054-05, CU-055-05] Los productos no tienen fecha de vencimiento ni advertencia de productos próximos a vencer | Pendiente | | |
 | BUG-05-03 | P3 | G | Gerald | [CU-054-02] El buscador de inventario no encuentra productos por código SKU | Pendiente | | |
@@ -36,11 +36,11 @@ Cada lote actualiza **solo sus filas** en el mismo PR de la corrección.
 | BUG-06-02 | P2 | E6 | Esteban | [CU-062-01, CU-062-02] El crédito del cliente no se usa en los pedidos: no existe pedido a crédito ni validación de pagos vencidos | Pendiente | | |
 | BUG-06-03 | P3 | E6 | Esteban | [CU-061-07] El detalle del cliente no muestra sus facturas ni su saldo | Pendiente | | |
 | BUG-06-04 | P3 | E4 | Esteban | [CU-063-01] Un cliente inactivo sigue apareciendo con sus pedidos pendientes al crear rutas | Pendiente | | |
-| BUG-07-01 | P2 | E3 | Esteban | [CU-071-06] La app móvil del vendedor no permite crear un pedido sin conexión: la lista de clientes no carga | Pendiente | | Revisar fix en stage2 antes de codificar |
-| BUG-07-02 | P1 | E3 | Esteban | [CU-072-02, CU-072-04, CU-073-06] Los pedidos guardados sin conexión no se sincronizan: «Sincronizar ahora» queda en Error | Pendiente | | Revisar fix en stage2 antes de codificar |
+| BUG-07-01 | P2 | E3 | Esteban | [CU-071-06] La app móvil del vendedor no permite crear un pedido sin conexión: la lista de clientes no carga | Pendiente | | Probable fix en restructuracion-2.0 |
+| BUG-07-02 | P1 | E3 | Esteban | [CU-072-02, CU-072-04, CU-073-06] Los pedidos guardados sin conexión no se sincronizan: «Sincronizar ahora» queda en Error | Pendiente | | Probable fix en restructuracion-2.0 |
 | BUG-08-01 | P3 | E3 | Esteban | [CU-081-04] Al asignar una ruta al chofer no se genera ninguna notificación; la web no tiene campana ni bandeja de notificaciones | Pendiente | | |
 | BUG-09-01 | P3 | E5 | Esteban | [CU-092-02] El comprobante no se envía por mensajería digital: la factura solo ofrece correo | Pendiente | | |
-| BUG-09-02 | P2 | E2 | Esteban | [CU-094-01, CU-094-04] El Gerente no tiene la opción Ingresos y Egresos en el menú y los demás accesos de Finanzas devuelven Acceso denegado | Pendiente | | Revisar fix en stage2 antes de codificar |
+| BUG-09-02 | P2 | E2 | Esteban | [CU-094-01, CU-094-04] El Gerente no tiene la opción Ingresos y Egresos en el menú y los demás accesos de Finanzas devuelven Acceso denegado | Pendiente | | Probable fix en restructuracion-2.0 |
 | BUG-09-03 | P1 | E1 | Esteban | [CU-091-01] El detalle de cualquier pedido en Administración devuelve "No podemos completar esta solicitud" y no permite generar facturas | Pendiente | | |
 | BUG-09-04 | P1 | E1 | Esteban | [CU-094-01, CU-094-02, CU-094-03, CU-094-04] La pantalla Ingresos y Egresos (/FinancialReportAdmin) devuelve "No podemos completar esta solicitud" con Administrador y Gerente | Pendiente | | |
 | BUG-09-05 | P1 | E1 | Esteban | [CU-092-01] Registrar un pedido en Venta móvil devuelve "No podemos completar esta solicitud" e impide generar el comprobante de facturación  (en el PDF aparece duplicado también como P2) | Pendiente | | |
@@ -57,11 +57,11 @@ Cada lote actualiza **solo sus filas** en el mismo PR de la corrección.
 | BUG-11-03 | P3 | E7 | Esteban | [CU-113-02] La planilla no calcula la comisión del vendedor: las comisiones se digitan a mano | Pendiente | | |
 | BUG-11-04 | P2 | E7 | Esteban | [CU-113-06] Aprobar, pagar, revertir y notificar planillas no se registra en la auditoría | Pendiente | | |
 | BUG-11-05 | P3 | E5 | Esteban | [CU-114-01] La boleta de pago se entrega como página HTML y no como PDF con el desglose | Pendiente | | |
-| BUG-11-06 | P2 | E2 | Esteban | [CU-111-05] Un empleado inactivado conserva el acceso mientras su sesión sigue abierta | Pendiente | | Revisar fix en stage2 antes de codificar |
+| BUG-11-06 | P2 | E2 | Esteban | [CU-111-05] Un empleado inactivado conserva el acceso mientras su sesión sigue abierta | Pendiente | | Probable fix en restructuracion-2.0 |
 | BUG-11-07 | P3 | E7 | Esteban | [CU-111-04] El ajuste salarial no permite indicar una fecha de vigencia | Pendiente | | |
 | BUG-12-01 | P3 | E6 | Esteban | [CU-123-02, CU-124-01, CU-124-04] El portal del cliente no tiene lista de facturas ni muestra facturas y pagos en el estado de cuenta | Pendiente | | |
 | BUG-12-02 | P3 | E5 | Esteban | [CU-123-03, CU-124-02, CU-124-03] El estado de cuenta y las facturas no se pueden descargar: el botón solo imprime la pantalla | Pendiente | | |
-| BUG-12-03 | P2 | E6 | Esteban | [CU-122-07] El checkout acepta un pedido con más unidades que el stock disponible y solo descuenta el stock que existe | Pendiente | | Revisar fix en stage2 antes de codificar |
+| BUG-12-03 | P2 | E6 | Esteban | [CU-122-07] El checkout acepta un pedido con más unidades que el stock disponible y solo descuenta el stock que existe | Pendiente | | Probable fix en restructuracion-2.0 |
 | BUG-13-01 | P3 | D | David | [CU-133-03] No existe exportación del inventario ni un reporte de inventario en Reportes | Pendiente | | |
 | BUG-13-02 | P3 | D | David | [CU-131-03] Los indicadores del tablero gerencial no se pueden seleccionar para ver gráficos detallados | Pendiente | | |
 | BUG-13-03 | P3 | D | David | [CU-131-04] El tablero gerencial intercambia en silencio un rango con la fecha inicial mayor a la final, sin avisar | Pendiente | | |
@@ -76,7 +76,7 @@ Cada lote actualiza **solo sus filas** en el mismo PR de la corrección.
 | BUG-16-04 | P3 | N | Danny | [CU-164-02] Rentabilidad de equipos no aplica la regla de 30 días ni genera una alerta de baja rentabilidad | Pendiente | | |
 | BUG-16-05 | P3 | N | Danny | [CU-163-03] El historial de comodatos del activo no muestra la condición de entrega ni de devolución | Pendiente | | |
 | BUG-16-06 | P3 | N | Danny | [CU-164-01] El reporte de equipos prestados no muestra la ubicación ni la fecha de entrega del equipo | Pendiente | | |
-| BUG-16-07 | P2 | E2 | Esteban | [CU-164-01] El rol Auditor recibe «Acceso denegado» en el reporte de equipos prestados que la HU le asigna | Pendiente | | Revisar fix en stage2 antes de codificar |
+| BUG-16-07 | P2 | E2 | Esteban | [CU-164-01] El rol Auditor recibe «Acceso denegado» en el reporte de equipos prestados que la HU le asigna | Pendiente | | Probable fix en restructuracion-2.0 |
 | BUG-17-01 | P2 | N | Danny | [CU-171-03] El sistema permite crear una segunda promoción del mismo producto con vigencia traslapada | Pendiente | | |
 | BUG-17-02 | P3 | N | Danny | [CU-171-05] Las promociones no tienen límite de unidades ni se inactivan al alcanzarlo | Pendiente | | |
 | BUG-18-01 | P3 | N | Danny | [CU-181-03] Al crear un combo sin productos o con un producto repetido no se muestra ningún mensaje de validación | Pendiente | | |
@@ -85,7 +85,7 @@ Cada lote actualiza **solo sus filas** en el mismo PR de la corrección.
 | BUG-21-02 | P3 | D | David | [CU-213-04] El Reporte de KPIs no tiene opción para exportar a Excel (.xlsx) | Pendiente | | |
 | BUG-21-03 | P3 | D | David | [CU-213-01] El cumplimiento global del Reporte de KPIs suma ventas de un vendedor sin meta | Pendiente | | |
 | BUG-22-01 | P1 | E1 | Esteban | [CU-221-01, CU-221-02, CU-221-04, CU-221-05, CU-221-06, CU-222-01, CU-222-03, CU-223-01] La pantalla de detalle de cualquier presupuesto devuelve HTTP 503 "No podemos cargar este presupuesto" | Pendiente | | |
-| BUG-22-02 | P2 | E2 | Esteban | [CU-222-01, CU-223-01] El Gerente ve el menú Finanzas pero Presupuestos, Gastos y Presupuesto vs. real responden 403 Acceso denegado | Pendiente | | Revisar fix en stage2 antes de codificar |
+| BUG-22-02 | P2 | E2 | Esteban | [CU-222-01, CU-223-01] El Gerente ve el menú Finanzas pero Presupuestos, Gastos y Presupuesto vs. real responden 403 Acceso denegado | Pendiente | | Probable fix en restructuracion-2.0 |
 | BUG-22-03 | P3 | D | David | [CU-222-02] Un gasto sin presupuesto disponible se registra con "Nivel: Normal (0.00%)" y sin alerta de Presupuesto Excedido | Pendiente | | |
 | BUG-22-04 | P3 | D | David | [CU-223-03] El comparativo Presupuesto vs. real exporta un CSV solo con el detalle de gastos, no un Excel (.xlsx) con los datos de pantalla | Pendiente | | |
 | BUG-23-01 | P3 | G | Gerald | [CU-231-01] Los mensajes directos del chat no muestran doble check cuando el destinatario los recibe | Pendiente | | |

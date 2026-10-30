@@ -31,12 +31,14 @@ Así se aprovecha lo mejor de las dos versiones sin heredar errores que nadie ha
 
 ## Reglas durante la Etapa 1 (correcciones sobre `main`)
 
-- **Si la reestructuración ya corrige un bug**, se porta ese fragmento (cherry-pick o adaptación) en vez de escribir otra solución. Se anota en `BACKLOG.md` → Nota: `portado de stage2 <commit>`.
+- **Antes de corregir cada bug, se revisa `restructuracion-2.0`.** Si ya lo corrige, se adapta ese fragmento en vez de escribir otra solución. Se anota en `BACKLOG.md` → Nota: `adaptado de restructuracion-2.0 <commit>`.
 - **Corregir en la capa de lógica** (SP, servicio, controlador, validación del modelo) siempre que se pueda. Las vistas se van a reemplazar por las del nuevo diseño, así que en ellas solo se hace el cambio mínimo.
 - Cada PR lista en la sección **"Re-aplicar en el nuevo diseño"** las vistas que tocó y qué debe conservarse (campo nuevo, mensaje, botón de exportar…). Esa lista es la guía para no perder correcciones al integrar.
 - Nada de cambios cosméticos ni de reformatear archivos durante la Etapa 1.
 
-## Etapa 2 — Integración selectiva (después de cerrar y verificar la Etapa 1)
+## Etapa 3 del plan — Integración selectiva (después de corregir y re-probar `main`)
+
+Cuánto se integra depende del tiempo que quede antes de la presentación (ver `MATRIZ_INTEGRACION.md` §6). Lo mínimo es la capa 1.
 
 Se hace en una rama `integracion/reestructuracion` desde `main` ya corregido y por capas, de menor a mayor riesgo. Cada capa se mergea solo si pasa build, tests y los casos QA de los módulos tocados.
 
@@ -47,13 +49,13 @@ Se hace en una rama `integracion/reestructuracion` desde `main` ya corregido y p
 | 3. Vistas por módulo | Storefront → portal → admin/inventario → compras → finanzas/crédito → RRHH/planilla → entregas | Medio | Casos QA del módulo + lista "Re-aplicar en el nuevo diseño" de cada PR de la Etapa 1 |
 | 4. Funcionalidades nuevas | Lo que no existía en `main` | Alto | Casos nuevos escritos para esa funcionalidad |
 
-Para cada cambio de la reestructuración se decide en `MATRIZ_INTEGRACION.md` (se crea al recibir el documento del compañero): **Adoptar** · **Adoptar con ajustes** · **Mantener `main`** · **Descartar**. Criterio: gana la versión que cumple la HU y el caso QA. Si ambas cumplen, gana la del nuevo diseño.
+Para cada cambio de la reestructuración se decide en `MATRIZ_INTEGRACION.md`: **Adoptar** · **Adoptar con ajustes** · **Mantener `main`** · **Descartar**. Criterio: gana la versión que cumple la HU y el caso QA. Si ambas cumplen, gana la del nuevo diseño.
 
 Se descarta o pospone lo que cambie contratos de BD o API que la app móvil usa, renombre rutas que los casos QA referencian sin dar redirección, o no se pueda verificar con un caso.
 
-## Etapa 3 — Re-prueba completa
+## Etapa 4 del plan — Regresión final
 
-Re-ejecución de los 502 casos de `G8_SC803_J_CasosQA.xlsx` sobre la versión integrada. Los bugs nuevos se registran con el mismo formato (`BUG-MM-NN`) en un backlog de la ronda 2.
+Se re-ejecutan los casos de `G8_SC803_J_CasosQA.xlsx` de los módulos tocados por la integración. Si una capa no pasa, se revierte y `main` corregido sigue siendo la entrega. Los bugs nuevos se registran con el mismo formato (`BUG-MM-NN`) en un backlog de la ronda 2.
 
 ## Insumos del compañero
 

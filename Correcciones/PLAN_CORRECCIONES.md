@@ -16,12 +16,13 @@ Meta: todas las correcciones integradas en `main` en **2 semanas**. Después se 
 
 | Etapa | Qué | Detalle |
 |---|---|---|
-| **0. Preparación** | Acordar el plan con el equipo, aprobar las decisiones D1–D5 de [`MATRIZ_INTEGRACION.md`](MATRIZ_INTEGRACION.md) y hacer el **triaje cruzado** (qué bugs ya resuelve `restructuracion-2.0`) | Las sesiones de corrección **no arrancan** hasta cerrar esta etapa. E3 y E4 dependen de la decisión D2 |
-| **1. Correcciones** | Los 91 bugs sobre `main` (este documento) | ~2 semanas |
-| **2. Integración** | Mejoras visuales y funcionales de la reestructuración, por capas y verificadas con los casos QA | [`REESTRUCTURACION.md`](REESTRUCTURACION.md) |
-| **3. Re-prueba** | Los 502 casos QA sobre la versión integrada | Backlog de la ronda 2 |
+| **0. Preparación** | Acordar el plan con el equipo y aprobar las decisiones D1–D5 de [`MATRIZ_INTEGRACION.md`](MATRIZ_INTEGRACION.md) | Las sesiones de corrección arrancan cuando el equipo aprueba |
+| **1. Correcciones** | Los 91 bugs sobre `main`, **todos los lotes (E1–E9, D, N, G)** | ~2 semanas |
+| **2. Re-prueba de `main`** | Casos QA de los bugs corregidos más un recorrido de regresión por módulo | `main` queda **listo**: es la entrega asegurada |
+| **3. Integración según tiempo** | Mejoras de `restructuracion-2.0` por capas. Lo mínimo es la capa visual; el resto se decide por el tiempo que quede antes de la presentación | [`REESTRUCTURACION.md`](REESTRUCTURACION.md) |
+| **4. Regresión final** | Casos QA de los módulos tocados por la integración | Si una capa no pasa, no se integra y `main` sigue siendo la entrega |
 
-**Regla que une las etapas 1 y 2:** si la reestructuración ya corrige un bug, se porta esa corrección. Se corrige en la capa de lógica y en las vistas solo lo mínimo. Cada PR lista las vistas que hay que **re-aplicar en el nuevo diseño**. El detalle está en `REESTRUCTURACION.md`.
+**Regla que une las etapas 1 y 3:** cada sesión, **antes de corregir un bug, revisa si `restructuracion-2.0` ya lo resolvió**. Si es así, adapta esa solución a `main` en vez de inventar otra: es más rápido y deja el código más parecido, lo que reduce conflictos al integrar. Se corrige en la capa de lógica y en las vistas solo lo mínimo. Cada PR lista las vistas que hay que **re-aplicar en el nuevo diseño**. El detalle está en `REESTRUCTURACION.md`.
 
 ---
 
@@ -64,12 +65,13 @@ Compañeros (David, Danny, Gerald): clonar con `git clone https://github.com/d0j
 3. Antes del PR: `dotnet build Trilogia-Cursos/Proyecto_Final.slnx` sin errores y `dotnet test` en verde. Móvil: `flutter analyze` sin errores.
 4. PR hacia `main` con la lista de bugs cerrados, cómo se verificó, los scripts SQL nuevos y la sección **"Re-aplicar en el nuevo diseño"** (vistas tocadas y qué conservar). Actualizar las filas del lote en `BACKLOG.md` en el mismo PR.
 5. Merge de uno en uno (Esteban revisa). Si `main` avanzó, actualizar la rama antes de mergear.
-6. No mergear el PR #127 ni la rama `codex/stage2-design-system` (la reestructuración) durante la Etapa 1. Si un bug ya está resuelto ahí, se porta solo ese fragmento y se anota en el backlog. La integración completa es la Etapa 2.
+6. No mergear `restructuracion-2.0` (ni sus versiones anteriores: PR #127, `codex/stage2-design-system`) durante la Etapa 1. Si un bug ya está resuelto ahí, se adapta solo ese fragmento y se anota en el backlog: `adaptado de restructuracion-2.0 <commit>`. Consulta rápida: `git log origin/restructuracion-2.0 -- <archivo>` y `git show origin/restructuracion-2.0:<ruta>`. La integración completa es la Etapa 3.
 
 Archivos de alto riesgo de conflicto (tocar solo lo necesario, sin reformatear): `Services/AdminDbService.cs`, `Program.cs`, `Views/Shared/_Layout*.cshtml`, menús por rol, `database/00_todo_en_uno.sql`.
 
 ## 3. Definición de terminado (por bug)
 
+- Revisado contra `restructuracion-2.0`: si ahí estaba resuelto, se adaptó esa solución.
 - Reproducido antes del cambio, o causa explicada si no se reproduce en LocalDB.
 - Cumple el **resultado esperado** del bug report (que cita la HU/caso CU-xxx-yy).
 - Build y tests en verde; prueba unitaria nueva cuando la lógica lo permite.

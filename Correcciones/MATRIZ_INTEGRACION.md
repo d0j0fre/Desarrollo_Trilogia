@@ -27,7 +27,7 @@ No es solo un cambio visual. Cambia login y sesiones, el modelo de pedidos y cot
 | R1 | **Colisión de migraciones 0023–0028**: en `main` son la app móvil/JWT; en la rama son seguridad Stage 1 (ownership, revocación, hash-only, capacidades). Mismo número, contenido distinto. Además la rama ocupa 0029–0061 | Romper el ledger `SchemaMigrationHistory` de Azure o aplicar scripts en orden incorrecto | Renumerar **todas** las migraciones de la rama en un bloque nuevo (`0400+`) durante la integración, cotejando el hash, los objetos y las dependencias. Las correcciones de la Etapa 1 usan `0200–0319` (ver plan) |
 | R2 | **API compartida con la app móvil**: la rama reescribe `AuthController`/`Program.cs` (login original 8 h, `OriginalLoginIssuer`) y `main` tiene la API JWT de la app | La app móvil deja de autenticar | Integrar la API conservando los endpoints JWT de `main`. Verificar con la app real (login por rol) antes de mergear |
 | R3 | **Chat V2 requiere un proceso broker separado** (`tools/ChatV2Broker`, named pipes) con una pausa de ~46 s sin causa demostrada; el chat departamental y de clientes (D/C) es solo candidato | No desplegable con certeza en Azure ni en la presentación | **Posponer Chat V2.** Se mantiene el chat de `main` y se corrigen ahí los BUG-23-xx (lote de Gerald) |
-| R4 | **Nuevo modelo de estados de pedido** (Liberado / Facturado / Entregado, aprobación > ₡2 000 000, cotizaciones del servidor, recibos UUID) | Toca los mismos flujos que los lotes E3/E4 (estados desde la app, liquidaciones) y la app móvil | Decidir **D2** antes de lanzar E3/E4 |
+| R4 | **Nuevo modelo de estados de pedido** (Liberado / Facturado / Entregado, aprobación > ₡2 000 000, cotizaciones del servidor, recibos UUID) | Toca los mismos flujos que los lotes E3/E4 (estados desde la app, liquidaciones) y la app móvil | E3/E4 se corrigen en `main`; el modelo nuevo se decide en la integración (D2) |
 | R5 | **Notificaciones nuevas por correo** (factura, entrega, despacho de ruta, contacto) con evidencia local; boletas y alertas documentales solo candidatas | Se superpone con E5 (correos) | Adoptar los 4 canales con evidencia en lugar de reescribirlos en E5. Boletas: corregir en `main` (BUG-11-05) |
 | R6 | Cuatro vistas de Flota/Vehículos marcadas por el autor como "modificaciones previas protegidas" de procedencia dudosa | Pisar trabajo de otro compañero | Mantener `main` y revisar con el autor |
 | R7 | Tamaño: 141 archivos en conflicto hoy, más los que toquen las correcciones | Integración larga y costosa en uso de IA | Integrar por capas (ver §4) y que cada PR de corrección deje su sección "Re-aplicar en el nuevo diseño" |
@@ -53,7 +53,7 @@ No es solo un cambio visual. Cambia login y sesiones, el modelo de pedidos y cot
 | G15 Exclusivo de `main` | App móvil, API JWT, migraciones 0023–0028, cuatro vistas de flota | QA ejecutado | **Mantener `main`** | No sobrescribir |
 | G16 Material privado | Respaldos, datos QA, claves, logs, bin/obj | — | **Descartar** del repo | — |
 
-## 4. Orden de integración (Etapa 2)
+## 4. Orden de integración (Etapa 3 del plan)
 
 1. **Capa 0, migraciones:** renumerar las de la rama, armar el orden único y probarlo en LocalDB desde cero y sobre una copia de Azure.
 2. **Capa 1, G1 visual + G13 tests:** sin lógica nueva.
@@ -66,17 +66,19 @@ No es solo un cambio visual. Cambia login y sesiones, el modelo de pedidos y cot
 | ID | Decisión | Recomendación |
 |---|---|---|
 | D1 | ¿Chat V2 entra en esta entrega? | **No.** Se corrige el chat de `main` |
-| D2 | ¿Se adopta el modelo comercial nuevo (estados Liberado/Facturado/Entregado, aprobación por monto, cotización del servidor)? | **Sí, pero en la Etapa 2.** Los lotes E3 y E4 se lanzan después del triaje, para no corregir dos veces los mismos estados |
+| D2 | ¿Se adopta el modelo comercial nuevo (estados Liberado/Facturado/Entregado, aprobación por monto, cotización del servidor)? | **Se decide en la Etapa 3, según el tiempo.** E3 y E4 se corrigen normalmente en `main` (la app móvil depende de ellos); si se adopta el modelo nuevo, se adapta al integrar |
 | D3 | Boletas y alertas documentales | Corregir en `main` y posponer los candidatos |
 | D4 | Numeración de migraciones | Correcciones en `0200–0319`; la rama se renumera a `0400+` al integrar |
-| D5 | Bugs que la rama ya resuelve | Se portan desde la rama en lugar de reescribirse (según el triaje) |
+| D5 | Bugs que la rama ya resuelve | Cada sesión revisa la rama antes de corregir; si está resuelto, adapta esa solución a `main` |
 
-## 6. Siguiente paso: triaje cruzado
+## 6. Cuándo se integra
 
-Antes de lanzar las sesiones de corrección se revisa, solo leyendo código, **si cada uno de los 91 bugs ya está resuelto en `restructuracion-2.0`**:
+Primero se corrigen todos los bugs en `main` y se re-prueba (Etapas 1 y 2): esa es la entrega asegurada. Luego, según el tiempo que quede antes de la presentación:
 
-- `Resuelto en rama` → se porta (o se espera a la Etapa 2 si depende de un grupo pospuesto).
-- `Parcial` → se porta lo existente y se completa.
-- `No resuelto` → se corrige en `main` según el plan.
+| Escenario | Qué se integra |
+|---|---|
+| Poco tiempo | Solo la capa 1 visual (G1), que es la de menor riesgo y la que más se nota |
+| Tiempo medio | Capas 1 y 2 (visual + seguridad/login, protegiendo la API JWT de la app) |
+| Tiempo suficiente | Capas 1–3, módulo por módulo con sus casos QA |
 
-El resultado se anota en la columna Nota de `BACKLOG.md` y define qué lotes arrancan primero. Con esto se evita la mayor parte del doble trabajo.
+Siempre quedan fuera de esta entrega G7, G9, G10 y G11 (boletas y alertas nuevas, Chat V2, Chat D/C, asignaciones comerciales).
