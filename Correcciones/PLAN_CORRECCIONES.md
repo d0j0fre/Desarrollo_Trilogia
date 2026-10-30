@@ -16,7 +16,7 @@ Meta: todas las correcciones integradas en `main` en **2 semanas**. Después se 
 
 | Etapa | Qué | Detalle |
 |---|---|---|
-| **0. Preparación** | Acordar el plan con el equipo, recibir el documento y la versión de la reestructuración, armar la matriz de integración | Las sesiones de corrección **no arrancan** hasta cerrar esta etapa |
+| **0. Preparación** | Acordar el plan con el equipo, aprobar las decisiones D1–D5 de [`MATRIZ_INTEGRACION.md`](MATRIZ_INTEGRACION.md) y hacer el **triaje cruzado** (qué bugs ya resuelve `restructuracion-2.0`) | Las sesiones de corrección **no arrancan** hasta cerrar esta etapa. E3 y E4 dependen de la decisión D2 |
 | **1. Correcciones** | Los 91 bugs sobre `main` (este documento) | ~2 semanas |
 | **2. Integración** | Mejoras visuales y funcionales de la reestructuración, por capas y verificadas con los casos QA | [`REESTRUCTURACION.md`](REESTRUCTURACION.md) |
 | **3. Re-prueba** | Los 502 casos QA sobre la versión integrada | Backlog de la ronda 2 |
@@ -46,14 +46,16 @@ Compañeros (David, Danny, Gerald): clonar con `git clone https://github.com/d0j
 - Cambios de esquema/SP: script nuevo en `Trilogia-Cursos/database/migrations/` siguiendo su `README.md` (idempotente, con `.verify.sql` y rollback). **Ninguna sesión aplica scripts en Azure**; Esteban los aplica después del merge.
 - Para que los lotes paralelos no choquen, cada lote usa su bloque de numeración:
 
+  La reestructuración ya ocupa `0023–0061`, así que las correcciones usan la serie **0200**:
+
 | Lote | Bloque | Lote | Bloque |
 |---|---|---|---|
-| E1 | 0030–0039 | E7 | 0090–0099 |
-| E2 | 0040–0049 | E8 | 0100–0109 |
-| E3 | 0050–0059 | E9 | 0110–0119 |
-| E4 | 0060–0069 | D (David) | 0120–0129 |
-| E5 | 0070–0079 | N (Danny) | 0130–0139 |
-| E6 | 0080–0089 | G (Gerald) | 0140–0149 |
+| E1 | 0200–0209 | E7 | 0260–0269 |
+| E2 | 0210–0219 | E8 | 0270–0279 |
+| E3 | 0220–0229 | E9 | 0280–0289 |
+| E4 | 0230–0239 | D (David) | 0290–0299 |
+| E5 | 0240–0249 | N (Danny) | 0300–0309 |
+| E6 | 0250–0259 | G (Gerald) | 0310–0319 |
 
 ## 2. Flujo Git
 

@@ -7,9 +7,11 @@ Un compañero reestructuró el sistema: nuevo diseño visual, módulos migrados 
 
 Así se aprovecha lo mejor de las dos versiones sin heredar errores que nadie ha documentado, y no se gasta uso de IA depurando una versión sin mapa de fallos.
 
-## Lo que ya se sabe (GitHub, 29/10/2026)
+## Versión oficial a integrar
 
-En GitHub hay una versión publicada de la reestructuración. Puede que el compañero tenga trabajo más reciente solo en su carpeta local.
+**`origin/restructuracion-2.0`** (commit `9aa7045`, 29/10/2026), con el informe del autor en `fuentes/INFORME-STAGE2-INTEGRACION.pdf`. Contiene todo lo de las ramas de abajo más el trabajo de septiembre y octubre: 64 commits, 719 archivos y +40k/−16k líneas contra `main`. El análisis completo, los riesgos y las decisiones están en [`MATRIZ_INTEGRACION.md`](MATRIZ_INTEGRACION.md).
+
+## Antecedentes en GitHub (versiones anteriores de la misma reestructuración)
 
 | Rama | Autor | Fecha | Contenido |
 |---|---|---|---|
@@ -53,8 +55,8 @@ Se descarta o pospone lo que cambie contratos de BD o API que la app móvil usa,
 
 Re-ejecución de los 502 casos de `G8_SC803_J_CasosQA.xlsx` sobre la versión integrada. Los bugs nuevos se registran con el mismo formato (`BUG-MM-NN`) en un backlog de la ronda 2.
 
-## Insumos pendientes del compañero
+## Insumos del compañero
 
-1. El documento con el registro de lo que hizo su IA (qué cambió, por qué y qué problemas encontró).
-2. Su versión más reciente **en una rama de GitHub** (`reestructuracion/<nombre>`), creada a partir del commit en que empezó. Sin `bin/`, `obj/`, `.vs/`, secretos ni `appsettings` con cadenas reales. Si trabajó fuera de Git, que indique de qué versión partió y se arma la rama desde ahí.
-3. La lista de errores conocidos que ya detectó en su versión.
+1. ✅ Informe de trabajo: `fuentes/INFORME-STAGE2-INTEGRACION.pdf`.
+2. ✅ Versión en GitHub: rama `restructuracion-2.0`.
+3. Pendiente: confirmar con el autor los riesgos R1–R4 de la matriz (migraciones, API de la app móvil, Chat V2 y modelo comercial).
