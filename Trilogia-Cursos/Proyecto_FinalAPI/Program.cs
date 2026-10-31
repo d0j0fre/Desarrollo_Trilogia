@@ -51,6 +51,7 @@ builder.Services.AddScoped<IInventoryMobileDbService, InventoryMobileDbService>(
 builder.Services.AddScoped<IOrdersMobileDbService, OrdersMobileDbService>();
 builder.Services.AddScoped<IManagementMobileDbService, ManagementMobileDbService>();
 builder.Services.AddScoped<IOfficeMobileDbService, OfficeMobileDbService>();
+builder.Services.AddScoped<INotificationsMobileDbService, NotificationsMobileDbService>();
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;

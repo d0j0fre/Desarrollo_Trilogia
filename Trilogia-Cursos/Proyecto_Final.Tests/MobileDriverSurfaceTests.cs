@@ -22,7 +22,8 @@ public sealed class MobileDriverSurfaceTests
     private static readonly Type[] MobileControllers =
     [
         typeof(MobileDriverController),
-        typeof(MobileMeController)
+        typeof(MobileMeController),
+        typeof(MobileNotificationsController)
     ];
 
     // ── Protección de la superficie ─────────────────────────────────────────

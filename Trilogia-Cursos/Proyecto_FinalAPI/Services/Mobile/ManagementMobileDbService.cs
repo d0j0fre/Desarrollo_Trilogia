@@ -210,12 +210,20 @@ namespace Proyecto_FinalAPI.Services.Mobile
             }, cancellationToken);
 
         public async Task<IReadOnlyList<(int PedidoId, string Cliente, string Correo)>> DispatchRouteAsync(
-            int routeId, int userId, string userName, CancellationToken cancellationToken = default) =>
-            await QueryAsync("dbo.sp_Rutas_Dispatch", p =>
+            int routeId, int userId, string userName, CancellationToken cancellationToken = default)
+        {
+            var recipients = await QueryAsync("dbo.sp_Rutas_Dispatch", p =>
             {
                 p.Add("@RutaId", SqlDbType.Int).Value = routeId;
                 p.Add("@UsuarioId", SqlDbType.Int).Value = userId;
                 p.Add("@UsuarioNombre", SqlDbType.NVarChar, 150).Value = ActorName(userName);
             }, r => (r.Int("PedidoId"), r.Str("ClienteNombre"), r.Str("ClienteCorreo")), cancellationToken);
+
+            // BUG-10-06: los pedidos de la ruta pasan a EnRuta igual que sus entregas.
+            await ExecuteAsync("dbo.sp_Pedidos_SincronizarEstadoEntrega",
+                p => p.Add("@RutaId", SqlDbType.Int).Value = routeId, cancellationToken);
+
+            return recipients;
+        }
     }
 }
