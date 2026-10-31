@@ -9,27 +9,25 @@ namespace Proyecto_Final.Services
 
         public static byte[] Build(ComodatoContractViewModel c)
         {
-            var pdf = new SimplePdfWriter($"Contrato de comodato {c.Numero}");
+            var pdf = new SimplePdfDocument($"{Comodante} · Contrato de comodato {c.Numero}");
             static string OrDash(string? value) => string.IsNullOrWhiteSpace(value) ? "—" : value.Trim();
 
-            pdf.Paragraph(Comodante, 9, bold: true, spaceAfter: 2, center: true);
-            pdf.Paragraph("CONTRATO DE COMODATO DE EQUIPO", 15, bold: true, spaceAfter: 2, center: true);
-            pdf.Paragraph($"N.º {c.Numero} · Emitido el {c.FechaRegistro:dd/MM/yyyy}", 9.5, spaceAfter: 14, center: true);
+            pdf.Title("Contrato de comodato de equipo");
+            pdf.Text($"{Comodante} · N.º {c.Numero} · Emitido el {c.FechaRegistro:dd/MM/yyyy}");
+            pdf.Rule();
 
-            pdf.Paragraph("Partes", 11.5, bold: true, spaceAfter: 2);
+            pdf.Heading("Partes");
             pdf.Field("Comodante", $"{Comodante}, quien presta el equipo.");
             pdf.Field("Comodatario", $"{c.ClienteNombre.Trim()}, identificación {OrDash(c.ClienteIdentificacion)}, quien lo recibe.");
-            pdf.Space(8);
 
-            pdf.Paragraph("Equipo entregado", 11.5, bold: true, spaceAfter: 2);
+            pdf.Heading("Equipo entregado");
             pdf.Field("Activo", $"{c.CodigoActivo} — {c.ActivoNombre} ({c.ActivoTipo})");
             pdf.Field("Ubicación del equipo", OrDash(c.Ubicacion));
             pdf.Field("Fecha de entrega", c.FechaAsignacion.ToString("dd/MM/yyyy"));
             pdf.Field("Condición de entrega", OrDash(c.CondicionEntrega));
             pdf.Field("Observaciones", OrDash(c.Observaciones));
-            pdf.Space(8);
 
-            pdf.Paragraph("Cláusulas", 11.5, bold: true, spaceAfter: 4);
+            pdf.Heading("Cláusulas");
             string[] clausulas =
             {
                 "1. Objeto. El comodante entrega al comodatario, en préstamo de uso gratuito, el equipo descrito, que sigue siendo propiedad del comodante. El equipo se destina a la conservación y exhibición de productos adquiridos al comodante.",
@@ -40,7 +38,11 @@ namespace Proyecto_Final.Services
                 "6. Revisión. El comodatario permitirá que el personal del comodante revise el equipo en horario comercial.",
                 "7. Aceptación. Las partes firman en señal de conformidad con la entrega del equipo y con las condiciones de este contrato."
             };
-            foreach (var clausula in clausulas) pdf.Paragraph(clausula, 10, spaceAfter: 5);
+            foreach (var clausula in clausulas)
+            {
+                pdf.Paragraph(clausula);
+                pdf.Space(4);
+            }
 
             pdf.Signatures(
                 "Por el comodante", $"{Comodante}{(string.IsNullOrWhiteSpace(c.RegistradoPorNombre) ? "" : $" · Registró: {c.RegistradoPorNombre.Trim()}")}",

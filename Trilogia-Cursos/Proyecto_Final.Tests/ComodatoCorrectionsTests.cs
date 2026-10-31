@@ -61,7 +61,7 @@ public sealed class ComodatoCorrectionsTests
     {
         var text = Latin1(ComodatoContractPdf.Build(Contrato()));
 
-        Assert.Contains("CONTRATO DE COMODATO DE EQUIPO", text);
+        Assert.Contains("Contrato de comodato de equipo", text);
         Assert.Contains("CMD-00007", text);
         Assert.Contains("NEV-QA-001", text);
         Assert.Contains("Pulpería El Tucán", text);          // í y á como bytes WinAnsi de un solo byte
@@ -89,11 +89,11 @@ public sealed class ComodatoCorrectionsTests
     [Fact]
     public void Wrap_KeepsEveryLineInsideTheGivenWidth()
     {
-        var lines = SimplePdfWriter.Wrap(
+        var lines = SimplePdfDocument.Wrap(
             "El comodatario usará el equipo con diligencia, lo mantendrá limpio y conectado según las indicaciones del comodante.",
             10, bold: false, width: 200);
 
         Assert.True(lines.Count > 1);
-        Assert.All(lines, line => Assert.True(SimplePdfWriter.TextWidth(line, 10, false) <= 200));
+        Assert.All(lines, line => Assert.True(SimplePdfDocument.TextWidth(line, 10, false) <= 200));
     }
 }
