@@ -11,6 +11,7 @@ import '../../features/home/presentation/home_page.dart';
 import '../../features/home/presentation/pending_page.dart';
 import '../../features/home/presentation/update_required_page.dart';
 import '../../features/mileage/presentation/mileage_page.dart';
+import '../../features/notifications/presentation/notifications_page.dart';
 import '../../features/management/presentation/dashboard_page.dart';
 import '../../features/management/presentation/orders_pages.dart';
 import '../../features/management/presentation/routes_management_pages.dart';
@@ -95,6 +96,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/kilometraje', builder: (_, _) => const MileagePage()),
       GoRoute(path: '/pendientes', builder: (_, _) => const PendingPage()),
       GoRoute(path: '/ajustes', builder: (_, _) => const SettingsPage()),
+      GoRoute(path: '/notificaciones', builder: (_, _) => const NotificationsPage()),
 
       // Bodega
       GoRoute(path: '/bodega/preparar', builder: (_, _) => const PickingPage()),

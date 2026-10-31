@@ -165,6 +165,7 @@ builder.Services.AddScoped<WarehouseDbService>();
 builder.Services.AddScoped<FleetDbService>();
 builder.Services.AddScoped<PromotionsDbService>();
 builder.Services.AddScoped<ReclamosDbService>();
+builder.Services.AddScoped<NotificationsDbService>();
 builder.Services.AddScoped<KpiDbService>();
 builder.Services.AddScoped<ExpensesDbService>();
 builder.Services.AddScoped<BudgetDbService>();

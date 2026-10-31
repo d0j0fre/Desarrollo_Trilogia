@@ -1,6 +1,7 @@
 @using Microsoft.AspNetCore.Http
 @using Proyecto_Final.Services
 @inject AdminDbService AdminDbService
+@inject NotificationsDbService NotificationsDbService
 @{
     const string SiteBrandName = "Supermercado Mayoreo";
     const string SiteBrandSubtitle = "Licorera - Distribuidora";
@@ -68,6 +69,13 @@
         // Supervisor: acceso a RRHH y Planilla sin ver el resto de módulos administrativos.
         var isSupervisor = isLoggedIn && string.Equals(userRole, "Supervisor", StringComparison.OrdinalIgnoreCase);
         var categoriasLayout = await AdminDbService.GetStoreCategoriesAsync();
+        // BUG-08-01: campana de avisos del personal. Si la consulta falla, la página sigue.
+        var notificacionesNoLeidas = 0;
+        if (isLoggedIn && !isClient)
+        {
+            try { notificacionesNoLeidas = await NotificationsDbService.CountUnreadAsync(Context.Session.GetInt32("UserId") ?? 0); }
+            catch (Microsoft.Data.SqlClient.SqlException) { }
+        }
     }
 
     <div class="container-fluid topbar">
@@ -92,6 +100,17 @@
                                 <p class="user-panel__role">@userRole</p>
                             </div>
                         </a>
+
+                        @if (!isClient)
+                        {
+                            <a asp-controller="Notifications" asp-action="Index" class="text-light mr-3 position-relative" title="Notificaciones" aria-label="Notificaciones">
+                                <i class="fa fa-bell fa-lg"></i>
+                                @if (notificacionesNoLeidas > 0)
+                                {
+                                    <span class="badge position-absolute" style="top:-8px;right:-12px;background:#dc3545;color:#fff;font-size:.65rem;padding:3px 6px;border-radius:10px;">@notificacionesNoLeidas</span>
+                                }
+                            </a>
+                        }
 
                         <form asp-controller="Account" asp-action="Logout" method="post" class="m-0">
                             @Html.AntiForgeryToken()

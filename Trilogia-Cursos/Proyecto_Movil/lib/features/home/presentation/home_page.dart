@@ -10,6 +10,7 @@ import '../../../core/theme/brand_colors.dart';
 import '../../../core/widgets/app_widgets.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../auth/domain/session.dart';
+import '../../notifications/data/notifications_api.dart';
 import '../domain/day_summary.dart';
 
 final daySummaryProvider = FutureProvider.autoDispose<DaySummary>(
@@ -44,6 +45,7 @@ class HomePage extends ConsumerWidget {
           color: BrandColors.redPrimary,
           onRefresh: () async {
             if (muestraResumen) ref.invalidate(daySummaryProvider);
+            ref.invalidate(notificationsInboxProvider);
             await ref
                 .read(authControllerProvider.notifier)
                 .reintentarCapacidades();
@@ -109,6 +111,31 @@ class _HeaderWithSummary extends StatelessWidget {
   }
 }
 
+/// Campana con los avisos sin leer (ruta asignada o reasignada, entre otros).
+/// Si la consulta falla, se muestra sin contador: no es motivo para un error.
+class _NotificationsBell extends ConsumerWidget {
+  const _NotificationsBell();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unread = ref.watch(notificationsInboxProvider).value?.unread ?? 0;
+
+    return IconButton(
+      icon: Badge(
+        isLabelVisible: unread > 0,
+        label: Text(unread > 99 ? '99+' : '$unread'),
+        child: const Icon(Icons.notifications_none_rounded),
+      ),
+      color: BrandColors.white,
+      tooltip: 'Notificaciones',
+      onPressed: () async {
+        await context.push('/notificaciones');
+        ref.invalidate(notificationsInboxProvider);
+      },
+    );
+  }
+}
+
 class _Header extends StatelessWidget {
   const _Header({required this.session, required this.espacioInferior});
 
@@ -169,6 +196,7 @@ class _Header extends StatelessWidget {
                   ],
                 ),
               ),
+              const _NotificationsBell(),
               IconButton(
                 icon: const Icon(Icons.person_outline_rounded),
                 color: BrandColors.white,
