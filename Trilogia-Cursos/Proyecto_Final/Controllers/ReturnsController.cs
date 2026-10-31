@@ -1,3 +1,4 @@
+using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Data.SqlClient;
@@ -73,6 +74,73 @@ namespace Proyecto_Final.Controllers
                 TempData["ErrorMessage"] = "No fue posible registrar la devolución.";
             }
             return RedirectToAction(nameof(Index));
+        }
+
+        // CU-143-04 — Reporte de devoluciones por producto, cliente y motivo (mes actual por defecto).
+        [HttpGet]
+        public async Task<IActionResult> Report(DateTime? desde, DateTime? hasta)
+        {
+            var reporte = await BuildReportAsync(desde, hasta);
+            if (reporte.Hasta < reporte.Desde)
+            {
+                ModelState.AddModelError(string.Empty, "La fecha final no puede ser anterior a la fecha inicial.");
+            }
+
+            return View(reporte);
+        }
+
+        [HttpGet]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+        public async Task<IActionResult> ExportCsv(DateTime? desde, DateTime? hasta)
+        {
+            var reporte = await BuildReportAsync(desde, hasta);
+            if (reporte.Hasta < reporte.Desde)
+            {
+                TempData["ErrorMessage"] = "La fecha final no puede ser anterior a la fecha inicial.";
+                return RedirectToAction(nameof(Report), new { desde, hasta });
+            }
+
+            var csv = new StringBuilder("Fecha,Devolucion,Pedido,Producto,Cantidad,Cliente/referencia,Motivo,Estado\r\n");
+            foreach (var d in reporte.Devoluciones)
+            {
+                csv.Append(CsvExportSanitizer.Cell(d.FechaRegistro.ToString("yyyy-MM-dd HH:mm"))).Append(',')
+                    .Append(CsvExportSanitizer.Cell(d.DevolucionId)).Append(',')
+                    .Append(CsvExportSanitizer.Cell(d.PedidoId)).Append(',')
+                    .Append(CsvExportSanitizer.Cell(d.ProductoNombre)).Append(',')
+                    .Append(CsvExportSanitizer.Cell(d.Cantidad)).Append(',')
+                    .Append(CsvExportSanitizer.Cell(d.ClienteInfo)).Append(',')
+                    .Append(CsvExportSanitizer.Cell(d.Motivo)).Append(',')
+                    .Append(CsvExportSanitizer.Cell(d.Estado)).Append("\r\n");
+            }
+
+            foreach (var (titulo, grupos) in new[]
+            {
+                ("Resumen por producto", reporte.PorProducto),
+                ("Resumen por cliente/referencia", reporte.PorCliente),
+                ("Resumen por motivo", reporte.PorMotivo)
+            })
+            {
+                csv.Append("\r\n").Append(CsvExportSanitizer.Cell(titulo)).Append(",Devoluciones,Unidades\r\n");
+                foreach (var g in grupos)
+                {
+                    csv.Append(CsvExportSanitizer.Cell(g.Clave)).Append(',')
+                        .Append(CsvExportSanitizer.Cell(g.Devoluciones)).Append(',')
+                        .Append(CsvExportSanitizer.Cell(g.Unidades)).Append("\r\n");
+                }
+            }
+
+            await RegistrarAuditoriaAsync("Exportar reporte de devoluciones", "Inventario",
+                $"Reporte de devoluciones del {reporte.Desde:dd/MM/yyyy} al {reporte.Hasta:dd/MM/yyyy} ({reporte.Devoluciones.Count} registro(s)).");
+            return File(new UTF8Encoding(true).GetBytes(csv.ToString()), "text/csv",
+                $"devoluciones-{reporte.Desde:yyyyMMdd}-{reporte.Hasta:yyyyMMdd}.csv");
+        }
+
+        private async Task<ReturnsReportViewModel> BuildReportAsync(DateTime? desde, DateTime? hasta)
+        {
+            var hoy = DateTime.Today;
+            var inicio = desde?.Date ?? new DateTime(hoy.Year, hoy.Month, 1);
+            var fin = hasta?.Date ?? hoy;
+            return ReturnsReportViewModel.Build(await _warehouse.GetReturnsAsync(null, null), inicio, fin);
         }
 
         // CU-142 — Bandeja de cuarentena.
