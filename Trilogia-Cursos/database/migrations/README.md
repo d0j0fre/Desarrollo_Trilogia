@@ -66,6 +66,9 @@ Cada migracion debe indicar su estrategia de rollback antes de ejecutarse. Los c
 | 0212 | `0212_product_search_by_sku.sql` | BUG-05-03: `sp_Admin_GetProducts` también filtra por código SKU (`SKU-` + `ProductoId` con cinco dígitos) | 0211 |
 | 0213 | `0213_promotion_overlap_validation.sql` | BUG-17-01: `sp_Promociones_Create` y `sp_Promociones_Update` rechazan reglas traslapadas (mismo producto, activas, vigencias y segmentos que se cruzan) con el error 53102 | Promociones CU-171/174 |
 | 0214 | `0214_promotion_unit_limit.sql` | BUG-17-02: `Promociones.LimiteUnidades`/`UnidadesConsumidas`; crear/editar/consultar promociones los manejan y el disparador `TR_PromocionAplicaciones_LimiteUnidades` suma las unidades aplicadas en cada pedido e inactiva la promoción al alcanzar el límite (sin modificar el checkout) | 0213; `PedidoDetalle.EsRegalo`/`PedidoComboId` (0012) |
+| 0220 | `0220_pedido_estado_desde_entrega.sql` | BUG-10-06: `sp_Pedidos_SincronizarEstadoEntrega` copia al pedido el estado de su entrega (`EnRuta`, `Entregado`, `Fallido`); la API móvil lo llama al despachar y al marcar una entrega | Rutas y entregas (cu081/cu082) |
+| 0221 | `0221_notificaciones_usuario.sql` | BUG-08-01 y BUG-10-08: tabla `NotificacionesUsuario`, disparador `TR_Rutas_NotificarChofer` (asignación y reasignación de ruta) y procedimientos de la bandeja de avisos | 0220 |
+| 0222 | `0222_notificacion_mensaje_directo.sql` | BUG-23-05: disparador `TR_ChatMensajes_NotificarReceptor` deja un aviso al receptor de un mensaje directo | 0221; chat privado (0002) |
 
 Los scripts no incluyen `USE`: el ejecutor debe seleccionar explícitamente la base antes de iniciar. Los hashes escritos por 0002–0011 son hashes de manifiesto para identificar versión; la evidencia de despliegue debe registrar además el SHA-256 real del archivo y actualizar el ledger si corresponde.
 
