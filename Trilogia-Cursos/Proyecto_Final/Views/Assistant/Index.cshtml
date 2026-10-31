@@ -610,7 +610,7 @@
             function sanitizeAssistantHtml(value) {
                 const template = document.createElement('template');
                 template.innerHTML = value ?? '';
-                const allowedTags = new Set(['STRONG', 'BR', 'EM', 'UL', 'LI']);
+                const allowedTags = new Set(['STRONG', 'BR', 'EM', 'UL', 'OL', 'LI']);
 
                 template.content.querySelectorAll('*').forEach(function(element) {
                     if (!allowedTags.has(element.tagName)) {
