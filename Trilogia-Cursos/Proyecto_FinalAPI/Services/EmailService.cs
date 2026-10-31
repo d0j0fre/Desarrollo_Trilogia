@@ -42,6 +42,16 @@ namespace Proyecto_FinalAPI.Services
                 EnableSsl = true
             };
 
+            // Solo para pruebas locales: deja el correo como .eml en una carpeta en lugar de enviarlo.
+            var directorioRecogida = _configuration.GetValue<string>("ConfiguracionCorreo:DirectorioRecogida");
+            if (!string.IsNullOrWhiteSpace(directorioRecogida))
+            {
+                Directory.CreateDirectory(directorioRecogida);
+                smtp.DeliveryMethod = SmtpDeliveryMethod.SpecifiedPickupDirectory;
+                smtp.PickupDirectoryLocation = directorioRecogida;
+                smtp.EnableSsl = false;
+            }
+
             smtp.Send(mensaje);
         }
     }

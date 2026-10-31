@@ -34,6 +34,10 @@ namespace Proyecto_Final.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            factura.Telefono = await _adminDbService.GetInvoiceClientPhoneAsync(id);
+            factura.WhatsAppUrl = WhatsAppReceiptLink.BuildUrl(factura.Telefono, factura.NumeroFactura, factura.FechaFactura, factura.Total);
+            ViewBag.FacturaRecienGenerada = Equals(TempData["FacturaRecienGenerada"], id);
+
             return View(factura);
         }
 
@@ -61,6 +65,7 @@ namespace Proyecto_Final.Controllers
                     $"Se genero la factura {result.NumeroFactura} para el pedido #{pedidoId}.");
 
                 TempData["SuccessMessage"] = $"Factura {result.NumeroFactura} generada correctamente.";
+                TempData["FacturaRecienGenerada"] = result.FacturaId;
                 await EnviarComprobantePorCorreoAsync(result.FacturaId);
                 return RedirectToAction(nameof(Detail), new { id = result.FacturaId });
             }

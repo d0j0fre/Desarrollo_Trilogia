@@ -530,6 +530,26 @@ namespace Proyecto_Final.Services
             return Convert.ToInt32(result);
         }
 
+        // Teléfono del cliente de la factura (migración 0201); null si no tiene o si 0201 aún no está aplicada.
+        public async Task<string?> GetInvoiceClientPhoneAsync(int facturaId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_GetInvoiceClientPhone", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add("@FacturaId", SqlDbType.Int).Value = facturaId;
+
+            await connection.OpenAsync();
+            try
+            {
+                var result = await command.ExecuteScalarAsync();
+                return result == null || result == DBNull.Value ? null : Convert.ToString(result);
+            }
+            catch (SqlException exception) when (exception.Number == 2812)
+            {
+                return null;
+            }
+        }
+
         public async Task<GenerateInvoiceResultViewModel> GenerateInvoiceFromOrderAsync(int pedidoId, int usuarioId, string usuarioNombre)
         {
             await using var connection = new SqlConnection(_connectionString);
@@ -2070,15 +2090,17 @@ namespace Proyecto_Final.Services
 
             const string egresosQuery = """
         SELECT
-            GastoId,
-            Fecha,
-            Concepto,
-            Categoria,
-            Monto
-        FROM dbo.Gastos
-        WHERE (@FechaInicio IS NULL OR Fecha >= @FechaInicio)
-          AND (@FechaFin IS NULL OR Fecha < DATEADD(DAY, 1, @FechaFin))
-        ORDER BY Fecha DESC;
+            g.GastoId,
+            CAST(g.FechaGasto AS DATETIME2) AS Fecha,
+            g.Descripcion AS Concepto,
+            c.Nombre AS Categoria,
+            g.Total AS Monto
+        FROM dbo.GastosOperativos g
+        LEFT JOIN dbo.CategoriasGasto c ON c.CategoriaId = g.CategoriaId
+        WHERE g.Estado IN (N'Aprobado', N'Pagado')
+          AND (@FechaInicio IS NULL OR g.FechaGasto >= @FechaInicio)
+          AND (@FechaFin IS NULL OR g.FechaGasto < DATEADD(DAY, 1, @FechaFin))
+        ORDER BY g.FechaGasto DESC;
         """;
 
             await using (var command = new SqlCommand(egresosQuery, connection))
