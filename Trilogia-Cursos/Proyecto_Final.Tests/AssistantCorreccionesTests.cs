@@ -72,5 +72,22 @@ public sealed class AssistantCorreccionesTests
         Assert.Null(AssistantService.Restringida(AssistantService.Normalizar(pregunta), rol));
     }
 
+    [Fact]
+    public void BUG_26_04_LasEntregasPendientesSonLasParadasAbiertasDeLasRutasDespachadas()
+    {
+        var migration = Read("database", "migrations", "0250_asistente_entregas_pendientes.sql");
+        var readme = Read("database", "migrations", "README.md");
+
+        // Misma regla que la columna "Pendientes" de sp_Rutas_List, solo en rutas despachadas.
+        Assert.Contains("CREATE OR ALTER PROCEDURE dbo.sp_Asistente_Metricas", migration, StringComparison.Ordinal);
+        Assert.Contains("WHERE r.Estado = N'Despachada'", migration, StringComparison.Ordinal);
+        Assert.Contains("AND rp.EstadoEntrega IN (N'Pendiente', N'EnRuta');", migration, StringComparison.Ordinal);
+        Assert.DoesNotContain("@EntregasPendientes = SUM(CASE WHEN EstadoEntrega = N'Pendiente'", migration, StringComparison.Ordinal);
+        // Solo lee: no toca tablas ni procedimientos de rutas.
+        Assert.DoesNotContain("PROCEDURE dbo.sp_Rutas", migration, StringComparison.Ordinal);
+        Assert.DoesNotContain("ALTER TABLE", migration, StringComparison.Ordinal);
+        Assert.Contains("0250_asistente_entregas_pendientes.sql", readme, StringComparison.Ordinal);
+    }
+
     private static string Read(params string[] parts) => MobileCorreccionesTests.Read(parts);
 }
