@@ -17,7 +17,7 @@ class AppDatabase {
   Database get raw => _db;
 
   static const _fileName = 'operacion_labodega.db';
-  static const _version = 1;
+  static const _version = 2;
 
   static Future<AppDatabase> open({String? path}) async {
     final databasePath = path ?? p.join(await getDatabasesPath(), _fileName);
@@ -27,6 +27,7 @@ class AppDatabase {
       version: _version,
       onConfigure: (db) => db.execute('PRAGMA foreign_keys = ON'),
       onCreate: _create,
+      onUpgrade: _upgrade,
     );
 
     return AppDatabase._(db);
@@ -105,6 +106,25 @@ class AppDatabase {
         abierta_en        TEXT
       )
     ''');
+
+    await _createSalesCatalog(db);
+  }
+
+  static Future<void> _upgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) await _createSalesCatalog(db);
+  }
+
+  /// Clientes y productos de la venta en campo, guardados tal como llegaron.
+  /// Sin esto el vendedor no podia tomar un pedido sin señal: el paso Cliente
+  /// quedaba en error y la venta nunca llegaba a la cola.
+  static Future<void> _createSalesCatalog(Database db) async {
+    await db.execute('''
+      CREATE TABLE catalogo_ventas (
+        clave             TEXT    PRIMARY KEY,
+        datos             TEXT    NOT NULL,
+        sincronizado_en   TEXT    NOT NULL
+      )
+    ''');
   }
 
   /// Borra los datos del usuario que cerro sesion. Un telefono se pierde: no
@@ -119,6 +139,7 @@ class AppDatabase {
       await txn.delete('rutas');
       await txn.delete('outbox');
       await txn.delete('jornada');
+      await txn.delete('catalogo_ventas');
     });
   }
 
