@@ -100,6 +100,35 @@ public sealed class ProductCatalogCorrectionsTests
         Assert.Contains(results, result => result.MemberNames.Contains(nameof(model.LimiteUnidades)));
     }
 
+    [Fact]
+    public void ComboCreateView_ShowsCompositionErrors()
+    {
+        // Los errores de "sin productos" y "producto repetido" se registran sobre la propiedad Productos;
+        // el resumen ModelOnly no los muestra, así que la vista necesita su propio mensaje.
+        var empty = new Proyecto_Final.Models.Admin.ComboFormViewModel { Nombre = "QA-18", Precio = 15000 };
+        var repeated = new Proyecto_Final.Models.Admin.ComboFormViewModel
+        {
+            Nombre = "QA-18", Precio = 15000,
+            Productos =
+            [
+                new() { ProductoId = 13, Seleccionado = true, Cantidad = 1 },
+                new() { ProductoId = 13, Seleccionado = true, Cantidad = 1 }
+            ]
+        };
+        Assert.Contains(ValidateObject(empty), r => r.MemberNames.Contains("Productos") && r.ErrorMessage!.StartsWith("Debe seleccionar al menos un producto", StringComparison.Ordinal));
+        Assert.Contains(ValidateObject(repeated), r => r.MemberNames.Contains("Productos") && r.ErrorMessage == "Un producto no puede repetirse dentro del mismo combo.");
+
+        var view = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "Proyecto_Final", "Views", "Combos", "Create.cshtml"));
+        Assert.Contains("asp-validation-for=\"Productos\"", view, StringComparison.Ordinal);
+    }
+
+    private static List<System.ComponentModel.DataAnnotations.ValidationResult> ValidateObject(object model)
+    {
+        var results = new List<System.ComponentModel.DataAnnotations.ValidationResult>();
+        System.ComponentModel.DataAnnotations.Validator.TryValidateObject(model, new(model), results, true);
+        return results;
+    }
+
     [Theory]
     [InlineData(15, true)]
     [InlineData(10, true)]
