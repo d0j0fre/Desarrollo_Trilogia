@@ -9,10 +9,24 @@ namespace Proyecto_Final.Controllers
     public class ConsultationsController : Controller
     {
         private readonly AdminDbService _adminDbService;
+        private readonly EmailService _emailService;
+        private readonly ILogger<ConsultationsController> _logger;
 
-        public ConsultationsController(AdminDbService adminDbService)
+        public ConsultationsController(AdminDbService adminDbService, EmailService emailService, ILogger<ConsultationsController> logger)
         {
             _adminDbService = adminDbService;
+            _emailService = emailService;
+            _logger = logger;
+        }
+
+        // Estados en los que la consulta se considera resuelta y se avisa al cliente (CU-032).
+        public static bool IsResolution(string? estadoAnterior, string? estadoNuevo)
+        {
+            var nuevo = estadoNuevo?.Trim();
+            var esResuelta = string.Equals(nuevo, "Atendida", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(nuevo, "Cerrada", StringComparison.OrdinalIgnoreCase);
+
+            return esResuelta && !string.Equals(estadoAnterior?.Trim(), nuevo, StringComparison.OrdinalIgnoreCase);
         }
 
         [HttpGet]
@@ -56,6 +70,8 @@ namespace Proyecto_Final.Controllers
 
             try
             {
+                var consultaAnterior = await _adminDbService.GetConsultationByIdAsync(model.ConsultaId);
+
                 await _adminDbService.UpdateConsultationStatusAsync(
                     model.ConsultaId,
                     model.Estado,
@@ -69,6 +85,26 @@ namespace Proyecto_Final.Controllers
                     $"Se actualizó la consulta #{model.ConsultaId} al estado {model.Estado}.");
 
                 TempData["SuccessMessage"] = "Consulta actualizada correctamente.";
+
+                if (consultaAnterior != null
+                    && !string.IsNullOrWhiteSpace(consultaAnterior.Correo)
+                    && IsResolution(consultaAnterior.Estado, model.Estado))
+                {
+                    try
+                    {
+                        _emailService.SendEmail(
+                            consultaAnterior.Correo,
+                            $"Tu consulta fue resuelta - {consultaAnterior.Asunto}",
+                            EmailTemplateBuilder.BuildConsultationResolvedEmail(consultaAnterior.Nombre, consultaAnterior.Asunto, model.Estado));
+
+                        TempData["SuccessMessage"] = "Consulta actualizada correctamente. Se notificó la resolución al cliente por correo.";
+                    }
+                    catch (Exception exception)
+                    {
+                        _logger.LogWarning(exception, "No se pudo notificar la resolución de la consulta {ConsultaId}. Solicitud {TraceId}.", model.ConsultaId, HttpContext.TraceIdentifier);
+                        TempData["ErrorMessage"] = "La consulta se actualizó, pero no fue posible notificar la resolución al cliente por correo.";
+                    }
+                }
             }
             catch (InvalidOperationException)
             {

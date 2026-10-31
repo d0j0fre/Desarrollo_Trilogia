@@ -139,6 +139,76 @@ namespace Proyecto_Final.Services
                 notaInferior: "Revisar el modulo de Consultas para darle seguimiento administrativo.");
         }
 
+        public static string BuildContactConfirmationEmail(string nombre, string asunto, string mensaje)
+        {
+            var nombreSeguro = Encode(nombre, "Cliente");
+            var asuntoSeguro = Encode(asunto, "Consulta web");
+            var mensajeSeguro = WebUtility.HtmlEncode(mensaje ?? string.Empty).Replace("\n", "<br />");
+
+            var contenido = $@"
+                <p style='margin:0 0 18px;color:#374151;font-size:15px;line-height:1.7;'>
+                    Hola <strong>{nombreSeguro}</strong>, recibimos tu consulta y nuestro equipo le dara seguimiento. Este es el resumen de lo que nos enviaste.
+                </p>
+
+                <table role='presentation' width='100%' cellspacing='0' cellpadding='0' style='border-collapse:collapse;margin:0 0 20px;'>
+                    <tr>
+                        <td style='padding:12px 14px;background:#fbfaf7;border:1px solid #ebe6dc;border-radius:14px;'>
+                            <p style='margin:0 0 6px;color:#6b7280;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;'>Asunto</p>
+                            <p style='margin:0;color:#111827;font-size:15px;font-weight:700;'>{asuntoSeguro}</p>
+                        </td>
+                    </tr>
+                </table>
+
+                <div style='padding:16px 18px;background:#ffffff;border:1px solid #ebe6dc;border-radius:16px;'>
+                    <p style='margin:0 0 8px;color:#6b7280;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;'>Mensaje</p>
+                    <p style='margin:0;color:#374151;font-size:15px;line-height:1.7;'>{mensajeSeguro}</p>
+                </div>";
+
+            return BuildBaseTemplate(
+                titulo: "Recibimos tu consulta",
+                subtitulo: asuntoSeguro,
+                badge: "Contacto",
+                contenido: contenido,
+                notaInferior: "Te avisaremos por este medio cuando tu consulta sea resuelta.");
+        }
+
+        public static string BuildConsultationResolvedEmail(string nombre, string asunto, string estado)
+        {
+            var nombreSeguro = Encode(nombre, "Cliente");
+            var asuntoSeguro = Encode(asunto, "Consulta web");
+            var estadoSeguro = Encode(estado, "Atendida");
+
+            var contenido = $@"
+                <p style='margin:0 0 18px;color:#374151;font-size:15px;line-height:1.7;'>
+                    Hola <strong>{nombreSeguro}</strong>, tu consulta fue atendida por nuestro equipo.
+                </p>
+
+                <table role='presentation' width='100%' cellspacing='0' cellpadding='0' style='border-collapse:collapse;margin:0 0 20px;'>
+                    <tr>
+                        <td style='padding:12px 14px;background:#fbfaf7;border:1px solid #ebe6dc;border-radius:14px;'>
+                            <p style='margin:0 0 6px;color:#6b7280;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;'>Asunto</p>
+                            <p style='margin:0;color:#111827;font-size:15px;font-weight:700;'>{asuntoSeguro}</p>
+                        </td>
+                    </tr>
+                </table>
+
+                <table role='presentation' width='100%' cellspacing='0' cellpadding='0' style='border-collapse:collapse;margin:0 0 20px;'>
+                    <tr>
+                        <td style='padding:12px 14px;background:#fbfaf7;border:1px solid #ebe6dc;border-radius:14px;'>
+                            <p style='margin:0 0 6px;color:#6b7280;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;'>Estado</p>
+                            <p style='margin:0;color:#111827;font-size:15px;font-weight:700;'>{estadoSeguro}</p>
+                        </td>
+                    </tr>
+                </table>";
+
+            return BuildBaseTemplate(
+                titulo: "Tu consulta fue resuelta",
+                subtitulo: asuntoSeguro,
+                badge: "Contacto",
+                contenido: contenido,
+                notaInferior: "Si necesitas mas ayuda, puedes enviarnos una nueva consulta desde el sitio web.");
+        }
+
         private static string BuildBaseTemplate(string titulo, string subtitulo, string badge, string contenido, string notaInferior)
         {
             var tituloSeguro = Encode(titulo, "Licorera La Bodega");
