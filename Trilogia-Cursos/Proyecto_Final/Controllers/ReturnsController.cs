@@ -56,10 +56,11 @@ namespace Proyecto_Final.Controllers
 
             try
             {
-                await _warehouse.CreateReturnAsync(nueva, usuarioId, usuarioNombre);
+                var devolucionId = await _warehouse.CreateReturnAsync(nueva, usuarioId, usuarioNombre);
+                var pedido = nueva.PedidoId > 0 ? $" Vinculada al pedido #{nueva.PedidoId}." : string.Empty;
                 await RegistrarAuditoriaAsync("Registrar devolución", "Inventario",
-                    $"Devolución registrada: {nueva.Cantidad} unidad(es) del producto #{nueva.ProductoId}. En cuarentena.");
-                TempData["SuccessMessage"] = "Devolución registrada. El producto quedó en cuarentena.";
+                    $"Devolución #{devolucionId} registrada: {nueva.Cantidad} unidad(es) del producto #{nueva.ProductoId}.{pedido} En cuarentena.");
+                TempData["SuccessMessage"] = $"Devolución #{devolucionId} registrada.{pedido} El producto quedó en cuarentena.";
             }
             catch (SqlException ex) when (ex.Number >= 50000)
             {

@@ -84,6 +84,8 @@
                             <tr>
                                 <th>Producto</th>
                                 <th class="text-center">Cant.</th>
+                                <th class="text-center">Pedido</th>
+                                <th>Cliente / referencia</th>
                                 <th>Motivo</th>
                                 <th class="text-center">Estado</th>
                                 <th>Fecha</th>
@@ -92,7 +94,7 @@
                         <tbody>
                             @if (!Model.Devoluciones.Any())
                             {
-                                <tr><td colspan="5" class="text-center text-muted py-4">No hay devoluciones registradas.</td></tr>
+                                <tr><td colspan="7" class="text-center text-muted py-4">No hay devoluciones registradas.</td></tr>
                             }
                             else
                             {
@@ -108,6 +110,8 @@
                                     <tr>
                                         <td class="font-weight-bold">@d.ProductoNombre</td>
                                         <td class="text-center">@d.Cantidad</td>
+                                        <td class="text-center">@(d.PedidoId.HasValue ? $"#{d.PedidoId}" : "—")</td>
+                                        <td>@(string.IsNullOrWhiteSpace(d.ClienteInfo) ? "—" : d.ClienteInfo)</td>
                                         <td>@d.Motivo</td>
                                         <td class="text-center"><span class="admin-badge-soft @badge">@label</span></td>
                                         <td>@d.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</td>
