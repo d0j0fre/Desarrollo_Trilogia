@@ -128,6 +128,119 @@ public sealed class CarritoClientesCorreccionesTests
         Assert.False(ClientsController.IsSaldoPendiente(sinSaldo));
     }
 
+    private static ClientAccountStatementViewModel Cuenta(int movimientos = 2) => new()
+    {
+        UsuarioId = 53,
+        NombreCompleto = "QA-06 Cliente prueba (Peña)",
+        Correo = "qa@example.test",
+        LimiteCredito = 500000m,
+        Saldo = 60000m,
+        CreditoDisponible = 440000m,
+        CantidadFacturas = 1,
+        TotalFacturado = 113000m,
+        TotalPagado = 40000m,
+        PlazoCreditoDias = 30,
+        FechaCorte = new DateTime(2026, 10, 30, 10, 0, 0),
+        Facturas = [new() { FacturaId = 1, NumeroFactura = "FAC-20261030-0054", PedidoId = 54, FechaFactura = new DateTime(2026, 10, 30), Total = 113000m, Estado = "Generada", MetodoPago = "Crédito" }],
+        Movimientos = Enumerable.Range(1, movimientos).Select(i => new ClientAccountMovementViewModel
+        {
+            CreditoMovimientoId = i,
+            FechaMovimiento = new DateTime(2026, 10, 1).AddHours(i),
+            TipoMovimiento = i % 2 == 1 ? "Cargo" : "Abono",
+            Descripcion = $"Movimiento {i}",
+            Cargo = i % 2 == 1 ? 100000m : 0,
+            Abono = i % 2 == 1 ? 0 : 40000m,
+            SaldoAcumulado = 60000m
+        }).ToList()
+    };
+
+    private static string PdfText(byte[] pdf) => System.Text.Encoding.Latin1.GetString(pdf);
+
+    [Fact]
+    public void StatementPdf_IsAValidPdfWithBalanceInvoicesAndPayments()
+    {
+        // BUG-12-02 · CU-123-03: el estado de cuenta se descarga como archivo, no se imprime la pantalla.
+        var pdf = Proyecto_Final.Services.ClientAccountPdf.BuildStatement(Cuenta(), []);
+        var text = PdfText(pdf);
+
+        Assert.StartsWith("%PDF-1.4", text, StringComparison.Ordinal);
+        Assert.EndsWith("%%EOF\n", text, StringComparison.Ordinal);
+        Assert.Contains("CRC 60,000.00", text, StringComparison.Ordinal);
+        Assert.Contains("FAC-20261030-0054", text, StringComparison.Ordinal);
+        Assert.Contains("Pago", text, StringComparison.Ordinal);
+        Assert.Contains("prueba \\(Peña\\)", text, StringComparison.Ordinal); // acentos en WinAnsi y paréntesis escapados
+        AssertXrefPointsToObjects(pdf);
+    }
+
+    [Fact]
+    public void StatementPdf_AddsPagesForLongHistories()
+    {
+        var pdf = Proyecto_Final.Services.ClientAccountPdf.BuildStatement(Cuenta(movimientos: 150), []);
+        var text = PdfText(pdf);
+
+        Assert.Contains("/Count 3", text, StringComparison.Ordinal);
+        Assert.Contains("Página 3 de 3", text, StringComparison.Ordinal);
+        AssertXrefPointsToObjects(pdf);
+    }
+
+    [Fact]
+    public void InvoicePdf_ContainsTheInvoiceLinesAndTotals()
+    {
+        // BUG-12-02 · CU-124-02.
+        var factura = new ClientPortalInvoiceViewModel
+        {
+            PedidoId = 54,
+            NumeroFactura = "FAC-20261030-0054",
+            Cliente = "Cliente QA",
+            Correo = "qa@example.test",
+            FechaFactura = new DateTime(2026, 10, 30),
+            Subtotal = 100000m,
+            Impuesto = 13000m,
+            Total = 113000m,
+            Estado = "Generada",
+            Lineas = [new() { Producto = "Pilsen 6 Pack", Cantidad = 5, PrecioUnitario = 20000m, Subtotal = 100000m }]
+        };
+
+        var pdf = Proyecto_Final.Services.ClientAccountPdf.BuildInvoice(factura);
+        var text = PdfText(pdf);
+
+        Assert.Contains("Pilsen 6 Pack", text, StringComparison.Ordinal);
+        Assert.Contains("CRC 113,000.00", text, StringComparison.Ordinal);
+        Assert.Equal("factura-FAC-20261030-0054.pdf", Proyecto_Final.Services.ClientAccountPdf.InvoiceFileName(factura));
+        AssertXrefPointsToObjects(pdf);
+    }
+
+    [Fact]
+    public void ClientDetailAndPortal_ReadTheSameStatementProcedure()
+    {
+        // BUG-06-03 / BUG-12-01: una sola consulta para que el saldo coincida en todos lados.
+        var root = Path.GetDirectoryName(FindProjectRoot())!;
+        var service = File.ReadAllText(Path.Combine(root, "Proyecto_Final", "Services", "ClientAccountDbService.cs"));
+        var migration = File.ReadAllText(Path.Combine(root, "database", "migrations", "0232_cliente_estado_cuenta.sql"));
+        var clients = File.ReadAllText(Path.Combine(root, "Proyecto_Final", "Controllers", "ClientsController.cs"));
+        var portal = File.ReadAllText(Path.Combine(root, "Proyecto_Final", "Controllers", "ClientPortalController.cs"));
+
+        Assert.Contains("dbo.sp_Cliente_EstadoCuenta", service, StringComparison.Ordinal);
+        Assert.Contains("CROSS APPLY dbo.fn_Cliente_EstadoDeuda(u.UsuarioId) deuda", migration, StringComparison.Ordinal);
+        Assert.Contains("_clientAccount.GetStatementAsync", clients, StringComparison.Ordinal);
+        Assert.Contains("_clientAccount.GetStatementAsync", portal, StringComparison.Ordinal);
+        Assert.Contains("\"application/pdf\"", portal, StringComparison.Ordinal);
+    }
+
+    private static void AssertXrefPointsToObjects(byte[] pdf)
+    {
+        var text = PdfText(pdf);
+        var start = int.Parse(text[(text.LastIndexOf("startxref\n", StringComparison.Ordinal) + 10)..].Split('\n')[0]);
+        Assert.StartsWith("xref", text[start..], StringComparison.Ordinal);
+        var lines = text[start..].Split('\n');
+        var count = int.Parse(lines[1].Split(' ')[1]);
+        for (var i = 1; i < count; i++)
+        {
+            var offset = int.Parse(lines[2 + i][..10]);
+            Assert.StartsWith($"{i} 0 obj", text[offset..], StringComparison.Ordinal);
+        }
+    }
+
     private static string FindProjectRoot()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);

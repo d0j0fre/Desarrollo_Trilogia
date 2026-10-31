@@ -10,11 +10,13 @@ namespace Proyecto_Final.Controllers
     public class ClientPortalController : Controller
     {
         private readonly AdminDbService _adminDbService;
+        private readonly ClientAccountDbService _clientAccount;
         private readonly ILogger<ClientPortalController> _logger;
 
-        public ClientPortalController(AdminDbService adminDbService, ILogger<ClientPortalController> logger)
+        public ClientPortalController(AdminDbService adminDbService, ClientAccountDbService clientAccount, ILogger<ClientPortalController> logger)
         {
             _adminDbService = adminDbService;
+            _clientAccount = clientAccount;
             _logger = logger;
         }
 
@@ -42,10 +44,86 @@ namespace Proyecto_Final.Controllers
 
                 Pedidos = cliente.Pedidos
                     .Select(MapOrderListItem)
-                    .ToList()
+                    .ToList(),
+
+                Facturas = (await TryGetStatementAsync(usuarioId))?.Facturas ?? new()
             };
 
             return View(model);
+        }
+
+        // BUG-12-01 · CU-124-01: lista de facturas del cliente con su saldo.
+        [HttpGet]
+        public async Task<IActionResult> Invoices()
+        {
+            var usuarioId = HttpContext.Session.GetInt32("UserId") ?? 0;
+            var cuenta = await TryGetStatementAsync(usuarioId);
+            if (cuenta == null)
+            {
+                TempData["ErrorMessage"] = "No fue posible cargar sus facturas en este momento.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            return View(cuenta);
+        }
+
+        // BUG-12-02 · CU-123-03: el estado de cuenta se descarga como archivo PDF.
+        [HttpGet]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+        public async Task<IActionResult> StatementPdf()
+        {
+            var usuarioId = HttpContext.Session.GetInt32("UserId") ?? 0;
+            var cuenta = await TryGetStatementAsync(usuarioId);
+            var cliente = cuenta == null ? null : await _adminDbService.GetClientDetailAsync(usuarioId);
+            if (cuenta == null || cliente == null)
+            {
+                TempData["ErrorMessage"] = "No fue posible generar el estado de cuenta.";
+                return RedirectToAction(nameof(Statement));
+            }
+
+            var pdf = ClientAccountPdf.BuildStatement(cuenta, cliente.Pedidos.Select(MapOrderListItem));
+            await RegistrarAuditoriaAsync(
+                "Descargar estado de cuenta",
+                "Portal cliente",
+                $"El cliente {cuenta.NombreCompleto} descargó su estado de cuenta en PDF (saldo ₡{cuenta.Saldo:N2}).");
+
+            return File(pdf, "application/pdf", ClientAccountPdf.StatementFileName(cuenta));
+        }
+
+        // BUG-12-02 · CU-124-02: la factura se descarga como archivo PDF (solo la propia; id = pedido).
+        [HttpGet]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+        public async Task<IActionResult> InvoicePdf(int id)
+        {
+            var usuarioId = HttpContext.Session.GetInt32("UserId") ?? 0;
+            if (id <= 0 || usuarioId <= 0)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            try
+            {
+                var comprobante = await _adminDbService.GetClientInvoiceByOrderAsync(id, usuarioId);
+                if (comprobante == null)
+                {
+                    TempData["ErrorMessage"] = "No fue posible cargar el comprobante solicitado.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                var pdf = ClientAccountPdf.BuildInvoice(comprobante);
+                await RegistrarAuditoriaAsync(
+                    "Descargar factura",
+                    "Portal cliente",
+                    $"El cliente descargó la factura {comprobante.NumeroFactura} del pedido #{id} en PDF.");
+
+                return File(pdf, "application/pdf", ClientAccountPdf.InvoiceFileName(comprobante));
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(exception, "No se pudo generar el PDF de la factura del portal del cliente.");
+                TempData["ErrorMessage"] = "No fue posible descargar la factura en este momento. Intente nuevamente.";
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         [HttpGet]
@@ -72,13 +150,15 @@ namespace Proyecto_Final.Controllers
 
                 Pedidos = cliente.Pedidos
                     .Select(MapOrderListItem)
-                    .ToList()
+                    .ToList(),
+
+                Cuenta = await TryGetStatementAsync(usuarioId)
             };
 
             await RegistrarAuditoriaAsync(
-                "Descargar estado de cuenta",
+                "Consultar estado de cuenta",
                 "Portal cliente",
-                $"El cliente {model.Cliente.NombreCompleto} descargó su estado de cuenta."
+                $"El cliente {model.Cliente.NombreCompleto} consultó su estado de cuenta."
             );
 
             return View(model);
@@ -371,6 +451,19 @@ namespace Proyecto_Final.Controllers
                     "No fue posible cargar las solicitudes de garantía.";
 
                 return RedirectToAction(nameof(Index));
+            }
+        }
+
+        private async Task<ClientAccountStatementViewModel?> TryGetStatementAsync(int usuarioId)
+        {
+            try
+            {
+                return await _clientAccount.GetStatementAsync(usuarioId, HttpContext.RequestAborted);
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(exception, "No se pudo cargar el estado de cuenta del cliente {UsuarioId}.", usuarioId);
+                return null;
             }
         }
 

@@ -9,11 +9,13 @@ namespace Proyecto_Final.Controllers
     public class ClientsController : Controller
     {
         private readonly AdminDbService _adminDbService;
+        private readonly ClientAccountDbService _clientAccount;
         private readonly ILogger<ClientsController> _logger;
 
-        public ClientsController(AdminDbService adminDbService, ILogger<ClientsController> logger)
+        public ClientsController(AdminDbService adminDbService, ClientAccountDbService clientAccount, ILogger<ClientsController> logger)
         {
             _adminDbService = adminDbService;
+            _clientAccount = clientAccount;
             _logger = logger;
         }
 
@@ -136,6 +138,16 @@ namespace Proyecto_Final.Controllers
             var cliente = await _adminDbService.GetClientDetailAsync(id);
 
             if (cliente == null) return NotFound();
+
+            // BUG-06-03: facturas y saldo; si fallan, el resto del detalle se muestra igual.
+            try
+            {
+                cliente.EstadoCuenta = await _clientAccount.GetStatementAsync(id, HttpContext.RequestAborted);
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(exception, "No se pudo cargar el estado de cuenta del cliente {UsuarioId}.", id);
+            }
 
             return View(cliente);
         }

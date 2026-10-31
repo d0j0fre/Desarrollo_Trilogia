@@ -82,6 +82,8 @@ namespace Proyecto_Final.Models.Admin
         public string? MotivoInactivacion { get; set; }
         public DateTime? FechaInactivacion { get; set; }
         public List<ClientOrderSummaryViewModel> Pedidos { get; set; } = new();
+        // BUG-06-03 · CU-061-07: facturas y saldo (sp_Cliente_EstadoCuenta, el mismo saldo de Créditos y del portal).
+        public ClientAccountStatementViewModel? EstadoCuenta { get; set; }
     }
 
     public class ClientOrderSummaryViewModel
