@@ -52,9 +52,9 @@ namespace Proyecto_Final.Services
         // ── Catálogo de intenciones (orden: específico → genérico) ──
         private static readonly List<(string Key, string Cat, string[] Kw)> Intents = new()
         {
-            ("ventas_hoy",       Fin, new[]{ "ventas hoy", "venta hoy", "vendimos hoy", "vendido hoy", "ventas de hoy" }),
-            ("ventas_anio",      Fin, new[]{ "ventas del ano", "venta anual", "ventas anuales", "ventas del year", "en el ano", "acumulado del ano" }),
-            ("ventas",           Fin, new[]{ "venta", "vendimos", "vendido", "ingreso", "ingresos", "facturado del mes" }),
+            ("ventas_hoy",       Fin, new[]{ "ventas hoy", "venta hoy", "vendimos hoy", "vendido hoy", "ventas de hoy", "vendio hoy", "vendieron hoy" }),
+            ("ventas_anio",      Fin, new[]{ "ventas del ano", "venta anual", "ventas anuales", "ventas del year", "en el ano", "acumulado del ano", "vendio este ano", "vendimos este ano" }),
+            ("ventas",           Fin, new[]{ "venta", "vendimos", "vendido", "vendio", "vendieron", "ingreso", "ingresos", "facturado del mes" }),
             ("facturas",         Fin, new[]{ "factura", "facturacion", "facturamos", "cuantas facturas" }),
             ("ticket",           Fin, new[]{ "ticket", "venta promedio", "promedio de venta", "valor promedio" }),
             ("cobros",           Fin, new[]{ "cobro", "cobrar", "por cobrar", "cuentas por cobrar", "saldo pendiente", "deuda", "adeud", "moroso" }),
@@ -120,8 +120,14 @@ namespace Proyecto_Final.Services
             var permitidas = CategoriasPermitidas(rol);
             AssistantAnswerViewModel r;
 
+            // 0) Pregunta sobre una categoría que el rol no puede ver (CU-261 E4):
+            //    se avisa antes de que el resumen o el detalle la respondan con otra cosa.
+            if (Restringida(norm, permitidas) is AssistantAnswerViewModel restringida)
+            {
+                r = restringida;
+            }
             // 1) Ampliar una métrica ya mostrada (E3): resumen de la categoría
-            if (Contiene(norm, DetalleWords) && !string.IsNullOrWhiteSpace(contextoIntent)
+            else if (Contiene(norm, DetalleWords) && !string.IsNullOrWhiteSpace(contextoIntent)
                 && IntentCategoria.TryGetValue(contextoIntent!, out var catCtx) && permitidas.Contains(catCtx))
             {
                 var m = await LoadMetricsAsync();
@@ -375,6 +381,20 @@ namespace Proyecto_Final.Services
             r.Sugerencias.Add("Dame un resumen");
             if (permitidas.Contains(Inv)) r.Sugerencias.Add("¿Cómo está el inventario?");
             return r;
+        }
+
+        // "Información restringida" cuando la pregunta pide datos de una categoría
+        // fuera del rol. Las preguntas de capacidades y de uso de un módulo no traen
+        // datos, así que siguen su camino normal.
+        public static AssistantAnswerViewModel? Restringida(string norm, string? rol) =>
+            Restringida(norm, CategoriasPermitidas(rol));
+
+        private static AssistantAnswerViewModel? Restringida(string norm, HashSet<string> permitidas)
+        {
+            if (Contiene(norm, CapacidadWords) || DetectarAyuda(norm) is not null) return null;
+            return DetectarIntent(norm) is (_, string cat) && !permitidas.Contains(cat)
+                ? NoAutorizado(NombreCategoria[cat], permitidas)
+                : null;
         }
 
         // ── Detección ───────────────────────────────────────────

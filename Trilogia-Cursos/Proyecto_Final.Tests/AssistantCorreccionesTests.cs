@@ -44,5 +44,33 @@ public sealed class AssistantCorreccionesTests
         Assert.Contains("'UL', 'OL', 'LI'", view, StringComparison.Ordinal);
     }
 
+    [Theory]
+    [InlineData("¿Cuánto se vendió este mes?")]
+    [InlineData("¿Cuál es el saldo de créditos?")]
+    [InlineData("¿Cómo van las ventas?")]
+    [InlineData("Dame un resumen de ventas")]
+    [InlineData("¿Cuánto se vendió hoy?")]
+    [InlineData("Más detalle de las ventas")]
+    public void BUG_26_06_ElChoferRecibeInformacionRestringidaEnLasPreguntasDeVentas(string pregunta)
+    {
+        var respuesta = AssistantService.Restringida(AssistantService.Normalizar(pregunta), "Chofer");
+
+        Assert.NotNull(respuesta);
+        Assert.Equal("Información restringida", respuesta!.Titulo);
+        Assert.Contains("Finanzas", respuesta.Respuesta, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("Administrador", "¿Cuánto se vendió este mes?")]
+    [InlineData("Gerente", "¿Cómo van las ventas?")]
+    [InlineData("Chofer", "Dame un resumen")]
+    [InlineData("Chofer", "¿Cuántas entregas pendientes hay?")]
+    [InlineData("Chofer", "¿Cómo genero una factura?")]
+    [InlineData("Chofer", "¿Qué puedo preguntar?")]
+    public void BUG_26_06_LoPermitidoNoSeRestringe(string rol, string pregunta)
+    {
+        Assert.Null(AssistantService.Restringida(AssistantService.Normalizar(pregunta), rol));
+    }
+
     private static string Read(params string[] parts) => MobileCorreccionesTests.Read(parts);
 }
