@@ -37,6 +37,35 @@ public sealed class AssistantCorreccionesTests
         Assert.True(respuesta.Respuesta.Split("<li>").Length - 1 >= 3);
     }
 
+    [Theory]
+    [InlineData("inventario")] [InlineData("pedidos")] [InlineData("facturacion")] [InlineData("clientes")]
+    [InlineData("creditos")] [InlineData("cobros")] [InlineData("rutas")] [InlineData("vehiculos")]
+    [InlineData("kilometraje")] [InlineData("mantenimiento")] [InlineData("alertas")] [InlineData("activos")]
+    [InlineData("devoluciones")] [InlineData("cuarentena")] [InlineData("empleados")] [InlineData("roles")]
+    [InlineData("consultas")]
+    public void BUG_26_02_LaNavegacionDeLaAyudaExisteEnElMenu(string modulo)
+    {
+        var layout = Read("Proyecto_Final", "Views", "Shared", "_Layout.cshtml");
+        var texto = System.Text.RegularExpressions.Regex.Replace(AssistantService.ResponderAyuda(modulo).Respuesta, "<[^>]+>", string.Empty);
+
+        Assert.DoesNotContain("Operación →", texto, StringComparison.Ordinal);
+        var rutas = System.Text.RegularExpressions.Regex.Matches(texto, @"Administración → ([^→]+?) → ");
+        Assert.NotEmpty(rutas);
+        foreach (System.Text.RegularExpressions.Match ruta in rutas)
+        {
+            // El área es una sección del menú y lo que sigue empieza con una opción de esa sección.
+            var area = ruta.Groups[1].Value.Trim();
+            var inicioSeccion = layout.IndexOf($"acc-sec__label\">{area}</span>", StringComparison.Ordinal);
+            Assert.True(inicioSeccion >= 0, $"No existe la sección «{area}» en el menú.");
+            var finSeccion = layout.IndexOf("</details>", inicioSeccion, StringComparison.Ordinal);
+            var opciones = System.Text.RegularExpressions.Regex.Matches(layout[inicioSeccion..finSeccion], "<span>([^<]+)</span>")
+                .Select(m => m.Groups[1].Value);
+            var resto = texto[(ruta.Index + ruta.Length)..];
+            Assert.True(opciones.Any(o => resto.StartsWith(o, StringComparison.Ordinal)),
+                $"«{resto[..Math.Min(40, resto.Length)]}» no es una opción de «{area}» en el menú.");
+        }
+    }
+
     [Fact]
     public void BUG_26_02_LaVistaDejaMostrarLaListaNumeradaDelPasoAPaso()
     {
