@@ -34,5 +34,10 @@ class AppConfig {
   /// con la cola vacia no consume nada del plan de Azure.
   static const Duration syncInterval = Duration(seconds: 30);
 
+  /// Cada cuanto se revisa la bandeja de avisos con la aplicacion abierta.
+  /// Tambien se revisa al volver a la aplicacion. Mas seguido mantendria
+  /// despierta la base del plan gratuito de Azure todo el dia.
+  static const Duration notificationsInterval = Duration(minutes: 3);
+
   static bool get isConfigured => apiBaseUrl.isNotEmpty;
 }

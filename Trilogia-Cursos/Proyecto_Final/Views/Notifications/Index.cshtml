@@ -53,7 +53,7 @@
                                 <form asp-action="Open" asp-route-id="@n.NotificacionId" method="post" class="m-0">
                                     @Html.AntiForgeryToken()
                                     <button type="submit" class="btn btn-sm btn-ds-view">
-                                        @(n.EntidadTipo == "Ruta" ? "Ver ruta" : "Marcar leída")
+                                        @(n.EntidadTipo switch { "Ruta" => "Ver ruta", "Chat" => "Abrir chat", _ => "Marcar leída" })
                                     </button>
                                 </form>
                             </li>

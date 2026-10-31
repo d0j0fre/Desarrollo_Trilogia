@@ -1,9 +1,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Unico permiso que la aplicacion necesita. No se pide ubicacion: por
-         decision de negocio no se rastrea al chofer, y las coordenadas que usa
-         para navegar son las del cliente, que ya vienen del servidor. -->
+    <!-- No se pide ubicacion: por decision de negocio no se rastrea al chofer,
+         y las coordenadas que usa para navegar son las del cliente, que ya
+         vienen del servidor. -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Avisos en la bandeja del telefono (ruta asignada o reasignada, mensaje
+         directo). Android 13 o superior descarta las notificaciones sin este
+         permiso; la aplicacion lo pide al iniciar sesion. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
     <application
         android:label="Distribuidora JJ"

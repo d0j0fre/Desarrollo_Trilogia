@@ -63,6 +63,9 @@ namespace Proyecto_Final.Controllers
                     : RedirectToAction("Detail", "RoutesAdmin", new { id = notification.EntidadId });
             }
 
+            // BUG-23-05: un mensaje directo se lee y se responde en el chat.
+            if (notification.EntidadTipo == "Chat") return RedirectToAction("Index", "Chat");
+
             return RedirectToAction(nameof(Index));
         }
 

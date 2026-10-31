@@ -42,7 +42,11 @@ class NotificationsPage extends ConsumerWidget {
           child: ListTile(
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             leading: IconBadge(
-              icon: item.entityType == 'Ruta' ? Icons.route_rounded : Icons.notifications_rounded,
+              icon: switch (item.entityType) {
+                'Ruta' => Icons.route_rounded,
+                'Chat' => Icons.chat_bubble_outline_rounded,
+                _ => Icons.notifications_rounded,
+              },
               color: item.read ? BrandColors.textMuted : BrandColors.redPrimary,
             ),
             title: Text(item.title, style: TextStyle(fontWeight: item.read ? FontWeight.w500 : FontWeight.w800)),
@@ -50,6 +54,8 @@ class NotificationsPage extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(item.message),
+                if (item.entityType == 'Chat')
+                  Text('Respondé desde Chat en el portal web.', style: Theme.of(context).textTheme.bodySmall),
                 const SizedBox(height: 4),
                 Text(Fmt.shortDateTime(item.createdAt), style: Theme.of(context).textTheme.bodySmall),
               ],
