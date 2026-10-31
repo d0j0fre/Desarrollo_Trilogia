@@ -121,5 +121,65 @@ public sealed class AssistantCorreccionesTests
         Assert.Contains(".replace(/</g, '&lt;')", script, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void BUG_26_05_SeSugiereUnArticuloDeOtraCategoriaQueElVendedorPuedeAgregar()
+    {
+        var sugerencias = new[]
+        {
+            Sugerencia(12, "Imperial Silver 6 Pack", "Cerveza"),
+            Sugerencia(99, "Producto fuera del catálogo", "Snacks"),
+            Sugerencia(30, "Agotado", "Hielo", stock: 0),
+            Sugerencia(23, "Bolsa de Hielo 2kg", "Hielo"),
+            Sugerencia(24, "Yucas Tostadas 150g", "Snacks"),
+        };
+        var catalogo = new HashSet<int> { 12, 13, 23, 24, 30 };
+        var categorias = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "cerveza" };
+
+        var elegida = Proyecto_Final.Models.Admin.SellerCrossSellPolicy.Complementario(sugerencias, categorias, catalogo);
+
+        // Con cerveza no se sugiere otra cerveza, ni algo que no está en el catálogo o sin stock.
+        Assert.NotNull(elegida);
+        Assert.Equal(23, elegida!.ProductoId);
+    }
+
+    [Fact]
+    public void BUG_26_05_SinComplementarioNoHaySugerencia()
+    {
+        var sugerencias = new[] { Sugerencia(12, "Imperial Silver 6 Pack", "Cerveza") };
+        var categorias = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Cerveza" };
+
+        Assert.Null(Proyecto_Final.Models.Admin.SellerCrossSellPolicy.Complementario(sugerencias, categorias, new HashSet<int> { 12 }));
+    }
+
+    [Theory]
+    [InlineData("13", new[] { 13 })]
+    [InlineData("13, 2,13,x,-4,0", new[] { 13, 2 })]
+    [InlineData("", new int[0])]
+    [InlineData(null, new int[0])]
+    public void BUG_26_05_LaListaDeProductosSeValida(string? productos, int[] esperados)
+    {
+        Assert.Equal(esperados.ToHashSet(), Proyecto_Final.Models.Admin.SellerCrossSellPolicy.ParseProductos(productos));
+    }
+
+    [Fact]
+    public void BUG_26_05_VentaMovilMuestraLaSugerenciaYNoInsisteAlDescartarla()
+    {
+        var view = Read("Proyecto_Final", "Views", "SellerOrders", "Index.cshtml");
+        var controller = Read("Proyecto_Final", "Controllers", "SellerOrdersController.cs");
+
+        Assert.Contains("@Url.Action(\"Suggestion\", \"SellerOrders\")", view, StringComparison.Ordinal);
+        Assert.Contains("id=\"crossSellPopup\"", view, StringComparison.Ordinal);
+        Assert.Contains("dismissedForOrder = true;", view, StringComparison.Ordinal);
+        Assert.Contains("if (dismissedForOrder || !navigator.onLine", view, StringComparison.Ordinal);
+        Assert.Contains("_crossSell.GetSuggestionsAsync(", controller, StringComparison.Ordinal);
+
+        var action = typeof(Proyecto_Final.Controllers.SellerOrdersController).GetMethod("Suggestion");
+        Assert.NotNull(action);
+        Assert.NotNull(action!.GetCustomAttributes(typeof(Microsoft.AspNetCore.Mvc.HttpGetAttribute), true).SingleOrDefault());
+    }
+
+    private static Proyecto_Final.Models.Store.CrossSellSuggestion Sugerencia(int id, string nombre, string categoria, int stock = 10) =>
+        new(id, nombre, categoria, 1000m, stock, string.Empty, "Se compró junto con productos del carrito en 3 pedidos.");
+
     private static string Read(params string[] parts) => MobileCorreccionesTests.Read(parts);
 }
