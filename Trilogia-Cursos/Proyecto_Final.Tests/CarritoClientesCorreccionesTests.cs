@@ -107,6 +107,13 @@ public sealed class CarritoClientesCorreccionesTests
         Assert.Contains("EXEC dbo.sp_Credito_CargarPedido", migration, StringComparison.Ordinal);
         Assert.Contains("FROM dbo.fn_Cliente_EstadoDeuda(@UsuarioId)", migration, StringComparison.Ordinal);
         Assert.Contains("TR_Pedidos_AnularCargoCredito", migration, StringComparison.Ordinal);
+
+        // El cargo es el total facturado (con IVA): la factura si existe, si no el total que Venta móvil
+        // calcula una sola vez para su auto-factura; al facturarse después, el cargo queda igual a la factura.
+        Assert.Contains("@MontoFactura = @TotalFactura", migration, StringComparison.Ordinal);
+        Assert.Contains("SELECT TOP 1 f.Total FROM dbo.Facturas f WHERE f.PedidoId = @PedidoId", migration, StringComparison.Ordinal);
+        Assert.Contains("CREATE OR ALTER TRIGGER dbo.TR_Facturas_SincronizarCargoCredito", migration, StringComparison.Ordinal);
+        Assert.Equal(1, migration.Split("SET @Impuesto    = ROUND(@Subtotal * 0.13, 2);").Length - 1);
         Assert.Contains("\"@MetodoPago\"", service, StringComparison.Ordinal);
         Assert.Contains("\"@PlazoCreditoDias\"", service, StringComparison.Ordinal);
         Assert.True(File.Exists(Path.Combine(root, "database", "migrations", "0230_cliente_estado_deuda.verify.sql")));

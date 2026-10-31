@@ -24,11 +24,11 @@ SET ANSI_NULLS ON;
      otro cargo mas antiguo.
 
    Un pedido a credito se permite solo si el cliente tiene credito activo, no
-   bloqueado, con limite mayor que cero, SIN deuda vencida y si el total del
-   pedido cabe en el credito disponible (limite - deuda actual). Al crearse
-   registra un Cargo por el total del pedido, con PedidoId y la referencia
-   "Pedido #N"; si el pedido se cancela o se rechaza, se registra un
-   AjusteNegativo por el mismo monto.
+   bloqueado, con limite mayor que cero, SIN deuda vencida y si el monto a
+   pagar cabe en el credito disponible (limite - deuda actual). Al crearse
+   registra un Cargo por el TOTAL FACTURADO (con IVA), con PedidoId y la
+   referencia "Pedido #N"; si el pedido se cancela o se rechaza, se registra
+   un AjusteNegativo por el mismo monto.
 
    Cambios
    -------
@@ -47,6 +47,9 @@ SET ANSI_NULLS ON;
    6. TR_Pedidos_AnularCargoCredito (AFTER UPDATE en dbo.Pedidos): reversa el
       cargo cuando un pedido a credito pasa a Cancelado o Rechazado, por
       cualquier camino (cliente, administracion o gerente).
+   7. TR_Facturas_SincronizarCargoCredito (AFTER INSERT en dbo.Facturas): si
+      un pedido retenido se factura despues, su cargo queda igual al total
+      de la factura.
 
    Errores nuevos: 52016 (plazo invalido), 52020-52024 (pedido a credito).
    Aditiva salvo los procedimientos redefinidos. Rollback en
@@ -326,7 +329,8 @@ GO
 CREATE OR ALTER PROCEDURE dbo.sp_Credito_CargarPedido
     @PedidoId INT,
     @RegistradoPorUsuarioId INT = NULL,
-    @RegistradoPorNombre NVARCHAR(150) = NULL
+    @RegistradoPorNombre NVARCHAR(150) = NULL,
+    @MontoFactura DECIMAL(18,2) = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -335,10 +339,18 @@ BEGIN
     IF @@TRANCOUNT = 0
         THROW 52020, 'El cargo a crédito debe registrarse en la misma transacción que crea el pedido.', 1;
 
+    /* El cargo es lo que el cliente debe pagar: el total facturado con IVA.
+       Si la factura ya existe se toma su total; si no (pedido retenido), el
+       total que calculó con la misma regla quien crea el pedido
+       (@MontoFactura). TR_Facturas_SincronizarCargoCredito lo deja igual a
+       la factura cuando esta se genera después. */
     DECLARE @UsuarioId INT, @Total DECIMAL(18,2);
-    SELECT @UsuarioId = UsuarioId, @Total = Total
+    SELECT @UsuarioId = UsuarioId
     FROM dbo.Pedidos WITH (UPDLOCK, HOLDLOCK)
     WHERE PedidoId = @PedidoId;
+
+    SELECT @Total = COALESCE((SELECT TOP 1 f.Total FROM dbo.Facturas f WHERE f.PedidoId = @PedidoId ORDER BY f.FacturaId),
+                             @MontoFactura);
 
     IF @UsuarioId IS NULL OR ISNULL(@Total, 0) <= 0
         THROW 52020, 'El pedido a crédito no es válido.', 1;
@@ -554,13 +566,12 @@ BEGIN
     SELECT @PedidoId, ProductoId, Cantidad, Precio
     FROM   @Items;
 
-    /* 0230: el pedido a crédito valida el crédito y registra el cargo; si no
-       procede, el THROW revierte el pedido completo (XACT_ABORT). */
-    IF @MetodoPago = N'Crédito'
-        EXEC dbo.sp_Credito_CargarPedido
-            @PedidoId = @PedidoId,
-            @RegistradoPorUsuarioId = @VendedorUsuarioId,
-            @RegistradoPorNombre = @VendedorNombre;
+    /* 0230: montos de la factura (CU-091), calculados una sola vez antes de la
+       regla de retención: los usa la auto-factura y, en un pedido retenido, el
+       cargo a crédito (mismo IVA y redondeo). */
+    SELECT @Subtotal = SUM(Precio * Cantidad) FROM @Items;
+    SET @Impuesto    = ROUND(@Subtotal * 0.13, 2);
+    SET @TotalFactura = @Subtotal + @Impuesto;
 
     /* ── Solo para pedidos NO retenidos: inventario + CU-091 auto-factura ── */
     IF @DescuentaInv = 1
@@ -601,10 +612,6 @@ BEGIN
             RIGHT(CONCAT(N'0000', CAST(@PedidoId AS NVARCHAR(4))), 4)
         );
 
-        SELECT @Subtotal = SUM(Precio * Cantidad) FROM @Items;
-        SET @Impuesto    = ROUND(@Subtotal * 0.13, 2);
-        SET @TotalFactura = @Subtotal + @Impuesto;
-
         INSERT INTO dbo.Facturas (
             PedidoId, NumeroFactura, UsuarioId,
             ClienteNombre, ClienteCorreo,
@@ -624,6 +631,16 @@ BEGIN
         SELECT @FacturaId, ProductoId, ProductoNombre, Cantidad, Precio
         FROM   @Items;
     END;
+
+    /* 0230: el pedido a crédito valida el crédito y registra el cargo por el
+       total facturado; si no procede, el THROW revierte el pedido completo
+       (XACT_ABORT). */
+    IF @MetodoPago = N'Crédito'
+        EXEC dbo.sp_Credito_CargarPedido
+            @PedidoId = @PedidoId,
+            @RegistradoPorUsuarioId = @VendedorUsuarioId,
+            @RegistradoPorNombre = @VendedorNombre,
+            @MontoFactura = @TotalFactura;
 
     COMMIT TRANSACTION;
 
@@ -674,12 +691,39 @@ END;
 GO
 
 /* ─────────────────────────────────────────────────────────────────────────
+   7. El cargo de un pedido a credito es el total de su factura. Un pedido
+      retenido se carga al crearse con el total calculado por Venta movil y se
+      factura despues (aprobacion del gerente o Facturacion); si ese total
+      difiriera, el cargo queda igual a la factura dentro de la misma
+      transaccion que la genera. No se toca un cargo ya anulado.
+   ───────────────────────────────────────────────────────────────────────── */
+CREATE OR ALTER TRIGGER dbo.TR_Facturas_SincronizarCargoCredito
+ON dbo.Facturas
+AFTER INSERT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    UPDATE m
+    SET m.Monto = f.Total
+    FROM dbo.ClienteCreditoMovimientos m
+    INNER JOIN inserted f ON f.PedidoId = m.PedidoId
+    WHERE m.TipoMovimiento = N'Cargo'
+      AND m.Monto <> f.Total
+      AND f.Total > 0
+      AND NOT EXISTS (SELECT 1 FROM dbo.ClienteCreditoMovimientos r
+                      WHERE r.PedidoId = m.PedidoId AND r.TipoMovimiento = N'AjusteNegativo');
+END;
+GO
+
+/* ─────────────────────────────────────────────────────────────────────────
    Verificacion y ledger.
    ───────────────────────────────────────────────────────────────────────── */
 IF OBJECT_ID(N'dbo.fn_Cliente_EstadoDeuda', N'IF') IS NULL
    OR OBJECT_ID(N'dbo.sp_Cliente_EstadoDeuda', N'P') IS NULL
    OR OBJECT_ID(N'dbo.sp_Credito_CargarPedido', N'P') IS NULL
    OR OBJECT_ID(N'dbo.TR_Pedidos_AnularCargoCredito', N'TR') IS NULL
+   OR OBJECT_ID(N'dbo.TR_Facturas_SincronizarCargoCredito', N'TR') IS NULL
     THROW 56305, N'0230 no dejó creados todos sus objetos.', 1;
 
 IF NOT EXISTS (SELECT 1 FROM sys.parameters WHERE object_id = OBJECT_ID(N'dbo.sp_Seller_CreateOrder') AND name = N'@MetodoPago')

@@ -7,7 +7,8 @@
   `dbo.ClienteCreditoMovimientos.PedidoId INT NULL` y el índice filtrado
   `IX_ClienteCreditoMovimientos_PedidoId`.
 - Crea `dbo.fn_Cliente_EstadoDeuda`, `dbo.sp_Cliente_EstadoDeuda`,
-  `dbo.sp_Credito_CargarPedido` y el disparador `dbo.TR_Pedidos_AnularCargoCredito`.
+  `dbo.sp_Credito_CargarPedido` y los disparadores `dbo.TR_Pedidos_AnularCargoCredito`
+  y `dbo.TR_Facturas_SincronizarCargoCredito`.
 - Redefine `sp_Admin_UpdateClientCreditSettings`, `sp_Admin_GetClientCreditDetail`
   y `sp_Seller_CreateOrder`.
 
@@ -28,6 +29,7 @@ SET XACT_ABORT ON;
 BEGIN TRANSACTION;
 
 DROP TRIGGER IF EXISTS dbo.TR_Pedidos_AnularCargoCredito;
+DROP TRIGGER IF EXISTS dbo.TR_Facturas_SincronizarCargoCredito;
 DROP PROCEDURE IF EXISTS dbo.sp_Credito_CargarPedido;
 DROP PROCEDURE IF EXISTS dbo.sp_Cliente_EstadoDeuda;
 

@@ -23,6 +23,18 @@ IF OBJECT_ID(N'dbo.TR_Pedidos_AnularCargoCredito', N'TR') IS NULL
 IF NOT EXISTS (SELECT 1 FROM sys.parameters WHERE object_id = OBJECT_ID(N'dbo.sp_Seller_CreateOrder') AND name = N'@MetodoPago')
     THROW 56314, N'sp_Seller_CreateOrder no acepta @MetodoPago.', 1;
 
+IF OBJECT_ID(N'dbo.TR_Facturas_SincronizarCargoCredito', N'TR') IS NULL
+   OR EXISTS (SELECT 1 FROM sys.triggers WHERE name = N'TR_Facturas_SincronizarCargoCredito' AND is_disabled = 1)
+    THROW 56317, N'Falta o está deshabilitado TR_Facturas_SincronizarCargoCredito.', 1;
+
+/* El cargo de cada pedido a crédito facturado es igual al total de su factura. */
+IF EXISTS (
+    SELECT 1
+    FROM dbo.ClienteCreditoMovimientos m
+    INNER JOIN dbo.Facturas f ON f.PedidoId = m.PedidoId
+    WHERE m.TipoMovimiento = N'Cargo' AND m.Monto <> f.Total)
+    THROW 56318, N'Hay cargos a crédito que no coinciden con el total de su factura.', 1;
+
 /* La deuda actual de la función coincide con la de Créditos para todos los clientes. */
 IF EXISTS (
     SELECT 1
@@ -38,8 +50,10 @@ IF EXISTS (
 SELECT p.name AS ProcedimientoARevisar
 FROM sys.procedures p
 INNER JOIN sys.sql_modules m ON m.object_id = p.object_id
-WHERE m.definition LIKE N'%dbo.Pedidos%'
-  AND (m.definition LIKE N'%@@IDENTITY%' OR m.definition LIKE N'%UPDATE dbo.Pedidos%OUTPUT inserted%');
+WHERE (m.definition LIKE N'%dbo.Pedidos%' OR m.definition LIKE N'%dbo.Facturas%')
+  AND (m.definition LIKE N'%@@IDENTITY%'
+       OR m.definition LIKE N'%UPDATE dbo.Pedidos%OUTPUT inserted%'
+       OR m.definition LIKE N'%INSERT INTO dbo.Facturas%OUTPUT inserted%');
 
 /* Prueba revertida: cargo de 100 000 hace 40 días, cargo de 50 000 hace 10 días
    y abono de 60 000: deuda 90 000, vencida 40 000. */
