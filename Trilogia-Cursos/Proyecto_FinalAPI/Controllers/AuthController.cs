@@ -320,7 +320,9 @@ namespace Proyecto_FinalAPI.Controllers
         [EnableRateLimiting("password-recovery")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordApiRequest request)
         {
-            const string safeRecoveryMessage = "Si la solicitud es válida, se procesará la recuperación de contraseña.";
+            const string sentRecoveryMessage = "Te enviamos un correo con las instrucciones y el enlace para restablecer tu contraseña.";
+            const string notRegisteredMessage = "El correo ingresado no está registrado.";
+            const string sendFailedMessage = "No fue posible enviar el correo de recuperación en este momento. Intentá nuevamente más tarde.";
 
             if (request == null || string.IsNullOrWhiteSpace(request.Email))
             {
@@ -349,10 +351,11 @@ namespace Proyecto_FinalAPI.Controllers
 
             if (user == null)
             {
+                // CU-012 escenario 2: se informa que el correo no está registrado y no se envía nada.
                 return Ok(new AuthResult
                 {
-                    Success = true,
-                    Message = safeRecoveryMessage
+                    Success = false,
+                    Message = notRegisteredMessage
                 });
             }
 
@@ -360,8 +363,8 @@ namespace Proyecto_FinalAPI.Controllers
             if (!Uri.TryCreate(configuredBaseUrl, UriKind.Absolute, out var publicBaseUri) ||
                 !string.Equals(publicBaseUri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
             {
-                _logger.LogWarning("PasswordRecovery:PublicBaseUrl no está configurada con una URL HTTPS válida.");
-                return Ok(new AuthResult { Success = true, Message = safeRecoveryMessage });
+                _logger.LogError("PasswordRecovery:PublicBaseUrl no está configurada con una URL HTTPS válida; no se envió el correo de recuperación.");
+                return Ok(new AuthResult { Success = false, Message = sendFailedMessage });
             }
 
             var token = await _accountApiDbService.CreatePasswordResetTokenAsync(user.UsuarioId);
@@ -382,15 +385,15 @@ namespace Proyecto_FinalAPI.Controllers
                 _logger.LogError(ex, "No fue posible enviar el correo de recuperación de contraseña.");
                 return Ok(new AuthResult
                 {
-                    Success = true,
-                    Message = safeRecoveryMessage
+                    Success = false,
+                    Message = sendFailedMessage
                 });
             }
 
             return Ok(new AuthResult
             {
                 Success = true,
-                Message = safeRecoveryMessage
+                Message = sentRecoveryMessage
             });
         }
 
