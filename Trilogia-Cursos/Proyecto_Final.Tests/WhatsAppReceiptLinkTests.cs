@@ -20,7 +20,7 @@ public sealed class WhatsAppReceiptLinkTests
     [InlineData("")]
     [InlineData("   ")]
     [InlineData("0000-0000")]
-    [InlineData("1234")]
+    [InlineData("88-80")]
     [InlineData("1 202 555 0100")]
     public void NormalizePhone_WithoutUsableNumber_ReturnsNull(string? telefono)
     {
