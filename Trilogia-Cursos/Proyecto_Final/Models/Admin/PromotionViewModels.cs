@@ -19,6 +19,8 @@ namespace Proyecto_Final.Models.Admin
         public string ProductoNombre { get; set; } = string.Empty;
         public string? ProductoRegaloNombre { get; set; }
         public bool Vigente { get; set; }
+        public int? LimiteUnidades { get; set; }
+        public int UnidadesConsumidas { get; set; }
     }
 
     public class PromotionFormViewModel
@@ -74,6 +76,13 @@ namespace Proyecto_Final.Models.Admin
         [Range(0, 1000)]
         [Display(Name = "Prioridad")]
         public int Prioridad { get; set; }
+
+        // CU-171-05: al consumir este número de unidades promocionales la promoción se inactiva sola.
+        [Range(1, 1000000, ErrorMessage = "El límite de unidades debe ser al menos 1.")]
+        [Display(Name = "Límite de unidades")]
+        public int? LimiteUnidades { get; set; }
+
+        public int UnidadesConsumidas { get; set; }
 
         public List<ProductOptionViewModel> Productos { get; set; } = new();
     }

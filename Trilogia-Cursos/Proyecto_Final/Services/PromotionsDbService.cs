@@ -42,7 +42,9 @@ namespace Proyecto_Final.Services
                     Prioridad = reader.GetInt32(10),
                     ProductoNombre = reader.GetString(11),
                     ProductoRegaloNombre = reader.IsDBNull(12) ? null : reader.GetString(12),
-                    Vigente = reader.GetInt32(13) == 1
+                    Vigente = reader.GetInt32(13) == 1,
+                    LimiteUnidades = reader.FieldCount > 14 && !reader.IsDBNull(14) ? reader.GetInt32(14) : null,
+                    UnidadesConsumidas = reader.FieldCount > 15 && !reader.IsDBNull(15) ? reader.GetInt32(15) : 0
                 });
             }
             return lista;
@@ -71,7 +73,9 @@ namespace Proyecto_Final.Services
                     SegmentoCliente = reader.GetString(9),
                     FechaInicio = reader.GetDateTime(10),
                     FechaFin = reader.GetDateTime(11),
-                    Prioridad = reader.GetInt32(13)
+                    Prioridad = reader.GetInt32(13),
+                    LimiteUnidades = reader.FieldCount > 14 && !reader.IsDBNull(14) ? reader.GetInt32(14) : null,
+                    UnidadesConsumidas = reader.FieldCount > 15 && !reader.IsDBNull(15) ? reader.GetInt32(15) : 0
                 };
             }
             return null;
@@ -115,6 +119,7 @@ namespace Proyecto_Final.Services
             command.Parameters.Add("@FechaInicio", SqlDbType.Date).Value = model.FechaInicio.Date;
             command.Parameters.Add("@FechaFin", SqlDbType.Date).Value = model.FechaFin.Date;
             command.Parameters.Add("@Prioridad", SqlDbType.Int).Value = model.Prioridad;
+            command.Parameters.Add("@LimiteUnidades", SqlDbType.Int).Value = model.LimiteUnidades.HasValue ? model.LimiteUnidades.Value : DBNull.Value;
         }
 
         // ── CU-174 Inactivar ────────────────────────────────

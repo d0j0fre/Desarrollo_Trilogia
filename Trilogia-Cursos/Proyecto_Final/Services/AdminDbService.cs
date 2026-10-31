@@ -105,7 +105,8 @@ namespace Proyecto_Final.Services
                     FechaCreacion = reader.IsDBNull(8) ? DateTime.MinValue : reader.GetDateTime(8),
                     ImagenUrl = reader.FieldCount > 9 && !reader.IsDBNull(9) ? reader.GetString(9) : string.Empty,
                     EsDestacado = reader.FieldCount > 10 && !reader.IsDBNull(10) && reader.GetBoolean(10),
-                    StockMinimo = reader.FieldCount > 11 && !reader.IsDBNull(11) ? reader.GetInt32(11) : 5
+                    StockMinimo = reader.FieldCount > 11 && !reader.IsDBNull(11) ? reader.GetInt32(11) : 5,
+                    FechaVencimiento = reader.FieldCount > 12 && !reader.IsDBNull(12) ? reader.GetDateTime(12) : null
                 });
             }
             return products;
@@ -160,7 +161,8 @@ namespace Proyecto_Final.Services
                 Activo = !reader.IsDBNull(6) && reader.GetBoolean(6),
                 ImagenUrl = reader.FieldCount > 7 && !reader.IsDBNull(7) ? reader.GetString(7) : string.Empty,
                 EsDestacado = reader.FieldCount > 8 && !reader.IsDBNull(8) && reader.GetBoolean(8),
-                StockMinimo = reader.FieldCount > 9 && !reader.IsDBNull(9) ? reader.GetInt32(9) : 5
+                StockMinimo = reader.FieldCount > 9 && !reader.IsDBNull(9) ? reader.GetInt32(9) : 5,
+                FechaVencimiento = reader.FieldCount > 10 && !reader.IsDBNull(10) ? reader.GetDateTime(10) : null
             };
         }
 
@@ -184,6 +186,7 @@ namespace Proyecto_Final.Services
                     command.Parameters.AddWithValue("@Activo", model.Activo);
                     command.Parameters.AddWithValue("@ImagenUrl", string.IsNullOrWhiteSpace(model.ImagenUrl) ? DBNull.Value : model.ImagenUrl.Trim());
                     command.Parameters.AddWithValue("@EsDestacado", model.EsDestacado);
+                    command.Parameters.Add("@FechaVencimiento", SqlDbType.Date).Value = (object?)model.FechaVencimiento?.Date ?? DBNull.Value;
                     productoId = Convert.ToInt32(await command.ExecuteScalarAsync());
                 }
 
@@ -236,6 +239,7 @@ namespace Proyecto_Final.Services
                     updateCommand.Parameters.AddWithValue("@Activo", model.Activo);
                     updateCommand.Parameters.AddWithValue("@ImagenUrl", string.IsNullOrWhiteSpace(model.ImagenUrl) ? DBNull.Value : model.ImagenUrl.Trim());
                     updateCommand.Parameters.AddWithValue("@EsDestacado", model.EsDestacado);
+                    updateCommand.Parameters.Add("@FechaVencimiento", SqlDbType.Date).Value = (object?)model.FechaVencimiento?.Date ?? DBNull.Value;
                     await updateCommand.ExecuteNonQueryAsync();
 
                     await using (var syncCategoria = new SqlCommand("UPDATE dbo.Productos SET CategoriaId = (SELECT TOP 1 CategoriaId FROM dbo.Categorias WHERE Nombre = @Categoria) WHERE ProductoId = @ProductoId;", connection, (SqlTransaction)transaction))

@@ -10,6 +10,17 @@ namespace Proyecto_Final.Controllers
     [AdminAuthorize("Promociones", "PROMOCIONES_GESTIONAR")]
     public class PromotionsController : Controller
     {
+        // CU-171-03: error que lanza la base al detectar reglas traslapadas (migración 0213).
+        public const int ReglasTraslapadasError = 53102;
+        public const string MensajeReglasTraslapadas =
+            "Reglas traslapadas: el producto ya tiene una promoción activa que se cruza con estas fechas para el mismo segmento. " +
+            "Ajuste la vigencia o inactive la otra promoción.";
+
+        // CU-171-05: el límite de unidades no puede quedar por debajo de lo ya consumido (migración 0214).
+        public const int LimiteUnidadesError = 53103;
+        public const string MensajeLimiteUnidades =
+            "El límite de unidades debe ser mayor que cero y mayor que las unidades ya consumidas por la promoción.";
+
         private readonly PromotionsDbService _promos;
         private readonly AdminDbService _adminDbService;
         private readonly ILogger<PromotionsController> _logger;
@@ -58,6 +69,12 @@ namespace Proyecto_Final.Controllers
                 TempData["SuccessMessage"] = "Promoción creada correctamente.";
                 return RedirectToAction(nameof(Index));
             }
+            catch (SqlException ex) when (ex.Number is ReglasTraslapadasError or LimiteUnidadesError)
+            {
+                ModelState.AddModelError(string.Empty, ex.Number == ReglasTraslapadasError ? MensajeReglasTraslapadas : MensajeLimiteUnidades);
+                model.Productos = await _promos.GetProductOptionsAsync();
+                return View(model);
+            }
             catch (SqlException ex) when (ex.Number >= 50000)
             {
                 _logger.LogWarning(ex, "La base de datos rechazó una operación de negocio.");
@@ -103,6 +120,12 @@ namespace Proyecto_Final.Controllers
                 await RegistrarAuditoriaAsync("Editar promoción", "Promociones", $"Promoción #{model.PromocionId} actualizada.");
                 TempData["SuccessMessage"] = "Promoción actualizada correctamente.";
                 return RedirectToAction(nameof(Index));
+            }
+            catch (SqlException ex) when (ex.Number is ReglasTraslapadasError or LimiteUnidadesError)
+            {
+                ModelState.AddModelError(string.Empty, ex.Number == ReglasTraslapadasError ? MensajeReglasTraslapadas : MensajeLimiteUnidades);
+                model.Productos = await _promos.GetProductOptionsAsync();
+                return View(model);
             }
             catch (SqlException ex) when (ex.Number >= 50000)
             {

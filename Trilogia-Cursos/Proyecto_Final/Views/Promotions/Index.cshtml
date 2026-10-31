@@ -81,6 +81,10 @@
                                                 @if (p.Tipo == "DescuentoPorcentual") { <text>@p.PorcentajeDescuento% desde @p.CantidadMinima u.</text> }
                                                 else { <text>@p.CantidadRegalo @p.ProductoRegaloNombre por cada @p.CantidadMinima u.</text> }
                                             </div>
+                                            @if (p.LimiteUnidades.HasValue)
+                                            {
+                                                <div class="text-muted small">Unidades: @p.UnidadesConsumidas de @p.LimiteUnidades</div>
+                                            }
                                         </td>
                                         <td>@p.ProductoNombre</td>
                                         <td>@p.SegmentoCliente</td>

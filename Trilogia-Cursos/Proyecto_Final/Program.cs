@@ -178,6 +178,7 @@ builder.Services.AddScoped<ICrossSellService, CrossSellDbService>();
 builder.Services.AddScoped<IDocumentManagementDbService, DocumentManagementDbService>();
 builder.Services.AddScoped<IDocumentAlertService, DocumentAlertService>();
 builder.Services.AddScoped<IDocumentAlertEmailSender, SmtpDocumentAlertEmailSender>();
+builder.Services.AddHostedService<DocumentAlertDailyWorker>();
 builder.Services.AddScoped<AssistantService>();
 builder.Services.AddScoped<IChatDbService, ChatDbService>();
 builder.Services.AddScoped<IChatAuthorizationService, ChatAuthorizationService>();

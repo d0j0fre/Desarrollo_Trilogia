@@ -1,4 +1,5 @@
 @model IEnumerable<Proyecto_Final.Models.Admin.ProductAdminViewModel>
+@using Proyecto_Final.Models.Admin
 @{
     ViewData["Title"] = "Inventario";
     var filtro = ViewBag.Filtro as string;
@@ -28,7 +29,7 @@
         <div class="col-12">
             <form asp-controller="Inventory" asp-action="Index" method="get" class="admin-filter-grid">
                 <input type="text" name="filtro" value="@filtro"
-                       class="form-control" placeholder="Buscar por nombre o categoría..." />
+                       class="form-control" placeholder="Buscar por código SKU, nombre o categoría..." />
                 <button type="submit" class="btn btn-ds-search"><i class="fa fa-search mr-1"></i>Buscar</button>
                 @if (!string.IsNullOrWhiteSpace(filtro))
                 {
@@ -44,6 +45,31 @@
             p.EstadoStock == "Bajo" ||
             p.EstadoStock == "Stock bajo" ||
             p.Stock <= p.StockMinimo).ToList();
+        var productosPorVencer = Model
+            .Where(p => ProductExpiration.RequiereAviso(p.FechaVencimiento, DateTime.Today))
+            .OrderBy(p => p.FechaVencimiento)
+            .ToList();
+    }
+
+    @if (productosPorVencer.Any())
+    {
+        <div class="row px-xl-5 mb-3">
+            <div class="col-12">
+                <div class="alert alert-warning d-flex align-items-start" role="alert">
+                    <span style="font-size:1.4rem; margin-right:10px;">⏳</span>
+                    <div>
+                        <strong>Productos próximos a vencer:</strong>
+                        hay @productosPorVencer.Count producto(s) vencidos o que vencen en los próximos @ProductExpiration.DiasAviso días:
+                        <ul class="mb-0 mt-1">
+                            @foreach (var p in productosPorVencer)
+                            {
+                                <li><strong>@p.Nombre</strong> — @ProductExpiration.Describir(p.FechaVencimiento, DateTime.Today)</li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
     }
 
     @if (productosConAlerta.Any())
@@ -79,7 +105,7 @@
                     <table class="table table-hover mb-0">
                         <thead class="thead-light">
                             <tr>
-                                <th>ID</th>
+                                <th>Código</th>
                                 <th>Imagen</th>
                                 <th>Nombre</th>
                                 <th>Categoría</th>
@@ -124,12 +150,19 @@
                                         : "Disponible";
 
                                     <tr>
-                                        <td>@item.ProductoId</td>
+                                        <td class="text-nowrap">SKU-@item.ProductoId.ToString("D5")</td>
                                         <td>
                                             <img src="@imagen" class="table-product-thumb" alt="Miniatura de @item.Nombre" loading="lazy" width="64" height="64"
                                                  onerror="this.onerror=null;this.src='/img/whisky-premium.webp';" />
                                         </td>
-                                        <td class="font-weight-bold">@item.Nombre</td>
+                                        <td class="font-weight-bold">
+                                            @item.Nombre
+                                            @if (ProductExpiration.RequiereAviso(item.FechaVencimiento, DateTime.Today))
+                                            {
+                                                <div><span class="badge badge-warning">Próximo a vencer</span></div>
+                                                <div class="small text-muted font-weight-normal">@ProductExpiration.Describir(item.FechaVencimiento, DateTime.Today)</div>
+                                            }
+                                        </td>
                                         <td>@item.Categoria</td>
                                         <td>
                                             <form asp-controller="Inventory" asp-action="ToggleFeatured" method="post" class="mb-0">

@@ -180,7 +180,8 @@ namespace Proyecto_Final.Controllers
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        [HttpGet]
+        // Sin restricción de verbo: UseExceptionHandler re-ejecuta esta acción con el método de la
+        // solicitud original; con [HttpGet] un fallo en un POST terminaba en HTTP 405.
         public IActionResult Error()
         {
             Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
