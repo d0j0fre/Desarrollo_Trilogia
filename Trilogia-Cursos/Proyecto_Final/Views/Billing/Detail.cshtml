@@ -76,6 +76,23 @@
         </div>
     </div>
 
+    @if (ViewBag.FacturaRecienGenerada == true && !string.IsNullOrWhiteSpace(Model.WhatsAppUrl))
+    {
+        <div class="row px-xl-5 pb-3 billing-detail-actions">
+            <div class="col-12">
+                <div class="admin-card d-flex flex-column flex-md-row justify-content-between align-items-md-center border border-success">
+                    <div class="mb-3 mb-md-0">
+                        <h5 class="mb-1">Enviar el comprobante al cliente</h5>
+                        <p class="text-muted mb-0">El cliente tiene el número @Model.Telefono registrado. Se abrirá WhatsApp con el comprobante listo para enviar.</p>
+                    </div>
+                    <a href="@Model.WhatsAppUrl" target="_blank" rel="noopener noreferrer" class="btn btn-success btn-lg">
+                        <i class="fab fa-whatsapp mr-2"></i>Enviar comprobante por WhatsApp
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+
     <div class="row px-xl-5 pb-3">
         <div class="col-lg-8 pb-3">
             <div class="admin-card h-100">
@@ -113,6 +130,11 @@
                     <div class="col-md-6 mb-3">
                         <label class="font-weight-bold d-block">Correo</label>
                         <span>@Model.Correo</span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="font-weight-bold d-block">Teléfono</label>
+                        <span>@(string.IsNullOrWhiteSpace(Model.Telefono) ? "No registrado" : Model.Telefono)</span>
                     </div>
 
                     <div class="col-md-6 mb-3">
@@ -156,6 +178,17 @@
                         <i class="fa fa-envelope mr-2"></i>Reenviar comprobante por correo
                     </button>
                 </form>
+
+                @if (!string.IsNullOrWhiteSpace(Model.WhatsAppUrl))
+                {
+                    <a href="@Model.WhatsAppUrl" target="_blank" rel="noopener noreferrer" class="btn btn-success btn-block mb-2">
+                        <i class="fab fa-whatsapp mr-2"></i>Enviar comprobante por WhatsApp
+                    </a>
+                }
+                else
+                {
+                    <p class="text-muted small mb-2">El cliente no tiene un número de teléfono registrado para enviar el comprobante por WhatsApp.</p>
+                }
 
                 <p class="text-muted mb-0 mt-3">
                     Esta vista permite consultar el detalle generado por el sistema para fines administrativos y de control.

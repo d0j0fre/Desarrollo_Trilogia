@@ -229,6 +229,12 @@ namespace Proyecto_Final.Controllers
                 pedido.FacturaId      = factura.Value.FacturaId;
                 pedido.NumeroFactura  = factura.Value.NumeroFactura;
                 pedido.HasInvoice     = true;
+
+                var detalleFactura = await _adminDbService.GetInvoiceDetailAsync(factura.Value.FacturaId);
+                var telefono = await _adminDbService.GetInvoiceClientPhoneAsync(factura.Value.FacturaId);
+                if (detalleFactura != null)
+                    ViewBag.WhatsAppUrl = WhatsAppReceiptLink.BuildUrl(telefono, detalleFactura.NumeroFactura, detalleFactura.FechaFactura, detalleFactura.Total);
+                ViewBag.TelefonoCliente = telefono;
             }
 
             ViewBag.NumeroFactura = TempData["ConfirmNumeroFactura"] as string ?? pedido.NumeroFactura;

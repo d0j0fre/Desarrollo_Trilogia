@@ -37,6 +37,8 @@ namespace Proyecto_Final.Models.Admin
         public decimal Impuesto { get; set; }
         public decimal Total { get; set; }
         public string Estado { get; set; } = string.Empty;
+        public string? Telefono { get; set; }
+        public string? WhatsAppUrl { get; set; }
         public List<InvoiceDetailLineViewModel> Detalles { get; set; } = new();
     }
 

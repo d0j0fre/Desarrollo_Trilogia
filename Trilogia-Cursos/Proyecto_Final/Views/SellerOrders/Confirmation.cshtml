@@ -33,6 +33,24 @@
                 </div>
             </div>
 
+            @if (Model.HasInvoice)
+            {
+                var whatsAppUrl = ViewBag.WhatsAppUrl as string;
+                <div class="admin-card text-center py-4 mb-4">
+                    @if (!string.IsNullOrWhiteSpace(whatsAppUrl))
+                    {
+                        <p class="text-muted mb-3">El cliente tiene el número @(ViewBag.TelefonoCliente as string) registrado. Se abrirá WhatsApp con el comprobante listo para enviar.</p>
+                        <a href="@whatsAppUrl" target="_blank" rel="noopener noreferrer" class="btn btn-success btn-lg">
+                            <i class="fab fa-whatsapp mr-2"></i>Enviar comprobante por WhatsApp
+                        </a>
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0">El cliente no tiene un número de teléfono registrado para enviar el comprobante por WhatsApp.</p>
+                    }
+                </div>
+            }
+
             <div class="admin-card mb-4">
                 <h5 class="mb-3">Resumen del pedido</h5>
                 <div class="row">
