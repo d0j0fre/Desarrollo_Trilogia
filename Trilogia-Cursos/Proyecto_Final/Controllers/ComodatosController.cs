@@ -114,6 +114,22 @@ namespace Proyecto_Final.Controllers
         [AdminAuthorize("Activos", "COMODATOS_CONSULTAR")]
         public async Task<IActionResult> Profitability()
         {
+            // BUG-16-04: al consultar se generan los avisos de baja rentabilidad
+            // (30 días sin compras) y cada aviso nuevo queda en la bitácora.
+            // Si falla, el reporte se muestra igual.
+            try
+            {
+                foreach (var alerta in await _fleet.GenerateComodatoProfitabilityAlertsAsync())
+                {
+                    await RegistrarAuditoriaAsync("Alerta de baja rentabilidad", "Activos",
+                        $"Comodato #{alerta.ComodatoId}: {alerta.ClienteNombre} no compra hace {alerta.DiasSinCompra} días; se sugiere retirar el equipo {alerta.CodigoActivo}.");
+                }
+            }
+            catch (SqlException ex)
+            {
+                _logger.LogWarning(ex, "No se pudieron generar las alertas de baja rentabilidad de comodatos.");
+            }
+
             var datos = await _fleet.GetComodatoProfitabilityAsync();
             return View(datos);
         }

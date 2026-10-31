@@ -119,5 +119,18 @@ namespace Proyecto_Final.Models.Admin
         public decimal TotalComprado { get; set; }
         public DateTime? UltimaCompra { get; set; }
         public string Ubicacion { get; set; } = string.Empty;
+        // BUG-16-04: días desde la última compra (o desde la asignación si no hay
+        // compras) y alerta de baja rentabilidad a los 30 días (fn_Comodato_Rentabilidad).
+        public int DiasSinCompra { get; set; }
+        public bool SugerirRetiro { get; set; }
+    }
+
+    // BUG-16-04: comodato que recibió un aviso nuevo de baja rentabilidad.
+    public class ComodatoProfitabilityAlertViewModel
+    {
+        public int ComodatoId { get; set; }
+        public string CodigoActivo { get; set; } = string.Empty;
+        public string ClienteNombre { get; set; } = string.Empty;
+        public int DiasSinCompra { get; set; }
     }
 }

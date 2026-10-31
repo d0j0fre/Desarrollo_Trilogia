@@ -399,7 +399,32 @@ namespace Proyecto_Final.Services
                     TotalComprado = reader.GetDecimal(9),
                     UltimaCompra = reader.IsDBNull(10) ? null : reader.GetDateTime(10),
                     // BUG-16-06: columna de 0241; sin la migración queda vacía.
-                    Ubicacion = reader.FieldCount > 11 ? reader.GetString(11) : string.Empty
+                    Ubicacion = reader.FieldCount > 11 ? reader.GetString(11) : string.Empty,
+                    // BUG-16-04: columnas de 0242.
+                    DiasSinCompra = reader.FieldCount > 12 ? reader.GetInt32(12) : 0,
+                    SugerirRetiro = reader.FieldCount > 13 && reader.GetBoolean(13)
+                });
+            }
+            return lista;
+        }
+
+        // BUG-16-04: deja los avisos de baja rentabilidad (30 días sin compras) y
+        // devuelve los comodatos que recibieron uno nuevo.
+        public async Task<List<ComodatoProfitabilityAlertViewModel>> GenerateComodatoProfitabilityAlertsAsync()
+        {
+            var lista = new List<ComodatoProfitabilityAlertViewModel>();
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Comodato_GenerarAlertasRentabilidad", connection) { CommandType = CommandType.StoredProcedure };
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                lista.Add(new ComodatoProfitabilityAlertViewModel
+                {
+                    ComodatoId = reader.GetInt32(0),
+                    CodigoActivo = reader.GetString(1),
+                    ClienteNombre = reader.GetString(2),
+                    DiasSinCompra = reader.GetInt32(3)
                 });
             }
             return lista;
