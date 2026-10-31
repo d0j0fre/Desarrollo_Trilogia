@@ -36,11 +36,8 @@ namespace Proyecto_Final.Controllers
         [HttpGet]
         public async Task<IActionResult> Assign()
         {
-            var model = new ComodatoAssignViewModel
-            {
-                FechaAsignacion = DateTime.Today,
-                ActivosDisponibles = await _fleet.GetAvailableAssetsAsync()
-            };
+            var model = new ComodatoAssignViewModel { FechaAsignacion = DateTime.Today };
+            await CargarOpcionesAsync(model);
             return View(model);
         }
 
@@ -49,9 +46,24 @@ namespace Proyecto_Final.Controllers
         public async Task<IActionResult> Assign(ComodatoAssignViewModel model)
         {
             model.ClienteIdentificacion = CostaRicanIdentificationAttribute.Normalize(model.ClienteIdentificacion);
-            if (!ModelState.IsValid)
+            await CargarOpcionesAsync(model);
+
+            // BUG-16-02: el cliente sale de la lista de clientes registrados y activos.
+            var cliente = model.Clientes.FirstOrDefault(c => c.UsuarioId == model.ClienteUsuarioId);
+            if (model.ClienteUsuarioId.HasValue && cliente is null)
+                ModelState.AddModelError(nameof(model.ClienteUsuarioId), "Seleccione un cliente registrado y activo.");
+            if (!ModelState.IsValid || cliente is null)
+                return View(model);
+            model.ClienteNombre = cliente.NombreCompleto;
+
+            // BUG-16-02 · CU-162-03: con saldo vencido se alerta el riesgo y se bloquea.
+            var deuda = await _fleet.GetComodatoClientDebtAsync(cliente.UsuarioId);
+            if (deuda.EsMoroso)
             {
-                model.ActivosDisponibles = await _fleet.GetAvailableAssetsAsync();
+                deuda.ClienteNombre = cliente.NombreCompleto;
+                model.Riesgo = deuda;
+                await RegistrarAuditoriaAsync("Comodato bloqueado por morosidad", "Activos",
+                    $"Activo #{model.ActivoId} no asignado a {cliente.NombreCompleto}: deuda vencida ₡{deuda.SaldoVencido:N2} con {deuda.DiasAtraso} días de atraso.");
                 return View(model);
             }
 
@@ -62,8 +74,17 @@ namespace Proyecto_Final.Controllers
                 var id = await _fleet.AssignComodatoAsync(model, usuarioId, usuarioNombre);
                 await RegistrarAuditoriaAsync("Asignar comodato", "Activos",
                     $"Comodato #{id}: activo #{model.ActivoId} asignado a {model.ClienteNombre}.");
-                TempData["SuccessMessage"] = "Comodato registrado correctamente.";
+                TempData["SuccessMessage"] = "Comodato registrado correctamente. Se emitió el contrato de comodato.";
+                TempData["ContratoComodatoId"] = id;
                 return RedirectToAction(nameof(Index));
+            }
+            catch (SqlException ex) when (ex.Number == 53086)
+            {
+                // La base también bloquea por morosidad (0245), p. ej. si la deuda venció entre la consulta y el registro.
+                _logger.LogWarning(ex, "Comodato bloqueado por morosidad del cliente {ClienteUsuarioId}.", cliente.UsuarioId);
+                // El mensaje de 53086 lo arma sp_Comodato_Asignar con el monto vencido y los días de atraso.
+                ModelState.AddModelError(string.Empty, ex.Message);
+                return View(model);
             }
             catch (SqlException ex) when (ex.Number >= 50000)
             {
@@ -81,6 +102,30 @@ namespace Proyecto_Final.Controllers
             }
         }
 
+        private async Task CargarOpcionesAsync(ComodatoAssignViewModel model)
+        {
+            model.ActivosDisponibles = await _fleet.GetAvailableAssetsAsync();
+            model.Clientes = await _fleet.GetComodatoClientsAsync();
+        }
+
+        // BUG-16-01 · CU-162-01 — Contrato de comodato en PDF.
+        [HttpGet]
+        public async Task<IActionResult> Contract(int id)
+        {
+            if (id <= 0) return NotFound();
+            try
+            {
+                var contrato = await _fleet.GetComodatoContractAsync(id);
+                if (contrato is null) return NotFound();
+                return File(ComodatoContractPdf.Build(contrato), "application/pdf", ComodatoContractPdf.FileName(contrato));
+            }
+            catch (SqlException ex)
+            {
+                _logger.LogError(ex, "No se pudo emitir el contrato del comodato {ComodatoId}.", id);
+                return StatusCode(StatusCodes.Status503ServiceUnavailable);
+            }
+        }
+
         // CU-163 — Devolver / Retirar
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -94,7 +139,10 @@ namespace Proyecto_Final.Controllers
                 var destino = model.Destino == "Mantenimiento" ? "enviado a mantenimiento" : "reingresado al inventario";
                 await RegistrarAuditoriaAsync("Devolver comodato", "Activos",
                     $"Comodato #{model.ComodatoId} cerrado; equipo {destino}.");
-                TempData["SuccessMessage"] = $"Comodato cerrado. Equipo {destino}.";
+                // BUG-16-03: con avería, sp_Comodato_Devolver avisa a taller y cobros (0243).
+                TempData["SuccessMessage"] = model.Destino == "Mantenimiento"
+                    ? $"Comodato cerrado. Equipo {destino} (en reparación). Se envió una alerta a taller y cobros."
+                    : $"Comodato cerrado. Equipo {destino}.";
             }
             catch (SqlException ex) when (ex.Number >= 50000)
             {
@@ -114,6 +162,22 @@ namespace Proyecto_Final.Controllers
         [AdminAuthorize("Activos", "COMODATOS_CONSULTAR")]
         public async Task<IActionResult> Profitability()
         {
+            // BUG-16-04: al consultar se generan los avisos de baja rentabilidad
+            // (30 días sin compras) y cada aviso nuevo queda en la bitácora.
+            // Si falla, el reporte se muestra igual.
+            try
+            {
+                foreach (var alerta in await _fleet.GenerateComodatoProfitabilityAlertsAsync())
+                {
+                    await RegistrarAuditoriaAsync("Alerta de baja rentabilidad", "Activos",
+                        $"Comodato #{alerta.ComodatoId}: {alerta.ClienteNombre} no compra hace {alerta.DiasSinCompra} días; se sugiere retirar el equipo {alerta.CodigoActivo}.");
+                }
+            }
+            catch (SqlException ex)
+            {
+                _logger.LogWarning(ex, "No se pudieron generar las alertas de baja rentabilidad de comodatos.");
+            }
+
             var datos = await _fleet.GetComodatoProfitabilityAsync();
             return View(datos);
         }

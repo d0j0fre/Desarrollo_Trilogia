@@ -52,9 +52,9 @@ namespace Proyecto_Final.Services
         // ── Catálogo de intenciones (orden: específico → genérico) ──
         private static readonly List<(string Key, string Cat, string[] Kw)> Intents = new()
         {
-            ("ventas_hoy",       Fin, new[]{ "ventas hoy", "venta hoy", "vendimos hoy", "vendido hoy", "ventas de hoy" }),
-            ("ventas_anio",      Fin, new[]{ "ventas del ano", "venta anual", "ventas anuales", "ventas del year", "en el ano", "acumulado del ano" }),
-            ("ventas",           Fin, new[]{ "venta", "vendimos", "vendido", "ingreso", "ingresos", "facturado del mes" }),
+            ("ventas_hoy",       Fin, new[]{ "ventas hoy", "venta hoy", "vendimos hoy", "vendido hoy", "ventas de hoy", "vendio hoy", "vendieron hoy" }),
+            ("ventas_anio",      Fin, new[]{ "ventas del ano", "venta anual", "ventas anuales", "ventas del year", "en el ano", "acumulado del ano", "vendio este ano", "vendimos este ano" }),
+            ("ventas",           Fin, new[]{ "venta", "vendimos", "vendido", "vendio", "vendieron", "ingreso", "ingresos", "facturado del mes" }),
             ("facturas",         Fin, new[]{ "factura", "facturacion", "facturamos", "cuantas facturas" }),
             ("ticket",           Fin, new[]{ "ticket", "venta promedio", "promedio de venta", "valor promedio" }),
             ("cobros",           Fin, new[]{ "cobro", "cobrar", "por cobrar", "cuentas por cobrar", "saldo pendiente", "deuda", "adeud", "moroso" }),
@@ -93,23 +93,23 @@ namespace Proyecto_Final.Services
         private static readonly Dictionary<string, (string Titulo, string Texto)> Ayuda =
             new(StringComparer.OrdinalIgnoreCase)
             {
-                ["inventario"] = ("Módulo de Inventario", "Operación → Inventario para ver productos y stock. 'Nuevo producto' para crear, el lápiz para editar, y 'Movimientos' para entradas, salidas o ajustes."),
-                ["pedidos"] = ("Módulo de Pedidos", "Operación → Pedidos: revisa los pedidos por estado y, desde el detalle, cámbialo, retenlo o factúralo."),
-                ["facturacion"] = ("Módulo de Facturación", "Operación → Facturación genera la factura de un pedido confirmado. El inventario se descontó en el checkout; no se vuelve a descontar al facturar."),
-                ["clientes"] = ("Módulo de Clientes", "Clientes → Clientes administra los datos; desde Créditos gestionas su línea de crédito y movimientos."),
-                ["creditos"] = ("Módulo de Créditos", "Clientes → Créditos define el límite, bloquea y registra cargos/abonos de cada cliente."),
-                ["cobros"] = ("Cuentas por cobrar", "Operación → Cuentas por Cobrar muestra los saldos deudores y permite registrar abonos."),
-                ["rutas"] = ("Rutas y Entregas", "Operación → Rutas: crea la ruta con chofer y vehículo, agrega pedidos, ubícalos en el mapa, secuénciala, despáchala y al final del día liquídala."),
-                ["vehiculos"] = ("Vehículos", "Operación → Vehículos registra la flota (placa, marca, capacidad, odómetro)."),
-                ["kilometraje"] = ("Kilometraje", "Operación → Kilometraje: el chofer registra el km inicial al salir y el final al volver; el sistema valida contra el odómetro del vehículo."),
-                ["mantenimiento"] = ("Mantenimiento de flota", "Operación → Mantenimiento registra órdenes preventivas o correctivas con costo y taller."),
-                ["alertas"] = ("Alertas de flota", "Operación → Alertas de flota muestra vencimientos legales (marchamo, RTV, seguro) y mantenimientos preventivos próximos o vencidos."),
-                ["activos"] = ("Activos", "Operación → Activos registra neveras y exhibidores con su código de activo y controla su estado (disponible, prestado, etc.)."),
-                ["devoluciones"] = ("Devoluciones", "Operación → Devoluciones registra la mercadería devuelta; pasa a cuarentena antes de reintegrarse."),
-                ["cuarentena"] = ("Cuarentena", "Operación → Cuarentena libera (reintegra al stock) o descarta los productos devueltos."),
-                ["empleados"] = ("Empleados", "Personal → Empleados administra el personal, asigna tareas y aprueba solicitudes de licencia."),
-                ["roles"] = ("Roles y permisos", "Seguridad → Roles define perfiles; en Permisos asignas los permisos a cada rol."),
-                ["consultas"] = ("Consultas", "Clientes → Consultas muestra los mensajes de contacto de los clientes para atenderlos."),
+                ["inventario"] = ("Módulo de Inventario", "Administración → Inventario → Inventario para ver productos y stock. 'Nuevo producto' para crear, el lápiz para editar, y 'Movimientos' para entradas, salidas o ajustes."),
+                ["pedidos"] = ("Módulo de Pedidos", "Administración → Ventas y Pedidos → Pedidos: revisa los pedidos por estado y, desde el detalle, cámbialo, retenlo o factúralo."),
+                ["facturacion"] = ("Cómo generar una factura", "La factura se genera desde el pedido, en el menú <strong>Administración → Ventas y Pedidos → Pedidos</strong>:<ol><li>Busca el pedido y presiona <strong>Ver</strong>.</li><li>En la sección <strong>Facturación</strong> del detalle, presiona <strong>Generar factura</strong> y confirma. Solo se puede si el pedido aún no tiene factura y está Pendiente, Aprobado, En proceso, Entregado o Liberado.</li><li>La factura queda en <strong>Ventas y Pedidos → Facturación</strong>; ábrela con <strong>Ver</strong> para imprimirla o usa <strong>Reenviar comprobante por correo</strong>.</li></ol>El inventario se descontó al registrar el pedido; no se vuelve a descontar al facturar."),
+                ["clientes"] = ("Módulo de Clientes", "Administración → Clientes → Clientes administra los datos; desde Créditos gestionas su línea de crédito y movimientos."),
+                ["creditos"] = ("Módulo de Créditos", "Administración → Clientes → Créditos define el límite, bloquea y registra cargos/abonos de cada cliente."),
+                ["cobros"] = ("Cuentas por cobrar", "Administración → Ventas y Pedidos → Cuentas por Cobrar muestra los saldos deudores y permite registrar abonos."),
+                ["rutas"] = ("Cómo crear una ruta", "En el menú <strong>Administración → Logística y Flota → Rutas y Entregas</strong>:<ol><li>Presiona <strong>Nueva ruta</strong>.</li><li>En <strong>Datos de la ruta</strong>, indica la <strong>Zona</strong>, el <strong>Chofer</strong> y el <strong>Vehículo</strong> (las observaciones son opcionales).</li><li>En <strong>Pedidos por asignar</strong>, marca al menos un pedido de la zona.</li><li>Presiona <strong>Crear ruta</strong>; se abre el detalle de la ruta, en estado Planificada.</li><li>Ordena las paradas con <strong>Secuenciar automáticamente</strong>, o ajústalas en el mapa y presiona <strong>Guardar orden y ubicaciones</strong>.</li><li>Presiona <strong>Despachar ruta</strong>: los pedidos pasan a En ruta y se avisa a los clientes.</li><li>Al final del día, presiona <strong>Liquidar ruta</strong>.</li></ol>"),
+                ["vehiculos"] = ("Vehículos", "Administración → Logística y Flota → Vehículos registra la flota (placa, marca, capacidad, odómetro)."),
+                ["kilometraje"] = ("Kilometraje", "Administración → Logística y Flota → Kilometraje (el chofer lo abre en Kilometraje, en la barra superior): el chofer registra el km inicial al salir y el final al volver; el sistema valida contra el odómetro del vehículo."),
+                ["mantenimiento"] = ("Mantenimiento de flota", "Administración → Logística y Flota → Mantenimiento registra órdenes preventivas o correctivas con costo y taller."),
+                ["alertas"] = ("Alertas de flota", "Administración → Logística y Flota → Alertas de flota muestra vencimientos legales (marchamo, RTV, seguro) y mantenimientos preventivos próximos o vencidos."),
+                ["activos"] = ("Activos", "Administración → Inventario → Activos registra neveras y exhibidores con su código de activo y controla su estado (disponible, prestado, etc.)."),
+                ["devoluciones"] = ("Cómo registrar una devolución", "En el menú <strong>Administración → Inventario → Devoluciones</strong>:<ol><li>En <strong>Registrar devolución</strong>, elige el <strong>Producto</strong> y la <strong>Cantidad</strong> devuelta.</li><li>Si aplica, indica el <strong>Pedido asociado</strong> (N.º de pedido) y el <strong>Cliente / referencia</strong>.</li><li>Escribe el <strong>Motivo</strong> (por ejemplo, producto dañado o error de despacho).</li><li>Presiona <strong>Registrar devolución</strong>: queda en el <strong>Historial de devoluciones</strong> y el producto pasa a cuarentena.</li><li>Después, en <strong>Inventario → Cuarentena</strong>, libéralo (vuelve al stock) o descártalo.</li></ol>"),
+                ["cuarentena"] = ("Cuarentena", "Administración → Inventario → Cuarentena libera (reintegra al stock) o descarta los productos devueltos."),
+                ["empleados"] = ("Empleados", "Administración → Personal → Empleados (el supervisor: Personal → Empleados) administra el personal, asigna tareas y aprueba solicitudes de licencia."),
+                ["roles"] = ("Roles y permisos", "Administración → Seguridad → Roles define perfiles; en Permisos asignas los permisos a cada rol."),
+                ["consultas"] = ("Consultas", "Administración → Clientes → Consultas muestra los mensajes de contacto de los clientes para atenderlos."),
                 ["asistente"] = ("Asistente", "Escríbeme una pregunta en lenguaje natural sobre métricas del negocio o sobre cómo usar un módulo. Prueba: “¿qué puedo preguntar?”."),
             };
 
@@ -120,8 +120,14 @@ namespace Proyecto_Final.Services
             var permitidas = CategoriasPermitidas(rol);
             AssistantAnswerViewModel r;
 
+            // 0) Pregunta sobre una categoría que el rol no puede ver (CU-261 E4):
+            //    se avisa antes de que el resumen o el detalle la respondan con otra cosa.
+            if (Restringida(norm, permitidas) is AssistantAnswerViewModel restringida)
+            {
+                r = restringida;
+            }
             // 1) Ampliar una métrica ya mostrada (E3): resumen de la categoría
-            if (Contiene(norm, DetalleWords) && !string.IsNullOrWhiteSpace(contextoIntent)
+            else if (Contiene(norm, DetalleWords) && !string.IsNullOrWhiteSpace(contextoIntent)
                 && IntentCategoria.TryGetValue(contextoIntent!, out var catCtx) && permitidas.Contains(catCtx))
             {
                 var m = await LoadMetricsAsync();
@@ -229,7 +235,7 @@ namespace Proyecto_Final.Services
                     r.Respuesta = $"Hay <strong>{m.VehiculosActivos}</strong> vehículo(s) activo(s) de {m.TotalVehiculos} registrados."; break;
                 case "kilometraje":
                     r.Titulo = "Kilometraje";
-                    r.Respuesta = $"El control de kilometraje está activo para los {m.VehiculosActivos} vehículo(s) de la flota. Consulta el odómetro de cada uno en Operación → Vehículos."; break;
+                    r.Respuesta = $"El control de kilometraje está activo para los {m.VehiculosActivos} vehículo(s) de la flota. Consulta el odómetro de cada uno en Administración → Logística y Flota → Vehículos."; break;
                 case "mantenimiento":
                     r.Titulo = "Mantenimiento";
                     r.Respuesta = $"Hay <strong>{m.MantenimientosProgramados}</strong> orden(es) de mantenimiento programada(s)."; break;
@@ -337,7 +343,7 @@ namespace Proyecto_Final.Services
             };
         }
 
-        private static AssistantAnswerViewModel ResponderAyuda(string modulo)
+        public static AssistantAnswerViewModel ResponderAyuda(string modulo)
         {
             var info = Ayuda[modulo];
             return new AssistantAnswerViewModel
@@ -377,6 +383,20 @@ namespace Proyecto_Final.Services
             return r;
         }
 
+        // "Información restringida" cuando la pregunta pide datos de una categoría
+        // fuera del rol. Las preguntas de capacidades y de uso de un módulo no traen
+        // datos, así que siguen su camino normal.
+        public static AssistantAnswerViewModel? Restringida(string norm, string? rol) =>
+            Restringida(norm, CategoriasPermitidas(rol));
+
+        private static AssistantAnswerViewModel? Restringida(string norm, HashSet<string> permitidas)
+        {
+            if (Contiene(norm, CapacidadWords) || DetectarAyuda(norm) is not null) return null;
+            return DetectarIntent(norm) is (_, string cat) && !permitidas.Contains(cat)
+                ? NoAutorizado(NombreCategoria[cat], permitidas)
+                : null;
+        }
+
         // ── Detección ───────────────────────────────────────────
         private static (string Key, string Cat)? DetectarIntent(string norm)
         {
@@ -386,19 +406,32 @@ namespace Proyecto_Final.Services
             return null;
         }
 
-        private static string? DetectarAyuda(string norm)
+        public static string? DetectarAyuda(string norm)
         {
-            var pideAyuda = Contiene(norm, "como uso", "como se usa", "como funciona", "como hago", "como creo", "como registro", "como genero", "como puedo usar", "ayuda con", "no se usar", "instrucciones");
+            var pideAyuda = Contiene(norm, "como uso", "como se usa", "como funciona", "como hago", "como creo", "como registro", "como genero", "como puedo usar", "ayuda con", "no se usar", "instrucciones",
+                "como facturo", "como se crea", "como se registra", "como se genera", "pasos para");
             if (!pideAyuda) return null;
             foreach (var clave in Ayuda.Keys)
                 if (norm.Contains(clave)) return clave;
-            if (norm.Contains("factura")) return "facturacion";
+            // Las claves están en plural; la pregunta suele venir en singular
+            // ("¿cómo registro una devolución?", "¿cómo creo una ruta?").
+            if (norm.Contains("devolucion")) return "devoluciones";
+            if (norm.Contains("ruta")) return "rutas";
+            if (norm.Contains("factur")) return "facturacion";
             if (norm.Contains("vehiculo")) return "vehiculos";
             if (norm.Contains("cobr")) return "cobros";
             return null;
         }
 
-        private static bool Contiene(string norm, params string[] terminos) => terminos.Any(t => norm.Contains(t));
+        // El término debe empezar una palabra: "venta" no debe encontrarse dentro de "inventario".
+        private static bool Contiene(string norm, params string[] terminos) => terminos.Any(t => EmpiezaPalabra(norm, t));
+
+        private static bool EmpiezaPalabra(string norm, string termino)
+        {
+            for (var i = norm.IndexOf(termino, StringComparison.Ordinal); i >= 0; i = norm.IndexOf(termino, i + 1, StringComparison.Ordinal))
+                if (i == 0 || !char.IsLetterOrDigit(norm[i - 1])) return true;
+            return false;
+        }
 
         // ── Carga de la foto de métricas ────────────────────────
         private async Task<Metrics> LoadMetricsAsync()
@@ -459,7 +492,7 @@ namespace Proyecto_Final.Services
             }
         }
 
-        private static string Normalizar(string texto)
+        public static string Normalizar(string texto)
         {
             if (string.IsNullOrWhiteSpace(texto)) return string.Empty;
             var sb = new StringBuilder(texto.Trim().ToLowerInvariant());

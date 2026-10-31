@@ -105,7 +105,8 @@ namespace Proyecto_Final.Services
                     FechaCreacion = reader.IsDBNull(8) ? DateTime.MinValue : reader.GetDateTime(8),
                     ImagenUrl = reader.FieldCount > 9 && !reader.IsDBNull(9) ? reader.GetString(9) : string.Empty,
                     EsDestacado = reader.FieldCount > 10 && !reader.IsDBNull(10) && reader.GetBoolean(10),
-                    StockMinimo = reader.FieldCount > 11 && !reader.IsDBNull(11) ? reader.GetInt32(11) : 5
+                    StockMinimo = reader.FieldCount > 11 && !reader.IsDBNull(11) ? reader.GetInt32(11) : 5,
+                    FechaVencimiento = reader.FieldCount > 12 && !reader.IsDBNull(12) ? reader.GetDateTime(12) : null
                 });
             }
             return products;
@@ -160,7 +161,8 @@ namespace Proyecto_Final.Services
                 Activo = !reader.IsDBNull(6) && reader.GetBoolean(6),
                 ImagenUrl = reader.FieldCount > 7 && !reader.IsDBNull(7) ? reader.GetString(7) : string.Empty,
                 EsDestacado = reader.FieldCount > 8 && !reader.IsDBNull(8) && reader.GetBoolean(8),
-                StockMinimo = reader.FieldCount > 9 && !reader.IsDBNull(9) ? reader.GetInt32(9) : 5
+                StockMinimo = reader.FieldCount > 9 && !reader.IsDBNull(9) ? reader.GetInt32(9) : 5,
+                FechaVencimiento = reader.FieldCount > 10 && !reader.IsDBNull(10) ? reader.GetDateTime(10) : null
             };
         }
 
@@ -184,6 +186,7 @@ namespace Proyecto_Final.Services
                     command.Parameters.AddWithValue("@Activo", model.Activo);
                     command.Parameters.AddWithValue("@ImagenUrl", string.IsNullOrWhiteSpace(model.ImagenUrl) ? DBNull.Value : model.ImagenUrl.Trim());
                     command.Parameters.AddWithValue("@EsDestacado", model.EsDestacado);
+                    command.Parameters.Add("@FechaVencimiento", SqlDbType.Date).Value = (object?)model.FechaVencimiento?.Date ?? DBNull.Value;
                     productoId = Convert.ToInt32(await command.ExecuteScalarAsync());
                 }
 
@@ -236,6 +239,7 @@ namespace Proyecto_Final.Services
                     updateCommand.Parameters.AddWithValue("@Activo", model.Activo);
                     updateCommand.Parameters.AddWithValue("@ImagenUrl", string.IsNullOrWhiteSpace(model.ImagenUrl) ? DBNull.Value : model.ImagenUrl.Trim());
                     updateCommand.Parameters.AddWithValue("@EsDestacado", model.EsDestacado);
+                    updateCommand.Parameters.Add("@FechaVencimiento", SqlDbType.Date).Value = (object?)model.FechaVencimiento?.Date ?? DBNull.Value;
                     await updateCommand.ExecuteNonQueryAsync();
 
                     await using (var syncCategoria = new SqlCommand("UPDATE dbo.Productos SET CategoriaId = (SELECT TOP 1 CategoriaId FROM dbo.Categorias WHERE Nombre = @Categoria) WHERE ProductoId = @ProductoId;", connection, (SqlTransaction)transaction))
@@ -528,6 +532,26 @@ namespace Proyecto_Final.Services
             }
 
             return Convert.ToInt32(result);
+        }
+
+        // Teléfono del cliente de la factura (migración 0201); null si no tiene o si 0201 aún no está aplicada.
+        public async Task<string?> GetInvoiceClientPhoneAsync(int facturaId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_GetInvoiceClientPhone", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add("@FacturaId", SqlDbType.Int).Value = facturaId;
+
+            await connection.OpenAsync();
+            try
+            {
+                var result = await command.ExecuteScalarAsync();
+                return result == null || result == DBNull.Value ? null : Convert.ToString(result);
+            }
+            catch (SqlException exception) when (exception.Number == 2812)
+            {
+                return null;
+            }
         }
 
         public async Task<GenerateInvoiceResultViewModel> GenerateInvoiceFromOrderAsync(int pedidoId, int usuarioId, string usuarioNombre)
@@ -1488,13 +1512,22 @@ namespace Proyecto_Final.Services
                     FechaActualizacion = reader.IsDBNull(14) ? null : reader.GetDateTime(14)
                 };
 
+                // BUG-06-02: columnas agregadas al final por 0230.
+                if (reader.FieldCount > 17)
+                {
+                    model.PlazoCreditoDias = reader.IsDBNull(15) ? 30 : reader.GetInt32(15);
+                    model.DeudaVencida = reader.IsDBNull(16) ? 0 : reader.GetDecimal(16);
+                    model.VencimientoMasAntiguo = reader.IsDBNull(17) ? null : reader.GetDateTime(17);
+                }
+
                 model.SettingsForm = new ClientCreditSettingsViewModel
                 {
                     UsuarioId = model.UsuarioId,
                     LimiteCredito = model.LimiteCredito,
                     CreditoActivo = model.CreditoActivo,
                     CreditoBloqueado = model.CreditoBloqueado,
-                    MotivoBloqueo = model.MotivoBloqueo
+                    MotivoBloqueo = model.MotivoBloqueo,
+                    PlazoCreditoDias = model.PlazoCreditoDias
                 };
 
                 model.MovementForm = new ClientCreditMovementFormViewModel
@@ -1544,6 +1577,7 @@ namespace Proyecto_Final.Services
                 command.Parameters.Add("@MotivoBloqueo", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.MotivoBloqueo) ? DBNull.Value : model.MotivoBloqueo.Trim();
                 command.Parameters.Add("@RegistradoPorUsuarioId", SqlDbType.Int).Value = usuarioId.HasValue ? usuarioId.Value : DBNull.Value;
                 command.Parameters.Add("@RegistradoPorNombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(usuarioNombre) ? DBNull.Value : usuarioNombre.Trim();
+                command.Parameters.Add("@PlazoCreditoDias", SqlDbType.Int).Value = model.PlazoCreditoDias; // BUG-06-02 (0230)
 
                 await connection.OpenAsync();
                 await command.ExecuteNonQueryAsync();
@@ -1664,6 +1698,9 @@ namespace Proyecto_Final.Services
                 command.Parameters.Add("@ItemsJson", SqlDbType.NVarChar, -1).Value = itemsJson;
                 command.Parameters.Add("@PedidoOfflineGuid", SqlDbType.UniqueIdentifier).Value = pedidoOfflineGuid.HasValue ? pedidoOfflineGuid.Value : DBNull.Value;
                 command.Parameters.Add("@CanalPedido", SqlDbType.NVarChar, 50).Value = string.IsNullOrWhiteSpace(canalPedido) ? "Venta móvil" : canalPedido.Trim();
+                // BUG-06-02 (0230): solo el pago a crédito se envía; sin parámetro el procedimiento conserva el valor histórico.
+                if (model.MetodoPago == SellerOrderCreateViewModel.PagoCredito)
+                    command.Parameters.Add("@MetodoPago", SqlDbType.NVarChar, 40).Value = SellerOrderCreateViewModel.PagoCredito;
 
                 await connection.OpenAsync();
                 await using var reader = await command.ExecuteReaderAsync();
@@ -2070,15 +2107,17 @@ namespace Proyecto_Final.Services
 
             const string egresosQuery = """
         SELECT
-            GastoId,
-            Fecha,
-            Concepto,
-            Categoria,
-            Monto
-        FROM dbo.Gastos
-        WHERE (@FechaInicio IS NULL OR Fecha >= @FechaInicio)
-          AND (@FechaFin IS NULL OR Fecha < DATEADD(DAY, 1, @FechaFin))
-        ORDER BY Fecha DESC;
+            g.GastoId,
+            CAST(g.FechaGasto AS DATETIME2) AS Fecha,
+            g.Descripcion AS Concepto,
+            c.Nombre AS Categoria,
+            g.Total AS Monto
+        FROM dbo.GastosOperativos g
+        LEFT JOIN dbo.CategoriasGasto c ON c.CategoriaId = g.CategoriaId
+        WHERE g.Estado IN (N'Aprobado', N'Pagado')
+          AND (@FechaInicio IS NULL OR g.FechaGasto >= @FechaInicio)
+          AND (@FechaFin IS NULL OR g.FechaGasto < DATEADD(DAY, 1, @FechaFin))
+        ORDER BY g.FechaGasto DESC;
         """;
 
             await using (var command = new SqlCommand(egresosQuery, connection))

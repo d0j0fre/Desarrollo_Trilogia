@@ -140,9 +140,9 @@ namespace Proyecto_Final.Controllers
                 try
                 {
                     _emailService.SendEmail(
-                        "p13972127@gmail.com",
-                        asunto,
-                        contenido);
+                        model.Correo,
+                        $"Recibimos tu consulta - {model.Asunto}",
+                        EmailTemplateBuilder.BuildContactConfirmationEmail(model.Nombre, model.Asunto, model.Mensaje));
                 }
                 catch (Exception exception)
                 {
@@ -151,7 +151,19 @@ namespace Proyecto_Final.Controllers
                     return RedirectToAction(nameof(Contact));
                 }
 
-                TempData["SuccessMessage"] = "Se guardó correctamente.";
+                try
+                {
+                    _emailService.SendEmail(
+                        "p13972127@gmail.com",
+                        asunto,
+                        contenido);
+                }
+                catch (Exception exception)
+                {
+                    _logger.LogWarning(exception, "No se pudo enviar el aviso interno de la consulta. Solicitud {TraceId}.", HttpContext.TraceIdentifier);
+                }
+
+                TempData["SuccessMessage"] = "Se guardó correctamente. Te enviamos un correo de confirmación con el resumen de tu consulta.";
             }
             catch (Exception exception)
             {
@@ -168,7 +180,8 @@ namespace Proyecto_Final.Controllers
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        [HttpGet]
+        // Sin restricción de verbo: UseExceptionHandler re-ejecuta esta acción con el método de la
+        // solicitud original; con [HttpGet] un fallo en un POST terminaba en HTTP 405.
         public IActionResult Error()
         {
             Response.StatusCode = StatusCodes.Status503ServiceUnavailable;

@@ -271,7 +271,10 @@ namespace Proyecto_Final.Services
                     FechaDevolucion = reader.IsDBNull(3) ? null : reader.GetDateTime(3),
                     Estado = reader.GetString(4),
                     DestinoDevolucion = reader.GetString(5),
-                    Observaciones = reader.GetString(6)
+                    Observaciones = reader.GetString(6),
+                    // BUG-16-05: columnas de 0240; sin la migración quedan vacías.
+                    CondicionEntrega = reader.FieldCount > 7 ? reader.GetString(7) : string.Empty,
+                    CondicionDevolucion = reader.FieldCount > 8 ? reader.GetString(8) : string.Empty
                 });
             }
             return lista;
@@ -340,6 +343,54 @@ namespace Proyecto_Final.Services
             return lista;
         }
 
+        // BUG-16-02: clientes activos con su saldo vencido para el formulario de asignación.
+        public async Task<List<ComodatoClientOptionViewModel>> GetComodatoClientsAsync()
+        {
+            var lista = new List<ComodatoClientOptionViewModel>();
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Comodato_ClientesParaAsignar", connection) { CommandType = CommandType.StoredProcedure };
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                lista.Add(new ComodatoClientOptionViewModel
+                {
+                    UsuarioId = reader.GetInt32(0),
+                    NombreCompleto = reader.GetString(1),
+                    Correo = reader.GetString(2),
+                    Direccion = reader.GetString(3),
+                    // Solo se precarga si es una identificación válida (los pedidos demo traen códigos como SEED-CR-001).
+                    Identificacion = new CostaRicanIdentificationAttribute().IsValid(reader.GetString(4)) ? reader.GetString(4) : string.Empty,
+                    SaldoVencido = reader.GetDecimal(5),
+                    DiasAtraso = reader.GetInt32(6)
+                });
+            }
+            return lista;
+        }
+
+        // BUG-16-02: deuda del cliente con la regla de crédito (sp_Cliente_EstadoDeuda,
+        // 0230); recibe dbo.Usuarios.UsuarioId. Bloquea el comodato si EsMoroso.
+        public async Task<ComodatoDebtViewModel> GetComodatoClientDebtAsync(int clienteUsuarioId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Cliente_EstadoDeuda", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = clienteUsuarioId;
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+            if (!await reader.ReadAsync()) return new ComodatoDebtViewModel();
+            // UsuarioId, LimiteCredito, PlazoCreditoDias, DeudaActual, DeudaVencida,
+            // TieneDeudaVencida, VencimientoMasAntiguo, DiasAtraso
+            return new ComodatoDebtViewModel
+            {
+                PlazoCreditoDias = reader.GetInt32(2),
+                SaldoActual = reader.GetDecimal(3),
+                SaldoVencido = reader.GetDecimal(4),
+                EsMoroso = reader.GetBoolean(5),
+                VencimientoMasAntiguo = reader.IsDBNull(6) ? null : reader.GetDateTime(6),
+                DiasAtraso = reader.GetInt32(7)
+            };
+        }
+
         public async Task<int> AssignComodatoAsync(ComodatoAssignViewModel model, int usuarioId, string usuarioNombre)
         {
             await using var connection = new SqlConnection(_connectionString);
@@ -394,7 +445,61 @@ namespace Proyecto_Final.Services
                     DiasEnComodato = reader.GetInt32(7),
                     NumPedidos = reader.GetInt32(8),
                     TotalComprado = reader.GetDecimal(9),
-                    UltimaCompra = reader.IsDBNull(10) ? null : reader.GetDateTime(10)
+                    UltimaCompra = reader.IsDBNull(10) ? null : reader.GetDateTime(10),
+                    // BUG-16-06: columna de 0241; sin la migración queda vacía.
+                    Ubicacion = reader.FieldCount > 11 ? reader.GetString(11) : string.Empty,
+                    // BUG-16-04: columnas de 0242.
+                    DiasSinCompra = reader.FieldCount > 12 ? reader.GetInt32(12) : 0,
+                    SugerirRetiro = reader.FieldCount > 13 && reader.GetBoolean(13)
+                });
+            }
+            return lista;
+        }
+
+        // BUG-16-01: datos del contrato de comodato; null si no existe.
+        public async Task<ComodatoContractViewModel?> GetComodatoContractAsync(int comodatoId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Comodato_GetContrato", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.Add("@ComodatoId", SqlDbType.Int).Value = comodatoId;
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+            if (!await reader.ReadAsync()) return null;
+            return new ComodatoContractViewModel
+            {
+                ComodatoId = reader.GetInt32(0),
+                CodigoActivo = reader.GetString(1),
+                ActivoNombre = reader.GetString(2),
+                ActivoTipo = reader.GetString(3),
+                ClienteNombre = reader.GetString(4),
+                ClienteIdentificacion = reader.GetString(5),
+                Ubicacion = reader.GetString(6),
+                FechaAsignacion = reader.GetDateTime(7),
+                CondicionEntrega = reader.GetString(8),
+                Observaciones = reader.GetString(9),
+                RegistradoPorNombre = reader.GetString(10),
+                FechaRegistro = reader.GetDateTime(11),
+                Estado = reader.GetString(12)
+            };
+        }
+
+        // BUG-16-04: deja los avisos de baja rentabilidad (30 días sin compras) y
+        // devuelve los comodatos que recibieron uno nuevo.
+        public async Task<List<ComodatoProfitabilityAlertViewModel>> GenerateComodatoProfitabilityAlertsAsync()
+        {
+            var lista = new List<ComodatoProfitabilityAlertViewModel>();
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Comodato_GenerarAlertasRentabilidad", connection) { CommandType = CommandType.StoredProcedure };
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                lista.Add(new ComodatoProfitabilityAlertViewModel
+                {
+                    ComodatoId = reader.GetInt32(0),
+                    CodigoActivo = reader.GetString(1),
+                    ClienteNombre = reader.GetString(2),
+                    DiasSinCompra = reader.GetInt32(3)
                 });
             }
             return lista;

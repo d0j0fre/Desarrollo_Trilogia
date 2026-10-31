@@ -10,10 +10,16 @@ namespace Proyecto_Final.Controllers
     public class SellerOrdersController : Controller
     {
         private readonly AdminDbService _adminDbService;
+        private readonly EmailService _emailService;
+        private readonly ILogger<SellerOrdersController> _logger;
+        private readonly ICrossSellService _crossSell;
 
-        public SellerOrdersController(AdminDbService adminDbService)
+        public SellerOrdersController(AdminDbService adminDbService, EmailService emailService, ILogger<SellerOrdersController> logger, ICrossSellService crossSell)
         {
             _adminDbService = adminDbService;
+            _emailService = emailService;
+            _logger = logger;
+            _crossSell = crossSell;
         }
 
         [HttpGet]
@@ -68,7 +74,17 @@ namespace Proyecto_Final.Controllers
                     return RedirectToAction(nameof(RetainedConfirmation), new { id = result.PedidoId });
 
                 TempData["ConfirmNumeroFactura"] = result.NumeroFactura;
+                if (result.TieneFactura && !await EnviarComprobantePorCorreoAsync(result.FacturaId))
+                    TempData["ErrorMessage"] = "El pedido se registró y facturó, pero no fue posible enviar el comprobante por correo.";
+
                 return RedirectToAction(nameof(Confirmation), new { id = result.PedidoId });
+            }
+            catch (InvalidOperationException ex)
+                when (ex.InnerException is Microsoft.Data.SqlClient.SqlException sql && CreditRejectionMessage(sql.Number) is not null)
+            {
+                // BUG-06-02: el pedido a crédito se rechazó; no se creó nada.
+                ModelState.AddModelError(string.Empty, CreditRejectionMessage(((Microsoft.Data.SqlClient.SqlException)ex.InnerException!).Number)!);
+                return View("Index", await BuildCreateModelAsync(model));
             }
             catch (Exception)
             {
@@ -76,6 +92,16 @@ namespace Proyecto_Final.Controllers
                 return View("Index", await BuildCreateModelAsync(model));
             }
         }
+
+        /// <summary>BUG-06-02 · CU-062: mensaje para cada rechazo del pedido a crédito (errores de 0230).</summary>
+        public static string? CreditRejectionMessage(int sqlErrorNumber) => sqlErrorNumber switch
+        {
+            52021 => "El cliente no tiene crédito activo. Registre el pedido con pago contra entrega.",
+            52022 => "El crédito del cliente está bloqueado. No se puede registrar el pedido a crédito.",
+            52023 => "El cliente tiene pagos vencidos pendientes. Debe ponerse al día antes de comprar a crédito.",
+            52024 => "El pedido supera el crédito disponible del cliente (se superó el límite de crédito).",
+            _ => null
+        };
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -175,6 +201,9 @@ namespace Proyecto_Final.Controllers
                     "Venta móvil",
                     $"El usuario {vendedorNombre} sincronizó el pedido offline {pedidoOfflineGuid} como pedido #{result.PedidoId}. Estado: {result.Estado}.");
 
+                if (result.TieneFactura)
+                    await EnviarComprobantePorCorreoAsync(result.FacturaId);
+
                 var redirectUrl = result.EsRetenido
                     ? Url.Action(nameof(RetainedConfirmation), "SellerOrders", new { id = result.PedidoId }) ?? string.Empty
                     : Url.Action(nameof(Confirmation),         "SellerOrders", new { id = result.PedidoId }) ?? string.Empty;
@@ -203,6 +232,52 @@ namespace Proyecto_Final.Controllers
             }
         }
 
+        // CU-262: artículo complementario para el pedido en curso. Es un apoyo opcional:
+        // si falla, la pantalla simplemente no muestra la sugerencia.
+        [HttpGet]
+        public async Task<IActionResult> Suggestion(int clienteUsuarioId, string? productos)
+        {
+            if (!IsAuthorizedSeller())
+                return Unauthorized();
+
+            var productosPedido = SellerCrossSellPolicy.ParseProductos(productos);
+            if (productosPedido.Count == 0)
+                return Json(new { ok = true, sugerencia = (object?)null });
+
+            try
+            {
+                var catalogo = (await _adminDbService.GetSellerOrderProductsAsync())
+                    .GroupBy(producto => producto.ProductoId)
+                    .ToDictionary(grupo => grupo.Key, grupo => grupo.First());
+                var categoriasPedido = productosPedido
+                    .Where(catalogo.ContainsKey)
+                    .Select(id => catalogo[id].Categoria)
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+                var sugerencias = await _crossSell.GetSuggestionsAsync(
+                    clienteUsuarioId > 0 ? clienteUsuarioId : null, productosPedido, HttpContext.RequestAborted);
+                var sugerencia = SellerCrossSellPolicy.Complementario(sugerencias, categoriasPedido, catalogo.Keys.ToHashSet());
+
+                return Json(new
+                {
+                    ok = true,
+                    sugerencia = sugerencia == null ? null : new
+                    {
+                        productoId = sugerencia.ProductoId,
+                        nombre = sugerencia.Nombre,
+                        categoria = sugerencia.Categoria,
+                        precio = sugerencia.Precio,
+                        explicacion = sugerencia.Explanation
+                    }
+                });
+            }
+            catch (Exception exception)
+            {
+                _logger.LogWarning(exception, "No fue posible calcular la sugerencia de venta cruzada en Venta móvil. Solicitud {TraceId}.", HttpContext.TraceIdentifier);
+                return Json(new { ok = false, sugerencia = (object?)null });
+            }
+        }
+
         [HttpGet]
         public async Task<IActionResult> Confirmation(int id)
         {
@@ -219,6 +294,12 @@ namespace Proyecto_Final.Controllers
                 pedido.FacturaId      = factura.Value.FacturaId;
                 pedido.NumeroFactura  = factura.Value.NumeroFactura;
                 pedido.HasInvoice     = true;
+
+                var detalleFactura = await _adminDbService.GetInvoiceDetailAsync(factura.Value.FacturaId);
+                var telefono = await _adminDbService.GetInvoiceClientPhoneAsync(factura.Value.FacturaId);
+                if (detalleFactura != null)
+                    ViewBag.WhatsAppUrl = WhatsAppReceiptLink.BuildUrl(telefono, detalleFactura.NumeroFactura, detalleFactura.FechaFactura, detalleFactura.Total);
+                ViewBag.TelefonoCliente = telefono;
             }
 
             ViewBag.NumeroFactura = TempData["ConfirmNumeroFactura"] as string ?? pedido.NumeroFactura;
@@ -290,6 +371,38 @@ namespace Proyecto_Final.Controllers
             return string.Equals(role, "Administrador", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(role, "Empleado", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(role, "Vendedor", StringComparison.OrdinalIgnoreCase);
+        }
+
+        // Envía el comprobante al correo del cliente (CU-092); no interrumpe el registro si el envío falla.
+        private async Task<bool> EnviarComprobantePorCorreoAsync(int facturaId)
+        {
+            try
+            {
+                var factura = await _adminDbService.GetInvoiceDetailAsync(facturaId);
+                if (factura == null || string.IsNullOrWhiteSpace(factura.Correo))
+                    return false;
+
+                var contenido = EmailTemplateBuilder.BuildInvoiceEmail(
+                    factura.Cliente,
+                    factura.NumeroFactura,
+                    factura.PedidoId,
+                    factura.FechaFactura,
+                    factura.Total);
+
+                _emailService.SendEmail(factura.Correo, $"Comprobante {factura.NumeroFactura}", contenido);
+
+                await RegistrarAuditoriaAsync(
+                    "Enviar comprobante por correo",
+                    "Facturacion",
+                    $"Se envio el comprobante {factura.NumeroFactura} al correo {factura.Correo}.");
+
+                return true;
+            }
+            catch (Exception exception)
+            {
+                _logger.LogWarning(exception, "No se pudo enviar el comprobante de la factura {FacturaId}. Solicitud {TraceId}.", facturaId, HttpContext.TraceIdentifier);
+                return false;
+            }
         }
 
         private async Task RegistrarAuditoriaAsync(string accion, string modulo, string descripcion)

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../../core/config/app_config.dart';
+import '../../../core/notifications/system_notifier.dart';
 import '../../../core/providers.dart';
 import '../../../core/sync/sync_service.dart';
 import '../../../core/theme/brand_colors.dart';
@@ -12,6 +13,10 @@ import '../../auth/application/auth_controller.dart';
 
 final packageInfoProvider = FutureProvider<PackageInfo>(
   (ref) => PackageInfo.fromPlatform(),
+);
+
+final _notificationsEnabledProvider = FutureProvider.autoDispose<bool>(
+  (ref) => ref.watch(systemNotifierProvider).enabled(),
 );
 
 class SettingsPage extends ConsumerWidget {
@@ -118,6 +123,26 @@ class SettingsPage extends ConsumerWidget {
               ),
               trailing: const Icon(Icons.chevron_right_rounded),
               onTap: () => context.push('/pendientes'),
+            ),
+          ),
+          const SizedBox(height: 24),
+          const SectionTitle('Notificaciones'),
+          Card(
+            child: ListTile(
+              leading: const IconBadge(icon: Icons.notifications_active_outlined, color: BrandColors.redPrimary),
+              title: const Text('Avisos en el teléfono'),
+              subtitle: Text(switch (ref.watch(_notificationsEnabledProvider).value) {
+                true => 'Activados: rutas asignadas y mensajes directos llegan a la bandeja del teléfono.',
+                false => 'Desactivados. Tocá para permitirlos.',
+                null => '…',
+              }),
+              isThreeLine: true,
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () async {
+                await ref.read(systemNotifierProvider).requestPermission();
+                ref.invalidate(_notificationsEnabledProvider);
+                if (context.mounted) context.push('/notificaciones');
+              },
             ),
           ),
           const SizedBox(height: 24),

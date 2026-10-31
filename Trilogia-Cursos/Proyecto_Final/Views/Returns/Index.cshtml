@@ -69,7 +69,8 @@
                         <option value="Descartada" selected="@(Model.Estado == "Descartada")">Descartada</option>
                     </select>
                     <button type="submit" class="btn btn-ds-search mr-2 mb-2"><i class="fa fa-search mr-2"></i>Buscar</button>
-                    <a asp-action="Index" class="btn btn-ds-neutral mb-2"><i class="fa fa-eraser mr-2"></i>Limpiar</a>
+                    <a asp-action="Index" class="btn btn-ds-neutral mr-2 mb-2"><i class="fa fa-eraser mr-2"></i>Limpiar</a>
+                    <a asp-action="Report" class="btn btn-ds-action mb-2"><i class="fa fa-chart-bar mr-2"></i>Reporte de devoluciones</a>
                 </form>
             </div>
 
@@ -84,6 +85,8 @@
                             <tr>
                                 <th>Producto</th>
                                 <th class="text-center">Cant.</th>
+                                <th class="text-center">Pedido</th>
+                                <th>Cliente / referencia</th>
                                 <th>Motivo</th>
                                 <th class="text-center">Estado</th>
                                 <th>Fecha</th>
@@ -92,7 +95,7 @@
                         <tbody>
                             @if (!Model.Devoluciones.Any())
                             {
-                                <tr><td colspan="5" class="text-center text-muted py-4">No hay devoluciones registradas.</td></tr>
+                                <tr><td colspan="7" class="text-center text-muted py-4">No hay devoluciones registradas.</td></tr>
                             }
                             else
                             {
@@ -108,6 +111,8 @@
                                     <tr>
                                         <td class="font-weight-bold">@d.ProductoNombre</td>
                                         <td class="text-center">@d.Cantidad</td>
+                                        <td class="text-center">@(d.PedidoId.HasValue ? $"#{d.PedidoId}" : "—")</td>
+                                        <td>@(string.IsNullOrWhiteSpace(d.ClienteInfo) ? "—" : d.ClienteInfo)</td>
                                         <td>@d.Motivo</td>
                                         <td class="text-center"><span class="admin-badge-soft @badge">@label</span></td>
                                         <td>@d.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</td>

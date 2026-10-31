@@ -132,7 +132,7 @@ public sealed class AuthenticationContractTests
     }
 
     [Fact]
-    public async Task ForgotPassword_WithoutPublicHttpsUrl_DoesNotCreateTokenAndReturnsGenericResponse()
+    public async Task ForgotPassword_WithoutPublicHttpsUrl_DoesNotCreateTokenAndReportsFailure()
     {
         var database = new Mock<IAccountApiDbService>();
         database.Setup(service => service.GetUserByEmailAsync("qa@example.com"))
@@ -143,8 +143,67 @@ public sealed class AuthenticationContractTests
 
         var ok = Assert.IsType<OkObjectResult>(result);
         var response = Assert.IsType<Proyecto_FinalAPI.Controllers.AuthResult>(ok.Value);
-        Assert.True(response.Success);
+        Assert.False(response.Success);
         database.Verify(service => service.CreatePasswordResetTokenAsync(It.IsAny<int>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ForgotPassword_UnregisteredEmail_SaysSoAndSendsNothing()
+    {
+        var pickup = CreatePickupDirectory();
+        var database = new Mock<IAccountApiDbService>();
+        database.Setup(service => service.GetUserByEmailAsync(It.IsAny<string>())).ReturnsAsync((ApiUser?)null);
+        var controller = CreateController(database.Object, pickupDirectory: pickup);
+
+        var result = await controller.ForgotPassword(new ForgotPasswordApiRequest { Email = "noexiste.qa@labodega.com" });
+
+        var response = Assert.IsType<Proyecto_FinalAPI.Controllers.AuthResult>(Assert.IsType<OkObjectResult>(result).Value);
+        Assert.False(response.Success);
+        Assert.Equal("El correo ingresado no está registrado.", response.Message);
+        Assert.Empty(Directory.GetFiles(pickup));
+        database.Verify(service => service.CreatePasswordResetTokenAsync(It.IsAny<int>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ForgotPassword_RegisteredEmail_SendsEmailWithResetLink()
+    {
+        var pickup = CreatePickupDirectory();
+        var database = new Mock<IAccountApiDbService>();
+        database.Setup(service => service.GetUserByEmailAsync("qa@example.com"))
+            .ReturnsAsync(new ApiUser { UsuarioId = 7, Correo = "qa@example.com", NombreCompleto = "QA" });
+        database.Setup(service => service.CreatePasswordResetTokenAsync(7)).ReturnsAsync("token-de-prueba");
+        var controller = CreateController(database.Object, pickupDirectory: pickup);
+
+        var result = await controller.ForgotPassword(new ForgotPasswordApiRequest { Email = "qa@example.com" });
+
+        var response = Assert.IsType<Proyecto_FinalAPI.Controllers.AuthResult>(Assert.IsType<OkObjectResult>(result).Value);
+        Assert.True(response.Success);
+        var correo = Assert.Single(Directory.GetFiles(pickup, "*.eml"));
+        var contenido = File.ReadAllText(correo);
+        Assert.Contains("To: qa@example.com", contenido);
+    }
+
+    [Fact]
+    public async Task ForgotPassword_WhenSmtpIsNotConfigured_ReportsFailure()
+    {
+        var database = new Mock<IAccountApiDbService>();
+        database.Setup(service => service.GetUserByEmailAsync("qa@example.com"))
+            .ReturnsAsync(new ApiUser { UsuarioId = 7, Correo = "qa@example.com", NombreCompleto = "QA" });
+        database.Setup(service => service.CreatePasswordResetTokenAsync(7)).ReturnsAsync("token-de-prueba");
+        var controller = CreateController(database.Object);
+
+        var result = await controller.ForgotPassword(new ForgotPasswordApiRequest { Email = "qa@example.com" });
+
+        var response = Assert.IsType<Proyecto_FinalAPI.Controllers.AuthResult>(Assert.IsType<OkObjectResult>(result).Value);
+        Assert.False(response.Success);
+        Assert.Contains("No fue posible enviar el correo", response.Message);
+    }
+
+    private static string CreatePickupDirectory()
+    {
+        var path = Path.Combine(Path.GetTempPath(), "trilogia-mail-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(path);
+        return path;
     }
 
     [Fact]
@@ -168,11 +227,20 @@ public sealed class AuthenticationContractTests
         string? publicBaseUrl = "https://qa.example.test",
         IJwtTokenService? jwtTokenService = null,
         IRefreshTokenService? refreshTokenService = null,
-        IMobileAuthDbService? mobileAuthDbService = null)
+        IMobileAuthDbService? mobileAuthDbService = null,
+        string? pickupDirectory = null)
     {
         var values = new Dictionary<string, string?>();
         if (publicBaseUrl is not null)
             values["PasswordRecovery:PublicBaseUrl"] = publicBaseUrl;
+        if (pickupDirectory is not null)
+        {
+            values["ConfiguracionCorreo:Host"] = "localhost";
+            values["ConfiguracionCorreo:Puerto"] = "25";
+            values["ConfiguracionCorreo:Remitente"] = "no-reply@labodega.test";
+            values["ConfiguracionCorreo:Contrasenna"] = "solo-pruebas";
+            values["ConfiguracionCorreo:DirectorioRecogida"] = pickupDirectory;
+        }
         var configuration = new ConfigurationBuilder().AddInMemoryCollection(values).Build();
         var cache = new MemoryCache(new MemoryCacheOptions());
         return new AuthController(

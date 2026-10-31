@@ -43,7 +43,15 @@ namespace Proyecto_Final.Controllers
 
         public async Task<IActionResult> Index()
         {
-            return View(await BuildCartViewModelAsync());
+            var solicitado = GetCartItems();
+            var cart = await BuildCartViewModelAsync();
+            var faltantes = DescribeStockShortages(solicitado, cart.Items);
+            if (faltantes.Count > 0)
+            {
+                TempData["ErrorMessage"] = StockShortageMessage(faltantes);
+            }
+
+            return View(cart);
         }
 
         [HttpPost]
@@ -212,9 +220,17 @@ namespace Proyecto_Final.Controllers
                 return RedirectToAction("Login", "Account", new { returnUrl = Url.Action(nameof(Checkout), "Cart") });
             }
 
+            var solicitado = GetCartItems();
             var cart = await BuildCartViewModelAsync();
+            var faltantes = DescribeStockShortages(solicitado, cart.Items);
             if (cart.Items.Count == 0)
             {
+                if (faltantes.Count > 0)
+                {
+                    TempData["ErrorMessage"] = StockShortageMessage(faltantes);
+                    return RedirectToAction(nameof(Index));
+                }
+
                 TempData["LoginSuccess"] = "Tu carrito está vacío.";
                 return RedirectToAction(nameof(Index));
             }
@@ -227,6 +243,13 @@ namespace Proyecto_Final.Controllers
                 TipoEntrega = "Envío a domicilio",
                 MetodoPago = "Efectivo contra entrega"
             };
+
+            // BUG-12-03: el carrito se ajustó al stock actual; se avisa antes de pagar.
+            if (faltantes.Count > 0)
+            {
+                ModelState.AddModelError(string.Empty, StockShortageMessage(faltantes));
+            }
+
             return View(model);
         }
 
@@ -234,6 +257,8 @@ namespace Proyecto_Final.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Checkout(CheckoutViewModel model)
         {
+            // BUG-12-03: lo que el cliente pidió, antes de ajustar el carrito al stock actual.
+            var solicitado = GetCartItems();
             model.Cart = await BuildCartViewModelAsync();
             model.TipoEntrega = "Envío a domicilio";
             model.Identificacion = CostaRicanIdentificationAttribute.Normalize(model.Identificacion);
@@ -258,6 +283,24 @@ namespace Proyecto_Final.Controllers
                     {
                         returnUrl = Url.Action(nameof(Checkout), "Cart")
                     });
+            }
+
+            // CU-122-07: si el stock se agotó mientras el carrito estaba abierto, no se crea
+            // el pedido con menos unidades sin avisar; el carrito queda ajustado al stock.
+            var faltantes = DescribeStockShortages(solicitado, model.Cart.Items);
+            if (faltantes.Count > 0)
+            {
+                var mensaje = StockShortageMessage(faltantes);
+                _logger.LogInformation("Checkout detenido por falta de stock para el usuario {UserId}.", HttpContext.Session.GetInt32("UserId"));
+
+                if (model.Cart.Items.Count == 0)
+                {
+                    TempData["ErrorMessage"] = mensaje;
+                    return RedirectToAction(nameof(Index));
+                }
+
+                ModelState.AddModelError(string.Empty, mensaje);
+                return InvalidCheckout(model);
             }
 
             if (model.Cart.Items.Count == 0)
@@ -421,7 +464,44 @@ namespace Proyecto_Final.Controllers
             return View(model ?? new OrderConfirmationViewModel());
         }
 
-        private bool IsLoggedIn() => !string.IsNullOrWhiteSpace(HttpContext.Session.GetString("UserEmail"));
+        /// <summary>
+        /// BUG-12-03: compara lo que el cliente pidió con el carrito ajustado al stock actual y
+        /// describe cada línea que ya no se puede despachar completa.
+        /// </summary>
+        public static IReadOnlyList<string> DescribeStockShortages(
+            IEnumerable<CartItemViewModel> solicitado,
+            IEnumerable<CartItemViewModel> disponible)
+        {
+            static string Clave(CartItemViewModel item) => item.ItemType == CartItemTypes.Combo
+                ? $"{CartItemTypes.Combo}:{item.ComboId}"
+                : $"{CartItemTypes.Product}:{item.ProductoId}";
+
+            var cantidades = disponible
+                .GroupBy(Clave)
+                .ToDictionary(grupo => grupo.Key, grupo => grupo.Sum(item => item.Cantidad));
+
+            return solicitado
+                .Where(item => item.Cantidad > 0)
+                .GroupBy(Clave)
+                .Select(grupo => new
+                {
+                    Nombre = grupo.First().Nombre,
+                    Pedido = grupo.Sum(item => item.Cantidad),
+                    Disponible = cantidades.TryGetValue(grupo.Key, out var cantidad) ? cantidad : 0
+                })
+                .Where(linea => linea.Disponible < linea.Pedido)
+                .Select(linea => linea.Disponible == 0
+                    ? $"{linea.Nombre} (pidió {linea.Pedido}, ya no hay unidades disponibles)"
+                    : $"{linea.Nombre} (pidió {linea.Pedido}, solo hay {linea.Disponible} disponibles)")
+                .ToList();
+        }
+
+        private static string StockShortageMessage(IEnumerable<string> faltantes) =>
+            "No hay stock suficiente para completar el pedido: " +
+            string.Join("; ", faltantes) +
+            ". El carrito se ajustó a las unidades disponibles; revíselo antes de finalizar la compra.";
+
+        private bool IsLoggedIn() =>!string.IsNullOrWhiteSpace(HttpContext.Session.GetString("UserEmail"));
 
         private ViewResult InvalidCheckout(CheckoutViewModel model)
         {

@@ -65,7 +65,8 @@ public sealed class DocumentAlertService : IDocumentAlertService
             try
             {
                 var title = WebUtility.HtmlEncode(candidate.DocumentTitle);
-                var body = $"<p>El documento <strong>{title}</strong> vence el {candidate.ExpirationDate:dd/MM/yyyy}.</p>";
+                var body = $"<p>El documento <strong>{title}</strong> vence el {candidate.ExpirationDate:dd/MM/yyyy}.</p>" +
+                           "<p>Por favor, actualice el documento antes de su vencimiento.</p>";
                 await _email.SendAsync(candidate.Recipient, $"Alerta de vencimiento: {candidate.DocumentTitle}", body, cancellationToken);
                 await _db.RegisterNotificationAsync(candidate, "Enviado", null);
             }

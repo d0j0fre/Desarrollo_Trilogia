@@ -44,6 +44,10 @@ namespace Proyecto_Final.Models.Admin
         public decimal TotalCargos { get; set; }
         public decimal TotalAbonos { get; set; }
         public DateTime? FechaActualizacion { get; set; }
+        // BUG-06-02 (0230): plazo de crédito y deuda vencida (regla FIFO de fn_Cliente_EstadoDeuda).
+        public int PlazoCreditoDias { get; set; } = 30;
+        public decimal DeudaVencida { get; set; }
+        public DateTime? VencimientoMasAntiguo { get; set; }
         public List<ClientCreditMovementViewModel> Movimientos { get; set; } = new();
         public ClientCreditSettingsViewModel SettingsForm { get; set; } = new();
         public ClientCreditMovementFormViewModel MovementForm { get; set; } = new();
@@ -67,6 +71,10 @@ namespace Proyecto_Final.Models.Admin
         [StringLength(255, ErrorMessage = "El motivo no puede superar los 255 caracteres.")]
         [Display(Name = "Motivo de bloqueo o desactivación")]
         public string? MotivoBloqueo { get; set; }
+
+        [Range(0, 365, ErrorMessage = "El plazo de crédito debe estar entre 0 y 365 días.")]
+        [Display(Name = "Plazo de crédito (días)")]
+        public int PlazoCreditoDias { get; set; } = 30;
     }
 
     public class ClientCreditMovementFormViewModel

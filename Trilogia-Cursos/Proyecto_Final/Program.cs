@@ -18,6 +18,7 @@ builder.Services.AddAntiforgery(options => options.HeaderName = "X-CSRF-TOKEN");
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = PasswordRecoveryRateLimitResponse.HandleAsync;
 
     options.AddPolicy("authentication", httpContext =>
         RateLimitPartition.GetFixedWindowLimiter(
@@ -162,9 +163,11 @@ builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<LogisticsDbService>();
 builder.Services.AddScoped<ReportsDbService>();
 builder.Services.AddScoped<WarehouseDbService>();
+builder.Services.AddScoped<ClientAccountDbService>(); // BUG-06-03 / BUG-12-01: estado de cuenta del cliente
 builder.Services.AddScoped<FleetDbService>();
 builder.Services.AddScoped<PromotionsDbService>();
 builder.Services.AddScoped<ReclamosDbService>();
+builder.Services.AddScoped<NotificationsDbService>();
 builder.Services.AddScoped<KpiDbService>();
 builder.Services.AddScoped<ExpensesDbService>();
 builder.Services.AddScoped<BudgetDbService>();
@@ -177,6 +180,7 @@ builder.Services.AddScoped<ICrossSellService, CrossSellDbService>();
 builder.Services.AddScoped<IDocumentManagementDbService, DocumentManagementDbService>();
 builder.Services.AddScoped<IDocumentAlertService, DocumentAlertService>();
 builder.Services.AddScoped<IDocumentAlertEmailSender, SmtpDocumentAlertEmailSender>();
+builder.Services.AddHostedService<DocumentAlertDailyWorker>();
 builder.Services.AddScoped<AssistantService>();
 builder.Services.AddScoped<IChatDbService, ChatDbService>();
 builder.Services.AddScoped<IChatAuthorizationService, ChatAuthorizationService>();

@@ -89,6 +89,11 @@ Variables requeridas:
 | `Swagger__Enabled` | `true` (habilitación explícita sólo para Azure DEV) | No |
 | `PasswordRecovery__PublicBaseUrl` | URL HTTPS pública del MVC | No |
 | `ConnectionStrings__DefaultConnection` | Connection string a Azure SQL DEV con `<sql-user>` y `<sql-password>` | Si |
+| `ConfiguracionCorreo__Remitente` | Cuenta SMTP que envía la recuperación de contraseña | No |
+| `ConfiguracionCorreo__Contrasenna` | Contraseña de aplicación SMTP (rotada tras el incidente del 2026-07-22) | Si |
+
+Sin las dos variables de correo la API no puede enviar el enlace de recuperación y
+ahora lo informa al usuario en lugar de confirmar la solicitud.
 
 Endpoints validados:
 
@@ -117,6 +122,13 @@ Variables requeridas:
 | `ASPNETCORE_ENVIRONMENT` | `Production` | No |
 | `ApiSettings__BaseUrl` | `https://api-trilogia-cursos-dev-cr01-haefhbgrd8dvcvc5.centralus-01.azurewebsites.net/` | No |
 | `ConnectionStrings__DefaultConnection` | Connection string a Azure SQL DEV con `<sql-user>` y `<sql-password>` | Si |
+| `ConfiguracionCorreo__Remitente` | Cuenta SMTP que envía consultas, comprobantes y boletas | No |
+| `ConfiguracionCorreo__Contrasenna` | Contraseña de aplicación SMTP (rotada tras el incidente del 2026-07-22) | Si |
+
+Sin las variables de correo, Contacto, Facturación, Tienda y Venta móvil muestran
+que no fue posible enviar el correo. Para pruebas locales sin SMTP se puede definir
+`ConfiguracionCorreo__DirectorioRecogida` (MVC y API): los correos quedan como `.eml`
+en esa carpeta y no se envían. No usarla en Azure.
 
 Dependencias:
 

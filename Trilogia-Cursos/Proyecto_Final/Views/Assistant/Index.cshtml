@@ -367,6 +367,17 @@
                 transform: none;
             }
 
+        .assistant-submit--secondary {
+            color: #1f2329;
+            background: #ffffff;
+            border: 1px solid #d8dade;
+            box-shadow: none;
+        }
+
+            .assistant-submit--secondary:hover {
+                box-shadow: 0 6px 14px rgba(0, 0, 0, .08);
+            }
+
         .assistant-composer__note {
             margin: 8px 3px 0;
             color: #8a8d93;
@@ -545,6 +556,15 @@
                         Enviar
                     </button>
 
+                    <button type="button"
+                            id="assistantExport"
+                            class="assistant-submit assistant-submit--secondary"
+                            title="Descargar la conversación en Excel (.xlsx)">
+
+                        <i class="fa fa-file-excel mr-1"></i>
+                        Exportar
+                    </button>
+
                 </div>
 
                 <p class="assistant-composer__note">
@@ -559,6 +579,7 @@
 </section>
 
 @section Scripts {
+    <script src="~/js/xlsx-export.js" asp-append-version="true"></script>
     <script>
         (function() {
             const askUrl = '@Url.Action("Ask", "Assistant")';
@@ -579,7 +600,64 @@
             const submitButton =
                 document.getElementById('assistantSubmit');
 
+            const exportButton =
+                document.getElementById('assistantExport');
+
             let lastMetricIntent = '';
+
+            // CU-263-03: preguntas y respuestas de esta pantalla, para exportarlas a Excel.
+            const conversation = [];
+
+            const exportUser = @Json.Serialize(new
+            {
+                nombre = Context.Session.GetString("UserFullName") ?? "Usuario",
+                rol = Context.Session.GetString("UserRole") ?? string.Empty
+            });
+
+            function pad(value) {
+                return String(value).padStart(2, '0');
+            }
+
+            function formatDateTime(date) {
+                return pad(date.getDate()) + '/' + pad(date.getMonth() + 1) + '/' + date.getFullYear() +
+                    ' ' + pad(date.getHours()) + ':' + pad(date.getMinutes()) + ':' + pad(date.getSeconds());
+            }
+
+            // Las respuestas traen HTML simple (strong, br, listas); en Excel van como texto.
+            function htmlToText(html) {
+                const template = document.createElement('template');
+                template.innerHTML = sanitizeAssistantHtml(html);
+                let out = '';
+
+                function walk(node, list) {
+                    node.childNodes.forEach(function(child) {
+                        if (child.nodeType === Node.TEXT_NODE) {
+                            out += child.textContent.replace(/\s+/g, ' ');
+                            return;
+                        }
+
+                        if (child.tagName === 'BR') {
+                            out += '\n';
+                        } else if (child.tagName === 'UL' || child.tagName === 'OL') {
+                            walk(child, { ordered: child.tagName === 'OL', count: 0 });
+                            out += '\n';
+                        } else if (child.tagName === 'LI') {
+                            const marker = list && list.ordered ? (++list.count) + '. ' : '• ';
+                            out += '\n' + marker;
+                            walk(child, list);
+                        } else {
+                            walk(child, list);
+                        }
+                    });
+                }
+
+                walk(template.content, null);
+
+                return out.split('\n')
+                    .map(function(line) { return line.trim(); })
+                    .filter(function(line) { return line.length > 0; })
+                    .join('\n');
+            }
 
             function escapeHtml(value) {
                 const element = document.createElement('div');
@@ -610,7 +688,7 @@
             function sanitizeAssistantHtml(value) {
                 const template = document.createElement('template');
                 template.innerHTML = value ?? '';
-                const allowedTags = new Set(['STRONG', 'BR', 'EM', 'UL', 'LI']);
+                const allowedTags = new Set(['STRONG', 'BR', 'EM', 'UL', 'OL', 'LI']);
 
                 template.content.querySelectorAll('*').forEach(function(element) {
                     if (!allowedTags.has(element.tagName)) {
@@ -744,6 +822,13 @@
                         data.sugerencias
                     );
 
+                    conversation.push({
+                        fecha: new Date(),
+                        pregunta: text,
+                        titulo: data.titulo || '',
+                        respuesta: htmlToText(data.respuesta)
+                    });
+
                     if (data.tipo === 'metrica') {
                         lastMetricIntent = data.intent;
                     }
@@ -773,6 +858,14 @@
                         (input.value || '').trim();
 
                     if (!text) {
+                        // CU-261-03: la pregunta vacía no se envía, pero se avisa por qué.
+                        addBotMessage(
+                            'No fue posible responder',
+                            escapeHtml('Escribe una pregunta.'),
+                            []
+                        );
+                        input.value = '';
+                        input.focus();
                         return;
                     }
 
@@ -780,6 +873,52 @@
                     input.value = '';
 
                     await sendQuestion(text);
+                }
+            );
+
+            exportButton.addEventListener(
+                'click',
+                function() {
+                    if (conversation.length === 0) {
+                        addBotMessage(
+                            'Nada que exportar',
+                            escapeHtml('Aún no hay respuestas en la conversación. Haz una pregunta y luego exporta.'),
+                            []
+                        );
+                        return;
+                    }
+
+                    const style = window.XlsxExport.STYLE;
+                    const now = new Date();
+                    const rows = [
+                        [{ text: 'Conversación con el Asistente virtual', style: style.bold }],
+                        [{ text: 'Usuario' }, { text: exportUser.nombre }],
+                        [{ text: 'Rol' }, { text: exportUser.rol }],
+                        [{ text: 'Exportado' }, { text: formatDateTime(now) }],
+                        [],
+                        ['N.º', 'Fecha y hora', 'Pregunta', 'Tema de la respuesta', 'Respuesta']
+                            .map(function(header) { return { text: header, style: style.bold }; })
+                    ];
+
+                    conversation.forEach(function(entry, index) {
+                        rows.push([
+                            String(index + 1),
+                            formatDateTime(entry.fecha),
+                            entry.pregunta,
+                            entry.titulo,
+                            entry.respuesta
+                        ].map(function(value) { return { text: value, style: style.wrap }; }));
+                    });
+
+                    const stamp = now.getFullYear() + pad(now.getMonth() + 1) + pad(now.getDate()) +
+                        '-' + pad(now.getHours()) + pad(now.getMinutes());
+
+                    window.XlsxExport.download(
+                        'asistente-conversacion-' + stamp + '.xlsx',
+                        'Asistente',
+                        rows,
+                        [6, 20, 45, 30, 90]
+                    );
                 }
             );
 

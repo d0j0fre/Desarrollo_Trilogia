@@ -24,7 +24,8 @@
                 <form asp-action="Quarantine" method="get" class="form-inline">
                     <input type="text" name="buscar" value="@buscar" class="form-control mr-2 mb-2" placeholder="Producto o motivo" />
                     <button type="submit" class="btn btn-ds-search mr-2 mb-2"><i class="fa fa-search mr-2"></i>Buscar</button>
-                    <a asp-action="Quarantine" class="btn btn-ds-neutral mb-2"><i class="fa fa-eraser mr-2"></i>Limpiar</a>
+                    <a asp-action="Quarantine" class="btn btn-ds-neutral mr-2 mb-2"><i class="fa fa-eraser mr-2"></i>Limpiar</a>
+                    <a asp-action="Report" class="btn btn-ds-action mb-2"><i class="fa fa-chart-bar mr-2"></i>Reporte de devoluciones</a>
                 </form>
             </div>
         </div>
@@ -43,6 +44,8 @@
                             <tr>
                                 <th>Producto</th>
                                 <th class="text-center">Cant.</th>
+                                <th class="text-center">Pedido</th>
+                                <th>Cliente / referencia</th>
                                 <th>Motivo</th>
                                 <th>Registrado por</th>
                                 <th>Fecha</th>
@@ -52,7 +55,7 @@
                         <tbody>
                             @if (Model == null || !Model.Any())
                             {
-                                <tr><td colspan="6" class="text-center text-muted py-4">No hay productos en cuarentena.</td></tr>
+                                <tr><td colspan="8" class="text-center text-muted py-4">No hay productos en cuarentena.</td></tr>
                             }
                             else
                             {
@@ -61,6 +64,8 @@
                                     <tr>
                                         <td class="font-weight-bold">@d.ProductoNombre</td>
                                         <td class="text-center">@d.Cantidad</td>
+                                        <td class="text-center">@(d.PedidoId.HasValue ? $"#{d.PedidoId}" : "—")</td>
+                                        <td>@(string.IsNullOrWhiteSpace(d.ClienteInfo) ? "—" : d.ClienteInfo)</td>
                                         <td>@d.Motivo</td>
                                         <td>@d.RegistradoPorNombre</td>
                                         <td>@d.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</td>

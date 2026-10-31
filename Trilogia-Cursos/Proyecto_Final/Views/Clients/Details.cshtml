@@ -102,6 +102,79 @@
         </div>
     </div>
 
+    @* BUG-06-03 · CU-061-07: facturas y saldo (mismo estado de cuenta que Créditos y el portal). *@
+    @if (Model.EstadoCuenta != null)
+    {
+        var cuenta = Model.EstadoCuenta;
+        <div class="row px-xl-5 pb-3">
+            <div class="col-lg-4 pb-3">
+                <div class="admin-card h-100 text-center">
+                    <h5 class="mb-3">Saldo</h5>
+                    <h3 class="@(cuenta.Saldo > 0 ? "text-danger" : "text-muted") mb-1">₡@cuenta.Saldo.ToString("N2")</h3>
+                    <p class="text-muted mb-2">Saldo pendiente</p>
+                    @if (cuenta.DeudaVencida > 0)
+                    {
+                        <p class="mb-2"><span class="badge badge-danger">Vencido: ₡@cuenta.DeudaVencida.ToString("N2")</span></p>
+                    }
+                    <p class="mb-1"><strong>Límite:</strong> ₡@cuenta.LimiteCredito.ToString("N2")</p>
+                    <p class="mb-1"><strong>Disponible:</strong> ₡@cuenta.CreditoDisponible.ToString("N2")</p>
+                    <p class="mb-3"><strong>Pagos registrados:</strong> ₡@cuenta.TotalPagado.ToString("N2")</p>
+                    <a asp-controller="Credits" asp-action="Details" asp-route-id="@Model.UsuarioId" class="btn btn-ds-view btn-sm">Ver cargos y pagos</a>
+                </div>
+            </div>
+
+            <div class="col-lg-8 pb-3">
+                <div class="admin-table-wrapper h-100">
+                    <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Facturas del cliente</h5>
+                        <span class="badge badge-light">@cuenta.CantidadFacturas factura(s) · ₡@cuenta.TotalFacturado.ToString("N2")</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Factura</th>
+                                    <th># Pedido</th>
+                                    <th>Fecha</th>
+                                    <th>Estado</th>
+                                    <th>Pago</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (!cuenta.Facturas.Any())
+                                {
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted py-4">Este cliente no tiene facturas registradas.</td>
+                                    </tr>
+                                }
+                                @foreach (var factura in cuenta.Facturas)
+                                {
+                                    <tr>
+                                        <td><a asp-controller="Billing" asp-action="Detail" asp-route-id="@factura.FacturaId">@factura.NumeroFactura</a></td>
+                                        <td>#@factura.PedidoId</td>
+                                        <td>@factura.FechaFactura.ToString("dd/MM/yyyy")</td>
+                                        <td>@factura.Estado</td>
+                                        <td>@(string.IsNullOrWhiteSpace(factura.MetodoPago) ? "No indicado" : factura.MetodoPago)</td>
+                                        <td>₡@factura.Total.ToString("N2")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row px-xl-5 pb-3">
+            <div class="col-12">
+                <div class="alert alert-warning mb-0">No fue posible cargar las facturas y el saldo del cliente en este momento.</div>
+            </div>
+        </div>
+    }
+
     <div class="row px-xl-5 pb-5">
         <div class="col-12">
             <div class="admin-table-wrapper">

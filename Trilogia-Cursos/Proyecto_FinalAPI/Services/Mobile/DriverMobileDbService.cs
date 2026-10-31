@@ -150,17 +150,32 @@ namespace Proyecto_FinalAPI.Services.Mobile
                 string.IsNullOrWhiteSpace(driverName) ? DBNull.Value : driverName.Trim();
 
             await connection.OpenAsync(cancellationToken);
-            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-            if (!await reader.ReadAsync(cancellationToken)) return null;
-
-            return new UpdateDeliveryStatusResponse
+            UpdateDeliveryStatusResponse result;
+            await using (var reader = await command.ExecuteReaderAsync(cancellationToken))
             {
-                RutaPedidoId = reader.GetInt32(0),
-                EstadoEntrega = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
-                PedidoId = reader.GetInt32(2),
-                RutaCompletada = !reader.IsDBNull(6) && reader.GetBoolean(6),
-                Duplicado = !reader.IsDBNull(7) && reader.GetBoolean(7)
+                if (!await reader.ReadAsync(cancellationToken)) return null;
+
+                result = new UpdateDeliveryStatusResponse
+                {
+                    RutaPedidoId = reader.GetInt32(0),
+                    EstadoEntrega = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
+                    PedidoId = reader.GetInt32(2),
+                    RutaCompletada = !reader.IsDBNull(6) && reader.GetBoolean(6),
+                    Duplicado = !reader.IsDBNull(7) && reader.GetBoolean(7)
+                };
+            }
+
+            // BUG-10-06: el pedido toma el estado de su entrega (EnRuta, Entregado,
+            // Fallido). También en un duplicado: es idempotente y completa un
+            // envío anterior que se cortó entre los dos pasos.
+            await using var sync = new SqlCommand("dbo.sp_Pedidos_SincronizarEstadoEntrega", connection)
+            {
+                CommandType = CommandType.StoredProcedure
             };
+            sync.Parameters.Add("@RutaPedidoId", SqlDbType.Int).Value = result.RutaPedidoId;
+            await sync.ExecuteNonQueryAsync(cancellationToken);
+
+            return result;
         }
 
         public async Task<IReadOnlyList<DriverVehicle>> GetVehiclesAsync(

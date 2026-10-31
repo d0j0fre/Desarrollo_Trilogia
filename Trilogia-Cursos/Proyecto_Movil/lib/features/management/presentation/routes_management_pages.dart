@@ -184,7 +184,7 @@ class _ManagedRouteDetailPageState extends ConsumerState<ManagedRouteDetailPage>
     );
     if (done == true) {
       _refresh();
-      if (mounted) showSuccess(context, 'Ruta reasignada. El chofer nuevo la ve al actualizar su lista.');
+      if (mounted) showSuccess(context, 'Ruta reasignada. El chofer nuevo recibe una notificación y la ve en Mis rutas.');
     }
   }
 

@@ -20,6 +20,15 @@
                     @Html.AntiForgeryToken()
                     <div asp-validation-summary="All" class="text-danger mb-2"></div>
 
+                    @if (Model.Riesgo is { EsMoroso: true } riesgo)
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            <h6 class="alert-heading mb-1"><i class="fa fa-exclamation-triangle mr-2"></i>Alerta de riesgo: cliente con deuda vencida</h6>
+                            <p class="mb-1">@riesgo.ClienteNombre tiene una deuda vencida de <strong>₡@riesgo.SaldoVencido.ToString("N2")</strong> con <strong>@riesgo.DiasAtraso días de atraso</strong>@(riesgo.VencimientoMasAntiguo.HasValue ? $" (vencida desde el {riesgo.VencimientoMasAntiguo.Value:dd/MM/yyyy}; plazo de crédito {riesgo.PlazoCreditoDias} días)" : ""). Deuda total: ₡@riesgo.SaldoActual.ToString("N2").</p>
+                            <p class="mb-0">La asignación del comodato queda bloqueada hasta que el cliente salde su cuenta.</p>
+                        </div>
+                    }
+
                     <div class="form-group">
                         <label asp-for="ActivoId"></label>
                         <select asp-for="ActivoId" class="form-control">
@@ -38,9 +47,19 @@
 
                     <div class="form-row">
                         <div class="form-group col-md-6">
-                            <label asp-for="ClienteNombre"></label>
-                            <input asp-for="ClienteNombre" class="form-control" />
-                            <span asp-validation-for="ClienteNombre" class="text-danger"></span>
+                            <label asp-for="ClienteUsuarioId"></label>
+                            <select asp-for="ClienteUsuarioId" class="form-control" id="comodato-cliente">
+                                <option value="">— Seleccione un cliente registrado —</option>
+                                @foreach (var cli in Model.Clientes)
+                                {
+                                    <option value="@cli.UsuarioId" data-identificacion="@cli.Identificacion" data-direccion="@cli.Direccion"
+                                            data-moroso="@(cli.EsMoroso ? "1" : "0")" data-vencido="@cli.SaldoVencido.ToString("N2")" data-dias="@cli.DiasAtraso">
+                                        @cli.NombreCompleto@(string.IsNullOrWhiteSpace(cli.Correo) ? "" : $" ({cli.Correo})")@(cli.EsMoroso ? " — deuda vencida" : "")
+                                    </option>
+                                }
+                            </select>
+                            <span asp-validation-for="ClienteUsuarioId" class="text-danger"></span>
+                            <div id="comodato-cliente-riesgo" class="alert alert-warning small mt-2 mb-0 d-none" role="alert"></div>
                         </div>
                         <div class="form-group col-md-6">
                             <label asp-for="ClienteIdentificacion"></label>
@@ -79,4 +98,28 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        // BUG-16-02: al elegir el cliente se completa su identificación y se avisa si tiene saldo vencido.
+        (function () {
+            var select = document.getElementById('comodato-cliente');
+            var aviso = document.getElementById('comodato-cliente-riesgo');
+            var identificacion = document.getElementById('ClienteIdentificacion');
+            var ubicacion = document.getElementById('Ubicacion');
+            if (!select) return;
+            function actualizar(rellenar) {
+                var opcion = select.options[select.selectedIndex];
+                var moroso = opcion && opcion.dataset.moroso === '1';
+                aviso.classList.toggle('d-none', !moroso);
+                aviso.textContent = moroso
+                    ? 'Alerta de riesgo: este cliente tiene una deuda vencida de ₡' + opcion.dataset.vencido + ' con ' + opcion.dataset.dias + ' días de atraso. No se le puede asignar un comodato hasta que salde su cuenta.'
+                    : '';
+                if (rellenar && opcion && opcion.value) {
+                    if (identificacion && !identificacion.value) identificacion.value = opcion.dataset.identificacion || '';
+                    if (ubicacion && !ubicacion.value) ubicacion.value = opcion.dataset.direccion || '';
+                }
+            }
+            select.addEventListener('change', function () { actualizar(true); });
+            actualizar(false);
+        })();
+    </script>
 }

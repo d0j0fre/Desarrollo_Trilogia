@@ -44,6 +44,9 @@ namespace Proyecto_Final.Services
         public async Task<AuthResult> ForgotPasswordAsync(ForgotPasswordViewModel model)
         {
             var response = await _httpClient.PostAsJsonAsync("api/auth/forgot-password", new { Email = model.Email });
+            if (response.StatusCode == HttpStatusCode.TooManyRequests)
+                return new AuthResult { Success = false, Message = "Alcanzaste el límite de solicitudes de recuperación de contraseña. Intentá nuevamente en 15 minutos." };
+
             if (!response.IsSuccessStatusCode)
                 return new AuthResult { Success = false, Message = "No fue posible procesar la recuperación en este momento." };
 

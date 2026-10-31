@@ -105,10 +105,40 @@
             display: block;
         }
 
+        /* CU-262: sugerencia de artículo complementario, discreta y descartable. */
+        .cross-sell-popup {
+            position: fixed;
+            right: 20px;
+            bottom: 120px;
+            z-index: 1050;
+            width: min(340px, calc(100vw - 32px));
+            border: 1px solid #e8e8e8;
+            border-radius: 16px;
+            padding: 14px 16px;
+            background: #fff;
+            box-shadow: 0 14px 34px rgba(0,0,0,.16);
+        }
+
+        .cross-sell-popup__close {
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            border: none;
+            background: transparent;
+            font-size: 1.2rem;
+            line-height: 1;
+            color: #888;
+        }
+
         @@media (max-width: 767.98px) {
             .seller-qty {
                 max-width: 100%;
                 margin-left: 0;
+            }
+
+            .cross-sell-popup {
+                right: 16px;
+                bottom: 180px;
             }
         }
     </style>
@@ -220,6 +250,16 @@
                     </div>
 
                     <div class="form-group">
+                        <label asp-for="MetodoPago" class="font-weight-bold"></label>
+                        <select asp-for="MetodoPago" class="form-control">
+                            <option value="@Proyecto_Final.Models.Admin.SellerOrderCreateViewModel.PagoContraEntrega">Pago contra entrega</option>
+                            <option value="@Proyecto_Final.Models.Admin.SellerOrderCreateViewModel.PagoCredito">Crédito del cliente</option>
+                        </select>
+                        <small class="form-text text-muted">El crédito se valida al registrar: crédito activo, sin pagos vencidos y con disponible suficiente.</small>
+                        <span asp-validation-for="MetodoPago" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
                         <label asp-for="DireccionEntrega" class="font-weight-bold"></label>
                         <textarea asp-for="DireccionEntrega" class="form-control" rows="4" placeholder="Dirección, señas o punto de entrega"></textarea>
                         <span asp-validation-for="DireccionEntrega" class="text-danger"></span>
@@ -302,6 +342,18 @@
             </div>
         </div>
     </form>
+
+    <div id="crossSellPopup" class="cross-sell-popup d-none" role="status" aria-live="polite">
+        <button type="button" id="crossSellClose" class="cross-sell-popup__close" aria-label="Cerrar sugerencia">&times;</button>
+        <div class="small text-muted mb-1"><i class="fa fa-lightbulb mr-1"></i>Sugerencia para este pedido</div>
+        <div class="font-weight-bold" id="crossSellName"></div>
+        <div class="small text-muted mb-1"><span id="crossSellCategory"></span> · <span id="crossSellPrice"></span></div>
+        <div class="small mb-3" id="crossSellReason"></div>
+        <div class="d-flex" style="gap:8px;">
+            <button type="button" id="crossSellAdd" class="btn btn-sm btn-ds-create"><i class="fa fa-plus mr-1"></i>Agregar 1</button>
+            <button type="button" id="crossSellDismiss" class="btn btn-sm btn-ds-neutral">No, gracias</button>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
@@ -494,6 +546,10 @@
                     errors.push('Debe seleccionar al menos un producto.');
                 }
 
+                if ((document.getElementById('MetodoPago').value || '') === '@Proyecto_Final.Models.Admin.SellerOrderCreateViewModel.PagoCredito') {
+                    errors.push('El pago a crédito necesita conexión para validar el crédito del cliente.');
+                }
+
                 return {
                     isValid: errors.length === 0,
                     errors: errors,
@@ -631,7 +687,7 @@
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
-                                'RequestVerificationToken': token
+                                'X-CSRF-TOKEN': token
                             },
                             body: JSON.stringify({
                                 pedidoOfflineGuid: orders[index].pedidoOfflineGuid,
@@ -751,6 +807,117 @@
             updateSummary();
             updateConnectionStatus();
             renderPendingOrders();
+        })();
+    </script>
+    <script>
+        // CU-262: al agregar un producto se sugiere un artículo complementario en una
+        // ventana discreta. Si el vendedor la descarta, no se vuelve a insistir en este
+        // pedido (CU-262-02). Es opcional: sin conexión o con error, no aparece.
+        (function () {
+            const suggestionUrl = '@Url.Action("Suggestion", "SellerOrders")';
+            const form = document.getElementById('sellerOrderForm');
+            const clientSelect = document.getElementById('ClienteUsuarioId');
+            const quantities = Array.from(document.querySelectorAll('.seller-quantity'));
+            const popup = document.getElementById('crossSellPopup');
+            const nameElement = document.getElementById('crossSellName');
+            const categoryElement = document.getElementById('crossSellCategory');
+            const priceElement = document.getElementById('crossSellPrice');
+            const reasonElement = document.getElementById('crossSellReason');
+            let dismissedForOrder = false;
+            let suggestedIds = new Set();
+            let current = null;
+            let timer = null;
+            let requestNumber = 0;
+
+            function selectedProductIds() {
+                return quantities
+                    .filter(input => parseInt(input.value || '0', 10) > 0)
+                    .map(input => input.closest('.seller-product-item').dataset.productId);
+            }
+
+            function quantityInputFor(productId) {
+                const item = document.querySelector('.seller-product-item[data-product-id="' + productId + '"]');
+                return item ? item.querySelector('.seller-quantity') : null;
+            }
+
+            function hide() {
+                popup.classList.add('d-none');
+                current = null;
+            }
+
+            function show(suggestion) {
+                current = suggestion;
+                suggestedIds.add(String(suggestion.productoId));
+                nameElement.textContent = suggestion.nombre;
+                categoryElement.textContent = suggestion.categoria;
+                priceElement.textContent = '₡' + Number(suggestion.precio).toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                reasonElement.textContent = suggestion.explicacion || '';
+                popup.classList.remove('d-none');
+            }
+
+            async function requestSuggestion() {
+                const ids = selectedProductIds();
+                if (dismissedForOrder || !navigator.onLine || ids.length === 0) {
+                    return;
+                }
+
+                const number = ++requestNumber;
+                const query = '?clienteUsuarioId=' + encodeURIComponent(clientSelect.value || '0') +
+                    '&productos=' + encodeURIComponent(ids.join(','));
+
+                try {
+                    const response = await fetch(suggestionUrl + query, { headers: { 'Accept': 'application/json' } });
+                    if (!response.ok || number !== requestNumber || dismissedForOrder) {
+                        return;
+                    }
+
+                    const data = await response.json();
+                    const suggestion = data && data.sugerencia;
+                    const input = suggestion ? quantityInputFor(suggestion.productoId) : null;
+                    if (!suggestion || !input || parseInt(input.value || '0', 10) > 0 || suggestedIds.has(String(suggestion.productoId))) {
+                        return;
+                    }
+
+                    show(suggestion);
+                } catch (error) {
+                    // La sugerencia es opcional: un error no afecta el pedido.
+                }
+            }
+
+            quantities.forEach(input => input.addEventListener('input', function () {
+                if (parseInt(input.value || '0', 10) <= 0) {
+                    return;
+                }
+
+                clearTimeout(timer);
+                timer = setTimeout(requestSuggestion, 600);
+            }));
+
+            document.getElementById('crossSellAdd').addEventListener('click', function () {
+                const input = current ? quantityInputFor(current.productoId) : null;
+                if (input) {
+                    input.value = '1';
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+                hide();
+            });
+
+            function dismiss() {
+                dismissedForOrder = true;
+                clearTimeout(timer);
+                hide();
+            }
+
+            document.getElementById('crossSellDismiss').addEventListener('click', dismiss);
+            document.getElementById('crossSellClose').addEventListener('click', dismiss);
+
+            // Un pedido nuevo (por ejemplo, después de guardarlo sin conexión) vuelve a sugerir.
+            form.addEventListener('reset', function () {
+                dismissedForOrder = false;
+                suggestedIds = new Set();
+                clearTimeout(timer);
+                hide();
+            });
         })();
     </script>
 }

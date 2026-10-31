@@ -4,10 +4,13 @@ public static class DocumentExpirationPolicy
 {
     public const string CostaRicaTimeZone = "America/Costa_Rica";
 
-    public static DateTime BusinessDate(DateTimeOffset utcNow)
+    public static DateTime BusinessDate(DateTimeOffset utcNow) => BusinessDateTime(utcNow).Date;
+
+    /// <summary>Fecha y hora local de Costa Rica para el instante indicado.</summary>
+    public static DateTime BusinessDateTime(DateTimeOffset utcNow)
     {
         var zone = FindCostaRicaTimeZone();
-        return TimeZoneInfo.ConvertTime(utcNow, zone).Date;
+        return TimeZoneInfo.ConvertTime(utcNow, zone).DateTime;
     }
 
     public static string Classify(bool active, bool doesNotExpire, DateTime? expirationDate, DateTime businessDate, int warningDays)

@@ -21,6 +21,20 @@
         </div>
     </div>
 
+    @{ var alertas = Model?.Count(r => r.SugerirRetiro) ?? 0; }
+    @if (alertas > 0)
+    {
+        <div class="row px-xl-5">
+            <div class="col-12">
+                <div class="alert alert-danger" role="alert">
+                    <i class="fa fa-exclamation-triangle mr-2"></i><strong>Alerta de baja rentabilidad:</strong>
+                    @alertas equipo(s) en comodato con clientes que no compran hace 30 días o más. Se sugiere retirar el equipo.
+                    El aviso también llega a la campana de notificaciones de quienes consultan este reporte.
+                </div>
+            </div>
+        </div>
+    }
+
     <div class="row px-xl-5 pb-5">
         <div class="col-12">
             <div class="admin-table-wrapper">
@@ -28,28 +42,36 @@
                     <table class="table table-hover mb-0 align-middle">
                         <thead class="thead-light">
                             <tr>
-                                <th>Activo</th><th>Cliente</th><th class="text-center">Días prestado</th>
+                                <th>Activo</th><th>Cliente</th><th>Ubicación</th><th class="text-center">Fecha de entrega</th><th class="text-center">Días prestado</th>
                                 <th class="text-center">Pedidos</th><th class="text-right">Total comprado</th>
-                                <th class="text-center">Última compra</th>
+                                <th class="text-center">Última compra</th><th class="text-center">Días sin compra</th>
                             </tr>
                         </thead>
                         <tbody>
                             @if (Model == null || !Model.Any())
                             {
-                                <tr><td colspan="6" class="text-center text-muted py-4">No hay comodatos activos.</td></tr>
+                                <tr><td colspan="9" class="text-center text-muted py-4">No hay comodatos activos.</td></tr>
                             }
                             else
                             {
                                 @foreach (var r in Model)
                                 {
-                                    var sinCompras = r.NumPedidos == 0;
-                                    <tr class="@(sinCompras ? "table-warning" : "")">
+                                    <tr class="@(r.SugerirRetiro ? "table-danger" : "")">
                                         <td class="font-weight-bold">@r.CodigoActivo <span class="text-muted small">@r.ActivoNombre</span></td>
                                         <td>@r.ClienteNombre</td>
+                                        <td>@(string.IsNullOrWhiteSpace(r.Ubicacion) ? "—" : r.Ubicacion)</td>
+                                        <td class="text-center">@r.FechaAsignacion.ToString("dd/MM/yyyy")</td>
                                         <td class="text-center">@r.DiasEnComodato</td>
                                         <td class="text-center">@r.NumPedidos</td>
                                         <td class="text-right">@r.TotalComprado.ToString("N2")</td>
                                         <td class="text-center">@(r.UltimaCompra.HasValue ? r.UltimaCompra.Value.ToString("dd/MM/yyyy") : "—")</td>
+                                        <td class="text-center">
+                                            @r.DiasSinCompra
+                                            @if (r.SugerirRetiro)
+                                            {
+                                                <span class="admin-badge-soft danger d-block mt-1">Sugerir retiro</span>
+                                            }
+                                        </td>
                                     </tr>
                                 }
                             }
@@ -57,7 +79,7 @@
                     </table>
                 </div>
             </div>
-            <p class="text-muted small mt-2"><i class="fa fa-info-circle mr-1"></i>Las filas resaltadas corresponden a clientes con equipo prestado pero sin compras registradas desde la asignación.</p>
+            <p class="text-muted small mt-2"><i class="fa fa-info-circle mr-1"></i>Regla de 30 días: "Días sin compra" cuenta desde la última compra del cliente (pedido aprobado, en proceso, en ruta o entregado) o, si no ha comprado, desde la entrega del equipo. Las filas resaltadas llevan 30 días o más sin compras y generan una alerta de baja rentabilidad.</p>
         </div>
     </div>
 </div>

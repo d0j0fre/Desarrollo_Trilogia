@@ -109,6 +109,13 @@ namespace Proyecto_Final.Controllers
             var current = await _adminDbService.GetProductByIdAsync(model.ProductoId);
             if (current is null) return NotFound();
 
+            if (BloqueaInactivacion(current.Activo, model.Activo, model.Stock))
+            {
+                model.ImagenUrl = current.ImagenUrl;
+                ModelState.AddModelError(string.Empty, MensajeInactivacionConStock(model.Nombre, model.Stock));
+                return View(model);
+            }
+
             StagedProductImage? staged = null;
             try
             {
@@ -173,6 +180,15 @@ namespace Proyecto_Final.Controllers
         {
             try
             {
+                // CU-056-02: un producto con existencias no se inactiva; primero se vacía el inventario.
+                var current = await _adminDbService.GetProductByIdAsync(productoId);
+                if (current is null) return NotFound();
+                if (BloqueaInactivacion(current.Activo, false, current.Stock))
+                {
+                    TempData["ErrorMessage"] = MensajeInactivacionConStock(current.Nombre, current.Stock);
+                    return RedirectToAction(nameof(Index), new { filtro });
+                }
+
                 // null = el procedimiento desplegado no informa el estado resultante.
                 // No se afirma una direccion que no se conoce: ni en la auditoria
                 // ni en el mensaje.
@@ -208,6 +224,13 @@ namespace Proyecto_Final.Controllers
 
             return RedirectToAction(nameof(Index), new { filtro });
         }
+
+        /// <summary>True cuando se intenta pasar de activo a inactivo un producto que aún tiene stock.</summary>
+        public static bool BloqueaInactivacion(bool activoActual, bool activoNuevo, int stock) =>
+            activoActual && !activoNuevo && stock > 0;
+
+        public static string MensajeInactivacionConStock(string nombre, int stock) =>
+            $"No se puede inactivar «{nombre}»: todavía tiene {stock} unidad(es) en bodega. Primero debe vaciarse el inventario.";
 
         [HttpPost]
         [ValidateAntiForgeryToken]

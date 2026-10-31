@@ -83,6 +83,15 @@
                 <h6 class="text-muted mb-2">Deuda actual</h6>
                 <h3 class="@(Model.DeudaActual > 0 ? "text-danger" : "text-muted") mb-1">₡@Model.DeudaActual.ToString("N2")</h3>
                 <small class="text-muted">Cargos menos abonos y ajustes</small>
+                @if (Model.DeudaVencida > 0)
+                {
+                    <div class="mt-2"><span class="badge badge-danger">Vencida: ₡@Model.DeudaVencida.ToString("N2")</span></div>
+                    <small class="text-danger">Desde @Model.VencimientoMasAntiguo?.ToString("dd/MM/yyyy"). No se permiten pedidos a crédito.</small>
+                }
+                else
+                {
+                    <div class="mt-2"><small class="text-muted">Sin pagos vencidos (plazo @Model.PlazoCreditoDias días)</small></div>
+                }
             </div>
         </div>
 
@@ -112,6 +121,12 @@
                     <div class="form-group">
                         <label class="font-weight-bold">Límite de crédito</label>
                         <input type="number" step="0.01" min="0" name="LimiteCredito" value="@Model.LimiteCredito" class="form-control" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="font-weight-bold" for="PlazoCreditoDias">Plazo de crédito (días)</label>
+                        <input type="number" step="1" min="0" max="365" id="PlazoCreditoDias" name="PlazoCreditoDias" value="@Model.PlazoCreditoDias" class="form-control" required />
+                        <small class="form-text text-muted">Cada cargo vence este número de días después de registrado; los abonos pagan primero los cargos más antiguos.</small>
                     </div>
 
                     <div class="form-group">

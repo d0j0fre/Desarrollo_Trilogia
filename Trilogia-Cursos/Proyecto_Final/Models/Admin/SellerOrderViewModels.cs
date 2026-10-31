@@ -63,6 +63,14 @@ namespace Proyecto_Final.Models.Admin
         [StringLength(500)]
         public string? Observaciones { get; set; }
 
+        // BUG-06-02 · CU-062: el pedido puede cargarse al crédito del cliente.
+        public const string PagoContraEntrega = "Contra entrega";
+        public const string PagoCredito = "Crédito";
+
+        [Display(Name = "Forma de pago")]
+        [RegularExpression("^(Contra entrega|Crédito)$", ErrorMessage = "Seleccione una forma de pago válida.")]
+        public string MetodoPago { get; set; } = PagoContraEntrega;
+
         public List<SellerOrderClientViewModel> Clientes { get; set; } = new();
         public List<SellerOrderProductInputViewModel> Productos { get; set; } = new();
 

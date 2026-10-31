@@ -9,11 +9,13 @@ namespace Proyecto_Final.Controllers
     public class ClientsController : Controller
     {
         private readonly AdminDbService _adminDbService;
+        private readonly ClientAccountDbService _clientAccount;
         private readonly ILogger<ClientsController> _logger;
 
-        public ClientsController(AdminDbService adminDbService, ILogger<ClientsController> logger)
+        public ClientsController(AdminDbService adminDbService, ClientAccountDbService clientAccount, ILogger<ClientsController> logger)
         {
             _adminDbService = adminDbService;
+            _clientAccount = clientAccount;
             _logger = logger;
         }
 
@@ -112,6 +114,11 @@ namespace Proyecto_Final.Controllers
                 TempData["SuccessMessage"] = "Cliente actualizado correctamente.";
                 return RedirectToAction(nameof(Details), new { id = model.UsuarioId });
             }
+            catch (InvalidOperationException ex) when (IsSaldoPendiente(ex))
+            {
+                // BUG-06-01 · CU-063-02 (0231): no se inactiva un cliente con deuda.
+                ModelState.AddModelError(string.Empty, await SaldoPendienteMessageAsync(model.UsuarioId));
+            }
             catch (InvalidOperationException)
             {
                 ModelState.AddModelError(string.Empty, "No se pudo actualizar el cliente. Revise los datos e intente nuevamente.");
@@ -131,6 +138,16 @@ namespace Proyecto_Final.Controllers
             var cliente = await _adminDbService.GetClientDetailAsync(id);
 
             if (cliente == null) return NotFound();
+
+            // BUG-06-03: facturas y saldo; si fallan, el resto del detalle se muestra igual.
+            try
+            {
+                cliente.EstadoCuenta = await _clientAccount.GetStatementAsync(id, HttpContext.RequestAborted);
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(exception, "No se pudo cargar el estado de cuenta del cliente {UsuarioId}.", id);
+            }
 
             return View(cliente);
         }
@@ -160,6 +177,10 @@ namespace Proyecto_Final.Controllers
                 TempData["SuccessMessage"] = nuevoEstado
                     ? "Cliente reactivado correctamente."
                     : "Cliente inactivado correctamente.";
+            }
+            catch (InvalidOperationException ex) when (IsSaldoPendiente(ex))
+            {
+                TempData["ErrorMessage"] = await SaldoPendienteMessageAsync(usuarioId);
             }
             catch (InvalidOperationException)
             {
@@ -191,6 +212,27 @@ namespace Proyecto_Final.Controllers
             {
                 _logger.LogWarning(exception, "La auditoría secundaria falló después de {Action}. TraceId {TraceId}", accion, HttpContext.TraceIdentifier);
             }
+        }
+
+        /// <summary>BUG-06-01: el procedimiento rechazó la inactivación porque el cliente tiene saldo (error 51012 de 0231).</summary>
+        public static bool IsSaldoPendiente(Exception exception) =>
+            exception.InnerException is Microsoft.Data.SqlClient.SqlException { Number: 51012 };
+
+        private async Task<string> SaldoPendienteMessageAsync(int usuarioId)
+        {
+            const string accion = "Debe saldarse la cuenta antes de inactivar al cliente.";
+            try
+            {
+                var credito = await _adminDbService.GetClientCreditDetailAsync(usuarioId);
+                if (credito is { DeudaActual: > 0 })
+                    return $"El cliente tiene un saldo pendiente de ₡{credito.DeudaActual:N2}. {accion}";
+            }
+            catch (Exception exception)
+            {
+                _logger.LogWarning(exception, "No se pudo leer el saldo del cliente {UsuarioId}.", usuarioId);
+            }
+
+            return $"El cliente tiene un saldo pendiente. {accion}";
         }
 
         private ViewResult InvalidClientForm(ClientFormViewModel model)

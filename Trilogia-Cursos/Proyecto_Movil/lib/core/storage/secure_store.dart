@@ -124,6 +124,14 @@ class SecureStore {
     return created;
   }
 
+  /// Ultimo aviso que ya se mostro como notificacion del sistema, por usuario.
+  /// Evita repetir el mismo aviso en cada consulta de la bandeja.
+  Future<int> readLastNotifiedId(int userId) async =>
+      int.tryParse(await _storage.read(key: 'ultimo_aviso_$userId') ?? '') ?? 0;
+
+  Future<void> writeLastNotifiedId(int userId, int id) =>
+      _storage.write(key: 'ultimo_aviso_$userId', value: '$id');
+
   /// Borra la sesion. El identificador de dispositivo se conserva: al volver a
   /// entrar, el servidor reconoce el mismo aparato.
   Future<void> clearSession() async {
