@@ -72,6 +72,7 @@ Cada migracion debe indicar su estrategia de rollback antes de ejecutarse. Los c
 | 0240 | `0240_comodato_historial_condicion.sql` | BUG-16-05: `sp_Comodato_HistorialPorActivo` devuelve al final la condición de entrega y de devolución | Comodatos (cu162/163/164) |
 | 0241 | `0241_comodato_rentabilidad_ubicacion.sql` | BUG-16-06: `sp_Comodato_Rentabilidad` devuelve al final la ubicación del equipo (la fecha de entrega ya venía) | Comodatos (cu162/163/164) |
 | 0242 | `0242_comodato_regla_30_dias.sql` | BUG-16-04: `fn_Comodato_Rentabilidad` aplica la regla de 30 días sin compras; `sp_Comodato_Rentabilidad` devuelve `DiasSinCompra`/`SugerirRetiro` y `sp_Comodato_GenerarAlertasRentabilidad` deja avisos de baja rentabilidad a quienes tienen `COMODATOS_CONSULTAR` | 0241; 0221 (`NotificacionesUsuario`) |
+| 0243 | `0243_comodato_alerta_averia.sql` | BUG-16-03: `sp_Comodato_Devolver` deja un aviso `ComodatoAveria` a taller (`FLOTA_MANTENIMIENTO`/`ACTIVOS_GESTIONAR`) y cobros (perfil Crédito y Cobro o `CREDITOS_MOVIMIENTOS`) cuando el equipo vuelve con avería | 0221 (`NotificacionesUsuario`) |
 
 Los scripts no incluyen `USE`: el ejecutor debe seleccionar explícitamente la base antes de iniciar. Los hashes escritos por 0002–0011 son hashes de manifiesto para identificar versión; la evidencia de despliegue debe registrar además el SHA-256 real del archivo y actualizar el ledger si corresponde.
 

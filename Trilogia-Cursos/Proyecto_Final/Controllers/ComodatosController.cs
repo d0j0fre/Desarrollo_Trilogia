@@ -94,7 +94,10 @@ namespace Proyecto_Final.Controllers
                 var destino = model.Destino == "Mantenimiento" ? "enviado a mantenimiento" : "reingresado al inventario";
                 await RegistrarAuditoriaAsync("Devolver comodato", "Activos",
                     $"Comodato #{model.ComodatoId} cerrado; equipo {destino}.");
-                TempData["SuccessMessage"] = $"Comodato cerrado. Equipo {destino}.";
+                // BUG-16-03: con avería, sp_Comodato_Devolver avisa a taller y cobros (0243).
+                TempData["SuccessMessage"] = model.Destino == "Mantenimiento"
+                    ? $"Comodato cerrado. Equipo {destino} (en reparación). Se envió una alerta a taller y cobros."
+                    : $"Comodato cerrado. Equipo {destino}.";
             }
             catch (SqlException ex) when (ex.Number >= 50000)
             {
