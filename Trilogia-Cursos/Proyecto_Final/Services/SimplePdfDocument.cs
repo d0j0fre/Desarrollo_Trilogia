@@ -52,6 +52,105 @@ namespace Proyecto_Final.Services
             _y -= 6;
         }
 
+        // ── BUG-16-01 (contrato de comodato): texto corrido que se ajusta al ancho de la página. ──
+
+        private const double TextSize = 9.5;
+        private const double TextLeading = 13;
+        private const double ContentWidth = PageWidth - 2 * Margin;
+
+        /// <summary>Párrafo en Helvetica que se parte en varias líneas para no salirse del margen.</summary>
+        public void Paragraph(string text, bool bold = false)
+        {
+            foreach (var line in Wrap(text, TextSize, bold, ContentWidth))
+                Text(line, bold);
+        }
+
+        /// <summary>"Etiqueta: valor" con la etiqueta en negrita; el valor se ajusta al ancho restante.</summary>
+        public void Field(string label, string value)
+        {
+            var labelText = label + ": ";
+            var labelWidth = TextWidth(labelText, TextSize, bold: true);
+            var lines = Wrap(value, TextSize, false, ContentWidth - labelWidth);
+            for (var i = 0; i < lines.Count; i++)
+            {
+                EnsureRoom(TextLeading);
+                _y -= TextLeading;
+                if (i == 0) AppendText(Current, labelText, "F2", TextSize, Margin, _y);
+                AppendText(Current, lines[i], "F1", TextSize, Margin + labelWidth, _y);
+            }
+        }
+
+        /// <summary>Dos líneas de firma lado a lado, con su título y una leyenda debajo.</summary>
+        public void Signatures(string left, string leftDetail, string right, string rightDetail)
+        {
+            var column = ContentWidth / 2 - 24;
+            var rightX = Margin + ContentWidth / 2 + 24;
+            var leftLines = Wrap(leftDetail, 8.5, false, column);
+            var rightLines = Wrap(rightDetail, 8.5, false, column);
+            var detailLines = Math.Max(leftLines.Count, rightLines.Count);
+            EnsureRoom(60 + detailLines * 11);
+            _y -= 45;
+            Current.Append(CultureInfo.InvariantCulture, $"0.6 w {Margin:0.##} {_y:0.##} m {Margin + column:0.##} {_y:0.##} l S\n");
+            Current.Append(CultureInfo.InvariantCulture, $"{rightX:0.##} {_y:0.##} m {PageWidth - Margin:0.##} {_y:0.##} l S\n");
+            AppendText(Current, left, "F2", TextSize, Margin, _y - 12);
+            AppendText(Current, right, "F2", TextSize, rightX, _y - 12);
+            for (var i = 0; i < detailLines; i++)
+            {
+                if (i < leftLines.Count) AppendText(Current, leftLines[i], "F1", 8.5, Margin, _y - 24 - i * 11);
+                if (i < rightLines.Count) AppendText(Current, rightLines[i], "F1", 8.5, rightX, _y - 24 - i * 11);
+            }
+            _y -= 24 + detailLines * 11;
+        }
+
+        /// <summary>Parte el texto en líneas que caben en <paramref name="width"/> puntos.</summary>
+        public static List<string> Wrap(string text, double size, bool bold, double width)
+        {
+            var lines = new List<string>();
+            foreach (var paragraph in text.Replace("\r\n", "\n").Split('\n'))
+            {
+                var current = string.Empty;
+                foreach (var word in paragraph.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                {
+                    var candidate = current.Length == 0 ? word : current + " " + word;
+                    if (current.Length > 0 && TextWidth(candidate, size, bold) > width)
+                    {
+                        lines.Add(current);
+                        current = word;
+                    }
+                    else
+                    {
+                        current = candidate;
+                    }
+                }
+                lines.Add(current);
+            }
+            return lines;
+        }
+
+        // Anchos de Helvetica (AFM, milésimas de em) para ASCII 32–126; las letras con tilde
+        // miden como su letra base y la negrita se estima un 8 % más ancha.
+        private static readonly short[] HelveticaWidths =
+        {
+            278, 278, 355, 556, 556, 889, 667, 191, 333, 333, 389, 584, 278, 333, 278, 278,
+            556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 278, 278, 584, 584, 584, 556,
+            1015, 667, 667, 722, 722, 667, 611, 778, 722, 278, 500, 667, 556, 833, 722, 778,
+            667, 778, 722, 667, 611, 722, 667, 944, 667, 667, 611, 278, 278, 278, 469, 556,
+            333, 556, 556, 500, 556, 556, 278, 556, 556, 222, 222, 500, 222, 833, 556, 556,
+            556, 556, 333, 500, 278, 556, 500, 722, 500, 500, 500, 334, 260, 334, 584
+        };
+
+        /// <summary>Ancho aproximado del texto en Helvetica, en puntos.</summary>
+        public static double TextWidth(string text, double size, bool bold)
+        {
+            double total = 0;
+            foreach (var c in text)
+            {
+                var basic = c < 128 ? c : c.ToString().Normalize(NormalizationForm.FormD)[0];
+                total += basic is >= ' ' and <= '~' ? HelveticaWidths[basic - ' '] : 556;
+            }
+            return total * size / 1000 * (bold ? 1.08 : 1);
+        }
+
         /// <summary>Arma una línea de tabla en ancho fijo: texto alineado a la izquierda o, con ancho negativo, a la derecha.</summary>
         public static string Columns(params (string Text, int Width)[] columns)
         {
