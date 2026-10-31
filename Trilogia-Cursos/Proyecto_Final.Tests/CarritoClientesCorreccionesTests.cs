@@ -83,6 +83,36 @@ public sealed class CarritoClientesCorreccionesTests
         Assert.Contains("asp-action=\"ExportCsv\"", File.ReadAllText(Path.Combine(views, "Report.cshtml")), StringComparison.Ordinal);
     }
 
+    [Theory]
+    [InlineData(52021, "no tiene crédito activo")]
+    [InlineData(52022, "bloqueado")]
+    [InlineData(52023, "pagos vencidos")]
+    [InlineData(52024, "límite de crédito")]
+    public void SellerCreditOrder_ExplainsEachCreditRejection(int sqlError, string expected)
+    {
+        // BUG-06-02 · CU-062-02, CU-062-03, CU-062-06.
+        Assert.Contains(expected, SellerOrdersController.CreditRejectionMessage(sqlError), StringComparison.Ordinal);
+        Assert.Null(SellerOrdersController.CreditRejectionMessage(50715));
+    }
+
+    [Fact]
+    public void CreditOrderMigration_ChargesTheOrderAndReusesTheDebtFunction()
+    {
+        var root = Path.GetDirectoryName(FindProjectRoot())!;
+        var migration = File.ReadAllText(Path.Combine(root, "database", "migrations", "0230_cliente_estado_deuda.sql"));
+        var service = File.ReadAllText(Path.Combine(root, "Proyecto_Final", "Services", "AdminDbService.cs"));
+
+        Assert.Contains("CREATE OR ALTER FUNCTION dbo.fn_Cliente_EstadoDeuda", migration, StringComparison.Ordinal);
+        Assert.Contains("@MetodoPago            NVARCHAR(40)    = NULL", migration, StringComparison.Ordinal);
+        Assert.Contains("EXEC dbo.sp_Credito_CargarPedido", migration, StringComparison.Ordinal);
+        Assert.Contains("FROM dbo.fn_Cliente_EstadoDeuda(@UsuarioId)", migration, StringComparison.Ordinal);
+        Assert.Contains("TR_Pedidos_AnularCargoCredito", migration, StringComparison.Ordinal);
+        Assert.Contains("\"@MetodoPago\"", service, StringComparison.Ordinal);
+        Assert.Contains("\"@PlazoCreditoDias\"", service, StringComparison.Ordinal);
+        Assert.True(File.Exists(Path.Combine(root, "database", "migrations", "0230_cliente_estado_deuda.verify.sql")));
+        Assert.True(File.Exists(Path.Combine(root, "database", "migrations", "0230_cliente_estado_deuda.rollback.md")));
+    }
+
     private static string FindProjectRoot()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
