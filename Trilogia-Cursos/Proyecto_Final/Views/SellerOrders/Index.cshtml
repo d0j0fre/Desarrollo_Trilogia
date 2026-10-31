@@ -220,6 +220,16 @@
                     </div>
 
                     <div class="form-group">
+                        <label asp-for="MetodoPago" class="font-weight-bold"></label>
+                        <select asp-for="MetodoPago" class="form-control">
+                            <option value="@Proyecto_Final.Models.Admin.SellerOrderCreateViewModel.PagoContraEntrega">Pago contra entrega</option>
+                            <option value="@Proyecto_Final.Models.Admin.SellerOrderCreateViewModel.PagoCredito">Crédito del cliente</option>
+                        </select>
+                        <small class="form-text text-muted">El crédito se valida al registrar: crédito activo, sin pagos vencidos y con disponible suficiente.</small>
+                        <span asp-validation-for="MetodoPago" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
                         <label asp-for="DireccionEntrega" class="font-weight-bold"></label>
                         <textarea asp-for="DireccionEntrega" class="form-control" rows="4" placeholder="Dirección, señas o punto de entrega"></textarea>
                         <span asp-validation-for="DireccionEntrega" class="text-danger"></span>
@@ -492,6 +502,10 @@
 
                 if (productos.length === 0) {
                     errors.push('Debe seleccionar al menos un producto.');
+                }
+
+                if ((document.getElementById('MetodoPago').value || '') === '@Proyecto_Final.Models.Admin.SellerOrderCreateViewModel.PagoCredito') {
+                    errors.push('El pago a crédito necesita conexión para validar el crédito del cliente.');
                 }
 
                 return {

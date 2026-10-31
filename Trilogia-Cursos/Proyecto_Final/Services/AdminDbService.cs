@@ -1512,13 +1512,22 @@ namespace Proyecto_Final.Services
                     FechaActualizacion = reader.IsDBNull(14) ? null : reader.GetDateTime(14)
                 };
 
+                // BUG-06-02: columnas agregadas al final por 0230.
+                if (reader.FieldCount > 17)
+                {
+                    model.PlazoCreditoDias = reader.IsDBNull(15) ? 30 : reader.GetInt32(15);
+                    model.DeudaVencida = reader.IsDBNull(16) ? 0 : reader.GetDecimal(16);
+                    model.VencimientoMasAntiguo = reader.IsDBNull(17) ? null : reader.GetDateTime(17);
+                }
+
                 model.SettingsForm = new ClientCreditSettingsViewModel
                 {
                     UsuarioId = model.UsuarioId,
                     LimiteCredito = model.LimiteCredito,
                     CreditoActivo = model.CreditoActivo,
                     CreditoBloqueado = model.CreditoBloqueado,
-                    MotivoBloqueo = model.MotivoBloqueo
+                    MotivoBloqueo = model.MotivoBloqueo,
+                    PlazoCreditoDias = model.PlazoCreditoDias
                 };
 
                 model.MovementForm = new ClientCreditMovementFormViewModel
@@ -1568,6 +1577,7 @@ namespace Proyecto_Final.Services
                 command.Parameters.Add("@MotivoBloqueo", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.MotivoBloqueo) ? DBNull.Value : model.MotivoBloqueo.Trim();
                 command.Parameters.Add("@RegistradoPorUsuarioId", SqlDbType.Int).Value = usuarioId.HasValue ? usuarioId.Value : DBNull.Value;
                 command.Parameters.Add("@RegistradoPorNombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(usuarioNombre) ? DBNull.Value : usuarioNombre.Trim();
+                command.Parameters.Add("@PlazoCreditoDias", SqlDbType.Int).Value = model.PlazoCreditoDias; // BUG-06-02 (0230)
 
                 await connection.OpenAsync();
                 await command.ExecuteNonQueryAsync();
@@ -1688,6 +1698,9 @@ namespace Proyecto_Final.Services
                 command.Parameters.Add("@ItemsJson", SqlDbType.NVarChar, -1).Value = itemsJson;
                 command.Parameters.Add("@PedidoOfflineGuid", SqlDbType.UniqueIdentifier).Value = pedidoOfflineGuid.HasValue ? pedidoOfflineGuid.Value : DBNull.Value;
                 command.Parameters.Add("@CanalPedido", SqlDbType.NVarChar, 50).Value = string.IsNullOrWhiteSpace(canalPedido) ? "Venta móvil" : canalPedido.Trim();
+                // BUG-06-02 (0230): solo el pago a crédito se envía; sin parámetro el procedimiento conserva el valor histórico.
+                if (model.MetodoPago == SellerOrderCreateViewModel.PagoCredito)
+                    command.Parameters.Add("@MetodoPago", SqlDbType.NVarChar, 40).Value = SellerOrderCreateViewModel.PagoCredito;
 
                 await connection.OpenAsync();
                 await using var reader = await command.ExecuteReaderAsync();

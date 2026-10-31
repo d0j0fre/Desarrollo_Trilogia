@@ -77,12 +77,29 @@ namespace Proyecto_Final.Controllers
 
                 return RedirectToAction(nameof(Confirmation), new { id = result.PedidoId });
             }
+            catch (InvalidOperationException ex)
+                when (ex.InnerException is Microsoft.Data.SqlClient.SqlException sql && CreditRejectionMessage(sql.Number) is not null)
+            {
+                // BUG-06-02: el pedido a crédito se rechazó; no se creó nada.
+                ModelState.AddModelError(string.Empty, CreditRejectionMessage(((Microsoft.Data.SqlClient.SqlException)ex.InnerException!).Number)!);
+                return View("Index", await BuildCreateModelAsync(model));
+            }
             catch (Exception)
             {
                 ModelState.AddModelError(string.Empty, "No fue posible registrar el pedido en este momento. Intente nuevamente.");
                 return View("Index", await BuildCreateModelAsync(model));
             }
         }
+
+        /// <summary>BUG-06-02 · CU-062: mensaje para cada rechazo del pedido a crédito (errores de 0230).</summary>
+        public static string? CreditRejectionMessage(int sqlErrorNumber) => sqlErrorNumber switch
+        {
+            52021 => "El cliente no tiene crédito activo. Registre el pedido con pago contra entrega.",
+            52022 => "El crédito del cliente está bloqueado. No se puede registrar el pedido a crédito.",
+            52023 => "El cliente tiene pagos vencidos pendientes. Debe ponerse al día antes de comprar a crédito.",
+            52024 => "El pedido supera el crédito disponible del cliente (se superó el límite de crédito).",
+            _ => null
+        };
 
         [HttpPost]
         [ValidateAntiForgeryToken]

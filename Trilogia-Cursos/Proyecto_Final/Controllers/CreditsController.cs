@@ -72,7 +72,7 @@ namespace Proyecto_Final.Controllers
                 await RegistrarAuditoriaAsync(
                     "Configurar",
                     "Créditos",
-                    $"Se actualizó la configuración de crédito del cliente #{model.UsuarioId}. Límite: ₡{model.LimiteCredito:N2}, activo: {model.CreditoActivo}, bloqueado: {model.CreditoBloqueado}.");
+                    $"Se actualizó la configuración de crédito del cliente #{model.UsuarioId}. Límite: ₡{model.LimiteCredito:N2}, plazo: {model.PlazoCreditoDias} días, activo: {model.CreditoActivo}, bloqueado: {model.CreditoBloqueado}.");
 
                 TempData["SuccessMessage"] = "Configuración de crédito actualizada correctamente.";
             }

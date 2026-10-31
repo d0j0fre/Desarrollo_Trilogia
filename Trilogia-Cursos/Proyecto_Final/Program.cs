@@ -163,6 +163,7 @@ builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<LogisticsDbService>();
 builder.Services.AddScoped<ReportsDbService>();
 builder.Services.AddScoped<WarehouseDbService>();
+builder.Services.AddScoped<ClientAccountDbService>(); // BUG-06-03 / BUG-12-01: estado de cuenta del cliente
 builder.Services.AddScoped<FleetDbService>();
 builder.Services.AddScoped<PromotionsDbService>();
 builder.Services.AddScoped<ReclamosDbService>();

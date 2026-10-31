@@ -1,0 +1,94 @@
+@model Proyecto_Final.Models.Admin.ClientAccountStatementViewModel
+@{
+    ViewData["Title"] = "Mis facturas";
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<section class="s4-client-portal-page">
+    <div class="container">
+        <div class="s4-client-portal-hero">
+            <div>
+                <span class="s4-client-portal-eyebrow">
+                    <i class="fa fa-receipt"></i>
+                    Portal del cliente
+                </span>
+                <h1>Mis facturas</h1>
+                <p>Consulta y descarga en PDF las facturas de tus pedidos.</p>
+            </div>
+
+            <div class="s4-client-portal-hero__stats">
+                <div>
+                    <span>Facturas</span>
+                    <strong>@Model.CantidadFacturas</strong>
+                </div>
+                <div>
+                    <span>Saldo pendiente</span>
+                    <strong>&#8353;@Model.Saldo.ToString("N2")</strong>
+                </div>
+            </div>
+        </div>
+
+        <partial name="_PdfDownload" />
+
+        <section class="s4-client-orders-panel">
+            <div class="s4-client-orders-panel__head">
+                <div>
+                    <span>Total facturado: &#8353;@Model.TotalFacturado.ToString("N2")</span>
+                    <h2>Facturas</h2>
+                </div>
+                <div>
+                    <a asp-controller="ClientPortal" asp-action="Index" class="btn btn-sm btn-ds-view s4-client-table-action">Mis pedidos</a>
+                    <a asp-controller="ClientPortal" asp-action="Statement" class="btn btn-sm btn-ds-view s4-client-table-action">Estado de cuenta</a>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 s4-client-orders-table">
+                    <thead>
+                        <tr>
+                            <th>Factura</th>
+                            <th># Pedido</th>
+                            <th>Fecha</th>
+                            <th>Estado</th>
+                            <th>Pago</th>
+                            <th>Subtotal</th>
+                            <th>Impuesto</th>
+                            <th>Total</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Facturas.Any())
+                        {
+                            <tr>
+                                <td colspan="9" class="text-center text-muted py-4">No hay facturas registradas.</td>
+                            </tr>
+                        }
+                        @foreach (var factura in Model.Facturas)
+                        {
+                            <tr>
+                                <td class="font-weight-bold">@factura.NumeroFactura</td>
+                                <td>#@factura.PedidoId</td>
+                                <td>@factura.FechaFactura.ToString("dd/MM/yyyy")</td>
+                                <td>@factura.Estado</td>
+                                <td>@(string.IsNullOrWhiteSpace(factura.MetodoPago) ? "No indicado" : factura.MetodoPago)</td>
+                                <td>&#8353;@factura.Subtotal.ToString("N2")</td>
+                                <td>&#8353;@factura.Impuesto.ToString("N2")</td>
+                                <td class="font-weight-bold">&#8353;@factura.Total.ToString("N2")</td>
+                                <td class="text-right text-nowrap">
+                                    <a asp-controller="ClientPortal" asp-action="Invoice" asp-route-id="@factura.PedidoId" class="btn btn-sm btn-ds-view s4-client-table-action">Ver</a>
+                                    <a asp-controller="ClientPortal" asp-action="InvoicePdf" asp-route-id="@factura.PedidoId"
+                                       data-pdf-download="@Proyecto_Final.Services.ClientAccountPdf.InvoiceFileName(factura.NumeroFactura)"
+                                       class="btn btn-sm btn-ds-action s4-client-table-action"><i class="fa fa-download"></i> PDF</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+</section>

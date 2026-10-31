@@ -1,0 +1,42 @@
+@* BUG-12-02 · CU-124-03: descarga el PDF y confirma al cliente que el archivo se guardó.
+   Los enlaces con data-pdf-download funcionan también sin JavaScript (descarga directa). *@
+<div id="pdfDownloadStatus" class="alert d-none no-print mt-3" role="status" aria-live="polite"></div>
+<script>
+    (function () {
+        function mostrar(tipo, mensaje) {
+            var aviso = document.getElementById('pdfDownloadStatus');
+            if (!aviso) { return; }
+            aviso.className = 'alert alert-' + tipo + ' no-print mt-3';
+            aviso.textContent = mensaje;
+        }
+
+        document.addEventListener('click', function (evento) {
+            var enlace = evento.target.closest ? evento.target.closest('a[data-pdf-download]') : null;
+            if (!enlace || !window.fetch || !window.URL || !window.URL.createObjectURL) { return; }
+            evento.preventDefault();
+            var nombre = enlace.getAttribute('data-pdf-download') || 'documento.pdf';
+            mostrar('info', 'Generando ' + nombre + '...');
+
+            fetch(enlace.href, { credentials: 'same-origin' })
+                .then(function (respuesta) {
+                    var tipo = respuesta.headers.get('Content-Type') || '';
+                    if (!respuesta.ok || tipo.indexOf('application/pdf') !== 0) { throw new Error('sin PDF'); }
+                    return respuesta.blob();
+                })
+                .then(function (archivo) {
+                    var url = URL.createObjectURL(archivo);
+                    var temporal = document.createElement('a');
+                    temporal.href = url;
+                    temporal.download = nombre;
+                    document.body.appendChild(temporal);
+                    temporal.click();
+                    temporal.remove();
+                    setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+                    mostrar('success', 'Descarga completada: el archivo ' + nombre + ' se guardó en su equipo.');
+                })
+                .catch(function () {
+                    mostrar('danger', 'No fue posible descargar el archivo. Intente nuevamente.');
+                });
+        });
+    })();
+</script>

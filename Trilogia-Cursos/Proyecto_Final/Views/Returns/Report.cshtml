@@ -1,0 +1,136 @@
+@model Proyecto_Final.Models.Admin.ReturnsReportViewModel
+@{
+    ViewData["Title"] = "Reporte de devoluciones";
+    var grupos = new[]
+    {
+        ("Por producto", "Producto", Model.PorProducto),
+        ("Por cliente / referencia", "Cliente / referencia", Model.PorCliente),
+        ("Por motivo", "Motivo", Model.PorMotivo)
+    };
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-2">Reporte de devoluciones</h2>
+                    <p class="mb-0">Devoluciones registradas del @Model.Desde.ToString("dd/MM/yyyy") al @Model.Hasta.ToString("dd/MM/yyyy"), agrupadas por producto, cliente y motivo.</p>
+                </div>
+                <a asp-action="Index" class="btn btn-ds-neutral">← Volver</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-filter-bar mb-3">
+                <form asp-action="Report" method="get" class="form-inline">
+                    <label class="mr-2 mb-2" for="desde">Desde</label>
+                    <input type="date" id="desde" name="desde" value="@Model.Desde.ToString("yyyy-MM-dd")" class="form-control mr-2 mb-2" />
+                    <label class="mr-2 mb-2" for="hasta">Hasta</label>
+                    <input type="date" id="hasta" name="hasta" value="@Model.Hasta.ToString("yyyy-MM-dd")" class="form-control mr-2 mb-2" />
+                    <button type="submit" class="btn btn-ds-search mr-2 mb-2"><i class="fa fa-search mr-2"></i>Generar</button>
+                    <a asp-action="ExportCsv" asp-route-desde="@Model.Desde.ToString("yyyy-MM-dd")" asp-route-hasta="@Model.Hasta.ToString("yyyy-MM-dd")" class="btn btn-ds-action mb-2"><i class="fa fa-download mr-2"></i>Descargar CSV</a>
+                </form>
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-3">
+        <div class="col-md-6 pb-3">
+            <div class="admin-card h-100 text-center">
+                <h6 class="text-muted mb-2">Devoluciones</h6>
+                <h3 class="mb-0">@Model.Devoluciones.Count</h3>
+            </div>
+        </div>
+        <div class="col-md-6 pb-3">
+            <div class="admin-card h-100 text-center">
+                <h6 class="text-muted mb-2">Unidades devueltas</h6>
+                <h3 class="mb-0">@Model.TotalUnidades</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5">
+        @foreach (var (titulo, columna, filas) in grupos)
+        {
+            <div class="col-lg-4 pb-4">
+                <div class="admin-table-wrapper h-100">
+                    <div class="p-3 border-bottom"><h5 class="mb-0">@titulo</h5></div>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>@columna</th>
+                                    <th class="text-center">Devol.</th>
+                                    <th class="text-center">Unid.</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (!filas.Any())
+                                {
+                                    <tr><td colspan="3" class="text-center text-muted py-4">Sin devoluciones en el período.</td></tr>
+                                }
+                                @foreach (var g in filas)
+                                {
+                                    <tr>
+                                        <td>@g.Clave</td>
+                                        <td class="text-center">@g.Devoluciones</td>
+                                        <td class="text-center">@g.Unidades</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-12">
+            <div class="admin-table-wrapper">
+                <div class="p-3 border-bottom"><h5 class="mb-0">Detalle del período</h5></div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Producto</th>
+                                <th class="text-center">Cant.</th>
+                                <th class="text-center">Pedido</th>
+                                <th>Cliente / referencia</th>
+                                <th>Motivo</th>
+                                <th class="text-center">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!Model.Devoluciones.Any())
+                            {
+                                <tr><td colspan="7" class="text-center text-muted py-4">Sin devoluciones en el período.</td></tr>
+                            }
+                            @foreach (var d in Model.Devoluciones)
+                            {
+                                <tr>
+                                    <td>@d.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td class="font-weight-bold">@d.ProductoNombre</td>
+                                    <td class="text-center">@d.Cantidad</td>
+                                    <td class="text-center">@(d.PedidoId.HasValue ? $"#{d.PedidoId}" : "—")</td>
+                                    <td>@(string.IsNullOrWhiteSpace(d.ClienteInfo) ? "—" : d.ClienteInfo)</td>
+                                    <td>@d.Motivo</td>
+                                    <td class="text-center">@(d.Estado == "EnCuarentena" ? "En cuarentena" : d.Estado)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -83,18 +83,29 @@
             <div>
                 <span>Portal del cliente</span>
                 <h1>Estado de cuenta</h1>
-                <p>Consulta e imprime tu resumen de credito y pedidos.</p>
+                <p>Consulta tu saldo, facturas, pagos y pedidos, y descárgalo en PDF.</p>
             </div>
 
             <div class="s4-client-invoice-actions no-print">
                 <a asp-controller="ClientPortal" asp-action="Index" class="s4-client-invoice-secondary">
                     Mis pedidos
                 </a>
-                <button type="button" id="btnDescargarEstado" class="s4-client-invoice-primary" onclick="window.print();">
-                    Descargar / Imprimir
+                <a asp-controller="ClientPortal" asp-action="Invoices" class="s4-client-invoice-secondary">
+                    Mis facturas
+                </a>
+                <button type="button" class="s4-client-invoice-secondary" onclick="window.print();">
+                    Imprimir
                 </button>
+                @if (Model.Cuenta != null)
+                {
+                    <a asp-controller="ClientPortal" asp-action="StatementPdf" id="btnDescargarEstado" class="s4-client-invoice-primary"
+                       data-pdf-download="@Proyecto_Final.Services.ClientAccountPdf.StatementFileName(Model.Cuenta)">
+                        Descargar PDF
+                    </a>
+                }
             </div>
         </div>
+        <partial name="_PdfDownload" />
 
         <section class="s4-client-invoice-document">
             <div class="s4-client-invoice-header">
@@ -154,7 +165,26 @@
                 <aside class="s4-client-invoice-totals">
                     <h3>Credito</h3>
 
-                    @if (Model.Credito == null)
+                    @if (Model.Cuenta != null)
+                    {
+                        <div>
+                            <span>Limite</span>
+                            <strong>&#8353;@Model.Cuenta.LimiteCredito.ToString("N2")</strong>
+                        </div>
+                        <div>
+                            <span>Saldo pendiente</span>
+                            <strong>&#8353;@Model.Cuenta.Saldo.ToString("N2")</strong>
+                        </div>
+                        <div>
+                            <span>Saldo vencido</span>
+                            <strong class="@(Model.Cuenta.DeudaVencida > 0 ? "text-danger" : string.Empty)">&#8353;@Model.Cuenta.DeudaVencida.ToString("N2")</strong>
+                        </div>
+                        <div class="s4-client-invoice-total-row">
+                            <span>Disponible</span>
+                            <strong>&#8353;@Model.Cuenta.CreditoDisponible.ToString("N2")</strong>
+                        </div>
+                    }
+                    else if (Model.Credito == null)
                     {
                         <p class="s4-client-empty-text">No hay credito asignado actualmente.</p>
                     }
@@ -175,6 +205,91 @@
                     }
                 </aside>
             </div>
+
+            @if (Model.Cuenta != null)
+            {
+                <div class="s4-client-invoice-products">
+                    <div class="s4-client-invoice-products-head">
+                        <span>@Model.Cuenta.CantidadFacturas factura(s) · &#8353;@Model.Cuenta.TotalFacturado.ToString("N2")</span>
+                        <h3>Facturas</h3>
+                    </div>
+
+                    <div class="s4-client-invoice-table-wrap">
+                        <table class="s4-client-invoice-table">
+                            <thead>
+                                <tr>
+                                    <th>Factura</th>
+                                    <th>Pedido</th>
+                                    <th>Fecha</th>
+                                    <th>Estado</th>
+                                    <th>Pago</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (!Model.Cuenta.Facturas.Any())
+                                {
+                                    <tr>
+                                        <td colspan="6" class="s4-client-invoice-empty">No hay facturas registradas.</td>
+                                    </tr>
+                                }
+                                @foreach (var factura in Model.Cuenta.Facturas)
+                                {
+                                    <tr>
+                                        <td><a asp-controller="ClientPortal" asp-action="Invoice" asp-route-id="@factura.PedidoId"><strong>@factura.NumeroFactura</strong></a></td>
+                                        <td>#@factura.PedidoId</td>
+                                        <td>@factura.FechaFactura.ToString("dd/MM/yyyy")</td>
+                                        <td>@factura.Estado</td>
+                                        <td>@(string.IsNullOrWhiteSpace(factura.MetodoPago) ? "No indicado" : factura.MetodoPago)</td>
+                                        <td>&#8353;@factura.Total.ToString("N2")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="s4-client-invoice-products">
+                    <div class="s4-client-invoice-products-head">
+                        <span>Pagos registrados: &#8353;@Model.Cuenta.TotalPagado.ToString("N2")</span>
+                        <h3>Cargos y pagos</h3>
+                    </div>
+
+                    <div class="s4-client-invoice-table-wrap">
+                        <table class="s4-client-invoice-table">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Tipo</th>
+                                    <th>Detalle</th>
+                                    <th>Cargo</th>
+                                    <th>Pago</th>
+                                    <th>Saldo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (!Model.Cuenta.Movimientos.Any())
+                                {
+                                    <tr>
+                                        <td colspan="6" class="s4-client-invoice-empty">No hay cargos ni pagos registrados.</td>
+                                    </tr>
+                                }
+                                @foreach (var movimiento in Model.Cuenta.Movimientos)
+                                {
+                                    <tr>
+                                        <td>@movimiento.FechaMovimiento.ToString("dd/MM/yyyy")</td>
+                                        <td>@movimiento.TipoTexto</td>
+                                        <td>@movimiento.Descripcion@(string.IsNullOrWhiteSpace(movimiento.Referencia) ? string.Empty : $" ({movimiento.Referencia})")</td>
+                                        <td>@(movimiento.Cargo > 0 ? "₡" + movimiento.Cargo.ToString("N2") : string.Empty)</td>
+                                        <td>@(movimiento.Abono > 0 ? "₡" + movimiento.Abono.ToString("N2") : string.Empty)</td>
+                                        <td>&#8353;@movimiento.SaldoAcumulado.ToString("N2")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
 
             <div class="s4-client-invoice-products">
                 <div class="s4-client-invoice-products-head">
@@ -220,16 +335,3 @@
         </section>
     </div>
 </div>
-
-@section Scripts {
-    <script>
-        // Confirma visualmente al cliente que el estado de cuenta se genero para descarga (CU-123).
-        window.addEventListener('afterprint', function () {
-            var boton = document.getElementById('btnDescargarEstado');
-            if (boton) {
-                boton.textContent = 'Descarga confirmada';
-                setTimeout(function () { boton.textContent = 'Descargar / Imprimir'; }, 3000);
-            }
-        });
-    </script>
-}

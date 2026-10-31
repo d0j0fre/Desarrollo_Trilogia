@@ -46,4 +46,63 @@ namespace Proyecto_Final.Models.Admin
         public string? Buscar { get; set; }
         public string? Estado { get; set; }
     }
+
+    // CU-143-04 — Reporte de devoluciones por producto, cliente y motivo.
+    public class ReturnsReportGroupViewModel
+    {
+        public string Clave { get; set; } = string.Empty;
+        public int Devoluciones { get; set; }
+        public int Unidades { get; set; }
+    }
+
+    public class ReturnsReportViewModel
+    {
+        public const string SinCliente = "Sin cliente / referencia";
+
+        public DateTime Desde { get; set; }
+        public DateTime Hasta { get; set; }
+        public List<ReturnListItemViewModel> Devoluciones { get; set; } = new();
+        public List<ReturnsReportGroupViewModel> PorProducto { get; set; } = new();
+        public List<ReturnsReportGroupViewModel> PorCliente { get; set; } = new();
+        public List<ReturnsReportGroupViewModel> PorMotivo { get; set; } = new();
+        public int TotalUnidades => Devoluciones.Sum(d => d.Cantidad);
+
+        /// <summary>Filtra por fecha de registro (ambos días incluidos) y agrupa.</summary>
+        public static ReturnsReportViewModel Build(IEnumerable<ReturnListItemViewModel> devoluciones, DateTime desde, DateTime hasta)
+        {
+            var inicio = desde.Date;
+            var fin = hasta.Date.AddDays(1);
+            var enRango = devoluciones
+                .Where(d => d.FechaRegistro >= inicio && d.FechaRegistro < fin)
+                .OrderByDescending(d => d.FechaRegistro)
+                .ToList();
+
+            return new ReturnsReportViewModel
+            {
+                Desde = inicio,
+                Hasta = hasta.Date,
+                Devoluciones = enRango,
+                PorProducto = Agrupar(enRango, d => d.ProductoNombre),
+                PorCliente = Agrupar(enRango, d => string.IsNullOrWhiteSpace(d.ClienteInfo) ? SinCliente : d.ClienteInfo),
+                PorMotivo = Agrupar(enRango, d => d.Motivo)
+            };
+        }
+
+        private static List<ReturnsReportGroupViewModel> Agrupar(
+            IEnumerable<ReturnListItemViewModel> devoluciones,
+            Func<ReturnListItemViewModel, string> clave)
+        {
+            return devoluciones
+                .GroupBy(d => clave(d).Trim(), StringComparer.OrdinalIgnoreCase)
+                .Select(g => new ReturnsReportGroupViewModel
+                {
+                    Clave = g.Key,
+                    Devoluciones = g.Count(),
+                    Unidades = g.Sum(d => d.Cantidad)
+                })
+                .OrderByDescending(g => g.Unidades)
+                .ThenBy(g => g.Clave, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+    }
 }
