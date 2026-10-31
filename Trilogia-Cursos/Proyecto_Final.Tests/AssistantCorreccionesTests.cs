@@ -89,5 +89,23 @@ public sealed class AssistantCorreccionesTests
         Assert.Contains("0250_asistente_entregas_pendientes.sql", readme, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void BUG_26_03_LaConversacionSePuedeExportarAExcel()
+    {
+        var view = Read("Proyecto_Final", "Views", "Assistant", "Index.cshtml");
+        var script = Read("Proyecto_Final", "wwwroot", "js", "xlsx-export.js");
+
+        Assert.Contains("id=\"assistantExport\"", view, StringComparison.Ordinal);
+        Assert.Contains("~/js/xlsx-export.js", view, StringComparison.Ordinal);
+        Assert.Contains("window.XlsxExport.download(", view, StringComparison.Ordinal);
+        Assert.Contains("'.xlsx'", view, StringComparison.Ordinal);
+
+        // Libro OpenXML real (no CSV renombrado) y celdas de texto que Excel no evalúa como fórmulas.
+        Assert.Contains("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", script, StringComparison.Ordinal);
+        Assert.Contains("name: 'xl/worksheets/sheet1.xml'", script, StringComparison.Ordinal);
+        Assert.Contains("t=\"inlineStr\"", script, StringComparison.Ordinal);
+        Assert.Contains(".replace(/</g, '&lt;')", script, StringComparison.Ordinal);
+    }
+
     private static string Read(params string[] parts) => MobileCorreccionesTests.Read(parts);
 }
