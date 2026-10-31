@@ -18,6 +18,7 @@ builder.Services.AddAntiforgery(options => options.HeaderName = "X-CSRF-TOKEN");
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = PasswordRecoveryRateLimitResponse.HandleAsync;
 
     options.AddPolicy("authentication", httpContext =>
         RateLimitPartition.GetFixedWindowLimiter(
