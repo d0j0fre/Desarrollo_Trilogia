@@ -12,12 +12,14 @@ namespace Proyecto_Final.Controllers
         private readonly AdminDbService _adminDbService;
         private readonly EmailService _emailService;
         private readonly ILogger<SellerOrdersController> _logger;
+        private readonly ICrossSellService _crossSell;
 
-        public SellerOrdersController(AdminDbService adminDbService, EmailService emailService, ILogger<SellerOrdersController> logger)
+        public SellerOrdersController(AdminDbService adminDbService, EmailService emailService, ILogger<SellerOrdersController> logger, ICrossSellService crossSell)
         {
             _adminDbService = adminDbService;
             _emailService = emailService;
             _logger = logger;
+            _crossSell = crossSell;
         }
 
         [HttpGet]
@@ -227,6 +229,52 @@ namespace Proyecto_Final.Controllers
                     Message = "No fue posible sincronizar el pedido offline en este momento. Intente nuevamente.",
                     PedidoOfflineGuid = request.PedidoOfflineGuid
                 });
+            }
+        }
+
+        // CU-262: artículo complementario para el pedido en curso. Es un apoyo opcional:
+        // si falla, la pantalla simplemente no muestra la sugerencia.
+        [HttpGet]
+        public async Task<IActionResult> Suggestion(int clienteUsuarioId, string? productos)
+        {
+            if (!IsAuthorizedSeller())
+                return Unauthorized();
+
+            var productosPedido = SellerCrossSellPolicy.ParseProductos(productos);
+            if (productosPedido.Count == 0)
+                return Json(new { ok = true, sugerencia = (object?)null });
+
+            try
+            {
+                var catalogo = (await _adminDbService.GetSellerOrderProductsAsync())
+                    .GroupBy(producto => producto.ProductoId)
+                    .ToDictionary(grupo => grupo.Key, grupo => grupo.First());
+                var categoriasPedido = productosPedido
+                    .Where(catalogo.ContainsKey)
+                    .Select(id => catalogo[id].Categoria)
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+                var sugerencias = await _crossSell.GetSuggestionsAsync(
+                    clienteUsuarioId > 0 ? clienteUsuarioId : null, productosPedido, HttpContext.RequestAborted);
+                var sugerencia = SellerCrossSellPolicy.Complementario(sugerencias, categoriasPedido, catalogo.Keys.ToHashSet());
+
+                return Json(new
+                {
+                    ok = true,
+                    sugerencia = sugerencia == null ? null : new
+                    {
+                        productoId = sugerencia.ProductoId,
+                        nombre = sugerencia.Nombre,
+                        categoria = sugerencia.Categoria,
+                        precio = sugerencia.Precio,
+                        explicacion = sugerencia.Explanation
+                    }
+                });
+            }
+            catch (Exception exception)
+            {
+                _logger.LogWarning(exception, "No fue posible calcular la sugerencia de venta cruzada en Venta móvil. Solicitud {TraceId}.", HttpContext.TraceIdentifier);
+                return Json(new { ok = false, sugerencia = (object?)null });
             }
         }
 
