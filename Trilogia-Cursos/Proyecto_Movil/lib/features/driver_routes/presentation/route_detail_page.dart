@@ -9,6 +9,7 @@ import '../../../shared/utils/navigation_launcher.dart';
 import '../application/routes_controller.dart';
 import '../domain/delivery.dart';
 import '../domain/route.dart';
+import 'route_map.dart';
 
 class RouteDetailPage extends ConsumerWidget {
   const RouteDetailPage({super.key, required this.rutaId});
@@ -153,6 +154,13 @@ class _RouteBody extends ConsumerWidget {
                 ],
               ),
             ),
+          ),
+          const SizedBox(height: 16),
+          RouteMap(
+            deliveries: route.entregas,
+            onExpand: () => Navigator.of(context).push(MaterialPageRoute<void>(
+              builder: (_) => RouteMapPage(title: 'Mapa · ${route.codigo}', deliveries: route.entregas),
+            )),
           ),
           const SizedBox(height: 22),
           const SectionTitle('Paradas'),
