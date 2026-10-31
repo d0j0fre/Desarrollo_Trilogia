@@ -2070,15 +2070,17 @@ namespace Proyecto_Final.Services
 
             const string egresosQuery = """
         SELECT
-            GastoId,
-            Fecha,
-            Concepto,
-            Categoria,
-            Monto
-        FROM dbo.Gastos
-        WHERE (@FechaInicio IS NULL OR Fecha >= @FechaInicio)
-          AND (@FechaFin IS NULL OR Fecha < DATEADD(DAY, 1, @FechaFin))
-        ORDER BY Fecha DESC;
+            g.GastoId,
+            CAST(g.FechaGasto AS DATETIME2) AS Fecha,
+            g.Descripcion AS Concepto,
+            c.Nombre AS Categoria,
+            g.Total AS Monto
+        FROM dbo.GastosOperativos g
+        LEFT JOIN dbo.CategoriasGasto c ON c.CategoriaId = g.CategoriaId
+        WHERE g.Estado IN (N'Aprobado', N'Pagado')
+          AND (@FechaInicio IS NULL OR g.FechaGasto >= @FechaInicio)
+          AND (@FechaFin IS NULL OR g.FechaGasto < DATEADD(DAY, 1, @FechaFin))
+        ORDER BY g.FechaGasto DESC;
         """;
 
             await using (var command = new SqlCommand(egresosQuery, connection))
