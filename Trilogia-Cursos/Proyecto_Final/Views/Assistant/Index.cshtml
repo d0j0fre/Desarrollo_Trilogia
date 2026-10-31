@@ -773,6 +773,14 @@
                         (input.value || '').trim();
 
                     if (!text) {
+                        // CU-261-03: la pregunta vacía no se envía, pero se avisa por qué.
+                        addBotMessage(
+                            'No fue posible responder',
+                            escapeHtml('Escribe una pregunta.'),
+                            []
+                        );
+                        input.value = '';
+                        input.focus();
                         return;
                     }
 
