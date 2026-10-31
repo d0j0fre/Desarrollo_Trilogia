@@ -62,6 +62,7 @@ Cada migracion debe indicar su estrategia de rollback antes de ejecutarse. Los c
 | 0210 | `0210_product_save_procedures.sql` | BUG-05-01: `sp_Admin_CreateProduct` y `sp_Admin_UpdateProduct` aceptan `@StockMinimo`, `@ImagenUrl` y `@EsDestacado` (la creación llena `CategoriaId`); `GetProductById` y `GetProducts` devuelven esas columnas | Esquema base de productos y categorías |
 | 0211 | `0211_product_expiration_date.sql` | BUG-05-02: `Productos.FechaVencimiento DATE NULL`; crear/editar/consultar productos la aceptan y devuelven. Aplicar antes de desplegar el código que envía `@FechaVencimiento` | 0210 |
 | 0212 | `0212_product_search_by_sku.sql` | BUG-05-03: `sp_Admin_GetProducts` también filtra por código SKU (`SKU-` + `ProductoId` con cinco dígitos) | 0211 |
+| 0213 | `0213_promotion_overlap_validation.sql` | BUG-17-01: `sp_Promociones_Create` y `sp_Promociones_Update` rechazan reglas traslapadas (mismo producto, activas, vigencias y segmentos que se cruzan) con el error 53102 | Promociones CU-171/174 |
 
 Los scripts no incluyen `USE`: el ejecutor debe seleccionar explícitamente la base antes de iniciar. Los hashes escritos por 0002–0011 son hashes de manifiesto para identificar versión; la evidencia de despliegue debe registrar además el SHA-256 real del archivo y actualizar el ledger si corresponde.
 

@@ -65,6 +65,21 @@ public sealed class ProductCatalogCorrectionsTests
         Assert.Contains("Primero debe vaciarse el inventario", mensaje, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void Promotions_RejectOverlappingRulesWithSpecificMessage()
+    {
+        var root = FindRepositoryRoot();
+        foreach (var procedure in new[] { "sp_Promociones_Create", "sp_Promociones_Update" })
+        {
+            var definition = LatestProcedureDefinition(root, procedure);
+            Assert.Contains($"THROW {Proyecto_Final.Controllers.PromotionsController.ReglasTraslapadasError}", definition, StringComparison.Ordinal);
+            Assert.Contains("FechaInicio <= @FechaFin", definition, StringComparison.Ordinal);
+            Assert.Contains("FechaFin >= @FechaInicio", definition, StringComparison.Ordinal);
+        }
+        Assert.Contains("PromocionId <> @PromocionId", LatestProcedureDefinition(root, "sp_Promociones_Update"), StringComparison.Ordinal);
+        Assert.StartsWith("Reglas traslapadas", Proyecto_Final.Controllers.PromotionsController.MensajeReglasTraslapadas, StringComparison.Ordinal);
+    }
+
     [Theory]
     [InlineData(15, true)]
     [InlineData(10, true)]
