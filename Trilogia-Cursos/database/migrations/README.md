@@ -59,6 +59,7 @@ Cada migracion debe indicar su estrategia de rollback antes de ejecutarse. Los c
 | 0023 | `0023_toggle_product_status_returns_state.sql` | `sp_Admin_ToggleProductStatus` devuelve el estado resultante para que la auditoría distinga activar de inactivar | Tabla `dbo.Productos` con columna `Activo` |
 | 0024–0027 | `0024_mobile_auth_jwt.sql` a `0027_mobile_app_selfhosted_package.sql` | Aplicación móvil: JWT, superficie del chofer, distribución y paquete propio | 0022 |
 | 0028 | `0028_mobile_roles_surface.sql` | Aplicación móvil por rol: permisos mínimos por perfil, `PEDIDOS_PREPARAR`, idempotencia (`MovilOperaciones`), preparación de pedidos y `sp_Movil_*`. Ver `docs/app-movil-roles.md` | 0025 |
+| 0200 | `0200_order_header_contract.sql` | `sp_Admin_GetOrderHeader` vuelve al contrato de cu097/cu098 (Observaciones antes que Total, columnas de pago y `MotivoRechazo`); el baseline `sp_admin_modulo.sql` lo dejaba con la versión antigua y el detalle de pedido fallaba (BUG-09-03, BUG-09-05, BUG-14-03) | Columnas de pago y retención de `dbo.Pedidos` (cu097/cu098) |
 
 Los scripts no incluyen `USE`: el ejecutor debe seleccionar explícitamente la base antes de iniciar. Los hashes escritos por 0002–0011 son hashes de manifiesto para identificar versión; la evidencia de despliegue debe registrar además el SHA-256 real del archivo y actualizar el ledger si corresponde.
 
