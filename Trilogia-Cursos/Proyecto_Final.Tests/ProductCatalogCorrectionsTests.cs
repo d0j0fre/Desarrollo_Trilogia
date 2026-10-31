@@ -80,6 +80,26 @@ public sealed class ProductCatalogCorrectionsTests
         Assert.StartsWith("Reglas traslapadas", Proyecto_Final.Controllers.PromotionsController.MensajeReglasTraslapadas, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void Promotions_HaveUnitLimitThatInactivatesThemWhenReached()
+    {
+        var root = FindRepositoryRoot();
+        var migration = File.ReadAllText(Path.Combine(root, "database", "migrations", "0214_promotion_unit_limit.sql"));
+        var service = File.ReadAllText(Path.Combine(root, "Proyecto_Final", "Services", "PromotionsDbService.cs"));
+
+        Assert.Contains("@LimiteUnidades", LatestProcedureDefinition(root, "sp_Promociones_Create"), StringComparison.Ordinal);
+        Assert.Contains("@LimiteUnidades", LatestProcedureDefinition(root, "sp_Promociones_Update"), StringComparison.Ordinal);
+        Assert.Contains($"THROW {Proyecto_Final.Controllers.PromotionsController.LimiteUnidadesError}", LatestProcedureDefinition(root, "sp_Promociones_Update"), StringComparison.Ordinal);
+        Assert.Contains("CREATE OR ALTER TRIGGER dbo.TR_PromocionAplicaciones_LimiteUnidades", migration, StringComparison.Ordinal);
+        Assert.Contains("AFTER INSERT", migration, StringComparison.Ordinal);
+        Assert.Contains("\"@LimiteUnidades\"", service, StringComparison.Ordinal);
+
+        var model = new Proyecto_Final.Models.Admin.PromotionFormViewModel { Nombre = "QA", ProductoId = 1, LimiteUnidades = 0 };
+        var results = new List<System.ComponentModel.DataAnnotations.ValidationResult>();
+        System.ComponentModel.DataAnnotations.Validator.TryValidateObject(model, new(model), results, true);
+        Assert.Contains(results, result => result.MemberNames.Contains(nameof(model.LimiteUnidades)));
+    }
+
     [Theory]
     [InlineData(15, true)]
     [InlineData(10, true)]
