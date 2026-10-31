@@ -1,4 +1,5 @@
 @model Proyecto_Final.Models.Admin.ProductFormViewModel
+@using Proyecto_Final.Models.Admin
 @{
     ViewData["Title"] = "Editar producto";
     var categorias = ViewBag.Categorias as List<string> ?? new List<string>();
@@ -28,6 +29,14 @@
                     @Html.AntiForgeryToken()
                     <input asp-for="ProductoId" type="hidden" />
                     <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3"></div>
+
+                    @if (ProductExpiration.RequiereAviso(Model.FechaVencimiento, DateTime.Today))
+                    {
+                        <div class="alert alert-warning" role="alert">
+                            <strong>@(ProductExpiration.DiasParaVencer(Model.FechaVencimiento, DateTime.Today) < 0 ? "Producto vencido:" : "Producto próximo a vencer:")</strong>
+                            @ProductExpiration.Describir(Model.FechaVencimiento, DateTime.Today).
+                        </div>
+                    }
 
                     <div class="form-group">
                         <label class="font-weight-bold">Código SKU</label>
@@ -82,6 +91,13 @@
                             <span asp-validation-for="StockMinimo" class="text-danger small"></span>
                             <small class="text-muted">Alerta cuando el stock sea igual o menor a este valor.</small>
                         </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="FechaVencimiento" class="font-weight-bold"></label>
+                        <input asp-for="FechaVencimiento" type="date" class="form-control" style="max-width:240px;" />
+                        <span asp-validation-for="FechaVencimiento" class="text-danger small"></span>
+                        <small class="text-muted d-block">Opcional. El inventario advierte los productos que vencen en los próximos @ProductExpiration.DiasAviso días.</small>
                     </div>
 
                     <div class="form-group">

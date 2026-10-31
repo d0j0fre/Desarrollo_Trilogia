@@ -1,4 +1,5 @@
 @model Proyecto_Final.Models.Admin.ProductFormViewModel
+@using Proyecto_Final.Models.Admin
 @{
     ViewData["Title"] = "Crear producto";
     var categorias = ViewBag.Categorias as List<string> ?? new List<string>();
@@ -77,6 +78,13 @@
                             <span asp-validation-for="StockMinimo" class="text-danger small"></span>
                             <small class="text-muted">Se usará para generar alertas de stock bajo.</small>
                         </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="FechaVencimiento" class="font-weight-bold"></label>
+                        <input asp-for="FechaVencimiento" type="date" class="form-control" style="max-width:240px;" />
+                        <span asp-validation-for="FechaVencimiento" class="text-danger small"></span>
+                        <small class="text-muted d-block">Opcional. El inventario advierte los productos que vencen en los próximos @ProductExpiration.DiasAviso días.</small>
                     </div>
 
                     <div class="form-group">
