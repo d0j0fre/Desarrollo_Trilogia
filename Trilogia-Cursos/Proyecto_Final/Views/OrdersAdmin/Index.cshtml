@@ -101,7 +101,7 @@
                                         <td>@item.Correo</td>
                                         <td>@item.FechaPedido.ToString("dd/MM/yyyy HH:mm")</td>
                                         <td>
-                                            <span class="admin-badge-soft @claseEstado">@item.Estado</span>
+                                            <span class="admin-badge-soft @claseEstado">@(item.Estado switch { "EnRuta" => "En ruta", "Fallido" => "No entregado", _ => item.Estado })</span>
                                         </td>
                                         <td>
                                             @(string.IsNullOrWhiteSpace(item.TipoEntrega)

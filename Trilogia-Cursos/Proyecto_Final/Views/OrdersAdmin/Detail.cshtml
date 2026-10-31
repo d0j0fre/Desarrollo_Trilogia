@@ -49,7 +49,7 @@
                             ? "danger"
                             : "dark";
                         }
-                        <span class="admin-badge-soft @claseEstado">@Model.Estado</span>
+                        <span class="admin-badge-soft @claseEstado">@(Model.Estado switch { "EnRuta" => "En ruta", "Fallido" => "No entregado", _ => Model.Estado })</span>
                     </div>
 
                     <div class="col-md-6 mb-3">
