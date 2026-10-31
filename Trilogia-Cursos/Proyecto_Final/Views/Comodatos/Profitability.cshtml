@@ -28,7 +28,7 @@
                     <table class="table table-hover mb-0 align-middle">
                         <thead class="thead-light">
                             <tr>
-                                <th>Activo</th><th>Cliente</th><th class="text-center">Días prestado</th>
+                                <th>Activo</th><th>Cliente</th><th>Ubicación</th><th class="text-center">Fecha de entrega</th><th class="text-center">Días prestado</th>
                                 <th class="text-center">Pedidos</th><th class="text-right">Total comprado</th>
                                 <th class="text-center">Última compra</th>
                             </tr>
@@ -36,7 +36,7 @@
                         <tbody>
                             @if (Model == null || !Model.Any())
                             {
-                                <tr><td colspan="6" class="text-center text-muted py-4">No hay comodatos activos.</td></tr>
+                                <tr><td colspan="8" class="text-center text-muted py-4">No hay comodatos activos.</td></tr>
                             }
                             else
                             {
@@ -46,6 +46,8 @@
                                     <tr class="@(sinCompras ? "table-warning" : "")">
                                         <td class="font-weight-bold">@r.CodigoActivo <span class="text-muted small">@r.ActivoNombre</span></td>
                                         <td>@r.ClienteNombre</td>
+                                        <td>@(string.IsNullOrWhiteSpace(r.Ubicacion) ? "—" : r.Ubicacion)</td>
+                                        <td class="text-center">@r.FechaAsignacion.ToString("dd/MM/yyyy")</td>
                                         <td class="text-center">@r.DiasEnComodato</td>
                                         <td class="text-center">@r.NumPedidos</td>
                                         <td class="text-right">@r.TotalComprado.ToString("N2")</td>

@@ -397,7 +397,9 @@ namespace Proyecto_Final.Services
                     DiasEnComodato = reader.GetInt32(7),
                     NumPedidos = reader.GetInt32(8),
                     TotalComprado = reader.GetDecimal(9),
-                    UltimaCompra = reader.IsDBNull(10) ? null : reader.GetDateTime(10)
+                    UltimaCompra = reader.IsDBNull(10) ? null : reader.GetDateTime(10),
+                    // BUG-16-06: columna de 0241; sin la migración queda vacía.
+                    Ubicacion = reader.FieldCount > 11 ? reader.GetString(11) : string.Empty
                 });
             }
             return lista;

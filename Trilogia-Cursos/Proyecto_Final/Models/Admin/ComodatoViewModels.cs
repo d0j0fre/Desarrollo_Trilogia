@@ -118,5 +118,6 @@ namespace Proyecto_Final.Models.Admin
         public int NumPedidos { get; set; }
         public decimal TotalComprado { get; set; }
         public DateTime? UltimaCompra { get; set; }
+        public string Ubicacion { get; set; } = string.Empty;
     }
 }
