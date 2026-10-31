@@ -32,6 +32,39 @@ public sealed class ProductCatalogCorrectionsTests
         Assert.Contains("FechaVencimiento", LatestProcedureDefinition(root, "sp_Admin_GetProductById"), StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void InventorySearch_MatchesTheSkuShownInTheViews()
+    {
+        var root = FindRepositoryRoot();
+        var definition = LatestProcedureDefinition(root, "sp_Admin_GetProducts");
+        var index = File.ReadAllText(Path.Combine(root, "Proyecto_Final", "Views", "Inventory", "Index.cshtml"));
+        var edit = File.ReadAllText(Path.Combine(root, "Proyecto_Final", "Views", "Inventory", "Edit.cshtml"));
+
+        // Mismo formato en la búsqueda (SQL) y en las vistas: "SKU-" + ProductoId con cinco dígitos.
+        Assert.Contains("CONCAT(N''SKU-'', FORMAT(ProductoId, ''D5'')) LIKE", definition, StringComparison.Ordinal);
+        Assert.Contains("SKU-@item.ProductoId.ToString(\"D5\")", index, StringComparison.Ordinal);
+        Assert.Contains("SKU-@Model.ProductoId.ToString(\"D5\")", edit, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData(true, false, 47, true)]   // inactivar con stock: bloqueado
+    [InlineData(true, false, 0, false)]   // inactivar sin stock: permitido
+    [InlineData(false, true, 47, false)]  // reactivar: permitido
+    [InlineData(true, true, 47, false)]   // sigue activo: permitido
+    [InlineData(false, false, 5, false)]  // ya estaba inactivo: no es una inactivación
+    public void Inventory_BlocksDeactivatingProductsWithStock(bool activoActual, bool activoNuevo, int stock, bool bloquea)
+    {
+        Assert.Equal(bloquea, Proyecto_Final.Controllers.InventoryController.BloqueaInactivacion(activoActual, activoNuevo, stock));
+    }
+
+    [Fact]
+    public void Inventory_DeactivationMessageAsksToEmptyStockFirst()
+    {
+        var mensaje = Proyecto_Final.Controllers.InventoryController.MensajeInactivacionConStock("Pilsen 6 Pack", 47);
+        Assert.Contains("47", mensaje, StringComparison.Ordinal);
+        Assert.Contains("Primero debe vaciarse el inventario", mensaje, StringComparison.Ordinal);
+    }
+
     [Theory]
     [InlineData(15, true)]
     [InlineData(10, true)]
