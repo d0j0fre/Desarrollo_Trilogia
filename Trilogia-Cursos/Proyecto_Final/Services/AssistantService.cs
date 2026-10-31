@@ -423,7 +423,15 @@ namespace Proyecto_Final.Services
             return null;
         }
 
-        private static bool Contiene(string norm, params string[] terminos) => terminos.Any(t => norm.Contains(t));
+        // El término debe empezar una palabra: "venta" no debe encontrarse dentro de "inventario".
+        private static bool Contiene(string norm, params string[] terminos) => terminos.Any(t => EmpiezaPalabra(norm, t));
+
+        private static bool EmpiezaPalabra(string norm, string termino)
+        {
+            for (var i = norm.IndexOf(termino, StringComparison.Ordinal); i >= 0; i = norm.IndexOf(termino, i + 1, StringComparison.Ordinal))
+                if (i == 0 || !char.IsLetterOrDigit(norm[i - 1])) return true;
+            return false;
+        }
 
         // ── Carga de la foto de métricas ────────────────────────
         private async Task<Metrics> LoadMetricsAsync()

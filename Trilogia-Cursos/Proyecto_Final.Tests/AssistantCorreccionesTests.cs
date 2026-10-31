@@ -67,9 +67,23 @@ public sealed class AssistantCorreccionesTests
     [InlineData("Chofer", "¿Cuántas entregas pendientes hay?")]
     [InlineData("Chofer", "¿Cómo genero una factura?")]
     [InlineData("Chofer", "¿Qué puedo preguntar?")]
+    [InlineData("Vendedor", "¿Cómo está el inventario?")]
+    [InlineData("Bodeguero", "¿Cómo está el inventario?")]
     public void BUG_26_06_LoPermitidoNoSeRestringe(string rol, string pregunta)
     {
         Assert.Null(AssistantService.Restringida(AssistantService.Normalizar(pregunta), rol));
+    }
+
+    [Fact]
+    public void BUG_26_06_ElInventarioNoSeConfundeConVentas()
+    {
+        // "inVENTArio" contenía la palabra clave "venta": al Chofer se le decía que
+        // Finanzas estaba restringida y a quien sí podía ver, se le daban las ventas.
+        var respuesta = AssistantService.Restringida(AssistantService.Normalizar("¿Cómo está el inventario?"), "Chofer");
+
+        Assert.NotNull(respuesta);
+        Assert.Contains("Inventario", respuesta!.Respuesta, StringComparison.Ordinal);
+        Assert.DoesNotContain("Finanzas", respuesta.Respuesta, StringComparison.Ordinal);
     }
 
     [Fact]
