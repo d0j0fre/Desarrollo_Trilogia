@@ -125,6 +125,25 @@ namespace Proyecto_Final.Models.Admin
         public bool SugerirRetiro { get; set; }
     }
 
+    // BUG-16-01: datos del contrato de comodato (sp_Comodato_GetContrato).
+    public class ComodatoContractViewModel
+    {
+        public int ComodatoId { get; set; }
+        public string Numero => $"CMD-{ComodatoId:D5}";
+        public string CodigoActivo { get; set; } = string.Empty;
+        public string ActivoNombre { get; set; } = string.Empty;
+        public string ActivoTipo { get; set; } = string.Empty;
+        public string ClienteNombre { get; set; } = string.Empty;
+        public string ClienteIdentificacion { get; set; } = string.Empty;
+        public string Ubicacion { get; set; } = string.Empty;
+        public DateTime FechaAsignacion { get; set; }
+        public string CondicionEntrega { get; set; } = string.Empty;
+        public string Observaciones { get; set; } = string.Empty;
+        public string RegistradoPorNombre { get; set; } = string.Empty;
+        public DateTime FechaRegistro { get; set; }
+        public string Estado { get; set; } = string.Empty;
+    }
+
     // BUG-16-04: comodato que recibió un aviso nuevo de baja rentabilidad.
     public class ComodatoProfitabilityAlertViewModel
     {

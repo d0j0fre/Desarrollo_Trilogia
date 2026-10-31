@@ -62,7 +62,8 @@ namespace Proyecto_Final.Controllers
                 var id = await _fleet.AssignComodatoAsync(model, usuarioId, usuarioNombre);
                 await RegistrarAuditoriaAsync("Asignar comodato", "Activos",
                     $"Comodato #{id}: activo #{model.ActivoId} asignado a {model.ClienteNombre}.");
-                TempData["SuccessMessage"] = "Comodato registrado correctamente.";
+                TempData["SuccessMessage"] = "Comodato registrado correctamente. Se emitió el contrato de comodato.";
+                TempData["ContratoComodatoId"] = id;
                 return RedirectToAction(nameof(Index));
             }
             catch (SqlException ex) when (ex.Number >= 50000)
@@ -78,6 +79,24 @@ namespace Proyecto_Final.Controllers
                 ModelState.AddModelError(string.Empty, "No fue posible registrar el comodato.");
                 model.ActivosDisponibles = await _fleet.GetAvailableAssetsAsync();
                 return View(model);
+            }
+        }
+
+        // BUG-16-01 · CU-162-01 — Contrato de comodato en PDF.
+        [HttpGet]
+        public async Task<IActionResult> Contract(int id)
+        {
+            if (id <= 0) return NotFound();
+            try
+            {
+                var contrato = await _fleet.GetComodatoContractAsync(id);
+                if (contrato is null) return NotFound();
+                return File(ComodatoContractPdf.Build(contrato), "application/pdf", ComodatoContractPdf.FileName(contrato));
+            }
+            catch (SqlException ex)
+            {
+                _logger.LogError(ex, "No se pudo emitir el contrato del comodato {ComodatoId}.", id);
+                return StatusCode(StatusCodes.Status503ServiceUnavailable);
             }
         }
 

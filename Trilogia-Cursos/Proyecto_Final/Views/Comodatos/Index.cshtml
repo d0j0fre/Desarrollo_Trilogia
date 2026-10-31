@@ -27,6 +27,18 @@
         </div>
     </div>
 
+    @if (TempData["ContratoComodatoId"] is int contratoId)
+    {
+        <div class="row px-xl-5">
+            <div class="col-12">
+                <div class="alert alert-success d-flex justify-content-between align-items-center flex-wrap" role="alert">
+                    <span><i class="fa fa-file-contract mr-2"></i>Contrato de comodato CMD-@contratoId.ToString("D5") listo para imprimir y firmar.</span>
+                    <a asp-action="Contract" asp-route-id="@contratoId" class="btn btn-ds-create btn-sm mt-2 mt-md-0"><i class="fa fa-file-pdf mr-1"></i>Descargar contrato (PDF)</a>
+                </div>
+            </div>
+        </div>
+    }
+
     <div class="row px-xl-5">
         <div class="col-12">
             <div class="admin-filter-bar">
@@ -78,17 +90,16 @@
                                         <td class="text-center">@c.FechaAsignacion.ToString("dd/MM/yyyy")</td>
                                         <td class="text-center">@c.DiasEnComodato</td>
                                         <td class="text-center"><span class="admin-badge-soft @EstadoBadge(c.Estado)">@c.Estado</span></td>
-                                        <td class="text-center">
+                                        <td class="text-center text-nowrap">
+                                            <a asp-action="Contract" asp-route-id="@c.ComodatoId" class="btn btn-sm btn-ds-view border" title="Descargar contrato de comodato (PDF)">
+                                                <i class="fa fa-file-pdf mr-1"></i>Contrato
+                                            </a>
                                             @if (c.Estado == "Activo")
                                             {
                                                 <button type="button" class="btn btn-sm btn-ds-action"
                                                         data-toggle="collapse" data-target="#ret-@c.ComodatoId">
                                                     <i class="fa fa-undo mr-1"></i>Devolver
                                                 </button>
-                                            }
-                                            else
-                                            {
-                                                <span class="text-muted">—</span>
                                             }
                                         </td>
                                     </tr>

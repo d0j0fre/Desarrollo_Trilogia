@@ -408,6 +408,33 @@ namespace Proyecto_Final.Services
             return lista;
         }
 
+        // BUG-16-01: datos del contrato de comodato; null si no existe.
+        public async Task<ComodatoContractViewModel?> GetComodatoContractAsync(int comodatoId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Comodato_GetContrato", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.Add("@ComodatoId", SqlDbType.Int).Value = comodatoId;
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+            if (!await reader.ReadAsync()) return null;
+            return new ComodatoContractViewModel
+            {
+                ComodatoId = reader.GetInt32(0),
+                CodigoActivo = reader.GetString(1),
+                ActivoNombre = reader.GetString(2),
+                ActivoTipo = reader.GetString(3),
+                ClienteNombre = reader.GetString(4),
+                ClienteIdentificacion = reader.GetString(5),
+                Ubicacion = reader.GetString(6),
+                FechaAsignacion = reader.GetDateTime(7),
+                CondicionEntrega = reader.GetString(8),
+                Observaciones = reader.GetString(9),
+                RegistradoPorNombre = reader.GetString(10),
+                FechaRegistro = reader.GetDateTime(11),
+                Estado = reader.GetString(12)
+            };
+        }
+
         // BUG-16-04: deja los avisos de baja rentabilidad (30 días sin compras) y
         // devuelve los comodatos que recibieron uno nuevo.
         public async Task<List<ComodatoProfitabilityAlertViewModel>> GenerateComodatoProfitabilityAlertsAsync()
