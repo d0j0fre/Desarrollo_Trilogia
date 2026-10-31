@@ -113,6 +113,21 @@ public sealed class CarritoClientesCorreccionesTests
         Assert.True(File.Exists(Path.Combine(root, "database", "migrations", "0230_cliente_estado_deuda.rollback.md")));
     }
 
+    [Fact]
+    public void ClientDeactivation_IsBlockedWhileTheClientHasDebt()
+    {
+        // BUG-06-01 · CU-063-02: los dos caminos de inactivación consultan la deuda.
+        var root = Path.GetDirectoryName(FindProjectRoot())!;
+        var migration = File.ReadAllText(Path.Combine(root, "database", "migrations", "0231_cliente_inactivar_con_saldo.sql"));
+
+        Assert.Contains("CREATE OR ALTER PROCEDURE dbo.sp_Admin_UpdateClient", migration, StringComparison.Ordinal);
+        Assert.Contains("CREATE OR ALTER PROCEDURE dbo.sp_Admin_ToggleClientStatus", migration, StringComparison.Ordinal);
+        Assert.Equal(2, migration.Split("FROM dbo.fn_Cliente_EstadoDeuda(@UsuarioId) WHERE DeudaActual > 0").Length - 1);
+
+        var sinSaldo = new InvalidOperationException("x", new Exception());
+        Assert.False(ClientsController.IsSaldoPendiente(sinSaldo));
+    }
+
     private static string FindProjectRoot()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
