@@ -79,6 +79,8 @@ namespace Proyecto_Final.Models.Admin
         public string Estado { get; set; } = string.Empty;
         public string DestinoDevolucion { get; set; } = string.Empty;
         public string Observaciones { get; set; } = string.Empty;
+        public string CondicionEntrega { get; set; } = string.Empty;
+        public string CondicionDevolucion { get; set; } = string.Empty;
     }
 
     // Detalle de un activo + su historial de comodatos.

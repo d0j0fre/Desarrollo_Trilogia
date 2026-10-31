@@ -271,7 +271,10 @@ namespace Proyecto_Final.Services
                     FechaDevolucion = reader.IsDBNull(3) ? null : reader.GetDateTime(3),
                     Estado = reader.GetString(4),
                     DestinoDevolucion = reader.GetString(5),
-                    Observaciones = reader.GetString(6)
+                    Observaciones = reader.GetString(6),
+                    // BUG-16-05: columnas de 0240; sin la migración quedan vacías.
+                    CondicionEntrega = reader.FieldCount > 7 ? reader.GetString(7) : string.Empty,
+                    CondicionDevolucion = reader.FieldCount > 8 ? reader.GetString(8) : string.Empty
                 });
             }
             return lista;
