@@ -343,6 +343,49 @@ namespace Proyecto_Final.Services
             return lista;
         }
 
+        // BUG-16-02: clientes activos con su saldo vencido para el formulario de asignación.
+        public async Task<List<ComodatoClientOptionViewModel>> GetComodatoClientsAsync()
+        {
+            var lista = new List<ComodatoClientOptionViewModel>();
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Comodato_ClientesParaAsignar", connection) { CommandType = CommandType.StoredProcedure };
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                lista.Add(new ComodatoClientOptionViewModel
+                {
+                    UsuarioId = reader.GetInt32(0),
+                    NombreCompleto = reader.GetString(1),
+                    Correo = reader.GetString(2),
+                    Direccion = reader.GetString(3),
+                    Identificacion = reader.GetString(4),
+                    SaldoVencido = reader.GetDecimal(5),
+                    DiasAtraso = reader.GetInt32(6)
+                });
+            }
+            return lista;
+        }
+
+        // BUG-16-02: deuda vencida de un cliente (bloquea el comodato si EsMoroso).
+        public async Task<ComodatoDebtViewModel> GetComodatoClientDebtAsync(int clienteUsuarioId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Comodato_EvaluarMorosidad", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.Add("@ClienteUsuarioId", SqlDbType.Int).Value = clienteUsuarioId;
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+            if (!await reader.ReadAsync()) return new ComodatoDebtViewModel();
+            return new ComodatoDebtViewModel
+            {
+                SaldoActual = reader.GetDecimal(0),
+                SaldoVencido = reader.GetDecimal(1),
+                CargoVencidoMasAntiguo = reader.IsDBNull(2) ? null : reader.GetDateTime(2),
+                DiasAtraso = reader.GetInt32(3),
+                EsMoroso = reader.GetBoolean(4)
+            };
+        }
+
         public async Task<int> AssignComodatoAsync(ComodatoAssignViewModel model, int usuarioId, string usuarioNombre)
         {
             await using var connection = new SqlConnection(_connectionString);

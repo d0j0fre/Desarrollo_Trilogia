@@ -28,12 +28,13 @@ namespace Proyecto_Final.Models.Admin
         [Display(Name = "Activo")]
         public int ActivoId { get; set; }
 
-        [Display(Name = "Cliente (usuario)")]
+        // BUG-16-02: el cliente se elige de la lista de clientes registrados.
+        [Required(ErrorMessage = "Seleccione el cliente que recibe el equipo.")]
+        [Display(Name = "Cliente")]
         public int? ClienteUsuarioId { get; set; }
 
-        [Required(ErrorMessage = "El nombre del cliente es obligatorio.")]
+        // Se toma del cliente seleccionado (no se escribe).
         [StringLength(150)]
-        [Display(Name = "Cliente")]
         public string ClienteNombre { get; set; } = string.Empty;
 
         [StringLength(50)]
@@ -59,6 +60,35 @@ namespace Proyecto_Final.Models.Admin
 
         // Opciones para el combo de activos disponibles.
         public List<AssetOptionViewModel> ActivosDisponibles { get; set; } = new();
+
+        // BUG-16-02: clientes activos y alerta de riesgo cuando se bloquea por morosidad.
+        public List<ComodatoClientOptionViewModel> Clientes { get; set; } = new();
+        public ComodatoDebtViewModel? Riesgo { get; set; }
+    }
+
+    // BUG-16-02 — cliente de la lista del formulario de asignación.
+    public class ComodatoClientOptionViewModel
+    {
+        public int UsuarioId { get; set; }
+        public string NombreCompleto { get; set; } = string.Empty;
+        public string Correo { get; set; } = string.Empty;
+        public string Direccion { get; set; } = string.Empty;
+        public string Identificacion { get; set; } = string.Empty;
+        public decimal SaldoVencido { get; set; }
+        public int DiasAtraso { get; set; }
+        public bool EsMoroso => SaldoVencido > 0;
+    }
+
+    // BUG-16-02 — deuda del cliente (fn_Comodato_DeudaVencida: saldo de crédito
+    // con más de 30 días, abonos aplicados a los cargos más antiguos).
+    public class ComodatoDebtViewModel
+    {
+        public string ClienteNombre { get; set; } = string.Empty;
+        public decimal SaldoActual { get; set; }
+        public decimal SaldoVencido { get; set; }
+        public DateTime? CargoVencidoMasAntiguo { get; set; }
+        public int DiasAtraso { get; set; }
+        public bool EsMoroso { get; set; }
     }
 
     public class AssetOptionViewModel

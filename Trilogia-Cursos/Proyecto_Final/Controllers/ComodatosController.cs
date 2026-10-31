@@ -36,11 +36,8 @@ namespace Proyecto_Final.Controllers
         [HttpGet]
         public async Task<IActionResult> Assign()
         {
-            var model = new ComodatoAssignViewModel
-            {
-                FechaAsignacion = DateTime.Today,
-                ActivosDisponibles = await _fleet.GetAvailableAssetsAsync()
-            };
+            var model = new ComodatoAssignViewModel { FechaAsignacion = DateTime.Today };
+            await CargarOpcionesAsync(model);
             return View(model);
         }
 
@@ -49,9 +46,24 @@ namespace Proyecto_Final.Controllers
         public async Task<IActionResult> Assign(ComodatoAssignViewModel model)
         {
             model.ClienteIdentificacion = CostaRicanIdentificationAttribute.Normalize(model.ClienteIdentificacion);
-            if (!ModelState.IsValid)
+            await CargarOpcionesAsync(model);
+
+            // BUG-16-02: el cliente sale de la lista de clientes registrados y activos.
+            var cliente = model.Clientes.FirstOrDefault(c => c.UsuarioId == model.ClienteUsuarioId);
+            if (model.ClienteUsuarioId.HasValue && cliente is null)
+                ModelState.AddModelError(nameof(model.ClienteUsuarioId), "Seleccione un cliente registrado y activo.");
+            if (!ModelState.IsValid || cliente is null)
+                return View(model);
+            model.ClienteNombre = cliente.NombreCompleto;
+
+            // BUG-16-02 · CU-162-03: con saldo vencido se alerta el riesgo y se bloquea.
+            var deuda = await _fleet.GetComodatoClientDebtAsync(cliente.UsuarioId);
+            if (deuda.EsMoroso)
             {
-                model.ActivosDisponibles = await _fleet.GetAvailableAssetsAsync();
+                deuda.ClienteNombre = cliente.NombreCompleto;
+                model.Riesgo = deuda;
+                await RegistrarAuditoriaAsync("Comodato bloqueado por morosidad", "Activos",
+                    $"Activo #{model.ActivoId} no asignado a {cliente.NombreCompleto}: saldo vencido ₡{deuda.SaldoVencido:N2} ({deuda.DiasAtraso} días).");
                 return View(model);
             }
 
@@ -65,6 +77,13 @@ namespace Proyecto_Final.Controllers
                 TempData["SuccessMessage"] = "Comodato registrado correctamente. Se emitió el contrato de comodato.";
                 TempData["ContratoComodatoId"] = id;
                 return RedirectToAction(nameof(Index));
+            }
+            catch (SqlException ex) when (ex.Number == 53086)
+            {
+                // La base también bloquea por morosidad (0245), p. ej. si la deuda venció entre la consulta y el registro.
+                _logger.LogWarning(ex, "Comodato bloqueado por morosidad del cliente {ClienteUsuarioId}.", cliente.UsuarioId);
+                ModelState.AddModelError(string.Empty, "El cliente tiene saldo vencido: la asignación queda bloqueada hasta que salde su cuenta.");
+                return View(model);
             }
             catch (SqlException ex) when (ex.Number >= 50000)
             {
@@ -80,6 +99,12 @@ namespace Proyecto_Final.Controllers
                 model.ActivosDisponibles = await _fleet.GetAvailableAssetsAsync();
                 return View(model);
             }
+        }
+
+        private async Task CargarOpcionesAsync(ComodatoAssignViewModel model)
+        {
+            model.ActivosDisponibles = await _fleet.GetAvailableAssetsAsync();
+            model.Clientes = await _fleet.GetComodatoClientsAsync();
         }
 
         // BUG-16-01 · CU-162-01 — Contrato de comodato en PDF.
