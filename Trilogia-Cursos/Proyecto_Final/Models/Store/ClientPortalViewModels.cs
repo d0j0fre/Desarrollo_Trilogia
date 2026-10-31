@@ -5,6 +5,8 @@ namespace Proyecto_Final.Models.Store
         public ClientPortalSummaryViewModel Cliente { get; set; } = new();
         public ClientPortalCreditSummaryViewModel? Credito { get; set; }
         public List<ClientPortalOrderListItemViewModel> Pedidos { get; set; } = new();
+        // BUG-12-01 · CU-124-01: facturas del cliente (sp_Cliente_EstadoCuenta).
+        public List<Proyecto_Final.Models.Admin.ClientAccountInvoiceViewModel> Facturas { get; set; } = new();
     }
 
     public class ClientPortalSummaryViewModel
@@ -97,5 +99,7 @@ namespace Proyecto_Final.Models.Store
         public ClientPortalCreditSummaryViewModel? Credito { get; set; }
         public List<ClientPortalOrderListItemViewModel> Pedidos { get; set; } = new();
         public DateTime FechaGeneracion { get; set; } = DateTime.Now;
+        // BUG-12-01 · CU-123-02: saldo, facturas y pagos (sp_Cliente_EstadoCuenta, el mismo saldo de Créditos).
+        public Proyecto_Final.Models.Admin.ClientAccountStatementViewModel? Cuenta { get; set; }
     }
 }
