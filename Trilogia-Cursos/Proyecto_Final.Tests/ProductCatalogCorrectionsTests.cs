@@ -129,6 +129,15 @@ public sealed class ProductCatalogCorrectionsTests
         return results;
     }
 
+    [Fact]
+    public void GlobalErrorAction_AcceptsAnyHttpMethod()
+    {
+        // UseExceptionHandler re-ejecuta /Home/Error con el verbo original; restringirlo convierte
+        // cualquier fallo en un POST en HTTP 405 (síntoma de BUG-05-01).
+        var action = typeof(Proyecto_Final.Controllers.HomeController).GetMethod("Error")!;
+        Assert.Empty(action.GetCustomAttributes(typeof(Microsoft.AspNetCore.Mvc.Routing.IActionHttpMethodProvider), true));
+    }
+
     [Theory]
     [InlineData(15, true)]
     [InlineData(10, true)]
