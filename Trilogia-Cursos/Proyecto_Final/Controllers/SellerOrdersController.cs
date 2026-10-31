@@ -10,10 +10,14 @@ namespace Proyecto_Final.Controllers
     public class SellerOrdersController : Controller
     {
         private readonly AdminDbService _adminDbService;
+        private readonly EmailService _emailService;
+        private readonly ILogger<SellerOrdersController> _logger;
 
-        public SellerOrdersController(AdminDbService adminDbService)
+        public SellerOrdersController(AdminDbService adminDbService, EmailService emailService, ILogger<SellerOrdersController> logger)
         {
             _adminDbService = adminDbService;
+            _emailService = emailService;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -68,6 +72,9 @@ namespace Proyecto_Final.Controllers
                     return RedirectToAction(nameof(RetainedConfirmation), new { id = result.PedidoId });
 
                 TempData["ConfirmNumeroFactura"] = result.NumeroFactura;
+                if (result.TieneFactura && !await EnviarComprobantePorCorreoAsync(result.FacturaId))
+                    TempData["ErrorMessage"] = "El pedido se registró y facturó, pero no fue posible enviar el comprobante por correo.";
+
                 return RedirectToAction(nameof(Confirmation), new { id = result.PedidoId });
             }
             catch (Exception)
@@ -174,6 +181,9 @@ namespace Proyecto_Final.Controllers
                     result.EsRetenido ? "Sincronizar pedido offline retenido" : "Sincronizar pedido offline",
                     "Venta móvil",
                     $"El usuario {vendedorNombre} sincronizó el pedido offline {pedidoOfflineGuid} como pedido #{result.PedidoId}. Estado: {result.Estado}.");
+
+                if (result.TieneFactura)
+                    await EnviarComprobantePorCorreoAsync(result.FacturaId);
 
                 var redirectUrl = result.EsRetenido
                     ? Url.Action(nameof(RetainedConfirmation), "SellerOrders", new { id = result.PedidoId }) ?? string.Empty
@@ -290,6 +300,38 @@ namespace Proyecto_Final.Controllers
             return string.Equals(role, "Administrador", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(role, "Empleado", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(role, "Vendedor", StringComparison.OrdinalIgnoreCase);
+        }
+
+        // Envía el comprobante al correo del cliente (CU-092); no interrumpe el registro si el envío falla.
+        private async Task<bool> EnviarComprobantePorCorreoAsync(int facturaId)
+        {
+            try
+            {
+                var factura = await _adminDbService.GetInvoiceDetailAsync(facturaId);
+                if (factura == null || string.IsNullOrWhiteSpace(factura.Correo))
+                    return false;
+
+                var contenido = EmailTemplateBuilder.BuildInvoiceEmail(
+                    factura.Cliente,
+                    factura.NumeroFactura,
+                    factura.PedidoId,
+                    factura.FechaFactura,
+                    factura.Total);
+
+                _emailService.SendEmail(factura.Correo, $"Comprobante {factura.NumeroFactura}", contenido);
+
+                await RegistrarAuditoriaAsync(
+                    "Enviar comprobante por correo",
+                    "Facturacion",
+                    $"Se envio el comprobante {factura.NumeroFactura} al correo {factura.Correo}.");
+
+                return true;
+            }
+            catch (Exception exception)
+            {
+                _logger.LogWarning(exception, "No se pudo enviar el comprobante de la factura {FacturaId}. Solicitud {TraceId}.", facturaId, HttpContext.TraceIdentifier);
+                return false;
+            }
         }
 
         private async Task RegistrarAuditoriaAsync(string accion, string modulo, string descripcion)
