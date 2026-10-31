@@ -79,14 +79,16 @@ namespace Proyecto_Final.Models.Admin
         public bool EsMoroso => SaldoVencido > 0;
     }
 
-    // BUG-16-02 — deuda del cliente (fn_Comodato_DeudaVencida: saldo de crédito
-    // con más de 30 días, abonos aplicados a los cargos más antiguos).
+    // BUG-16-02 — estado de la deuda del cliente con la regla de crédito
+    // (sp_Cliente_EstadoDeuda, 0230: cada cargo vence a los PlazoCreditoDias
+    // días y los abonos pagan primero los cargos más antiguos).
     public class ComodatoDebtViewModel
     {
         public string ClienteNombre { get; set; } = string.Empty;
+        public int PlazoCreditoDias { get; set; }
         public decimal SaldoActual { get; set; }
         public decimal SaldoVencido { get; set; }
-        public DateTime? CargoVencidoMasAntiguo { get; set; }
+        public DateTime? VencimientoMasAntiguo { get; set; }
         public int DiasAtraso { get; set; }
         public bool EsMoroso { get; set; }
     }

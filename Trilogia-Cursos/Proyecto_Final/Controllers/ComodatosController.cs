@@ -63,7 +63,7 @@ namespace Proyecto_Final.Controllers
                 deuda.ClienteNombre = cliente.NombreCompleto;
                 model.Riesgo = deuda;
                 await RegistrarAuditoriaAsync("Comodato bloqueado por morosidad", "Activos",
-                    $"Activo #{model.ActivoId} no asignado a {cliente.NombreCompleto}: saldo vencido ₡{deuda.SaldoVencido:N2} ({deuda.DiasAtraso} días).");
+                    $"Activo #{model.ActivoId} no asignado a {cliente.NombreCompleto}: deuda vencida ₡{deuda.SaldoVencido:N2} con {deuda.DiasAtraso} días de atraso.");
                 return View(model);
             }
 
@@ -82,7 +82,8 @@ namespace Proyecto_Final.Controllers
             {
                 // La base también bloquea por morosidad (0245), p. ej. si la deuda venció entre la consulta y el registro.
                 _logger.LogWarning(ex, "Comodato bloqueado por morosidad del cliente {ClienteUsuarioId}.", cliente.UsuarioId);
-                ModelState.AddModelError(string.Empty, "El cliente tiene saldo vencido: la asignación queda bloqueada hasta que salde su cuenta.");
+                // El mensaje de 53086 lo arma sp_Comodato_Asignar con el monto vencido y los días de atraso.
+                ModelState.AddModelError(string.Empty, ex.Message);
                 return View(model);
             }
             catch (SqlException ex) when (ex.Number >= 50000)

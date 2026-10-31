@@ -2,21 +2,18 @@
 
 ## Qué introduce
 
-- `dbo.fn_Comodato_DeudaVencida(@DiasPlazo)`: deuda vencida por cliente a
-  partir de `dbo.ClienteCreditoMovimientos` (abonos aplicados a los cargos más
-  antiguos; vencido = más de 30 días) (BUG-16-02).
-- `dbo.sp_Comodato_ClientesParaAsignar` y `dbo.sp_Comodato_EvaluarMorosidad`.
+- `dbo.sp_Comodato_ClientesParaAsignar`: clientes activos con su deuda
+  vencida (BUG-16-02).
 - `dbo.sp_Comodato_Asignar`: exige un cliente registrado y activo (error
-  53087), toma el nombre de `dbo.Usuarios` y rechaza clientes con saldo
-  vencido (error 53086). Mismos parámetros y resultado.
+  53087), toma el nombre de `dbo.Usuarios` y rechaza clientes con deuda
+  vencida según `dbo.fn_Cliente_EstadoDeuda` (error 53086). Mismos
+  parámetros y resultado.
 
-No cambia tablas ni procedimientos de crédito o clientes.
+Depende de 0230 (`fn_Cliente_EstadoDeuda`, `sp_Cliente_EstadoDeuda`), que no
+se toca. No cambia tablas ni procedimientos de crédito o clientes.
 
-## Alinear con la regla de BUG-06-02
-
-Si la sesión de crédito publica su propia regla de deuda vencida, reemplazar
-solo el cuerpo de `dbo.fn_Comodato_DeudaVencida` manteniendo las columnas
-`UsuarioId`, `SaldoActual`, `SaldoVencido` y `CargoVencidoMasAntiguo`.
+Revertir 0245 antes que 0230: con 0230 revertida, `sp_Comodato_Asignar`
+fallaría al no encontrar la función.
 
 ## Revertir
 
@@ -69,8 +66,6 @@ BEGIN
     END CATCH
 END;
 GO
-DROP PROCEDURE IF EXISTS dbo.sp_Comodato_EvaluarMorosidad;
 DROP PROCEDURE IF EXISTS dbo.sp_Comodato_ClientesParaAsignar;
-DROP FUNCTION IF EXISTS dbo.fn_Comodato_DeudaVencida;
 DELETE FROM dbo.SchemaMigrationHistory WHERE MigrationId = N'0245_comodato_bloqueo_morosidad';
 ```

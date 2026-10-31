@@ -359,7 +359,8 @@ namespace Proyecto_Final.Services
                     NombreCompleto = reader.GetString(1),
                     Correo = reader.GetString(2),
                     Direccion = reader.GetString(3),
-                    Identificacion = reader.GetString(4),
+                    // Solo se precarga si es una identificación válida (los pedidos demo traen códigos como SEED-CR-001).
+                    Identificacion = new CostaRicanIdentificationAttribute().IsValid(reader.GetString(4)) ? reader.GetString(4) : string.Empty,
                     SaldoVencido = reader.GetDecimal(5),
                     DiasAtraso = reader.GetInt32(6)
                 });
@@ -367,22 +368,26 @@ namespace Proyecto_Final.Services
             return lista;
         }
 
-        // BUG-16-02: deuda vencida de un cliente (bloquea el comodato si EsMoroso).
+        // BUG-16-02: deuda del cliente con la regla de crédito (sp_Cliente_EstadoDeuda,
+        // 0230); recibe dbo.Usuarios.UsuarioId. Bloquea el comodato si EsMoroso.
         public async Task<ComodatoDebtViewModel> GetComodatoClientDebtAsync(int clienteUsuarioId)
         {
             await using var connection = new SqlConnection(_connectionString);
-            await using var command = new SqlCommand("dbo.sp_Comodato_EvaluarMorosidad", connection) { CommandType = CommandType.StoredProcedure };
-            command.Parameters.Add("@ClienteUsuarioId", SqlDbType.Int).Value = clienteUsuarioId;
+            await using var command = new SqlCommand("dbo.sp_Cliente_EstadoDeuda", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = clienteUsuarioId;
             await connection.OpenAsync();
             await using var reader = await command.ExecuteReaderAsync();
             if (!await reader.ReadAsync()) return new ComodatoDebtViewModel();
+            // UsuarioId, LimiteCredito, PlazoCreditoDias, DeudaActual, DeudaVencida,
+            // TieneDeudaVencida, VencimientoMasAntiguo, DiasAtraso
             return new ComodatoDebtViewModel
             {
-                SaldoActual = reader.GetDecimal(0),
-                SaldoVencido = reader.GetDecimal(1),
-                CargoVencidoMasAntiguo = reader.IsDBNull(2) ? null : reader.GetDateTime(2),
-                DiasAtraso = reader.GetInt32(3),
-                EsMoroso = reader.GetBoolean(4)
+                PlazoCreditoDias = reader.GetInt32(2),
+                SaldoActual = reader.GetDecimal(3),
+                SaldoVencido = reader.GetDecimal(4),
+                EsMoroso = reader.GetBoolean(5),
+                VencimientoMasAntiguo = reader.IsDBNull(6) ? null : reader.GetDateTime(6),
+                DiasAtraso = reader.GetInt32(7)
             };
         }
 
