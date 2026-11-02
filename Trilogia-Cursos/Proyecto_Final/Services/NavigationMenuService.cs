@@ -52,6 +52,7 @@ public static class NavigationMenu
             new("Fleet", "Maintenance", "fa-wrench", "Mantenimiento"),
             new("Fleet", "Alerts", "fa-bell", "Alertas de flota"),
             new("Comodatos", "Index", "fa-handshake", "Comodatos"),
+            new("Comodatos", "Profitability", "fa-chart-pie", "Rentabilidad de comodatos"),
             new("MobileApp", "Index", "fa-mobile-alt", "Aplicación móvil"),
         ]),
         new("Finanzas", "fa-coins",

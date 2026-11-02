@@ -46,7 +46,7 @@ public sealed class NavigationMenuTests
         { "Gerente", "Inventario/Inventario|Inventario/Movimientos|Inventario/Devoluciones|Inventario/Cuarentena|Inventario/Activos"
             + "|Ventas y Pedidos/Pedidos|Ventas y Pedidos/Promociones"
             + "|Logística y Flota/Rutas y Entregas|Logística y Flota/Tablero de entregas|Logística y Flota/Vehículos|Logística y Flota/Mantenimiento"
-            + "|Logística y Flota/Alertas de flota|Logística y Flota/Comodatos"
+            + "|Logística y Flota/Alertas de flota|Logística y Flota/Comodatos|Logística y Flota/Rentabilidad de comodatos"
             + "|Finanzas/Liquidación de cobros|Finanzas/Presupuestos anuales|Finanzas/Gastos operativos|Finanzas/Presupuesto vs. real|Finanzas/Ingresos y Egresos"
             + "|Reportes y Gerencia/Tablero gerencial|Reportes y Gerencia/Reporte de ventas|Reportes y Gerencia/Desempeño de vendedores"
             + "|Reportes y Gerencia/Metas de ventas|Reportes y Gerencia/Reporte de KPIs|Clientes/Reclamos" },
@@ -58,7 +58,7 @@ public sealed class NavigationMenuTests
         { "Crédito y Cobro", "Ventas y Pedidos/Cuentas por Cobrar|Clientes/Clientes|Clientes/Créditos" },
         { "Compras", "Inventario/Inventario|Inventario/Movimientos|Finanzas/Proveedores|Finanzas/Órdenes de compra" },
         { "Soporte", "Clientes/Consultas" },
-        { "Auditor Interno", "Seguridad/Auditoría" },
+        { "Auditor Interno", "Logística y Flota/Rentabilidad de comodatos|Seguridad/Auditoría" },
         { "Cliente", "" },
     };
 
@@ -83,7 +83,7 @@ public sealed class NavigationMenuTests
 
         Assert.Equal(NavigationMenu.AdminPanel.Select(s => s.Label), panel.Select(s => s.Label));
         Assert.Equal(NavigationMenu.AdminPanel.Sum(s => s.Links.Count), panel.Sum(s => s.Links.Count));
-        Assert.Equal(49, panel.Sum(s => s.Links.Count));
+        Assert.Equal(50, panel.Sum(s => s.Links.Count));
     }
 
     [Fact]
