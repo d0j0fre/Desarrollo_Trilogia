@@ -65,9 +65,10 @@ namespace Proyecto_Final.Controllers
 
                 TempData["SuccessMessage"] = "Estado del pedido actualizado correctamente.";
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                TempData["ErrorMessage"] = "No fue posible actualizar el estado del pedido en este momento. Intente nuevamente.";
+                // G2-31: «La transición de estado solicitada no es válida.», «El pedido facturado debe permanecer como Entregado.»…
+                TempData["ErrorMessage"] = BusinessErrors.MessageOr(ex, "No fue posible actualizar el estado del pedido en este momento. Intente nuevamente.");
             }
 
             return RedirectToAction(nameof(Detail), new { id = pedidoId });
