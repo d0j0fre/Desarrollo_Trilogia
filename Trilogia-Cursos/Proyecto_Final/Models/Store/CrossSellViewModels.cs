@@ -26,6 +26,9 @@ public static class CrossSellPolicy
 {
     public const int MinimumSupport = 2;
 
+    /// <summary>Origen de los productos con que se compara: en la Tienda, el carrito (G3-06).</summary>
+    public const string CartProductsPhrase = "productos del carrito";
+
     public static IReadOnlyList<CrossSellSuggestion> Select(
         IEnumerable<CrossSellCandidate> source,
         IReadOnlySet<int> cartProductIds,
@@ -54,7 +57,7 @@ public static class CrossSellPolicy
             item.Stock,
             item.ImagenUrl,
             item.Support >= MinimumSupport
-                ? $"Se compró junto con productos del carrito en {item.Support} pedidos."
+                ? $"Se compró junto con {CartProductsPhrase} en {item.Support} pedidos."
                 : item.CategoryMatch
                     ? "Alternativa relacionada por categoría; todavía no hay historial conjunto suficiente."
                     : "Producto popular; todavía no hay historial conjunto suficiente."
