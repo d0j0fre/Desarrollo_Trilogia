@@ -1,4 +1,5 @@
 @model Proyecto_Final.Models.Store.ClientPortalIndexViewModel
+@using Proyecto_Final.Services
 @{
     ViewData["Title"] = "Mis pedidos";
 }
@@ -16,7 +17,7 @@
                     Portal del cliente
                 </span>
                 <h1>Mis pedidos</h1>
-                <p>Consulta tu informacion, credito disponible e historial de compras en un solo lugar.</p>
+                <p>Consulta tu información, crédito disponible e historial de compras en un solo lugar.</p>
             </div>
 
             <div class="s4-client-portal-hero__stats">
@@ -44,12 +45,12 @@
 
                 <div class="s4-client-summary-list">
                     <div>
-                        <span>Telefono</span>
-                        <strong>@(string.IsNullOrWhiteSpace(Model.Cliente.Telefono) ? "Sin telefono" : Model.Cliente.Telefono)</strong>
+                        <span>Teléfono</span>
+                        <strong>@(string.IsNullOrWhiteSpace(Model.Cliente.Telefono) ? "Sin teléfono" : Model.Cliente.Telefono)</strong>
                     </div>
                     <div>
-                        <span>Direccion</span>
-                        <strong>@(string.IsNullOrWhiteSpace(Model.Cliente.Direccion) ? "Sin direccion" : Model.Cliente.Direccion)</strong>
+                        <span>Dirección</span>
+                        <strong>@(string.IsNullOrWhiteSpace(Model.Cliente.Direccion) ? "Sin dirección" : Model.Cliente.Direccion)</strong>
                     </div>
                     <div>
                         <span>Cliente desde</span>
@@ -70,7 +71,7 @@
 
                 <div class="s4-client-summary-list">
                     <div>
-                        <span>Ultimo pedido</span>
+                        <span>Último pedido</span>
                         <strong>@(Model.Cliente.UltimoPedido.HasValue ? Model.Cliente.UltimoPedido.Value.ToString("dd/MM/yyyy") : "Sin pedidos")</strong>
                     </div>
                 </div>
@@ -81,23 +82,23 @@
                     <i class="fa fa-credit-card"></i>
                 </div>
                 <div>
-                    <span>Credito</span>
+                    <span>Crédito</span>
                     <h2>Estado de cuenta</h2>
                 </div>
                 @if (Model.Credito == null)
                 {
-                    <p class="s4-client-empty-text">No hay credito asignado actualmente.</p>
+                    <p class="s4-client-empty-text">No hay crédito asignado actualmente.</p>
                 }
                 else
                 {
                     <div class="s4-client-credit-amount @(Model.Credito.CreditoDisponible < 0 ? "danger" : "success")">
                         &#8353;@Model.Credito.CreditoDisponible.ToString("N2")
                     </div>
-                    <p class="s4-client-empty-text">Credito disponible</p>
+                    <p class="s4-client-empty-text">Crédito disponible</p>
 
                     <div class="s4-client-summary-list">
                         <div>
-                            <span>Limite</span>
+                            <span>Límite</span>
                             <strong>&#8353;@Model.Credito.LimiteCredito.ToString("N2")</strong>
                         </div>
                         <div>
@@ -164,7 +165,7 @@
                                 <tr>
                                     <td class="font-weight-bold">#@pedido.PedidoId</td>
                                     <td>@pedido.FechaPedido.ToString("dd/MM/yyyy HH:mm")</td>
-                                    <td><span class="s4-client-status-pill @claseEstado">@pedido.Estado</span></td>
+                                    <td><span class="s4-client-status-pill @claseEstado">@OrderStatusFlow.Name(pedido.Estado)</span></td>
                                     <td>@(string.IsNullOrWhiteSpace(pedido.TipoEntrega) ? "No indicado" : pedido.TipoEntrega)</td>
                                     <td class="font-weight-bold">&#8353;@pedido.Total.ToString("N2")</td>
                                     <td class="text-right">

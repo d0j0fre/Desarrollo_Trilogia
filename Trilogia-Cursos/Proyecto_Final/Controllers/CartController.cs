@@ -388,6 +388,17 @@ namespace Proyecto_Final.Controllers
                     model.Cart.Items,
                     HttpContext.RequestAborted);
 
+                // G3-15: los datos para facturar quedan con el pedido. El pedido ya existe:
+                // si este guardado falla se registra y la compra sigue confirmada.
+                try
+                {
+                    await _storeDbService.SaveOrderCustomerDataAsync(order.PedidoId, usuarioId, model, HttpContext.RequestAborted);
+                }
+                catch (Exception exception)
+                {
+                    _logger.LogWarning(exception, "No se guardaron los datos del cliente del pedido {PedidoId}.", order.PedidoId);
+                }
+
                 var confirmedItems = order.Items.Concat(order.Gifts).ToList();
 
                 var confirmacion = new OrderConfirmationViewModel

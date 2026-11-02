@@ -22,7 +22,8 @@ class RouteDetailPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(detail.value?.codigo ?? 'Ruta'),
+        // Sin señal el detalle puede llegar con error: `.value` lo relanzaria al dibujar.
+        title: Text(detail.valueOrNull?.codigo ?? 'Ruta'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded),

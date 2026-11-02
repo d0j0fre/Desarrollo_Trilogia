@@ -118,7 +118,8 @@ class _NotificationsBell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final unread = ref.watch(notificationsInboxProvider).value?.unread ?? 0;
+    // Sin señal la bandeja llega con error: `.value` lo relanzaria al dibujar.
+    final unread = ref.watch(notificationsInboxProvider).valueOrNull?.unread ?? 0;
 
     return IconButton(
       icon: Badge(

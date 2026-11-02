@@ -137,9 +137,8 @@
                             {
                                 @foreach (var item in Model)
                                 {
-                                    var imagen = string.IsNullOrWhiteSpace(item.ImagenUrl)
-                                        ? Url.Content("~/img/whisky-premium.webp")
-                                        : Url.Content(item.ImagenUrl);
+                                    var imagen = Url.Content(Proyecto_Final.Services.ProductImageFallback.Resolve(item.ImagenUrl, item.Categoria));
+                                    var respaldo = Url.Content(Proyecto_Final.Services.ProductImageFallback.ForCategory(item.Categoria));
 
                                     var stockClass = item.Stock <= 0 ? "danger"
                                         : item.Stock <= item.StockMinimo ? "warning"
@@ -153,7 +152,7 @@
                                         <td class="text-nowrap">SKU-@item.ProductoId.ToString("D5")</td>
                                         <td>
                                             <img src="@imagen" class="table-product-thumb" alt="Miniatura de @item.Nombre" loading="lazy" width="64" height="64"
-                                                 onerror="this.onerror=null;this.src='/img/whisky-premium.webp';" />
+                                                 onerror="this.onerror=null;this.src='@respaldo';" />
                                         </td>
                                         <td class="font-weight-bold">
                                             @item.Nombre

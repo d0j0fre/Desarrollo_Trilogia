@@ -15,7 +15,7 @@ class NotificationsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final inbox = ref.watch(notificationsInboxProvider);
-    final unread = inbox.value?.unread ?? 0;
+    final unread = inbox.valueOrNull?.unread ?? 0;
 
     return Scaffold(
       appBar: AppBar(
@@ -27,7 +27,9 @@ class NotificationsPage extends ConsumerWidget {
                 await ref.read(notificationsApiProvider).markAllRead();
                 ref.invalidate(notificationsInboxProvider);
               },
-              child: const Text('Marcar leídas', style: TextStyle(color: BrandColors.white)),
+              // La barra es clara (AppBarTheme usa BrandColors.surface): el texto toma el
+              // color del tema de TextButton, no blanco, para que se lea.
+              child: const Text('Marcar leídas'),
             ),
         ],
       ),

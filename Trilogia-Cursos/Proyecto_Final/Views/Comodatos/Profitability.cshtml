@@ -1,5 +1,7 @@
+@using Microsoft.AspNetCore.Http
 @using Proyecto_Final.Models.Admin
 @model IEnumerable<ComodatoProfitabilityViewModel>
+@inject Proyecto_Final.Services.NavigationMenuService MenuAccess
 @{
     ViewData["Title"] = "Rentabilidad de comodatos";
 }
@@ -16,7 +18,11 @@
                     <h2 class="mb-2">Rentabilidad de equipos prestados</h2>
                     <p class="mb-0">Inventario de comodatos activos cruzado con el historial de compras del cliente. Los menos rentables aparecen primero.</p>
                 </div>
-                <a asp-action="Index" class="btn btn-ds-neutral mt-2 mt-md-0"><i class="fa fa-arrow-left mr-2"></i>Volver</a>
+                @* El Auditor llega desde el menú y no puede abrir la lista de comodatos. *@
+                @if (await MenuAccess.CanOpenAsync(Context.Session.GetString("UserRole"), "Comodatos", "Index"))
+                {
+                    <a asp-action="Index" class="btn btn-ds-neutral mt-2 mt-md-0"><i class="fa fa-arrow-left mr-2"></i>Volver</a>
+                }
             </div>
         </div>
     </div>

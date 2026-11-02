@@ -268,13 +268,20 @@ namespace Proyecto_Final.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Movements()
+        public async Task<IActionResult> Movements(string? buscar, string? tipo, DateTime? desde, DateTime? hasta)
         {
-            var movimientos = await _adminDbService.GetInventoryMovementsAsync();
+            // G2-42: búsqueda por producto y filtros por tipo y fechas.
+            if (tipo is not (null or "Entrada" or "Salida" or "Ajuste")) tipo = null;
+            ViewData["Buscar"] = buscar;
+            ViewData["Tipo"] = tipo;
+            ViewData["Desde"] = desde?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+            ViewData["Hasta"] = hasta?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+            var movimientos = await _adminDbService.GetInventoryMovementsAsync(buscar, tipo, desde, hasta);
             return View(movimientos);
         }
 
         [HttpGet]
+        [AdminAuthorize("Inventario", "INVENTARIO_MOVIMIENTOS")]
         public async Task<IActionResult> RegisterMovement()
         {
             var productos = await _adminDbService.GetActiveProductsForSelectAsync();
@@ -288,6 +295,7 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AdminAuthorize("Inventario", "INVENTARIO_MOVIMIENTOS")]
         public async Task<IActionResult> RegisterMovement(InventoryMovementFormViewModel model)
         {
             if (!ModelState.IsValid)
@@ -315,13 +323,14 @@ namespace Proyecto_Final.Controllers
                 TempData["SuccessMessage"] = "Movimiento registrado correctamente.";
                 return RedirectToAction(nameof(Movements));
             }
-            catch (InvalidOperationException)
+            catch (InvalidOperationException ex) when (BusinessErrors.IsApplicationRule(ex))
             {
-                ModelState.AddModelError(string.Empty, "No se pudo registrar el movimiento de inventario. Revise los datos e intente nuevamente.");
+                // RegisterInventoryMovementAsync explica la regla que falló («El movimiento deja el stock en negativo.»).
+                ModelState.AddModelError(string.Empty, ex.Message);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                ModelState.AddModelError(string.Empty, "Ocurrió un error al registrar el movimiento. Intente nuevamente.");
+                ModelState.AddModelError(string.Empty, BusinessErrors.MessageOr(ex, "Ocurrió un error al registrar el movimiento. Intente nuevamente."));
             }
 
             var productosRetry = await _adminDbService.GetActiveProductsForSelectAsync();

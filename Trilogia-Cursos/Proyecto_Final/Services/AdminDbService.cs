@@ -318,12 +318,18 @@ namespace Proyecto_Final.Services
             }
         }
 
-        public async Task<List<InventoryMovementViewModel>> GetInventoryMovementsAsync()
+        public async Task<List<InventoryMovementViewModel>> GetInventoryMovementsAsync(
+            string? buscar = null, string? tipoMovimiento = null, DateTime? desde = null, DateTime? hasta = null)
         {
             var movements = new List<InventoryMovementViewModel>();
             await using var connection = new SqlConnection(_connectionString);
             await using var command = new SqlCommand("dbo.sp_Admin_GetInventoryMovements", connection);
             command.CommandType = CommandType.StoredProcedure;
+            // G2-42 (0253): filtros opcionales; sin ellos, los últimos 200 de siempre.
+            command.Parameters.Add("@Buscar", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(buscar) ? DBNull.Value : buscar.Trim();
+            command.Parameters.Add("@TipoMovimiento", SqlDbType.NVarChar, 20).Value = string.IsNullOrWhiteSpace(tipoMovimiento) ? DBNull.Value : tipoMovimiento;
+            command.Parameters.Add("@Desde", SqlDbType.Date).Value = (object?)desde?.Date ?? DBNull.Value;
+            command.Parameters.Add("@Hasta", SqlDbType.Date).Value = (object?)hasta?.Date ?? DBNull.Value;
             await connection.OpenAsync();
             await using var reader = await command.ExecuteReaderAsync();
             while (await reader.ReadAsync())
@@ -1698,7 +1704,7 @@ namespace Proyecto_Final.Services
                 command.Parameters.Add("@ItemsJson", SqlDbType.NVarChar, -1).Value = itemsJson;
                 command.Parameters.Add("@PedidoOfflineGuid", SqlDbType.UniqueIdentifier).Value = pedidoOfflineGuid.HasValue ? pedidoOfflineGuid.Value : DBNull.Value;
                 command.Parameters.Add("@CanalPedido", SqlDbType.NVarChar, 50).Value = string.IsNullOrWhiteSpace(canalPedido) ? "Venta móvil" : canalPedido.Trim();
-                // BUG-06-02 (0230): solo el pago a crédito se envía; sin parámetro el procedimiento conserva el valor histórico.
+                // BUG-06-02 (0230): solo el pago a crédito se envía; sin parámetro el procedimiento guarda «Efectivo contra entrega» (0255).
                 if (model.MetodoPago == SellerOrderCreateViewModel.PagoCredito)
                     command.Parameters.Add("@MetodoPago", SqlDbType.NVarChar, 40).Value = SellerOrderCreateViewModel.PagoCredito;
 

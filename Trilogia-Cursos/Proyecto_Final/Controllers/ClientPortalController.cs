@@ -416,9 +416,10 @@ namespace Proyecto_Final.Controllers
             catch (Exception exception)
             {
                 _logger.LogWarning(exception, "No se pudo crear la solicitud de garantía del usuario {UserId}.", usuarioId);
+                // Las reglas del procedimiento («Ya existe una solicitud abierta…») se muestran tal cual.
                 ModelState.AddModelError(
                     string.Empty,
-                    "No fue posible registrar la solicitud de garantía en este momento."
+                    BusinessErrors.MessageOr(exception, "No fue posible registrar la solicitud de garantía en este momento.")
                 );
 
                 return View(model);

@@ -544,6 +544,12 @@ body {
         color: #111111;
     }
 
+    /* G2-08: Prestado, comodato Activo, segmento Mayorista, reclamo En proceso. */
+    .admin-badge-soft.info {
+        background: rgba(30, 79, 153, .12);
+        color: #1e4f99;
+    }
+
 /* =========================================================
    RESPONSIVE
    ========================================================= */

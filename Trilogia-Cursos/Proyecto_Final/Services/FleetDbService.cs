@@ -253,6 +253,16 @@ namespace Proyecto_Final.Services
             await command.ExecuteNonQueryAsync();
         }
 
+        // G2-03 (0254): un equipo reparado vuelve de Mantenimiento a Disponible.
+        public async Task MarkAssetAvailableAsync(int activoId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Activos_MarcarDisponible", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.Add("@ActivoId", SqlDbType.Int).Value = activoId;
+            await connection.OpenAsync();
+            await command.ExecuteNonQueryAsync();
+        }
+
         public async Task<List<ComodatoHistoryItemViewModel>> GetAssetComodatoHistoryAsync(int activoId)
         {
             var lista = new List<ComodatoHistoryItemViewModel>();

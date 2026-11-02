@@ -193,7 +193,8 @@ class _ManagedRouteDetailPageState extends ConsumerState<ManagedRouteDetailPage>
     final route = ref.watch(managedRouteProvider(widget.routeId));
 
     return Scaffold(
-      appBar: AppBar(title: Text(route.value?.code ?? 'Ruta')),
+      // Sin señal la ruta puede llegar con error: `.value` lo relanzaria al dibujar.
+      appBar: AppBar(title: Text(route.valueOrNull?.code ?? 'Ruta')),
       body: AsyncDetailBody<ManagedRouteDetail>(
         value: route,
         onRefresh: () async => _refresh(),

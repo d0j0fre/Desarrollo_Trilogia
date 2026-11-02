@@ -32,6 +32,7 @@ namespace Proyecto_Final.Models.Admin
         public string Tipo { get; set; } = "Nevera";
 
         [StringLength(300)]
+        [Display(Name = "Descripción")]
         public string? Descripcion { get; set; }
 
         public string Estado { get; set; } = "Disponible";

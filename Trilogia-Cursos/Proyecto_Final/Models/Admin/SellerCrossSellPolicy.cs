@@ -13,10 +13,15 @@ namespace Proyecto_Final.Models.Admin
             IReadOnlySet<string> categoriasDelPedido,
             IReadOnlySet<int> catalogoVendedor)
         {
-            return sugerencias.FirstOrDefault(s =>
+            var elegida = sugerencias.FirstOrDefault(s =>
                 catalogoVendedor.Contains(s.ProductoId)
                 && s.Stock > 0
                 && !categoriasDelPedido.Contains(s.Categoria));
+
+            // G3-06: en Venta móvil no hay carrito; el motivo habla del pedido en curso.
+            return elegida is null
+                ? null
+                : elegida with { Explanation = elegida.Explanation.Replace(CrossSellPolicy.CartProductsPhrase, "productos de este pedido", StringComparison.Ordinal) };
         }
 
         // Lista "1,2,3" que envía la pantalla; descarta valores inválidos y repetidos.

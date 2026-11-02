@@ -112,7 +112,7 @@
                                     <tr>
                                         <td class="font-weight-bold">@p.PedidoId</td>
                                         <td>@p.Cliente</td>
-                                        <td>@p.MetodoPago</td>
+                                        <td>@Proyecto_Final.Services.PaymentMethodNames.Display(p.MetodoPago)</td>
                                         <td class="text-right">@p.Total.ToString("N2")</td>
                                     </tr>
                                 }

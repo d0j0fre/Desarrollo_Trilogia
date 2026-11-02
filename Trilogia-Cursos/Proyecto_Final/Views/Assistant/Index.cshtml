@@ -946,13 +946,8 @@
                             cómo utilizar los diferentes módulos del sistema.
                             Selecciona una opción o escribe tu propia pregunta.
                         `,
-                [
-                    '¿Qué puedo preguntar?',
-                    'Dame un resumen',
-                    '¿Cuánto vendimos este mes?',
-                    '¿Cómo está el inventario?',
-                    '¿Cómo uso el módulo de rutas?'
-                ]
+                // G3-05: solo las preguntas de las categorías que el rol puede consultar.
+                @Json.Serialize(Proyecto_Final.Services.AssistantService.SugerenciasIniciales(Context.Session.GetString("UserRole")))
             );
 
             input.focus();

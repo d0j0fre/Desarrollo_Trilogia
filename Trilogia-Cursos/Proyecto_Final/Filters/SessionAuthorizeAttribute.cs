@@ -13,6 +13,9 @@ namespace Proyecto_Final.Filters
             _allowedRoles = allowedRoles ?? Array.Empty<string>();
         }
 
+        // El menú la lee para no mostrar opciones que el rol no puede abrir.
+        public IReadOnlyList<string> AllowedRoles => _allowedRoles;
+
         public void OnAuthorization(AuthorizationFilterContext context)
         {
             var session = context.HttpContext.Session;

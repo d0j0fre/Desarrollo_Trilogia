@@ -157,7 +157,13 @@
                     Al rechazar: el pedido se marca como rechazado y el vendedor verá el motivo en su panel.
                     No se afecta el inventario.
                 </p>
-                <form asp-action="Reject" method="post">
+                @* G2-06: primero se valida el motivo y después se pide confirmación con una ventana propia. *@
+                <form asp-action="Reject" method="post" id="rechazarPedidoForm"
+                      data-s3-confirm="¿Rechazar el pedido #@Model.Pedido.PedidoId? El vendedor verá el motivo en su panel y no se afecta el inventario."
+                      data-s3-confirm-title="Rechazar pedido #@Model.Pedido.PedidoId"
+                      data-s3-confirm-type="danger"
+                      data-s3-confirm-ok="Sí, rechazar"
+                      data-s3-confirm-cancel="Cancelar">
                     @Html.AntiForgeryToken()
                     <input type="hidden" asp-for="RechazarForm.PedidoId" />
 
@@ -182,4 +188,26 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        // G2-06: la confirmación intercepta el envío antes que la validación; el motivo se
+        // revisa al hacer clic, y con el motivo vacío no se abre ninguna ventana.
+        (function () {
+            var form = document.getElementById('rechazarPedidoForm');
+            if (!form) return;
+            var motivo = form.querySelector('textarea');
+            var mensaje = form.querySelector('[data-valmsg-for="' + motivo.name + '"]');
+            form.querySelector('button[type=submit]').addEventListener('click', function (event) {
+                if (motivo.value.trim()) return;
+                event.preventDefault();
+                motivo.classList.add('is-invalid');
+                if (mensaje) mensaje.textContent = motivo.getAttribute('data-val-required');
+                motivo.focus();
+            });
+            motivo.addEventListener('input', function () {
+                if (!motivo.value.trim()) return;
+                motivo.classList.remove('is-invalid');
+                if (mensaje) mensaje.textContent = '';
+            });
+        })();
+    </script>
 }

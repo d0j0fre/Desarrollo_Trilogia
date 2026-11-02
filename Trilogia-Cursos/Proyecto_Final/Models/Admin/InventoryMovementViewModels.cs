@@ -16,7 +16,7 @@ namespace Proyecto_Final.Models.Admin
         public DateTime FechaMovimiento { get; set; }
     }
 
-    public class InventoryMovementFormViewModel
+    public class InventoryMovementFormViewModel : IValidatableObject
     {
         [Display(Name = "Producto")]
         [Range(1, int.MaxValue, ErrorMessage = "Debes seleccionar un producto.")]
@@ -26,8 +26,9 @@ namespace Proyecto_Final.Models.Admin
         [Required(ErrorMessage = "El tipo de movimiento es obligatorio.")]
         public string TipoMovimiento { get; set; } = "Entrada";
 
+        // En un Ajuste la cantidad es el stock final y puede ser 0 (G2-41); entradas y salidas, desde 1.
         [Display(Name = "Cantidad")]
-        [Range(1, int.MaxValue, ErrorMessage = "La cantidad debe ser mayor que cero.")]
+        [Range(0, int.MaxValue, ErrorMessage = "La cantidad no puede ser negativa.")]
         public int Cantidad { get; set; } = 1;
 
         [Display(Name = "Motivo")]
@@ -47,6 +48,14 @@ namespace Proyecto_Final.Models.Admin
         public string? CategoriaGasto { get; set; }
 
         public List<ProductAdminViewModel> ProductosDisponibles { get; set; } = new();
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (TipoMovimiento != "Ajuste" && Cantidad < 1)
+            {
+                yield return new ValidationResult("La cantidad debe ser mayor que cero.", [nameof(Cantidad)]);
+            }
+        }
     }
 
     // CU-182 — Transforma stock de un producto "origen" (ej. caja) a un producto "destino" (ej. unidad).

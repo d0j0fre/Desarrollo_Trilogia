@@ -23,8 +23,10 @@ namespace Proyecto_Final.Models.Admin
 
     public class ReturnFormViewModel
     {
+        // G2-02: sin producto la lista envía un valor vacío; con int? el mensaje es este y no el del enlace del modelo.
+        [Required(ErrorMessage = "Debe seleccionar un producto.")]
         [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un producto.")]
-        public int ProductoId { get; set; }
+        public int? ProductoId { get; set; }
 
         public int? PedidoId { get; set; }
 

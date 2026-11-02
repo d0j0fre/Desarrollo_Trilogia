@@ -22,13 +22,17 @@ namespace Proyecto_Final.Controllers
         }
 
         [HttpGet]
-        public IActionResult Login()
+        public IActionResult Login(string? returnUrl = null)
         {
+            // G3-14: «Debes iniciar sesión para finalizar la compra» envía de vuelta al pago.
+            returnUrl = Url.IsLocalUrl(returnUrl) ? returnUrl : null;
+
             if (!string.IsNullOrWhiteSpace(HttpContext.Session.GetString("UserEmail")))
             {
-                return RedirectToAction("Index", "Home");
+                return returnUrl is null ? RedirectToAction("Index", "Home") : LocalRedirect(returnUrl);
             }
 
+            ViewBag.ReturnUrl = returnUrl;
             return View(new Proyecto_Final.Models.LoginViewModel
             {
                 Email = string.Empty,
@@ -43,8 +47,12 @@ namespace Proyecto_Final.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [EnableRateLimiting("authentication")]
-        public async Task<IActionResult> Login(Proyecto_Final.Models.LoginViewModel model)
+        public async Task<IActionResult> Login(Proyecto_Final.Models.LoginViewModel model, string? returnUrl = null)
         {
+            // Solo direcciones de este sitio: un returnUrl externo no se sigue.
+            returnUrl = Url.IsLocalUrl(returnUrl) ? returnUrl : null;
+            ViewBag.ReturnUrl = returnUrl;
+
             if (!ModelState.IsValid)
             {
                 return View(model);
@@ -75,7 +83,7 @@ namespace Proyecto_Final.Controllers
                     "El usuario inició sesión correctamente.");
 
                 TempData["LoginSuccess"] = $"Bienvenido, {response.FullName}.";
-                return RedirectToAction("Index", "Home");
+                return returnUrl is null ? RedirectToAction("Index", "Home") : LocalRedirect(returnUrl);
             }
             catch (Exception exception)
             {

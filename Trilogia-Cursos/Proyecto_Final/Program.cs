@@ -151,6 +151,8 @@ builder.Services.AddScoped<AdminDbService>();
 builder.Services.AddScoped<IMobileAppReleaseService, MobileAppReleaseDbService>();
 builder.Services.AddSingleton<IMobileAppPackageStorage, MobileAppPackageStorageService>();
 builder.Services.AddScoped<IRolePermissionService, RolePermissionService>();
+builder.Services.AddScoped<NavigationMenuService>();
+builder.Services.AddScoped<ISellerOrderAccess, SellerOrderAccess>();
 builder.Services.AddScoped<ISessionStatusService, SessionStatusService>();
 builder.Services.AddScoped<IEmployeesService, EmployeesDbService>();
 builder.Services.AddScoped<IAttendanceService, AttendanceDbService>();

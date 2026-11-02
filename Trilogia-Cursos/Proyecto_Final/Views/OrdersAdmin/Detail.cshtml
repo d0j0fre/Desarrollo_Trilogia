@@ -1,6 +1,11 @@
 @model Proyecto_Final.Models.Admin.OrderDetailViewModel
+@using Microsoft.AspNetCore.Http
+@using Proyecto_Final.Services
+@inject NavigationMenuService MenuAccess
 @{
     ViewData["Title"] = "Detalle del pedido";
+    // SellerOrders/Detail reutiliza esta vista para el vendedor: sin cambiar estado ni facturar.
+    var soloLectura = ViewData["SoloLectura"] is true;
 }
 
 @section Styles {
@@ -12,7 +17,9 @@
         <div class="col-12">
             <div class="admin-page-header">
                 <h2 class="mb-2">Detalle del pedido #@Model.PedidoId</h2>
-                <p>Consulta la información general del pedido, productos asociados y actualiza su estado.</p>
+                <p>@(soloLectura
+                    ? "Consulta la información general del pedido y los productos asociados."
+                    : "Consulta la información general del pedido, productos asociados y actualiza su estado.")</p>
             </div>
         </div>
     </div>
@@ -40,16 +47,7 @@
 
                     <div class="col-md-6 mb-3">
                         <label class="font-weight-bold d-block">Estado actual</label>
-                        @{
-                            var claseEstado = Model.Estado == "Pendiente"
-                            ? "warning"
-                            : Model.Estado == "Entregado"
-                            ? "success"
-                            : Model.Estado == "Cancelado"
-                            ? "danger"
-                            : "dark";
-                        }
-                        <span class="admin-badge-soft @claseEstado">@(Model.Estado switch { "EnRuta" => "En ruta", "Fallido" => "No entregado", _ => Model.Estado })</span>
+                        <span class="admin-badge-soft @OrderStatusFlow.BadgeClass(Model.Estado)">@OrderStatusFlow.Name(Model.Estado)</span>
                     </div>
 
                     <div class="col-md-6 mb-3">
@@ -69,9 +67,7 @@
                     <div class="col-md-6 mb-3">
                         <label class="font-weight-bold d-block">Método de pago</label>
                         <span>
-                            @(string.IsNullOrWhiteSpace(Model.MetodoPago)
-                                                        ? "No registrado"
-                                                        : Model.MetodoPago)
+                            @PaymentMethodNames.Display(Model.MetodoPago)
                         </span>
                     </div>
 
@@ -118,31 +114,94 @@
                         </span>
                     </div>
                 </div>
+
+                @if (ViewData["DatosCliente"] is Proyecto_Final.Models.Store.OrderCustomerDataViewModel datosCliente)
+                {
+                    @* G3-15: lo que el cliente indicó al pagar en la Tienda. *@
+                    <h5 class="mt-4 mb-3">Datos del cliente para facturar</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="font-weight-bold d-block">Tipo de cliente</label>
+                            <span>@datosCliente.TipoCliente</span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="font-weight-bold d-block">Factura electrónica</label>
+                            <span>@(datosCliente.FacturaElectronica ? "Sí, la solicitó" : "No la solicitó")</span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="font-weight-bold d-block">Correo del comprobante</label>
+                            <span>@(datosCliente.CorreoComprobante ?? "No indicado")</span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="font-weight-bold d-block">Teléfonos</label>
+                            <span>@(string.Join(" · ", new[] { datosCliente.Telefono, datosCliente.TelefonoAlterno }.Where(t => !string.IsNullOrWhiteSpace(t))) is { Length: > 0 } telefonos ? telefonos : "No indicados")</span>
+                        </div>
+                    </div>
+                }
             </div>
         </div>
 
         <div class="col-lg-4 pb-3">
+            @if (soloLectura)
+            {
+            <div class="admin-card h-100">
+                <h5 class="mb-3">Facturación</h5>
+                <p class="mb-4">
+                    @(Model.HasInvoice
+                        ? $"Factura {Model.NumeroFactura}."
+                        : "Este pedido todavía no tiene factura.")
+                </p>
+                <a asp-controller="SellerOrders" asp-action="MyOrders" class="btn btn-ds-neutral btn-block">
+                    <i class="fa fa-arrow-left mr-2"></i>Volver a mis pedidos
+                </a>
+            </div>
+            }
+            else
+            {
             <div class="admin-card h-100">
                 <h5 class="mb-4">Actualizar estado</h5>
 
+                @{
+                    // G2-30: solo los cambios que acepta sp_Admin_UpdateOrderStatus desde el estado actual.
+                    var siguientes = OrderStatusFlow.NextStates(Model.Estado, Model.HasInvoice);
+                    // G2-32: cada botón según el permiso de la acción a la que lleva.
+                    var rol = Context.Session.GetString("UserRole");
+                    var puedeCambiarEstado = await MenuAccess.CanSubmitAsync(rol, "OrdersAdmin", "UpdateStatus");
+                    var puedeVerFactura = await MenuAccess.CanOpenAsync(rol, "Billing", "Detail");
+                    var puedeFacturar = await MenuAccess.CanSubmitAsync(rol, "Billing", "GenerateFromOrder");
+                }
                 <form asp-controller="OrdersAdmin" asp-action="UpdateStatus" method="post">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="pedidoId" value="@Model.PedidoId" />
 
-                    <div class="form-group">
-                        <label class="font-weight-bold">Nuevo estado</label>
-                        <select name="nuevoEstado" class="form-control">
-                            <option value="Pendiente" selected="@(Model.Estado == "Pendiente")">Pendiente</option>
-                            <option value="Aprobado" selected="@(Model.Estado == "Aprobado")">Aprobado</option>
-                            <option value="EnProceso" selected="@(Model.Estado == "EnProceso")">En proceso</option>
-                            <option value="Entregado" selected="@(Model.Estado == "Entregado")">Entregado</option>
-                            <option value="Cancelado" selected="@(Model.Estado == "Cancelado")">Cancelado</option>
-                        </select>
-                    </div>
+                    @if (siguientes.Count > 0 && puedeCambiarEstado)
+                    {
+                        <div class="form-group">
+                            <label class="font-weight-bold" for="nuevoEstado">Nuevo estado</label>
+                            <select id="nuevoEstado" name="nuevoEstado" class="form-control">
+                                @foreach (var estado in siguientes)
+                                {
+                                    <option value="@estado">@OrderStatusFlow.Name(estado)</option>
+                                }
+                            </select>
+                        </div>
 
-                    <button type="submit" class="btn btn-ds-action btn-block mb-2">
-                        <i class="fa fa-save mr-2"></i>Guardar estado
-                    </button>
+                        <button type="submit" class="btn btn-ds-action btn-block mb-2">
+                            <i class="fa fa-save mr-2"></i>Guardar estado
+                        </button>
+                    }
+                    else if (puedeCambiarEstado)
+                    {
+                        <p class="text-muted">
+                            @(Model.Estado is "EnRuta" or "Fallido"
+                                ? $"El estado «{OrderStatusFlow.Name(Model.Estado)}» lo actualiza Rutas y entregas."
+                                : $"Un pedido en estado «{OrderStatusFlow.Name(Model.Estado)}» no tiene cambios de estado desde esta pantalla.")
+                        </p>
+                    }
+                    else
+                    {
+                        <p class="text-muted">Su perfil puede consultar el pedido, pero no cambiar su estado.</p>
+                    }
 
                     <a asp-controller="OrdersAdmin" asp-action="Index" class="btn btn-ds-neutral btn-block">
                         <i class="fa fa-arrow-left mr-2"></i>Volver a pedidos
@@ -151,21 +210,24 @@
 
                 <hr />
 
-                <h5 class="mb-3">Facturacion</h5>
+                <h5 class="mb-3">Facturación</h5>
 
                 @if (Model.HasInvoice && Model.FacturaId.HasValue)
                 {
+                    @if (puedeVerFactura)
+                    {
                     <a asp-controller="Billing"
                        asp-action="Detail"
                        asp-route-id="@Model.FacturaId.Value"
                        class="btn btn-ds-view btn-block mb-2">
                         <i class="fa fa-file-invoice mr-2"></i>Ver factura
                     </a>
+                    }
                     <p class="text-muted mb-0">
-                        Este pedido ya tiene una factura asociada.
+                        Este pedido ya tiene una factura asociada@(string.IsNullOrWhiteSpace(Model.NumeroFactura) ? "" : $" ({Model.NumeroFactura})").
                     </p>
                 }
-                else if (Model.CanGenerateInvoice)
+                else if (Model.CanGenerateInvoice && puedeFacturar)
                 {
                     <form asp-controller="Billing"
                           asp-action="GenerateFromOrder"
@@ -185,6 +247,12 @@
                         La factura se genera desde las lineas actuales del pedido. No se descuenta inventario en esta accion.
                     </p>
                 }
+                else if (Model.CanGenerateInvoice)
+                {
+                    <p class="text-muted mb-0">
+                        Este pedido todavía no tiene factura. Su perfil no genera facturas.
+                    </p>
+                }
                 else
                 {
                     <p class="text-muted mb-0">
@@ -192,6 +260,7 @@
                     </p>
                 }
             </div>
+            }
         </div>
     </div>
 

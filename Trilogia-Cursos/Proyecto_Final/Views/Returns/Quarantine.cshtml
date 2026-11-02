@@ -70,6 +70,9 @@
                                         <td>@d.RegistradoPorNombre</td>
                                         <td>@d.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</td>
                                         <td class="text-center">
+                                            @* G2-07: la observación se guarda con la resolución y se ve en el historial de Devoluciones. *@
+                                            <input type="text" class="form-control form-control-sm mb-1 js-observacion-cuarentena" maxlength="300"
+                                                   data-devolucion="@d.DevolucionId" placeholder="Observación (opcional)" aria-label="Observación de la devolución #@d.DevolucionId" />
                                             <form asp-action="Release" method="post" class="d-inline"
                                                   data-s3-confirm="¿Liberar y reintegrar @d.Cantidad unidad(es) al inventario?"
                                                   data-s3-confirm-title="Liberar de cuarentena"
@@ -78,6 +81,7 @@
                                                   data-s3-confirm-cancel="Cancelar">
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="devolucionId" value="@d.DevolucionId" />
+                                                <input type="hidden" name="observacion" data-observacion-de="@d.DevolucionId" />
                                                 <button type="submit" class="btn btn-sm btn-ds-action mb-1"><i class="fa fa-check mr-1"></i>Liberar</button>
                                             </form>
                                             <form asp-action="Discard" method="post" class="d-inline"
@@ -88,6 +92,7 @@
                                                   data-s3-confirm-cancel="Cancelar">
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="devolucionId" value="@d.DevolucionId" />
+                                                <input type="hidden" name="observacion" data-observacion-de="@d.DevolucionId" />
                                                 <button type="submit" class="btn btn-sm btn-ds-danger--soft mb-1"><i class="fa fa-trash mr-1"></i>Descartar</button>
                                             </form>
                                         </td>
@@ -101,3 +106,15 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        // G2-07: la confirmación envía el formulario sin pasar por submit; la observación se copia al escribir.
+        document.querySelectorAll('.js-observacion-cuarentena').forEach(function (campo) {
+            campo.addEventListener('input', function () {
+                document.querySelectorAll('[data-observacion-de="' + campo.dataset.devolucion + '"]')
+                    .forEach(function (oculto) { oculto.value = campo.value; });
+            });
+        });
+    </script>
+}
