@@ -9,7 +9,6 @@ namespace Proyecto_Final.Controllers
 {
     // CU-162/163/164 — Comodatos: asignación, devolución/retiro y consulta de rentabilidad.
     // Gestión reutiliza el permiso ACTIVOS_GESTIONAR (módulo Activos).
-    [AdminAuthorize("Activos", "ACTIVOS_GESTIONAR")]
     public class ComodatosController : Controller
     {
         private readonly FleetDbService _fleet;
@@ -24,6 +23,7 @@ namespace Proyecto_Final.Controllers
         }
 
         [HttpGet]
+        [AdminAuthorize("Activos", "ACTIVOS_GESTIONAR")]
         public async Task<IActionResult> Index(string? estado, string? buscar)
         {
             ViewBag.Estado = estado;
@@ -34,6 +34,7 @@ namespace Proyecto_Final.Controllers
 
         // CU-162 — Asignar
         [HttpGet]
+        [AdminAuthorize("Activos", "ACTIVOS_GESTIONAR")]
         public async Task<IActionResult> Assign()
         {
             var model = new ComodatoAssignViewModel { FechaAsignacion = DateTime.Today };
@@ -43,6 +44,7 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AdminAuthorize("Activos", "ACTIVOS_GESTIONAR")]
         public async Task<IActionResult> Assign(ComodatoAssignViewModel model)
         {
             model.ClienteIdentificacion = CostaRicanIdentificationAttribute.Normalize(model.ClienteIdentificacion);
@@ -110,6 +112,7 @@ namespace Proyecto_Final.Controllers
 
         // BUG-16-01 · CU-162-01 — Contrato de comodato en PDF.
         [HttpGet]
+        [AdminAuthorize("Activos", "ACTIVOS_GESTIONAR")]
         public async Task<IActionResult> Contract(int id)
         {
             if (id <= 0) return NotFound();
@@ -129,6 +132,7 @@ namespace Proyecto_Final.Controllers
         // CU-163 — Devolver / Retirar
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AdminAuthorize("Activos", "ACTIVOS_GESTIONAR")]
         public async Task<IActionResult> Return(ComodatoReturnViewModel model)
         {
             var usuarioId = HttpContext.Session.GetInt32("UserId") ?? 0;

@@ -93,6 +93,10 @@ namespace Proyecto_Final.Controllers
                 TempData["SuccessMessage"] = "Rol actualizado correctamente.";
                 return RedirectToAction(nameof(Index));
             }
+            catch (InvalidOperationException ex) when (ex.InnerException is Microsoft.Data.SqlClient.SqlException { Number: 56601 })
+            {
+                ModelState.AddModelError(string.Empty, "No se puede inactivar el rol porque tiene usuarios asignados.");
+            }
             catch (InvalidOperationException)
             {
                 ModelState.AddModelError(string.Empty, "No se pudo actualizar el rol. Revise los datos e intente nuevamente.");
@@ -127,6 +131,10 @@ namespace Proyecto_Final.Controllers
                     $"Se cambió el estado del rol #{perfilId} {(rol == null ? string.Empty : rol.Nombre)}.");
 
                 TempData["SuccessMessage"] = "Estado del rol actualizado correctamente.";
+            }
+            catch (InvalidOperationException ex) when (ex.InnerException is Microsoft.Data.SqlClient.SqlException { Number: 56601 })
+            {
+                TempData["ErrorMessage"] = "No se puede inactivar el rol porque tiene usuarios asignados.";
             }
             catch (InvalidOperationException)
             {

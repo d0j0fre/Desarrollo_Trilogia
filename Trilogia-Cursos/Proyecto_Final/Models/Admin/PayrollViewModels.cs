@@ -57,6 +57,10 @@ public sealed class PayrollRuleFormViewModel : IValidatableObject
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
+        if (Codigo == "COMISION_VENTAS" && (Tipo != "Ingreso" || TipoCalculo != "PorcentajeBruto" || Valor > 1))
+            yield return new ValidationResult("COMISION_VENTAS debe ser un ingreso porcentual entre 0 y 1.", [nameof(Valor)]);
+        if (Codigo == "AUSENCIA_HORA" && (Tipo != "Deduccion" || TipoCalculo != "MontoFijo"))
+            yield return new ValidationResult("AUSENCIA_HORA debe ser una deducción de monto fijo por hora.", [nameof(Codigo)]);
         if (VigenteDesde == default)
         {
             yield return new ValidationResult(
@@ -173,6 +177,8 @@ public sealed class PayrollCalculationInput
     public decimal SalarioBase { get; init; }
     public decimal HorasOrdinarias { get; init; }
     public decimal HorasExtra { get; init; }
+    public decimal HorasAusencia { get; init; }
+    public decimal VentasFacturadas { get; init; }
     public decimal Comisiones { get; init; }
     public decimal FactorSalario { get; init; }
     public string FuenteConfiguracionPeriodo { get; init; } = string.Empty;
@@ -263,17 +269,24 @@ public static class PayrollCalculationPolicy
     public static PayrollCalculationResult Calculate(PayrollCalculationInput input)
     {
         ArgumentNullException.ThrowIfNull(input);
-        if (input.SalarioBase < 0 || input.HorasOrdinarias < 0 || input.HorasExtra < 0 || input.Comisiones < 0)
+        if (input.SalarioBase < 0 || input.HorasOrdinarias < 0 || input.HorasExtra < 0 || input.HorasAusencia < 0 || input.Comisiones < 0)
             throw new ArgumentOutOfRangeException(nameof(input), "Los importes y horas no pueden ser negativos.");
         var active = input.Reglas.Where(rule => rule.VigenteDesde.Date <= input.FechaCalculo.Date &&
             (!rule.VigenteHasta.HasValue || rule.VigenteHasta.Value.Date >= input.FechaCalculo.Date)).OrderBy(rule => rule.Codigo).ToList();
+        if (active.Any(rule => rule.Codigo == "COMISION_VENTAS" && (rule.Tipo != "Ingreso" || rule.TipoCalculo != "PorcentajeBruto" || rule.Valor < 0 || rule.Valor > 1)) ||
+            active.Any(rule => rule.Codigo == "AUSENCIA_HORA" && (rule.Tipo != "Deduccion" || rule.TipoCalculo != "MontoFijo")))
+            throw new PayrollConfigurationException("La configuración de comisiones o ausencias no es válida.");
         if (input.HorasExtra > 0 && !active.Any(rule => rule.Tipo == "Ingreso" && rule.TipoCalculo == "PorHoraExtra"))
             throw new PayrollConfigurationException("Hay horas extra aprobadas, pero no existe una regla vigente para valorarlas.");
+        if (input.HorasAusencia > 0 && !active.Any(rule => rule.Codigo == "AUSENCIA_HORA" && rule.Tipo == "Deduccion" && rule.TipoCalculo == "MontoFijo"))
+            throw new PayrollConfigurationException("Hay ausencias aprobadas, pero no existe una regla vigente AUSENCIA_HORA de deducción por hora.");
+        if (input.VentasFacturadas > 0 && !active.Any(rule => rule.Codigo == "COMISION_VENTAS" && rule.Tipo == "Ingreso" && rule.TipoCalculo == "PorcentajeBruto"))
+            throw new PayrollConfigurationException("Hay ventas facturadas, pero no existe una regla vigente COMISION_VENTAS con el porcentaje de comisión.");
 
         var lines = new List<PayrollLine>();
         foreach (var rule in active.Where(rule => rule.Tipo == "Ingreso"))
         {
-            var amount = CalculateRule(rule, input.SalarioBase, input.SalarioBase, input.HorasExtra);
+            var amount = rule.Codigo == "COMISION_VENTAS" ? Round(input.VentasFacturadas * rule.Valor) : CalculateRule(rule, input.SalarioBase, input.SalarioBase, input.HorasExtra);
             if (amount > 0) lines.Add(new PayrollLine(rule.Codigo, rule.Nombre, rule.Tipo, amount));
         }
         if (input.Comisiones > 0) lines.Add(new PayrollLine("COMISION_MANUAL", "Comisiones confirmadas", "Ingreso", Round(input.Comisiones)));
@@ -281,17 +294,17 @@ public static class PayrollCalculationPolicy
         var gross = Round(input.SalarioBase + income);
         foreach (var rule in active.Where(rule => rule.Tipo == "Deduccion"))
         {
-            var amount = CalculateRule(rule, input.SalarioBase, gross, input.HorasExtra);
+            var amount = rule.Codigo == "AUSENCIA_HORA" ? Round(input.HorasAusencia * rule.Valor) : CalculateRule(rule, input.SalarioBase, gross, input.HorasExtra);
             if (amount > 0) lines.Add(new PayrollLine(rule.Codigo, rule.Nombre, rule.Tipo, amount));
         }
         var deductions = Round(lines.Where(line => line.Tipo == "Deduccion").Sum(line => line.Monto));
         if (deductions > gross) throw new PayrollConfigurationException("Las deducciones configuradas superan el total bruto.");
-        var snapshot = JsonSerializer.Serialize(new { input.FactorSalario, input.FuenteConfiguracionPeriodo, Reglas = active });
-        var canonical = JsonSerializer.Serialize(new { input.PeriodoId, input.EmpleadoId, input.SalarioBase, input.HorasOrdinarias, input.HorasExtra, input.Comisiones, input.FactorSalario, input.FuenteConfiguracionPeriodo, Lines = lines, Rules = active });
+        var snapshot = JsonSerializer.Serialize(new { input.FactorSalario, input.FuenteConfiguracionPeriodo, input.HorasAusencia, input.VentasFacturadas, Reglas = active });
+        var canonical = JsonSerializer.Serialize(new { input.PeriodoId, input.EmpleadoId, input.SalarioBase, input.HorasOrdinarias, input.HorasExtra, input.HorasAusencia, input.VentasFacturadas, input.Comisiones, input.FactorSalario, input.FuenteConfiguracionPeriodo, Lines = lines, Rules = active });
         return new PayrollCalculationResult
         {
             SalarioBase = Round(input.SalarioBase), HorasOrdinarias = input.HorasOrdinarias, HorasExtra = input.HorasExtra,
-            Comisiones = Round(input.Comisiones), TotalIngresos = income, TotalDeducciones = deductions,
+            Comisiones = Round(input.Comisiones + lines.Where(line => line.Codigo == "COMISION_VENTAS").Sum(line => line.Monto)), TotalIngresos = income, TotalDeducciones = deductions,
             TotalBruto = gross, TotalNeto = Round(gross - deductions), Lineas = lines,
             ReglasSnapshotJson = snapshot, Fingerprint = SHA256.HashData(Encoding.UTF8.GetBytes(canonical))
         };

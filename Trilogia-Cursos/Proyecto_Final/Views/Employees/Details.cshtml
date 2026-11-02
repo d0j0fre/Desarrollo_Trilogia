@@ -1,4 +1,5 @@
 @model Proyecto_Final.Models.Admin.EmployeeDetailViewModel
+<div class="container pt-3"><strong>Identificación:</strong> @(string.IsNullOrWhiteSpace(Model.Identificacion) ? "Pendiente" : Model.Identificacion)</div>
 @{
     ViewData["Title"] = "Detalle de empleado";
 }

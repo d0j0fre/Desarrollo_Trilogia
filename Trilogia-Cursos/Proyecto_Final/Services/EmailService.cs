@@ -17,6 +17,9 @@ namespace Proyecto_Final.Services
         }
 
         public void SendEmail(string destinatario, string asunto, string contenido)
+            => SendEmail(destinatario, asunto, contenido, null, null);
+
+        public void SendEmail(string destinatario, string asunto, string contenido, byte[]? adjunto, string? nombreAdjunto)
         {
             var host = _configuration.GetValue<string>("ConfiguracionCorreo:Host") ?? string.Empty;
             var puerto = _configuration.GetValue<int>("ConfiguracionCorreo:Puerto");
@@ -39,6 +42,8 @@ namespace Proyecto_Final.Services
             {
                 IsBodyHtml = true
             };
+            if (adjunto is not null)
+                mensaje.Attachments.Add(new Attachment(new MemoryStream(adjunto), nombreAdjunto ?? "documento.pdf", "application/pdf"));
 
             using var smtp = new SmtpClient(host, puerto)
             {

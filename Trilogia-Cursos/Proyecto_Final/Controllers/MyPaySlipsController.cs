@@ -26,7 +26,8 @@ public sealed class MyPaySlipsController : Controller
     {
         var model=await _service.GetAsync(id,UserId(),false,cancellationToken);
         if(model is null)return NotFound();
-        return File(Encoding.UTF8.GetBytes(PaySlipHtmlBuilder.Build(model)),"text/html",$"mi-boleta-{id}.html");
+        Response.Headers.CacheControl = "no-store";
+        return File(PaySlipPdf.Build(model),"application/pdf",$"mi-boleta-{id}.pdf");
     }
 
     private int UserId()=>HttpContext.Session.GetInt32("UserId")??0;

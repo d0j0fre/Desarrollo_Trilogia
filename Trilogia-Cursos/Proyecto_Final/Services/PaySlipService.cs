@@ -16,7 +16,7 @@ public interface IPaySlipService
 
 public interface IPaySlipEmailSender
 {
-    Task SendLinkAsync(string recipient, string employee, Uri secureLink, CancellationToken cancellationToken);
+    Task SendLinkAsync(string recipient, string employee, Uri secureLink, byte[] pdf, CancellationToken cancellationToken);
 }
 
 public interface IPaySlipDeliveryCoordinator
@@ -42,7 +42,9 @@ public sealed class PaySlipDeliveryCoordinator : IPaySlipDeliveryCoordinator
         if (!delivery.DebeEnviar) return;
         try
         {
-            await _sender.SendLinkAsync(delivery.Destinatario, delivery.Empleado, secureLink, cancellationToken);
+            var slip = await _service.GetAsync(calculationId, actorId, true, cancellationToken)
+                ?? throw new InvalidOperationException("No se encontró la boleta para el envío.");
+            await _sender.SendLinkAsync(delivery.Destinatario, delivery.Empleado, secureLink, PaySlipPdf.Build(slip), cancellationToken);
             await _service.CompleteDeliveryAsync(delivery.EnvioId, true, null, actorId, actorName, cancellationToken);
         }
         catch
@@ -58,13 +60,13 @@ public sealed class SmtpPaySlipEmailSender : IPaySlipEmailSender
     private readonly EmailService _emailService;
     public SmtpPaySlipEmailSender(EmailService emailService) => _emailService = emailService;
 
-    public Task SendLinkAsync(string recipient, string employee, Uri secureLink, CancellationToken cancellationToken)
+    public Task SendLinkAsync(string recipient, string employee, Uri secureLink, byte[] pdf, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         var safeEmployee = WebUtility.HtmlEncode(employee);
         var safeLink = WebUtility.HtmlEncode(secureLink.AbsoluteUri);
         _emailService.SendEmail(recipient, "Boleta de pago disponible",
-            $"<p>Hola {safeEmployee},</p><p>Tu boleta de pago está disponible en el portal privado.</p><p><a href=\"{safeLink}\">Consultar boleta</a></p><p>El acceso requiere iniciar sesión. Este correo no contiene importes ni datos sensibles.</p>");
+            $"<p>Hola {safeEmployee},</p><p>Tu boleta de pago se encuentra adjunta y también está disponible en el portal privado.</p><p><a href=\"{safeLink}\">Consultar boleta</a></p>", pdf, "boleta-de-pago.pdf");
         return Task.CompletedTask;
     }
 }
