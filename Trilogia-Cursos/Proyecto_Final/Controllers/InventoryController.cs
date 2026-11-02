@@ -275,6 +275,7 @@ namespace Proyecto_Final.Controllers
         }
 
         [HttpGet]
+        [AdminAuthorize("Inventario", "INVENTARIO_MOVIMIENTOS")]
         public async Task<IActionResult> RegisterMovement()
         {
             var productos = await _adminDbService.GetActiveProductsForSelectAsync();
@@ -288,6 +289,7 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AdminAuthorize("Inventario", "INVENTARIO_MOVIMIENTOS")]
         public async Task<IActionResult> RegisterMovement(InventoryMovementFormViewModel model)
         {
             if (!ModelState.IsValid)

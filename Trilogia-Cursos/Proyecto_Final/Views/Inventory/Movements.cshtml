@@ -1,4 +1,6 @@
 @model IEnumerable<Proyecto_Final.Models.Admin.InventoryMovementViewModel>
+@using Microsoft.AspNetCore.Http
+@inject Proyecto_Final.Services.NavigationMenuService MenuAccess
 @{
     ViewData["Title"] = "Movimientos de inventario";
 }
@@ -25,11 +27,15 @@
                     <span class="text-muted">Total registros: @(Model?.Count() ?? 0)</span>
                 </div>
 
+                @* Registrar exige INVENTARIO_MOVIMIENTOS; consultar la lista, solo el módulo. *@
+                @if (await MenuAccess.CanOpenAsync(Context.Session.GetString("UserRole"), "Inventory", "RegisterMovement"))
+                {
                 <div>
                     <a asp-controller="Inventory" asp-action="RegisterMovement" class="btn btn-ds-create">
                         <i class="fa fa-plus mr-2"></i>Registrar movimiento
                     </a>
                 </div>
+                }
             </div>
         </div>
     </div>
