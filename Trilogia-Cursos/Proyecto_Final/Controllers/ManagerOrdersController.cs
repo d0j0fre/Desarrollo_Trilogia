@@ -80,7 +80,7 @@ namespace Proyecto_Final.Controllers
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "No se pudo aprobar el pedido retenido {OrderId}.", pedidoId);
-                TempData["ErrorMessage"] = "No fue posible aprobar el pedido en este momento.";
+                TempData["ErrorMessage"] = BusinessErrors.MessageOr(ex, "No fue posible aprobar el pedido en este momento.");
                 return RedirectToAction(nameof(Review), new { id = pedidoId });
             }
         }
@@ -136,7 +136,7 @@ namespace Proyecto_Final.Controllers
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "No se pudo rechazar el pedido retenido {OrderId}.", model.PedidoId);
-                TempData["ErrorMessage"] = "No fue posible rechazar el pedido en este momento.";
+                TempData["ErrorMessage"] = BusinessErrors.MessageOr(ex, "No fue posible rechazar el pedido en este momento.");
                 return RedirectToAction(nameof(Review), new { id = model.PedidoId });
             }
         }
