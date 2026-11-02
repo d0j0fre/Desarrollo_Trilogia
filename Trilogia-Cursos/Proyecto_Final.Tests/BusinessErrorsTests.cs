@@ -30,7 +30,7 @@ public sealed class BusinessErrorsTests
 
     [Theory]
     [InlineData("ReturnsController.cs", 3)]
-    [InlineData("AssetsController.cs", 3)]
+    [InlineData("AssetsController.cs", 4)] // 3 del G2-01 + «Marcar como disponible» (G2-03)
     [InlineData("ComodatosController.cs", 2)]
     [InlineData("PromotionsController.cs", 4)]
     [InlineData("ReclamosController.cs", 2)]
