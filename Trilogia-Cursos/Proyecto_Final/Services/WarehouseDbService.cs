@@ -52,7 +52,7 @@ namespace Proyecto_Final.Services
             await using var connection = new SqlConnection(_connectionString);
             await using var command = new SqlCommand("dbo.sp_Devoluciones_Create", connection) { CommandType = CommandType.StoredProcedure };
             command.Parameters.Add("@PedidoId", SqlDbType.Int).Value = model.PedidoId.HasValue && model.PedidoId > 0 ? model.PedidoId.Value : DBNull.Value;
-            command.Parameters.Add("@ProductoId", SqlDbType.Int).Value = model.ProductoId;
+            command.Parameters.Add("@ProductoId", SqlDbType.Int).Value = (object?)model.ProductoId ?? DBNull.Value;
             command.Parameters.Add("@Cantidad", SqlDbType.Int).Value = model.Cantidad;
             command.Parameters.Add("@Motivo", SqlDbType.NVarChar, 300).Value = model.Motivo.Trim();
             command.Parameters.Add("@ClienteInfo", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(model.ClienteInfo) ? DBNull.Value : model.ClienteInfo.Trim();
