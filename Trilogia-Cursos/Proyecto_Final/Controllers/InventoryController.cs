@@ -268,9 +268,15 @@ namespace Proyecto_Final.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Movements()
+        public async Task<IActionResult> Movements(string? buscar, string? tipo, DateTime? desde, DateTime? hasta)
         {
-            var movimientos = await _adminDbService.GetInventoryMovementsAsync();
+            // G2-42: búsqueda por producto y filtros por tipo y fechas.
+            if (tipo is not (null or "Entrada" or "Salida" or "Ajuste")) tipo = null;
+            ViewData["Buscar"] = buscar;
+            ViewData["Tipo"] = tipo;
+            ViewData["Desde"] = desde?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+            ViewData["Hasta"] = hasta?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+            var movimientos = await _adminDbService.GetInventoryMovementsAsync(buscar, tipo, desde, hasta);
             return View(movimientos);
         }
 

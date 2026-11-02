@@ -40,6 +40,31 @@
         </div>
     </div>
 
+    @{
+        var tipo = ViewData["Tipo"] as string;
+    }
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-filter-bar mb-3">
+                <form asp-action="Movements" method="get" class="form-inline">
+                    <input type="text" name="buscar" value="@ViewData["Buscar"]" class="form-control mr-2 mb-2" placeholder="Producto" aria-label="Producto" />
+                    <select name="tipo" class="form-control mr-2 mb-2" aria-label="Tipo de movimiento">
+                        <option value="">Todos los tipos</option>
+                        <option value="Entrada" selected="@(tipo == "Entrada")">Entrada</option>
+                        <option value="Salida" selected="@(tipo == "Salida")">Salida</option>
+                        <option value="Ajuste" selected="@(tipo == "Ajuste")">Ajuste</option>
+                    </select>
+                    <label class="mr-2 mb-2" for="movDesde">Desde</label>
+                    <input type="date" id="movDesde" name="desde" value="@ViewData["Desde"]" class="form-control mr-2 mb-2" />
+                    <label class="mr-2 mb-2" for="movHasta">Hasta</label>
+                    <input type="date" id="movHasta" name="hasta" value="@ViewData["Hasta"]" class="form-control mr-2 mb-2" />
+                    <button type="submit" class="btn btn-ds-search mr-2 mb-2"><i class="fa fa-search mr-2"></i>Buscar</button>
+                    <a asp-action="Movements" class="btn btn-ds-neutral mb-2"><i class="fa fa-eraser mr-2"></i>Limpiar</a>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <div class="row px-xl-5 pb-5">
         <div class="col-12">
             <div class="admin-table-wrapper">

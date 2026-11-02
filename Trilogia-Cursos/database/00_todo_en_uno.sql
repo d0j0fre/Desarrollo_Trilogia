@@ -205,7 +205,7 @@ END;
 INSERT INTO dbo.Usuarios (PerfilId, NombreCompleto, Correo, Contrasena, Telefono, Direccion)
 VALUES
 (1, 'Administrador General', 'admin@distribuidorajj.com', @DemoPassword, '0000-0000', 'Oficina Central'),
-(2, 'Cliente Demo', 'cliente@distribuidorajj.com', @DemoPassword, '8888-1111', 'San JosÃ© Centro'),
+(2, 'Cliente Demo', 'cliente@distribuidorajj.com', @DemoPassword, '8888-1111', 'San José Centro'),
 (2, 'Cliente Tienda', 'ventas@clientejj.com', @DemoPassword, '8888-2222', 'Desamparados');
 GO
 
@@ -232,11 +232,11 @@ VALUES
 ('Cacique 750ml', 'Licorera', (SELECT TOP 1 CategoriaId FROM dbo.Categorias WHERE Nombre='Licorera'), 'Licor nacional 750ml', 6500, 20, NULL, 0, 1),
 ('Coca-Cola 2.5L', 'Supermercado', (SELECT TOP 1 CategoriaId FROM dbo.Categorias WHERE Nombre='Supermercado'), 'Bebida gaseosa retornable', 1850, 35, NULL, 0, 1),
 ('Cerveza Pilsen 6 Pack', 'Mayoreo', (SELECT TOP 1 CategoriaId FROM dbo.Categorias WHERE Nombre='Mayoreo'), 'Pack de 6 cervezas', 4200, 15, NULL, 0, 1),
-('Whisky Black Label 750ml', 'Whisky', (SELECT TOP 1 CategoriaId FROM dbo.Categorias WHERE Nombre='Whisky'), 'Whisky premium 12 aÃ±os', 35900, 4, '~/img/DES-Whisky Black Label.png', 1, 1),
+('Whisky Black Label 750ml', 'Whisky', (SELECT TOP 1 CategoriaId FROM dbo.Categorias WHERE Nombre='Whisky'), 'Whisky premium 12 años', 35900, 4, '~/img/DES-Whisky Black Label.png', 1, 1),
 ('Vino Tinto Reserva 750ml', 'Vino', (SELECT TOP 1 CategoriaId FROM dbo.Categorias WHERE Nombre='Vino'), 'Vino reserva nacional', 8900, 0, '~/img/DES-Vino Tinto Reserva 750ml.png', 1, 1),
 ('Agua 600ml', 'Supermercado', (SELECT TOP 1 CategoriaId FROM dbo.Categorias WHERE Nombre='Supermercado'), 'Botella de agua purificada', 650, 48, NULL, 0, 1),
-('Ron AÃ±ejo 750ml', 'Ron', (SELECT TOP 1 CategoriaId FROM dbo.Categorias WHERE Nombre='Ron'), 'Ron aÃ±ejo de presentaciÃ³n estÃ¡ndar.', 12900, 20, '~/img/CAT- Ron.png', 0, 1),
-('Vodka Premium 750ml', 'Vodka', (SELECT TOP 1 CategoriaId FROM dbo.Categorias WHERE Nombre='Vodka'), 'Vodka clÃ¡sico de 750ml.', 10900, 18, '~/img/CAT-Vodka.webp', 0, 1),
+('Ron Añejo 750ml', 'Ron', (SELECT TOP 1 CategoriaId FROM dbo.Categorias WHERE Nombre='Ron'), 'Ron añejo de presentación estándar.', 12900, 20, '~/img/CAT- Ron.png', 0, 1),
+('Vodka Premium 750ml', 'Vodka', (SELECT TOP 1 CategoriaId FROM dbo.Categorias WHERE Nombre='Vodka'), 'Vodka clásico de 750ml.', 10900, 18, '~/img/CAT-Vodka.webp', 0, 1),
 ('Tequila Reposado 750ml', 'Tequila', (SELECT TOP 1 CategoriaId FROM dbo.Categorias WHERE Nombre='Tequila'), 'Tequila reposado de 750ml.', 16900, 12, '~/img/CAT-Tequila.webp', 0, 1),
 ('Pack Cervezas 6 unidades', 'Cerveza', (SELECT TOP 1 CategoriaId FROM dbo.Categorias WHERE Nombre='Cerveza'), 'Pack de 6 cervezas.', 6900, 30, '~/img/DES-Pack Cervezas (6 unidades).webp', 1, 1);
 GO
@@ -248,7 +248,7 @@ GO
 
 INSERT INTO dbo.Pedidos (UsuarioId, FechaPedido, Estado, TipoEntrega, DireccionEntrega, Total, Observaciones)
 VALUES
-(2, DATEADD(DAY, -2, SYSDATETIME()), 'Pendiente', 'Entrega a domicilio', 'San JosÃ© Centro', 16600, 'Cliente solicita entrega en horas de la tarde.'),
+(2, DATEADD(DAY, -2, SYSDATETIME()), 'Pendiente', 'Entrega a domicilio', 'San José Centro', 16600, 'Cliente solicita entrega en horas de la tarde.'),
 (3, DATEADD(DAY, -1, SYSDATETIME()), 'Entregado', 'Retiro en tienda', 'Sucursal principal', 13000, 'Pedido retirado personalmente.');
 GO
 
@@ -864,7 +864,7 @@ BEGIN
 
     IF ISNULL(@ItemsJson, '') = ''
     BEGIN
-        RAISERROR('El carrito estÃ¡ vacÃ­o.', 16, 1);
+        RAISERROR('El carrito está vacío.', 16, 1);
         RETURN;
     END
 
@@ -877,7 +877,7 @@ BEGIN
 
     IF NOT EXISTS (SELECT 1 FROM @Items)
     BEGIN
-        RAISERROR('El carrito estÃ¡ vacÃ­o.', 16, 1);
+        RAISERROR('El carrito está vacío.', 16, 1);
         RETURN;
     END
 
@@ -889,13 +889,13 @@ BEGIN
 
     IF EXISTS (SELECT 1 FROM @Items WHERE Precio IS NULL OR StockActual IS NULL)
     BEGIN
-        RAISERROR('Uno o mÃ¡s productos no estÃ¡n disponibles.', 16, 1);
+        RAISERROR('Uno o más productos no están disponibles.', 16, 1);
         RETURN;
     END
 
     IF EXISTS (SELECT 1 FROM @Items WHERE StockActual < Cantidad)
     BEGIN
-        RAISERROR('No hay stock suficiente para uno o mÃ¡s productos.', 16, 1);
+        RAISERROR('No hay stock suficiente para uno o más productos.', 16, 1);
         RETURN;
     END
 
