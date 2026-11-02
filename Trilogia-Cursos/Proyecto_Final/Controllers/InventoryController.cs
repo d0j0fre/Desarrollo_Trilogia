@@ -317,13 +317,14 @@ namespace Proyecto_Final.Controllers
                 TempData["SuccessMessage"] = "Movimiento registrado correctamente.";
                 return RedirectToAction(nameof(Movements));
             }
-            catch (InvalidOperationException)
+            catch (InvalidOperationException ex) when (BusinessErrors.IsApplicationRule(ex))
             {
-                ModelState.AddModelError(string.Empty, "No se pudo registrar el movimiento de inventario. Revise los datos e intente nuevamente.");
+                // RegisterInventoryMovementAsync explica la regla que falló («El movimiento deja el stock en negativo.»).
+                ModelState.AddModelError(string.Empty, ex.Message);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                ModelState.AddModelError(string.Empty, "Ocurrió un error al registrar el movimiento. Intente nuevamente.");
+                ModelState.AddModelError(string.Empty, BusinessErrors.MessageOr(ex, "Ocurrió un error al registrar el movimiento. Intente nuevamente."));
             }
 
             var productosRetry = await _adminDbService.GetActiveProductsForSelectAsync();

@@ -30,4 +30,13 @@ public static class BusinessErrors
 
     public static string MessageOr(Exception? exception, string genericMessage) =>
         TryGetMessage(exception, out var message) ? message : genericMessage;
+
+    /// <summary>
+    /// Regla que valida un servicio de este proyecto con InvalidOperationException
+    /// («El movimiento deja el stock en negativo.»). Las que lanza SqlClient (pool agotado,
+    /// conexión cerrada) son técnicas y no cuentan.
+    /// </summary>
+    public static bool IsApplicationRule(Exception exception) =>
+        exception is InvalidOperationException
+        && exception.TargetSite?.Module.Assembly == typeof(BusinessErrors).Assembly;
 }
