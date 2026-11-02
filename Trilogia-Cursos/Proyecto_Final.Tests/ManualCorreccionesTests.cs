@@ -94,6 +94,19 @@ public sealed class ManualCorreccionesTests
         Assert.DoesNotContain("@RenderBody()", layout, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void MisGarantias_ElMenuDelClienteAbreLaListaYNoElFormularioDeSolicitud()
+    {
+        var layout = MobileCorreccionesTests.Read("Proyecto_Final", "Views", "Shared", "_Layout.cshtml");
+        var link = System.Text.RegularExpressions.Regex.Match(layout,
+            @"<a asp-controller=""ClientPortal""\s+asp-action=""(\w+)""[^>]*>\s*<i class=""fa fa-undo""></i> Mis garantías");
+
+        Assert.True(link.Success);
+        Assert.Equal("Warranties", link.Groups[1].Value);
+        // La lista no pide parámetros; el formulario «Warranty» exige la línea del pedido.
+        Assert.Empty(typeof(ClientPortalController).GetMethod("Warranties")!.GetParameters());
+    }
+
     private static AttendanceEntryViewModel Jornada(string estado) => new()
     {
         JornadaId = 41, Fecha = Fecha, HorasOrdinarias = 8, Estado = estado, RowVersionBase64 = "AAAAAAAAB9E="
