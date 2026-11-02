@@ -97,7 +97,7 @@
         <article class="payroll-card">
             <div class="payroll-card__header">
                 <span class="payroll-card__icon"><i class="fa fa-list-alt"></i></span>
-                <div><h2>Regla versionada</h2><p>Defina ingresos o deducciones con vigencia y evidencia.</p></div>
+                <div><h2>Regla versionada</h2><p>Defina ingresos o deducciones con vigencia y evidencia. Para comisiones use COMISION_VENTAS, ingreso y porcentaje bruto (por ejemplo 0,05 para 5 %). Para ausencias use AUSENCIA_HORA, deducción y monto fijo por hora.</p></div>
             </div>
             <div class="payroll-card__body">
                 <form asp-action="ConfigureRule" method="post" data-prevent-double-submit>
@@ -152,7 +152,8 @@
                     <div class="payroll-form-grid">
                         <div class="payroll-field payroll-field--full"><label for="period-id">ID del período</label><input id="period-id" name="PeriodoId" value="@(calculation.PeriodoId > 0 ? calculation.PeriodoId : "")" type="number" class="form-control" min="1" step="1" required placeholder="Ej: 12" /></div>
                         <div class="payroll-field payroll-field--full"><label for="employee-id">ID del empleado</label><input id="employee-id" name="EmpleadoId" value="@(calculation.EmpleadoId > 0 ? calculation.EmpleadoId : "")" type="number" class="form-control" min="1" step="1" required placeholder="Ej: 45" /></div>
-                        <div class="payroll-field payroll-field--full"><label for="commission">Comisiones confirmadas</label><input id="commission" name="Comisiones" value="@calculation.Comisiones.ToString(System.Globalization.CultureInfo.InvariantCulture)" class="form-control" inputmode="decimal" min="0" max="99999999" step="0.01" required placeholder="0,00" /><small class="payroll-help">Ingrese 0 si no hay comisiones.</small></div>
+
+                        <p class="payroll-help">Las comisiones se calculan automáticamente con las facturas del período y la regla COMISION_VENTAS.</p>
                     </div>
                     <button class="btn btn-ds-action" type="submit"><i class="fa fa-calculator"></i> Calcular planilla</button>
                     <p class="payroll-form-status" aria-live="polite"></p>

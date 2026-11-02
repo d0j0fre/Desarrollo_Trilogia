@@ -913,7 +913,7 @@ namespace Proyecto_Final.Services
                     Nombre = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
                     Descripcion = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
                     Activo = !reader.IsDBNull(5) && reader.GetBoolean(5),
-                    Asignado = !reader.IsDBNull(6) && reader.GetBoolean(6)
+                    Asignado = model.EsAdministrador || (!reader.IsDBNull(6) && reader.GetBoolean(6))
                 });
             }
 

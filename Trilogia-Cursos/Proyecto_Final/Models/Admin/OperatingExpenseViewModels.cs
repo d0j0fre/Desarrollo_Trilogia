@@ -42,10 +42,10 @@ public sealed class OperatingExpenseFormViewModel
     [StringLength(500)]
     public string Description { get; set; } = string.Empty;
 
-    [Range(typeof(decimal), "0.01", "999999999999.99")]
+    [Range(typeof(decimal), "0.01", "999999999999.99", ParseLimitsInInvariantCulture = true)]
     public decimal Subtotal { get; set; }
 
-    [Range(typeof(decimal), "0", "999999999999.99")]
+    [Range(typeof(decimal), "0", "999999999999.99", ParseLimitsInInvariantCulture = true)]
     public decimal Tax { get; set; }
 
     [Required]
@@ -78,6 +78,8 @@ public sealed class OperatingExpenseListItemViewModel
     public decimal CommittedSpent { get; set; }
     public decimal ExecutionPercent { get; set; }
     public string ConsumptionLevel { get; set; } = string.Empty;
+    public bool BudgetExceeded => RealSpent + CommittedSpent > BudgetAmount;
+    public string DisplayStatus => Status == "Registrado" && BudgetExceeded ? "Requiere Aprobación" : Status;
 }
 
 public sealed class OperatingExpenseDetailsViewModel

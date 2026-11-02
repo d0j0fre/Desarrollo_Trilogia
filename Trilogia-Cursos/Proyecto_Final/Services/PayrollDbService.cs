@@ -85,7 +85,26 @@ public sealed class PayrollDbService : IPayrollService
         await using var reader=await command.ExecuteReaderAsync(cancellationToken); if(!await reader.ReadAsync(cancellationToken)) throw new InvalidOperationException("No existe entrada de planilla.");
         var input=new PayrollCalculationInput{PeriodoId=request.PeriodoId,EmpleadoId=request.EmpleadoId,SalarioBase=reader.GetDecimal(0),HorasOrdinarias=reader.GetDecimal(1),HorasExtra=reader.GetDecimal(2),Comisiones=request.Comisiones,FechaCalculo=reader.GetDateTime(3),FactorSalario=reader.GetDecimal(4),FuenteConfiguracionPeriodo=reader.GetString(5)};
         var rules=new List<PayrollRuleViewModel>(); await reader.NextResultAsync(cancellationToken); while(await reader.ReadAsync(cancellationToken)) rules.Add(new PayrollRuleViewModel{ReglaId=reader.GetInt32(0),Codigo=reader.GetString(1),Nombre=reader.GetString(2),Tipo=reader.GetString(3),TipoCalculo=reader.GetString(4),Valor=reader.GetDecimal(5),Tope=reader.IsDBNull(6)?null:reader.GetDecimal(6),VigenteDesde=reader.GetDateTime(7),VigenteHasta=reader.IsDBNull(8)?null:reader.GetDateTime(8),Fuente=reader.GetString(9)});
-        return new PayrollCalculationInput{PeriodoId=input.PeriodoId,EmpleadoId=input.EmpleadoId,SalarioBase=input.SalarioBase,HorasOrdinarias=input.HorasOrdinarias,HorasExtra=input.HorasExtra,Comisiones=input.Comisiones,FechaCalculo=input.FechaCalculo,FactorSalario=input.FactorSalario,FuenteConfiguracionPeriodo=input.FuenteConfiguracionPeriodo,Reglas=rules};
+        await reader.DisposeAsync();
+        await using var absenceCommand = new SqlCommand(@"SELECT COALESCE(SUM(j.HorasAusencia),0) FROM dbo.EmpleadoJornadas j JOIN dbo.PlanillaPeriodos p ON p.PeriodoId=@PeriodoId WHERE j.EmpleadoId=@EmpleadoId AND j.Fecha BETWEEN p.Desde AND p.Hasta AND j.Estado=N'Aprobada'", connection);
+        absenceCommand.Parameters.Add("@PeriodoId", SqlDbType.Int).Value = request.PeriodoId;
+        absenceCommand.Parameters.Add("@EmpleadoId", SqlDbType.Int).Value = request.EmpleadoId;
+        var absence = Convert.ToDecimal(await absenceCommand.ExecuteScalarAsync(cancellationToken));
+        await using var salesCommand = new SqlCommand(@"SELECT COALESCE(SUM(f.Total),0) FROM dbo.Empleados e JOIN dbo.Usuarios u ON u.UsuarioId=e.UsuarioId JOIN dbo.Perfiles pf ON pf.PerfilId=u.PerfilId JOIN dbo.Pedidos p ON p.VendedorUsuarioId=u.UsuarioId JOIN dbo.Facturas f ON f.PedidoId=p.PedidoId JOIN dbo.PlanillaPeriodos periodo ON periodo.PeriodoId=@PeriodoId WHERE e.EmpleadoId=@EmpleadoId AND pf.Nombre=N'Vendedor' AND f.Estado<>N'Anulada' AND f.FechaFactura>=periodo.Desde AND f.FechaFactura<DATEADD(DAY,1,periodo.Hasta)", connection);
+        salesCommand.Parameters.Add("@PeriodoId", SqlDbType.Int).Value = request.PeriodoId;
+        salesCommand.Parameters.Add("@EmpleadoId", SqlDbType.Int).Value = request.EmpleadoId;
+        var sales = Convert.ToDecimal(await salesCommand.ExecuteScalarAsync(cancellationToken));
+        await using var salaryCommand = new SqlCommand(@"WITH dias AS (
+            SELECT Desde AS Fecha,Hasta,FactorSalario FROM dbo.PlanillaPeriodos WHERE PeriodoId=@PeriodoId
+            UNION ALL SELECT DATEADD(day,1,Fecha),Hasta,FactorSalario FROM dias WHERE Fecha<Hasta)
+            SELECT CAST(ROUND(AVG(CAST(COALESCE(v.Salario,e.Salario) AS decimal(18,2))) * MAX(d.FactorSalario),2) AS decimal(18,2))
+            FROM dias d JOIN dbo.Empleados e ON e.EmpleadoId=@EmpleadoId
+            OUTER APPLY (SELECT TOP 1 Salario FROM dbo.EmpleadoSalarioVigencias WHERE EmpleadoId=e.EmpleadoId AND FechaVigencia<=d.Fecha ORDER BY FechaVigencia DESC) v
+            OPTION (MAXRECURSION 32767)", connection);
+        salaryCommand.Parameters.Add("@PeriodoId", SqlDbType.Int).Value = request.PeriodoId;
+        salaryCommand.Parameters.Add("@EmpleadoId", SqlDbType.Int).Value = request.EmpleadoId;
+        var salary = Convert.ToDecimal(await salaryCommand.ExecuteScalarAsync(cancellationToken));
+        return new PayrollCalculationInput{PeriodoId=input.PeriodoId,EmpleadoId=input.EmpleadoId,SalarioBase=salary,HorasOrdinarias=input.HorasOrdinarias,HorasExtra=input.HorasExtra,HorasAusencia=absence,VentasFacturadas=sales,Comisiones=0,FechaCalculo=input.FechaCalculo,FactorSalario=input.FactorSalario,FuenteConfiguracionPeriodo=input.FuenteConfiguracionPeriodo,Reglas=rules};
     }
 
     private static SqlCommand Command(SqlConnection connection,string name)=>new(name,connection){CommandType=CommandType.StoredProcedure};

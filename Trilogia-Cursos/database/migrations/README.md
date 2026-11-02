@@ -79,6 +79,12 @@ Cada migracion debe indicar su estrategia de rollback antes de ejecutarse. Los c
 | 0244 | `0244_comodato_contrato.sql` | BUG-16-01: `sp_Comodato_GetContrato` (solo lectura) con los datos del contrato de comodato que la MVC emite en PDF | Comodatos (cu162/163/164) |
 | 0245 | `0245_comodato_bloqueo_morosidad.sql` | BUG-16-02: `sp_Comodato_ClientesParaAsignar` (clientes activos con su deuda vencida); `sp_Comodato_Asignar` exige cliente registrado (53087) y bloquea si `fn_Cliente_EstadoDeuda` indica deuda vencida (53086, con monto y días de atraso). La MVC lee la deuda con `sp_Cliente_EstadoDeuda` | **0230** (`fn_Cliente_EstadoDeuda`, rama de carrito/crédito; la migración la exige en el ledger) |
 | 0250 | `0250_asistente_entregas_pendientes.sql` | BUG-26-04: `sp_Asistente_Metricas` cuenta como entregas pendientes las paradas `Pendiente`/`EnRuta` de las rutas `Despachada` (la columna "Pendientes" del listado de rutas); antes contaba solo `Pendiente` de cualquier ruta. Solo lectura | cu310; rutas y entregas (cu081/cu082) |
+| 0260 | `0260_roles_finanzas_consulta.sql` | Impide inactivar roles con usuarios asignados y asigna permisos de Finanzas y consulta de comodatos | 0009 y 0010; tablas de usuarios, perfiles y permisos |
+| 0261 | `0261_auditoria_planilla.sql` | Refleja cambios de estado y envíos de boletas en la auditoría general | 0019 y 0020; AuditoriaSistema |
+| 0262 | `0262_empleado_identificacion.sql` | Identificación única para empleados, compatible con registros anteriores | Empleados |
+| 0263 | `0263_vigencia_salarial.sql` | Historial salarial por fecha efectiva | 0017; historial de salarios |
+| 0264 | `0264_gasto_sin_presupuesto.sql` | Detecta exceso cuando existe gasto sin presupuesto | 0010; vista de impacto de gastos |
+| 0265 | `0265_estado_gasto_aprobacion.sql` | Estado persistente de aprobación y su inclusión en gastos pendientes | 0010, 0011 y 0264 |
 
 Los scripts no incluyen `USE`: el ejecutor debe seleccionar explícitamente la base antes de iniciar. Los hashes escritos por 0002–0011 son hashes de manifiesto para identificar versión; la evidencia de despliegue debe registrar además el SHA-256 real del archivo y actualizar el ledger si corresponde.
 

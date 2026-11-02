@@ -72,6 +72,15 @@ namespace Proyecto_FinalAPI.Services
                 if (!verified || !user.Activo)
                     return null;
 
+                await using (var roleCommand = new SqlCommand(@"SELECT COUNT(1) FROM dbo.Usuarios u
+                    INNER JOIN dbo.Perfiles p ON p.PerfilId = u.PerfilId
+                    WHERE u.UsuarioId = @UserId AND u.Activo = 1 AND p.Activo = 1", connection))
+                {
+                    roleCommand.Parameters.Add("@UserId", SqlDbType.Int).Value = user.UsuarioId;
+                    if (Convert.ToInt32(await roleCommand.ExecuteScalarAsync(cancellationToken)) != 1)
+                        return null;
+                }
+
                 if (string.IsNullOrWhiteSpace(storedHash))
                 {
                     await SetPasswordHashAsync(connection, user.UsuarioId, _passwordHashes.Hash(password), cancellationToken);

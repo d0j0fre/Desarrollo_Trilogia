@@ -29,6 +29,7 @@ public sealed class PaySlipSecurityAndDeliveryTests
         var repository=new Mock<IPaySlipService>();
         repository.Setup(item=>item.PrepareDeliveryAsync(7,It.IsAny<Guid>(),3,"Gestor",It.IsAny<CancellationToken>()))
             .ReturnsAsync(new PaySlipDeliveryPreparation(11,"employee@example.invalid","Empleado",true));
+        repository.Setup(item=>item.GetAsync(7,3,true,It.IsAny<CancellationToken>())).ReturnsAsync(new PaySlipViewModel { Empleado="Empleado", Periodo="QA" });
         var sender=new FakePaySlipEmailSender();
         var coordinator=new PaySlipDeliveryCoordinator(repository.Object,sender);
 
@@ -36,6 +37,7 @@ public sealed class PaySlipSecurityAndDeliveryTests
 
         Assert.Equal("employee@example.invalid",sender.Recipient);
         Assert.Equal("https",sender.Link!.Scheme);
+        Assert.StartsWith("%PDF-",System.Text.Encoding.ASCII.GetString(sender.Pdf!));
         repository.Verify(item=>item.CompleteDeliveryAsync(11,true,null,3,"Gestor",It.IsAny<CancellationToken>()),Times.Once);
     }
 
@@ -45,6 +47,7 @@ public sealed class PaySlipSecurityAndDeliveryTests
         var repository=new Mock<IPaySlipService>();
         repository.Setup(item=>item.PrepareDeliveryAsync(It.IsAny<long>(),It.IsAny<Guid>(),It.IsAny<int>(),It.IsAny<string>(),It.IsAny<CancellationToken>()))
             .ReturnsAsync(new PaySlipDeliveryPreparation(12,"employee@example.invalid","Empleado",true));
+        repository.Setup(item=>item.GetAsync(8,3,true,It.IsAny<CancellationToken>())).ReturnsAsync(new PaySlipViewModel { Empleado="Empleado", Periodo="QA" });
         var coordinator=new PaySlipDeliveryCoordinator(repository.Object,new FakePaySlipEmailSender{Failure=new InvalidOperationException("SMTP synthetic failure")});
 
         await Assert.ThrowsAsync<InvalidOperationException>(()=>coordinator.SendAsync(8,Guid.NewGuid(),3,"Gestor",new Uri("https://portal.example.invalid/MyPaySlips/Details/8"),CancellationToken.None));
@@ -65,11 +68,12 @@ public sealed class PaySlipSecurityAndDeliveryTests
     {
         public string? Recipient{get;private set;}
         public Uri? Link{get;private set;}
+        public byte[]? Pdf{get;private set;}
         public Exception? Failure{get;init;}
-        public Task SendLinkAsync(string recipient,string employee,Uri secureLink,CancellationToken cancellationToken)
+        public Task SendLinkAsync(string recipient,string employee,Uri secureLink,byte[] pdf,CancellationToken cancellationToken)
         {
             if(Failure is not null)throw Failure;
-            Recipient=recipient;Link=secureLink;return Task.CompletedTask;
+            Recipient=recipient;Link=secureLink;Pdf=pdf;return Task.CompletedTask;
         }
     }
 }

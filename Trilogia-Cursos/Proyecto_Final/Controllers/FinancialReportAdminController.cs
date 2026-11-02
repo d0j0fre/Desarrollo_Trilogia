@@ -5,7 +5,7 @@ using Proyecto_Final.Services;
 
 namespace Proyecto_Final.Controllers
 {
-    [AdminAuthorize("Finanzas")]
+    [AdminAuthorize("Finanzas", "FINANZAS_INGRESOS_EGRESOS_VER")]
     public class FinancialReportAdminController : Controller
     {
         private readonly AdminDbService _adminDbService;

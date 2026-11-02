@@ -34,7 +34,8 @@ public sealed class PaySlipsController : Controller
     {
         var model=await _service.GetAsync(id,UserId(),true,cancellationToken);
         if(model is null)return NotFound();
-        return File(Encoding.UTF8.GetBytes(PaySlipHtmlBuilder.Build(model)),"text/html",$"boleta-{id}.html");
+        Response.Headers.CacheControl = "no-store";
+        return File(PaySlipPdf.Build(model),"application/pdf",$"boleta-{id}.pdf");
     }
 
     [HttpPost,ValidateAntiForgeryToken]

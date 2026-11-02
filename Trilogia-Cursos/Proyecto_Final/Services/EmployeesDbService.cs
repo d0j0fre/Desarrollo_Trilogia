@@ -100,8 +100,17 @@ namespace Proyecto_Final.Services
             var detail = await GetEmployeeHeaderAsync(empleadoId);
             if (detail == null) return null;
 
+            await using var identificationConnection = new SqlConnection(_connectionString);
+            await identificationConnection.OpenAsync();
+            await using var identificationCommand = new SqlCommand("SELECT Identificacion FROM dbo.Empleados WHERE EmpleadoId=@id", identificationConnection);
+            identificationCommand.Parameters.Add("@id", SqlDbType.Int).Value = empleadoId;
+            var identification = Convert.ToString(await identificationCommand.ExecuteScalarAsync()) ?? string.Empty;
+            await using var currentSalaryCommand = new SqlCommand("SELECT TOP 1 Salario FROM dbo.EmpleadoSalarioVigencias WHERE EmpleadoId=@id AND FechaVigencia<=CONVERT(date,GETDATE()) ORDER BY FechaVigencia DESC", identificationConnection);
+            currentSalaryCommand.Parameters.Add("@id", SqlDbType.Int).Value = empleadoId;
+            var currentSalaryValue = await currentSalaryCommand.ExecuteScalarAsync();
             return new EmployeeFormViewModel
             {
+                Identificacion = identification,
                 EmpleadoId = detail.EmpleadoId,
                 UsuarioId = detail.UsuarioId,
                 PerfilId = detail.PerfilId,
@@ -112,7 +121,7 @@ namespace Proyecto_Final.Services
                 Direccion = detail.Direccion,
                 Puesto = detail.Puesto,
                 Departamento = detail.Departamento,
-                Salario = detail.Salario,
+                Salario = currentSalaryValue is null or DBNull ? detail.Salario : Convert.ToDecimal(currentSalaryValue),
                 FechaContratacion = detail.FechaContratacion,
                 Responsabilidades = detail.Responsabilidades,
                 ObservacionesInternas = detail.ObservacionesInternas,
@@ -129,6 +138,17 @@ namespace Proyecto_Final.Services
             var detail = await GetEmployeeHeaderAsync(empleadoId);
             if (detail == null) return null;
 
+            await using (var identificationConnection = new SqlConnection(_connectionString))
+            {
+                await identificationConnection.OpenAsync();
+                await using var identificationCommand = new SqlCommand("SELECT Identificacion FROM dbo.Empleados WHERE EmpleadoId=@id", identificationConnection);
+                identificationCommand.Parameters.Add("@id", SqlDbType.Int).Value = empleadoId;
+                detail.Identificacion = Convert.ToString(await identificationCommand.ExecuteScalarAsync());
+                await using var salaryCommand = new SqlCommand("SELECT TOP 1 Salario FROM dbo.EmpleadoSalarioVigencias WHERE EmpleadoId=@id AND FechaVigencia<=CONVERT(date,GETDATE()) ORDER BY FechaVigencia DESC", identificationConnection);
+                salaryCommand.Parameters.Add("@id", SqlDbType.Int).Value = empleadoId;
+                var salary = await salaryCommand.ExecuteScalarAsync();
+                if (salary is not null and not DBNull) detail.Salario = Convert.ToDecimal(salary);
+            }
             detail.Tareas = await GetEmployeeTasksAsync(empleadoId);
             detail.Solicitudes = await GetEmployeeLeaveRequestsAsync(null, empleadoId);
             detail.HistorialSalarios = await GetEmployeeSalaryHistoryAsync(empleadoId);
@@ -150,8 +170,25 @@ namespace Proyecto_Final.Services
             command.Parameters.Add("@UsuarioCambioNombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(usuarioCambioNombre) ? DBNull.Value : usuarioCambioNombre.Trim();
 
             await connection.OpenAsync();
+            await using var transaction = (SqlTransaction)await connection.BeginTransactionAsync();
+            command.Transaction = transaction;
+            if (await ProcedureHasParameterAsync(connection, transaction, "sp_Admin_CreateEmployee", "@ContrasenaHash"))
+            {
+                if (string.IsNullOrWhiteSpace(model.Contrasena)) throw new InvalidOperationException("La contraseña es obligatoria.");
+                command.Parameters.RemoveAt("@Contrasena");
+                command.Parameters.Add("@ContrasenaHash", SqlDbType.NVarChar, 512).Value = HashPassword(model.Contrasena.Trim());
+            }
             var result = await command.ExecuteScalarAsync();
-            return Convert.ToInt32(result ?? 0);
+            var employeeId = Convert.ToInt32(result ?? 0);
+            await SaveIdentificationAsync(connection, transaction, employeeId, model.Identificacion);
+            await using (var initialSalary = new SqlCommand("INSERT dbo.EmpleadoSalarioVigencias(EmpleadoId,FechaVigencia,Salario,Motivo) VALUES(@id,'19000101',@salario,N'Salario inicial')", connection, transaction))
+            {
+                initialSalary.Parameters.Add("@id", SqlDbType.Int).Value = employeeId;
+                initialSalary.Parameters.Add("@salario", SqlDbType.Decimal).Value = model.Salario;
+                await initialSalary.ExecuteNonQueryAsync();
+            }
+            await transaction.CommitAsync();
+            return employeeId;
         }
 
         public async Task UpdateEmployeeAsync(EmployeeFormViewModel model, int? usuarioCambioId, string? usuarioCambioNombre)
@@ -170,7 +207,67 @@ namespace Proyecto_Final.Services
             command.Parameters.Add("@VersionFila", SqlDbType.Binary, 8).Value = Convert.FromBase64String(model.RowVersionBase64);
 
             await connection.OpenAsync();
+            await using var transaction = (SqlTransaction)await connection.BeginTransactionAsync();
+            command.Transaction = transaction;
+            if (!await ProcedureHasParameterAsync(connection, transaction, "sp_RRHH_UpdateEmployee", "@Contrasena"))
+            {
+                if (!string.IsNullOrWhiteSpace(model.Contrasena)) throw new InvalidOperationException("La contraseña debe cambiarse desde el flujo de recuperación.");
+                command.Parameters.RemoveAt("@Contrasena");
+            }
+            await using var salaryQuery = new SqlCommand("SELECT COALESCE((SELECT TOP 1 Salario FROM dbo.EmpleadoSalarioVigencias WHERE EmpleadoId=e.EmpleadoId AND FechaVigencia<=CONVERT(date,GETDATE()) ORDER BY FechaVigencia DESC),e.Salario) FROM dbo.Empleados e WITH (UPDLOCK,HOLDLOCK) WHERE EmpleadoId=@id", connection, transaction);
+            salaryQuery.Parameters.Add("@id", SqlDbType.Int).Value = model.EmpleadoId;
+            var currentSalaryValue = await salaryQuery.ExecuteScalarAsync();
+            if (currentSalaryValue is null or DBNull) throw new InvalidOperationException("No existe el salario del empleado.");
+            var currentSalary = Convert.ToDecimal(currentSalaryValue);
+            if (model.Salario != currentSalary && !model.FechaVigenciaSalario.HasValue)
+                throw new InvalidOperationException("Debe indicar la fecha de vigencia del ajuste salarial.");
+            command.Parameters["@Salario"].Value = currentSalary;
             await command.ExecuteNonQueryAsync();
+            await SaveIdentificationAsync(connection, transaction, model.EmpleadoId, model.Identificacion);
+            if (model.Salario != currentSalary)
+            {
+                await using var schedule = new SqlCommand(@"INSERT dbo.EmpleadoSalarioVigencias(EmpleadoId,FechaVigencia,Salario,Motivo,ActorUsuarioId,ActorNombre)
+                    VALUES(@id,@fecha,@salario,@motivo,@actor,@nombre);
+                    UPDATE dbo.Empleados SET Salario=(SELECT TOP 1 Salario FROM dbo.EmpleadoSalarioVigencias WHERE EmpleadoId=@id AND FechaVigencia<=CONVERT(date,GETDATE()) ORDER BY FechaVigencia DESC) WHERE EmpleadoId=@id;
+                    INSERT dbo.EmpleadoHistorialSalarios(EmpleadoId,SalarioAnterior,SalarioNuevo,Motivo,UsuarioCambioId,UsuarioCambioNombre)
+                    VALUES(@id,@anterior,@salario,@motivo,@actor,@nombre);", connection, transaction);
+                schedule.Parameters.Add("@id", SqlDbType.Int).Value = model.EmpleadoId;
+                schedule.Parameters.Add("@fecha", SqlDbType.Date).Value = model.FechaVigenciaSalario!.Value.Date;
+                schedule.Parameters.Add("@salario", SqlDbType.Decimal).Value = model.Salario;
+                schedule.Parameters.Add("@anterior", SqlDbType.Decimal).Value = currentSalary;
+                schedule.Parameters.Add("@motivo", SqlDbType.NVarChar,255).Value = string.IsNullOrWhiteSpace(model.MotivoCambioSalario) ? DBNull.Value : model.MotivoCambioSalario.Trim();
+                schedule.Parameters.Add("@actor", SqlDbType.Int).Value = usuarioCambioId is > 0 ? usuarioCambioId.Value : DBNull.Value;
+                schedule.Parameters.Add("@nombre", SqlDbType.NVarChar,150).Value = string.IsNullOrWhiteSpace(usuarioCambioNombre) ? DBNull.Value : usuarioCambioNombre.Trim();
+                await schedule.ExecuteNonQueryAsync();
+            }
+            await transaction.CommitAsync();
+        }
+
+        private static async Task SaveIdentificationAsync(SqlConnection connection, SqlTransaction transaction, int employeeId, string identification)
+        {
+            var normalized = Proyecto_Final.Validation.CostaRicanIdentificationAttribute.Normalize(identification);
+            if (string.IsNullOrWhiteSpace(normalized) || !new Proyecto_Final.Validation.CostaRicanIdentificationAttribute().IsValid(normalized))
+                throw new InvalidOperationException("La identificación del empleado no es válida.");
+            await using var command = new SqlCommand("UPDATE dbo.Empleados SET Identificacion=@identificacion WHERE EmpleadoId=@id", connection, transaction);
+            command.Parameters.Add("@identificacion", SqlDbType.NVarChar, 12).Value = normalized;
+            command.Parameters.Add("@id", SqlDbType.Int).Value = employeeId;
+            await command.ExecuteNonQueryAsync();
+        }
+
+        private static async Task<bool> ProcedureHasParameterAsync(SqlConnection connection, SqlTransaction transaction, string procedure, string parameter)
+        {
+            await using var command = new SqlCommand("SELECT COUNT(*) FROM sys.parameters WHERE object_id=OBJECT_ID(@proc) AND name=@param", connection, transaction);
+            command.Parameters.Add("@proc", SqlDbType.NVarChar, 150).Value = "dbo." + procedure;
+            command.Parameters.Add("@param", SqlDbType.NVarChar, 150).Value = parameter;
+            return Convert.ToInt32(await command.ExecuteScalarAsync()) == 1;
+        }
+
+        private static string HashPassword(string password)
+        {
+            const int iterations = 210000;
+            var salt = System.Security.Cryptography.RandomNumberGenerator.GetBytes(16);
+            var hash = System.Security.Cryptography.Rfc2898DeriveBytes.Pbkdf2(password, salt, iterations, System.Security.Cryptography.HashAlgorithmName.SHA256, 32);
+            return $"pbkdf2-sha256${iterations}${Convert.ToBase64String(salt)}${Convert.ToBase64String(hash)}";
         }
 
         public async Task<bool> ToggleEmployeeStatusAsync(int empleadoId)

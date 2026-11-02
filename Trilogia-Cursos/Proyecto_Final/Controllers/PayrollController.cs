@@ -103,6 +103,11 @@ public sealed class PayrollController : Controller
             return UnprocessableEntity(new { message = $"La solicitud no es válida: {detail}" });
         }
         try {await action();TempData["SuccessMessage"]=success;}
+        catch(PayrollConfigurationException exception)
+        {
+            _logger.LogWarning(exception,"Configuración de planilla incompleta. TraceId {TraceId}",HttpContext.TraceIdentifier);
+            return UnprocessableEntity(new { message = "Revise las reglas vigentes de comisiones, ausencias y horas extra antes de calcular la planilla." });
+        }
         catch(SqlException exception) when(exception.Number>=50000)
         {
             _logger.LogWarning(exception,"Regla de planilla rechazada. TraceId {TraceId}",HttpContext.TraceIdentifier);

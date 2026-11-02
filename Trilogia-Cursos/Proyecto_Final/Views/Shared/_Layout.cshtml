@@ -2,6 +2,7 @@
 @using Proyecto_Final.Services
 @inject AdminDbService AdminDbService
 @inject NotificationsDbService NotificationsDbService
+@inject IRolePermissionService RolePermissionService
 @{
     const string SiteBrandName = "Supermercado Mayoreo";
     const string SiteBrandSubtitle = "Licorera - Distribuidora";
@@ -65,6 +66,13 @@
         var isCajero = isLoggedIn && (
             string.Equals(userRole, "Cajero", StringComparison.OrdinalIgnoreCase)
             || string.Equals(userRole, "Financiero", StringComparison.OrdinalIgnoreCase));
+        var financeMenu = !isAdmin && (isGerente || isCajero);
+        var canBudgets = financeMenu && await RolePermissionService.HasCodePermissionAsync(userRole!, "PRESUPUESTOS_VER");
+        var canExpenses = financeMenu && await RolePermissionService.HasCodePermissionAsync(userRole!, "GASTOS_VER");
+        var canCompare = financeMenu && await RolePermissionService.HasCodePermissionAsync(userRole!, "PRESUPUESTOS_COMPARAR");
+        var canFinancialReport = financeMenu && await RolePermissionService.HasCodePermissionAsync(userRole!, "FINANZAS_INGRESOS_EGRESOS_VER");
+        var canDeliveryBoard = financeMenu && await RolePermissionService.HasCodePermissionAsync(userRole!, "ENTREGAS_TABLERO_VER");
+        var canDocumentAlerts = financeMenu && await RolePermissionService.HasCodePermissionAsync(userRole!, "DOCUMENTOS_VER");
         var isPurchasing = isLoggedIn && string.Equals(userRole, "Compras", StringComparison.OrdinalIgnoreCase);
         // Supervisor: acceso a RRHH y Planilla sin ver el resto de módulos administrativos.
         var isSupervisor = isLoggedIn && string.Equals(userRole, "Supervisor", StringComparison.OrdinalIgnoreCase);
@@ -163,16 +171,17 @@
                         <div class="navbar-nav ml-lg-auto py-0 main-nav-clean main-nav-2027">
                             <a asp-controller="Home" asp-action="Index" class="nav-item nav-link"><i class="fa fa-home mr-1"></i>Inicio</a>
 
-                            @if (!isAdmin && (isGerente || isCajero))
+                            @if (financeMenu && (canBudgets || canExpenses || canCompare || canFinancialReport || canDeliveryBoard || canDocumentAlerts))
                             {
                                 <div class="nav-item dropdown">
                                     <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown"><i class="fa fa-coins mr-1"></i>Finanzas</a>
                                     <div class="dropdown-menu border-0 rounded-0 m-0">
-                                        <a asp-controller="Budgets" asp-action="Index" class="dropdown-item">Presupuestos anuales</a>
-                                        <a asp-controller="Expenses" asp-action="Index" class="dropdown-item">Gastos operativos</a>
-                                        <a asp-controller="BudgetComparison" asp-action="Index" class="dropdown-item">Presupuesto vs. real</a>
-                                        @if (isGerente) { <a asp-controller="DeliveryBoard" asp-action="Index" class="dropdown-item">Tablero de entregas</a> }
-                                        @if (isGerente) { <a asp-controller="Documents" asp-action="Alerts" class="dropdown-item"><i class="fa fa-bell text-warning mr-1"></i>Alertas documentales</a> }
+                                        @if (canBudgets) { <a asp-controller="Budgets" asp-action="Index" class="dropdown-item">Presupuestos anuales</a> }
+                                        @if (canExpenses) { <a asp-controller="Expenses" asp-action="Index" class="dropdown-item">Gastos operativos</a> }
+                                        @if (canCompare) { <a asp-controller="BudgetComparison" asp-action="Index" class="dropdown-item">Presupuesto vs. real</a> }
+                                        @if (canFinancialReport) { <a asp-controller="FinancialReportAdmin" asp-action="Index" class="dropdown-item">Ingresos y Egresos</a> }
+                                        @if (canDeliveryBoard) { <a asp-controller="DeliveryBoard" asp-action="Index" class="dropdown-item">Tablero de entregas</a> }
+                                        @if (canDocumentAlerts) { <a asp-controller="Documents" asp-action="Alerts" class="dropdown-item"><i class="fa fa-bell text-warning mr-1"></i>Alertas documentales</a> }
                                     </div>
                                 </div>
                             }

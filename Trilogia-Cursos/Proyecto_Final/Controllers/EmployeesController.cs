@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
+using Microsoft.Data.SqlClient;
 using Proyecto_Final.Filters;
 using Proyecto_Final.Models.Admin;
 using Proyecto_Final.Services;
@@ -84,6 +85,11 @@ namespace Proyecto_Final.Controllers
                 TempData["SuccessMessage"] = "Empleado registrado correctamente.";
                 return RedirectToAction(nameof(Details), new { id = empleadoId });
             }
+            catch (SqlException exception) when (exception.Number is 2601 or 2627)
+            {
+                _logger.LogWarning(exception, "Registro duplicado al crear empleado.");
+                ModelState.AddModelError(string.Empty, "La identificación, el correo o la fecha de vigencia ya se encuentran registrados.");
+            }
             catch (InvalidOperationException)
             {
                 ModelState.AddModelError(string.Empty, "No se pudo registrar el empleado. Revise los datos e intente nuevamente.");
@@ -118,6 +124,8 @@ namespace Proyecto_Final.Controllers
         [AdminAuthorize("Empleados", "EMPLEADOS_EDITAR")]
         public async Task<IActionResult> Edit(EmployeeFormViewModel model)
         {
+            if (model.FechaVigenciaSalario.HasValue && model.FechaVigenciaSalario.Value.Date <= new DateTime(1900, 1, 1))
+                ModelState.AddModelError(nameof(model.FechaVigenciaSalario), "La fecha de vigencia debe ser posterior al 1 de enero de 1900.");
             if (string.IsNullOrWhiteSpace(model.RowVersionBase64))
             {
                 ModelState.AddModelError(nameof(model.RowVersionBase64), "La versión del expediente es obligatoria para editar.");
@@ -149,10 +157,20 @@ namespace Proyecto_Final.Controllers
                 TempData["SuccessMessage"] = "Empleado actualizado correctamente.";
                 return RedirectToAction(nameof(Details), new { id = model.EmpleadoId });
             }
+            catch (SqlException exception) when (exception.Number is 2601 or 2627)
+            {
+                _logger.LogWarning(exception, "Registro duplicado al editar empleado.");
+                ModelState.AddModelError(string.Empty, "La identificación o el correo ya se encuentran registrados.");
+            }
             catch (DBConcurrencyException exception)
             {
                 _logger.LogWarning(exception, "Conflicto de concurrencia al actualizar el empleado {EmployeeId}.", model.EmpleadoId);
                 ModelState.AddModelError(string.Empty, "El expediente cambió mientras lo editaba. Recargue la página e intente nuevamente.");
+            }
+            catch (InvalidOperationException exception)
+            {
+                _logger.LogWarning(exception, "Datos incompletos al actualizar el empleado {EmployeeId}.", model.EmpleadoId);
+                ModelState.AddModelError(string.Empty, "Revise la identificación y la fecha de vigencia del salario.");
             }
             catch (Exception exception)
             {

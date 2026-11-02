@@ -61,7 +61,7 @@ public sealed class HrSecurityAndRulesTests
     {
         var model = new EmployeeFormViewModel
         {
-            PerfilId = 1, NombreCompleto = "Persona sintética", Correo = "synthetic@example.invalid",
+            PerfilId = 1, NombreCompleto = "Persona sintética", Correo = "synthetic@example.invalid", Identificacion = "101110111",
             Puesto = "Pruebas", RowVersionBase64 = string.Empty
         };
         var results = new List<ValidationResult>();
