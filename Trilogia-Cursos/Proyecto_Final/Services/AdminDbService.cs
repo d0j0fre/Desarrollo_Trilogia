@@ -1704,7 +1704,7 @@ namespace Proyecto_Final.Services
                 command.Parameters.Add("@ItemsJson", SqlDbType.NVarChar, -1).Value = itemsJson;
                 command.Parameters.Add("@PedidoOfflineGuid", SqlDbType.UniqueIdentifier).Value = pedidoOfflineGuid.HasValue ? pedidoOfflineGuid.Value : DBNull.Value;
                 command.Parameters.Add("@CanalPedido", SqlDbType.NVarChar, 50).Value = string.IsNullOrWhiteSpace(canalPedido) ? "Venta móvil" : canalPedido.Trim();
-                // BUG-06-02 (0230): solo el pago a crédito se envía; sin parámetro el procedimiento conserva el valor histórico.
+                // BUG-06-02 (0230): solo el pago a crédito se envía; sin parámetro el procedimiento guarda «Efectivo contra entrega» (0255).
                 if (model.MetodoPago == SellerOrderCreateViewModel.PagoCredito)
                     command.Parameters.Add("@MetodoPago", SqlDbType.NVarChar, 40).Value = SellerOrderCreateViewModel.PagoCredito;
 
