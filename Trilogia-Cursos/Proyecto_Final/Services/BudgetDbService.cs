@@ -80,7 +80,7 @@ public sealed class BudgetDbService
             while (await reader.ReadAsync()) details.Add(new()
             {
                 BudgetDetailId = reader.GetInt32(0), CategoryId = reader.GetInt32(1), CategoryName = NullableString(reader, 2) ?? "Sin categoría",
-                Month = reader.GetInt32(3), AllocatedAmount = reader.GetDecimal(4), Notes = NullableString(reader, 5)
+                Month = reader.GetByte(3), AllocatedAmount = reader.GetDecimal(4), Notes = NullableString(reader, 5)
             });
         }
         var audit = new List<BudgetAuditViewModel>();

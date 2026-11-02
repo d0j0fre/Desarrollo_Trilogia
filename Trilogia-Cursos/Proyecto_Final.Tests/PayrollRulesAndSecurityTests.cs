@@ -70,6 +70,32 @@ public sealed class PayrollRulesAndSecurityTests
         Assert.Throws<PayrollConfigurationException>(() => PayrollCalculationPolicy.Calculate(input));
     }
 
+    [Fact]
+    public void Calculation_UsesApprovedAbsencesAndPeriodSalesWithConfiguredRules()
+    {
+        var input = new PayrollCalculationInput {
+            SalarioBase=1000m, HorasExtra=2m, HorasAusencia=3m, VentasFacturadas=2000m,
+            FechaCalculo=new DateTime(2026,10,15), Reglas=[
+                new() { Codigo="EXTRA", Nombre="Extra", Tipo="Ingreso", TipoCalculo="PorHoraExtra", Valor=10m, VigenteDesde=new DateTime(2026,1,1) },
+                new() { Codigo="COMISION_VENTAS", Nombre="Comisión", Tipo="Ingreso", TipoCalculo="PorcentajeBruto", Valor=0.05m, VigenteDesde=new DateTime(2026,1,1) },
+                new() { Codigo="AUSENCIA_HORA", Nombre="Ausencia", Tipo="Deduccion", TipoCalculo="MontoFijo", Valor=4m, VigenteDesde=new DateTime(2026,1,1) }
+            ]
+        };
+        var result = PayrollCalculationPolicy.Calculate(input);
+        Assert.Equal(1120m, result.TotalBruto);
+        Assert.Equal(12m, result.TotalDeducciones);
+        Assert.Equal(100m, result.Comisiones);
+        Assert.Equal(1108m, result.TotalNeto);
+        Assert.Contains("VentasFacturadas", result.ReglasSnapshotJson);
+    }
+
+    [Fact]
+    public void Calculation_RequiresConfigurationForSalesAndAbsences()
+    {
+        Assert.Throws<PayrollConfigurationException>(() => PayrollCalculationPolicy.Calculate(new PayrollCalculationInput { SalarioBase=1000m, VentasFacturadas=100m }));
+        Assert.Throws<PayrollConfigurationException>(() => PayrollCalculationPolicy.Calculate(new PayrollCalculationInput { SalarioBase=1000m, HorasAusencia=1m }));
+    }
+
     private static PayrollCalculationInput ValidInput() => new()
     {
         PeriodoId = 10,

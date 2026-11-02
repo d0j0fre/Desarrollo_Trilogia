@@ -37,6 +37,10 @@ namespace Proyecto_Final.Models.Admin
 
     public class EmployeeFormViewModel
     {
+        [Required(ErrorMessage = "La identificación es obligatoria.")]
+        [Proyecto_Final.Validation.CostaRicanIdentification]
+        [Display(Name = "Identificación")]
+        public string Identificacion { get; set; } = string.Empty;
         public int EmpleadoId { get; set; }
         public int UsuarioId { get; set; }
 
@@ -100,6 +104,10 @@ namespace Proyecto_Final.Models.Admin
         [Display(Name = "Motivo de cambio salarial")]
         public string? MotivoCambioSalario { get; set; }
 
+        [DataType(DataType.Date)]
+        [Display(Name = "Fecha de vigencia del salario")]
+        public DateTime? FechaVigenciaSalario { get; set; }
+
         public DateTime FechaRegistro { get; set; }
         public DateTime? FechaActualizacion { get; set; }
 
@@ -109,6 +117,7 @@ namespace Proyecto_Final.Models.Admin
 
     public class EmployeeDetailViewModel
     {
+        public string? Identificacion { get; set; }
         public int EmpleadoId { get; set; }
         public int UsuarioId { get; set; }
         public int PerfilId { get; set; }

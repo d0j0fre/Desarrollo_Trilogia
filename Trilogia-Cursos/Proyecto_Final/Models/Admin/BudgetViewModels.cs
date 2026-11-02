@@ -37,7 +37,7 @@ public sealed class BudgetCreateViewModel
     [Range(1, int.MaxValue, ErrorMessage = "Seleccione una categoría inicial.")]
     public int CategoryId { get; set; }
 
-    [Range(typeof(decimal), "0.01", "999999999999.99", ErrorMessage = "El monto anual debe ser mayor que cero.")]
+    [Range(typeof(decimal), "0.01", "999999999999.99", ParseLimitsInInvariantCulture = true, ErrorMessage = "El monto anual debe ser mayor que cero.")]
     public decimal AnnualAmount { get; set; }
 
     [StringLength(800)]
@@ -61,7 +61,7 @@ public sealed class BudgetHeaderEditViewModel
     [Range(2000, 2100)]
     public int Year { get; set; }
 
-    [Range(typeof(decimal), "0.01", "999999999999.99")]
+    [Range(typeof(decimal), "0.01", "999999999999.99", ParseLimitsInInvariantCulture = true)]
     public decimal AnnualAmount { get; set; }
 
     [StringLength(800)]
@@ -79,7 +79,7 @@ public sealed class BudgetDetailEditViewModel
     [Range(1, 12)]
     public int Month { get; set; }
 
-    [Range(typeof(decimal), "0", "999999999999.99")]
+    [Range(typeof(decimal), "0", "999999999999.99", ParseLimitsInInvariantCulture = true)]
     public decimal AllocatedAmount { get; set; }
 
     [StringLength(300)]
