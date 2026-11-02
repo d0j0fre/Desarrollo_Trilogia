@@ -26,11 +26,10 @@
                         <label class="font-weight-bold">Filtrar por estado</label>
                         <select name="estado" class="form-control">
                             <option value="">Todos</option>
-                            <option value="Pendiente" selected="@(estadoActual == "Pendiente")">Pendiente</option>
-                            <option value="Aprobado" selected="@(estadoActual == "Aprobado")">Aprobado</option>
-                            <option value="EnProceso" selected="@(estadoActual == "EnProceso")">En proceso</option>
-                            <option value="Entregado" selected="@(estadoActual == "Entregado")">Entregado</option>
-                            <option value="Cancelado" selected="@(estadoActual == "Cancelado")">Cancelado</option>
+                            @foreach (var estado in Proyecto_Final.Services.OrderStatusFlow.All)
+                            {
+                                <option value="@estado.Code" selected="@(estadoActual == estado.Code)">@estado.Name</option>
+                            }
                         </select>
                     </div>
 
@@ -87,13 +86,7 @@
                             {
                                 @foreach (var item in Model)
                                 {
-                                    var claseEstado = item.Estado == "Pendiente"
-                                    ? "warning"
-                                    : item.Estado == "Entregado"
-                                    ? "success"
-                                    : item.Estado == "Cancelado"
-                                    ? "danger"
-                                    : "dark";
+                                    var claseEstado = Proyecto_Final.Services.OrderStatusFlow.BadgeClass(item.Estado);
 
                                     <tr>
                                         <td class="font-weight-bold">#@item.PedidoId</td>
@@ -101,7 +94,7 @@
                                         <td>@item.Correo</td>
                                         <td>@item.FechaPedido.ToString("dd/MM/yyyy HH:mm")</td>
                                         <td>
-                                            <span class="admin-badge-soft @claseEstado">@(item.Estado switch { "EnRuta" => "En ruta", "Fallido" => "No entregado", _ => item.Estado })</span>
+                                            <span class="admin-badge-soft @claseEstado">@Proyecto_Final.Services.OrderStatusFlow.Name(item.Estado)</span>
                                         </td>
                                         <td>
                                             @(string.IsNullOrWhiteSpace(item.TipoEntrega)

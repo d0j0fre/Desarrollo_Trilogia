@@ -1,4 +1,5 @@
 @model Proyecto_Final.Models.Admin.OrderDetailViewModel
+@using Proyecto_Final.Services
 @{
     ViewData["Title"] = "Detalle del pedido";
     // SellerOrders/Detail reutiliza esta vista para el vendedor: sin cambiar estado ni facturar.
@@ -44,16 +45,7 @@
 
                     <div class="col-md-6 mb-3">
                         <label class="font-weight-bold d-block">Estado actual</label>
-                        @{
-                            var claseEstado = Model.Estado == "Pendiente"
-                            ? "warning"
-                            : Model.Estado == "Entregado"
-                            ? "success"
-                            : Model.Estado == "Cancelado"
-                            ? "danger"
-                            : "dark";
-                        }
-                        <span class="admin-badge-soft @claseEstado">@(Model.Estado switch { "EnRuta" => "En ruta", "Fallido" => "No entregado", _ => Model.Estado })</span>
+                        <span class="admin-badge-soft @OrderStatusFlow.BadgeClass(Model.Estado)">@OrderStatusFlow.Name(Model.Estado)</span>
                     </div>
 
                     <div class="col-md-6 mb-3">
@@ -145,24 +137,38 @@
             <div class="admin-card h-100">
                 <h5 class="mb-4">Actualizar estado</h5>
 
+                @{
+                    // G2-30: solo los cambios que acepta sp_Admin_UpdateOrderStatus desde el estado actual.
+                    var siguientes = OrderStatusFlow.NextStates(Model.Estado, Model.HasInvoice);
+                }
                 <form asp-controller="OrdersAdmin" asp-action="UpdateStatus" method="post">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="pedidoId" value="@Model.PedidoId" />
 
-                    <div class="form-group">
-                        <label class="font-weight-bold">Nuevo estado</label>
-                        <select name="nuevoEstado" class="form-control">
-                            <option value="Pendiente" selected="@(Model.Estado == "Pendiente")">Pendiente</option>
-                            <option value="Aprobado" selected="@(Model.Estado == "Aprobado")">Aprobado</option>
-                            <option value="EnProceso" selected="@(Model.Estado == "EnProceso")">En proceso</option>
-                            <option value="Entregado" selected="@(Model.Estado == "Entregado")">Entregado</option>
-                            <option value="Cancelado" selected="@(Model.Estado == "Cancelado")">Cancelado</option>
-                        </select>
-                    </div>
+                    @if (siguientes.Count > 0)
+                    {
+                        <div class="form-group">
+                            <label class="font-weight-bold" for="nuevoEstado">Nuevo estado</label>
+                            <select id="nuevoEstado" name="nuevoEstado" class="form-control">
+                                @foreach (var estado in siguientes)
+                                {
+                                    <option value="@estado">@OrderStatusFlow.Name(estado)</option>
+                                }
+                            </select>
+                        </div>
 
-                    <button type="submit" class="btn btn-ds-action btn-block mb-2">
-                        <i class="fa fa-save mr-2"></i>Guardar estado
-                    </button>
+                        <button type="submit" class="btn btn-ds-action btn-block mb-2">
+                            <i class="fa fa-save mr-2"></i>Guardar estado
+                        </button>
+                    }
+                    else
+                    {
+                        <p class="text-muted">
+                            @(Model.Estado is "EnRuta" or "Fallido"
+                                ? $"El estado «{OrderStatusFlow.Name(Model.Estado)}» lo actualiza Rutas y entregas."
+                                : $"Un pedido en estado «{OrderStatusFlow.Name(Model.Estado)}» no tiene cambios de estado desde esta pantalla.")
+                        </p>
+                    }
 
                     <a asp-controller="OrdersAdmin" asp-action="Index" class="btn btn-ds-neutral btn-block">
                         <i class="fa fa-arrow-left mr-2"></i>Volver a pedidos
