@@ -1,6 +1,8 @@
 @model Proyecto_Final.Models.Admin.OrderDetailViewModel
 @{
     ViewData["Title"] = "Detalle del pedido";
+    // SellerOrders/Detail reutiliza esta vista para el vendedor: sin cambiar estado ni facturar.
+    var soloLectura = ViewData["SoloLectura"] is true;
 }
 
 @section Styles {
@@ -12,7 +14,9 @@
         <div class="col-12">
             <div class="admin-page-header">
                 <h2 class="mb-2">Detalle del pedido #@Model.PedidoId</h2>
-                <p>Consulta la información general del pedido, productos asociados y actualiza su estado.</p>
+                <p>@(soloLectura
+                    ? "Consulta la información general del pedido y los productos asociados."
+                    : "Consulta la información general del pedido, productos asociados y actualiza su estado.")</p>
             </div>
         </div>
     </div>
@@ -122,6 +126,22 @@
         </div>
 
         <div class="col-lg-4 pb-3">
+            @if (soloLectura)
+            {
+            <div class="admin-card h-100">
+                <h5 class="mb-3">Facturación</h5>
+                <p class="mb-4">
+                    @(Model.HasInvoice
+                        ? $"Factura {Model.NumeroFactura}."
+                        : "Este pedido todavía no tiene factura.")
+                </p>
+                <a asp-controller="SellerOrders" asp-action="MyOrders" class="btn btn-ds-neutral btn-block">
+                    <i class="fa fa-arrow-left mr-2"></i>Volver a mis pedidos
+                </a>
+            </div>
+            }
+            else
+            {
             <div class="admin-card h-100">
                 <h5 class="mb-4">Actualizar estado</h5>
 
@@ -192,6 +212,7 @@
                     </p>
                 }
             </div>
+            }
         </div>
     </div>
 

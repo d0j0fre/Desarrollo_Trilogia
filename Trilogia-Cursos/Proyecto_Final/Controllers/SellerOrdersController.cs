@@ -330,6 +330,38 @@ namespace Proyecto_Final.Controllers
             return View(pedidos);
         }
 
+        // G3-02: detalle de solo lectura de un pedido propio. El detalle de
+        // OrdersAdmin exige permisos de administración de pedidos que el
+        // vendedor no tiene; aquí solo se muestra si el pedido es suyo.
+        [HttpGet]
+        public async Task<IActionResult> Detail(int id)
+        {
+            if (!IsAuthorizedSeller())
+                return RedirectToAction("Login", "Account");
+
+            var vendedorId = HttpContext.Session.GetInt32("UserId") ?? 0;
+            var propios = await _adminDbService.GetSellerMyOrdersAsync(vendedorId, int.MaxValue);
+            var pedido = id > 0 && propios.Any(p => p.PedidoId == id)
+                ? await _adminDbService.GetOrderDetailAsync(id)
+                : null;
+            if (pedido == null)
+            {
+                TempData["ErrorMessage"] = "No se encontró el pedido entre sus pedidos.";
+                return RedirectToAction(nameof(MyOrders));
+            }
+
+            var factura = await _adminDbService.GetInvoiceSummaryByOrderAsync(id);
+            if (factura.HasValue)
+            {
+                pedido.FacturaId = factura.Value.FacturaId;
+                pedido.NumeroFactura = factura.Value.NumeroFactura;
+                pedido.HasInvoice = true;
+            }
+
+            ViewData["SoloLectura"] = true;
+            return View("~/Views/OrdersAdmin/Detail.cshtml", pedido);
+        }
+
         private async Task<SellerOrderCreateViewModel> BuildCreateModelAsync(SellerOrderCreateViewModel model)
         {
             model.Clientes = await _adminDbService.GetSellerOrderClientsAsync();

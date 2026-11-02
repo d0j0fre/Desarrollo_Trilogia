@@ -1,6 +1,11 @@
 @model Proyecto_Final.Models.Admin.OrderDetailViewModel
+@using Microsoft.AspNetCore.Http
+@inject Proyecto_Final.Services.NavigationMenuService MenuAccess
 @{
     ViewData["Title"] = "Pedido registrado";
+    // G3-02: quien administra pedidos abre el detalle completo; el vendedor, el de solo lectura de sus pedidos.
+    var detalleController = await MenuAccess.CanOpenAsync(Context.Session.GetString("UserRole"), "OrdersAdmin", "Detail")
+        ? "OrdersAdmin" : "SellerOrders";
     var numeroFactura = ViewBag.NumeroFactura as string ?? Model.NumeroFactura;
 }
 
@@ -109,7 +114,7 @@
                 <a asp-controller="SellerOrders" asp-action="MyOrders" class="btn btn-ds-view btn-lg">
                     <i class="fa fa-list mr-1"></i> Mis pedidos
                 </a>
-                <a asp-controller="OrdersAdmin" asp-action="Detail" asp-route-id="@Model.PedidoId" class="btn btn-ds-view btn-lg">
+                <a asp-controller="@detalleController" asp-action="Detail" asp-route-id="@Model.PedidoId" class="btn btn-ds-view btn-lg">
                     <i class="fa fa-eye mr-1"></i> Ver detalle completo
                 </a>
             </div>

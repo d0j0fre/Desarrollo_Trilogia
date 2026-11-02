@@ -107,6 +107,42 @@ public sealed class ManualCorreccionesTests
         Assert.Empty(typeof(ClientPortalController).GetMethod("Warranties")!.GetParameters());
     }
 
+    [Fact]
+    public async Task VentaMovil_ElVendedorAbreElDetalleDeSoloLecturaYNoElDeAdministracion()
+    {
+        var permisos = new Mock<IRolePermissionService>();
+        var menu = new NavigationMenuService(permisos.Object);
+
+        Assert.True(await menu.CanOpenAsync("Vendedor", "SellerOrders", "Detail"));
+        Assert.False(await menu.CanOpenAsync("Vendedor", "OrdersAdmin", "Detail"));
+        Assert.False(await menu.CanOpenAsync("Cliente", "SellerOrders", "Detail"));
+        Assert.Empty(NavigationMenu.GetScreenAccess("SellerOrders", "Detail").Permissions);
+    }
+
+    [Fact]
+    public void VentaMovil_ElDetalleSoloMuestraPedidosPropiosYSinAccionesDeAdministracion()
+    {
+        var controller = MobileCorreccionesTests.Read("Proyecto_Final", "Controllers", "SellerOrdersController.cs");
+        var detalle = controller[controller.IndexOf("public async Task<IActionResult> Detail(int id)", StringComparison.Ordinal)..];
+        detalle = detalle[..detalle.IndexOf("private bool IsAuthorizedSeller", StringComparison.Ordinal)];
+        Assert.Contains("GetSellerMyOrdersAsync(vendedorId, int.MaxValue)", detalle, StringComparison.Ordinal);
+        Assert.Contains("propios.Any(p => p.PedidoId == id)", detalle, StringComparison.Ordinal);
+        Assert.Contains("ViewData[\"SoloLectura\"] = true", detalle, StringComparison.Ordinal);
+
+        var vista = MobileCorreccionesTests.Read("Proyecto_Final", "Views", "OrdersAdmin", "Detail.cshtml");
+        var inicio = vista.IndexOf("@if (soloLectura)", StringComparison.Ordinal);
+        var soloLectura = vista[inicio..vista.IndexOf("            else", inicio, StringComparison.Ordinal)];
+        Assert.DoesNotContain("<form", soloLectura, StringComparison.Ordinal);
+        Assert.DoesNotContain("OrdersAdmin", soloLectura, StringComparison.Ordinal);
+
+        foreach (var archivo in new[] { "MyOrders.cshtml", "Confirmation.cshtml" })
+        {
+            var boton = MobileCorreccionesTests.Read("Proyecto_Final", "Views", "SellerOrders", archivo);
+            Assert.DoesNotContain("asp-controller=\"OrdersAdmin\" asp-action=\"Detail\"", boton, StringComparison.Ordinal);
+            Assert.Contains("asp-controller=\"@detalleController\" asp-action=\"Detail\"", boton, StringComparison.Ordinal);
+        }
+    }
+
     private static AttendanceEntryViewModel Jornada(string estado) => new()
     {
         JornadaId = 41, Fecha = Fecha, HorasOrdinarias = 8, Estado = estado, RowVersionBase64 = "AAAAAAAAB9E="
