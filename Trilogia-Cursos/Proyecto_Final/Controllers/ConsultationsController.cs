@@ -102,7 +102,9 @@ namespace Proyecto_Final.Controllers
                     catch (Exception exception)
                     {
                         _logger.LogWarning(exception, "No se pudo notificar la resolución de la consulta {ConsultaId}. Solicitud {TraceId}.", model.ConsultaId, HttpContext.TraceIdentifier);
-                        TempData["ErrorMessage"] = "La consulta se actualizó, pero no fue posible notificar la resolución al cliente por correo.";
+                        // G2-43: un solo aviso, amarillo: la consulta sí se guardó; lo que falló es el correo.
+                        TempData.Remove("SuccessMessage");
+                        TempData["WarningMessage"] = "La consulta se actualizó, pero no fue posible notificar la resolución al cliente por correo.";
                     }
                 }
             }

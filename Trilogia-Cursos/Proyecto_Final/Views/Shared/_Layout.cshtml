@@ -447,6 +447,10 @@
         {
             <div class="container mt-3"><div class="alert alert-success">@successMessage</div></div>
         }
+        @if (TempData["WarningMessage"] is string warningMessage && !string.IsNullOrWhiteSpace(warningMessage) && !ShownByView(warningMessage))
+        {
+            <div class="container mt-3"><div class="alert alert-warning">@warningMessage</div></div>
+        }
         @if (TempData["ErrorMessage"] is string errorMessage && !string.IsNullOrWhiteSpace(errorMessage) && !ShownByView(errorMessage))
         {
             <div class="container mt-3"><div class="alert alert-danger">@errorMessage</div></div>
