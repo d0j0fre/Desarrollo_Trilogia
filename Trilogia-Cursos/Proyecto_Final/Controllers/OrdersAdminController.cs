@@ -8,10 +8,14 @@ namespace Proyecto_Final.Controllers
     public class OrdersAdminController : Controller
     {
         private readonly AdminDbService _adminDbService;
+        private readonly StoreDbService _storeDbService;
+        private readonly ILogger<OrdersAdminController> _logger;
 
-        public OrdersAdminController(AdminDbService adminDbService)
+        public OrdersAdminController(AdminDbService adminDbService, StoreDbService storeDbService, ILogger<OrdersAdminController> logger)
         {
             _adminDbService = adminDbService;
+            _storeDbService = storeDbService;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -36,6 +40,16 @@ namespace Proyecto_Final.Controllers
 
             pedido.FacturaId = await _adminDbService.GetInvoiceIdByOrderAsync(id);
             pedido.HasInvoice = pedido.FacturaId.HasValue;
+
+            // G3-15: datos que el cliente indicó al pagar en la Tienda (tipo, factura electrónica, contacto).
+            try
+            {
+                ViewData["DatosCliente"] = await _storeDbService.GetOrderCustomerDataAsync(id);
+            }
+            catch (Microsoft.Data.SqlClient.SqlException exception)
+            {
+                _logger.LogWarning(exception, "No se pudieron leer los datos del cliente del pedido {PedidoId}.", id);
+            }
 
             return View(pedido);
         }

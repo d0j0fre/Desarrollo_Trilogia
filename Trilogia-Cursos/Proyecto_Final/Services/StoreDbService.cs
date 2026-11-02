@@ -165,4 +165,39 @@ public sealed class StoreDbService
         var ordinal = reader.GetOrdinal(column);
         return reader.IsDBNull(ordinal) ? null : reader.GetString(ordinal);
     }
+
+    // G3-15 (0256): tipo de cliente, factura electrónica, correo y teléfonos del pago se guardan con el pedido.
+    public async Task SaveOrderCustomerDataAsync(int pedidoId, int userId, CheckoutViewModel checkout, CancellationToken cancellationToken = default)
+    {
+        await using var connection = new SqlConnection(_connectionString);
+        await using var command = new SqlCommand("dbo.sp_Pedido_GuardarDatosCliente", connection) { CommandType = CommandType.StoredProcedure };
+        command.Parameters.Add("@PedidoId", SqlDbType.Int).Value = pedidoId;
+        command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = userId;
+        command.Parameters.Add("@TipoCliente", SqlDbType.NVarChar, 30).Value = checkout.TipoCliente.Trim();
+        command.Parameters.Add("@FacturaElectronica", SqlDbType.Bit).Value = checkout.FacturaElectronica;
+        command.Parameters.Add("@CorreoComprobante", SqlDbType.NVarChar, 150).Value = (object?)checkout.CorreoElectronico?.Trim() ?? DBNull.Value;
+        command.Parameters.Add("@Telefono", SqlDbType.NVarChar, 30).Value = (object?)checkout.Telefono?.Trim() ?? DBNull.Value;
+        command.Parameters.Add("@TelefonoAlterno", SqlDbType.NVarChar, 30).Value = (object?)checkout.Telefono2?.Trim() ?? DBNull.Value;
+        await connection.OpenAsync(cancellationToken);
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    public async Task<OrderCustomerDataViewModel?> GetOrderCustomerDataAsync(int pedidoId, CancellationToken cancellationToken = default)
+    {
+        await using var connection = new SqlConnection(_connectionString);
+        await using var command = new SqlCommand("dbo.sp_Pedido_GetDatosCliente", connection) { CommandType = CommandType.StoredProcedure };
+        command.Parameters.Add("@PedidoId", SqlDbType.Int).Value = pedidoId;
+        await connection.OpenAsync(cancellationToken);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        if (!await reader.ReadAsync(cancellationToken)) return null;
+        return new OrderCustomerDataViewModel
+        {
+            PedidoId = reader.GetInt32(reader.GetOrdinal("PedidoId")),
+            TipoCliente = reader.GetString(reader.GetOrdinal("TipoCliente")),
+            FacturaElectronica = reader.GetBoolean(reader.GetOrdinal("FacturaElectronica")),
+            CorreoComprobante = ReadNullableString(reader, "CorreoComprobante"),
+            Telefono = ReadNullableString(reader, "Telefono"),
+            TelefonoAlterno = ReadNullableString(reader, "TelefonoAlterno")
+        };
+    }
 }

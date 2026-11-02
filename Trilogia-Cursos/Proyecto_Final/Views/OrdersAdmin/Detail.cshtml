@@ -114,6 +114,30 @@
                         </span>
                     </div>
                 </div>
+
+                @if (ViewData["DatosCliente"] is Proyecto_Final.Models.Store.OrderCustomerDataViewModel datosCliente)
+                {
+                    @* G3-15: lo que el cliente indicó al pagar en la Tienda. *@
+                    <h5 class="mt-4 mb-3">Datos del cliente para facturar</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="font-weight-bold d-block">Tipo de cliente</label>
+                            <span>@datosCliente.TipoCliente</span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="font-weight-bold d-block">Factura electrónica</label>
+                            <span>@(datosCliente.FacturaElectronica ? "Sí, la solicitó" : "No la solicitó")</span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="font-weight-bold d-block">Correo del comprobante</label>
+                            <span>@(datosCliente.CorreoComprobante ?? "No indicado")</span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="font-weight-bold d-block">Teléfonos</label>
+                            <span>@(string.Join(" · ", new[] { datosCliente.Telefono, datosCliente.TelefonoAlterno }.Where(t => !string.IsNullOrWhiteSpace(t))) is { Length: > 0 } telefonos ? telefonos : "No indicados")</span>
+                        </div>
+                    </div>
+                }
             </div>
         </div>
 
