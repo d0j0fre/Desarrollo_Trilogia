@@ -33,6 +33,18 @@ IF EXISTS (
     WHERE NOT EXISTS (SELECT 1 FROM dbo.PerfilPermisos pp WHERE pp.PerfilId = pf.PerfilId AND pp.PermisoId = p.PermisoId))
     THROW 56561, N'Un perfil de oficina no tiene todos los permisos de la matriz 0028.', 1;
 
+/* Con la 0260 aplicada (en cualquier orden), todo perfil de oficina con un permiso
+   activo de Finanzas tiene tambien FINANZAS_INGRESOS_EGRESOS_VER (regla de la 0260). */
+IF EXISTS(SELECT 1 FROM dbo.SchemaMigrationHistory WHERE MigrationId=N'0260_roles_finanzas_consulta' AND Status=N'Applied')
+   AND EXISTS (
+    SELECT 1 FROM @Matriz m
+    INNER JOIN dbo.Perfiles pf ON pf.Nombre LIKE m.Perfil
+    INNER JOIN dbo.Permisos p ON p.Codigo = m.Codigo
+    WHERE p.Modulo = N'Finanzas' AND p.Activo = 1 AND p.Codigo <> N'FINANZAS_INGRESOS_EGRESOS_VER'
+      AND NOT EXISTS (SELECT 1 FROM dbo.PerfilPermisos pp INNER JOIN dbo.Permisos ie ON ie.PermisoId = pp.PermisoId
+                      WHERE pp.PerfilId = pf.PerfilId AND ie.Codigo = N'FINANZAS_INGRESOS_EGRESOS_VER'))
+    THROW 56564, N'Un perfil de oficina con permisos de Finanzas no tiene FINANZAS_INGRESOS_EGRESOS_VER (regla de la 0260).', 1;
+
 /* Lo que verifica la 0028: todo perfil del personal entra a la aplicacion; Cliente no. */
 IF EXISTS (
     SELECT 1 FROM dbo.Perfiles pf

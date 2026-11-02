@@ -27,7 +27,7 @@ public sealed class NavigationMenuTests
             + "MOVIL_ACCESO:Movil,RRHH_JORNADAS_REGISTRAR:RRHH,RRHH_JORNADAS_VER_PROPIAS:RRHH",
         ["Supervisor"] = "EMPLEADOS_CREAR:Empleados,EMPLEADOS_EDITAR:Empleados,EMPLEADOS_VER:Empleados,MOVIL_ACCESO:Movil,"
             + "PLANILLA_BOLETAS_GESTIONAR:Planilla,RRHH_JORNADAS_APROBAR:RRHH,RRHH_JORNADAS_REGISTRAR:RRHH,RRHH_JORNADAS_VER_PROPIAS:RRHH",
-        ["Cajero"] = "LIQUIDACION_FINANCIERA:Finanzas,MOVIL_ACCESO:Movil,RRHH_JORNADAS_REGISTRAR:RRHH,RRHH_JORNADAS_VER_PROPIAS:RRHH",
+        ["Cajero"] = "FINANZAS_INGRESOS_EGRESOS_VER:Finanzas,LIQUIDACION_FINANCIERA:Finanzas,MOVIL_ACCESO:Movil,RRHH_JORNADAS_REGISTRAR:RRHH,RRHH_JORNADAS_VER_PROPIAS:RRHH",
         ["Bodeguero"] = "COMPRAS_ORDENES_RECIBIR:Compras,COMPRAS_ORDENES_VER:Compras,INVENTARIO_MOVIMIENTOS:Inventario,INVENTARIO_VER:Inventario,"
             + "MOVIL_ACCESO:Movil,PEDIDOS_PREPARAR:Pedidos,PEDIDOS_VER:Pedidos,RRHH_JORNADAS_REGISTRAR:RRHH,RRHH_JORNADAS_VER_PROPIAS:RRHH",
         ["Facturador"] = "FACTURACION_VER:Facturación,MOVIL_ACCESO:Movil,PEDIDOS_VER:Pedidos,RRHH_JORNADAS_REGISTRAR:RRHH,RRHH_JORNADAS_VER_PROPIAS:RRHH",
@@ -52,7 +52,7 @@ public sealed class NavigationMenuTests
             + "|Reportes y Gerencia/Metas de ventas|Reportes y Gerencia/Reporte de KPIs|Clientes/Reclamos" },
         { "Chofer", "Logística y Flota/Kilometraje" },
         { "Supervisor", "Personal/Empleados|Personal/Solicitudes (licencias)|Personal/Aprobar jornadas|Personal/Boletas de pago" },
-        { "Cajero", "Finanzas/Liquidación de cobros" },
+        { "Cajero", "Finanzas/Liquidación de cobros|Finanzas/Ingresos y Egresos" },
         { "Bodeguero", "Inventario/Inventario|Inventario/Movimientos|Ventas y Pedidos/Pedidos|Finanzas/Órdenes de compra" },
         { "Facturador", "Ventas y Pedidos/Pedidos|Ventas y Pedidos/Facturación" },
         { "Crédito y Cobro", "Ventas y Pedidos/Cuentas por Cobrar|Clientes/Clientes|Clientes/Créditos" },

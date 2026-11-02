@@ -18,8 +18,14 @@ SET ANSI_NULLS ON;
    tilde); si un perfil no existe, simplemente no se le asigna nada.
 
    Convive con 0260-0265: solo inserta filas en dbo.PerfilPermisos que falten
-   y no quita ninguna. La 0260 no se vuelve a ejecutar: si corrio antes que esta,
-   Cajero queda sin FINANZAS_INGRESOS_EGRESOS_VER (no lo tenia la matriz 0028).
+   y no quita ninguna. El resultado es el mismo en cualquier orden:
+   - Orden numerico (0251 y luego 0260): la 0260 aplica su regla de
+     conservacion («quien ya tiene un permiso activo del modulo Finanzas recibe
+     FINANZAS_INGRESOS_EGRESOS_VER») y se la da a Cajero por
+     LIQUIDACION_FINANCIERA.
+   - 0260 ya aplicada (bases que la recibieron antes): esta migracion aplica esa
+     misma regla, pero solo a los perfiles a los que acaba de dar un permiso del
+     modulo Finanzas. Asi Cajero termina igual en los dos ordenes.
 
    Idempotente en los datos. Rollback en 0251_perfiles_oficina_permisos.rollback.md. */
 IF OBJECT_ID(N'dbo.SchemaMigrationHistory',N'U') IS NULL THROW 56510,N'Falta el ledger 0001.',1;
@@ -88,9 +94,12 @@ INSERT @Matriz (Perfil, Codigo, Origen) VALUES
 IF EXISTS (SELECT 1 FROM @Matriz m WHERE NOT EXISTS (SELECT 1 FROM dbo.Permisos p WHERE p.Codigo = m.Codigo))
     THROW 56513, N'Uno o más permisos de la matriz no existen en dbo.Permisos.', 1;
 
+DECLARE @Nuevas TABLE (PerfilId INT NOT NULL, PermisoId INT NOT NULL);
+
 BEGIN TRANSACTION;
 
 INSERT dbo.PerfilPermisos (PerfilId, PermisoId, UsuarioAsignacionId, UsuarioAsignacionNombre)
+OUTPUT inserted.PerfilId, inserted.PermisoId INTO @Nuevas (PerfilId, PermisoId)
 SELECT profile.PerfilId, permission.PermisoId, NULL, MIN(m.Origen)
 FROM @Matriz m
 INNER JOIN dbo.Perfiles profile ON profile.Nombre LIKE m.Perfil
@@ -100,10 +109,28 @@ WHERE NOT EXISTS (SELECT 1 FROM dbo.PerfilPermisos assigned
 GROUP BY profile.PerfilId, permission.PermisoId;
 
 DECLARE @Asignados INT = @@ROWCOUNT;
+
+/* Regla de conservacion de la 0260, si esa migracion ya corrio: solo para los
+   perfiles a los que esta migracion acaba de dar un permiso activo de Finanzas. */
+DECLARE @ReglaFinanzas INT = 0;
+IF EXISTS(SELECT 1 FROM dbo.SchemaMigrationHistory WHERE MigrationId=N'0260_roles_finanzas_consulta' AND Status=N'Applied')
+BEGIN
+    INSERT dbo.PerfilPermisos (PerfilId, PermisoId, UsuarioAsignacionId, UsuarioAsignacionNombre)
+    SELECT DISTINCT nueva.PerfilId, nuevo.PermisoId, NULL, N'Migración 0251 (regla 0260)'
+    FROM @Nuevas nueva
+    INNER JOIN dbo.Permisos previo ON previo.PermisoId = nueva.PermisoId
+    CROSS JOIN dbo.Permisos nuevo
+    WHERE previo.Modulo = N'Finanzas' AND previo.Activo = 1 AND previo.Codigo <> N'FINANZAS_INGRESOS_EGRESOS_VER'
+      AND nuevo.Codigo = N'FINANZAS_INGRESOS_EGRESOS_VER'
+      AND NOT EXISTS (SELECT 1 FROM dbo.PerfilPermisos x WHERE x.PerfilId = nueva.PerfilId AND x.PermisoId = nuevo.PermisoId);
+    SET @ReglaFinanzas = @@ROWCOUNT;
+END;
+
 DECLARE @MigrationSha256 NVARCHAR(128)=N'$(MigrationSha256)';
 IF LEN(@MigrationSha256)<>64 OR @MigrationSha256 LIKE N'%[^0-9A-Fa-f]%' THROW 56514,N'SHA-256 inválido para 0251.',1;
 INSERT dbo.SchemaMigrationHistory(MigrationId,FileName,FileSha256,Status,AppliedBy,EnvironmentName,Notes)
 VALUES(N'0251_perfiles_oficina_permisos',N'0251_perfiles_oficina_permisos.sql',UPPER(@MigrationSha256),N'Applied',ORIGINAL_LOGIN(),DB_NAME(),
-       CONCAT(N'Matriz 0028 (y MOVIL_ACCESO 0025) para los perfiles de oficina creados después de esas migraciones. Asignaciones nuevas: ', @Asignados, N'. Aditiva.'));
+       CONCAT(N'Matriz 0028 (y MOVIL_ACCESO 0025) para los perfiles de oficina creados después de esas migraciones. Asignaciones nuevas: ', @Asignados,
+              N'; por la regla de Finanzas de la 0260: ', @ReglaFinanzas, N'. Aditiva.'));
 COMMIT TRANSACTION;
 GO
