@@ -112,6 +112,50 @@ public sealed class AssistantCorreccionesTests
         Assert.DoesNotContain("Finanzas", respuesta.Respuesta, StringComparison.Ordinal);
     }
 
+    [Theory]
+    [InlineData("Vendedor")]
+    [InlineData("Empleado")]
+    [InlineData("Chofer")]
+    [InlineData("Bodeguero")]
+    public void G3_05_LasSugerenciasInicialesNoOfrecenVentasSinFinanzas(string rol)
+    {
+        var sugerencias = AssistantService.SugerenciasIniciales(rol);
+
+        Assert.DoesNotContain("¿Cuánto vendimos este mes?", sugerencias);
+        Assert.Contains("¿Qué puedo preguntar?", sugerencias);
+        Assert.Contains("¿Cómo uso el módulo de rutas?", sugerencias);
+        // Ninguna sugerencia termina en "Información restringida" para ese rol.
+        Assert.All(sugerencias, s => Assert.Null(AssistantService.Restringida(AssistantService.Normalizar(s), rol)));
+    }
+
+    [Theory]
+    [InlineData("Administrador")]
+    [InlineData("Gerente")]
+    public void G3_05_QuienVeFinanzasConservaTodasLasSugerencias(string rol)
+    {
+        Assert.Equal(
+            ["¿Qué puedo preguntar?", "Dame un resumen", "¿Cuánto vendimos este mes?", "¿Cómo está el inventario?", "¿Cómo uso el módulo de rutas?"],
+            AssistantService.SugerenciasIniciales(rol));
+    }
+
+    [Theory]
+    [InlineData("Chofer", false)]   // solo Logística
+    [InlineData("Vendedor", true)]
+    [InlineData("Bodeguero", true)]
+    public void G3_05_ElInventarioSeSugiereSoloSiElRolLoPuedeVer(string rol, bool sugerido)
+    {
+        Assert.Equal(sugerido, AssistantService.SugerenciasIniciales(rol).Contains("¿Cómo está el inventario?"));
+    }
+
+    [Fact]
+    public void G3_05_LaVistaUsaLasSugerenciasDelRol()
+    {
+        var view = Read("Proyecto_Final", "Views", "Assistant", "Index.cshtml");
+
+        Assert.Contains("AssistantService.SugerenciasIniciales(Context.Session.GetString(\"UserRole\"))", view, StringComparison.Ordinal);
+        Assert.DoesNotContain("'¿Cuánto vendimos este mes?'", view, StringComparison.Ordinal);
+    }
+
     [Fact]
     public void BUG_26_04_LasEntregasPendientesSonLasParadasAbiertasDeLasRutasDespachadas()
     {

@@ -313,9 +313,27 @@ namespace Proyecto_Final.Services
             {
                 Tipo = "metrica", Intent = "resumen", Interpretado = true,
                 Titulo = "Resumen del negocio", Respuesta = sb.ToString(),
-                Sugerencias = { "¿Cuánto vendimos hoy?", "¿Cómo está el inventario?", "¿Qué puedo preguntar?" }
+                Sugerencias = SoloPermitidas(permitidas, "¿Cuánto vendimos hoy?", "¿Cómo está el inventario?", "¿Qué puedo preguntar?")
             };
         }
+
+        // ── Sugerencias según el rol (G3-05) ────────────────────
+        // Preguntas de bienvenida de la pantalla del asistente.
+        private static readonly string[] Bienvenida =
+        {
+            "¿Qué puedo preguntar?", "Dame un resumen", "¿Cuánto vendimos este mes?",
+            "¿Cómo está el inventario?", "¿Cómo uso el módulo de rutas?"
+        };
+
+        // Las que el rol puede hacer sin recibir "Información restringida" (p. ej. ventas
+        // para Vendedor, Empleado, Chofer o Bodeguero).
+        public static List<string> SugerenciasIniciales(string? rol) =>
+            SoloPermitidas(CategoriasPermitidas(rol), Bienvenida);
+
+        // Misma regla que AskAsync aplica a la pregunta (Restringida): se descarta la
+        // sugerencia que pide datos de una categoría fuera del rol.
+        private static List<string> SoloPermitidas(HashSet<string> permitidas, params string[] preguntas) =>
+            preguntas.Where(p => Restringida(Normalizar(p), permitidas) is null).ToList();
 
         // ── Capacidades por rol ─────────────────────────────────
         private static AssistantAnswerViewModel Capacidades(HashSet<string> permitidas)
