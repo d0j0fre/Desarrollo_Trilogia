@@ -27,7 +27,9 @@ class NotificationsPage extends ConsumerWidget {
                 await ref.read(notificationsApiProvider).markAllRead();
                 ref.invalidate(notificationsInboxProvider);
               },
-              child: const Text('Marcar leídas', style: TextStyle(color: BrandColors.white)),
+              // La barra es clara (AppBarTheme usa BrandColors.surface): el texto toma el
+              // color del tema de TextButton, no blanco, para que se lea.
+              child: const Text('Marcar leídas'),
             ),
         ],
       ),
