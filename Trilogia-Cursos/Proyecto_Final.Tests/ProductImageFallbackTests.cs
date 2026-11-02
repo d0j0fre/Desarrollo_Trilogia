@@ -28,6 +28,9 @@ public sealed class ProductImageFallbackTests
     {
         Assert.Equal("~/img/productos/pilsen-6pack.png", ProductImageFallback.Resolve("~/img/productos/pilsen-6pack.png", "Cerveza"));
         Assert.Equal("~/img/CAT-Cerveza.png", ProductImageFallback.Resolve(null, "Cerveza"));
+        // Los procedimientos de la Tienda devuelven la foto del whisky cuando no hay imagen.
+        Assert.Equal(ProductImageFallback.Neutral, ProductImageFallback.Resolve("~/img/whisky-premium.webp", "Supermercado"));
+        Assert.Equal("~/img/CAT-Cerveza.png", ProductImageFallback.Resolve("~/img/whisky-premium.webp", "Cerveza"));
     }
 
     [Theory]

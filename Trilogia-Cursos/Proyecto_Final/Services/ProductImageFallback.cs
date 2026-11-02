@@ -10,6 +10,12 @@ public static class ProductImageFallback
 {
     public const string Neutral = "~/img/producto-sin-imagen.svg";
 
+    /// <summary>
+    /// sp_Store_GetProducts, sp_Store_GetProductById y sp_Ventas_CrossSellSuggestions devuelven
+    /// esta foto cuando el producto no tiene imagen: se trata como «sin imagen».
+    /// </summary>
+    public const string StoreProcedurePlaceholder = "~/img/whisky-premium.webp";
+
     public static string ForCategory(string? categoria) => (categoria ?? string.Empty).Trim().ToLowerInvariant() switch
     {
         "cerveza" or "cervezas" => "~/img/CAT-Cerveza.png",
@@ -24,5 +30,8 @@ public static class ProductImageFallback
     };
 
     public static string Resolve(string? imagenUrl, string? categoria) =>
-        string.IsNullOrWhiteSpace(imagenUrl) ? ForCategory(categoria) : imagenUrl;
+        string.IsNullOrWhiteSpace(imagenUrl)
+        || string.Equals(imagenUrl.Trim(), StoreProcedurePlaceholder, StringComparison.OrdinalIgnoreCase)
+            ? ForCategory(categoria)
+            : imagenUrl;
 }
