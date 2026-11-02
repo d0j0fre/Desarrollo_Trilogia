@@ -428,20 +428,31 @@
     </div>
 
     <main role="main">
-        @if (TempData["LoginSuccess"] is string loginSuccess && !string.IsNullOrWhiteSpace(loginSuccess))
+        @{
+            // La vista se dibuja antes que el layout y varias pantallas muestran su propio aviso de
+            // TempData. El layout solo lo pinta si la vista no lo mostró ya, para que no salga dos veces.
+            string bodyHtml;
+            using (var bodyWriter = new System.IO.StringWriter())
+            {
+                RenderBody().WriteTo(bodyWriter, HtmlEncoder);
+                bodyHtml = bodyWriter.ToString();
+            }
+            bool ShownByView(string message) => bodyHtml.Contains(HtmlEncoder.Encode(message), StringComparison.Ordinal);
+        }
+        @if (TempData["LoginSuccess"] is string loginSuccess && !string.IsNullOrWhiteSpace(loginSuccess) && !ShownByView(loginSuccess))
         {
             <div class="container mt-3"><div class="alert alert-success">@loginSuccess</div></div>
         }
-        @if (TempData["SuccessMessage"] is string successMessage && !string.IsNullOrWhiteSpace(successMessage))
+        @if (TempData["SuccessMessage"] is string successMessage && !string.IsNullOrWhiteSpace(successMessage) && !ShownByView(successMessage))
         {
             <div class="container mt-3"><div class="alert alert-success">@successMessage</div></div>
         }
-        @if (TempData["ErrorMessage"] is string errorMessage && !string.IsNullOrWhiteSpace(errorMessage))
+        @if (TempData["ErrorMessage"] is string errorMessage && !string.IsNullOrWhiteSpace(errorMessage) && !ShownByView(errorMessage))
         {
             <div class="container mt-3"><div class="alert alert-danger">@errorMessage</div></div>
         }
 
-        @RenderBody()
+        @Html.Raw(bodyHtml)
     </main>
 
     <footer class="container-fluid s3-footer mt-5 pt-5">
