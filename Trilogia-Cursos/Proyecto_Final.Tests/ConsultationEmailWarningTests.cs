@@ -8,7 +8,8 @@ public sealed class ConsultationEmailWarningTests
     {
         var controller = MobileCorreccionesTests.Read("Proyecto_Final", "Controllers", "ConsultationsController.cs");
         var falla = controller[controller.IndexOf("No se pudo notificar la resolución de la consulta", StringComparison.Ordinal)..];
-        falla = falla[..falla.IndexOf('}')];
+        // Hasta el catch siguiente (la plantilla del log tiene llaves: {ConsultaId}).
+        falla = falla[..falla.IndexOf("catch (InvalidOperationException)", StringComparison.Ordinal)];
 
         Assert.Contains("TempData.Remove(\"SuccessMessage\");", falla, StringComparison.Ordinal);
         Assert.Contains("TempData[\"WarningMessage\"]", falla, StringComparison.Ordinal);
