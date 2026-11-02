@@ -110,11 +110,11 @@ public static class NavigationMenu
 
     private static readonly ConcurrentDictionary<string, ScreenAccess> AccessCache = new(StringComparer.OrdinalIgnoreCase);
 
-    /// <summary>Lee [SessionAuthorize] y [AdminAuthorize] del controlador y de su acción GET.</summary>
-    public static ScreenAccess GetScreenAccess(string controller, string action) =>
-        AccessCache.GetOrAdd($"{controller}/{action}", _ => ReadScreenAccess(controller, action));
+    /// <summary>Lee [SessionAuthorize] y [AdminAuthorize] del controlador y de su acción GET (o POST, para un botón de formulario).</summary>
+    public static ScreenAccess GetScreenAccess(string controller, string action, string httpMethod = "GET") =>
+        AccessCache.GetOrAdd($"{httpMethod} {controller}/{action}", _ => ReadScreenAccess(controller, action, httpMethod));
 
-    private static ScreenAccess ReadScreenAccess(string controller, string action)
+    private static ScreenAccess ReadScreenAccess(string controller, string action, string httpMethod)
     {
         var controllerType = typeof(NavigationMenu).Assembly.GetTypes()
             .SingleOrDefault(t => typeof(ControllerBase).IsAssignableFrom(t) && !t.IsAbstract
@@ -123,8 +123,8 @@ public static class NavigationMenu
 
         var method = controllerType.GetMethods(BindingFlags.Public | BindingFlags.Instance)
             .Where(m => m.Name == action && m.GetCustomAttribute<NonActionAttribute>() is null)
-            .SingleOrDefault(AcceptsGet)
-            ?? throw new InvalidOperationException($"{controller}.{action} no tiene una acción GET.");
+            .SingleOrDefault(m => Accepts(m, httpMethod))
+            ?? throw new InvalidOperationException($"{controller}.{action} no tiene una acción {httpMethod}.");
 
         var attributes = controllerType.GetCustomAttributes(true).Concat(method.GetCustomAttributes(true)).ToList();
         var roleLists = attributes.OfType<SessionAuthorizeAttribute>()
@@ -137,10 +137,10 @@ public static class NavigationMenu
         return new ScreenAccess(roleLists, permissions);
     }
 
-    private static bool AcceptsGet(MethodInfo method)
+    private static bool Accepts(MethodInfo method, string httpMethod)
     {
         var verbs = method.GetCustomAttributes(true).OfType<IActionHttpMethodProvider>().ToList();
-        return verbs.Count == 0 || verbs.Any(v => v.HttpMethods.Contains("GET", StringComparer.OrdinalIgnoreCase));
+        return verbs.Count == 0 || verbs.Any(v => v.HttpMethods.Contains(httpMethod, StringComparer.OrdinalIgnoreCase));
     }
 }
 
@@ -153,14 +153,21 @@ public sealed class NavigationMenuService(IRolePermissionService permissionServi
 {
     private readonly Dictionary<string, bool> _checks = new(StringComparer.OrdinalIgnoreCase);
 
-    public async Task<bool> CanOpenAsync(string? role, string controller, string action)
+    public Task<bool> CanOpenAsync(string? role, string controller, string action) =>
+        CanAsync(role, controller, action, "GET");
+
+    /// <summary>Si el rol puede enviar el formulario de una acción POST (botones como «Generar factura»).</summary>
+    public Task<bool> CanSubmitAsync(string? role, string controller, string action) =>
+        CanAsync(role, controller, action, "POST");
+
+    private async Task<bool> CanAsync(string? role, string controller, string action, string httpMethod)
     {
         if (string.IsNullOrWhiteSpace(role))
         {
             return false;
         }
 
-        var access = NavigationMenu.GetScreenAccess(controller, action);
+        var access = NavigationMenu.GetScreenAccess(controller, action, httpMethod);
         if (access.RoleLists.Any(roles => !roles.Contains(role, StringComparer.OrdinalIgnoreCase)))
         {
             return false;

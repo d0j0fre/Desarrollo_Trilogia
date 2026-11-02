@@ -1,5 +1,7 @@
 @model Proyecto_Final.Models.Admin.OrderDetailViewModel
+@using Microsoft.AspNetCore.Http
 @using Proyecto_Final.Services
+@inject NavigationMenuService MenuAccess
 @{
     ViewData["Title"] = "Detalle del pedido";
     // SellerOrders/Detail reutiliza esta vista para el vendedor: sin cambiar estado ni facturar.
@@ -140,12 +142,17 @@
                 @{
                     // G2-30: solo los cambios que acepta sp_Admin_UpdateOrderStatus desde el estado actual.
                     var siguientes = OrderStatusFlow.NextStates(Model.Estado, Model.HasInvoice);
+                    // G2-32: cada botón según el permiso de la acción a la que lleva.
+                    var rol = Context.Session.GetString("UserRole");
+                    var puedeCambiarEstado = await MenuAccess.CanSubmitAsync(rol, "OrdersAdmin", "UpdateStatus");
+                    var puedeVerFactura = await MenuAccess.CanOpenAsync(rol, "Billing", "Detail");
+                    var puedeFacturar = await MenuAccess.CanSubmitAsync(rol, "Billing", "GenerateFromOrder");
                 }
                 <form asp-controller="OrdersAdmin" asp-action="UpdateStatus" method="post">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="pedidoId" value="@Model.PedidoId" />
 
-                    @if (siguientes.Count > 0)
+                    @if (siguientes.Count > 0 && puedeCambiarEstado)
                     {
                         <div class="form-group">
                             <label class="font-weight-bold" for="nuevoEstado">Nuevo estado</label>
@@ -161,13 +168,17 @@
                             <i class="fa fa-save mr-2"></i>Guardar estado
                         </button>
                     }
-                    else
+                    else if (puedeCambiarEstado)
                     {
                         <p class="text-muted">
                             @(Model.Estado is "EnRuta" or "Fallido"
                                 ? $"El estado «{OrderStatusFlow.Name(Model.Estado)}» lo actualiza Rutas y entregas."
                                 : $"Un pedido en estado «{OrderStatusFlow.Name(Model.Estado)}» no tiene cambios de estado desde esta pantalla.")
                         </p>
+                    }
+                    else
+                    {
+                        <p class="text-muted">Su perfil puede consultar el pedido, pero no cambiar su estado.</p>
                     }
 
                     <a asp-controller="OrdersAdmin" asp-action="Index" class="btn btn-ds-neutral btn-block">
@@ -177,21 +188,24 @@
 
                 <hr />
 
-                <h5 class="mb-3">Facturacion</h5>
+                <h5 class="mb-3">Facturación</h5>
 
                 @if (Model.HasInvoice && Model.FacturaId.HasValue)
                 {
+                    @if (puedeVerFactura)
+                    {
                     <a asp-controller="Billing"
                        asp-action="Detail"
                        asp-route-id="@Model.FacturaId.Value"
                        class="btn btn-ds-view btn-block mb-2">
                         <i class="fa fa-file-invoice mr-2"></i>Ver factura
                     </a>
+                    }
                     <p class="text-muted mb-0">
-                        Este pedido ya tiene una factura asociada.
+                        Este pedido ya tiene una factura asociada@(string.IsNullOrWhiteSpace(Model.NumeroFactura) ? "" : $" ({Model.NumeroFactura})").
                     </p>
                 }
-                else if (Model.CanGenerateInvoice)
+                else if (Model.CanGenerateInvoice && puedeFacturar)
                 {
                     <form asp-controller="Billing"
                           asp-action="GenerateFromOrder"
@@ -209,6 +223,12 @@
                     </form>
                     <p class="text-muted mb-0">
                         La factura se genera desde las lineas actuales del pedido. No se descuenta inventario en esta accion.
+                    </p>
+                }
+                else if (Model.CanGenerateInvoice)
+                {
+                    <p class="text-muted mb-0">
+                        Este pedido todavía no tiene factura. Su perfil no genera facturas.
                     </p>
                 }
                 else
