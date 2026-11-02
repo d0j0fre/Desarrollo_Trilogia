@@ -80,4 +80,19 @@ public static class AttendanceRules
         if (ordinary + overtime + absence == 0m) errors.Add("Debe registrar al menos una hora ordinaria, extra o de ausencia.");
         return errors;
     }
+
+    /// <summary>Solo un borrador o una jornada rechazada se pueden completar y volver a enviar (sp_RRHH_GuardarMiJornada).</summary>
+    public static bool IsEditable(string? estado) => estado is "Borrador" or "Rechazada";
+
+    /// <summary>Formulario para completar una jornada existente: conserva su id y su versión de fila.</summary>
+    public static AttendanceFormViewModel ToForm(AttendanceEntryViewModel entry) => new()
+    {
+        JornadaId = entry.JornadaId,
+        Fecha = entry.Fecha.Date,
+        HorasOrdinarias = entry.HorasOrdinarias,
+        HorasExtra = entry.HorasExtra,
+        HorasAusencia = entry.HorasAusencia,
+        Observaciones = entry.Observaciones,
+        RowVersionBase64 = entry.RowVersionBase64
+    };
 }
