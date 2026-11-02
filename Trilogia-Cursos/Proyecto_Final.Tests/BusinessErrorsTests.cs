@@ -43,6 +43,20 @@ public sealed class BusinessErrorsTests
         Assert.DoesNotContain("= \"No fue posible completar la operación solicitada.\"", source, StringComparison.Ordinal);
         Assert.DoesNotContain("(string.Empty, \"No fue posible completar la operación solicitada.\")", source, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public void G3_10_LaSolicitudDeGarantiaMuestraLaReglaDelProcedimiento()
+    {
+        const string generico = "No fue posible registrar la solicitud de garantía en este momento.";
+        var source = MobileCorreccionesTests.Read("Proyecto_Final", "Controllers", "ClientPortalController.cs");
+
+        // El catch del POST Warranty pasa la excepción por el helper común en vez de fijar el genérico.
+        Assert.Contains($"BusinessErrors.MessageOr(exception, \"{generico}\")", source, StringComparison.Ordinal);
+        Assert.Equal(1, source.Split(generico).Length - 1);
+        Assert.Equal("Ya existe una solicitud abierta para este producto.",
+            BusinessErrors.MessageOr(SqlErrors.Create(53302, "Ya existe una solicitud abierta para este producto."), generico));
+        Assert.Equal(generico, BusinessErrors.MessageOr(SqlErrors.Create(1205, "Deadlock"), generico));
+    }
 }
 
 /// <summary>SqlException no tiene constructor público: se arma como lo hace el proveedor.</summary>
