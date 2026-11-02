@@ -3,7 +3,7 @@ using Proyecto_Final.Services;
 
 namespace Proyecto_Final.Tests;
 
-/// <summary>Textos del portal del cliente (G3-13).</summary>
+/// <summary>Textos y estados del portal del cliente (G3-13, G3-20).</summary>
 public sealed class ClientPortalTextTests
 {
     public static TheoryData<string> Vistas => new()
@@ -53,6 +53,43 @@ public sealed class ClientPortalTextTests
     [InlineData("Pendiente", "Pendiente")]
     public void G3_13_LosCodigosDeEstadoTienenNombreLegible(string codigo, string nombre) =>
         Assert.Equal(nombre, OrderStatusFlow.Name(codigo));
+
+    [Fact]
+    public void G3_20_LosEstadosDeGarantiaUsanLaPastillaLegibleDelPortal()
+    {
+        var vista = Vista("Warranties.cshtml");
+
+        // Antes: badge bg-info/bg-success con el texto oscuro heredado encima del color fuerte.
+        Assert.DoesNotContain("badge bg-", vista, StringComparison.Ordinal);
+        Assert.Contains("<span class=\"s4-client-status-pill @claseEstado\">@solicitud.Estado</span>", vista, StringComparison.Ordinal);
+        foreach (var (estado, clase) in new[] { ("Pendiente", "warning"), ("En revisión", "info"), ("Aprobada", "success"), ("Rechazada", "danger") })
+        {
+            Assert.Contains($"\"{estado}\" => \"{clase}\"", vista, StringComparison.Ordinal);
+        }
+
+        // La variante azul es local a la vista y cumple AA (4.5:1) para texto pequeño.
+        var info = Regex.Match(vista, @"\.s4-client-status-pill\.info\s*\{\s*background:\s*(#[0-9a-f]{6});\s*color:\s*(#[0-9a-f]{6});");
+        Assert.True(info.Success);
+        Assert.True(Contraste(info.Groups[1].Value, info.Groups[2].Value) >= 4.5);
+    }
+
+    // Relación de contraste WCAG entre dos colores #rrggbb.
+    private static double Contraste(string fondo, string texto)
+    {
+        static double Luminancia(string hex)
+        {
+            double Canal(int i)
+            {
+                var c = Convert.ToInt32(hex.Substring(i, 2), 16) / 255.0;
+                return c <= 0.03928 ? c / 12.92 : Math.Pow((c + 0.055) / 1.055, 2.4);
+            }
+
+            return 0.2126 * Canal(1) + 0.7152 * Canal(3) + 0.0722 * Canal(5);
+        }
+
+        var (a, b) = (Luminancia(fondo), Luminancia(texto));
+        return (Math.Max(a, b) + 0.05) / (Math.Min(a, b) + 0.05);
+    }
 
     internal static string Vista(string archivo) =>
         MobileCorreccionesTests.Read("Proyecto_Final", "Views", "ClientPortal", archivo);
