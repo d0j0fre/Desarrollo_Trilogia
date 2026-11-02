@@ -15,7 +15,7 @@ class NotificationsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final inbox = ref.watch(notificationsInboxProvider);
-    final unread = inbox.value?.unread ?? 0;
+    final unread = inbox.valueOrNull?.unread ?? 0;
 
     return Scaffold(
       appBar: AppBar(
