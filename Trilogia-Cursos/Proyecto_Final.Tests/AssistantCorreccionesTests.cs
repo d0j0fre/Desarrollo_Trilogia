@@ -45,7 +45,6 @@ public sealed class AssistantCorreccionesTests
     [InlineData("consultas")]
     public void BUG_26_02_LaNavegacionDeLaAyudaExisteEnElMenu(string modulo)
     {
-        var layout = Read("Proyecto_Final", "Views", "Shared", "_Layout.cshtml");
         var texto = System.Text.RegularExpressions.Regex.Replace(AssistantService.ResponderAyuda(modulo).Respuesta, "<[^>]+>", string.Empty);
 
         Assert.DoesNotContain("Operación →", texto, StringComparison.Ordinal);
@@ -53,13 +52,11 @@ public sealed class AssistantCorreccionesTests
         Assert.NotEmpty(rutas);
         foreach (System.Text.RegularExpressions.Match ruta in rutas)
         {
-            // El área es una sección del menú y lo que sigue empieza con una opción de esa sección.
+            // El área es una sección del panel Administración y lo que sigue empieza con una opción de esa sección.
             var area = ruta.Groups[1].Value.Trim();
-            var inicioSeccion = layout.IndexOf($"acc-sec__label\">{area}</span>", StringComparison.Ordinal);
-            Assert.True(inicioSeccion >= 0, $"No existe la sección «{area}» en el menú.");
-            var finSeccion = layout.IndexOf("</details>", inicioSeccion, StringComparison.Ordinal);
-            var opciones = System.Text.RegularExpressions.Regex.Matches(layout[inicioSeccion..finSeccion], "<span>([^<]+)</span>")
-                .Select(m => m.Groups[1].Value);
+            var seccion = Proyecto_Final.Services.NavigationMenu.AdminPanel.SingleOrDefault(s => s.Label == area);
+            Assert.True(seccion is not null, $"No existe la sección «{area}» en el menú.");
+            var opciones = seccion!.Links.Select(l => l.Label);
             var resto = texto[(ruta.Index + ruta.Length)..];
             Assert.True(opciones.Any(o => resto.StartsWith(o, StringComparison.Ordinal)),
                 $"«{resto[..Math.Min(40, resto.Length)]}» no es una opción de «{area}» en el menú.");
