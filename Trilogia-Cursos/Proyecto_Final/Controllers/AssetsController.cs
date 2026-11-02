@@ -76,6 +76,25 @@ namespace Proyecto_Final.Controllers
             return View(model);
         }
 
+        // G2-03: un equipo devuelto a mantenimiento queda disponible cuando ya está reparado.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MarkAvailable(int id)
+        {
+            try
+            {
+                await _fleet.MarkAssetAvailableAsync(id);
+                await RegistrarAuditoriaAsync("Marcar disponible", "Activos", $"El activo #{id} volvió de mantenimiento y quedó disponible.");
+                TempData["SuccessMessage"] = "El activo quedó disponible para asignarlo en comodato.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "No se pudo marcar como disponible el activo {ActivoId}.", id);
+                TempData["ErrorMessage"] = BusinessErrors.MessageOr(ex, "No fue posible marcar el activo como disponible.");
+            }
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
