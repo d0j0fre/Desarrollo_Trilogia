@@ -67,9 +67,7 @@
                     <div class="col-md-6 mb-3">
                         <label class="font-weight-bold d-block">Método de pago</label>
                         <span>
-                            @(string.IsNullOrWhiteSpace(Model.MetodoPago)
-                                                        ? "No registrado"
-                                                        : Model.MetodoPago)
+                            @PaymentMethodNames.Display(Model.MetodoPago)
                         </span>
                     </div>
 
