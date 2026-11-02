@@ -188,12 +188,13 @@
                     @foreach (var producto in productos)
                     {
                         var claseStock = producto.Stock <= 0 ? "out" : producto.Stock <= 5 ? "low" : "ok";
-                        var imagen = string.IsNullOrWhiteSpace(producto.ImagenUrl) ? Url.Content("~/img/whisky-premium.webp") : Url.Content(producto.ImagenUrl);
+                        var imagen = Url.Content(Proyecto_Final.Services.ProductImageFallback.Resolve(producto.ImagenUrl, producto.Categoria));
+                        var respaldo = Url.Content(Proyecto_Final.Services.ProductImageFallback.ForCategory(producto.Categoria));
 
                         <article class="s3-product-card">
                             <a asp-controller="Home" asp-action="Detail" asp-route-id="@producto.ProductoId" class="s3-product-card__image">
                                 <img src="@imagen" alt="Producto @producto.Nombre" loading="lazy" width="360" height="360"
-                                     onerror="this.onerror=null;this.src='/img/whisky-premium.webp';" />
+                                     onerror="this.onerror=null;this.src='@respaldo';" />
                             </a>
 
                             <div class="s3-product-card__body">

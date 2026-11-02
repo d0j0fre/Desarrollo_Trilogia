@@ -40,7 +40,7 @@ public sealed class StoreDbService
             Descripcion = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
             Precio = reader.GetDecimal(4),
             Stock = reader.GetInt32(5),
-            ImagenUrl = reader.IsDBNull(6) ? "~/img/whisky-premium.webp" : reader.GetString(6)
+            ImagenUrl = reader.IsDBNull(6) ? string.Empty : reader.GetString(6)
         };
     }
 
