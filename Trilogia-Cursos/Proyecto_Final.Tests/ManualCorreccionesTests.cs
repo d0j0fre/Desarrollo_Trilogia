@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Proyecto_Final.Controllers;
@@ -120,15 +121,8 @@ public sealed class ManualCorreccionesTests
     }
 
     [Fact]
-    public void VentaMovil_ElDetalleSoloMuestraPedidosPropiosYSinAccionesDeAdministracion()
+    public void VentaMovil_ElDetalleDelVendedorNoTieneAccionesDeAdministracion()
     {
-        var controller = MobileCorreccionesTests.Read("Proyecto_Final", "Controllers", "SellerOrdersController.cs");
-        var detalle = controller[controller.IndexOf("public async Task<IActionResult> Detail(int id)", StringComparison.Ordinal)..];
-        detalle = detalle[..detalle.IndexOf("private bool IsAuthorizedSeller", StringComparison.Ordinal)];
-        Assert.Contains("GetSellerMyOrdersAsync(vendedorId, int.MaxValue)", detalle, StringComparison.Ordinal);
-        Assert.Contains("propios.Any(p => p.PedidoId == id)", detalle, StringComparison.Ordinal);
-        Assert.Contains("ViewData[\"SoloLectura\"] = true", detalle, StringComparison.Ordinal);
-
         var vista = MobileCorreccionesTests.Read("Proyecto_Final", "Views", "OrdersAdmin", "Detail.cshtml");
         var inicio = vista.IndexOf("@if (soloLectura)", StringComparison.Ordinal);
         var soloLectura = vista[inicio..vista.IndexOf("            else", inicio, StringComparison.Ordinal)];
@@ -141,6 +135,76 @@ public sealed class ManualCorreccionesTests
             Assert.DoesNotContain("asp-controller=\"OrdersAdmin\" asp-action=\"Detail\"", boton, StringComparison.Ordinal);
             Assert.Contains("asp-controller=\"@detalleController\" asp-action=\"Detail\"", boton, StringComparison.Ordinal);
         }
+    }
+
+    // Toda acción de Venta móvil que recibe el id de un pedido.
+    private static string[] NombresAccionesConPedido() => typeof(SellerOrdersController).GetMethods()
+        .Where(m => m.ReturnType == typeof(Task<IActionResult>)
+                    && m.GetParameters() is [{ Name: "id", ParameterType: var tipo }] && tipo == typeof(int))
+        .Select(m => m.Name)
+        .Order(StringComparer.Ordinal)
+        .ToArray();
+
+    public static TheoryData<string> AccionesConPedido() => new(NombresAccionesConPedido());
+
+    [Fact]
+    public void VentaMovil_SeRevisanTodasLasAccionesQueRecibenUnPedido() =>
+        Assert.Equal(new[] { "Confirmation", "Detail", "RetainedConfirmation" }, NombresAccionesConPedido());
+
+    [Theory]
+    [MemberData(nameof(AccionesConPedido))]
+    public async Task VentaMovil_UnPedidoAjenoSeRechaza(string accion)
+    {
+        var access = new Mock<ISellerOrderAccess>();
+        access.Setup(a => a.GetOwnOrderAsync(7, 99)).ReturnsAsync((OrderDetailViewModel?)null);
+        var controller = SellerController(access.Object);
+
+        var result = await (Task<IActionResult>)typeof(SellerOrdersController).GetMethod(accion)!.Invoke(controller, [99])!;
+
+        Assert.Equal("MyOrders", Assert.IsType<RedirectToActionResult>(result).ActionName);
+        Assert.Equal("No se encontró el pedido entre sus pedidos.", controller.TempData["ErrorMessage"]);
+        access.Verify(a => a.GetOwnOrderAsync(7, 99), Times.Once);
+    }
+
+    [Fact]
+    public async Task VentaMovil_UnPedidoPropioSePermite()
+    {
+        var pedido = new OrderDetailViewModel { PedidoId = 37, Estado = "Retenido" };
+        var access = new Mock<ISellerOrderAccess>();
+        access.Setup(a => a.GetOwnOrderAsync(7, 37)).ReturnsAsync(pedido);
+
+        var result = await SellerController(access.Object).RetainedConfirmation(37);
+
+        Assert.Same(pedido, Assert.IsType<ViewResult>(result).Model);
+    }
+
+    [Fact]
+    public void VentaMovil_LaSincronizacionNoDevuelveNiReenviaPedidosAjenos()
+    {
+        var controller = MobileCorreccionesTests.Read("Proyecto_Final", "Controllers", "SellerOrdersController.cs");
+        var sync = controller[controller.IndexOf("public async Task<IActionResult> SyncOffline", StringComparison.Ordinal)..];
+        var check = sync.IndexOf("_orderAccess.IsOwnOrderAsync(vendedorId, result.PedidoId)", StringComparison.Ordinal);
+
+        Assert.True(check > 0);
+        Assert.True(check < sync.IndexOf("EnviarComprobantePorCorreoAsync", StringComparison.Ordinal));
+        Assert.True(check < sync.IndexOf("RegistrarAuditoriaAsync", StringComparison.Ordinal));
+    }
+
+    private static SellerOrdersController SellerController(ISellerOrderAccess access)
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["ConnectionStrings:DefaultConnection"] = "Server=sin-uso" })
+            .Build();
+        var http = new DefaultHttpContext { Session = new TestSession() };
+        http.Session.SetInt32("UserId", 7);
+        http.Session.SetString("UserEmail", "vendedor@x.test");
+        http.Session.SetString("UserRole", "Vendedor");
+        return new SellerOrdersController(new AdminDbService(configuration), new EmailService(configuration),
+            NullLogger<SellerOrdersController>.Instance, Mock.Of<ICrossSellService>(), access)
+        {
+            ControllerContext = new ControllerContext { HttpContext = http },
+            TempData = new TempDataDictionary(http, Mock.Of<ITempDataProvider>())
+        };
     }
 
     private static AttendanceEntryViewModel Jornada(string estado) => new()
