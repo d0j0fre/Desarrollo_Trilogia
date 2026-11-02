@@ -11,7 +11,8 @@ public sealed class RejectRetainedOrderTests
 
         Assert.Contains("data-s3-confirm-title=\"Rechazar pedido #@Model.Pedido.PedidoId\"", form[..600], StringComparison.Ordinal);
         Assert.Contains("addEventListener('click'", vista, StringComparison.Ordinal);
-        Assert.Contains("jQuery(form).valid()", vista, StringComparison.Ordinal);
+        Assert.Contains("if (motivo.value.trim()) return;", vista, StringComparison.Ordinal);
+        Assert.Contains("motivo.getAttribute('data-val-required')", vista, StringComparison.Ordinal);
     }
 
     [Fact]

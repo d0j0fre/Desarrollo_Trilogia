@@ -194,9 +194,19 @@
         (function () {
             var form = document.getElementById('rechazarPedidoForm');
             if (!form) return;
+            var motivo = form.querySelector('textarea');
+            var mensaje = form.querySelector('[data-valmsg-for="' + motivo.name + '"]');
             form.querySelector('button[type=submit]').addEventListener('click', function (event) {
-                var valido = window.jQuery && jQuery.fn.valid ? jQuery(form).valid() : form.reportValidity();
-                if (!valido) event.preventDefault();
+                if (motivo.value.trim()) return;
+                event.preventDefault();
+                motivo.classList.add('is-invalid');
+                if (mensaje) mensaje.textContent = motivo.getAttribute('data-val-required');
+                motivo.focus();
+            });
+            motivo.addEventListener('input', function () {
+                if (!motivo.value.trim()) return;
+                motivo.classList.remove('is-invalid');
+                if (mensaje) mensaje.textContent = '';
             });
         })();
     </script>
