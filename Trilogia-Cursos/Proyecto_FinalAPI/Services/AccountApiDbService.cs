@@ -45,7 +45,7 @@ namespace Proyecto_FinalAPI.Services
             CancellationToken cancellationToken = default)
         {
             await using var connection = new SqlConnection(_connectionString);
-            await using var command = CreateValidateUserCommand(connection, email, password);
+            await using var command = CreateValidateUserCommand(connection, email);
 
             try
             {
@@ -63,10 +63,9 @@ namespace Proyecto_FinalAPI.Services
                 var user = MapAuthenticatedUser(reader);
                 var hashOrdinal = reader.GetOrdinal("ContrasenaHash");
                 var storedHash = reader.IsDBNull(hashOrdinal) ? null : reader.GetString(hashOrdinal);
-                var legacyMatch = reader.GetBoolean(reader.GetOrdinal("LegacyPasswordMatches"));
-                var verified = string.IsNullOrWhiteSpace(storedHash)
-                    ? legacyMatch
-                    : _passwordHashes.Verify(password, storedHash);
+                // Sin hash no hay credencial válida: el texto plano ya no se guarda ni se compara (migración 0310).
+                var verified = !string.IsNullOrWhiteSpace(storedHash)
+                    && _passwordHashes.Verify(password, storedHash);
 
                 await reader.DisposeAsync();
                 if (!verified || !user.Activo)
@@ -81,10 +80,11 @@ namespace Proyecto_FinalAPI.Services
                         return null;
                 }
 
-                if (string.IsNullOrWhiteSpace(storedHash))
+                if (_passwordHashes.NeedsRehash(storedHash!))
                 {
+                    // El hash de transición de la migración 0310 pasa a PBKDF2 en el primer ingreso correcto.
                     await SetPasswordHashAsync(connection, user.UsuarioId, _passwordHashes.Hash(password), cancellationToken);
-                    _logger.LogInformation("La credencial heredada del usuario {UserId} se migró a hash.", user.UsuarioId);
+                    _logger.LogInformation("La credencial del usuario {UserId} se actualizó a PBKDF2.", user.UsuarioId);
                 }
 
                 return user;
@@ -101,14 +101,14 @@ namespace Proyecto_FinalAPI.Services
             }
         }
 
-        internal static SqlCommand CreateValidateUserCommand(SqlConnection connection, string email, string password)
+        // La contraseña no viaja a la base: el procedimiento devuelve el hash y la verificación es de la API.
+        internal static SqlCommand CreateValidateUserCommand(SqlConnection connection, string email)
         {
             var command = new SqlCommand("dbo.sp_Auth_GetLoginCredential", connection)
             {
                 CommandType = CommandType.StoredProcedure
             };
             command.Parameters.Add(new SqlParameter("@Correo", SqlDbType.NVarChar, 150) { Value = email.Trim() });
-            command.Parameters.Add(new SqlParameter("@Contrasena", SqlDbType.NVarChar, 255) { Value = password });
             return command;
         }
 

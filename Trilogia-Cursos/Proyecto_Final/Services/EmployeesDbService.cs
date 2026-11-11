@@ -264,10 +264,7 @@ namespace Proyecto_Final.Services
 
         private static string HashPassword(string password)
         {
-            const int iterations = 210000;
-            var salt = System.Security.Cryptography.RandomNumberGenerator.GetBytes(16);
-            var hash = System.Security.Cryptography.Rfc2898DeriveBytes.Pbkdf2(password, salt, iterations, System.Security.Cryptography.HashAlgorithmName.SHA256, 32);
-            return $"pbkdf2-sha256${iterations}${Convert.ToBase64String(salt)}${Convert.ToBase64String(hash)}";
+            return PasswordHasher.Hash(password);
         }
 
         public async Task<bool> ToggleEmployeeStatusAsync(int empleadoId)
