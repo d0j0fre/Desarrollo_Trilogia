@@ -1,3 +1,4 @@
+@using Proyecto_Final.Models.Admin
 @model Proyecto_Final.Models.Admin.RouteDetailViewModel
 @{
     ViewData["Title"] = $"Ruta {Model.Cabecera.Codigo}";
@@ -197,6 +198,7 @@
                                 <th># Pedido</th>
                                 <th>Cliente</th>
                                 <th>Dirección</th>
+                                <th>Prioridad</th>
                                 <th>Entrega</th>
                                 <th class="text-center">Evidencias</th>
                                 @if (esPlanificada)
@@ -213,6 +215,7 @@
                                     <td class="font-weight-bold">#@p.PedidoId</td>
                                     <td>@p.Cliente</td>
                                     <td><small>@p.DireccionEntrega</small></td>
+                                    <td>@RoutePriority.Texto(p.Prioridad)</td>
                                     <td>
                                         <span class="admin-badge-soft @BadgeEntrega(p.EstadoEntrega)">@TextoEntrega(p.EstadoEntrega)</span>
                                         @if (p.EstadoEntrega == "Fallido" && !string.IsNullOrWhiteSpace(p.MotivoFallo))
@@ -275,7 +278,7 @@
                     <div class="admin-table-wrapper mt-3">
                         <div class="p-3 border-bottom">
                             <h6 class="mb-0">Orden manual y ubicación en mapa (CU-251)</h6>
-                            <small class="text-muted">Pulse <strong>Ubicar</strong> en una parada y haga clic en el mapa para fijar su coordenada (o arrastre el pin). Guarde antes de despachar. La ubicación se recuerda para ese cliente.</small>
+                            <small class="text-muted">Pulse <strong>Ubicar</strong> en una parada y haga clic en el mapa para fijar su coordenada (o arrastre el pin). Guarde antes de despachar. La ubicación se recuerda para ese cliente. La <strong>prioridad</strong> (Urgente, Alta, Normal) define el orden de "Secuenciar automáticamente": primero las Urgentes, luego las Altas y al final las Normales; dentro de cada nivel, la parada más cercana.</small>
                         </div>
                         <div class="p-3">
                             <div id="routePickerMap" class="mb-3"></div>
@@ -284,7 +287,7 @@
                                 <input type="hidden" name="rutaId" value="@c.RutaId" />
                                 <table class="table table-sm mb-3">
                                     <thead class="thead-light">
-                                        <tr><th style="width:80px">Orden</th><th># Pedido</th><th>Latitud</th><th>Longitud</th><th></th></tr>
+                                        <tr><th style="width:80px">Orden</th><th># Pedido</th><th style="width:130px">Prioridad</th><th>Latitud</th><th>Longitud</th><th></th></tr>
                                     </thead>
                                     <tbody>
                                         @foreach (var p in Model.Pedidos)
@@ -295,6 +298,14 @@
                                                     <input type="number" name="secuencia" value="@p.Secuencia" class="form-control form-control-sm seq-input" min="1" />
                                                 </td>
                                                 <td class="align-middle font-weight-bold">#@p.PedidoId<br /><small class="text-muted">@p.Cliente</small></td>
+                                                <td>
+                                                    <select name="prioridad" class="form-control form-control-sm" aria-label="Prioridad del pedido #@p.PedidoId">
+                                                        @foreach (var (valor, texto) in RoutePriority.Opciones)
+                                                        {
+                                                            <option value="@valor" selected="@(valor == p.Prioridad)">@texto</option>
+                                                        }
+                                                    </select>
+                                                </td>
                                                 <td><input type="number" step="0.000001" name="lat" value="@(p.Latitud?.ToString(System.Globalization.CultureInfo.InvariantCulture))" class="form-control form-control-sm lat-input" placeholder="9.93" /></td>
                                                 <td><input type="number" step="0.000001" name="lng" value="@(p.Longitud?.ToString(System.Globalization.CultureInfo.InvariantCulture))" class="form-control form-control-sm lng-input" placeholder="-84.08" /></td>
                                                 <td class="align-middle text-center">

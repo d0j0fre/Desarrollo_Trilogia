@@ -177,9 +177,10 @@ namespace Proyecto_Final.Services
 
         public async Task<(int RutaId, string Codigo)> CreateRouteAsync(
             string zona, int choferUsuarioId, int vehiculoId, string? observaciones,
-            List<int> pedidos, int creadaPorUsuarioId, string creadaPorNombre)
+            List<int> pedidos, int creadaPorUsuarioId, string creadaPorNombre,
+            IReadOnlyDictionary<int, int>? prioridades = null)
         {
-            var pedidosJson = "[" + string.Join(",", pedidos.Distinct().Select(id => $"{{\"pedidoId\":{id}}}")) + "]";
+            var pedidosJson = BuildOrdersJson(pedidos, prioridades);
 
             await using var connection = new SqlConnection(_connectionString);
             await using var command = new SqlCommand("dbo.sp_Rutas_Create", connection) { CommandType = CommandType.StoredProcedure };
@@ -197,6 +198,17 @@ namespace Proyecto_Final.Services
                 return (reader.GetInt32(0), reader.IsDBNull(1) ? string.Empty : reader.GetString(1));
             }
             return (0, string.Empty);
+        }
+
+        // JSON de pedidos para sp_Rutas_Create: {"pedidoId":n,"prioridad":1..3}. Sin prioridad
+        // elegida el procedimiento usa 3 (Normal). Un valor fuera de 1 a 3 lo rechaza el procedimiento.
+        public static string BuildOrdersJson(IEnumerable<int> pedidos, IReadOnlyDictionary<int, int>? prioridades)
+        {
+            var items = pedidos.Distinct().Select(id =>
+                prioridades != null && prioridades.TryGetValue(id, out var prioridad)
+                    ? (object)new { pedidoId = id, prioridad }
+                    : new { pedidoId = id });
+            return System.Text.Json.JsonSerializer.Serialize(items);
         }
 
         public async Task<List<RouteListItemViewModel>> GetRoutesAsync(string? estado, string? buscar)
@@ -284,7 +296,8 @@ namespace Proyecto_Final.Services
                     EstadoPedido = reader.IsDBNull(10) ? string.Empty : reader.GetString(10),
                     TotalEvidencias = reader.IsDBNull(11) ? 0 : reader.GetInt32(11),
                     Latitud = reader.IsDBNull(12) ? null : reader.GetDecimal(12),
-                    Longitud = reader.IsDBNull(13) ? null : reader.GetDecimal(13)
+                    Longitud = reader.IsDBNull(13) ? null : reader.GetDecimal(13),
+                    Prioridad = reader.FieldCount > 14 && !reader.IsDBNull(14) ? Convert.ToInt32(reader.GetValue(14)) : RoutePriority.Normal
                 });
             }
             return lista;

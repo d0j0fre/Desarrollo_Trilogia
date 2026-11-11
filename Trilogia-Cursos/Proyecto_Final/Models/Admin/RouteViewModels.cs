@@ -55,6 +55,29 @@ namespace Proyecto_Final.Models.Admin
         public int TotalEvidencias { get; set; }
         public decimal? Latitud { get; set; }
         public decimal? Longitud { get; set; }
+        public int Prioridad { get; set; } = RoutePriority.Normal;
+    }
+
+    // Prioridad de una parada (BUG-10-01). La secuenciación automática visita primero las
+    // paradas de prioridad 1, luego las de 2 y al final las de 3; dentro de cada nivel
+    // sigue el vecino más cercano. Los valores son los que guarda RutaPedidos.Prioridad.
+    public static class RoutePriority
+    {
+        public const int Urgente = 1;
+        public const int Alta = 2;
+        public const int Normal = 3;
+
+        public static IReadOnlyList<(int Valor, string Texto)> Opciones { get; } = new[]
+        {
+            (Urgente, "Urgente"), (Alta, "Alta"), (Normal, "Normal")
+        };
+
+        public static string Texto(int prioridad) => prioridad switch
+        {
+            Urgente => "Urgente",
+            Alta => "Alta",
+            _ => "Normal"
+        };
     }
 
     // ── Pedido asignable a una ruta ─────────────────────────
@@ -107,6 +130,9 @@ namespace Proyecto_Final.Models.Admin
         public string? Observaciones { get; set; }
 
         public List<int> PedidosSeleccionados { get; set; } = new();
+
+        // Prioridad elegida por pedido (BUG-10-01): Prioridades[pedidoId] = 1 Urgente, 2 Alta, 3 Normal.
+        public Dictionary<int, int> Prioridades { get; set; } = new();
 
         // Datos para poblar el formulario
         public List<AssignableOrderViewModel> PedidosDisponibles { get; set; } = new();

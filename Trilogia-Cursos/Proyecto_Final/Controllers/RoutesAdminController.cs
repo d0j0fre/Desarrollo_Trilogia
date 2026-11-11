@@ -67,7 +67,7 @@ namespace Proyecto_Final.Controllers
             {
                 var (rutaId, codigo) = await _logistics.CreateRouteAsync(
                     model.Zona, model.ChoferUsuarioId, model.VehiculoId, model.Observaciones,
-                    model.PedidosSeleccionados, usuarioId, usuarioNombre);
+                    model.PedidosSeleccionados, usuarioId, usuarioNombre, model.Prioridades);
 
                 await RegistrarAuditoriaAsync(
                     "Crear ruta", "Rutas",
@@ -268,7 +268,7 @@ namespace Proyecto_Final.Controllers
         // de la cultura regional del servidor.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SaveSequence(int rutaId, List<int> rutaPedidoId, List<int> secuencia, List<string?> lat, List<string?> lng)
+        public async Task<IActionResult> SaveSequence(int rutaId, List<int> rutaPedidoId, List<int> secuencia, List<string?> lat, List<string?> lng, List<int>? prioridad = null)
         {
             try
             {
@@ -285,7 +285,8 @@ namespace Proyecto_Final.Controllers
                         rutaPedidoId = rutaPedidoId[i],
                         secuencia = i < secuencia.Count ? secuencia[i] : i + 1,
                         lat = latVal,
-                        lng = lngVal
+                        lng = lngVal,
+                        prioridad = prioridad != null && i < prioridad.Count ? prioridad[i] : (int?)null
                     });
                 }
                 var json = System.Text.Json.JsonSerializer.Serialize(items);

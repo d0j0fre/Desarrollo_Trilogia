@@ -1,3 +1,4 @@
+@using Proyecto_Final.Models.Admin
 @model Proyecto_Final.Models.Admin.RouteCreateViewModel
 @{
     ViewData["Title"] = "Nueva ruta de entrega";
@@ -88,7 +89,7 @@
                 <div class="admin-table-wrapper">
                     <div class="p-4 border-bottom d-flex justify-content-between align-items-center flex-wrap">
                         <h5 class="mb-0">Pedidos por asignar</h5>
-                        <span class="text-muted">Seleccione los pedidos de la zona</span>
+                        <span class="text-muted">Seleccione los pedidos de la zona. La secuenciación automática visita primero los de prioridad Urgente, luego Alta y al final Normal; dentro de cada nivel, el más cercano.</span>
                     </div>
                     <div class="table-responsive" style="max-height: 460px; overflow-y: auto;">
                         <table class="table table-hover mb-0">
@@ -99,12 +100,13 @@
                                     <th>Cliente</th>
                                     <th>Dirección</th>
                                     <th>Total</th>
+                                    <th style="width:150px;">Prioridad</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @if (!Model.PedidosDisponibles.Any())
                                 {
-                                    <tr><td colspan="5" class="text-center text-muted py-4">No hay pedidos pendientes de asignar.</td></tr>
+                                    <tr><td colspan="6" class="text-center text-muted py-4">No hay pedidos pendientes de asignar.</td></tr>
                                 }
                                 else
                                 {
@@ -119,6 +121,14 @@
                                             <td>@p.Cliente</td>
                                             <td><small>@p.DireccionEntrega</small></td>
                                             <td>₡@p.Total.ToString("N2")</td>
+                                            <td>
+                                                <select name="Prioridades[@p.PedidoId]" class="form-control form-control-sm" aria-label="Prioridad del pedido #@p.PedidoId">
+                                                    @foreach (var (valor, texto) in RoutePriority.Opciones)
+                                                    {
+                                                        <option value="@valor" selected="@(valor == RoutePriority.Normal)">@texto</option>
+                                                    }
+                                                </select>
+                                            </td>
                                         </tr>
                                     }
                                 }
