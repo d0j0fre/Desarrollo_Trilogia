@@ -516,6 +516,19 @@ public sealed class RrhhCorreccionesTests
         Assert.Contains("@if (isEmployeePortalUser)", layout[(attendance - 220)..attendance], StringComparison.Ordinal);
     }
 
+    // ───────────── BUD-QF · el formulario rápido de Presupuestos acepta decimales ─────────────
+
+    [Fact]
+    public void BUD_QF_ElMontoRenombradoLlevaSuPropiaMarcaDeCulturaInvariante()
+    {
+        var view = Read("Proyecto_Final", "Views", "Budgets", "Index.cshtml");
+
+        // El tag helper marca la cultura invariante con el nombre del modelo (NewBudget.AnnualAmount); al renombrar el
+        // campo a «AnnualAmount» la marca debe llevar ese mismo nombre o «1200000.50» se lee con la cultura del servidor.
+        Assert.Contains("name=\"AnnualAmount\"", view, StringComparison.Ordinal);
+        Assert.Contains("<input type=\"hidden\" name=\"__Invariant\" value=\"AnnualAmount\" />", view, StringComparison.Ordinal);
+    }
+
     // ───────────── ayudas ─────────────
 
     private static string Plain(string text) => text.Replace('\u00A0', ' ').Replace('\u202F', ' ');
