@@ -93,14 +93,16 @@ namespace Proyecto_Final.Controllers
                 _logger.LogWarning(exception, "Registro duplicado al crear empleado.");
                 ModelState.AddModelError(string.Empty, "La identificación, el correo o la fecha de vigencia ya se encuentran registrados.");
             }
-            catch (InvalidOperationException)
+            catch (Exception exception) when (BusinessErrors.TryGetMessage(exception, out _) || BusinessErrors.IsApplicationRule(exception))
             {
-                ModelState.AddModelError(string.Empty, "No se pudo registrar el empleado. Revise los datos e intente nuevamente.");
+                // G2-21: la causa («Ya existe un usuario registrado con ese correo.») se muestra tal cual.
+                _logger.LogWarning(exception, "Regla de negocio al registrar el empleado.");
+                ModelState.AddModelError(string.Empty, BusinessErrors.TryGetMessage(exception, out var message) ? message : exception.Message);
             }
             catch (Exception exception)
             {
                 _logger.LogError(exception, "No fue posible registrar el empleado.");
-                ModelState.AddModelError(string.Empty, "Ocurrio un error al registrar el empleado. Intente nuevamente.");
+                ModelState.AddModelError(string.Empty, "Ocurrió un error al registrar el empleado. Intente nuevamente.");
             }
 
             model.RolesDisponibles = await _employeesDbService.GetEmployeeRoleSelectListAsync(ActorRole, model.PerfilId);
@@ -202,15 +204,15 @@ namespace Proyecto_Final.Controllers
                 _logger.LogWarning(exception, "Conflicto de concurrencia al actualizar el empleado {EmployeeId}.", model.EmpleadoId);
                 ModelState.AddModelError(string.Empty, "El expediente cambió mientras lo editaba. Recargue la página e intente nuevamente.");
             }
-            catch (InvalidOperationException exception)
+            catch (Exception exception) when (BusinessErrors.TryGetMessage(exception, out _) || BusinessErrors.IsApplicationRule(exception))
             {
-                _logger.LogWarning(exception, "Datos incompletos al actualizar el empleado {EmployeeId}.", model.EmpleadoId);
-                ModelState.AddModelError(string.Empty, "Revise la identificación y la fecha de vigencia del salario.");
+                _logger.LogWarning(exception, "Regla de negocio al actualizar el empleado {EmployeeId}.", model.EmpleadoId);
+                ModelState.AddModelError(string.Empty, BusinessErrors.TryGetMessage(exception, out var message) ? message : exception.Message);
             }
             catch (Exception exception)
             {
                 _logger.LogError(exception, "No fue posible actualizar el empleado {EmployeeId}.", model.EmpleadoId);
-                ModelState.AddModelError(string.Empty, "Ocurrio un error al actualizar el empleado. Intente nuevamente.");
+                ModelState.AddModelError(string.Empty, "Ocurrió un error al actualizar el empleado. Intente nuevamente.");
             }
 
             model.RolesDisponibles = await _employeesDbService.GetEmployeeRoleSelectListAsync(ActorRole, model.PerfilId);
@@ -276,9 +278,10 @@ namespace Proyecto_Final.Controllers
                     ? "Empleado reactivado correctamente."
                     : "Empleado inactivado correctamente.";
             }
-            catch (Exception)
+            catch (Exception exception)
             {
-                TempData["ErrorMessage"] = "Ocurrió un error al cambiar el estado del empleado.";
+                _logger.LogWarning(exception, "No fue posible cambiar el estado del empleado {EmployeeId}.", empleadoId);
+                TempData["ErrorMessage"] = BusinessErrors.MessageOr(exception, "Ocurrió un error al cambiar el estado del empleado.");
             }
 
             return RedirectToAction(nameof(Index), new { buscar, estado });
