@@ -43,7 +43,7 @@ namespace Proyecto_Final.Controllers
             {
                 Activo = true,
                 FechaContratacion = DateTime.Today,
-                RolesDisponibles = await _employeesDbService.GetEmployeeRoleSelectListAsync()
+                RolesDisponibles = await _employeesDbService.GetEmployeeRoleSelectListAsync(ActorRole)
             };
 
             return View(model);
@@ -64,9 +64,12 @@ namespace Proyecto_Final.Controllers
                 ModelState.AddModelError(nameof(model.Salario), "El salario no puede ser negativo.");
             }
 
+            // G2-22: el rol se valida en el servidor, no solo en la lista que ve el usuario.
+            await ValidateAssignableRoleAsync(model.PerfilId);
+
             if (!ModelState.IsValid)
             {
-                model.RolesDisponibles = await _employeesDbService.GetEmployeeRoleSelectListAsync(model.PerfilId);
+                model.RolesDisponibles = await _employeesDbService.GetEmployeeRoleSelectListAsync(ActorRole, model.PerfilId);
                 return View(model);
             }
 
@@ -90,17 +93,19 @@ namespace Proyecto_Final.Controllers
                 _logger.LogWarning(exception, "Registro duplicado al crear empleado.");
                 ModelState.AddModelError(string.Empty, "La identificación, el correo o la fecha de vigencia ya se encuentran registrados.");
             }
-            catch (InvalidOperationException)
+            catch (Exception exception) when (BusinessErrors.TryGetMessage(exception, out _) || BusinessErrors.IsApplicationRule(exception))
             {
-                ModelState.AddModelError(string.Empty, "No se pudo registrar el empleado. Revise los datos e intente nuevamente.");
+                // G2-21: la causa («Ya existe un usuario registrado con ese correo.») se muestra tal cual.
+                _logger.LogWarning(exception, "Regla de negocio al registrar el empleado.");
+                ModelState.AddModelError(string.Empty, BusinessErrors.TryGetMessage(exception, out var message) ? message : exception.Message);
             }
             catch (Exception exception)
             {
                 _logger.LogError(exception, "No fue posible registrar el empleado.");
-                ModelState.AddModelError(string.Empty, "Ocurrio un error al registrar el empleado. Intente nuevamente.");
+                ModelState.AddModelError(string.Empty, "Ocurrió un error al registrar el empleado. Intente nuevamente.");
             }
 
-            model.RolesDisponibles = await _employeesDbService.GetEmployeeRoleSelectListAsync(model.PerfilId);
+            model.RolesDisponibles = await _employeesDbService.GetEmployeeRoleSelectListAsync(ActorRole, model.PerfilId);
             return View(model);
         }
 
@@ -116,6 +121,13 @@ namespace Proyecto_Final.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            if (!EmployeeRolePolicy.CanManage(ActorRole, model.Rol))
+            {
+                TempData["ErrorMessage"] = ManageDeniedMessage;
+                return RedirectToAction(nameof(Index));
+            }
+
+            model.RolesDisponibles = await _employeesDbService.GetEmployeeRoleSelectListAsync(ActorRole, model.PerfilId);
             return View(model);
         }
 
@@ -136,9 +148,34 @@ namespace Proyecto_Final.Controllers
                 ModelState.AddModelError(nameof(model.Salario), "El salario no puede ser negativo.");
             }
 
+            // G2-22: la cuenta destino se lee de la base (no del formulario) y se valida quién puede tocarla.
+            var current = await _employeesDbService.GetEmployeeDetailAsync(model.EmpleadoId);
+            if (current == null)
+            {
+                TempData["ErrorMessage"] = "No se encontró el empleado solicitado.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (!EmployeeRolePolicy.CanManage(ActorRole, current.Rol))
+            {
+                TempData["ErrorMessage"] = ManageDeniedMessage;
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (current.UsuarioId == ActorUserId)
+            {
+                if (!model.Activo)
+                    ModelState.AddModelError(string.Empty, SelfDeactivationMessage);
+                if (model.PerfilId != current.PerfilId)
+                    ModelState.AddModelError(string.Empty, "No puede cambiar su propio rol.");
+            }
+
+            await ValidateAssignableRoleAsync(model.PerfilId);
+
             if (!ModelState.IsValid)
             {
-                model.RolesDisponibles = await _employeesDbService.GetEmployeeRoleSelectListAsync(model.PerfilId);
+                model.Rol = current.Rol;
+                model.RolesDisponibles = await _employeesDbService.GetEmployeeRoleSelectListAsync(ActorRole, model.PerfilId);
                 return View(model);
             }
 
@@ -167,18 +204,18 @@ namespace Proyecto_Final.Controllers
                 _logger.LogWarning(exception, "Conflicto de concurrencia al actualizar el empleado {EmployeeId}.", model.EmpleadoId);
                 ModelState.AddModelError(string.Empty, "El expediente cambió mientras lo editaba. Recargue la página e intente nuevamente.");
             }
-            catch (InvalidOperationException exception)
+            catch (Exception exception) when (BusinessErrors.TryGetMessage(exception, out _) || BusinessErrors.IsApplicationRule(exception))
             {
-                _logger.LogWarning(exception, "Datos incompletos al actualizar el empleado {EmployeeId}.", model.EmpleadoId);
-                ModelState.AddModelError(string.Empty, "Revise la identificación y la fecha de vigencia del salario.");
+                _logger.LogWarning(exception, "Regla de negocio al actualizar el empleado {EmployeeId}.", model.EmpleadoId);
+                ModelState.AddModelError(string.Empty, BusinessErrors.TryGetMessage(exception, out var message) ? message : exception.Message);
             }
             catch (Exception exception)
             {
                 _logger.LogError(exception, "No fue posible actualizar el empleado {EmployeeId}.", model.EmpleadoId);
-                ModelState.AddModelError(string.Empty, "Ocurrio un error al actualizar el empleado. Intente nuevamente.");
+                ModelState.AddModelError(string.Empty, "Ocurrió un error al actualizar el empleado. Intente nuevamente.");
             }
 
-            model.RolesDisponibles = await _employeesDbService.GetEmployeeRoleSelectListAsync(model.PerfilId);
+            model.RolesDisponibles = await _employeesDbService.GetEmployeeRoleSelectListAsync(ActorRole, model.PerfilId);
             return View(model);
         }
 
@@ -208,6 +245,26 @@ namespace Proyecto_Final.Controllers
                 return RedirectToAction(nameof(Index), new { buscar, estado });
             }
 
+            // G2-22: nadie se inactiva a sí mismo y solo el Administrador toca cuentas de Administrador o Gerente.
+            var target = await _employeesDbService.GetEmployeeDetailAsync(empleadoId);
+            if (target == null)
+            {
+                TempData["ErrorMessage"] = "No se encontró el empleado solicitado.";
+                return RedirectToAction(nameof(Index), new { buscar, estado });
+            }
+
+            if (target.UsuarioId == ActorUserId)
+            {
+                TempData["ErrorMessage"] = SelfDeactivationMessage;
+                return RedirectToAction(nameof(Index), new { buscar, estado });
+            }
+
+            if (!EmployeeRolePolicy.CanManage(ActorRole, target.Rol))
+            {
+                TempData["ErrorMessage"] = ManageDeniedMessage;
+                return RedirectToAction(nameof(Index), new { buscar, estado });
+            }
+
             try
             {
                 var nuevoEstado = await _employeesDbService.ToggleEmployeeStatusAsync(empleadoId);
@@ -221,9 +278,10 @@ namespace Proyecto_Final.Controllers
                     ? "Empleado reactivado correctamente."
                     : "Empleado inactivado correctamente.";
             }
-            catch (Exception)
+            catch (Exception exception)
             {
-                TempData["ErrorMessage"] = "Ocurrió un error al cambiar el estado del empleado.";
+                _logger.LogWarning(exception, "No fue posible cambiar el estado del empleado {EmployeeId}.", empleadoId);
+                TempData["ErrorMessage"] = BusinessErrors.MessageOr(exception, "Ocurrió un error al cambiar el estado del empleado.");
             }
 
             return RedirectToAction(nameof(Index), new { buscar, estado });
@@ -322,12 +380,30 @@ namespace Proyecto_Final.Controllers
 
                 TempData["SuccessMessage"] = "Solicitud actualizada correctamente.";
             }
-            catch (Exception)
+            catch (Exception exception)
             {
-                TempData["ErrorMessage"] = "No fue posible actualizar la solicitud.";
+                // G2-24: el procedimiento rechaza las transiciones no válidas y explica por qué.
+                _logger.LogWarning(exception, "No fue posible actualizar la solicitud de licencia {SolicitudId}.", model.SolicitudId);
+                TempData["ErrorMessage"] = BusinessErrors.MessageOr(exception, "No fue posible actualizar la solicitud.");
             }
 
             return RedirectToAction(nameof(LeaveRequests), new { estado = estadoFiltro });
+        }
+
+        private const string ManageDeniedMessage = "No tiene permiso para modificar esa cuenta: solo puede administrar cuentas de un rol inferior al suyo.";
+        private const string SelfDeactivationMessage = "No puede inactivar su propia cuenta.";
+
+        private string? ActorRole => HttpContext.Session.GetString("UserRole");
+        private int ActorUserId => HttpContext.Session.GetInt32("UserId") ?? 0;
+
+        /// <summary>El rol elegido debe existir y ser de nivel menor al de quien registra (el Administrador puede asignar cualquiera).</summary>
+        private async Task ValidateAssignableRoleAsync(int perfilId)
+        {
+            var role = (await _employeesDbService.GetEmployeeRolesAsync()).FirstOrDefault(candidate => candidate.PerfilId == perfilId);
+            if (role == null || !EmployeeRolePolicy.CanAssign(ActorRole, role.Nombre))
+            {
+                ModelState.AddModelError(nameof(EmployeeFormViewModel.PerfilId), "No tiene permiso para asignar ese rol.");
+            }
         }
 
         private async Task RegistrarAuditoriaAsync(string accion, string modulo, string descripcion)

@@ -5,7 +5,9 @@ using Proyecto_Final.Services;
 
 namespace Proyecto_Final.Controllers
 {
-    [SessionAuthorize("Empleado", "Vendedor")]
+    // G2-36: Mi portal se abre a todo el personal con expediente de empleado (no solo a Empleado y Vendedor).
+    // Un cliente no es personal: se le niega aquí; quien no tiene expediente recibe un mensaje en Index.
+    [SessionAuthorize]
     public class EmployeePortalController : Controller
     {
         private readonly IEmployeesService _employeesDbService;
@@ -17,9 +19,16 @@ namespace Proyecto_Final.Controllers
             _adminDbService = adminDbService;
         }
 
+        private bool IsClient => string.Equals(HttpContext.Session.GetString("UserRole"), "Cliente", StringComparison.OrdinalIgnoreCase);
+
         [HttpGet]
         public async Task<IActionResult> Index()
         {
+            if (IsClient)
+            {
+                return AuthorizationResults.AccessDenied();
+            }
+
             var usuarioId = HttpContext.Session.GetInt32("UserId") ?? 0;
             if (usuarioId <= 0)
             {
@@ -41,6 +50,11 @@ namespace Proyecto_Final.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RequestTimeOff(EmployeeLeaveRequestFormViewModel model)
         {
+            if (IsClient)
+            {
+                return AuthorizationResults.AccessDenied();
+            }
+
             var usuarioId = HttpContext.Session.GetInt32("UserId") ?? 0;
             if (usuarioId <= 0)
             {
@@ -81,6 +95,11 @@ namespace Proyecto_Final.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateMyTaskStatus(int tareaId, string estado)
         {
+            if (IsClient)
+            {
+                return AuthorizationResults.AccessDenied();
+            }
+
             var usuarioId = HttpContext.Session.GetInt32("UserId") ?? 0;
             if (usuarioId <= 0)
             {

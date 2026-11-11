@@ -19,7 +19,7 @@ public sealed class NavigationMenuTests
         ["Gerente"] = "ACTIVOS_GESTIONAR:Activos,ASISTENTE_METRICAS:Asistente,COMODATOS_CONSULTAR:Activos,CUARENTENA_GESTIONAR:Inventario,"
             + "DEVOLUCIONES_GESTIONAR:Inventario,ENTREGAS_EVIDENCIA_VER:Entregas,ENTREGAS_TABLERO_VER:Entregas,FINANZAS_INGRESOS_EGRESOS_VER:Finanzas,"
             + "FLOTA_MANTENIMIENTO:Flota,GASTOS_VER:Gastos,INVENTARIO_VER:Inventario,LIQUIDACION_FINANCIERA:Finanzas,METAS_GESTIONAR:Metas y KPIs,"
-            + "MOVIL_ACCESO:Movil,PEDIDOS_AUTORIZAR_RECHAZAR:Pedidos,PEDIDOS_VER:Pedidos,PRESUPUESTOS_APROBAR:Presupuestos,"
+            + "MOVIL_ACCESO:Movil,PEDIDOS_AUTORIZAR_RECHAZAR:Pedidos,PEDIDOS_VER:Pedidos,PLANILLA_APROBAR:Planilla,PLANILLA_VER:Planilla,PRESUPUESTOS_APROBAR:Presupuestos,"
             + "PRESUPUESTOS_COMPARAR:Presupuestos,PRESUPUESTOS_VER:Presupuestos,PROMOCIONES_GESTIONAR:Promociones,"
             + "RECLAMOS_GESTIONAR:Servicio al cliente,REPORTE_KPI:Metas y KPIs,REPORTES_DASHBOARD:Reportes,REPORTES_VENDEDORES_VER:Reportes,"
             + "REPORTES_VENTAS_VER:Reportes,RRHH_JORNADAS_REGISTRAR:RRHH,RRHH_JORNADAS_VER_PROPIAS:RRHH,RUTAS_GESTIONAR:Rutas",
@@ -49,7 +49,7 @@ public sealed class NavigationMenuTests
             + "|Logística y Flota/Alertas de flota|Logística y Flota/Comodatos|Logística y Flota/Rentabilidad de comodatos"
             + "|Finanzas/Liquidación de cobros|Finanzas/Presupuestos anuales|Finanzas/Gastos operativos|Finanzas/Presupuesto vs. real|Finanzas/Ingresos y Egresos"
             + "|Reportes y Gerencia/Tablero gerencial|Reportes y Gerencia/Reporte de ventas|Reportes y Gerencia/Reporte de inventario|Reportes y Gerencia/Desempeño de vendedores"
-            + "|Reportes y Gerencia/Metas de ventas|Reportes y Gerencia/Reporte de KPIs|Clientes/Reclamos" },
+            + "|Reportes y Gerencia/Metas de ventas|Reportes y Gerencia/Reporte de KPIs|Clientes/Reclamos|Personal/Planilla" },
         { "Chofer", "Logística y Flota/Kilometraje" },
         { "Supervisor", "Personal/Empleados|Personal/Solicitudes (licencias)|Personal/Aprobar jornadas|Personal/Boletas de pago" },
         { "Cajero", "Finanzas/Liquidación de cobros|Finanzas/Ingresos y Egresos" },
@@ -126,8 +126,11 @@ public sealed class NavigationMenuTests
     {
         var service = new NavigationMenuService(new FakePermissions(Profiles["Gerente"]));
 
-        Assert.False(await service.CanOpenAsync("Gerente", "EmployeePortal", "Index"));
+        // G2-36: Mi portal ya no tiene roles fijos (se abre a todo el personal con expediente).
+        Assert.True(await service.CanOpenAsync("Gerente", "EmployeePortal", "Index"));
         Assert.True(await service.CanOpenAsync("Vendedor", "EmployeePortal", "Index"));
+        // Sigue habiendo pantallas con roles fijos: Mis jornadas solo para Empleado y Vendedor.
+        Assert.False(await service.CanOpenAsync("Gerente", "MyAttendance", "Index"));
         Assert.False(await service.CanOpenAsync(null, "Inventory", "Index"));
     }
 

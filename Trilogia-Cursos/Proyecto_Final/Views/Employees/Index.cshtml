@@ -1,6 +1,8 @@
 @model Proyecto_Final.Models.Admin.EmployeeFilterViewModel
 @{
     ViewData["Title"] = "Empleados";
+    var actorRole = Context.Session.GetString("UserRole");
+    var actorUserId = Context.Session.GetInt32("UserId") ?? 0;
 }
 
 @section Styles {
@@ -57,6 +59,9 @@
                     {
                         foreach (var item in Model.Empleados)
                         {
+                            // G2-22: solo se ofrece editar/inactivar cuentas de un rol inferior al propio, y nunca la propia.
+                            var puedeAdministrar = Proyecto_Final.Services.EmployeeRolePolicy.CanManage(actorRole, item.Rol);
+                            var esCuentaPropia = item.UsuarioId == actorUserId;
                             <tr>
                                 <td>
                                     <div class="employee-person">
@@ -96,9 +101,14 @@
                                         <a asp-controller="Employees" asp-action="Details" asp-route-id="@item.EmpleadoId" class="btn btn-sm btn-ds-view">
                                             <i class="fa fa-eye mr-1"></i>Ver
                                         </a>
+                                        @if (puedeAdministrar)
+                                        {
                                         <a asp-controller="Employees" asp-action="Edit" asp-route-id="@item.EmpleadoId" class="btn btn-sm btn-ds-edit">
                                             <i class="fa fa-edit mr-1"></i>Editar
                                         </a>
+                                        }
+                                        @if (puedeAdministrar && !esCuentaPropia)
+                                        {
                                         <form asp-controller="Employees" asp-action="ToggleStatus" method="post" class="d-inline"
                                               data-s3-confirm="¿Desea cambiar el estado de este empleado?"
                                               data-s3-confirm-title="Confirmar estado de empleado"
@@ -113,6 +123,7 @@
                                                 <i class="fa @(item.Activo ? "fa-ban" : "fa-check") mr-1"></i>@(item.Activo ? "Inactivar" : "Activar")
                                             </button>
                                         </form>
+                                        }
                                     </div>
                                 </td>
                             </tr>

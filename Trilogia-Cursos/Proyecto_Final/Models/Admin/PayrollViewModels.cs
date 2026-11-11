@@ -9,6 +9,15 @@ namespace Proyecto_Final.Models.Admin;
 
 public sealed class PayrollRuleViewModel
 {
+    /// <summary>
+    /// Valor tal como se lee: porcentaje (0,1067 → «10,67 %») o monto («₡15 000,00»). Solo para mostrar:
+    /// no entra en el JSON de la regla que se guarda con cada cálculo (su huella no debe cambiar).
+    /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string ValorTexto => PayrollRuleFormViewModel.IsPercentage(TipoCalculo)
+        ? Proyecto_Final.Services.RrhhFormat.Number(Valor * 100m, 4) + " %"
+        : Proyecto_Final.Services.RrhhFormat.Money(Valor);
+
     public int ReglaId { get; set; }
     public string Codigo { get; set; } = string.Empty;
     public string Nombre { get; set; } = string.Empty;
@@ -55,10 +64,21 @@ public sealed class PayrollRuleFormViewModel : IValidatableObject
     [StringLength(500, ErrorMessage = "La fuente no puede superar 500 caracteres.")]
     public string Fuente { get; set; } = string.Empty;
 
+    /// <summary>Los tipos «% de salario» y «% bruto» se escriben como porcentaje (10,67 = 10,67 %).</summary>
+    public static bool IsPercentage(string? tipoCalculo) => tipoCalculo is "PorcentajeSalario" or "PorcentajeBruto";
+
+    /// <summary>
+    /// Lo que se guarda: los porcentajes se convierten a fracción (10,67 → 0,1067) y los demás tipos
+    /// (monto fijo, por hora extra) quedan tal cual. Las reglas ya guardadas no cambian de valor.
+    /// </summary>
+    public decimal ValorAlmacenado => IsPercentage(TipoCalculo) ? decimal.Round(Valor / 100m, 6, MidpointRounding.AwayFromZero) : Valor;
+
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
-        if (Codigo == "COMISION_VENTAS" && (Tipo != "Ingreso" || TipoCalculo != "PorcentajeBruto" || Valor > 1))
-            yield return new ValidationResult("COMISION_VENTAS debe ser un ingreso porcentual entre 0 y 1.", [nameof(Valor)]);
+        if (IsPercentage(TipoCalculo) && Valor > 100m)
+            yield return new ValidationResult("Un porcentaje debe estar entre 0 y 100 (por ejemplo 10,67 para 10,67 %).", [nameof(Valor)]);
+        if (Codigo == "COMISION_VENTAS" && (Tipo != "Ingreso" || TipoCalculo != "PorcentajeBruto"))
+            yield return new ValidationResult("COMISION_VENTAS debe ser un ingreso de tipo % bruto (por ejemplo 5 para 5 %).", [nameof(Valor)]);
         if (Codigo == "AUSENCIA_HORA" && (Tipo != "Deduccion" || TipoCalculo != "MontoFijo"))
             yield return new ValidationResult("AUSENCIA_HORA debe ser una deducción de monto fijo por hora.", [nameof(Codigo)]);
         if (VigenteDesde == default)
@@ -150,8 +170,8 @@ public sealed class PayrollPeriodFormViewModel : IValidatableObject
 
 public sealed class PayrollCalculationRequestViewModel : IValidatableObject
 {
-    [Range(1, int.MaxValue)] public int PeriodoId { get; set; }
-    [Range(1, int.MaxValue)] public int EmpleadoId { get; set; }
+    [Range(1, int.MaxValue, ErrorMessage = "Seleccione un período abierto.")] public int PeriodoId { get; set; }
+    [Range(1, int.MaxValue, ErrorMessage = "Seleccione un empleado.")] public int EmpleadoId { get; set; }
     [ModelBinder(BinderType = typeof(FlexibleDecimalModelBinder))]
     [Range(typeof(decimal), "0", "99999999", ErrorMessage = "Las comisiones no pueden ser negativas ni superar 99 999 999.")]
     public decimal Comisiones { get; set; }
@@ -251,12 +271,36 @@ public sealed class PayrollStateChangeViewModel : IValidatableObject
     }
 }
 
+public sealed class PayrollPeriodOptionViewModel
+{
+    public int PeriodoId { get; set; }
+    public string Tipo { get; set; } = string.Empty;
+    public DateTime Desde { get; set; }
+    public DateTime Hasta { get; set; }
+    public decimal FactorSalario { get; set; }
+
+    /// <summary>«Quincenal · 01/11/2026 al 15/11/2026».</summary>
+    public string Etiqueta => $"{Tipo} · {Proyecto_Final.Services.RrhhFormat.Date(Desde)} al {Proyecto_Final.Services.RrhhFormat.Date(Hasta)}";
+}
+
+public sealed class PayrollEmployeeOptionViewModel
+{
+    public int EmpleadoId { get; set; }
+    public string NombreCompleto { get; set; } = string.Empty;
+    public string Puesto { get; set; } = string.Empty;
+
+    public string Etiqueta => string.IsNullOrWhiteSpace(Puesto) ? NombreCompleto : $"{NombreCompleto} · {Puesto}";
+}
+
 public sealed class PayrollIndexViewModel
 {
     public PayrollPeriodFormViewModel Periodo { get; set; } = new();
     public PayrollRuleFormViewModel Regla { get; set; } = new();
     public PayrollCalculationRequestViewModel Calculo { get; set; } = new();
     public List<PayrollListItemViewModel> Calculos { get; set; } = [];
+    public List<PayrollRuleViewModel> Reglas { get; set; } = [];
+    public List<PayrollPeriodOptionViewModel> PeriodosAbiertos { get; set; } = [];
+    public List<PayrollEmployeeOptionViewModel> Empleados { get; set; } = [];
 }
 
 public sealed class PayrollConfigurationException : Exception

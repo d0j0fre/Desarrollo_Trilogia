@@ -1,17 +1,44 @@
+@using Proyecto_Final.Services
 @model IEnumerable<Proyecto_Final.Models.Admin.AttendanceEntryViewModel>
-@{ ViewData["Title"] = "Aprobación de jornadas"; }
+@{
+    ViewData["Title"] = "Aprobación de jornadas";
+    var desde = (DateTime)ViewBag.Desde;
+    var hasta = (DateTime)ViewBag.Hasta;
+    var propiasOcultas = (int)(ViewBag.PropiasOcultas ?? 0);
+}
 <div class="container py-4">
     <h2>Aprobación de jornadas</h2>
     <p class="text-muted">Revise jornadas enviadas. Las tasas o reglas laborales no se calculan en este módulo.</p>
+
+    <form asp-action="Index" method="get" class="form-inline mb-3">
+        <label for="desde" class="mr-2">Desde</label>
+        <input id="desde" name="desde" type="date" value="@desde.ToString("yyyy-MM-dd")" class="form-control form-control-sm mr-3" />
+        <label for="hasta" class="mr-2">Hasta</label>
+        <input id="hasta" name="hasta" type="date" value="@hasta.ToString("yyyy-MM-dd")" class="form-control form-control-sm mr-3" />
+        <button type="submit" class="btn btn-ds-search btn-sm"><i class="fa fa-filter mr-1"></i>Filtrar</button>
+    </form>
+
+    @if (propiasOcultas > 0)
+    {
+        <p class="text-muted small"><i class="fa fa-info-circle mr-1"></i>@(propiasOcultas == 1 ? "Su propia jornada no aparece aquí" : $"Sus {propiasOcultas} jornadas propias no aparecen aquí"): la aprueba otra persona.</p>
+    }
+
+    <div class="table-responsive">
     <table class="table table-striped">
-        <thead><tr><th>Empleado</th><th>Fecha</th><th>Ordinarias</th><th>Extra</th><th>Ausencia</th><th>Estado</th><th>Decisión</th></tr></thead>
+        <thead><tr><th>Empleado</th><th>Fecha</th><th>Ordinarias</th><th>Extra</th><th>Ausencia</th><th>Observaciones del empleado</th><th>Estado</th><th>Decisión</th></tr></thead>
         <tbody>
+        @if (!Model.Any())
+        {
+            <tr><td colspan="8" class="text-center text-muted py-4">No hay jornadas enviadas pendientes entre el @RrhhFormat.Date(desde) y el @RrhhFormat.Date(hasta).</td></tr>
+        }
         @foreach (var item in Model)
         {
-            <tr><td>@item.NombreCompleto</td><td>@item.Fecha.ToString("dd/MM/yyyy")</td><td>@item.HorasOrdinarias</td><td>@item.HorasExtra</td><td>@item.HorasAusencia</td><td>@item.Estado</td>
+            <tr><td>@item.NombreCompleto</td><td>@RrhhFormat.Date(item.Fecha)</td><td>@item.HorasOrdinarias</td><td>@item.HorasExtra</td><td>@item.HorasAusencia</td>
+                <td style="max-width: 260px;">@(string.IsNullOrWhiteSpace(item.Observaciones) ? "Sin observaciones" : item.Observaciones)</td><td>@item.Estado</td>
                 <td><form asp-action="Decide" method="post" class="form-inline">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="JornadaId" value="@item.JornadaId" /><input type="hidden" name="RowVersionBase64" value="@item.RowVersionBase64" />
+                    <input type="hidden" name="desde" value="@desde.ToString("yyyy-MM-dd")" /><input type="hidden" name="hasta" value="@hasta.ToString("yyyy-MM-dd")" />
                     <input name="RespuestaSupervisor" maxlength="500" class="form-control form-control-sm mr-1" placeholder="Observación" />
                     <button name="Decision" value="Aprobada" class="btn btn-ds-action btn-sm mr-1">Aprobar</button>
                     <button name="Decision" value="Rechazada" class="btn btn-ds-danger--soft btn-sm">Rechazar</button>
@@ -19,4 +46,5 @@
         }
         </tbody>
     </table>
+    </div>
 </div>
