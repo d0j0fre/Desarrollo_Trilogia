@@ -1,6 +1,9 @@
 @model Proyecto_Final.Models.Admin.InventoryIntelligenceViewModel
+@inject Proyecto_Final.Services.NavigationMenuService MenuAccess
 @{
     ViewData["Title"] = "Inteligencia de inventario";
+    var userRole = Context.Session.GetString("UserRole");
+    var canOpenSuggestions = await MenuAccess.CanOpenAsync(userRole, "PurchaseOrders", "Suggestions");
     var maxSales = Model.TendenciaEstacional.Any() ? Model.TendenciaEstacional.Max(point => point.TotalVendido) : 0m;
     string RiskClass(string risk) => risk == "Alto" ? "danger" : risk == "Medio" ? "warning" : "info";
 }
@@ -48,7 +51,7 @@
         {
             <div class="table-responsive"><table class="table table-hover">
                 <thead><tr><th>Producto</th><th>Stock / mínimo</th><th>Venta ventana</th><th>Promedio mensual</th><th>Cobertura</th><th>Sugerencia</th></tr></thead>
-                <tbody>@foreach (var item in Model.SugerenciasCompra) { <tr><td><strong>@item.Nombre</strong>@if(item.DatosInsuficientes){<small class="d-block text-warning"><i class="fa fa-info-circle"></i> Sin ventas suficientes</small>}</td><td>@item.StockActual / @item.StockMinimo</td><td>@item.UnidadesVendidasVentana u.</td><td>@item.PromedioVentaMensual.ToString("N2") u.</td><td>@item.MesesCobertura mes(es)</td><td><span class="badge badge-success">Comprar @item.CantidadSugerida</span></td></tr> }</tbody>
+                <tbody>@foreach (var item in Model.SugerenciasCompra) { <tr><td><strong>@item.Nombre</strong>@if(item.DatosInsuficientes){<small class="d-block text-warning"><i class="fa fa-info-circle"></i> Datos insuficientes</small>}</td><td>@item.StockActual / @item.StockMinimo</td><td>@item.UnidadesVendidasVentana u.</td><td>@item.PromedioVentaMensual.ToString("N2") u.</td><td>@item.MesesCobertura mes(es)</td><td>@if (item.DatosInsuficientes) { @* BUG-24-01: sin historial de ventas no se calcula una cantidad; se pide ingresarla a mano. *@ <span class="badge badge-warning">Ingresar cantidad manualmente</span> @if (canOpenSuggestions) { <a class="d-block small" asp-controller="PurchaseOrders" asp-action="Suggestions" asp-route-recentMonths="@Model.Filter.RecentMonths" asp-route-coverageMonths="@Model.Filter.CoverageMonths">Ingresarla en Sugerencias de compra</a> } } else { <span class="badge badge-success">Comprar @item.CantidadSugerida</span> }</td></tr> }</tbody>
             </table></div>
         }
     </section>
