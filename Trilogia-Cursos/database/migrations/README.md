@@ -92,6 +92,7 @@ Cada migracion debe indicar su estrategia de rollback antes de ejecutarse. Los c
 | 0263 | `0263_vigencia_salarial.sql` | Historial salarial por fecha efectiva | 0017; historial de salarios |
 | 0264 | `0264_gasto_sin_presupuesto.sql` | Detecta exceso cuando existe gasto sin presupuesto | 0010; vista de impacto de gastos |
 | 0265 | `0265_estado_gasto_aprobacion.sql` | Estado persistente de aprobación y su inclusión en gastos pendientes | 0010, 0011 y 0264 |
+| 0280 | `0280_rutas_cliente_inactivo.sql` | BUG-06-04: `sp_Rutas_GetAssignableOrders`, `sp_Rutas_AddOrder` y `sp_Rutas_Create` no ofrecen ni aceptan pedidos de un cliente inactivo (AddOrder lanza 52014 y Create 52006). Solo reemplaza procedimientos; no cambia datos | Rutas y entregas (cu081/cu302) |
 
 Los scripts no incluyen `USE`: el ejecutor debe seleccionar explícitamente la base antes de iniciar. Los hashes escritos por 0002–0011 son hashes de manifiesto para identificar versión; la evidencia de despliegue debe registrar además el SHA-256 real del archivo y actualizar el ledger si corresponde.
 
