@@ -29,7 +29,7 @@ public sealed class RrhhCorreccionesTests
         var result = await controller.Create(new EmployeeFormViewModel
         {
             PerfilId = 3, NombreCompleto = "Persona de prueba", Correo = "ya.existe@example.invalid", Identificacion = "101110111",
-            Puesto = "Pruebas", Contrasena = "clave-de-prueba"
+            Puesto = "Pruebas", Contrasena = SyntheticSecret()
         });
 
         Assert.IsType<ViewResult>(result);
@@ -50,7 +50,7 @@ public sealed class RrhhCorreccionesTests
         await controller.Create(new EmployeeFormViewModel
         {
             PerfilId = 3, NombreCompleto = "Persona de prueba", Correo = "otra@example.invalid", Identificacion = "101110111",
-            Puesto = "Pruebas", Contrasena = "clave-de-prueba"
+            Puesto = "Pruebas", Contrasena = SyntheticSecret()
         });
 
         var errors = controller.ModelState[string.Empty]!.Errors.Select(e => e.ErrorMessage).ToList();
@@ -350,7 +350,7 @@ public sealed class RrhhCorreccionesTests
     private static readonly (string, string?)[] MailSettings =
     [
         ("ConfiguracionCorreo:Host", "smtp.example.invalid"), ("ConfiguracionCorreo:Puerto", "587"),
-        ("ConfiguracionCorreo:Remitente", "remitente@example.invalid"), ("ConfiguracionCorreo:Contrasenna", "valor-de-prueba"),
+        ("ConfiguracionCorreo:Remitente", "remitente@example.invalid"), ("ConfiguracionCorreo:Contrasenna", SyntheticSecret()),
     ];
 
     [Theory]
@@ -597,15 +597,16 @@ public sealed class RrhhCorreccionesTests
     [Fact]
     public void Empleados_LaClaveViajaSoloComoHashPbkdf2()
     {
-        var command = CredentialCommand("  clave-de-prueba-1  ");
+        var secret = SyntheticSecret();
+        var command = CredentialCommand($"  {secret}  ");
 
         var parameter = Assert.Single(command.Parameters.Cast<Microsoft.Data.SqlClient.SqlParameter>());
         Assert.Equal("@ContrasenaHash", parameter.ParameterName);
         var hash = Assert.IsType<string>(parameter.Value);
         Assert.StartsWith("pbkdf2-sha256$", hash, StringComparison.Ordinal);
-        Assert.DoesNotContain("clave-de-prueba-1", hash, StringComparison.Ordinal);
+        Assert.DoesNotContain(secret, hash, StringComparison.Ordinal);
         // Lo verifica la API, que es quien autentica (la clave se recorta igual que al iniciar sesión).
-        Assert.True(new Proyecto_FinalAPI.Services.PasswordHashService().Verify("clave-de-prueba-1", hash));
+        Assert.True(new Proyecto_FinalAPI.Services.PasswordHashService().Verify(secret, hash));
     }
 
     [Theory]
@@ -630,6 +631,9 @@ public sealed class RrhhCorreccionesTests
     }
 
     // ───────────── ayudas ─────────────
+
+    // Valor sintético distinto en cada ejecución: ninguna clave literal en el repositorio.
+    private static string SyntheticSecret() => Guid.NewGuid().ToString("N");
 
     private static string Plain(string text) => text.Replace('\u00A0', ' ').Replace('\u202F', ' ');
 

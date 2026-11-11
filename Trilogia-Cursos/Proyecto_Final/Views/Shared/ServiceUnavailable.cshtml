@@ -1,7 +1,7 @@
 @{
     ViewData["Title"] = "Servicio temporalmente no disponible";
     // Texto genérico para cualquier pantalla. Quien lo muestra puede indicar, con ViewData, a dónde volver:
-    //   VolverTexto («presupuestos»), VolverControlador y VolverAccion. Sin ellos, el botón lleva al inicio.
+    //   VolverTexto (por ejemplo «el carrito»), VolverControlador y VolverAccion. Sin ellos, el botón lleva al inicio.
     var backText = ViewData["VolverTexto"] as string;
     var backController = ViewData["VolverControlador"] as string;
     var backAction = ViewData["VolverAccion"] as string ?? "Index";
