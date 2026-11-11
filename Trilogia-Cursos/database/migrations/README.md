@@ -110,6 +110,7 @@ Cada migracion debe indicar su estrategia de rollback antes de ejecutarse. Los c
 | 0297 | `0297_tablero_detalle_indicadores.sql` | BUG-13-02: `sp_Reportes_DashboardDetalle`, datos de los gráficos de cada indicador del tablero | 0296; rutas y crédito de clientes |
 | 0298 | `0298_metas_reemplazo_confirmado.sql` | BUG-21-01: `sp_Metas_Upsert` exige `@Reemplazar` para sustituir una meta existente (error 53134) | 0211 (metas) |
 | 0299 | `0299_chat_marcar_leidos.sql` | BUG-23-01: `sp_Chat_MarcarLeidos` para el doble check de los mensajes directos | 0002 (chat privado) |
+| 0305 | `0305_evidencia_entrega_movil.sql` | G3-04: evidencia de entrega (foto y firma) desde la app del chofer: `EntregaEvidencias.SyncGuid` con índice único filtrado para reenvíos idempotentes, `@SyncGuid` opcional en `sp_Entrega_RegisterEvidence` y `sp_Chofer_PrepararEvidencia` (parada propia, ruta Despachada o cerrada hace ≤ 48 h). Aplicar antes de desplegar la API | 0004 (evidencia privada), 0024–0027 (API móvil) |
 
 Los scripts no incluyen `USE`: el ejecutor debe seleccionar explícitamente la base antes de iniciar. Los hashes escritos por 0002–0011 son hashes de manifiesto para identificar versión; la evidencia de despliegue debe registrar además el SHA-256 real del archivo y actualizar el ledger si corresponde.
 
