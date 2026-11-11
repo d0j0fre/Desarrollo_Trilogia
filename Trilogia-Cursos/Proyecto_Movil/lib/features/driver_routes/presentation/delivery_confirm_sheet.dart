@@ -210,8 +210,7 @@ class _DeliveryConfirmSheetState extends ConsumerState<DeliveryConfirmSheet> {
               Text('Confirmar entrega', style: theme.textTheme.headlineSmall),
               const SizedBox(height: 10),
               Text(
-                'Va a marcar el pedido #${widget.pedidoId} de ${widget.cliente} como entregado. '
-                'Se le va a avisar al cliente.',
+                'Va a marcar el pedido #${widget.pedidoId} de ${widget.cliente} como entregado.',
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: BrandColors.textMuted,
                 ),

@@ -9,8 +9,13 @@ import 'package:proyecto_movil/features/driver_routes/domain/evidence_draft.dart
 import 'package:proyecto_movil/features/driver_routes/domain/route.dart';
 import 'package:proyecto_movil/features/driver_routes/presentation/route_detail_page.dart';
 
-/// G3-04: la web deja marcar una parada «En ruta» y la API ya acepta esa
-/// transición; la app solo ofrecía Entregado y No entregado.
+/// G3-04 (revision): la app NO ofrece boton «En ruta».
+///
+/// Despachar la ruta (sp_Rutas_Dispatch) ya pone todas sus paradas En ruta, y una
+/// parada Pendiente solo existe en una ruta Planificada, donde el servidor rechaza
+/// cualquier cambio de estado. El boton nunca tenia un caso en que sirviera; el
+/// estado se muestra en la etiqueta de la tarjeta y las acciones son Entregado y
+/// No entregado.
 void main() {
   Delivery entrega(String estado) => Delivery(
         rutaPedidoId: 14,
@@ -53,47 +58,20 @@ void main() {
 
   final botonEnRuta = find.widgetWithText(OutlinedButton, 'En ruta');
 
-  testWidgets('una parada pendiente ofrece el botón En ruta', (tester) async {
-    await abrir(tester, DeliveryStatus.pendiente);
+  for (final estado in [DeliveryStatus.pendiente, DeliveryStatus.enRuta]) {
+    testWidgets('una parada $estado no ofrece «En ruta», solo cerrar la entrega', (tester) async {
+      await abrir(tester, estado);
 
-    expect(botonEnRuta, findsOneWidget);
-    expect(find.text('Entregado'), findsOneWidget);
-    expect(find.text('No entregado'), findsOneWidget);
-  });
+      expect(botonEnRuta, findsNothing);
+      expect(find.text('Entregado'), findsOneWidget);
+      expect(find.text('No entregado'), findsOneWidget);
+    });
+  }
 
-  testWidgets('al confirmar, la app marca la entrega En ruta (estado EnRuta de la API)', (tester) async {
-    final repo = await abrir(tester, DeliveryStatus.pendiente);
-
-    await tester.ensureVisible(botonEnRuta);
-    await tester.tap(botonEnRuta);
-    await tester.pumpAndSettle();
-    expect(find.text('Sí, voy en ruta'), findsOneWidget);
-    expect(repo.marcadas, isEmpty, reason: 'Sin confirmar no se marca nada.');
-
-    await tester.tap(find.text('Sí, voy en ruta'));
-    await tester.pumpAndSettle();
-
-    expect(repo.marcadas, [DeliveryStatus.enRuta]);
-  });
-
-  testWidgets('cancelar la confirmación no marca nada', (tester) async {
-    final repo = await abrir(tester, DeliveryStatus.pendiente);
-
-    await tester.ensureVisible(botonEnRuta);
-    await tester.tap(botonEnRuta);
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Cancelar'));
-    await tester.pumpAndSettle();
-
-    expect(repo.marcadas, isEmpty);
-  });
-
-  testWidgets('una parada que ya está En ruta no repite el botón', (tester) async {
+  testWidgets('la etiqueta de la tarjeta muestra el estado En ruta', (tester) async {
     await abrir(tester, DeliveryStatus.enRuta);
 
-    expect(botonEnRuta, findsNothing);
-    // Sigue pudiendo cerrarse.
-    expect(find.text('Entregado'), findsOneWidget);
+    expect(find.text('En ruta'), findsOneWidget);
   });
 
   testWidgets('una parada cerrada no ofrece ninguna acción', (tester) async {
