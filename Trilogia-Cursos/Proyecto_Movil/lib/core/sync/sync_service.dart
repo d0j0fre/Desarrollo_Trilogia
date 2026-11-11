@@ -187,7 +187,14 @@ class SyncService {
         return true;
       }
 
-      if (error.failure == ApiFailure.sesionExpirada ||
+      // Un 4xx sin forma de regla de negocio (400, 413, 415: el servidor no aceptó el
+      // archivo o la solicitud) tampoco se arregla reintentando lo mismo.
+      final rechazada = error.failure == ApiFailure.desconocido &&
+          (error.statusCode ?? 0) >= 400 &&
+          (error.statusCode ?? 0) < 500;
+
+      if (rechazada ||
+          error.failure == ApiFailure.sesionExpirada ||
           error.failure == ApiFailure.sinPermiso) {
         // No se reintenta: no depende de la red. La sesion ya se cerro sola
         // desde el interceptor, o el permiso se revoco.

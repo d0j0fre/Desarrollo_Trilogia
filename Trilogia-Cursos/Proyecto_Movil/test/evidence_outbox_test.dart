@@ -244,6 +244,24 @@ void main() {
       expect(await files.existe(foto.archivo!), isTrue);
     });
 
+    test('un 400/413 del servidor (archivo demasiado grande) es conflicto, no se reintenta 10 veces', () async {
+      api.sinConexion = false;
+      api.responder = (path) => path.endsWith('/evidence')
+          ? ApiException(ApiFailure.desconocido, 'No fue posible completar la operación.', statusCode: 400)
+          : null;
+      await repo.marcarEntrega(
+        rutaPedidoId: 14,
+        pedidoId: 54,
+        estado: DeliveryStatus.entregado,
+        evidencias: await capturar(),
+      );
+      await esperarCola();
+
+      final conflictos = await outbox.conflictos();
+      expect(conflictos.map((e) => e.syncGuid), containsAll(['foto-1', 'firma-1']));
+      expect(conflictos.every((e) => e.intentos == 0), isTrue);
+    });
+
     test('si el archivo ya no esta en el teléfono se avisa, no se reintenta en silencio', () async {
       await entregarConEvidencia(); // sin señal: todo queda en la cola
       await files.borrar((await outbox.todas())[1].archivo);
