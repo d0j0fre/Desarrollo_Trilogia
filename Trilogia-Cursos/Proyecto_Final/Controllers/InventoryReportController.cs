@@ -6,6 +6,8 @@ using Proyecto_Final.Services;
 namespace Proyecto_Final.Controllers
 {
     // CU-133 — Reporte de inventario con exportación a Excel (.xlsx, generado en el navegador).
+    // El reporte muestra el valor del inventario: solo Administrador y Gerente, además del permiso de ver inventario.
+    [SessionAuthorize("Administrador", "Gerente")]
     [AdminAuthorize("Inventario", "INVENTARIO_VER")]
     public class InventoryReportController : Controller
     {

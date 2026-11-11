@@ -48,7 +48,7 @@ public sealed class NavigationMenuTests
             + "|Logística y Flota/Rutas y Entregas|Logística y Flota/Tablero de entregas|Logística y Flota/Vehículos|Logística y Flota/Mantenimiento"
             + "|Logística y Flota/Alertas de flota|Logística y Flota/Comodatos|Logística y Flota/Rentabilidad de comodatos"
             + "|Finanzas/Liquidación de cobros|Finanzas/Presupuestos anuales|Finanzas/Gastos operativos|Finanzas/Presupuesto vs. real|Finanzas/Ingresos y Egresos"
-            + "|Reportes y Gerencia/Tablero gerencial|Reportes y Gerencia/Reporte de ventas|Reportes y Gerencia/Desempeño de vendedores"
+            + "|Reportes y Gerencia/Tablero gerencial|Reportes y Gerencia/Reporte de ventas|Reportes y Gerencia/Reporte de inventario|Reportes y Gerencia/Desempeño de vendedores"
             + "|Reportes y Gerencia/Metas de ventas|Reportes y Gerencia/Reporte de KPIs|Clientes/Reclamos" },
         { "Chofer", "Logística y Flota/Kilometraje" },
         { "Supervisor", "Personal/Empleados|Personal/Solicitudes (licencias)|Personal/Aprobar jornadas|Personal/Boletas de pago" },
@@ -83,7 +83,7 @@ public sealed class NavigationMenuTests
 
         Assert.Equal(NavigationMenu.AdminPanel.Select(s => s.Label), panel.Select(s => s.Label));
         Assert.Equal(NavigationMenu.AdminPanel.Sum(s => s.Links.Count), panel.Sum(s => s.Links.Count));
-        Assert.Equal(50, panel.Sum(s => s.Links.Count));
+        Assert.Equal(51, panel.Sum(s => s.Links.Count));
     }
 
     [Fact]
