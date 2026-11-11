@@ -428,8 +428,8 @@ class DeliveryCard extends ConsumerWidget {
       context,
       title: 'Salir hacia esta parada',
       message:
-          'Vas a marcar el pedido #${delivery.pedidoId} de ${delivery.cliente} como en ruta. '
-          'Se le va a avisar al cliente que vas en camino.',
+          'Va a marcar el pedido #${delivery.pedidoId} de ${delivery.cliente} como en ruta. '
+          'Se le va a avisar al cliente que va en camino.',
       confirmLabel: 'Sí, voy en ruta',
       icon: Icons.local_shipping_outlined,
     );
@@ -458,7 +458,7 @@ class DeliveryCard extends ConsumerWidget {
       context,
       title: 'Confirmar entrega',
       message:
-          'Vas a marcar el pedido #${delivery.pedidoId} de ${delivery.cliente} como entregado. '
+          'Va a marcar el pedido #${delivery.pedidoId} de ${delivery.cliente} como entregado. '
           'Se le va a avisar al cliente.',
       confirmLabel: 'Sí, fue entregado',
       icon: Icons.check_circle_outline_rounded,
