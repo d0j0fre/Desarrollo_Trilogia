@@ -21,7 +21,10 @@
             </div>
         </div>
         <div class="employee-actions">
-            <a asp-controller="Employees" asp-action="Edit" asp-route-id="@Model.EmpleadoId" class="btn btn-ds-edit"><i class="fa fa-edit mr-1"></i>Editar</a>
+            @if (Proyecto_Final.Services.EmployeeRolePolicy.CanManage(Context.Session.GetString("UserRole"), Model.Rol))
+            {
+                <a asp-controller="Employees" asp-action="Edit" asp-route-id="@Model.EmpleadoId" class="btn btn-ds-edit"><i class="fa fa-edit mr-1"></i>Editar</a>
+            }
             <a asp-controller="Employees" asp-action="Index" class="btn btn-ds-neutral"><i class="fa fa-arrow-left mr-1"></i>Volver</a>
         </div>
     </div>
