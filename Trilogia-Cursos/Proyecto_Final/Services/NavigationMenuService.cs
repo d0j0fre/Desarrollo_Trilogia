@@ -71,6 +71,7 @@ public static class NavigationMenu
             new("Admin", "Index", "fa-tachometer-alt", "Dashboard"),
             new("ManagementDashboard", "Index", "fa-chart-line", "Tablero gerencial"),
             new("SalesReports", "Index", "fa-file-alt", "Reporte de ventas"),
+            new("InventoryReport", "Index", "fa-boxes", "Reporte de inventario"),
             new("SellerPerformance", "Index", "fa-user-chart", "Desempeño de vendedores"),
             new("Kpis", "Index", "fa-bullseye", "Metas de ventas"),
             new("Kpis", "Report", "fa-chart-bar", "Reporte de KPIs"),

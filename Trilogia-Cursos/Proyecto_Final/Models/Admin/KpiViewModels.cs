@@ -42,6 +42,9 @@ namespace Proyecto_Final.Models.Admin
 
         [StringLength(300, ErrorMessage = "Las observaciones no pueden superar los 300 caracteres.")]
         public string? Observaciones { get; set; }
+
+        // true cuando la persona confirmó que quiere reemplazar la meta que ya existe (BUG-21-01).
+        public bool Reemplazar { get; set; }
     }
 
     // Modelo de la pantalla de gestión de metas (CU-211): filtro de período + tabla + formulario.
@@ -74,6 +77,8 @@ namespace Proyecto_Final.Models.Admin
         public decimal MetaGlobal { get; set; }
         public decimal VentaGlobal { get; set; }
         public int VendedoresConMeta { get; set; }
+        // Venta de vendedores que no tienen meta en el período: se muestra aparte y no entra en el cumplimiento.
+        public decimal VentaSinMeta { get; set; }
 
         public decimal PorcentajeGlobal => MetaGlobal > 0 ? Math.Round(VentaGlobal / MetaGlobal * 100, 2) : 0m;
         public bool HayDatos => Items.Any();

@@ -6,11 +6,13 @@ namespace Proyecto_Final.Hubs
     public sealed class ChatHub : Hub
     {
         private readonly IChatAuthorizationService _authorization;
+        private readonly IChatDbService _chat;
         private readonly ILogger<ChatHub> _logger;
 
-        public ChatHub(IChatAuthorizationService authorization, ILogger<ChatHub> logger)
+        public ChatHub(IChatAuthorizationService authorization, IChatDbService chat, ILogger<ChatHub> logger)
         {
             _authorization = authorization;
+            _chat = chat;
             _logger = logger;
         }
 
@@ -38,6 +40,26 @@ namespace Proyecto_Final.Hubs
             }
 
             await Groups.AddToGroupAsync(Context.ConnectionId, ConversationGroup(conversationId));
+        }
+
+        /// <summary>
+        /// El destinatario que tiene la conversación abierta confirma que recibió los mensajes del otro
+        /// participante (BUG-23-01): se marcan como leídos y se avisa al grupo para que el emisor
+        /// los muestre con doble check.
+        /// </summary>
+        public async Task MarkConversationRead(int conversationId)
+        {
+            var userId = CurrentUserId();
+            if (!await _authorization.CanAccessConversationAsync(userId, conversationId))
+            {
+                throw new HubException("No tiene acceso a la conversación.");
+            }
+
+            var marked = await _chat.MarkConversationReadAsync(conversationId, userId);
+            if (marked > 0)
+            {
+                await Clients.OthersInGroup(ConversationGroup(conversationId)).SendAsync("MessagesRead", conversationId);
+            }
         }
 
         public Task LeaveConversation(int conversationId) =>

@@ -104,6 +104,11 @@ Cada migracion debe indicar su estrategia de rollback antes de ejecutarse. Los c
 | 0291 | `0291_gerente_inteligencia_inventario.sql` | BUG-24-03: asigna `INVENTARIO_INTELIGENCIA_VER` al perfil Gerente para que vea la alerta de productos estancados y la sugerencia de incluirlos en una promoción. Solo inserta la asignación si falta | 0012 (permiso) y perfiles |
 | 0292 | `0292_tendencia_estacional_facturas.sql` | BUG-24-05: `sp_Admin_GetSeasonalSalesTrend` suma facturas no anuladas (importe con IVA, unidades de `FacturaDetalle`, mes por `FechaFactura`), la misma definición de venta que el Reporte de ventas; antes sumaba líneas de pedidos sin IVA. Solo lectura | **0012** (definición previa) y facturas |
 | 0293 | `0293_tendencia_estacional_categoria.sql` | BUG-24-04: `sp_Admin_GetSeasonalSalesTrend` acepta `@Categoria` (NULL = todas); con categoría suma solo las líneas de factura de esa categoría, repartiendo el IVA de cada factura sobre sus líneas. Solo lectura | **0292** (la exige en el ledger) |
+| 0295 | `0295_kpi_cumplimiento_solo_con_meta.sql` | BUG-21-03: la venta global del Reporte de KPIs solo suma vendedores con meta y devuelve aparte la venta sin meta | 0211–0213 (metas y KPIs) |
+| 0296 | `0296_tablero_ventas_no_anuladas.sql` | G2-16: el Tablero gerencial y su serie suman facturas no anuladas (definición única de venta) | CU-131 (tablero gerencial) |
+| 0297 | `0297_tablero_detalle_indicadores.sql` | BUG-13-02: `sp_Reportes_DashboardDetalle`, datos de los gráficos de cada indicador del tablero | 0296; rutas y crédito de clientes |
+| 0298 | `0298_metas_reemplazo_confirmado.sql` | BUG-21-01: `sp_Metas_Upsert` exige `@Reemplazar` para sustituir una meta existente (error 53134) | 0211 (metas) |
+| 0299 | `0299_chat_marcar_leidos.sql` | BUG-23-01: `sp_Chat_MarcarLeidos` para el doble check de los mensajes directos | 0002 (chat privado) |
 
 Los scripts no incluyen `USE`: el ejecutor debe seleccionar explícitamente la base antes de iniciar. Los hashes escritos por 0002–0011 son hashes de manifiesto para identificar versión; la evidencia de despliegue debe registrar además el SHA-256 real del archivo y actualizar el ledger si corresponde.
 

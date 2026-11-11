@@ -10,6 +10,7 @@ namespace Proyecto_Final.Services
         Task<int?> GetOrCreateConversationAsync(int currentUserId, int otherUserId);
         Task<bool> IsConversationMemberAsync(int conversationId, int userId);
         Task<ChatMessageViewModel?> SendMessageAsync(int conversationId, int senderId, string content);
+        Task<int> MarkConversationReadAsync(int conversationId, int userId);
         Task<List<ChatMessageViewModel>> GetMessagesAsync(int conversationId, int userId, int page, int pageSize);
         Task<List<ChatDepartmentViewModel>> GetDepartmentsAsync(int userId, bool canManageAll);
         Task<bool> IsDepartmentMemberAsync(int departmentId, int userId, bool canManageAll);
@@ -90,6 +91,17 @@ namespace Proyecto_Final.Services
             await connection.OpenAsync();
             await using var reader = await command.ExecuteReaderAsync(CommandBehavior.SingleRow);
             return await reader.ReadAsync() ? ReadPrivateMessage(reader) : null;
+        }
+
+        public async Task<int> MarkConversationReadAsync(int conversationId, int userId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = CreateProcedure(connection, "dbo.sp_Chat_MarcarLeidos");
+            command.Parameters.Add("@ConversacionId", SqlDbType.Int).Value = conversationId;
+            command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = userId;
+            await connection.OpenAsync();
+            var result = await command.ExecuteScalarAsync();
+            return result is null or DBNull ? 0 : Convert.ToInt32(result);
         }
 
         public async Task<List<ChatMessageViewModel>> GetMessagesAsync(
@@ -221,7 +233,7 @@ namespace Proyecto_Final.Services
                     SenderId = reader.GetInt32(reader.GetOrdinal("RemitenteId")),
                     SenderName = reader.GetString(reader.GetOrdinal("RemitenteNombre")),
                     Content = reader.GetString(reader.GetOrdinal("Contenido")),
-                    SentAt = reader.GetDateTime(reader.GetOrdinal("FechaEnvio")),
+                    SentAt = DateTime.SpecifyKind(reader.GetDateTime(reader.GetOrdinal("FechaEnvio")), DateTimeKind.Utc),
                     TotalResults = reader.GetInt32(reader.GetOrdinal("TotalResultados"))
                 });
             }
@@ -332,7 +344,7 @@ namespace Proyecto_Final.Services
             ConversacionId = reader.GetInt32(reader.GetOrdinal("ConversacionId")),
             RemitenteId = reader.GetInt32(reader.GetOrdinal("RemitenteId")),
             Contenido = reader.GetString(reader.GetOrdinal("Contenido")),
-            FechaEnvio = reader.GetDateTime(reader.GetOrdinal("FechaEnvio")),
+            FechaEnvio = DateTime.SpecifyKind(reader.GetDateTime(reader.GetOrdinal("FechaEnvio")), DateTimeKind.Utc),
             Leido = reader.GetBoolean(reader.GetOrdinal("Leido"))
         };
 
@@ -342,7 +354,7 @@ namespace Proyecto_Final.Services
             DepartamentoId = reader.GetInt32(reader.GetOrdinal("DepartamentoId")),
             RemitenteId = reader.GetInt32(reader.GetOrdinal("RemitenteId")),
             Contenido = reader.GetString(reader.GetOrdinal("Contenido")),
-            FechaEnvio = reader.GetDateTime(reader.GetOrdinal("FechaEnvio")),
+            FechaEnvio = DateTime.SpecifyKind(reader.GetDateTime(reader.GetOrdinal("FechaEnvio")), DateTimeKind.Utc),
             RemitenteNombre = reader.GetString(reader.GetOrdinal("RemitenteNombre"))
         };
 

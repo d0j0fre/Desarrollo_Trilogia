@@ -527,3 +527,37 @@
         max-width: 86%;
     }
 }
+
+/* Búsqueda dentro de la conversación (G2-34): el cuadro de texto ocupa su propia fila a todo lo ancho. */
+.chat-search.chat-search-form {
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+    .chat-search.chat-search-form input[type="search"] {
+        flex: 1 1 100%;
+        width: 100%;
+        min-width: 0;
+        padding: 6px 8px;
+        border: 1px solid #dddddd;
+        border-radius: 6px;
+        background: #ffffff;
+    }
+
+    .chat-search.chat-search-form select {
+        flex: 1 1 auto;
+        min-width: 0;
+        max-width: 100%;
+    }
+
+/* Doble check de los mensajes directos enviados (BUG-23-01). */
+.chat-message .chat-ticks {
+    letter-spacing: -2px;
+    opacity: .7;
+}
+
+.chat-message .chat-ticks-read {
+    color: #4fc3f7;
+    opacity: 1;
+}
+
