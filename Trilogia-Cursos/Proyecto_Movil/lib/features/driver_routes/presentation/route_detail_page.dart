@@ -344,6 +344,18 @@ class DeliveryCard extends ConsumerWidget {
                 ],
               ),
             ],
+            if (delivery.estadoEntrega == DeliveryStatus.pendiente) ...[
+              // G3-04: la API ya acepta la transición a «En ruta» (es la que
+              // hace la web). Solo se ofrece mientras la parada sigue pendiente:
+              // despachar la ruta ya las pone En ruta a todas, y repetirlo
+              // volvería a avisarle al cliente.
+              const SizedBox(height: 10),
+              OutlinedButton.icon(
+                icon: const Icon(Icons.local_shipping_outlined, size: 20),
+                label: const Text('En ruta'),
+                onPressed: () => _marcarEnRuta(context, ref),
+              ),
+            ],
             if (!delivery.estaCerrada) ...[
               const SizedBox(height: 10),
               Row(
@@ -406,6 +418,36 @@ class DeliveryCard extends ConsumerWidget {
           content: Text(
             'No se pudo abrir el marcador. Número: ${delivery.telefono}',
           ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _marcarEnRuta(BuildContext context, WidgetRef ref) async {
+    final confirmado = await confirmSheet(
+      context,
+      title: 'Salir hacia esta parada',
+      message:
+          'Vas a marcar el pedido #${delivery.pedidoId} de ${delivery.cliente} como en ruta. '
+          'Se le va a avisar al cliente que vas en camino.',
+      confirmLabel: 'Sí, voy en ruta',
+      icon: Icons.local_shipping_outlined,
+    );
+
+    if (!confirmado) return;
+
+    await ref
+        .read(routeDetailProvider(rutaId).notifier)
+        .marcar(
+          rutaPedidoId: delivery.rutaPedidoId,
+          pedidoId: delivery.pedidoId,
+          estado: DeliveryStatus.enRuta,
+        );
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Pedido #${delivery.pedidoId} marcado en ruta.'),
         ),
       );
     }

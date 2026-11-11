@@ -94,9 +94,11 @@ class RoutesRepository {
           if (motivoFallo != null && motivoFallo.trim().isNotEmpty)
             'motivoFallo': motivoFallo.trim(),
         },
-        descripcion: estado == DeliveryStatus.entregado
-            ? 'Pedido #$pedidoId entregado'
-            : 'Pedido #$pedidoId no entregado',
+        descripcion: switch (estado) {
+          DeliveryStatus.entregado => 'Pedido #$pedidoId entregado',
+          DeliveryStatus.enRuta => 'Pedido #$pedidoId en ruta',
+          _ => 'Pedido #$pedidoId no entregado',
+        },
         estado: OutboxStatus.pendiente,
         intentos: 0,
         creadoEn: DateTime.now(),
