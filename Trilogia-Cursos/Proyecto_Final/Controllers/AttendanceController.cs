@@ -34,7 +34,9 @@ public sealed class AttendanceController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Decide(AttendanceDecisionViewModel model, DateTime? desde, DateTime? hasta, CancellationToken cancellationToken)
     {
-        if (!ModelState.IsValid) { TempData["ErrorMessage"] = "La decisión no es válida."; return RedirectToAction(nameof(Index), new { desde, hasta }); }
+        // El rango viaja en la URL como fecha ISO (no «11/01/2026 00:00:00»).
+        var range = new { desde = desde?.ToString("yyyy-MM-dd"), hasta = hasta?.ToString("yyyy-MM-dd") };
+        if (!ModelState.IsValid) { TempData["ErrorMessage"] = "La decisión no es válida."; return RedirectToAction(nameof(Index), range); }
         try
         {
             await _attendance.DecideAsync(model, HttpContext.Session.GetInt32("UserId") ?? 0,
@@ -47,6 +49,6 @@ public sealed class AttendanceController : Controller
             // G2-26: la causa («No puede resolver su propia jornada.») viene del procedimiento.
             TempData["ErrorMessage"] = BusinessErrors.MessageOr(exception, "No fue posible resolver la jornada; recargue la lista.");
         }
-        return RedirectToAction(nameof(Index), new { desde, hasta });
+        return RedirectToAction(nameof(Index), range);
     }
 }

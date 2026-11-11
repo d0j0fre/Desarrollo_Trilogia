@@ -255,7 +255,7 @@
                         var status = item.Estado?.Trim() ?? string.Empty;
                         var statusClass = status switch { "Borrador" => "draft", "Aprobada" => "approved", "Pagada" => "paid", "Revertida" => "reverted", _ => "unknown" };
                         <tr>
-                            <td class="payroll-period">@(string.IsNullOrWhiteSpace(item.Periodo) ? "Sin período" : item.Periodo)</td>
+                            <td class="payroll-period">@(string.IsNullOrWhiteSpace(item.Periodo) ? "Sin período" : RrhhFormat.PeriodText(item.Periodo))</td>
                             <td class="payroll-employee">@(string.IsNullOrWhiteSpace(item.Empleado) ? "Empleado no disponible" : item.Empleado)</td>
                             <td><span class="payroll-amount">@RrhhFormat.Money(item.TotalBruto)</span></td>
                             <td><span class="payroll-amount">@RrhhFormat.Money(item.TotalDeducciones)</span></td>
