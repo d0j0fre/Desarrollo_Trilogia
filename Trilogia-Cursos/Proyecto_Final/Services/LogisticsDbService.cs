@@ -427,20 +427,22 @@ namespace Proyecto_Final.Services
             return result is int n ? n : Convert.ToInt32(result ?? 0);
         }
 
-        // CU-105 — Liquidar ruta: reingresa al inventario la mercadería no entregada
-        // y cierra la ruta. Devuelve (pedidos reingresados, unidades reingresadas).
-        public async Task<(int PedidosReingresados, int UnidadesReingresadas)> LiquidateRouteAsync(int rutaId, int usuarioId, string usuarioNombre)
+        // BUG-10-07 (0289) — Finalizar ruta: una ruta Despachada pasa a Completada y las paradas sin entregar
+        // quedan Fallido (y sus pedidos, «No entregado»). No toca el inventario ni liquida: eso se hace en
+        // Finanzas (cobros y mercadería con conteo). Devuelve (entregados, no entregados).
+        public async Task<(int Entregados, int NoEntregados)> FinalizeRouteAsync(int rutaId, int usuarioId, string usuarioNombre)
         {
             await using var connection = new SqlConnection(_connectionString);
-            await using var command = new SqlCommand("dbo.sp_Rutas_Liquidar", connection) { CommandType = CommandType.StoredProcedure };
+            await using var command = new SqlCommand("dbo.sp_Rutas_Finalizar", connection) { CommandType = CommandType.StoredProcedure };
             command.Parameters.Add("@RutaId", SqlDbType.Int).Value = rutaId;
             command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId > 0 ? usuarioId : DBNull.Value;
             command.Parameters.Add("@Nombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(usuarioNombre) ? DBNull.Value : usuarioNombre.Trim();
             await connection.OpenAsync();
             await using var reader = await command.ExecuteReaderAsync();
-            if (await reader.ReadAsync())
+            // El primer resultado es el de sp_Pedidos_SincronizarEstadoEntrega; el resumen es el segundo.
+            if (await reader.NextResultAsync() && await reader.ReadAsync())
             {
-                return (reader.IsDBNull(0) ? 0 : reader.GetInt32(0), reader.IsDBNull(1) ? 0 : reader.GetInt32(1));
+                return (reader.IsDBNull(1) ? 0 : reader.GetInt32(1), reader.IsDBNull(3) ? 0 : reader.GetInt32(3));
             }
             return (0, 0);
         }

@@ -348,22 +348,23 @@ namespace Proyecto_Final.Controllers
             return RedirectToAction(nameof(Detail), new { id = rutaId });
         }
 
-        // CU-105 — Liquidar la ruta al final del día (reingresa inventario no entregado).
+        // BUG-10-07 — Finalizar la ruta despachada. NO reingresa inventario ni liquida: la ruta Completada se
+        // liquida en Finanzas (cobros y mercadería con conteo), el único camino para devolver mercadería al stock.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Liquidate(int rutaId)
+        public async Task<IActionResult> Finalize(int rutaId)
         {
             var usuarioId = HttpContext.Session.GetInt32("UserId") ?? 0;
             var usuarioNombre = HttpContext.Session.GetString("UserFullName") ?? "Administrador";
 
             try
             {
-                var (pedidos, unidades) = await _logistics.LiquidateRouteAsync(rutaId, usuarioId, usuarioNombre);
-                await RegistrarAuditoriaAsync("Liquidar ruta", "Rutas",
-                    $"Se liquidó la ruta #{rutaId}. {pedidos} pedido(s) y {unidades} unidad(es) reingresadas al inventario.");
-                TempData["SuccessMessage"] = pedidos > 0
-                    ? $"Ruta liquidada. Se reingresaron {unidades} unidad(es) de {pedidos} pedido(s) no entregado(s)."
-                    : "Ruta liquidada. No había mercadería pendiente por reingresar.";
+                var (entregados, noEntregados) = await _logistics.FinalizeRouteAsync(rutaId, usuarioId, usuarioNombre);
+                await RegistrarAuditoriaAsync("Finalizar ruta", "Rutas",
+                    $"Se finalizó la ruta #{rutaId}: {entregados} entrega(s) y {noEntregados} sin entregar.");
+                TempData["SuccessMessage"] = noEntregados > 0
+                    ? $"Ruta finalizada. {noEntregados} pedido(s) quedaron como No entregado. Liquide la mercadería para devolverla al inventario y los cobros en Finanzas."
+                    : "Ruta finalizada. Todos los pedidos se entregaron; liquide los cobros en Finanzas.";
             }
             catch (SqlException ex) when (ex.Number >= 50000)
             {
@@ -372,8 +373,8 @@ namespace Proyecto_Final.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al liquidar ruta.");
-                TempData["ErrorMessage"] = "No fue posible liquidar la ruta.";
+                _logger.LogError(ex, "Error al finalizar ruta.");
+                TempData["ErrorMessage"] = "No fue posible finalizar la ruta.";
             }
             return RedirectToAction(nameof(Detail), new { id = rutaId });
         }
