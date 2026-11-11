@@ -265,7 +265,7 @@ public sealed class RoutesCorreccionesTests
         Assert.Contains("SyncOrderStatusAsync(rutaId)", despachar, StringComparison.Ordinal);
 
         var recalcular = controlador[controlador.IndexOf("public async Task<IActionResult> Recalculate(", StringComparison.Ordinal)..];
-        recalcular = recalcular[..recalcular.IndexOf("public async Task<IActionResult> Liquidate(", StringComparison.Ordinal)];
+        recalcular = recalcular[..recalcular.IndexOf("public async Task<IActionResult> Finalize(", StringComparison.Ordinal)];
         Assert.Contains("SyncOrderStatusAsync(rutaId)", recalcular, StringComparison.Ordinal);
     }
 

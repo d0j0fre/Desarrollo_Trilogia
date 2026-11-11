@@ -120,15 +120,15 @@
                     }
                     @if (c.Estado == "Despachada")
                     {
-                        <form asp-action="Liquidate" method="post" class="mr-2 mb-2"
-                              data-s3-confirm="¿Liquidar la ruta al final del día? La mercadería de los pedidos NO entregados se reingresará al inventario."
-                              data-s3-confirm-title="Liquidar ruta"
+                        <form asp-action="Finalize" method="post" class="mr-2 mb-2"
+                              data-s3-confirm="¿Finalizar la ruta? Las paradas sin entregar quedarán como No entregado. La mercadería y los cobros se liquidan después en Finanzas."
+                              data-s3-confirm-title="Finalizar ruta"
                               data-s3-confirm-type="warning"
-                              data-s3-confirm-ok="Sí, liquidar"
+                              data-s3-confirm-ok="Sí, finalizar"
                               data-s3-confirm-cancel="Cancelar">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="rutaId" value="@c.RutaId" />
-                            <button type="submit" class="btn btn-ds-action"><i class="fa fa-clipboard-check mr-2"></i>Liquidar ruta</button>
+                            <button type="submit" class="btn btn-ds-action"><i class="fa fa-flag-checkered mr-2"></i>Finalizar ruta</button>
                         </form>
                     }
                     @if (c.Estado == "Completada" && Model.Pedidos.Any(p => p.EstadoEntrega != "Entregado"))

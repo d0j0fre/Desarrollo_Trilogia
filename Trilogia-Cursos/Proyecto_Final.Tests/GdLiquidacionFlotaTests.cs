@@ -142,6 +142,34 @@ public sealed class GdLiquidacionFlotaTests
         Assert.Contains("Error de digitaci", texto, StringComparison.Ordinal);
     }
 
+    // ── BUG-10-07: un solo camino para liquidar (Finalizar ruta → Finanzas) ─────────────
+    [Fact]
+    public void FinalizarRuta_NoReingresaInventarioNiLiquida_YEsElUnicoCierreDeLaWeb()
+    {
+        var controlador = MobileCorreccionesTests.Read("Proyecto_Final", "Controllers", "RoutesAdminController.cs");
+        var servicio = MobileCorreccionesTests.Read("Proyecto_Final", "Services", "LogisticsDbService.cs");
+        var vista = MobileCorreccionesTests.Read("Proyecto_Final", "Views", "RoutesAdmin", "Detail.cshtml");
+
+        Assert.Contains("public async Task<IActionResult> Finalize(", controlador, StringComparison.Ordinal);
+        Assert.DoesNotContain("public async Task<IActionResult> Liquidate(", controlador, StringComparison.Ordinal);
+        Assert.Contains("dbo.sp_Rutas_Finalizar", servicio, StringComparison.Ordinal);
+        Assert.Contains("asp-action=\"Finalize\"", vista, StringComparison.Ordinal);
+        Assert.DoesNotContain("asp-action=\"Liquidate\"", vista, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ElProcedimientoQueReingresaSinConteoYaNoSeLlamaDesdeNingunaParte()
+    {
+        var raiz = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
+        var llamadas = new[] { "Proyecto_Final", "Proyecto_FinalAPI" }
+            .SelectMany(p => Directory.GetFiles(Path.Combine(raiz, p), "*.cs", SearchOption.AllDirectories))
+            .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}") && !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}"))
+            .Where(f => File.ReadAllText(f).Contains("sp_Rutas_Liquidar", StringComparison.Ordinal))
+            .ToArray();
+
+        Assert.Empty(llamadas);
+    }
+
     // ── G2-12: mensajes de negocio en Vehículos, Mantenimiento, Alertas y Finanzas ─────
     [Theory]
     [InlineData("VehiclesController.cs", 3)]
