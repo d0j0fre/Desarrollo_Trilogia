@@ -5,6 +5,7 @@ import 'package:proyecto_movil/core/providers.dart';
 import 'package:proyecto_movil/core/theme/app_theme.dart';
 import 'package:proyecto_movil/features/driver_routes/data/routes_repository.dart';
 import 'package:proyecto_movil/features/driver_routes/domain/delivery.dart';
+import 'package:proyecto_movil/features/driver_routes/domain/evidence_draft.dart';
 import 'package:proyecto_movil/features/driver_routes/domain/route.dart';
 import 'package:proyecto_movil/features/driver_routes/presentation/route_detail_page.dart';
 
@@ -115,6 +116,7 @@ class _RepoFalso implements RoutesRepository {
     required int pedidoId,
     required String estado,
     String? motivoFallo,
+    List<EvidenceDraft> evidencias = const [],
   }) async {
     marcadas.add(estado);
   }

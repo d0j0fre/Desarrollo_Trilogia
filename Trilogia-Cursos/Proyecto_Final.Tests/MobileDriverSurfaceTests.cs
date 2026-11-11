@@ -81,7 +81,8 @@ public sealed class MobileDriverSurfaceTests
             {
                 typeof(UpdateDeliveryStatusRequest),
                 typeof(OpenMileageRequest),
-                typeof(CloseMileageRequest)
+                typeof(CloseMileageRequest),
+                typeof(RegisterEvidenceRequest)
             }
             .SelectMany(type => type.GetProperties().Select(property => new { type, property }))
             .Where(entry =>
@@ -280,10 +281,12 @@ public sealed class MobileDriverSurfaceTests
     private static MobileDriverController BuildDriverController(
         Mock<IDriverMobileDbService> db,
         Mock<IMobileAuditService>? audit = null,
-        int userId = 7)
+        int userId = 7,
+        Mock<IDriverEvidenceService>? evidence = null)
     {
         var controller = new MobileDriverController(
             db.Object,
+            (evidence ?? new Mock<IDriverEvidenceService>()).Object,
             (audit ?? new Mock<IMobileAuditService>()).Object,
             NullLogger<MobileDriverController>.Instance)
         {

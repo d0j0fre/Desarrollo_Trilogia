@@ -237,6 +237,12 @@ class AuthController extends StateNotifier<AuthState> {
     await _store.clearSession();
     // Un telefono se pierde: no puede quedar la ruta de nadie despues de salir.
     await _database.clearUserData();
+    // Tampoco quedan fotos ni firmas de entregas sin enviar.
+    try {
+      await _ref.read(evidenceFileStoreProvider).borrarTodo();
+    } on Object {
+      // Sin archivos que borrar (o sin acceso): no debe impedir cerrar sesion.
+    }
     await _sync.refreshCounters();
 
     state = const AuthState(status: AuthStatus.anonimo);

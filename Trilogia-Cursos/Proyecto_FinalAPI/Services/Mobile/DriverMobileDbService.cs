@@ -14,7 +14,19 @@ namespace Proyecto_FinalAPI.Services.Mobile
         Task<MileageResponse> CloseMileageAsync(int driverUserId, int mileageId, int endKm, Guid syncGuid, CancellationToken cancellationToken = default);
         Task<OpenMileageShift?> GetOpenShiftAsync(int driverUserId, CancellationToken cancellationToken = default);
         Task<DriverDaySummary> GetDaySummaryAsync(int driverUserId, CancellationToken cancellationToken = default);
+
+        // Evidencia de entrega (G3-04). Son los mismos procedimientos que usa la web.
+        Task<EvidenceTarget> PrepareEvidenceAsync(int routeOrderId, int driverUserId, Guid syncGuid, CancellationToken cancellationToken = default);
+        Task<int> RegisterEvidenceAsync(int orderId, int routeId, string evidenceType, string storageKey, string mimeType, string? notes, int driverUserId, string driverName, Guid syncGuid, CancellationToken cancellationToken = default);
+        Task MarkEvidenceReadyAsync(int evidenceId, int driverUserId, CancellationToken cancellationToken = default);
+        Task DeletePendingEvidenceAsync(int evidenceId, int driverUserId, CancellationToken cancellationToken = default);
     }
+
+    /// <summary>
+    /// Parada autorizada para recibir evidencia. <see cref="ExistingEvidenceId"/> viene
+    /// lleno cuando ese mismo archivo ya se registró (un reenvío de la cola sin señal).
+    /// </summary>
+    public sealed record EvidenceTarget(int RutaId, int PedidoId, int? ExistingEvidenceId);
 
     /// <summary>
     /// Datos del chofer para la aplicación móvil.
@@ -324,6 +336,108 @@ namespace Proyecto_FinalAPI.Services.Mobile
                 EntregasFallidasHoy = reader.IsDBNull(3) ? 0 : reader.GetInt32(3),
                 JornadaAbierta = !reader.IsDBNull(4) && reader.GetBoolean(4)
             };
+        }
+
+        // ── Evidencia de entrega ────────────────────────────────────────────
+
+        /// <summary>
+        /// Resuelve la parada del chofer y comprueba, en SQL, que sea suya y que su ruta
+        /// admita evidencia (0305). Lanza SqlException ≥ 50000 si no.
+        /// </summary>
+        public async Task<EvidenceTarget> PrepareEvidenceAsync(
+            int routeOrderId,
+            int driverUserId,
+            Guid syncGuid,
+            CancellationToken cancellationToken = default)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Chofer_PrepararEvidencia", connection)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+            command.Parameters.Add("@RutaPedidoId", SqlDbType.Int).Value = routeOrderId;
+            command.Parameters.Add("@ChoferUsuarioId", SqlDbType.Int).Value = driverUserId;
+            command.Parameters.Add("@SyncGuid", SqlDbType.UniqueIdentifier).Value = syncGuid;
+
+            await connection.OpenAsync(cancellationToken);
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+            if (!await reader.ReadAsync(cancellationToken))
+            {
+                throw new InvalidOperationException("sp_Chofer_PrepararEvidencia no devolvió la parada.");
+            }
+
+            return new EvidenceTarget(
+                reader.GetInt32(reader.GetOrdinal("RutaId")),
+                reader.GetInt32(reader.GetOrdinal("PedidoId")),
+                reader.IsDBNull(reader.GetOrdinal("EvidenciaIdExistente"))
+                    ? null
+                    : reader.GetInt32(reader.GetOrdinal("EvidenciaIdExistente")));
+        }
+
+        public async Task<int> RegisterEvidenceAsync(
+            int orderId,
+            int routeId,
+            string evidenceType,
+            string storageKey,
+            string mimeType,
+            string? notes,
+            int driverUserId,
+            string driverName,
+            Guid syncGuid,
+            CancellationToken cancellationToken = default)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Entrega_RegisterEvidence", connection)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+            command.Parameters.Add("@PedidoId", SqlDbType.Int).Value = orderId;
+            command.Parameters.Add("@RutaId", SqlDbType.Int).Value = routeId;
+            command.Parameters.Add("@TipoEvidencia", SqlDbType.NVarChar, 20).Value = evidenceType.Trim();
+            command.Parameters.Add("@StorageKey", SqlDbType.NVarChar, 160).Value = storageKey.Trim();
+            command.Parameters.Add("@MimeType", SqlDbType.NVarChar, 100).Value = mimeType.Trim();
+            command.Parameters.Add("@Observaciones", SqlDbType.NVarChar, 300).Value =
+                string.IsNullOrWhiteSpace(notes) ? DBNull.Value : notes.Trim();
+            command.Parameters.Add("@RegistradoPorUsuarioId", SqlDbType.Int).Value = driverUserId;
+            command.Parameters.Add("@RegistradoPorNombre", SqlDbType.NVarChar, 150).Value =
+                string.IsNullOrWhiteSpace(driverName) ? DBNull.Value : driverName.Trim();
+            command.Parameters.Add("@SyncGuid", SqlDbType.UniqueIdentifier).Value = syncGuid;
+
+            await connection.OpenAsync(cancellationToken);
+            var result = await command.ExecuteScalarAsync(cancellationToken);
+            return result is int id ? id : Convert.ToInt32(result);
+        }
+
+        public async Task MarkEvidenceReadyAsync(
+            int evidenceId,
+            int driverUserId,
+            CancellationToken cancellationToken = default)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Entrega_MarkEvidenceReady", connection)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+            command.Parameters.Add("@EvidenciaId", SqlDbType.Int).Value = evidenceId;
+            command.Parameters.Add("@RegistradoPorUsuarioId", SqlDbType.Int).Value = driverUserId;
+            await connection.OpenAsync(cancellationToken);
+            await command.ExecuteNonQueryAsync(cancellationToken);
+        }
+
+        public async Task DeletePendingEvidenceAsync(
+            int evidenceId,
+            int driverUserId,
+            CancellationToken cancellationToken = default)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Entrega_DeletePendingEvidence", connection)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+            command.Parameters.Add("@EvidenciaId", SqlDbType.Int).Value = evidenceId;
+            command.Parameters.Add("@RegistradoPorUsuarioId", SqlDbType.Int).Value = driverUserId;
+            await connection.OpenAsync(cancellationToken);
+            await command.ExecuteNonQueryAsync(cancellationToken);
         }
     }
 }

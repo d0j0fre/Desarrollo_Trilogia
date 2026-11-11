@@ -82,6 +82,29 @@ namespace Proyecto_FinalAPI.Models
         public bool Duplicado { get; set; }
     }
 
+    /// <summary>
+    /// Foto o firma de una parada (multipart/form-data). La parada va en la ruta de la
+    /// URL y el chofer sale del token: aquí no viaja ningún identificador de usuario.
+    /// </summary>
+    public sealed class RegisterEvidenceRequest
+    {
+        /// <summary><c>Foto</c> o <c>Firma</c>.</summary>
+        public string Tipo { get; set; } = string.Empty;
+
+        /// <summary>Identificador del archivo, igual en cada reintento de la cola.</summary>
+        public string SyncGuid { get; set; } = string.Empty;
+
+        public IFormFile? Archivo { get; set; }
+        public string? Observaciones { get; set; }
+    }
+
+    public sealed class RegisterEvidenceResponse
+    {
+        public int EvidenciaId { get; set; }
+        public string Tipo { get; set; } = string.Empty;
+        public bool Duplicado { get; set; }
+    }
+
     public sealed class DriverVehicle
     {
         public int VehiculoId { get; set; }

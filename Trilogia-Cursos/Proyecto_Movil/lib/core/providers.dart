@@ -6,11 +6,13 @@ import 'package:uuid/uuid.dart';
 
 import '../features/auth/application/auth_controller.dart';
 import '../features/auth/data/auth_api.dart';
+import '../features/driver_routes/data/evidence_capture.dart';
 import '../features/driver_routes/data/routes_local_dao.dart';
 import '../features/driver_routes/data/routes_repository.dart';
 import '../features/mileage/data/mileage_repository.dart';
 import 'network/api_client.dart';
 import 'storage/app_database.dart';
+import 'storage/evidence_file_store.dart';
 import 'storage/secure_store.dart';
 import 'sync/outbox_repository.dart';
 import 'sync/sync_service.dart';
@@ -35,6 +37,17 @@ final outboxRepositoryProvider = Provider<OutboxRepository>(
   (ref) => OutboxRepository(ref.watch(appDatabaseProvider)),
 );
 
+/// Fotos y firmas de las entregas, guardadas en el almacenamiento propio de la
+/// aplicacion hasta que la cola las suba.
+final evidenceFileStoreProvider = Provider<EvidenceFileStore>(
+  (ref) => EvidenceFileStore(),
+);
+
+/// Camara y galeria. En las pruebas se reemplaza por una falsa.
+final evidenceCaptureProvider = Provider<EvidenceCapture>(
+  (ref) => ImagePickerEvidenceCapture(),
+);
+
 final apiClientProvider = Provider<ApiClient>((ref) {
   return ApiClient(
     store: ref.watch(secureStoreProvider),
@@ -48,6 +61,7 @@ final syncServiceProvider = Provider<SyncService>((ref) {
   final service = SyncService(
     api: ref.watch(apiClientProvider),
     outbox: ref.watch(outboxRepositoryProvider),
+    files: ref.watch(evidenceFileStoreProvider),
   );
   ref.onDispose(service.dispose);
   return service;

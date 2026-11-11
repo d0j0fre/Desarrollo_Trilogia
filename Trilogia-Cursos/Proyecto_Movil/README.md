@@ -16,11 +16,22 @@ teléfono puede:
 - Abrir la navegación en Waze o Google Maps.
 - Llamar al cliente.
 - Marcar una entrega como entregada o no entregada, con motivo.
+- Al marcar «Entregado», adjuntar una **foto** (cámara o galería) y la **firma del
+  cliente** como evidencia. Ambas son opcionales, como en la web (Rutas →
+  Evidencias). Sin señal quedan en «Por enviar» y salen después del estado de
+  su entrega.
 - Abrir y cerrar la jornada de kilometraje del vehículo de su ruta.
 - Ver qué acciones suyas todavía no salieron del teléfono.
 
 **Todo lo anterior funciona sin señal**, salvo descargar rutas nuevas y el
 inicio de sesión. Lo que se marca sin conexión sale solo al recuperarla.
+
+> La evidencia usa la cámara (`image_picker`), el lienzo de firma (`signature`)
+> y el almacenamiento de la app (`path_provider`). Las fotos se reducen a 1600 px
+> y calidad 80 al capturarlas. Android pide el permiso de cámara la primera vez
+> que se toca «Tomar foto»; la galería no pide ninguno.
+> Para probar contra una API local la carpeta `EvidenceStorage__RootPath` debe ser
+> la misma que usa el sitio web (ver `docs/credenciales-configuracion-segura.md`).
 
 ---
 
