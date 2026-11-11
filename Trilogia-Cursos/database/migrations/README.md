@@ -92,6 +92,11 @@ Cada migracion debe indicar su estrategia de rollback antes de ejecutarse. Los c
 | 0263 | `0263_vigencia_salarial.sql` | Historial salarial por fecha efectiva | 0017; historial de salarios |
 | 0264 | `0264_gasto_sin_presupuesto.sql` | Detecta exceso cuando existe gasto sin presupuesto | 0010; vista de impacto de gastos |
 | 0265 | `0265_estado_gasto_aprobacion.sql` | Estado persistente de aprobación y su inclusión en gastos pendientes | 0010, 0011 y 0264 |
+| 0295 | `0295_kpi_cumplimiento_solo_con_meta.sql` | BUG-21-03: la venta global del Reporte de KPIs solo suma vendedores con meta y devuelve aparte la venta sin meta | 0211–0213 (metas y KPIs) |
+| 0296 | `0296_tablero_ventas_no_anuladas.sql` | G2-16: el Tablero gerencial y su serie suman facturas no anuladas (definición única de venta) | CU-131 (tablero gerencial) |
+| 0297 | `0297_tablero_detalle_indicadores.sql` | BUG-13-02: `sp_Reportes_DashboardDetalle`, datos de los gráficos de cada indicador del tablero | 0296; rutas y crédito de clientes |
+| 0298 | `0298_metas_reemplazo_confirmado.sql` | BUG-21-01: `sp_Metas_Upsert` exige `@Reemplazar` para sustituir una meta existente (error 53134) | 0211 (metas) |
+| 0299 | `0299_chat_marcar_leidos.sql` | BUG-23-01: `sp_Chat_MarcarLeidos` para el doble check de los mensajes directos | 0002 (chat privado) |
 
 Los scripts no incluyen `USE`: el ejecutor debe seleccionar explícitamente la base antes de iniciar. Los hashes escritos por 0002–0011 son hashes de manifiesto para identificar versión; la evidencia de despliegue debe registrar además el SHA-256 real del archivo y actualizar el ledger si corresponde.
 
