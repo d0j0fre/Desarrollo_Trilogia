@@ -104,8 +104,7 @@ public sealed class ExpensesController : Controller
                 ready = true;
             }
             await AuditAsync("REGISTRAR_GASTO", $"Gasto #{expenseId}, total {model.Total:N2}, nivel {result.ConsumptionLevel} ({result.ExecutionPercent:N2}%).");
-            TempData["SuccessMessage"] = result.ConsumptionLevel == "Normal"
-                ? "Gasto registrado." : $"Gasto registrado. Nivel presupuestario: {result.ConsumptionLevel} ({result.ExecutionPercent:N2}%).";
+            TempData["SuccessMessage"] = result.BudgetMessage();
             return RedirectToAction(nameof(Details), new { id = expenseId });
         }
         catch (PrivateFileValidationException exception) { TempData["ErrorMessage"] = exception.Message; }
