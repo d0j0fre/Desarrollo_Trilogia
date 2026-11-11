@@ -68,7 +68,7 @@ namespace Proyecto_FinalAPI.Controllers
                 _logger.LogError(exception, "No se pudo consultar la versión vigente de la aplicación móvil.");
                 return StatusCode(
                     StatusCodes.Status503ServiceUnavailable,
-                    new MobileError("servicio_no_disponible", "No fue posible verificar la versión. Intentá de nuevo."));
+                    new MobileError("servicio_no_disponible", "No fue posible verificar la versión. Intente de nuevo."));
             }
         }
     }

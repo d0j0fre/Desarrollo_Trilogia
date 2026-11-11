@@ -64,7 +64,7 @@ namespace Proyecto_FinalAPI.Controllers
         {
             if (orderId <= 0) return NotFoundOrForbidden();
             var target = request?.Estado?.Trim();
-            if (string.IsNullOrWhiteSpace(target)) return InvalidRequest("Indicá el estado nuevo.");
+            if (string.IsNullOrWhiteSpace(target)) return InvalidRequest("Indique el estado nuevo.");
 
             return await GuardAsync(_logger, "cambiar estado de pedido", async () =>
             {
@@ -173,7 +173,7 @@ namespace Proyecto_FinalAPI.Controllers
             if (orderId <= 0) return Task.FromResult(NotFoundOrForbidden());
             var reason = request?.Motivo?.Trim();
             if (string.IsNullOrWhiteSpace(reason) || reason.Length < 5)
-                return Task.FromResult(InvalidRequest("Explicá el motivo del rechazo (al menos 5 caracteres)."));
+                return Task.FromResult(InvalidRequest("Explique el motivo del rechazo (al menos 5 caracteres)."));
 
             return GuardAsync(_logger, "rechazar pedido retenido", async () =>
             {

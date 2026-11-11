@@ -53,7 +53,7 @@ namespace Proyecto_FinalAPI.Controllers
                 return BadRequest(new AuthResult
                 {
                     Success = false,
-                    Message = "Debes indicar correo y contraseña."
+                    Message = "Debe indicar correo y contraseña."
                 });
             }
 
@@ -65,7 +65,7 @@ namespace Proyecto_FinalAPI.Controllers
                 return StatusCode(StatusCodes.Status429TooManyRequests, new AuthResult
                 {
                     Success = false,
-                    Message = $"Demasiados intentos fallidos. Intentá nuevamente en {Math.Ceiling(remainingTime.TotalMinutes)} minuto(s)."
+                    Message = $"Demasiados intentos fallidos. Intente nuevamente en {Math.Ceiling(remainingTime.TotalMinutes)} minuto(s)."
                 });
             }
 
@@ -112,7 +112,7 @@ namespace Proyecto_FinalAPI.Controllers
                         return StatusCode(StatusCodes.Status403Forbidden, new AuthResult
                         {
                             Success = false,
-                            Message = "Tu perfil no tiene acceso a la aplicación móvil. Podés usar el sitio web."
+                            Message = "Su perfil no tiene acceso a la aplicación móvil. Puede usar el sitio web."
                         });
                     }
                 }
@@ -125,7 +125,7 @@ namespace Proyecto_FinalAPI.Controllers
                     return StatusCode(StatusCodes.Status503ServiceUnavailable, new AuthResult
                     {
                         Success = false,
-                        Message = "El servicio no está disponible en este momento. Intentá de nuevo."
+                        Message = "El servicio no está disponible en este momento. Intente de nuevo."
                     });
                 }
             }
@@ -166,7 +166,7 @@ namespace Proyecto_FinalAPI.Controllers
                 return StatusCode(StatusCodes.Status503ServiceUnavailable, new AuthResult
                 {
                     Success = false,
-                    Message = "El servicio no está disponible en este momento. Intentá de nuevo."
+                    Message = "El servicio no está disponible en este momento. Intente de nuevo."
                 });
             }
 
@@ -178,7 +178,7 @@ namespace Proyecto_FinalAPI.Controllers
                 return Unauthorized(new AuthResult
                 {
                     Success = false,
-                    Message = "La sesión expiró. Iniciá sesión de nuevo."
+                    Message = "La sesión expiró. Inicie sesión de nuevo."
                 });
             }
 
@@ -320,16 +320,16 @@ namespace Proyecto_FinalAPI.Controllers
         [EnableRateLimiting("password-recovery")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordApiRequest request)
         {
-            const string sentRecoveryMessage = "Te enviamos un correo con las instrucciones y el enlace para restablecer tu contraseña.";
+            const string sentRecoveryMessage = "Le enviamos un correo con las instrucciones y el enlace para restablecer su contraseña.";
             const string notRegisteredMessage = "El correo ingresado no está registrado.";
-            const string sendFailedMessage = "No fue posible enviar el correo de recuperación en este momento. Intentá nuevamente más tarde.";
+            const string sendFailedMessage = "No fue posible enviar el correo de recuperación en este momento. Intente nuevamente más tarde.";
 
             if (request == null || string.IsNullOrWhiteSpace(request.Email))
             {
                 return BadRequest(new AuthResult
                 {
                     Success = false,
-                    Message = "Debes indicar un correo."
+                    Message = "Debe indicar un correo."
                 });
             }
 
