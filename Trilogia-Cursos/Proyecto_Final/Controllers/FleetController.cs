@@ -12,13 +12,15 @@ namespace Proyecto_Final.Controllers
         private readonly FleetDbService _fleet;
         private readonly LogisticsDbService _logistics;
         private readonly AdminDbService _adminDbService;
+        private readonly IRolePermissionService _permissionService;
         private readonly ILogger<FleetController> _logger;
 
-        public FleetController(FleetDbService fleet, LogisticsDbService logistics, AdminDbService adminDbService, ILogger<FleetController> logger)
+        public FleetController(FleetDbService fleet, LogisticsDbService logistics, AdminDbService adminDbService, IRolePermissionService permissionService, ILogger<FleetController> logger)
         {
             _fleet = fleet;
             _logistics = logistics;
             _adminDbService = adminDbService;
+            _permissionService = permissionService;
             _logger = logger;
         }
 
@@ -28,8 +30,8 @@ namespace Proyecto_Final.Controllers
         public async Task<IActionResult> Mileage()
         {
             await PopulateMileageVehiclesAsync();
-            var esChofer = string.Equals(HttpContext.Session.GetString("UserRole"), "Chofer", StringComparison.OrdinalIgnoreCase);
-            int? choferFiltro = esChofer ? HttpContext.Session.GetInt32("UserId") : null;
+            // Quien no administra jornadas ajenas (FLOTA_KILOMETRAJE_ADMIN o Administrador) solo ve las suyas.
+            int? choferFiltro = await CanAdministerMileageAsync() ? null : HttpContext.Session.GetInt32("UserId");
             var vm = new MileageIndexViewModel
             {
                 Jornadas = await _fleet.GetMileageAsync(null, choferFiltro)
@@ -74,9 +76,16 @@ namespace Proyecto_Final.Controllers
         [AdminAuthorize("Flota", "FLOTA_KILOMETRAJE")]
         public async Task<IActionResult> CloseMileage(int kilometrajeId, int kmFinal)
         {
+            // Propiedad: el procedimiento cierra solo la jornada del actor, salvo que pueda administrar las ajenas.
+            var actorUsuarioId = HttpContext.Session.GetInt32("UserId") ?? 0;
+            if (actorUsuarioId <= 0)
+            {
+                return AuthorizationResults.AccessDenied();
+            }
+
             try
             {
-                await _fleet.CloseMileageAsync(kilometrajeId, kmFinal);
+                await _fleet.CloseMileageAsync(kilometrajeId, kmFinal, actorUsuarioId, await CanAdministerMileageAsync());
                 TempData["SuccessMessage"] = "Jornada cerrada. Kilometraje final registrado.";
             }
             catch (SqlException ex) when (ex.Number >= 50000)
@@ -309,6 +318,14 @@ namespace Proyecto_Final.Controllers
                     RutasAbiertas = v.RutasAbiertas
                 })
                 .ToList();
+        }
+
+        // Puede consultar y cerrar jornadas de otros: Administrador o el permiso FLOTA_KILOMETRAJE_ADMIN.
+        private async Task<bool> CanAdministerMileageAsync()
+        {
+            var role = HttpContext.Session.GetString("UserRole") ?? string.Empty;
+            return string.Equals(role, "Administrador", StringComparison.OrdinalIgnoreCase)
+                || await _permissionService.HasCodePermissionAsync(role, "FLOTA_KILOMETRAJE_ADMIN");
         }
 
         // Vehículos activos con su odómetro actual (para el kilometraje).

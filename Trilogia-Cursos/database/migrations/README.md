@@ -112,6 +112,7 @@ Cada migracion debe indicar su estrategia de rollback antes de ejecutarse. Los c
 | 0299 | `0299_chat_marcar_leidos.sql` | BUG-23-01: `sp_Chat_MarcarLeidos` para el doble check de los mensajes directos | 0002 (chat privado) |
 | 0310 | `0310_credenciales_solo_hash.sql` | Seguridad: ninguna contraseña en texto plano es válida ni queda guardada (hash de transición con sal para los datos existentes, disparador `tr_Usuarios_SinTextoPlano`, login sin comparación de texto plano, clientes con hash PBKDF2) | 0022 (columnas de hash) |
 | 0311 | `0311_revocacion_sesiones.sql` | Seguridad: `SecurityStamp` por usuario; el disparador `tr_Usuarios_RevocarSesiones` lo renueva y revoca los tokens de refresco al inactivar, cambiar de perfil o de contraseña; `sp_Auth_GetSessionState` para la web y los JWT | 0310 y 0024 móvil (`UsuarioTokensRefresco`) |
+| 0312 | `0312_kilometraje_propiedad.sql` | Seguridad: `sp_Kilometraje_Cerrar` exige propiedad de la jornada (o `FLOTA_KILOMETRAJE_ADMIN`) y es atómico (error 53044 en el segundo cierre) | Kilometraje de flota (CU-152) |
 
 Los scripts no incluyen `USE`: el ejecutor debe seleccionar explícitamente la base antes de iniciar. Los hashes escritos por 0002–0011 son hashes de manifiesto para identificar versión; la evidencia de despliegue debe registrar además el SHA-256 real del archivo y actualizar el ledger si corresponde.
 
