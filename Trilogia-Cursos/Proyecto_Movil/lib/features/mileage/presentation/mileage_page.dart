@@ -69,7 +69,7 @@ class MileagePage extends ConsumerWidget {
                           const Center(child: CircularProgressIndicator()),
                       error: (_, _) => ErrorView(
                         message:
-                            'No se pudo consultar tu jornada. Revisá la señal e intentá de nuevo.',
+                            'No se pudo consultar su jornada. Revise la señal e intente de nuevo.',
                         onRetry: () => ref.invalidate(openShiftProvider),
                       ),
                       data: (abierta) => abierta == null
@@ -201,7 +201,7 @@ class _OpenShiftFormState extends ConsumerState<_OpenShiftForm> {
                   icon: Icons.play_circle_outline_rounded,
                   color: BrandColors.action,
                   title: 'Iniciar jornada',
-                  subtitle: 'Anotá el kilometraje del tablero antes de salir.',
+                  subtitle: 'Anote el kilometraje del tablero antes de salir.',
                 ),
                 const SizedBox(height: 22),
                 vehicles.when(
@@ -216,7 +216,7 @@ class _OpenShiftFormState extends ConsumerState<_OpenShiftForm> {
                         color: BrandColors.offline,
                         icon: Icons.wifi_off_rounded,
                         message:
-                            'No se pudieron traer tus vehículos. Revisá la señal.',
+                            'No se pudieron traer sus vehículos. Revise la señal.',
                       ),
                       const SizedBox(height: 12),
                       OutlinedButton.icon(
@@ -229,9 +229,9 @@ class _OpenShiftFormState extends ConsumerState<_OpenShiftForm> {
                   data: (lista) => lista.isEmpty
                       ? const EmptyState(
                           icon: Icons.local_shipping_outlined,
-                          title: 'No tenés vehículo asignado',
+                          title: 'No tiene vehículo asignado',
                           message:
-                              'Solo podés registrar kilometraje del vehículo de una ruta activa tuya.',
+                              'Solo puede registrar kilometraje del vehículo de una ruta activa tuya.',
                         )
                       : Form(
                           key: _formKey,
@@ -267,7 +267,7 @@ class _OpenShiftFormState extends ConsumerState<_OpenShiftForm> {
                                 onChanged: (value) =>
                                     setState(() => _vehiculo = value),
                                 validator: (value) =>
-                                    value == null ? 'Elegí el vehículo.' : null,
+                                    value == null ? 'Elija el vehículo.' : null,
                               ),
                               const SizedBox(height: 14),
                               TextFormField(
@@ -308,7 +308,7 @@ class _OpenShiftFormState extends ConsumerState<_OpenShiftForm> {
 
   String? _validarKm(String? value) {
     final km = int.tryParse(value ?? '');
-    if (km == null) return 'Escribí el kilometraje.';
+    if (km == null) return 'Escriba el kilometraje.';
     if (km < 0) return 'No puede ser negativo.';
 
     // Aviso temprano: el servidor tambien lo valida, pero decirlo antes de
@@ -316,7 +316,7 @@ class _OpenShiftFormState extends ConsumerState<_OpenShiftForm> {
     // la cola por fin salio.
     final actual = _vehiculo?.kilometrajeActual ?? 0;
     if (km < actual) {
-      return 'El vehículo marcaba $actual km. Revisá el número.';
+      return 'El vehículo marcaba $actual km. Revise el número.';
     }
     return null;
   }
@@ -425,7 +425,7 @@ class _CloseShiftFormState extends ConsumerState<_CloseShiftForm> {
                     ),
                     validator: (value) {
                       final km = int.tryParse(value ?? '');
-                      if (km == null) return 'Escribí el kilometraje.';
+                      if (km == null) return 'Escriba el kilometraje.';
                       if (km < shift.kmInicial) {
                         return 'No puede ser menor a ${shift.kmInicial} km.';
                       }

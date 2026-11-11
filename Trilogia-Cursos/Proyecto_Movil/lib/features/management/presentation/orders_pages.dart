@@ -247,7 +247,7 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
                   if (!allChecked)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 12),
-                      child: Text('Marcá cada producto a medida que lo alistás.', textAlign: TextAlign.center,
+                      child: Text('Marque cada producto a medida que lo alista.', textAlign: TextAlign.center,
                           style: Theme.of(context).textTheme.bodySmall),
                     ),
                   ElevatedButton.icon(
@@ -381,7 +381,7 @@ class ApprovalsPage extends ConsumerWidget {
         onRefresh: () async => ref.invalidate(retainedOrdersProvider),
         emptyIcon: Icons.verified_outlined,
         emptyTitle: 'Nada por aprobar',
-        emptyMessage: 'Cuando una venta supere el umbral de retención va a aparecer acá.',
+        emptyMessage: 'Cuando una venta supere el umbral de retención va a aparecer aquí.',
         itemBuilder: (context, order) => _RetainedCard(order: order),
       ),
     );

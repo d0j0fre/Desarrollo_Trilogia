@@ -282,7 +282,7 @@ class _SummaryCard extends ConsumerWidget {
                 SizedBox(width: 14),
                 Expanded(
                   child: Text(
-                    'No se pudo traer el resumen del día. Tocá para reintentar.',
+                    'No se pudo traer el resumen del día. Toque para reintentar.',
                     style: TextStyle(
                       fontSize: 14,
                       color: BrandColors.textMuted,
@@ -444,7 +444,7 @@ class _Modules extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           for (final entry in secciones) ...[
-            SectionTitle(secciones.length == 1 ? '¿Qué querés hacer?' : entry.key),
+            SectionTitle(secciones.length == 1 ? '¿Qué quiere hacer?' : entry.key),
             if (compacto)
               _ModuleGrid(modulos: entry.value)
             else
@@ -462,7 +462,7 @@ class _Modules extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SectionTitle('¿Qué querés hacer?'),
+        const SectionTitle('¿Qué quiere hacer?'),
         if (!auth.capacidadesCargadas)
           // Todavia no se sabe que puede hacer esta persona: casi siempre es
           // falta de señal o el servidor despertando. Decir "sin permisos" aqui
@@ -478,8 +478,8 @@ class _Modules extends ConsumerWidget {
               icon: Icons.lock_outline_rounded,
               title: 'Sin funciones habilitadas',
               message:
-                  'Tu perfil todavía no tiene acceso a ninguna función de la '
-                  'aplicación. Hablá con administración.',
+                  'Su perfil todavía no tiene acceso a ninguna función de la '
+                  'aplicación. Hable con administración.',
             ),
           ),
       ],
@@ -519,12 +519,12 @@ class _LoadingModulesState extends State<_LoadingModules> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Cargando tus funciones…',
+              'Cargando sus funciones…',
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 6),
             Text(
-              'Si recién abrís la aplicación o tenés poca señal, puede tardar '
+              'Si recién abre la aplicación o tiene poca señal, puede tardar '
               'un momento.',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodySmall,
@@ -676,7 +676,7 @@ class _ModuleCard extends StatelessWidget {
   /// anterior de la aplicación, que no traían descripción.
   static const _descripciones = <String, String>{
     'driver.routes': 'Paradas, navegación y estado de cada entrega',
-    'driver.mileage': 'Iniciá o cerrá la jornada del vehículo',
+    'driver.mileage': 'Inicie o cierre la jornada del vehículo',
     'driver.summary': 'Acciones guardadas que faltan por enviar',
   };
 

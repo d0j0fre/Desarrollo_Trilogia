@@ -185,7 +185,7 @@ class SyncBanner extends ConsumerWidget {
       return (
         BrandColors.danger,
         Icons.error_outline_rounded,
-        '${sync.conflictos} ${sync.conflictos == 1 ? "acción necesita" : "acciones necesitan"} tu atención',
+        '${sync.conflictos} ${sync.conflictos == 1 ? "acción necesita" : "acciones necesitan"} su atención',
       );
     }
 

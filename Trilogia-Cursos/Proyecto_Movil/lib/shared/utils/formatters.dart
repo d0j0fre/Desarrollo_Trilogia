@@ -1,5 +1,7 @@
 import 'package:intl/intl.dart';
 
+import '../../core/format/status_labels.dart';
+
 /// Formatos de la aplicación. En un solo lugar para que un monto o una fecha se
 /// vean igual en todas las pantallas.
 class Fmt {
@@ -46,14 +48,7 @@ class Fmt {
   }
 
   /// Nombre legible de los estados que la base guarda sin espacios.
-  static String status(String value) => switch (value) {
-        'EnProceso' => 'En proceso',
-        'EnRuta' => 'En ruta',
-        'RecibidaParcial' => 'Recibida parcial',
-        'CerradaConDiscrepancia' => 'Con discrepancia',
-        'Fallido' => 'No entregado',
-        _ => value,
-      };
+  static String status(String value) => statusLabel(value);
 }
 
 /// Lectura tolerante de JSON: un campo ausente o nulo no tumba la pantalla.

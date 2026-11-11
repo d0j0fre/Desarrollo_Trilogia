@@ -34,7 +34,7 @@ class RouteMap extends StatelessWidget {
         child: ListTile(
           leading: const Icon(Icons.map_outlined, color: BrandColors.textMuted),
           title: const Text('Mapa de la ruta'),
-          subtitle: const Text('Ninguna parada tiene ubicación registrada. Seguí la secuencia de la lista.'),
+          subtitle: const Text('Ninguna parada tiene ubicación registrada. Siga la secuencia de la lista.'),
         ),
       );
     }

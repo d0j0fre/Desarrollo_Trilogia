@@ -140,9 +140,9 @@ void main() {
     test('los mensajes del servidor pasan tal cual', () {
       expect(
         AuthController.loginErrorMessage(
-          ApiException(ApiFailure.demasiadasPeticiones, 'Esperá 5 minutos.'),
+          ApiException(ApiFailure.demasiadasPeticiones, 'Espere 5 minutos.'),
         ),
-        'Esperá 5 minutos.',
+        'Espere 5 minutos.',
       );
     });
   });

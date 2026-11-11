@@ -157,7 +157,7 @@ class AuthController extends StateNotifier<AuthState> {
     } catch (_) {
       state = state.copyWith(
         cargando: false,
-        error: 'No fue posible iniciar sesión. Intentá de nuevo.',
+        error: 'No fue posible iniciar sesión. Intente de nuevo.',
       );
       return false;
     }
@@ -172,13 +172,13 @@ class AuthController extends StateNotifier<AuthState> {
   static String loginErrorMessage(ApiException error) =>
       switch (error.failure) {
         ApiFailure.sinConexion =>
-          'No se pudo conectar con el servidor. Revisá tu conexión a internet '
-              'e intentá de nuevo.',
+          'No se pudo conectar con el servidor. Revise su conexión a internet '
+              'e intente de nuevo.',
         ApiFailure.tiempoAgotado =>
-          'El servidor está tardando en responder. Esperá unos segundos e '
-              'intentá de nuevo.',
+          'El servidor está tardando en responder. Espere unos segundos e '
+              'intente de nuevo.',
         ApiFailure.servidor =>
-          'El servidor no está disponible en este momento. Intentá de nuevo '
+          'El servidor no está disponible en este momento. Intente de nuevo '
               'en unos minutos.',
         _ => error.message,
       };
