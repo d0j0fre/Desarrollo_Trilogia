@@ -164,6 +164,23 @@ void main() {
       expect(firma.files.single.value.contentType.toString(), 'image/png');
     });
 
+    test('al recuperar la señal salen enseguida, sin esperar el reintento programado', () async {
+      await entregarConEvidencia();
+      // Tras varios fallos el estado quedo programado para dentro de minutos.
+      final estado = (await outbox.todas()).first;
+      await outbox.update(estado.copyWith(intentos: 5, proximoIntento: DateTime.now().add(const Duration(minutes: 5))));
+
+      api.sinConexion = false;
+      sync.setConnectivity(true);
+      while (sync.state.enviando) {
+        await Future<void>.delayed(const Duration(milliseconds: 5));
+      }
+      await esperarCola();
+
+      expect(api.llamadas.map((c) => c.path.split('/').last), ['status', 'evidence', 'evidence']);
+      expect(await outbox.todas(), isEmpty);
+    });
+
     test('si el estado se está reintentando, la evidencia sigue esperando', () async {
       await entregarConEvidencia();
       final estado = (await outbox.todas()).first;
@@ -390,6 +407,13 @@ class _MemoryOutbox implements OutboxRepository {
   @override
   Future<List<OutboxEntry>> dependientesDe(String syncGuid) async =>
       _filas.values.where((e) => e.dependeDe == syncGuid).toList();
+
+  @override
+  Future<void> reiniciarEsperas() async {
+    for (final e in _filas.values.where((e) => e.estado == OutboxStatus.pendiente).toList()) {
+      _filas[e.syncGuid] = e.copyWith(limpiarProximoIntento: true);
+    }
+  }
 
   @override
   Future<void> reintentar(String syncGuid) async {

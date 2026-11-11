@@ -96,8 +96,15 @@ class SyncService {
   void setConnectivity(bool hayConexion) {
     _emit(_state.copyWith(hayConexion: hayConexion));
     // Recuperar señal es el mejor momento para vaciar la cola: es cuando el
-    // chofer acaba de salir de una zona muerta con entregas acumuladas.
-    if (hayConexion) unawaited(flush());
+    // chofer acaba de salir de una zona muerta con entregas acumuladas. Las
+    // esperas de reintento acumuladas sin señal se quitan: si no, lo ultimo que
+    // fallo esperaria hasta 5 minutos con la red ya disponible.
+    if (hayConexion) unawaited(_vaciarTrasRecuperarSenal());
+  }
+
+  Future<void> _vaciarTrasRecuperarSenal() async {
+    await _outbox.reiniciarEsperas();
+    await flush();
   }
 
   Future<void> refreshCounters() async {

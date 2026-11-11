@@ -99,6 +99,19 @@ class OutboxRepository {
     await _db.delete('outbox', where: 'sync_guid = ?', whereArgs: [syncGuid]);
   }
 
+  /// Quita la espera de reintento de todo lo pendiente. Se usa al recuperar la
+  /// señal: la espera creciente (hasta 5 minutos) existe para no castigar a un
+  /// servidor caido, pero con red recien recuperada no tiene sentido hacerle esperar
+  /// al chofer lo que acumulo sin señal.
+  Future<void> reiniciarEsperas() async {
+    await _db.update(
+      'outbox',
+      {'proximo_intento': null},
+      where: 'estado = ?',
+      whereArgs: [OutboxStatus.pendiente.name],
+    );
+  }
+
   /// Vuelve a poner en cola un conflicto que el chofer decidio reintentar.
   Future<void> reintentar(String syncGuid) async {
     await _db.update(
