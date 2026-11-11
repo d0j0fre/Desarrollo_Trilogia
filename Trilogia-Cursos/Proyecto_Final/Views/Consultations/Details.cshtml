@@ -1,5 +1,8 @@
 @model Proyecto_Final.Models.Admin.ConsultationDetailViewModel
+@inject Proyecto_Final.Services.NavigationMenuService MenuAccess
 @{
+    // Cambiar el estado y responder exige CONSULTAS_ATENDER.
+    var puedeAtender = await MenuAccess.CanSubmitAsync(Context.Session.GetString("UserRole"), "Consultations", "UpdateStatus");
     ViewData["Title"] = "Detalle de consulta";
     var estadoClase = Model.Estado == "Pendiente" ? "warning" : Model.Estado == "Atendida" ? "success" : "dark";
 }
@@ -68,7 +71,9 @@
             <div class="admin-card h-100">
                 <h4 class="mb-4">Actualizar seguimiento</h4>
 
-                <form asp-controller="Consultations" asp-action="UpdateStatus" method="post">
+                @if (puedeAtender)
+{
+<form asp-controller="Consultations" asp-action="UpdateStatus" method="post">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="ConsultaId" value="@Model.ConsultaId" />
 
@@ -91,6 +96,11 @@
                         <i class="fa fa-save mr-1"></i>Guardar cambios
                     </button>
                 </form>
+}
+else
+{
+    <p class="text-muted mb-0">Su perfil puede consultar el mensaje, pero no atenderlo.</p>
+}
             </div>
         </div>
     </div>

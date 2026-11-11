@@ -1,6 +1,9 @@
 @model Proyecto_Final.Models.Admin.ClientCreditDetailViewModel
+@inject Proyecto_Final.Services.NavigationMenuService MenuAccess
 
 @{
+    var puedeConfigurar = await MenuAccess.CanSubmitAsync(Context.Session.GetString("UserRole"), "AccountsReceivableAdmin", "UpdateSettings");
+    var puedeMovimientos = await MenuAccess.CanSubmitAsync(Context.Session.GetString("UserRole"), "AccountsReceivableAdmin", "RegisterMovement");
     ViewData["Title"] = "Detalle de cuenta por cobrar";
 
     var estadoTexto = !Model.CreditoActivo
@@ -165,7 +168,9 @@
                     Configuración del crédito
                 </h5>
 
-                <form asp-controller="AccountsReceivableAdmin"
+                @if (puedeConfigurar)
+{
+<form asp-controller="AccountsReceivableAdmin"
                       asp-action="UpdateSettings"
                       method="post">
 
@@ -262,6 +267,11 @@
                     </a>
 
                 </form>
+}
+else
+{
+    <p class="text-muted mb-0">Su perfil puede consultar el crédito, pero no configurarlo.</p>
+}
 
             </div>
 
@@ -423,7 +433,9 @@
 
                 </div>
 
-                <form asp-controller="AccountsReceivableAdmin"
+                @if (puedeMovimientos)
+{
+<form asp-controller="AccountsReceivableAdmin"
                       asp-action="RegisterMovement"
                       method="post">
 
@@ -536,6 +548,11 @@
                     </div>
 
                 </form>
+}
+else
+{
+    <p class="text-muted mb-0">Su perfil puede consultar el crédito, pero no registrar movimientos.</p>
+}
 
             </div>
 

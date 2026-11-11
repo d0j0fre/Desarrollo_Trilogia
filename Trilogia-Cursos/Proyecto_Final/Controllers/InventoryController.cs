@@ -36,6 +36,7 @@ namespace Proyecto_Final.Controllers
         }
 
         [HttpGet]
+        [AdminAuthorize("Inventario", "INVENTARIO_CREAR")]
         public async Task<IActionResult> Create()
         {
             ViewBag.Categorias = await _adminDbService.GetStoreCategoriesAsync();
@@ -86,6 +87,7 @@ namespace Proyecto_Final.Controllers
         }
 
         [HttpGet]
+        [AdminAuthorize("Inventario", "INVENTARIO_EDITAR")]
         public async Task<IActionResult> Edit(int id)
         {
             ViewBag.Categorias = await _adminDbService.GetStoreCategoriesAsync();
@@ -162,6 +164,7 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AdminAuthorize("Inventario", "INVENTARIO_EDITAR")]
         public async Task<IActionResult> ToggleFeatured(int productoId, string? filtro)
         {
             await _adminDbService.ToggleFeaturedAsync(productoId);
@@ -176,6 +179,7 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AdminAuthorize("Inventario", "INVENTARIO_EDITAR")]
         public async Task<IActionResult> ToggleStatus(int productoId, string? filtro)
         {
             try
@@ -234,6 +238,7 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AdminAuthorize("Inventario", "INVENTARIO_EDITAR")]
         public async Task<IActionResult> Delete(int productoId, string? filtro)
         {
             // Compatibilidad con formularios anteriores: esta acción ahora solo inactiva/reactiva.
@@ -242,7 +247,7 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [AdminAuthorize("Inventario", "INVENTARIO_EDITAR")]
+        [AdminAuthorize("Inventario", "INVENTARIO_ELIMINAR")]
         public async Task<IActionResult> DeletePermanent(int productoId, string? filtro)
         {
             try

@@ -43,6 +43,7 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AdminAuthorize("Creditos", "CREDITOS_CONFIGURAR")]
         public async Task<IActionResult> UpdateSettings(ClientCreditSettingsViewModel model)
         {
             if (model.UsuarioId <= 0)
@@ -90,6 +91,7 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AdminAuthorize("Creditos", "CREDITOS_MOVIMIENTOS")]
         public async Task<IActionResult> RegisterMovement(ClientCreditMovementFormViewModel model)
         {
             if (model.UsuarioId <= 0)

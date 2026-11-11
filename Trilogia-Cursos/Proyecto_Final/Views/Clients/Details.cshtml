@@ -1,6 +1,9 @@
 @model Proyecto_Final.Models.Admin.ClientDetailViewModel
+@inject Proyecto_Final.Services.NavigationMenuService MenuAccess
 @{
     ViewData["Title"] = "Detalle de cliente";
+    var puedeEditar = await MenuAccess.CanSubmitAsync(Context.Session.GetString("UserRole"), "Clients", "Edit");
+    var puedeInactivar = await MenuAccess.CanSubmitAsync(Context.Session.GetString("UserRole"), "Clients", "ToggleStatus");
 }
 
 @section Styles {
@@ -16,7 +19,10 @@
                     <p class="text-muted mb-0">Información general, estado e historial comercial.</p>
                 </div>
                 <div>
-                    <a asp-controller="Clients" asp-action="Edit" asp-route-id="@Model.UsuarioId" class="btn btn-ds-edit mr-2">Editar</a>
+                    @if (puedeEditar)
+                    {
+                        <a asp-controller="Clients" asp-action="Edit" asp-route-id="@Model.UsuarioId" class="btn btn-ds-edit mr-2">Editar</a>
+                    }
                     <a asp-controller="Clients" asp-action="Index" class="btn btn-ds-neutral">← Volver</a>
                 </div>
             </div>
@@ -81,6 +87,8 @@
                     <p class="mb-3"><strong>Motivo:</strong> @(string.IsNullOrWhiteSpace(Model.MotivoInactivacion) ? "No indicado" : Model.MotivoInactivacion)</p>
                 }
 
+                @if (puedeInactivar)
+                {
                 <form asp-controller="Clients" asp-action="ToggleStatus" method="post"
                       data-s3-confirm="@(Model.Activo ? "¿Desea inactivar este cliente?" : "¿Desea reactivar este cliente?")"
                       data-s3-confirm-title="Confirmar cambio de estado"
@@ -98,6 +106,7 @@
                         @(Model.Activo ? "Inactivar cliente" : "Reactivar cliente")
                     </button>
                 </form>
+                }
             </div>
         </div>
     </div>

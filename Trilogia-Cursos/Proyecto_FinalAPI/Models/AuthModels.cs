@@ -41,6 +41,12 @@ namespace Proyecto_FinalAPI.Models
         public string Correo { get; set; } = string.Empty;
         public string PerfilNombre { get; set; } = string.Empty;
         public bool Activo { get; set; }
+
+        /// <summary>
+        /// Sello de seguridad vigente (Usuarios.SecurityStamp, migración 0311). Viaja como claim <c>stamp</c> en el
+        /// access token: cuando el usuario se inactiva, cambia de perfil o de contraseña el sello cambia y el token deja de valer.
+        /// </summary>
+        public string SecurityStamp { get; set; } = string.Empty;
     }
 
     public class PasswordResetTokenInfo

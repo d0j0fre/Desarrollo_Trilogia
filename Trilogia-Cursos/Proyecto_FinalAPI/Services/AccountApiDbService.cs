@@ -45,7 +45,7 @@ namespace Proyecto_FinalAPI.Services
             CancellationToken cancellationToken = default)
         {
             await using var connection = new SqlConnection(_connectionString);
-            await using var command = CreateValidateUserCommand(connection, email, password);
+            await using var command = CreateValidateUserCommand(connection, email);
 
             try
             {
@@ -63,10 +63,9 @@ namespace Proyecto_FinalAPI.Services
                 var user = MapAuthenticatedUser(reader);
                 var hashOrdinal = reader.GetOrdinal("ContrasenaHash");
                 var storedHash = reader.IsDBNull(hashOrdinal) ? null : reader.GetString(hashOrdinal);
-                var legacyMatch = reader.GetBoolean(reader.GetOrdinal("LegacyPasswordMatches"));
-                var verified = string.IsNullOrWhiteSpace(storedHash)
-                    ? legacyMatch
-                    : _passwordHashes.Verify(password, storedHash);
+                // Sin hash no hay credencial válida: el texto plano ya no se guarda ni se compara (migración 0310).
+                var verified = !string.IsNullOrWhiteSpace(storedHash)
+                    && _passwordHashes.Verify(password, storedHash);
 
                 await reader.DisposeAsync();
                 if (!verified || !user.Activo)
@@ -81,10 +80,11 @@ namespace Proyecto_FinalAPI.Services
                         return null;
                 }
 
-                if (string.IsNullOrWhiteSpace(storedHash))
+                if (_passwordHashes.NeedsRehash(storedHash!))
                 {
-                    await SetPasswordHashAsync(connection, user.UsuarioId, _passwordHashes.Hash(password), cancellationToken);
-                    _logger.LogInformation("La credencial heredada del usuario {UserId} se migró a hash.", user.UsuarioId);
+                    // El hash de transición de la migración 0310 pasa a PBKDF2 en el primer ingreso correcto.
+                    await RehashAsync(connection, user.UsuarioId, storedHash!, _passwordHashes.Hash(password), cancellationToken);
+                    _logger.LogInformation("La credencial del usuario {UserId} se actualizó a PBKDF2.", user.UsuarioId);
                 }
 
                 return user;
@@ -101,14 +101,14 @@ namespace Proyecto_FinalAPI.Services
             }
         }
 
-        internal static SqlCommand CreateValidateUserCommand(SqlConnection connection, string email, string password)
+        // La contraseña no viaja a la base: el procedimiento devuelve el hash y la verificación es de la API.
+        internal static SqlCommand CreateValidateUserCommand(SqlConnection connection, string email)
         {
             var command = new SqlCommand("dbo.sp_Auth_GetLoginCredential", connection)
             {
                 CommandType = CommandType.StoredProcedure
             };
             command.Parameters.Add(new SqlParameter("@Correo", SqlDbType.NVarChar, 150) { Value = email.Trim() });
-            command.Parameters.Add(new SqlParameter("@Contrasena", SqlDbType.NVarChar, 255) { Value = password });
             return command;
         }
 
@@ -120,8 +120,21 @@ namespace Proyecto_FinalAPI.Services
                 NombreCompleto = reader.GetString(reader.GetOrdinal("NombreCompleto")),
                 Correo = reader.GetString(reader.GetOrdinal("Correo")),
                 PerfilNombre = reader.GetString(reader.GetOrdinal("PerfilNombre")),
-                Activo = reader.GetBoolean(reader.GetOrdinal("Activo"))
+                Activo = reader.GetBoolean(reader.GetOrdinal("Activo")),
+                SecurityStamp = ReadStamp(reader)
             };
+        }
+
+        // El sello llega con la migración 0311; sin ella (base anterior) queda vacío y el token no se acepta.
+        private static string ReadStamp(DbDataReader reader)
+        {
+            for (var i = 0; i < reader.FieldCount; i++)
+            {
+                if (string.Equals(reader.GetName(i), "SecurityStamp", StringComparison.OrdinalIgnoreCase))
+                    return reader.IsDBNull(i) ? string.Empty : reader.GetGuid(i).ToString("D");
+            }
+
+            return string.Empty;
         }
 
         public async Task<bool> EmailExistsAsync(string email)
@@ -251,18 +264,22 @@ namespace Proyecto_FinalAPI.Services
             }
         }
 
-        private static async Task SetPasswordHashAsync(
+        // Cambia el algoritmo del hash tras una verificación correcta. Solo escribe si la clave no cambió mientras
+        // tanto y no cuenta como cambio de acceso: no revoca las sesiones abiertas (migración 0311).
+        private static async Task RehashAsync(
             SqlConnection connection,
             int userId,
-            string passwordHash,
+            string previousHash,
+            string newHash,
             CancellationToken cancellationToken)
         {
-            await using var command = new SqlCommand("dbo.sp_Auth_SetPasswordHash", connection)
+            await using var command = new SqlCommand("dbo.sp_Auth_ActualizarHash", connection)
             {
                 CommandType = CommandType.StoredProcedure
             };
             command.Parameters.Add(new SqlParameter("@UsuarioId", SqlDbType.Int) { Value = userId });
-            command.Parameters.Add(new SqlParameter("@ContrasenaHash", SqlDbType.NVarChar, 512) { Value = passwordHash });
+            command.Parameters.Add(new SqlParameter("@HashAnterior", SqlDbType.NVarChar, 512) { Value = previousHash });
+            command.Parameters.Add(new SqlParameter("@HashNuevo", SqlDbType.NVarChar, 512) { Value = newHash });
             await command.ExecuteNonQueryAsync(cancellationToken);
         }
     }

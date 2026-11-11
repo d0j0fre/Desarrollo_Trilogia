@@ -1349,7 +1349,8 @@ namespace Proyecto_Final.Services
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.Add("@NombreCompleto", SqlDbType.NVarChar, 150).Value = model.NombreCompleto.Trim();
                 command.Parameters.Add("@Correo", SqlDbType.NVarChar, 150).Value = model.Correo.Trim();
-                command.Parameters.Add("@Contrasena", SqlDbType.NVarChar, 255).Value = (model.Contrasena ?? string.Empty).Trim();
+                // La contraseña viaja como hash PBKDF2: nunca en texto plano (migración 0310).
+                command.Parameters.Add("@ContrasenaHash", SqlDbType.NVarChar, 512).Value = PasswordHasher.Hash((model.Contrasena ?? string.Empty).Trim());
                 command.Parameters.Add("@Telefono", SqlDbType.NVarChar, 30).Value = string.IsNullOrWhiteSpace(model.Telefono) ? DBNull.Value : model.Telefono.Trim();
                 command.Parameters.Add("@Direccion", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.Direccion) ? DBNull.Value : model.Direccion.Trim();
                 command.Parameters.Add("@Activo", SqlDbType.Bit).Value = model.Activo;
@@ -1377,7 +1378,7 @@ namespace Proyecto_Final.Services
                 command.Parameters.Add("@Correo", SqlDbType.NVarChar, 150).Value = model.Correo.Trim();
                 command.Parameters.Add("@Telefono", SqlDbType.NVarChar, 30).Value = string.IsNullOrWhiteSpace(model.Telefono) ? DBNull.Value : model.Telefono.Trim();
                 command.Parameters.Add("@Direccion", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.Direccion) ? DBNull.Value : model.Direccion.Trim();
-                command.Parameters.Add("@Contrasena", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.Contrasena) ? DBNull.Value : model.Contrasena.Trim();
+                command.Parameters.Add("@ContrasenaHash", SqlDbType.NVarChar, 512).Value = string.IsNullOrWhiteSpace(model.Contrasena) ? DBNull.Value : PasswordHasher.Hash(model.Contrasena.Trim());
                 command.Parameters.Add("@Activo", SqlDbType.Bit).Value = model.Activo;
                 command.Parameters.Add("@MotivoInactivacion", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.MotivoInactivacion) ? DBNull.Value : model.MotivoInactivacion.Trim();
 
