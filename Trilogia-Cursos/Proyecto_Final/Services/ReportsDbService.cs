@@ -67,6 +67,63 @@ namespace Proyecto_Final.Services
             return model;
         }
 
+        // Gráficos de detalle de un indicador del tablero (CU-131-03). Los títulos se definen aquí;
+        // el procedimiento solo devuelve Grupo, Etiqueta, Valor y Detalle.
+        private static readonly Dictionary<string, (string Titulo, bool Moneda)> DetailGroups = new()
+        {
+            ["ventas:categoria"] = ("Ventas por categoría", true),
+            ["ventas:producto"] = ("Productos más vendidos", true),
+            ["ventas:vendedor"] = ("Ventas por vendedor", true),
+            ["stock:categoria"] = ("Productos con stock bajo o agotados por categoría", false),
+            ["stock:producto"] = ("Productos más cerca de agotarse (existencias)", false),
+            ["ruta:ruta"] = ("Pedidos en ruta por ruta", false),
+            ["ruta:estado"] = ("Entregas de rutas abiertas por estado", false),
+            ["cobros:cliente"] = ("Clientes con mayor saldo por cobrar", true),
+            ["cobros:movimiento"] = ("Movimientos de crédito del período", true)
+        };
+
+        public async Task<List<DashboardDetailGroupViewModel>> GetDashboardDetailAsync(string indicator, DateTime desde, DateTime hasta)
+        {
+            var groups = new List<DashboardDetailGroupViewModel>();
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Reportes_DashboardDetalle", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.Add("@Indicador", SqlDbType.NVarChar, 20).Value = indicator;
+            command.Parameters.Add("@Desde", SqlDbType.Date).Value = desde.Date;
+            command.Parameters.Add("@Hasta", SqlDbType.Date).Value = hasta.Date;
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                var key = reader.GetString(0);
+                var group = groups.FirstOrDefault(g => g.Clave == key);
+                if (group is null)
+                {
+                    var (title, money) = DetailGroups.TryGetValue($"{indicator}:{key}", out var info) ? info : (key, false);
+                    group = new DashboardDetailGroupViewModel { Clave = key, Titulo = title, EsMoneda = money };
+                    groups.Add(group);
+                }
+
+                group.Items.Add(new DashboardDetailItemViewModel
+                {
+                    Etiqueta = reader.GetString(1),
+                    Valor = reader.GetDecimal(2),
+                    Detalle = reader.IsDBNull(3) ? null : reader.GetString(3)
+                });
+            }
+
+            // Un gráfico sin datos también se muestra (con su leyenda), en el orden definido arriba.
+            foreach (var entry in DetailGroups.Where(e => e.Key.StartsWith(indicator + ":")))
+            {
+                var key = entry.Key[(indicator.Length + 1)..];
+                if (groups.All(g => g.Clave != key))
+                    groups.Add(new DashboardDetailGroupViewModel { Clave = key, Titulo = entry.Value.Titulo, EsMoneda = entry.Value.Moneda });
+            }
+
+            return groups
+                .OrderBy(g => DetailGroups.Keys.ToList().IndexOf($"{indicator}:{g.Clave}"))
+                .ToList();
+        }
+
         public async Task<DetailedSalesReportViewModel> GetSalesReportAsync(
             SalesReportFilterViewModel filter,
             CancellationToken cancellationToken = default)
