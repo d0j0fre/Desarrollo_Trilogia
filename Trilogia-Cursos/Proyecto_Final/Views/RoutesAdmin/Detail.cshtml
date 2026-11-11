@@ -202,6 +202,9 @@
                                 <i class="fas fa-directions mr-1"></i>Ver recorrido en Maps
                             </a>
                         }
+                        <button type="button" id="exportRouteXlsx" class="btn btn-sm btn-ds-view mr-3" title="Descargar la hoja de ruta en Excel (.xlsx)">
+                            <i class="fa fa-file-excel mr-1"></i>Exportar a Excel
+                        </button>
                         <span class="text-muted">Total: @Model.Pedidos.Count</span>
                     </div>
                 </div>
@@ -426,3 +429,55 @@
         })();
     </script>
 }
+
+@{
+    // BUG-25-03 (CU-253-05): hoja de ruta para descargar en Excel. Se arma en el navegador con
+    // wwwroot/js/xlsx-export.js, así que no hace falta ninguna librería en el servidor.
+    string Celda(string? valor) => valor ?? string.Empty;
+    var hojaDeRuta = new
+    {
+        archivo = $"hoja-de-ruta-{c.Codigo}.xlsx",
+        titulo = $"Hoja de ruta {c.Codigo}",
+        datos = new[]
+        {
+            new[] { "Zona", c.Zona },
+            new[] { "Estado", c.Estado },
+            new[] { "Chofer", c.Chofer },
+            new[] { "Vehículo", $"{c.VehiculoPlaca} {c.VehiculoDescripcion}".Trim() },
+            new[] { "Despachada", c.FechaDespacho.HasValue ? c.FechaDespacho.Value.ToString("dd/MM/yyyy HH:mm") : "" },
+            new[] { "Tiempo total estimado", Model.Estimacion.TieneEstimacion ? $"{Model.Estimacion.TextoTotal} ({Model.Estimacion.TextoDistancia})" : "" },
+            new[] { "Observaciones", c.Observaciones }
+        },
+        encabezado = new[] { "Orden", "# Pedido", "Cliente", "Dirección", "Prioridad", "Llegada estimada (desde la salida)", "Entrega", "Motivo del fallo", "Total (₡)" },
+        filas = Model.Pedidos.Select(p => new[]
+        {
+            p.Secuencia.ToString(),
+            p.PedidoId.ToString(),
+            Celda(p.Cliente),
+            Celda(p.DireccionEntrega),
+            RoutePriority.Texto(p.Prioridad),
+            Model.Estimacion.PorParada.TryGetValue(p.RutaPedidoId, out var llegada) ? "+" + RouteEstimator.FormatMinutes(llegada.MinutosAcumulados) : "",
+            TextoEntrega(p.EstadoEntrega),
+            Celda(p.MotivoFallo),
+            p.Total.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("es-CR"))
+        }).ToArray()
+    };
+}
+<script src="~/js/xlsx-export.js" asp-append-version="true"></script>
+<script>
+    (function () {
+        var boton = document.getElementById('exportRouteXlsx');
+        if (!boton || !window.XlsxExport) return;
+        boton.addEventListener('click', function () {
+            var hoja = @Json.Serialize(hojaDeRuta);
+            var texto = function (valor) { return { text: String(valor == null ? '' : valor) }; };
+            var negrita = function (valor) { return { text: String(valor == null ? '' : valor), style: window.XlsxExport.STYLE.bold }; };
+            var filas = [[negrita(hoja.titulo)]];
+            hoja.datos.forEach(function (par) { filas.push([negrita(par[0]), texto(par[1])]); });
+            filas.push([]);
+            filas.push(hoja.encabezado.map(negrita));
+            hoja.filas.forEach(function (fila) { filas.push(fila.map(texto)); });
+            window.XlsxExport.download(hoja.archivo, 'Hoja de ruta', filas, [12, 12, 30, 45, 12, 22, 14, 30, 14]);
+        });
+    })();
+</script>

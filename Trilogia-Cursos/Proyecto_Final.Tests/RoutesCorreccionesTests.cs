@@ -163,6 +163,20 @@ public sealed class RoutesCorreccionesTests
         Assert.Contains("Llegada estimada", vista, StringComparison.Ordinal);
     }
 
+    // ── BUG-25-03 · exportar la hoja de ruta ────────────────────────────────
+
+    [Fact]
+    public void ElDetalleDeLaRutaExportaLaHojaDeRutaConLaLibreriaXlsxDelNavegador()
+    {
+        var vista = MobileCorreccionesTests.Read("Proyecto_Final", "Views", "RoutesAdmin", "Detail.cshtml");
+
+        Assert.Contains("id=\"exportRouteXlsx\"", vista, StringComparison.Ordinal);
+        Assert.Contains("~/js/xlsx-export.js", vista, StringComparison.Ordinal);
+        Assert.Contains("window.XlsxExport.download(hoja.archivo", vista, StringComparison.Ordinal);
+        // El nombre del archivo lleva el código de la ruta y termina en .xlsx.
+        Assert.Contains("hoja-de-ruta-{c.Codigo}.xlsx", vista, StringComparison.Ordinal);
+    }
+
     private static int CuantasVeces(string texto, string buscado)
     {
         var cuenta = 0;
