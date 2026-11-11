@@ -94,6 +94,7 @@ Cada migracion debe indicar su estrategia de rollback antes de ejecutarse. Los c
 | 0265 | `0265_estado_gasto_aprobacion.sql` | Estado persistente de aprobación y su inclusión en gastos pendientes | 0010, 0011 y 0264 |
 | 0280 | `0280_rutas_cliente_inactivo.sql` | BUG-06-04: `sp_Rutas_GetAssignableOrders`, `sp_Rutas_AddOrder` y `sp_Rutas_Create` no ofrecen ni aceptan pedidos de un cliente inactivo (AddOrder lanza 52014 y Create 52006). Solo reemplaza procedimientos; no cambia datos | Rutas y entregas (cu081/cu302) |
 | 0281 | `0281_rutas_prioridad_secuenciacion.sql` | BUG-10-01: columna `RutaPedidos.Prioridad` (1 Urgente, 2 Alta, 3 Normal) y secuenciación por prioridad y, dentro de cada nivel, por cercanía (`sp_Rutas_Secuenciar` y `sp_Rutas_Recalcular`). `sp_Rutas_Create` y `sp_Rutas_GuardarSecuencia` aceptan la prioridad; `sp_Rutas_GetOrders` la devuelve como última columna. Aditiva: las paradas existentes quedan en Normal | **0280** (la exige en el ledger) |
+| 0282 | `0282_rutas_secuenciar_exige_ubicacion.sql` | BUG-25-01: `sp_Rutas_Secuenciar` rechaza con 54012 una ruta con paradas sin coordenada (dice cuántas faltan) y no cambia el orden; con todas las coordenadas ordena como la 0281. No cambia datos | **0281** (la exige en el ledger) |
 
 Los scripts no incluyen `USE`: el ejecutor debe seleccionar explícitamente la base antes de iniciar. Los hashes escritos por 0002–0011 son hashes de manifiesto para identificar versión; la evidencia de despliegue debe registrar además el SHA-256 real del archivo y actualizar el ledger si corresponde.
 

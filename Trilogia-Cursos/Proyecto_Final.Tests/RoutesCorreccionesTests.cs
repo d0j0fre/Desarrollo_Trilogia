@@ -62,6 +62,32 @@ public sealed class RoutesCorreccionesTests
         Assert.Matches(@"rp\.Longitud,\s+rp\.Prioridad", sql);
     }
 
+    // ── BUG-25-01 · secuenciar exige coordenadas ────────────────────────────
+
+    [Fact]
+    public void Migracion0282_RechazaSecuenciarSinCoordenadasAntesDeOrdenar()
+    {
+        var sql = Migracion("0282_rutas_secuenciar_exige_ubicacion.sql");
+
+        var rechazo = sql.IndexOf("THROW 54012", StringComparison.Ordinal);
+        var ordena = sql.IndexOf("WHILE EXISTS", StringComparison.Ordinal);
+        var guarda = sql.IndexOf("UPDATE rp", StringComparison.Ordinal);
+
+        Assert.True(rechazo > 0, "Falta el rechazo 54012.");
+        Assert.True(rechazo < ordena && ordena < guarda, "La validación debe ir antes de ordenar y de guardar.");
+    }
+
+    [Fact]
+    public void SecuenciarMuestraElMotivoDelProcedimientoYNoDejaElAvisoDeParadasAlFinal()
+    {
+        var controlador = MobileCorreccionesTests.Read("Proyecto_Final", "Controllers", "RoutesAdminController.cs");
+        var secuenciar = controlador[controlador.IndexOf("public async Task<IActionResult> Sequence(", StringComparison.Ordinal)..];
+        secuenciar = secuenciar[..secuenciar.IndexOf("return RedirectToAction", StringComparison.Ordinal)];
+
+        Assert.Contains("BusinessErrors.MessageOr(ex", secuenciar, StringComparison.Ordinal);
+        Assert.DoesNotContain("quedaron al final", secuenciar, StringComparison.Ordinal);
+    }
+
     private static int CuantasVeces(string texto, string buscado)
     {
         var cuenta = 0;

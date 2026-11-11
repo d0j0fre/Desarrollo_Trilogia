@@ -231,7 +231,10 @@ namespace Proyecto_Final.Controllers
         {
             try
             {
-                var (puntos, sinCoord) = await _logistics.SequenceRouteAsync(rutaId);
+                // BUG-25-01: sp_Rutas_Secuenciar ya no procesa una ruta con paradas sin coordenada:
+                // la rechaza (54012) diciendo cuántas faltan y no cambia el orden. Ese texto es el
+                // que se muestra; hay que ubicar los puntos en el mapa y volver a secuenciar.
+                var (puntos, _) = await _logistics.SequenceRouteAsync(rutaId);
                 if (puntos == 0)
                 {
                     TempData["ErrorMessage"] = "No hay pedidos pendientes para secuenciar en esta ruta.";
@@ -239,20 +242,13 @@ namespace Proyecto_Final.Controllers
                 else
                 {
                     await RegistrarAuditoriaAsync("Secuenciar ruta", "Rutas", $"Se secuenciaron automáticamente {puntos} punto(s) de la ruta #{rutaId}.");
-                    if (sinCoord > 0)
-                    {
-                        TempData["ErrorMessage"] = $"{sinCoord} de {puntos} punto(s) no tienen coordenada y quedaron al final. Ubícalos en el mapa para que aparezcan en la app del chofer.";
-                    }
-                    else
-                    {
-                        TempData["SuccessMessage"] = $"Ruta secuenciada automáticamente ({puntos} punto(s)). Puede reordenar manualmente antes de despachar.";
-                    }
+                    TempData["SuccessMessage"] = $"Ruta secuenciada automáticamente ({puntos} punto(s)). Puede reordenar manualmente antes de despachar.";
                 }
             }
             catch (SqlException ex) when (ex.Number >= 50000)
             {
                 _logger.LogWarning(ex, "La base de datos rechazó una operación de negocio.");
-                TempData["ErrorMessage"] = "No fue posible completar la operación solicitada.";
+                TempData["ErrorMessage"] = BusinessErrors.MessageOr(ex, "No fue posible completar la operación solicitada.");
             }
             catch (Exception ex)
             {

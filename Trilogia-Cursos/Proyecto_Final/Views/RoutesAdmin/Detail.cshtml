@@ -13,6 +13,8 @@
     // Enlace de verificación del recorrido en Google Maps (paradas con coordenada, en orden).
     var invD = System.Globalization.CultureInfo.InvariantCulture;
     var paradasConCoord = Model.Pedidos.Where(x => x.Latitud.HasValue && x.Longitud.HasValue).ToList();
+    // BUG-25-01: la secuenciación automática exige que todas las paradas tengan coordenada.
+    var sinUbicacion = Model.Pedidos.Count(x => x.EstadoEntrega == "Pendiente" && !(x.Latitud.HasValue && x.Longitud.HasValue));
     string? rutaMapsUrl = null;
     if (paradasConCoord.Count > 0)
     {
@@ -281,6 +283,14 @@
                             <small class="text-muted">Pulse <strong>Ubicar</strong> en una parada y haga clic en el mapa para fijar su coordenada (o arrastre el pin). Guarde antes de despachar. La ubicación se recuerda para ese cliente. La <strong>prioridad</strong> (Urgente, Alta, Normal) define el orden de "Secuenciar automáticamente": primero las Urgentes, luego las Altas y al final las Normales; dentro de cada nivel, la parada más cercana.</small>
                         </div>
                         <div class="p-3">
+                            @if (sinUbicacion > 0)
+                            {
+                                <div class="alert alert-warning" role="alert" id="sinUbicacionAviso">
+                                    <i class="fa fa-map-marker-alt mr-1"></i>
+                                    <strong>@sinUbicacion de @Model.Pedidos.Count parada(s) no tienen ubicación</strong> (marcadas en amarillo).
+                                    Ubíquelas en el mapa y pulse <strong>Guardar orden y ubicaciones</strong> antes de usar "Secuenciar automáticamente".
+                                </div>
+                            }
                             <div id="routePickerMap" class="mb-3"></div>
                             <form asp-action="SaveSequence" method="post" id="seqForm">
                                 @Html.AntiForgeryToken()
@@ -292,7 +302,7 @@
                                     <tbody>
                                         @foreach (var p in Model.Pedidos)
                                         {
-                                            <tr class="seq-row" data-rutapedidoid="@p.RutaPedidoId" data-label="#@p.PedidoId @p.Cliente">
+                                            <tr class="seq-row @(p.EstadoEntrega == "Pendiente" && !(p.Latitud.HasValue && p.Longitud.HasValue) ? "table-warning" : "")" data-rutapedidoid="@p.RutaPedidoId" data-label="#@p.PedidoId @p.Cliente">
                                                 <td>
                                                     <input type="hidden" name="rutaPedidoId" value="@p.RutaPedidoId" />
                                                     <input type="number" name="secuencia" value="@p.Secuencia" class="form-control form-control-sm seq-input" min="1" />
