@@ -526,6 +526,7 @@ namespace Proyecto_Final.Controllers
             _logger.LogError(exception, "Falla técnica durante checkout para usuario {UserId}. TraceId {TraceId}", HttpContext.Session.GetInt32("UserId"), traceId);
             Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
             ViewData["TraceId"] = traceId;
+            ViewData["VolverTexto"] = "el carrito"; ViewData["VolverControlador"] = "Cart";
             return View("ServiceUnavailable");
         }
 

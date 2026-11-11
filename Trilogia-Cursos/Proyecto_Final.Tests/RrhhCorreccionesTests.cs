@@ -29,7 +29,7 @@ public sealed class RrhhCorreccionesTests
         var result = await controller.Create(new EmployeeFormViewModel
         {
             PerfilId = 3, NombreCompleto = "Persona de prueba", Correo = "ya.existe@example.invalid", Identificacion = "101110111",
-            Puesto = "Pruebas", Contrasena = "clave-de-prueba"
+            Puesto = "Pruebas", Contrasena = SyntheticSecret()
         });
 
         Assert.IsType<ViewResult>(result);
@@ -50,7 +50,7 @@ public sealed class RrhhCorreccionesTests
         await controller.Create(new EmployeeFormViewModel
         {
             PerfilId = 3, NombreCompleto = "Persona de prueba", Correo = "otra@example.invalid", Identificacion = "101110111",
-            Puesto = "Pruebas", Contrasena = "clave-de-prueba"
+            Puesto = "Pruebas", Contrasena = SyntheticSecret()
         });
 
         var errors = controller.ModelState[string.Empty]!.Errors.Select(e => e.ErrorMessage).ToList();
@@ -350,7 +350,7 @@ public sealed class RrhhCorreccionesTests
     private static readonly (string, string?)[] MailSettings =
     [
         ("ConfiguracionCorreo:Host", "smtp.example.invalid"), ("ConfiguracionCorreo:Puerto", "587"),
-        ("ConfiguracionCorreo:Remitente", "remitente@example.invalid"), ("ConfiguracionCorreo:Contrasenna", "valor-de-prueba"),
+        ("ConfiguracionCorreo:Remitente", "remitente@example.invalid"), ("ConfiguracionCorreo:Contrasenna", SyntheticSecret()),
     ];
 
     [Theory]
@@ -513,7 +513,7 @@ public sealed class RrhhCorreccionesTests
         var attendance = layout.IndexOf("asp-controller=\"MyAttendance\"", StringComparison.Ordinal);
 
         Assert.Contains("@if (isLoggedIn && !isClient)", layout[(portal - 220)..portal], StringComparison.Ordinal);
-        Assert.Contains("@if (isEmployeePortalUser)", layout[(attendance - 220)..attendance], StringComparison.Ordinal);
+        Assert.Contains("CanOpenAsync(userRole, \"MyAttendance\", \"Index\")", layout[(attendance - 220)..attendance], StringComparison.Ordinal);
     }
 
     // ───────────── BUD-QF · el formulario rápido de Presupuestos acepta decimales ─────────────
@@ -529,7 +529,111 @@ public sealed class RrhhCorreccionesTests
         Assert.Contains("<input type=\"hidden\" name=\"__Invariant\" value=\"AnnualAmount\" />", view, StringComparison.Ordinal);
     }
 
+    // ───────────── Mis jornadas para todo el personal con el permiso ─────────────
+
+    [Fact]
+    public void MisJornadas_SeAbrePorPermisoYNoPorNombreDeRol()
+    {
+        var type = typeof(MyAttendanceController);
+
+        Assert.Empty(type.GetCustomAttributes(typeof(Proyecto_Final.Filters.SessionAuthorizeAttribute), true));
+        var viewPermission = Assert.Single(type.GetCustomAttributes(typeof(Proyecto_Final.Filters.AdminAuthorizeAttribute), true).Cast<Proyecto_Final.Filters.AdminAuthorizeAttribute>());
+        Assert.Equal("RRHH_JORNADAS_VER_PROPIAS", viewPermission.Arguments![1]);
+
+        var save = type.GetMethod("Save")!;
+        var savePermission = Assert.Single(save.GetCustomAttributes(typeof(Proyecto_Final.Filters.AdminAuthorizeAttribute), true).Cast<Proyecto_Final.Filters.AdminAuthorizeAttribute>());
+        Assert.Equal("RRHH_JORNADAS_REGISTRAR", savePermission.Arguments![1]);
+    }
+
+    [Theory]
+    [InlineData("Bodeguero", true)]
+    [InlineData("Chofer", true)]
+    [InlineData("Gerente", true)]
+    [InlineData("Cliente", false)]
+    public async Task MisJornadas_ElMenuLoMuestraSegunElPermiso(string role, bool visible)
+    {
+        const string staff = "RRHH_JORNADAS_REGISTRAR:RRHH,RRHH_JORNADAS_VER_PROPIAS:RRHH";
+        var permissions = new Mock<IRolePermissionService>();
+        permissions.Setup(p => p.HasCodePermissionAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync((string r, string code) => r != "Cliente" && staff.Contains(code, StringComparison.Ordinal));
+        var menu = new NavigationMenuService(permissions.Object);
+
+        Assert.Equal(visible, await menu.CanOpenAsync(role, "MyAttendance", "Index"));
+        Assert.Equal(visible, await menu.CanSubmitAsync(role, "MyAttendance", "Save"));
+    }
+
+    // ───────────── ServiceUnavailable genérico ─────────────
+
+    [Fact]
+    public void ServiceUnavailable_ElTextoSirveParaCualquierPantalla()
+    {
+        var view = Read("Proyecto_Final", "Views", "Shared", "ServiceUnavailable.cshtml");
+
+        Assert.DoesNotContain("presupuesto", view, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("asp-controller=\"Budgets\"", view, StringComparison.Ordinal);
+        Assert.Contains("ViewData[\"VolverTexto\"]", view, StringComparison.Ordinal);
+        Assert.Contains("asp-controller=\"Home\" asp-action=\"Index\"", view, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("BudgetsController.cs", "presupuestos")]
+    [InlineData("CartController.cs", "el carrito")]
+    [InlineData("ClientsController.cs", "clientes")]
+    [InlineData("ExpensesController.cs", "gastos")]
+    public void ServiceUnavailable_CadaPantallaIndicaADondeVolver(string controller, string moduleText) =>
+        Assert.Contains($"ViewData[\"VolverTexto\"] = \"{moduleText}\"", Read("Proyecto_Final", "Controllers", controller), StringComparison.Ordinal);
+
+    // ───────────── Contraseña de empleados solo con hash (0269) ─────────────
+
+    private static Microsoft.Data.SqlClient.SqlCommand CredentialCommand(string? password)
+    {
+        var command = new Microsoft.Data.SqlClient.SqlCommand();
+        var add = typeof(EmployeesDbService).GetMethod("AddCredentialHash", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!;
+        try { add.Invoke(null, [command, password]); }
+        catch (System.Reflection.TargetInvocationException exception) { throw exception.InnerException!; }
+        return command;
+    }
+
+    [Fact]
+    public void Empleados_LaClaveViajaSoloComoHashPbkdf2()
+    {
+        var secret = SyntheticSecret();
+        var command = CredentialCommand($"  {secret}  ");
+
+        var parameter = Assert.Single(command.Parameters.Cast<Microsoft.Data.SqlClient.SqlParameter>());
+        Assert.Equal("@ContrasenaHash", parameter.ParameterName);
+        var hash = Assert.IsType<string>(parameter.Value);
+        Assert.StartsWith("pbkdf2-sha256$", hash, StringComparison.Ordinal);
+        Assert.DoesNotContain(secret, hash, StringComparison.Ordinal);
+        // Lo verifica la API, que es quien autentica (la clave se recorta igual que al iniciar sesión).
+        Assert.True(new Proyecto_FinalAPI.Services.PasswordHashService().Verify(secret, hash));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void Empleados_SinClaveNoSeCreaLaCuenta(string? password) =>
+        Assert.Throws<InvalidOperationException>(() => CredentialCommand(password));
+
+    [Fact]
+    public void Empleados_NingunProcedimientoRecibeLaClaveEnTexto()
+    {
+        var service = Read("Proyecto_Final", "Services", "EmployeesDbService.cs");
+        Assert.DoesNotContain("\"@Contrasena\"", service, StringComparison.Ordinal);
+        Assert.DoesNotContain("ProcedureHasParameterAsync", service, StringComparison.Ordinal);
+
+        var migration = Read("database", "migrations", "0269_empleados_contrasena_solo_hash.sql");
+        Assert.Contains("@ContrasenaHash NVARCHAR(512)", migration, StringComparison.Ordinal);
+        Assert.DoesNotContain("@Contrasena NVARCHAR", migration, StringComparison.Ordinal);
+        Assert.Contains("N'', @ContrasenaHash, 1", migration, StringComparison.Ordinal);
+        Assert.Contains("0269", Read("database", "migrations", "README.md"), StringComparison.Ordinal);
+    }
+
     // ───────────── ayudas ─────────────
+
+    // Valor sintético distinto en cada ejecución: ninguna clave literal en el repositorio.
+    private static string SyntheticSecret() => Guid.NewGuid().ToString("N");
 
     private static string Plain(string text) => text.Replace('\u00A0', ' ').Replace('\u202F', ' ');
 

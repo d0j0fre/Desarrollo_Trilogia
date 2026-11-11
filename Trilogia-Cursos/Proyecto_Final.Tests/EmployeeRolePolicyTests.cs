@@ -225,8 +225,11 @@ public sealed class EmployeeRolePolicyTests
     private static EmployeeFormViewModel NewModel(int perfilId) => new()
     {
         PerfilId = perfilId, NombreCompleto = "Persona de prueba", Correo = "prueba@example.invalid", Identificacion = "101110111",
-        Puesto = "Pruebas", Contrasena = "clave-de-prueba", Salario = 1000m, Activo = true
+        Puesto = "Pruebas", Contrasena = SyntheticSecret(), Salario = 1000m, Activo = true
     };
+
+    // Valor sintético distinto en cada ejecución: ninguna clave literal en el repositorio.
+    private static string SyntheticSecret() => Guid.NewGuid().ToString("N");
 
     private static EmployeeFormViewModel EditModel(int empleadoId, int perfilId)
     {

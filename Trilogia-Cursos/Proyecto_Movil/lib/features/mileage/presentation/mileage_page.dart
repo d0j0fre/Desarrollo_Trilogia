@@ -499,7 +499,7 @@ class _CloseShiftFormState extends ConsumerState<_CloseShiftForm> {
       context,
       title: 'Cerrar jornada',
       message:
-          'Vas a cerrar la jornada de ${widget.shift.vehiculoPlaca} con '
+          'Va a cerrar la jornada de ${widget.shift.vehiculoPlaca} con '
           '${_kmController.text} km. Recorrido: $_recorrido km.',
       confirmLabel: 'Cerrar jornada',
       icon: Icons.stop_circle_outlined,

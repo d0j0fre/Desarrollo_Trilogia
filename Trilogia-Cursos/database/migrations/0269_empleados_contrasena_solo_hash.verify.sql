@@ -1,0 +1,23 @@
+SET NOCOUNT ON;
+IF NOT EXISTS(SELECT 1 FROM dbo.SchemaMigrationHistory WHERE MigrationId=N'0269_empleados_contrasena_solo_hash' AND Status=N'Applied') THROW 58695,N'La migracion 0269 no esta registrada.',1;
+IF OBJECT_ID(N'dbo.sp_Admin_CreateEmployee',N'P') IS NULL OR OBJECT_ID(N'dbo.sp_RRHH_UpdateEmployee',N'P') IS NULL THROW 58696,N'Faltan los procedimientos de empleados.',1;
+IF (SELECT COUNT(*) FROM sys.parameters WHERE object_id IN(OBJECT_ID(N'dbo.sp_Admin_CreateEmployee'),OBJECT_ID(N'dbo.sp_RRHH_UpdateEmployee')) AND name=N'@ContrasenaHash')<>2 THROW 58697,N'Falta @ContrasenaHash.',1;
+IF EXISTS(SELECT 1 FROM sys.parameters WHERE object_id IN(OBJECT_ID(N'dbo.sp_Admin_CreateEmployee'),OBJECT_ID(N'dbo.sp_RRHH_UpdateEmployee')) AND name=N'@Contrasena') THROW 58698,N'Todavia se acepta @Contrasena en texto.',1;
+-- Prueba funcional deshecha: el empleado queda con hash y sin texto plano; sin hash o con correo repetido se rechaza.
+DECLARE @perfil INT=(SELECT TOP (1) PerfilId FROM dbo.Perfiles WHERE Nombre=N'Empleado');
+DECLARE @correo NVARCHAR(150)=N'verificacion.0269@example.invalid';
+DECLARE @hash NVARCHAR(512)=N'pbkdf2-sha256$210000$c2FsLXZlcmlmaWNhY2lvbg==$aGFzaC1kZS1wcnVlYmE=';
+BEGIN TRANSACTION;
+DECLARE @r TABLE(EmpleadoId INT);
+INSERT @r EXEC dbo.sp_Admin_CreateEmployee @PerfilId=@perfil,@NombreCompleto=N'Verificacion 0269',@Correo=@correo,@ContrasenaHash=@hash,@Puesto=N'Pruebas',@Salario=1000;
+DECLARE @emp INT=(SELECT TOP (1) EmpleadoId FROM @r);
+IF @emp IS NULL THROW 58699,N'No se creo el empleado.',1;
+IF NOT EXISTS(SELECT 1 FROM dbo.Usuarios WHERE Correo=@correo AND ContrasenaHash=@hash AND Contrasena=N'' AND PasswordVersion=1) THROW 58700,N'El usuario no quedo con hash y sin texto plano.',1;
+DECLARE @ok BIT=1;
+BEGIN TRY EXEC dbo.sp_Admin_CreateEmployee @PerfilId=@perfil,@NombreCompleto=N'Sin hash',@Correo=N'sin.hash.0269@example.invalid',@ContrasenaHash=N'',@Puesto=N'Pruebas'; END TRY BEGIN CATCH SET @ok=0; END CATCH;
+IF @ok=1 THROW 58701,N'Se creo un empleado sin hash.',1;
+SET @ok=1;
+BEGIN TRY EXEC dbo.sp_Admin_CreateEmployee @PerfilId=@perfil,@NombreCompleto=N'Duplicado',@Correo=@correo,@ContrasenaHash=@hash,@Puesto=N'Pruebas'; END TRY BEGIN CATCH SET @ok=0; END CATCH;
+IF @ok=1 THROW 58702,N'Se creo un empleado con correo duplicado.',1;
+ROLLBACK TRANSACTION;
+PRINT N'Verificacion 0269 completada.';
