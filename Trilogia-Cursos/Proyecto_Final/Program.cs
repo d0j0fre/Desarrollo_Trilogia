@@ -2,6 +2,7 @@
 using Proyecto_Final.Middleware;
 using Proyecto_Final.Services;
 using Proyecto_Final.Hubs;
+using Microsoft.AspNetCore.SignalR;
 using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,7 +14,11 @@ builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(optio
 {
     options.ValueCountLimit = 4096;
 });
-builder.Services.AddSignalR();
+// Revocación de sesiones (0311): el hub valida el sello de seguridad al conectar y en cada invocación, y un
+// proceso periódico corta las conexiones de quien ya no tiene sesión vigente (por ejemplo, solo recibe mensajes).
+builder.Services.AddSingleton<IChatConnectionRegistry, ChatConnectionRegistry>();
+builder.Services.AddHostedService<ChatSessionRevocationWorker>();
+builder.Services.AddSignalR().AddHubOptions<ChatHub>(options => options.AddFilter<ChatSessionHubFilter>());
 builder.Services.AddAntiforgery(options => options.HeaderName = "X-CSRF-TOKEN");
 builder.Services.AddRateLimiter(options =>
 {
