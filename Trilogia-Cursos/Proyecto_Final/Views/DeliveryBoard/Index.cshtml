@@ -6,12 +6,42 @@
 <div class="container-fluid pt-4 backoffice-page" data-snapshot-url="@Url.Action("Snapshot", "DeliveryBoard")">
     <div class="row px-xl-5"><div class="col-12 d-flex justify-content-between align-items-start"><div><h2>Tablero de entregas</h2><p>Estado operativo actualizado automáticamente cada 15 segundos (CU-084).</p></div><small id="board-updated" class="text-muted">Actualizado: @Model.GeneradoUtc.ToLocalTime().ToString("HH:mm:ss")</small></div></div>
     <div class="row px-xl-5 mb-4">
-        <div class="col-md-3"><div class="card"><div class="card-body"><small>Rutas activas</small><h3 id="active-routes">@Model.RutasActivas</h3></div></div></div>
-        <div class="col-md-3"><div class="card"><div class="card-body"><small>Pendientes</small><h3 id="pending-deliveries">@Model.EntregasPendientes</h3></div></div></div>
-        <div class="col-md-3"><div class="card"><div class="card-body"><small>Entregadas</small><h3 id="completed-deliveries">@Model.EntregasCompletadas</h3></div></div></div>
-        <div class="col-md-3"><div class="card"><div class="card-body"><small>Fallidas</small><h3 id="failed-deliveries">@Model.EntregasFallidas</h3></div></div></div>
+        <div class="col-md"><div class="card mb-2"><div class="card-body"><small>Rutas activas</small><h3 id="active-routes">@Model.RutasActivas</h3></div></div></div>
+        <div class="col-md"><div class="card mb-2"><div class="card-body"><small>En ruta</small><h3 id="in-route-orders">@Model.PedidosEnRuta</h3></div></div></div>
+        <div class="col-md"><div class="card mb-2"><div class="card-body"><small>Pendientes</small><h3 id="pending-deliveries">@Model.EntregasPendientes</h3></div></div></div>
+        <div class="col-md"><div class="card mb-2"><div class="card-body"><small>Entregadas</small><h3 id="completed-deliveries">@Model.EntregasCompletadas</h3></div></div></div>
+        <div class="col-md"><div class="card mb-2"><div class="card-body"><small>Fallidas</small><h3 id="failed-deliveries">@Model.EntregasFallidas</h3></div></div></div>
     </div>
-    <div class="row px-xl-5 pb-5"><div class="col-12 admin-table-wrapper"><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>Ruta</th><th>Zona</th><th>Chofer / vehículo</th><th>Estado</th><th>Progreso</th><th></th></tr></thead><tbody id="delivery-board-body">
+
+    <div class="row px-xl-5 mb-4"><div class="col-12 admin-table-wrapper">
+        <div class="p-3 border-bottom"><h5 class="mb-0">Pedidos en ruta <span class="text-muted" id="in-route-count">(@Model.PedidosEnRuta)</span></h5><small class="text-muted">Pedidos que ya salieron con el chofer y esperan la entrega.</small></div>
+        <div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th># Pedido</th><th>Cliente</th><th>Dirección</th><th>Ruta</th><th>Chofer</th><th>Parada</th><th class="text-right">Total</th></tr></thead><tbody id="in-route-body">
+        @if (!Model.EnRuta.Any())
+        {
+            <tr><td colspan="7" class="text-center text-muted py-4">No hay pedidos en ruta.</td></tr>
+        }
+        @foreach (var order in Model.EnRuta)
+        {
+            <tr><td><strong>#@order.PedidoId</strong></td><td>@order.Cliente</td><td><small>@order.Direccion</small></td><td><a asp-controller="RoutesAdmin" asp-action="Detail" asp-route-id="@order.RutaId">@order.RutaCodigo</a></td><td>@order.Chofer</td><td>@order.Secuencia</td><td class="text-right">₡@order.Total.ToString("N2")</td></tr>
+        }
+        </tbody></table></div>
+    </div></div>
+
+    <div class="row px-xl-5 mb-4"><div class="col-12 admin-table-wrapper">
+        <div class="p-3 border-bottom"><h5 class="mb-0">Pendientes de entrega <span class="text-muted" id="pending-count">(@Model.EntregasPendientes)</span></h5><small class="text-muted">Pedidos a domicilio que todavía no salen: en una ruta planificada o sin ruta asignada.</small></div>
+        <div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th># Pedido</th><th>Cliente</th><th>Dirección</th><th>Ruta</th><th>Prioridad</th><th>Fecha del pedido</th><th class="text-right">Total</th></tr></thead><tbody id="pending-body">
+        @if (!Model.Pendientes.Any())
+        {
+            <tr><td colspan="7" class="text-center text-muted py-4">No hay pedidos pendientes de entrega.</td></tr>
+        }
+        @foreach (var order in Model.Pendientes)
+        {
+            <tr><td><strong>#@order.PedidoId</strong></td><td>@order.Cliente</td><td><small>@order.Direccion</small></td><td>@if (order.RutaId.HasValue){<a asp-controller="RoutesAdmin" asp-action="Detail" asp-route-id="@order.RutaId">@order.RutaCodigo</a>}else{<span class="text-muted">Sin ruta</span>}</td><td>@order.PrioridadTexto</td><td>@order.FechaPedido.ToString("dd/MM/yyyy HH:mm")</td><td class="text-right">₡@order.Total.ToString("N2")</td></tr>
+        }
+        </tbody></table></div>
+    </div></div>
+
+    <div class="row px-xl-5 pb-5"><div class="col-12 admin-table-wrapper"><div class="p-3 border-bottom"><h5 class="mb-0">Rutas</h5></div><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>Ruta</th><th>Zona</th><th>Chofer / vehículo</th><th>Estado</th><th>Progreso</th><th></th></tr></thead><tbody id="delivery-board-body">
     @foreach (var route in Model.Rutas)
     {
         <tr><td><strong>@route.Codigo</strong></td><td>@route.Zona</td><td>@route.Chofer<small class="d-block text-muted">@route.VehiculoPlaca</small></td><td>@route.Estado</td><td><span class="text-success">@route.Entregados entregadas</span> · <span class="text-danger">@route.Fallidos fallidas</span> · @route.Pendientes pendientes</td><td><a asp-controller="RoutesAdmin" asp-action="Detail" asp-route-id="@route.RutaId" class="btn btn-sm btn-ds-view">Ver ruta</a></td></tr>
@@ -24,8 +54,15 @@
     (() => {
         const root = document.querySelector('[data-snapshot-url]');
         const body = document.getElementById('delivery-board-body');
+        const inRouteBody = document.getElementById('in-route-body');
+        const pendingBody = document.getElementById('pending-body');
         const setText = (id, value) => { const node = document.getElementById(id); if (node) node.textContent = value; };
         const escapeHtml = value => { const node = document.createElement('span'); node.textContent = value ?? ''; return node.innerHTML; };
+        const money = value => '₡' + Number(value ?? 0).toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const routeLink = order => `<a href="/RoutesAdmin/Detail/${Number(order.rutaId)}">${escapeHtml(order.rutaCodigo)}</a>`;
+        const empty = text => `<tr><td colspan="7" class="text-center text-muted py-4">${text}</td></tr>`;
+        const inRouteRow = order => `<tr><td><strong>#${Number(order.pedidoId)}</strong></td><td>${escapeHtml(order.cliente)}</td><td><small>${escapeHtml(order.direccion)}</small></td><td>${routeLink(order)}</td><td>${escapeHtml(order.chofer)}</td><td>${escapeHtml(order.secuencia)}</td><td class="text-right">${money(order.total)}</td></tr>`;
+        const pendingRow = order => `<tr><td><strong>#${Number(order.pedidoId)}</strong></td><td>${escapeHtml(order.cliente)}</td><td><small>${escapeHtml(order.direccion)}</small></td><td>${order.rutaId ? routeLink(order) : '<span class="text-muted">Sin ruta</span>'}</td><td>${escapeHtml(order.prioridadTexto)}</td><td>${new Date(order.fechaPedido).toLocaleString('es-CR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })}</td><td class="text-right">${money(order.total)}</td></tr>`;
         async function refresh() {
             if (document.hidden) return;
             try {
@@ -33,8 +70,12 @@
                 if (!response.ok) return;
                 const data = await response.json();
                 setText('active-routes', data.rutasActivas); setText('pending-deliveries', data.entregasPendientes);
+                setText('in-route-orders', data.pedidosEnRuta);
                 setText('completed-deliveries', data.entregasCompletadas); setText('failed-deliveries', data.entregasFallidas);
+                setText('in-route-count', `(${data.pedidosEnRuta})`); setText('pending-count', `(${data.entregasPendientes})`);
                 setText('board-updated', `Actualizado: ${new Date(data.generadoUtc).toLocaleTimeString('es-CR')}`);
+                inRouteBody.innerHTML = data.enRuta.length ? data.enRuta.map(inRouteRow).join('') : empty('No hay pedidos en ruta.');
+                pendingBody.innerHTML = data.pendientes.length ? data.pendientes.map(pendingRow).join('') : empty('No hay pedidos pendientes de entrega.');
                 body.innerHTML = data.rutas.map(route => `<tr><td><strong>${escapeHtml(route.codigo)}</strong></td><td>${escapeHtml(route.zona)}</td><td>${escapeHtml(route.chofer)}<small class="d-block text-muted">${escapeHtml(route.vehiculoPlaca)}</small></td><td>${escapeHtml(route.estado)}</td><td><span class="text-success">${route.entregados} entregadas</span> · <span class="text-danger">${route.fallidos} fallidas</span> · ${route.pendientes} pendientes</td><td><a class="btn btn-sm btn-ds-view" href="/RoutesAdmin/Detail/${route.rutaId}">Ver ruta</a></td></tr>`).join('');
             } catch { /* El siguiente ciclo reintenta; no se altera el estado mostrado. */ }
         }

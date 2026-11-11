@@ -241,6 +241,35 @@ namespace Proyecto_Final.Services
             return lista;
         }
 
+        // BUG-10-02: pedidos En ruta y pendientes de entrega para el tablero (sp_Entregas_PedidosTablero).
+        public async Task<List<DeliveryBoardOrderViewModel>> GetBoardOrdersAsync(CancellationToken cancellationToken = default)
+        {
+            var lista = new List<DeliveryBoardOrderViewModel>();
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Entregas_PedidosTablero", connection) { CommandType = CommandType.StoredProcedure };
+            await connection.OpenAsync(cancellationToken);
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+            while (await reader.ReadAsync(cancellationToken))
+            {
+                lista.Add(new DeliveryBoardOrderViewModel
+                {
+                    Grupo = reader.GetString(0),
+                    PedidoId = reader.GetInt32(1),
+                    Cliente = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                    Direccion = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
+                    Total = reader.IsDBNull(4) ? 0 : reader.GetDecimal(4),
+                    FechaPedido = reader.IsDBNull(5) ? DateTime.MinValue : reader.GetDateTime(5),
+                    RutaId = reader.IsDBNull(6) ? null : reader.GetInt32(6),
+                    RutaCodigo = reader.IsDBNull(7) ? string.Empty : reader.GetString(7),
+                    RutaEstado = reader.IsDBNull(8) ? string.Empty : reader.GetString(8),
+                    Chofer = reader.IsDBNull(9) ? string.Empty : reader.GetString(9),
+                    Secuencia = reader.IsDBNull(10) ? null : reader.GetInt32(10),
+                    Prioridad = reader.IsDBNull(11) ? null : Convert.ToInt32(reader.GetValue(11))
+                });
+            }
+            return lista;
+        }
+
         public async Task<RouteHeaderViewModel?> GetRouteHeaderAsync(int rutaId)
         {
             await using var connection = new SqlConnection(_connectionString);

@@ -177,6 +177,43 @@ public sealed class RoutesCorreccionesTests
         Assert.Contains("hoja-de-ruta-{c.Codigo}.xlsx", vista, StringComparison.Ordinal);
     }
 
+    // ── BUG-10-02 · el tablero lista los pedidos ────────────────────────────
+
+    [Fact]
+    public void Migracion0283_ListaPedidosEnRutaYPendientesDeEntrega()
+    {
+        var sql = Migracion("0283_tablero_entregas_pedidos.sql");
+
+        Assert.Contains("CREATE OR ALTER PROCEDURE dbo.sp_Entregas_PedidosTablero", sql, StringComparison.Ordinal);
+        Assert.Contains("CAST(N'EnRuta' AS NVARCHAR(10)) AS Grupo", sql, StringComparison.Ordinal);
+        Assert.Contains("CAST(N'Pendiente' AS NVARCHAR(10)) AS Grupo", sql, StringComparison.Ordinal);
+        // Solo lectura: no escribe en ninguna tabla.
+        Assert.DoesNotMatch(@"(?im)^\s*(INSERT|UPDATE|DELETE)\s+(INTO\s+)?dbo\.(?!SchemaMigrationHistory)", sql);
+    }
+
+    [Fact]
+    public void ElTableroMuestraLasListasDePedidosEnRutaYPendientesYLasRefrescaConElSnapshot()
+    {
+        var vista = MobileCorreccionesTests.Read("Proyecto_Final", "Views", "DeliveryBoard", "Index.cshtml");
+
+        Assert.Contains("Pedidos en ruta", vista, StringComparison.Ordinal);
+        Assert.Contains("Pendientes de entrega", vista, StringComparison.Ordinal);
+        Assert.Contains("Model.EnRuta", vista, StringComparison.Ordinal);
+        Assert.Contains("Model.Pendientes", vista, StringComparison.Ordinal);
+        Assert.Contains("data.enRuta", vista, StringComparison.Ordinal);
+        Assert.Contains("data.pendientes", vista, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ElControladorDelTableroArmaLasListasConLosPedidosDelProcedimiento()
+    {
+        var controlador = MobileCorreccionesTests.Read("Proyecto_Final", "Controllers", "DeliveryBoardController.cs");
+
+        Assert.Contains("GetBoardOrdersAsync", controlador, StringComparison.Ordinal);
+        Assert.Contains("EntregasPendientes = pendientes.Length", controlador, StringComparison.Ordinal);
+        Assert.Contains("PedidosEnRuta = enRuta.Length", controlador, StringComparison.Ordinal);
+    }
+
     private static int CuantasVeces(string texto, string buscado)
     {
         var cuenta = 0;

@@ -169,13 +169,35 @@ namespace Proyecto_Final.Models.Admin
         public DateTime? FechaDespacho { get; init; }
     }
 
+    // BUG-10-02 (CU-104): un pedido del tablero, En ruta o pendiente de entrega.
+    public sealed class DeliveryBoardOrderViewModel
+    {
+        public string Grupo { get; init; } = string.Empty;   // "EnRuta" | "Pendiente"
+        public int PedidoId { get; init; }
+        public string Cliente { get; init; } = string.Empty;
+        public string Direccion { get; init; } = string.Empty;
+        public decimal Total { get; init; }
+        public DateTime FechaPedido { get; init; }
+        public int? RutaId { get; init; }                     // null: todavía sin ruta
+        public string RutaCodigo { get; init; } = string.Empty;
+        public string RutaEstado { get; init; } = string.Empty;
+        public string Chofer { get; init; } = string.Empty;
+        public int? Secuencia { get; init; }
+        public int? Prioridad { get; init; }
+        public string PrioridadTexto => Prioridad.HasValue ? RoutePriority.Texto(Prioridad.Value) : string.Empty;
+    }
+
     public sealed class DeliveryBoardViewModel
     {
         public DateTimeOffset GeneradoUtc { get; init; }
         public int RutasActivas { get; init; }
+        // Pedidos a domicilio que todavía no salieron (con ruta planificada o sin ruta).
         public int EntregasPendientes { get; init; }
+        public int PedidosEnRuta { get; init; }
         public int EntregasCompletadas { get; init; }
         public int EntregasFallidas { get; init; }
         public IReadOnlyList<DeliveryBoardRowViewModel> Rutas { get; init; } = [];
+        public IReadOnlyList<DeliveryBoardOrderViewModel> EnRuta { get; init; } = [];
+        public IReadOnlyList<DeliveryBoardOrderViewModel> Pendientes { get; init; } = [];
     }
 }
