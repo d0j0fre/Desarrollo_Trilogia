@@ -74,6 +74,8 @@ namespace Proyecto_Final.Models.Admin
         public decimal MetaGlobal { get; set; }
         public decimal VentaGlobal { get; set; }
         public int VendedoresConMeta { get; set; }
+        // Venta de vendedores que no tienen meta en el período: se muestra aparte y no entra en el cumplimiento.
+        public decimal VentaSinMeta { get; set; }
 
         public decimal PorcentajeGlobal => MetaGlobal > 0 ? Math.Round(VentaGlobal / MetaGlobal * 100, 2) : 0m;
         public bool HayDatos => Items.Any();

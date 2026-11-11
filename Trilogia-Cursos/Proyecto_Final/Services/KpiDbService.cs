@@ -137,6 +137,7 @@ namespace Proyecto_Final.Services
                 model.MetaGlobal = reader.GetDecimal(0);
                 model.VentaGlobal = reader.GetDecimal(1);
                 model.VendedoresConMeta = reader.GetInt32(2);
+                if (reader.FieldCount > 3 && !reader.IsDBNull(3)) model.VentaSinMeta = reader.GetDecimal(3);
             }
             return model;
         }
