@@ -279,6 +279,30 @@ public sealed class RoutesCorreccionesTests
         Assert.Contains("dbo.sp_Pedidos_SincronizarEstadoEntrega", servicio, StringComparison.Ordinal);
     }
 
+    // ── G2-13 · contraste en el encabezado oscuro de Rutas ──────────────────
+
+    [Fact]
+    public void LaInsigniaDeEstadoDeLaRutaSobreElEncabezadoOscuroEsSolida_G2_13()
+    {
+        var css = MobileCorreccionesTests.Read("Proyecto_Final", "wwwroot", "css", "design-system-buttons.css");
+        var inicio = css.IndexOf(".admin-page-header .admin-badge-soft.warning,", StringComparison.Ordinal);
+        Assert.True(inicio >= 0, "Falta la regla de la insignia de estado en el encabezado.");
+        var regla = css[inicio..css.IndexOf('}', inicio)];
+
+        Assert.Contains("background-color: var(--brand-gold-primary, #D4AF37) !important;", regla, StringComparison.Ordinal);
+        Assert.Contains("color: var(--brand-black, #1F1F1F) !important;", regla, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("Detail.cshtml", "Volver")]
+    [InlineData("Evidences.cshtml", "Volver a la ruta")]
+    public void LosBotonesVolverDeRutasUsanElEstiloNeutroQueSeLeeSobreElEncabezado_G2_13(string vista, string texto)
+    {
+        var html = MobileCorreccionesTests.Read("Proyecto_Final", "Views", "RoutesAdmin", vista);
+
+        Assert.Matches(@"class=""btn btn-ds-neutral[^""]*""><i class=""fa fa-arrow-left mr-2""></i>" + texto + "</a>", html);
+    }
+
     private static int CuantasVeces(string texto, string buscado)
     {
         var cuenta = 0;
