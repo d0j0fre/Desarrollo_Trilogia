@@ -342,7 +342,183 @@ public sealed class RrhhCorreccionesTests
         Assert.Contains("<input type=\"hidden\" name=\"desde\"", view, StringComparison.Ordinal);
     }
 
+    // ───────────── G2-27 · notificar boletas explica lo que falta ─────────────
+
+    private static IConfiguration Settings(params (string Key, string? Value)[] values) => new ConfigurationBuilder()
+        .AddInMemoryCollection(values.ToDictionary(v => v.Key, v => v.Value)).Build();
+
+    private static readonly (string, string?)[] MailSettings =
+    [
+        ("ConfiguracionCorreo:Host", "smtp.example.invalid"), ("ConfiguracionCorreo:Puerto", "587"),
+        ("ConfiguracionCorreo:Remitente", "remitente@example.invalid"), ("ConfiguracionCorreo:Contrasenna", "valor-de-prueba"),
+    ];
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("http://localhost:7250")]
+    [InlineData("no-es-una-url")]
+    public void G2_27_SinUrlPublicaHttpsLaPantallaExplicaElMotivo(string? baseUrl)
+    {
+        var configuration = Settings([("PaySlips:PublicBaseUrl", baseUrl), .. MailSettings]);
+
+        var problem = PaySlipDeliveryDiagnostics.GetConfigurationProblem(configuration);
+
+        Assert.Equal(PaySlipDeliveryDiagnostics.MissingBaseUrlMessage, problem);
+        Assert.Contains("PaySlips:PublicBaseUrl", problem, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void G2_27_SinCorreoConfiguradoLaPantallaLoDice()
+    {
+        var configuration = Settings(("PaySlips:PublicBaseUrl", "https://sitio.example.invalid"), ("ConfiguracionCorreo:Host", "smtp.example.invalid"));
+
+        Assert.Equal(PaySlipDeliveryDiagnostics.MissingMailMessage, PaySlipDeliveryDiagnostics.GetConfigurationProblem(configuration));
+    }
+
+    [Fact]
+    public void G2_27_ConLaConfiguracionCompletaNoHayProblema() =>
+        Assert.Null(PaySlipDeliveryDiagnostics.GetConfigurationProblem(Settings([("PaySlips:PublicBaseUrl", "https://sitio.example.invalid"), .. MailSettings])));
+
+    [Fact]
+    public async Task G2_27_SinConfiguracionNoSeIntentaElEnvioNiSeRegistraUnFallo()
+    {
+        var delivery = new Mock<IPaySlipDeliveryCoordinator>();
+        var http = Http("Supervisor", 20);
+        var controller = new PaySlipsController(Mock.Of<IPaySlipService>(), delivery.Object, Settings(("PaySlips:PublicBaseUrl", "")), NullLogger<PaySlipsController>.Instance)
+        {
+            ControllerContext = new ControllerContext { HttpContext = http },
+            TempData = new TempDataDictionary(http, Mock.Of<ITempDataProvider>())
+        };
+
+        await controller.Send(new PaySlipSendViewModel { CalculoId = 3, IdempotencyKey = Guid.NewGuid() }, CancellationToken.None);
+
+        Assert.Equal(PaySlipDeliveryDiagnostics.MissingBaseUrlMessage, controller.TempData["ErrorMessage"]);
+        delivery.Verify(d => d.SendAsync(It.IsAny<long>(), It.IsAny<Guid>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<Uri>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public void G2_27_LaConfiguracionDeDesarrolloTraeLaUrlHttpsSinSecretos()
+    {
+        using var settings = System.Text.Json.JsonDocument.Parse(Read("Proyecto_Final", "appsettings.Development.json"));
+
+        var baseUrl = settings.RootElement.GetProperty("PaySlips").GetProperty("PublicBaseUrl").GetString();
+        Assert.True(Uri.TryCreate(baseUrl, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps);
+        Assert.Equal("", settings.RootElement.GetProperty("ConfiguracionCorreo").GetProperty("Contrasenna").GetString());
+
+        var docs = Read("docs", "azure-despliegue-final-qa.md");
+        Assert.Contains("PaySlips__PublicBaseUrl", docs, StringComparison.Ordinal);
+    }
+
+    // ───────────── G2-28 / G2-35 · montos, fechas y tipos con formato ─────────────
+
+    [Theory]
+    [InlineData(255000, "₡255 000,00")]
+    [InlineData(1234567.5, "₡1 234 567,50")]
+    [InlineData(0, "₡0,00")]
+    public void G2_28_LosMontosLlevanColonYSeparadorDeMiles(double amount, string expected) =>
+        Assert.Equal(expected, Plain(RrhhFormat.Money((decimal)amount)));
+
+    [Fact]
+    public void G2_28_LasFechasDelPeriodoSeMuestranDiaMesAnio()
+    {
+        Assert.Equal("16/10/2026 — 31/10/2026", RrhhFormat.PeriodText("2026-10-16 — 2026-10-31"));
+        Assert.Equal("Octubre", RrhhFormat.PeriodText("Octubre"));
+        Assert.Equal("16/10/2026", RrhhFormat.Date(new DateTime(2026, 10, 16)));
+    }
+
+    [Theory]
+    [InlineData("Deduccion", "Deducción")]
+    [InlineData("Ingreso", "Ingreso")]
+    public void G2_28_ElTipoDeConceptoLlevaTilde(string stored, string shown) =>
+        Assert.Equal(shown, RrhhFormat.ConceptType(stored));
+
+    [Theory]
+    [InlineData("PaySlips", "Index.cshtml")]
+    [InlineData("MyPaySlips", "Index.cshtml")]
+    [InlineData("MyPaySlips", "Details.cshtml")]
+    public void G2_28_LasBoletasFormateanMontosFechasYTipos(string folder, string file)
+    {
+        var view = Read("Proyecto_Final", "Views", folder, file);
+
+        Assert.Contains("RrhhFormat.Money(", view, StringComparison.Ordinal);
+        Assert.DoesNotContain("@item.TotalBruto<", view, StringComparison.Ordinal);
+        Assert.DoesNotContain("@Model.TotalNeto<", view, StringComparison.Ordinal);
+        Assert.DoesNotContain("@line.Monto<", view, StringComparison.Ordinal);
+        Assert.DoesNotContain("@line.Tipo<", view, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void G2_35_MisBoletasUsaBotonesDelSitioEnLugarDeEnlacesAmarillos()
+    {
+        var view = Read("Proyecto_Final", "Views", "MyPaySlips", "Index.cshtml");
+
+        Assert.Contains("asp-action=\"Details\" asp-route-id=\"@item.CalculoId\" class=\"btn btn-sm btn-ds-view\"", view, StringComparison.Ordinal);
+        Assert.Contains("asp-action=\"Download\" asp-route-id=\"@item.CalculoId\" class=\"btn btn-sm btn-ds-view\"", view, StringComparison.Ordinal);
+        Assert.DoesNotContain("</a> · <a", view, StringComparison.Ordinal);
+    }
+
+    // ───────────── G2-36 · Mi portal para todo el personal con expediente ─────────────
+
+    [Fact]
+    public void G2_36_MiPortalYaNoTieneRolesFijos()
+    {
+        var attribute = Assert.Single(typeof(EmployeePortalController).GetCustomAttributes(typeof(Proyecto_Final.Filters.SessionAuthorizeAttribute), true)
+            .Cast<Proyecto_Final.Filters.SessionAuthorizeAttribute>());
+
+        Assert.Empty(attribute.AllowedRoles);
+    }
+
+    [Theory]
+    [InlineData("Bodeguero")]
+    [InlineData("Cajero")]
+    [InlineData("Chofer")]
+    [InlineData("Supervisor")]
+    public async Task G2_36_UnPuestoDeOficinaConExpedienteAbreMiPortal(string role)
+    {
+        var employees = new Mock<IEmployeesService>();
+        employees.Setup(e => e.GetEmployeePortalAsync(31)).ReturnsAsync(new EmployeePortalViewModel { Perfil = new EmployeeDetailViewModel { EmpleadoId = 5, UsuarioId = 31 } });
+        var http = Http(role, 31);
+        var controller = new EmployeePortalController(employees.Object, new AdminDbService(Configuration()))
+        {
+            ControllerContext = new ControllerContext { HttpContext = http },
+            TempData = new TempDataDictionary(http, Mock.Of<ITempDataProvider>())
+        };
+
+        var result = await controller.Index();
+
+        Assert.IsType<ViewResult>(result);
+    }
+
+    [Fact]
+    public async Task G2_36_UnClienteNoEntraAMiPortal()
+    {
+        var http = Http("Cliente", 40);
+        var controller = new EmployeePortalController(Mock.Of<IEmployeesService>(), new AdminDbService(Configuration()))
+        {
+            ControllerContext = new ControllerContext { HttpContext = http },
+            TempData = new TempDataDictionary(http, Mock.Of<ITempDataProvider>())
+        };
+
+        var result = Assert.IsType<ViewResult>(await controller.Index());
+
+        Assert.Equal(StatusCodes.Status403Forbidden, result.StatusCode);
+    }
+
+    [Fact]
+    public void G2_36_ElMenuMuestraMiPortalATodoElPersonalYMisJornadasSoloAQuienPuedeAbrirlas()
+    {
+        var layout = Read("Proyecto_Final", "Views", "Shared", "_Layout.cshtml");
+        var portal = layout.IndexOf("asp-controller=\"EmployeePortal\"", StringComparison.Ordinal);
+        var attendance = layout.IndexOf("asp-controller=\"MyAttendance\"", StringComparison.Ordinal);
+
+        Assert.Contains("@if (isLoggedIn && !isClient)", layout[(portal - 220)..portal], StringComparison.Ordinal);
+        Assert.Contains("@if (isEmployeePortalUser)", layout[(attendance - 220)..attendance], StringComparison.Ordinal);
+    }
+
     // ───────────── ayudas ─────────────
+
+    private static string Plain(string text) => text.Replace('\u00A0', ' ').Replace('\u202F', ' ');
 
     private static AttendanceEntryViewModel Jornada(long id, int usuarioId, string nombre) => new()
     {
