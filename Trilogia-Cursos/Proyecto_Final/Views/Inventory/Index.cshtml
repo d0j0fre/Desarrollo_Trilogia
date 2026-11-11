@@ -18,9 +18,14 @@
                     <h2 class="mb-1">Inventario</h2>
                     <p class="text-muted mb-0">Gestión de productos del catálogo.</p>
                 </div>
-                <a asp-controller="Inventory" asp-action="Create" class="btn btn-ds-create">
-                    <i class="fa fa-plus mr-1"></i>Nuevo producto
-                </a>
+                <div>
+                    <a asp-controller="InventoryReport" asp-action="Index" asp-route-filtro="@filtro" class="btn btn-ds-view mr-2">
+                        <i class="fa fa-file-excel mr-1"></i>Reporte / Exportar
+                    </a>
+                    <a asp-controller="Inventory" asp-action="Create" class="btn btn-ds-create">
+                        <i class="fa fa-plus mr-1"></i>Nuevo producto
+                    </a>
+                </div>
             </div>
         </div>
     </div>
