@@ -94,6 +94,7 @@ Cada migracion debe indicar su estrategia de rollback antes de ejecutarse. Los c
 | 0265 | `0265_estado_gasto_aprobacion.sql` | Estado persistente de aprobación y su inclusión en gastos pendientes | 0010, 0011 y 0264 |
 | 0290 | `0290_sugerencias_compra_promedio_real.sql` | BUG-24-02 / G1-13: `sp_Admin_GetPurchaseSuggestions` acepta `@IncluirTodos` (0 = igual que antes; 1 = todos los productos activos con el mismo cálculo de demanda) para que Sugerencias de compra e Inteligencia de inventario usen una sola fórmula. Solo lectura | **0012** (definición previa del procedimiento) |
 | 0291 | `0291_gerente_inteligencia_inventario.sql` | BUG-24-03: asigna `INVENTARIO_INTELIGENCIA_VER` al perfil Gerente para que vea la alerta de productos estancados y la sugerencia de incluirlos en una promoción. Solo inserta la asignación si falta | 0012 (permiso) y perfiles |
+| 0292 | `0292_tendencia_estacional_facturas.sql` | BUG-24-05: `sp_Admin_GetSeasonalSalesTrend` suma facturas no anuladas (importe con IVA, unidades de `FacturaDetalle`, mes por `FechaFactura`), la misma definición de venta que el Reporte de ventas; antes sumaba líneas de pedidos sin IVA. Solo lectura | **0012** (definición previa) y facturas |
 
 Los scripts no incluyen `USE`: el ejecutor debe seleccionar explícitamente la base antes de iniciar. Los hashes escritos por 0002–0011 son hashes de manifiesto para identificar versión; la evidencia de despliegue debe registrar además el SHA-256 real del archivo y actualizar el ledger si corresponde.
 

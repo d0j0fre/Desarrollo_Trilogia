@@ -85,6 +85,7 @@
 
     <section class="card" aria-labelledby="seasonal-title">
         <div class="card-header" id="seasonal-title">Tendencia estacional @Model.Filter.StartYear–@Model.Filter.EndYear</div>
+        <p class="text-muted small px-3 pt-2 mb-0">Ventas = facturas no anuladas, con IVA; los mismos totales del Reporte de ventas. Cada mes suma ese mes de todos los años del rango.</p>
         <div class="card-body">
             <div class="s4-seasonal-chart" aria-label="Gráfico de ventas por mes">
                 @foreach (var point in Model.TendenciaEstacional)
@@ -99,7 +100,7 @@
             </div>
         </div>
         <div class="table-responsive"><table class="table">
-            <thead><tr><th>Mes</th><th class="text-right">Total vendido</th><th class="text-right">Unidades</th></tr></thead>
+            <thead><tr><th>Mes</th><th class="text-right">Total vendido (IVA incluido)</th><th class="text-right">Unidades</th></tr></thead>
             <tbody>@foreach (var point in Model.TendenciaEstacional) { <tr><td>@point.NombreMes</td><td class="text-right">₡@point.TotalVendido.ToString("N2")</td><td class="text-right">@point.UnidadesVendidas</td></tr> }</tbody>
         </table></div>
     </section>
