@@ -110,6 +110,8 @@ Cada migracion debe indicar su estrategia de rollback antes de ejecutarse. Los c
 | 0297 | `0297_tablero_detalle_indicadores.sql` | BUG-13-02: `sp_Reportes_DashboardDetalle`, datos de los gráficos de cada indicador del tablero | 0296; rutas y crédito de clientes |
 | 0298 | `0298_metas_reemplazo_confirmado.sql` | BUG-21-01: `sp_Metas_Upsert` exige `@Reemplazar` para sustituir una meta existente (error 53134) | 0211 (metas) |
 | 0299 | `0299_chat_marcar_leidos.sql` | BUG-23-01: `sp_Chat_MarcarLeidos` para el doble check de los mensajes directos | 0002 (chat privado) |
+| 0300 | `0300_reparar_texto_contrasena.sql` | Repara el texto dañado «Credencial inválida.» de `sp_Auth_UpdatePassword` (heredado de 0022) | 0022 |
+| 0301 | `0301_trato_de_usted_procedimientos.sql` | Trato de usted en mensajes de `sp_Movil_*` y en el aviso `TR_Rutas_NotificarChofer` (solo textos) | 0028–0033, 0221 |
 
 Los scripts no incluyen `USE`: el ejecutor debe seleccionar explícitamente la base antes de iniciar. Los hashes escritos por 0002–0011 son hashes de manifiesto para identificar versión; la evidencia de despliegue debe registrar además el SHA-256 real del archivo y actualizar el ledger si corresponde.
 
