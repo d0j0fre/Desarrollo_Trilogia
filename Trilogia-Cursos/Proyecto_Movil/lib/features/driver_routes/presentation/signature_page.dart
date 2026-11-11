@@ -55,8 +55,8 @@ class _SignaturePageState extends State<SignaturePage> {
             children: [
               Text(
                 widget.cliente.isEmpty
-                    ? 'Pedile al cliente que firme con el dedo dentro del recuadro.'
-                    : 'Pedile a ${widget.cliente} que firme con el dedo dentro del recuadro.',
+                    ? 'Pida al cliente que firme con el dedo dentro del recuadro.'
+                    : 'Pida a ${widget.cliente} que firme con el dedo dentro del recuadro.',
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: BrandColors.textMuted,
                 ),

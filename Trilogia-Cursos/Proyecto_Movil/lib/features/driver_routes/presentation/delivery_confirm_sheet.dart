@@ -97,12 +97,12 @@ class _DeliveryConfirmSheetState extends ConsumerState<DeliveryConfirmSheet> {
       final guardada = await _store.importar(origen: origen, syncGuid: guid);
 
       if (guardada == null) {
-        _aviso('Ese formato de imagen no se admite. Usá una foto JPG, PNG o WEBP.');
+        _aviso('Ese formato de imagen no se admite. Use una foto JPG, PNG o WEBP.');
         return;
       }
       if (await File(guardada).length() > _maxBytes) {
         await _borrarSilencioso(guardada);
-        _aviso('La foto pesa más de 5 MB. Tomá otra o elegí una más liviana.');
+        _aviso('La foto pesa más de 5 MB. Tome otra o elija una más liviana.');
         return;
       }
 
@@ -116,7 +116,7 @@ class _DeliveryConfirmSheetState extends ConsumerState<DeliveryConfirmSheet> {
         ),
       );
     } on Object {
-      _aviso('No se pudo abrir la cámara. Revisá el permiso de la aplicación.');
+      _aviso('No se pudo abrir la cámara. Revise el permiso de la aplicación.');
     } finally {
       if (mounted) setState(() => _ocupado = false);
     }
@@ -210,7 +210,7 @@ class _DeliveryConfirmSheetState extends ConsumerState<DeliveryConfirmSheet> {
               Text('Confirmar entrega', style: theme.textTheme.headlineSmall),
               const SizedBox(height: 10),
               Text(
-                'Vas a marcar el pedido #${widget.pedidoId} de ${widget.cliente} como entregado. '
+                'Va a marcar el pedido #${widget.pedidoId} de ${widget.cliente} como entregado. '
                 'Se le va a avisar al cliente.',
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: BrandColors.textMuted,

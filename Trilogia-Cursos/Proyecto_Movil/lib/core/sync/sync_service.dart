@@ -278,7 +278,7 @@ class SyncService {
 
     await _outbox.update(entry.copyWith(
       estado: OutboxStatus.conflicto,
-      ultimoError: 'El archivo ya no está en el teléfono. Volvé a tomarlo desde la entrega.',
+      ultimoError: 'El archivo ya no está en el teléfono. Vuelva a tomarlo desde la entrega.',
       limpiarProximoIntento: true,
     ));
     return false;
