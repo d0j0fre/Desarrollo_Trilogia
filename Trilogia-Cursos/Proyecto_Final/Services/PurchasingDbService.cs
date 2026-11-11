@@ -37,7 +37,7 @@ public interface IPurchasingService
     Task ReceivePurchaseOrderLineAsync(PurchaseOrderReceiveViewModel model, PurchasingActor actor, CancellationToken cancellationToken = default);
     Task CloseWithDiscrepancyAsync(PurchaseOrderCloseViewModel model, PurchasingActor actor, CancellationToken cancellationToken = default);
     Task CancelPurchaseOrderAsync(PurchaseOrderCloseViewModel model, PurchasingActor actor, CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<PurchaseOrderLineSelectionViewModel>> GetPurchaseSuggestionsAsync(int recentMonths, int coverageMonths, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<PurchaseOrderLineSelectionViewModel>> GetPurchaseSuggestionsAsync(int recentMonths, int coverageMonths, bool includeAll = false, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<PriceHistoryLineViewModel>> GetPriceHistoryAsync(int productId, CancellationToken cancellationToken = default);
     Task<IReadOnlyDictionary<int, decimal>> GetLastPurchasePricesAsync(CancellationToken cancellationToken = default);
 }
@@ -274,6 +274,7 @@ public sealed class PurchasingDbService : IPurchasingService
     public async Task<IReadOnlyList<PurchaseOrderLineSelectionViewModel>> GetPurchaseSuggestionsAsync(
         int recentMonths,
         int coverageMonths,
+        bool includeAll = false,
         CancellationToken cancellationToken = default)
     {
         var suggestions = new List<PurchaseOrderLineSelectionViewModel>();
@@ -281,6 +282,7 @@ public sealed class PurchasingDbService : IPurchasingService
         await using var command = Procedure("dbo.sp_Admin_GetPurchaseSuggestions", connection);
         command.Parameters.Add("@MesesRecientes", SqlDbType.Int).Value = recentMonths;
         command.Parameters.Add("@MesesCobertura", SqlDbType.Int).Value = coverageMonths;
+        command.Parameters.Add("@IncluirTodos", SqlDbType.Bit).Value = includeAll;
         await connection.OpenAsync(cancellationToken);
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         while (await reader.ReadAsync(cancellationToken))
@@ -292,6 +294,7 @@ public sealed class PurchasingDbService : IPurchasingService
                 Nombre = reader.GetString(reader.GetOrdinal("Nombre")),
                 StockActual = reader.GetInt32(reader.GetOrdinal("StockActual")),
                 PromedioVentaMensual = reader.GetDecimal(reader.GetOrdinal("PromedioVentaMensual")),
+                CantidadSugerida = suggested,
                 Cantidad = Math.Max(suggested, 1),
                 Seleccionado = suggested > 0,
                 PrecioUnitario = 1m,

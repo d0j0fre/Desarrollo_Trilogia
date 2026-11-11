@@ -48,6 +48,7 @@ public sealed class PurchaseOrdersController : Controller
     [AdminAuthorize("Compras", "COMPRAS_ORDENES_CREAR")]
     public async Task<IActionResult> Create(PurchaseOrderFormViewModel model, CancellationToken cancellationToken)
     {
+        NormalizeBindingMessages();
         if (model.TokenOperacion == Guid.Empty)
         {
             ModelState.AddModelError(string.Empty, "La solicitud no contiene un token de operación válido.");
@@ -83,12 +84,17 @@ public sealed class PurchaseOrdersController : Controller
     [HttpGet]
     [EnableRateLimiting("sensitive-read")]
     [AdminAuthorize("Compras", "COMPRAS_SUGERENCIAS_VER")]
-    public async Task<IActionResult> Suggestions(CancellationToken cancellationToken)
+    public async Task<IActionResult> Suggestions(int? recentMonths, int? coverageMonths, CancellationToken cancellationToken)
     {
-        var suggestions = (await _purchasing.GetPurchaseSuggestionsAsync(3, 1, cancellationToken)).ToList();
-        var model = new PurchaseOrderFormViewModel { Productos = suggestions };
+        // Mismos parámetros por defecto que Inteligencia de inventario (BUG-24-02): así un producto
+        // muestra el mismo promedio y la misma cantidad sugerida en ambas pantallas.
+        var model = new PurchaseOrderFormViewModel
+        {
+            DesdeSugerencias = true,
+            MesesPromedio = recentMonths ?? InventoryIntelligenceFilterViewModel.DefaultRecentMonths,
+            MesesCobertura = coverageMonths ?? InventoryIntelligenceFilterViewModel.DefaultCoverageMonths
+        };
         await PopulateOptionsAsync(model, cancellationToken);
-        ViewData["FromSuggestions"] = true;
         return View("Create", model);
     }
 
@@ -201,6 +207,8 @@ public sealed class PurchaseOrdersController : Controller
     private async Task PopulateOptionsAsync(PurchaseOrderFormViewModel model, CancellationToken cancellationToken)
     {
         model.Proveedores = await _purchasing.GetSuppliersAsync(true, null, cancellationToken);
+        model.MesesPromedio = ValidMonths(model.MesesPromedio, InventoryIntelligenceFilterViewModel.DefaultRecentMonths);
+        model.MesesCobertura = ValidMonths(model.MesesCobertura, InventoryIntelligenceFilterViewModel.DefaultCoverageMonths);
         var posted = model.Productos
             .Where(product => product.ProductoId > 0)
             .GroupBy(product => product.ProductoId)
@@ -208,9 +216,16 @@ public sealed class PurchaseOrdersController : Controller
         var products = await _admin.GetActiveProductsForSelectAsync();
         var lastPrices = await _purchasing.GetLastPurchasePricesAsync(cancellationToken);
 
-        model.Productos = products.Select(product =>
+        // La demanda sale siempre del mismo cálculo que usa Inteligencia de inventario; un producto
+        // sin sugerencia conserva su promedio real en lugar de un 0 inventado.
+        var demand = (await _purchasing.GetPurchaseSuggestionsAsync(
+                model.MesesPromedio, model.MesesCobertura, includeAll: true, cancellationToken))
+            .ToDictionary(item => item.ProductoId);
+
+        var lines = products.Select(product =>
         {
             posted.TryGetValue(product.ProductoId, out var previous);
+            demand.TryGetValue(product.ProductoId, out var calculation);
             return new PurchaseOrderLineSelectionViewModel
             {
                 ProductoId = product.ProductoId,
@@ -218,14 +233,74 @@ public sealed class PurchaseOrdersController : Controller
                 StockActual = product.Stock,
                 PrecioTienda = product.Precio,
                 UltimoPrecioPagado = lastPrices.TryGetValue(product.ProductoId, out var lastPrice) ? lastPrice : null,
-                PromedioVentaMensual = previous?.PromedioVentaMensual ?? 0,
-                DatosInsuficientes = previous?.DatosInsuficientes ?? false,
+                PromedioVentaMensual = calculation?.PromedioVentaMensual ?? 0,
+                CantidadSugerida = calculation?.CantidadSugerida ?? 0,
+                DatosInsuficientes = calculation?.DatosInsuficientes ?? false,
                 Seleccionado = previous?.Seleccionado ?? false,
                 Cantidad = previous?.Cantidad ?? 1,
                 PrecioUnitario = previous?.PrecioUnitario ?? 1m
             };
         }).ToList();
+
+        if (!model.DesdeSugerencias)
+        {
+            model.Productos = lines;
+            return;
+        }
+
+        // Sugerencias de compra: solo los productos que el cálculo recomienda reabastecer, con su
+        // cantidad sugerida. Si no hay historial de ventas, la cantidad se deja vacía (ingreso manual).
+        model.Productos = lines
+            .Where(line => line.CantidadSugerida > 0)
+            .OrderByDescending(line => line.CantidadSugerida)
+            .ThenBy(line => line.Nombre, StringComparer.CurrentCultureIgnoreCase)
+            .Select(line =>
+            {
+                if (posted.TryGetValue(line.ProductoId, out var previous))
+                {
+                    line.Seleccionado = previous.Seleccionado;
+                    line.Cantidad = previous.Cantidad;
+                    line.PrecioUnitario = previous.PrecioUnitario;
+                }
+                else
+                {
+                    // Al volver a mostrar el formulario tras un error, las filas no enviadas son las que se desmarcaron.
+                    line.Seleccionado = posted.Count == 0 && !line.DatosInsuficientes;
+                    line.Cantidad = line.DatosInsuficientes ? 0 : line.CantidadSugerida;
+                    line.PrecioUnitario = line.UltimoPrecioPagado ?? 0m;
+                }
+
+                return line;
+            })
+            .ToList();
     }
+
+    // Un campo vacío en un número genera el mensaje técnico en inglés «The value '' is invalid.»;
+    // se cambia por un texto claro para el usuario.
+    private void NormalizeBindingMessages()
+    {
+        foreach (var (key, entry) in ModelState.Where(pair => pair.Value is { Errors.Count: > 0 }).ToList())
+        {
+            if (entry is null || !entry.Errors.Any(error => error.ErrorMessage.StartsWith("The value ", StringComparison.Ordinal)))
+            {
+                continue;
+            }
+
+            var message = key switch
+            {
+                nameof(PurchaseOrderFormViewModel.ProveedorId) => "Debe seleccionar un proveedor.",
+                _ when key.EndsWith(nameof(PurchaseOrderLineSelectionViewModel.Cantidad), StringComparison.Ordinal) =>
+                    "Ingrese la cantidad de cada producto seleccionado.",
+                _ when key.EndsWith(nameof(PurchaseOrderLineSelectionViewModel.PrecioUnitario), StringComparison.Ordinal) =>
+                    "Ingrese el precio de compra de cada producto seleccionado.",
+                _ => "Hay un valor no válido en el formulario."
+            };
+            entry.Errors.Clear();
+            entry.Errors.Add(message);
+        }
+    }
+
+    private static int ValidMonths(int value, int fallback) => value is >= 1 and <= 12 ? value : fallback;
 
     private PurchasingActor CurrentActor() => new(
         HttpContext.Session.GetInt32("UserId") ?? 0,

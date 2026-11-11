@@ -43,9 +43,10 @@ namespace Proyecto_Final.Controllers
 
         // CU-171/172 — Crear
         [HttpGet]
-        public async Task<IActionResult> Create()
+        public async Task<IActionResult> Create(int? productoId = null)
         {
-            var model = new PromotionFormViewModel { Productos = await _promos.GetProductOptionsAsync() };
+            // BUG-24-03: Inteligencia de inventario sugiere incluir un producto estancado en una promoción.
+            var model = new PromotionFormViewModel { Productos = await _promos.GetProductOptionsAsync(), ProductoId = productoId ?? 0 };
             return View(model);
         }
 
