@@ -1,0 +1,53 @@
+@model Proyecto_Final.Models.Admin.VehicleDocumentEditViewModel
+@{
+    ViewData["Title"] = "Editar documento";
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5">
+        <div class="col-lg-6 offset-lg-3">
+            <div class="admin-page-header">
+                <h2 class="mb-2">Editar documento — @Model.VehiculoPlaca</h2>
+                <p class="mb-0">Corrige el tipo, la fecha de vencimiento o las observaciones del documento.</p>
+            </div>
+
+            <div class="admin-table-wrapper p-4">
+                <form asp-action="EditDocument" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="All" class="text-danger mb-2"></div>
+                    <input type="hidden" asp-for="DocumentoId" />
+                    <input type="hidden" asp-for="VehiculoId" />
+                    <input type="hidden" asp-for="VehiculoPlaca" />
+                    <div class="form-group">
+                        <label asp-for="Tipo" class="font-weight-bold">Tipo</label>
+                        <select asp-for="Tipo" class="form-control">
+                            <option value="Marchamo">Marchamo</option>
+                            <option value="RTV">RTV (Riteve)</option>
+                            <option value="Seguro">Seguro</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="FechaVencimiento" class="font-weight-bold">Fecha de vencimiento</label>
+                        <input asp-for="FechaVencimiento" class="form-control" type="date" />
+                        <span asp-validation-for="FechaVencimiento" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Observaciones" class="font-weight-bold">Observaciones</label>
+                        <input asp-for="Observaciones" class="form-control" maxlength="300" />
+                    </div>
+                    <button type="submit" class="btn btn-ds-create"><i class="fa fa-save mr-2"></i>Guardar cambios</button>
+                    <a asp-action="Alerts" asp-route-vehiculoId="@Model.VehiculoId" class="btn btn-ds-neutral">Cancelar</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

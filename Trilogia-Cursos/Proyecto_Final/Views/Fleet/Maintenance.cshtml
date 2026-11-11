@@ -2,6 +2,7 @@
 @{
     ViewData["Title"] = "Mantenimiento de flota";
     var vehiculos = ViewBag.Vehiculos as List<Proyecto_Final.Models.Admin.VehicleOptionViewModel> ?? new();
+    string TextoEstado(string e) => e == "EnProceso" ? "En proceso" : e;
 }
 
 @section Styles {
@@ -13,7 +14,7 @@
         <div class="col-12">
             <div class="admin-page-header">
                 <h2 class="mb-2">Órdenes de mantenimiento</h2>
-                <p class="mb-0">Registra el mantenimiento preventivo y correctivo de cada vehículo para llevar control de los gastos del taller.</p>
+                <p class="mb-0">Registra el mantenimiento preventivo y correctivo de cada vehículo para llevar control de los gastos del taller. Mientras una orden correctiva está En proceso, el vehículo queda fuera de circulación.</p>
             </div>
         </div>
     </div>
@@ -57,7 +58,7 @@
                         </div>
                         <div class="form-group col-6">
                             <label class="font-weight-bold">Estado</label>
-                            <select asp-for="Nueva.Estado" class="form-control">
+                            <select asp-for="Nueva.Estado" class="form-control" id="estadoOrden">
                                 <option value="Programada">Programada</option>
                                 <option value="EnProceso">En proceso</option>
                                 <option value="Completada">Completada</option>
@@ -73,6 +74,11 @@
                             <label class="font-weight-bold">Próximo (km)</label>
                             <input asp-for="Nueva.KilometrajeProximo" class="form-control" type="number" min="0" placeholder="Aviso por desgaste" />
                         </div>
+                    </div>
+                    <div class="form-group" id="fechaRealizadaGrupo">
+                        <label class="font-weight-bold">Fecha de realización</label>
+                        <input asp-for="Nueva.FechaRealizada" class="form-control" type="date" max="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                        <small class="form-text text-muted">Para una orden Completada; si se deja vacía se usa la fecha de hoy.</small>
                     </div>
                     <button type="submit" class="btn btn-ds-create btn-block"><i class="fa fa-wrench mr-2"></i>Registrar orden</button>
                 </form>
@@ -105,6 +111,8 @@
                                 <th>Vehículo</th>
                                 <th>Tipo</th>
                                 <th>Descripción</th>
+                                <th>Fechas</th>
+                                <th class="text-right">Próx. km</th>
                                 <th class="text-right">Costo</th>
                                 <th class="text-center">Estado</th>
                                 <th class="text-center">Acción</th>
@@ -113,7 +121,7 @@
                         <tbody>
                             @if (!Model.Ordenes.Any())
                             {
-                                <tr><td colspan="6" class="text-center text-muted py-4">No hay órdenes registradas.</td></tr>
+                                <tr><td colspan="8" class="text-center text-muted py-4">No hay órdenes registradas.</td></tr>
                             }
                             else
                             {
@@ -121,25 +129,37 @@
                                 {
                                     var badge = o.Estado == "Completada" ? "success" : (o.Estado == "EnProceso" ? "dark" : "warning");
                                     var tipoBadge = o.Tipo == "Preventivo" ? "info" : "danger";
+                                    var cerrada = o.Estado == "Completada" || o.Estado == "Cancelada";
                                     <tr>
                                         <td class="font-weight-bold">@o.VehiculoPlaca</td>
                                         <td><span class="admin-badge-soft @tipoBadge">@o.Tipo</span></td>
                                         <td>@o.Descripcion<br /><small class="text-muted">@o.Taller</small></td>
+                                        <td class="small text-nowrap">
+                                            Registrada: @o.FechaRegistro.ToString("dd/MM/yyyy")<br />
+                                            Programada: @(o.FechaProgramada?.ToString("dd/MM/yyyy") ?? "—")<br />
+                                            Realizada: @(o.FechaRealizada?.ToString("dd/MM/yyyy") ?? "—")
+                                        </td>
+                                        <td class="text-right">@(o.KilometrajeProximo.HasValue ? $"{o.KilometrajeProximo.Value:N0} km" : "—")</td>
                                         <td class="text-right">₡@o.Costo.ToString("N2")</td>
-                                        <td class="text-center"><span class="admin-badge-soft @badge">@o.Estado</span></td>
-                                        <td class="text-center">
-                                            @if (o.Estado != "Completada")
+                                        <td class="text-center"><span class="admin-badge-soft @badge">@TextoEstado(o.Estado)</span></td>
+                                        <td class="text-center text-nowrap">
+                                            @if (o.Estado == "Programada")
                                             {
-                                                <form asp-action="CompleteMaintenance" method="post" class="d-inline"
-                                                      data-s3-confirm="¿Marcar la orden como completada?"
-                                                      data-s3-confirm-title="Completar mantenimiento"
+                                                <form asp-action="StartMaintenance" method="post" class="d-inline"
+                                                      data-s3-confirm="@(o.Tipo == "Correctivo" ? "¿Iniciar la reparación? El vehículo quedará fuera de circulación hasta completarla." : "¿Pasar la orden a En proceso?")"
+                                                      data-s3-confirm-title="Iniciar mantenimiento"
                                                       data-s3-confirm-type="warning"
-                                                      data-s3-confirm-ok="Sí, completar"
+                                                      data-s3-confirm-ok="Sí, iniciar"
                                                       data-s3-confirm-cancel="Cancelar">
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="ordenId" value="@o.OrdenMantenimientoId" />
-                                                    <button type="submit" class="btn btn-sm btn-ds-action" aria-label="Marcar mantenimiento como atendido"><i class="fa fa-check"></i></button>
+                                                    <button type="submit" class="btn btn-sm btn-ds-edit" title="Iniciar" aria-label="Iniciar la orden de @o.VehiculoPlaca"><i class="fa fa-play"></i></button>
                                                 </form>
+                                            }
+                                            @if (!cerrada)
+                                            {
+                                                <button type="button" class="btn btn-sm btn-ds-action" data-toggle="collapse" data-target="#completar-@o.OrdenMantenimientoId"
+                                                        title="Completar" aria-label="Marcar mantenimiento como atendido"><i class="fa fa-check"></i></button>
                                             }
                                             else
                                             {
@@ -147,6 +167,27 @@
                                             }
                                         </td>
                                     </tr>
+                                    @if (!cerrada)
+                                    {
+                                        <tr class="collapse" id="completar-@o.OrdenMantenimientoId">
+                                            <td colspan="8" class="bg-light">
+                                                <form asp-action="CompleteMaintenance" method="post" class="form-inline"
+                                                      data-s3-confirm="¿Marcar la orden como completada con el costo final indicado?"
+                                                      data-s3-confirm-title="Completar mantenimiento"
+                                                      data-s3-confirm-type="warning"
+                                                      data-s3-confirm-ok="Sí, completar"
+                                                      data-s3-confirm-cancel="Cancelar">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="ordenId" value="@o.OrdenMantenimientoId" />
+                                                    <label class="font-weight-bold mr-2 mb-2" for="costo-@o.OrdenMantenimientoId">Costo final (₡)</label>
+                                                    <input type="number" id="costo-@o.OrdenMantenimientoId" name="costo" step="0.01" min="0" value="@o.Costo.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)" class="form-control mr-3 mb-2" style="width:150px" />
+                                                    <label class="font-weight-bold mr-2 mb-2" for="fecha-@o.OrdenMantenimientoId">Fecha de realización</label>
+                                                    <input type="date" id="fecha-@o.OrdenMantenimientoId" name="fechaRealizada" value="@DateTime.Today.ToString("yyyy-MM-dd")" max="@DateTime.Today.ToString("yyyy-MM-dd")" class="form-control mr-3 mb-2" />
+                                                    <button type="submit" class="btn btn-ds-create mb-2"><i class="fa fa-check mr-2"></i>Completar orden</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    }
                                 }
                             }
                         </tbody>
@@ -159,4 +200,14 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            var estado = document.getElementById('estadoOrden');
+            var grupo = document.getElementById('fechaRealizadaGrupo');
+            if (!estado || !grupo) return;
+            function sync() { grupo.style.display = estado.value === 'Completada' ? '' : 'none'; }
+            estado.addEventListener('change', sync);
+            sync();
+        })();
+    </script>
 }
