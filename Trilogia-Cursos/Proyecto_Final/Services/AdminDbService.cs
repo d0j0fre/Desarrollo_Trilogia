@@ -2065,16 +2065,21 @@ namespace Proyecto_Final.Services
             await connection.OpenAsync();
 
             const string ingresosQuery = """
+        -- Misma definición de «venta» que el Reporte de ventas y el Tablero gerencial:
+        -- facturas no anuladas, por su fecha de factura y con IVA (Total).
         SELECT
-            PedidoId,
-            FechaPago,
-            MetodoPago,
-            Total
-        FROM dbo.Pedidos
-        WHERE EstadoPago = N'Confirmado simulado'
-          AND (@FechaInicio IS NULL OR FechaPago >= @FechaInicio)
-          AND (@FechaFin IS NULL OR FechaPago < DATEADD(DAY, 1, @FechaFin))
-        ORDER BY FechaPago DESC;
+            f.FacturaId,
+            f.PedidoId,
+            f.NumeroFactura,
+            f.FechaFactura,
+            p.MetodoPago,
+            f.Total
+        FROM dbo.Facturas f
+        LEFT JOIN dbo.Pedidos p ON p.PedidoId = f.PedidoId
+        WHERE f.Estado <> N'Anulada'
+          AND (@FechaInicio IS NULL OR f.FechaFactura >= @FechaInicio)
+          AND (@FechaFin IS NULL OR f.FechaFactura < DATEADD(DAY, 1, @FechaFin))
+        ORDER BY f.FechaFactura DESC;
         """;
 
             await using (var command = new SqlCommand(ingresosQuery, connection))
@@ -2093,17 +2098,23 @@ namespace Proyecto_Final.Services
 
                 while (await reader.ReadAsync())
                 {
+                    var facturaId = reader.GetInt32(reader.GetOrdinal("FacturaId"));
                     var pedidoId = reader.GetInt32(reader.GetOrdinal("PedidoId"));
                     var monto = reader.GetDecimal(reader.GetOrdinal("Total"));
-                    var metodoPago = reader.GetString(reader.GetOrdinal("MetodoPago"));
+                    var numeroOrdinal = reader.GetOrdinal("NumeroFactura");
+                    var metodoOrdinal = reader.GetOrdinal("MetodoPago");
+                    var numero = reader.IsDBNull(numeroOrdinal) ? $"#{facturaId}" : reader.GetString(numeroOrdinal);
+                    var metodoPago = reader.IsDBNull(metodoOrdinal) ? null : reader.GetString(metodoOrdinal);
 
                     modelo.Movimientos.Add(new FinancialMovementViewModel
                     {
-                        MovimientoId = pedidoId,
-                        Fecha = reader.GetDateTime(reader.GetOrdinal("FechaPago")),
+                        MovimientoId = facturaId,
+                        Fecha = reader.GetDateTime(reader.GetOrdinal("FechaFactura")),
                         Tipo = "Ingreso",
-                        Descripcion = "Venta realizada",
-                        Referencia = $"Pedido #{pedidoId} - {metodoPago}",
+                        Descripcion = "Venta facturada",
+                        Referencia = string.IsNullOrWhiteSpace(metodoPago)
+                            ? $"Factura {numero} - Pedido #{pedidoId}"
+                            : $"Factura {numero} - Pedido #{pedidoId} - {metodoPago}",
                         Monto = monto
                     });
 
