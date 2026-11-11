@@ -1,5 +1,4 @@
 @model Proyecto_Final.Models.Admin.EmployeeDetailViewModel
-<div class="container pt-3"><strong>Identificación:</strong> @(string.IsNullOrWhiteSpace(Model.Identificacion) ? "Pendiente" : Model.Identificacion)</div>
 @{
     ViewData["Title"] = "Detalle de empleado";
 }
@@ -34,6 +33,8 @@
             <div class="employee-card p-4 h-100">
                 <h4 class="employee-card-title"><i class="fa fa-address-card mr-1"></i>Datos generales</h4>
                 <dl class="employee-dl">
+                    <dt>Identificación</dt>
+                    <dd>@(string.IsNullOrWhiteSpace(Model.Identificacion) ? "Pendiente" : Model.Identificacion)</dd>
                     <dt>Correo</dt>
                     <dd>@Model.Correo</dd>
                     <dt>Teléfono</dt>
