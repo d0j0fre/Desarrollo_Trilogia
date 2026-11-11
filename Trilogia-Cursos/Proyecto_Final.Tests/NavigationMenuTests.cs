@@ -74,6 +74,20 @@ public sealed class NavigationMenuTests
         Assert.Equal(expected, string.Join("|", visible));
     }
 
+    [Theory]
+    [InlineData("Administrador", true)]
+    [InlineData("Gerente", true)]
+    [InlineData("Empleado", false)]
+    [InlineData("Bodeguero", false)]
+    [InlineData("Compras", false)]
+    public async Task ElBotonReporteDeInventarioSoloLoVenQuienPuedeAbrirlo(string role, bool expected)
+    {
+        var permissions = role == "Administrador" ? "" : Profiles[role];
+        var service = new NavigationMenuService(new FakePermissions(permissions));
+
+        Assert.Equal(expected, await service.CanOpenAsync(role, "InventoryReport", "Index"));
+    }
+
     [Fact]
     public async Task ElAdministradorConservaTodoElPanel()
     {
