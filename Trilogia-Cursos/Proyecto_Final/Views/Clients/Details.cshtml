@@ -210,7 +210,7 @@
                                     <tr>
                                         <td>#@pedido.PedidoId</td>
                                         <td>@pedido.FechaPedido.ToString("dd/MM/yyyy HH:mm")</td>
-                                        <td><span class="admin-badge-soft @claseEstado">@pedido.Estado</span></td>
+                                        <td><span class="admin-badge-soft @claseEstado">@Proyecto_Final.Services.OrderStatusFlow.Name(pedido.Estado)</span></td>
                                         <td>@(string.IsNullOrWhiteSpace(pedido.TipoEntrega) ? "No indicado" : pedido.TipoEntrega)</td>
                                         <td>₡@pedido.Total.ToString("N2")</td>
                                         <td>@(string.IsNullOrWhiteSpace(pedido.Observaciones) ? "Sin observaciones" : pedido.Observaciones)</td>

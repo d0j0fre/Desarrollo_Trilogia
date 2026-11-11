@@ -28,7 +28,7 @@
                     <div class="admin-card text-center py-4">
                         <div class="text-muted small mb-1">Estado</div>
                         <span class="admin-badge-soft success" style="font-size:1rem; padding:6px 18px;">
-                            @Model.Estado
+                            @Proyecto_Final.Services.OrderStatusFlow.Name(Model.Estado)
                         </span>
                     </div>
                 </div>
@@ -37,7 +37,7 @@
             @if (!string.IsNullOrWhiteSpace(Model.NumeroFactura))
             {
                 <div class="admin-card mb-4 text-center py-4">
-                    <div class="text-muted small mb-2">Factura generada automáticamente (CU-091)</div>
+                    <div class="text-muted small mb-2">Factura generada automáticamente</div>
                     <div class="font-weight-bold text-success" style="font-size:1.5rem;">
                         @Model.NumeroFactura
                     </div>

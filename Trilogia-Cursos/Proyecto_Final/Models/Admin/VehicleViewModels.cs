@@ -26,6 +26,7 @@ namespace Proyecto_Final.Models.Admin
         [StringLength(60, ErrorMessage = "La marca no puede exceder 60 caracteres.")]
         public string? Marca { get; set; }
 
+        [Display(Name = "Descripción")]
         [Required(ErrorMessage = "La descripción es obligatoria.")]
         [StringLength(150, ErrorMessage = "La descripción no puede exceder 150 caracteres.")]
         public string Descripcion { get; set; } = string.Empty;

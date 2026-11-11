@@ -1,6 +1,6 @@
 ﻿@model Proyecto_Final.Models.Admin.MetaProgresoViewModel
 @{
-    ViewData["Title"] = "Mi progreso";
+    ViewData["Title"] = "Mi meta";
     var meses = new[] { "", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre" };
     // CU-212 escenario 2: sin ventas/meta el indicador se muestra en 0%.
     var barraClase = Model.PorcentajeBarra >= 100 ? "success" : Model.PorcentajeBarra >= 70 ? "warning" : "danger";
@@ -19,8 +19,8 @@
     <div class="row px-xl-5">
         <div class="col-12">
             <div class="admin-page-header">
-                <h2 class="mb-2">Mi progreso</h2>
-                <p>Meta de ventas — @meses[Model.Mes] @Model.Anio (CU-212).</p>
+                <h2 class="mb-2">Mi meta</h2>
+                <p>Meta de ventas — @meses[Model.Mes] @Model.Anio.</p>
             </div>
         </div>
     </div>
