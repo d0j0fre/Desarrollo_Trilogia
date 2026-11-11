@@ -191,7 +191,7 @@ namespace Proyecto_Final.Controllers
         {
             if (!ModelState.IsValid)
             {
-                TempData["ErrorMessage"] = "Revisá los datos de la versión.";
+                TempData["ErrorMessage"] = "Revise los datos de la versión.";
                 return RedirectToAction(nameof(Index));
             }
 

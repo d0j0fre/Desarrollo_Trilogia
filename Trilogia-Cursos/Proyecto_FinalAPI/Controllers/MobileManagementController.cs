@@ -98,10 +98,10 @@ namespace Proyecto_FinalAPI.Controllers
         {
             if (routeId <= 0) return NotFoundOrForbidden();
             if (request is null) return InvalidRequest("Falta el cuerpo de la solicitud.");
-            if (request.NuevoChoferId <= 0) return InvalidRequest("Elegí el chofer.");
+            if (request.NuevoChoferId <= 0) return InvalidRequest("Elija el chofer.");
             var reason = request.Motivo?.Trim();
             if (string.IsNullOrWhiteSpace(reason) || reason.Length < 5)
-                return InvalidRequest("Explicá el motivo de la reasignación (al menos 5 caracteres).");
+                return InvalidRequest("Explique el motivo de la reasignación (al menos 5 caracteres).");
             if (!TryReadSyncGuid(request.SyncGuid, out var syncGuid))
                 return InvalidRequest("Falta un identificador de sincronización válido.");
 

@@ -65,7 +65,7 @@ namespace Proyecto_Final.Controllers
         {
             if (!ModelState.IsValid)
             {
-                TempData["ErrorMessage"] = "Revisá el estado y la observación ingresada.";
+                TempData["ErrorMessage"] = "Revise el estado y la observación ingresada.";
                 return RedirectToAction(nameof(Details), new { id = model.ConsultaId });
             }
 
@@ -95,7 +95,7 @@ namespace Proyecto_Final.Controllers
                     {
                         _emailService.SendEmail(
                             consultaAnterior.Correo,
-                            $"Tu consulta fue resuelta - {consultaAnterior.Asunto}",
+                            $"Su consulta fue resuelta - {consultaAnterior.Asunto}",
                             EmailTemplateBuilder.BuildConsultationResolvedEmail(consultaAnterior.Nombre, consultaAnterior.Asunto, model.Estado));
 
                         TempData["SuccessMessage"] = "Consulta actualizada correctamente. Se notificó la resolución al cliente por correo.";

@@ -102,17 +102,17 @@ namespace Proyecto_FinalAPI.Controllers
             // ── Chofer ─────────────────────────────────────────────────────
             new("driver.routes", "Mis rutas", "Paradas, navegación y estado de cada entrega", "route", SectionField,
                 (_, _) => false),
-            new("driver.mileage", "Kilometraje", "Iniciá o cerrá la jornada del vehículo", "speedometer", SectionField,
+            new("driver.mileage", "Kilometraje", "Inicie o cierre la jornada del vehículo", "speedometer", SectionField,
                 (_, _) => false),
             new("driver.summary", "Por enviar", "Acciones guardadas que faltan por enviar", "clipboard", SectionField,
                 (_, _) => false),
 
             // ── Bodega ─────────────────────────────────────────────────────
-            new("warehouse.picking", "Pedidos por preparar", "Alistá los pedidos y marcá los que quedan listos", "picking", SectionWarehouse,
+            new("warehouse.picking", "Pedidos por preparar", "Aliste los pedidos y marque los que quedan listos", "picking", SectionWarehouse,
                 (admin, p) => Has(admin, p, MobilePermissions.PrepareOrders)),
-            new("warehouse.receiving", "Recepción de compras", "Recibí la mercadería de las órdenes de compra", "receiving", SectionWarehouse,
+            new("warehouse.receiving", "Recepción de compras", "Reciba la mercadería de las órdenes de compra", "receiving", SectionWarehouse,
                 (admin, p) => Has(admin, p, MobilePermissions.ReceivePurchases)),
-            new("warehouse.movements", "Movimientos de inventario", "Registrá entradas, salidas y ajustes", "movements", SectionWarehouse,
+            new("warehouse.movements", "Movimientos de inventario", "Registre entradas, salidas y ajustes", "movements", SectionWarehouse,
                 (admin, p) => Has(admin, p, MobilePermissions.InventoryMovements)),
             new("warehouse.stock", "Consulta de inventario", "Existencias, alertas de stock e historial", "inventory", SectionWarehouse,
                 (admin, p) => Has(admin, p, MobilePermissions.InventoryView)),
@@ -120,7 +120,7 @@ namespace Proyecto_FinalAPI.Controllers
             // ── Gestión ────────────────────────────────────────────────────
             new("management.dashboard", "Métricas del negocio", "Ventas, pedidos, entregas y existencias", "chart", SectionManagement,
                 (admin, p) => Has(admin, p, MobilePermissions.Dashboard)),
-            new("management.approvals", "Pedidos retenidos", "Aprobá o rechazá pedidos que superan el umbral", "approval", SectionManagement,
+            new("management.approvals", "Pedidos retenidos", "Apruebe o rechace pedidos que superan el umbral", "approval", SectionManagement,
                 (admin, p) => Has(admin, p, MobilePermissions.AuthorizeOrders)),
             new("management.routes", "Rutas y choferes", "Seguimiento, despacho y reasignación de rutas", "fleet", SectionManagement,
                 (admin, p) => Has(admin, p, MobilePermissions.ManageRoutes)),
@@ -128,11 +128,11 @@ namespace Proyecto_FinalAPI.Controllers
             // aquí le duplicaría la pantalla de inicio.
             new("management.orders", "Pedidos", "Consulta de pedidos y cambios de estado", "orders", SectionManagement,
                 (admin, p) => admin || (Has(admin, p, MobilePermissions.OrdersView) && !Has(admin, p, MobilePermissions.PrepareOrders))),
-            new("management.products", "Productos", "Activá o inactivá productos del catálogo", "product", SectionManagement,
+            new("management.products", "Productos", "Active o inactive productos del catálogo", "product", SectionManagement,
                 (admin, p) => Has(admin, p, MobilePermissions.ProductsEdit)),
 
             // ── Ventas ─────────────────────────────────────────────────────
-            new("sales.orders", "Ventas en campo", "Tomá pedidos de clientes y seguí su estado", "cart", SectionSales,
+            new("sales.orders", "Ventas en campo", "Tome pedidos de clientes y siga su estado", "cart", SectionSales,
                 (admin, p) => Has(admin, p, MobilePermissions.SellerOrders)),
 
             // ── Oficina ────────────────────────────────────────────────────
@@ -145,15 +145,15 @@ namespace Proyecto_FinalAPI.Controllers
             // Igual con compras: quien recibe mercadería ya ve las órdenes en su recepción.
             new("office.purchasing", "Compras", "Órdenes de compra y sugerencias de reposición", "purchasing", SectionOffice,
                 (admin, p) => admin || (Has(admin, p, MobilePermissions.PurchaseOrdersView) && !Has(admin, p, MobilePermissions.ReceivePurchases))),
-            new("office.support", "Consultas de clientes", "Atendé las consultas recibidas", "support", SectionOffice,
+            new("office.support", "Consultas de clientes", "Atienda las consultas recibidas", "support", SectionOffice,
                 (admin, p) => Has(admin, p, MobilePermissions.ConsultationsView)),
             new("office.audit", "Bitácora", "Acciones registradas en el sistema", "audit", SectionOffice,
                 (admin, p) => Has(admin, p, MobilePermissions.AuditView)),
 
             // ── Personal ───────────────────────────────────────────────────
-            new("staff.approvals", "Aprobar jornadas", "Revisá las jornadas enviadas por el personal", "approve-hours", SectionPeople,
+            new("staff.approvals", "Aprobar jornadas", "Revise las jornadas enviadas por el personal", "approve-hours", SectionPeople,
                 (admin, p) => Has(admin, p, MobilePermissions.AttendanceApprove)),
-            new("staff.attendance", "Mis jornadas", "Registrá tus horas y seguí su aprobación", "clock", SectionPeople,
+            new("staff.attendance", "Mis jornadas", "Registre sus horas y siga su aprobación", "clock", SectionPeople,
                 (admin, p) => Has(admin, p, MobilePermissions.AttendanceRegister)),
         ];
 

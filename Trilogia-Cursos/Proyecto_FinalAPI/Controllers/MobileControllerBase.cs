@@ -54,7 +54,7 @@ namespace Proyecto_FinalAPI.Controllers
         protected IActionResult Unavailable() =>
             StatusCode(
                 StatusCodes.Status503ServiceUnavailable,
-                new MobileError("servicio_no_disponible", "El servicio no está disponible en este momento. Intentá de nuevo."));
+                new MobileError("servicio_no_disponible", "El servicio no está disponible en este momento. Intente de nuevo."));
 
         protected IActionResult InvalidRequest(string message) =>
             BadRequest(new MobileError("solicitud_invalida", message));

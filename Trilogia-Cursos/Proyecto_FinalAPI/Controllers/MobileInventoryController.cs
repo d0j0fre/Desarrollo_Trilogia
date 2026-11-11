@@ -71,7 +71,7 @@ namespace Proyecto_FinalAPI.Controllers
             CancellationToken cancellationToken)
         {
             if (request is null) return InvalidRequest("Falta el cuerpo de la solicitud.");
-            if (request.ProductoId <= 0) return InvalidRequest("Indicá el producto.");
+            if (request.ProductoId <= 0) return InvalidRequest("Indique el producto.");
             if (!MovementTypes.Contains(request.TipoMovimiento ?? string.Empty))
                 return InvalidRequest("El tipo de movimiento no es válido.");
             if (request.Cantidad < 0 || request.Cantidad > 1_000_000)
@@ -113,7 +113,7 @@ namespace Proyecto_FinalAPI.Controllers
             [FromBody] ChangeProductStatusRequest request,
             CancellationToken cancellationToken)
         {
-            if (productId <= 0) return InvalidRequest("Indicá el producto.");
+            if (productId <= 0) return InvalidRequest("Indique el producto.");
             if (request is null) return InvalidRequest("Falta el cuerpo de la solicitud.");
             if (!TryReadSyncGuid(request.SyncGuid, out var syncGuid))
                 return InvalidRequest("Falta un identificador de sincronización válido.");

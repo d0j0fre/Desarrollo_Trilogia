@@ -223,7 +223,7 @@
                                         <td>@item.Cliente</td>
                                         <td>@item.FechaPedido.ToString("dd/MM/yyyy")</td>
                                         <td>
-                                            <span class="admin-badge-soft @claseEstado">@item.Estado</span>
+                                            <span class="admin-badge-soft @claseEstado">@Proyecto_Final.Services.OrderStatusFlow.Name(item.Estado)</span>
                                         </td>
                                         <td>₡@item.Total.ToString("N2")</td>
                                     </tr>

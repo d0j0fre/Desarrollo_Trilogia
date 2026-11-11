@@ -64,7 +64,7 @@ public sealed class MobileAppPackageStorageService : IMobileAppPackageStorage
     public async Task<StoredPackage> SaveAsync(IFormFile? file, CancellationToken cancellationToken = default)
     {
         if (file is null || file.Length == 0)
-            throw new PackageValidationException("Elegí el archivo de la aplicación.");
+            throw new PackageValidationException("Elija el archivo de la aplicación.");
 
         if (file.Length > MaximumBytes)
             throw new PackageValidationException(

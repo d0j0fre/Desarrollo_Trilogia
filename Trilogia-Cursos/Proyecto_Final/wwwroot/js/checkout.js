@@ -158,7 +158,7 @@
         var savedDistrito = getSavedValue("savedDistrito");
 
         function cargarProvincias(selectedValue) {
-            clearOptions(provincia, "Elige una opción...");
+            clearOptions(provincia, "Elija una opción...");
             addOptions(provincia, Object.keys(ubicaciones));
             ensureOption(provincia, selectedValue);
             provincia.value = selectedValue || "";

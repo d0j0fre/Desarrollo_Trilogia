@@ -8,15 +8,15 @@ namespace Proyecto_Final.Tests;
 public sealed class AssistantCorreccionesTests
 {
     [Fact]
-    public void BUG_26_01_LaPreguntaVaciaMuestraEscribeUnaPregunta()
+    public void BUG_26_01_LaPreguntaVaciaMuestraEscribaUnaPregunta()
     {
         var view = Read("Proyecto_Final", "Views", "Assistant", "Index.cshtml");
         var controller = Read("Proyecto_Final", "Controllers", "AssistantController.cs");
 
         // El cliente no envía la pregunta vacía, pero la avisa en la conversación
         // con el mismo texto que devuelve el servidor.
-        Assert.Contains("escapeHtml('Escribe una pregunta.')", view, StringComparison.Ordinal);
-        Assert.Contains("\"Escribe una pregunta.\"", controller, StringComparison.Ordinal);
+        Assert.Contains("escapeHtml('Escriba una pregunta.')", view, StringComparison.Ordinal);
+        Assert.Contains("\"Escriba una pregunta.\"", controller, StringComparison.Ordinal);
     }
 
     [Theory]

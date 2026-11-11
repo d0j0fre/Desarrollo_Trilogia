@@ -108,7 +108,7 @@
                             <label>Resolución <span id="ResolucionReq" class="text-danger d-none">*</span></label>
                             <textarea name="Resolucion" id="ResolucionTxt" class="form-control" rows="6" maxlength="1000"
                                       placeholder="Describa cómo se resolvió la inconformidad. Obligatorio para cerrar el reclamo."></textarea>
-                            <small class="form-text text-muted">Para cerrar el reclamo debe documentar la resolución (CU-192).</small>
+                            <small class="form-text text-muted">Para cerrar el reclamo debe documentar la resolución.</small>
                         </div>
 
                         <button type="submit" class="btn btn-ds-action btn-block py-2">
@@ -123,7 +123,7 @@
 
 @section Scripts {
     <script>
-        // Marca la resolución como obligatoria en la UI cuando se elige "Cerrado" (CU-192).
+        // Marca la resolución como obligatoria en la UI cuando se elige "Cerrado".
         (function () {
             var estado = document.getElementById('EstadoSelect');
             var req = document.getElementById('ResolucionReq');

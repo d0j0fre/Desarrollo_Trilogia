@@ -85,12 +85,12 @@ class ApiException implements Exception {
       // incorrectos."); sin mensaje, el token de una peticion autenticada.
       401 => ApiException(
         ApiFailure.sesionExpirada,
-        serverMessage ?? 'La sesión expiró. Iniciá sesión de nuevo.',
+        serverMessage ?? 'La sesión expiró. Inicie sesión de nuevo.',
         statusCode: status,
       ),
       403 => ApiException(
         ApiFailure.sinPermiso,
-        serverMessage ?? 'No tenés permiso para hacer esto.',
+        serverMessage ?? 'No tiene permiso para hacer esto.',
         statusCode: status,
       ),
       404 => ApiException(
@@ -105,7 +105,7 @@ class ApiException implements Exception {
       ),
       429 => ApiException(
         ApiFailure.demasiadasPeticiones,
-        serverMessage ?? 'Demasiadas solicitudes seguidas. Esperá un momento.',
+        serverMessage ?? 'Demasiadas solicitudes seguidas. Espere un momento.',
         statusCode: status,
       ),
       _ when status != null && status >= 500 => ApiException(

@@ -9,7 +9,7 @@ namespace Proyecto_Final.Models.Store
         public string Nombre { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "El correo es obligatorio.")]
-        [EmailAddress(ErrorMessage = "Ingresa un correo válido.")]
+        [EmailAddress(ErrorMessage = "Ingrese un correo válido.")]
         public string Correo { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "El asunto es obligatorio.")]

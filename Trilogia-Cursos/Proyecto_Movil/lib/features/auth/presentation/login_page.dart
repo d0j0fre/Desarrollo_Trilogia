@@ -131,7 +131,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               Text('Iniciar sesión', style: theme.textTheme.headlineSmall),
               const SizedBox(height: 6),
               Text(
-                'Usá el mismo correo y contraseña del sistema web.',
+                'Use el mismo correo y contraseña del sistema web.',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: BrandColors.textMuted,
                 ),
@@ -150,7 +150,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 ),
                 validator: (value) {
                   final texto = value?.trim() ?? '';
-                  if (texto.isEmpty) return 'Escribí tu correo.';
+                  if (texto.isEmpty) return 'Escriba su correo.';
                   if (!texto.contains('@')) {
                     return 'Ese correo no parece completo.';
                   }
@@ -182,7 +182,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   ),
                 ),
                 validator: (value) =>
-                    (value ?? '').isEmpty ? 'Escribí tu contraseña.' : null,
+                    (value ?? '').isEmpty ? 'Escriba su contraseña.' : null,
               ),
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 200),

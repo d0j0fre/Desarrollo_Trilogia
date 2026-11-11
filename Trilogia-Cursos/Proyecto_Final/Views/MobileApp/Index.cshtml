@@ -24,8 +24,8 @@
             <div class="col-lg-5 mb-4">
                 <div class="card h-100">
                     <div class="card-body text-center py-4">
-                        <h3 class="mb-2">Instalá la aplicación</h3>
-                        <p class="text-muted mb-4">Apuntá la cámara del teléfono al código</p>
+                        <h3 class="mb-2">Instale la aplicación</h3>
+                        <p class="text-muted mb-4">Apunte la cámara del teléfono al código</p>
 
                         <img src="@Url.Action("Qr", "MobileApp")"
                              alt="Código para descargar la aplicación"
@@ -52,15 +52,15 @@
                     <div class="card-body">
                         <h5 class="card-title mb-3">Cómo instalarla en el teléfono</h5>
                         <ol class="mb-4 pl-3">
-                            <li class="mb-2">Abrí la cámara del teléfono y apuntá al código. Tocá el aviso que aparece.</li>
-                            <li class="mb-2">Aceptá la descarga del archivo.</li>
+                            <li class="mb-2">Abra la cámara del teléfono y apunte al código. Toque el aviso que aparece.</li>
+                            <li class="mb-2">Acepte la descarga del archivo.</li>
                             <li class="mb-2">
                                 Android va a advertir que la aplicación viene de un <strong>origen desconocido</strong>.
                                 Es normal: no está en Google Play porque es de uso interno.
-                                Tocá <strong>Configuración</strong> y permití la instalación desde el navegador.
+                                Toque <strong>Configuración</strong> y permita la instalación desde el navegador.
                             </li>
-                            <li class="mb-2">Tocá <strong>Instalar</strong> y luego <strong>Abrir</strong>.</li>
-                            <li>Entrá con el mismo correo y contraseña que usás en este sistema.</li>
+                            <li class="mb-2">Toque <strong>Instalar</strong> y luego <strong>Abrir</strong>.</li>
+                            <li>Ingrese con el mismo correo y contraseña que usa en este sistema.</li>
                         </ol>
 
                         @if (!string.IsNullOrWhiteSpace(v.Notas))
@@ -114,11 +114,11 @@
                         <p class="mb-0 mt-2">
                             @if (Model.PuedePublicar)
                             {
-                                <span>Publicá la primera versión con el formulario de abajo.</span>
+                                <span>Publique la primera versión con el formulario de abajo.</span>
                             }
                             else
                             {
-                                <span>El equipo de desarrollo todavía no ha publicado ninguna versión. Volvé más tarde.</span>
+                                <span>El equipo de desarrollo todavía no ha publicado ninguna versión. Vuelva más tarde.</span>
                             }
                         </p>
                     </div>
@@ -142,7 +142,7 @@
 
                     <div class="card-body border-top">
                         <p class="text-muted small mb-3">
-                            Subí el archivo <code>.apk</code> compilado. El sistema calcula su huella y su
+                            Suba el archivo <code>.apk</code> compilado. El sistema calcula su huella y su
                             tamaño solo. El número de compilación tiene que ser mayor que el de la última
                             versión publicada; la versión mínima soportada bloquea las aplicaciones más
                             viejas y las obliga a actualizar.
@@ -156,7 +156,7 @@
                                 <input id="archivo" name="archivo" type="file" accept=".apk"
                                        class="form-control-file" required />
                                 <small class="form-text text-muted">
-                                    Usá el que termina en <code>-arm64-v8a-release.apk</code>.
+                                    Use el que termina en <code>-arm64-v8a-release.apk</code>.
                                 </small>
                             </div>
                             <div class="form-group col-md-2">
@@ -180,7 +180,7 @@
                                     <small>
                                         <strong>El número de compilación no es el que pasaste a la herramienta.</strong>
                                         Al separar el archivo por tipo de teléfono, Flutter le suma 2000:
-                                        si compilaste con <code>--build-number=2</code>, acá va
+                                        si compiló con <code>--build-number=2</code>, aquí va
                                         <code>2002</code>. El valor exacto aparece en la aplicación, en
                                         <strong>Ajustes → Versión</strong>. Si no coincide, el bloqueo por
                                         versión mínima no va a funcionar.
@@ -196,7 +196,7 @@
                             <div class="form-group col-md-6">
                                 <label for="MensajeObligatorio">Mensaje si la actualización es obligatoria</label>
                                 <input id="MensajeObligatorio" name="MensajeObligatorio" class="form-control"
-                                       maxlength="300" placeholder="Solo si bloqueás versiones anteriores" />
+                                       maxlength="300" placeholder="Solo si bloquea versiones anteriores" />
                             </div>
 
                             <div class="col-12">

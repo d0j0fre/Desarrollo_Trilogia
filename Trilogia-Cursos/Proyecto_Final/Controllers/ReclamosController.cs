@@ -112,7 +112,7 @@ namespace Proyecto_Final.Controllers
         {
             if (!ModelState.IsValid)
             {
-                TempData["ErrorMessage"] = "Revisá el estado y la resolución ingresada.";
+                TempData["ErrorMessage"] = "Revise el estado y la resolución ingresada.";
                 return RedirectToAction(nameof(Details), new { id = model.ReclamoId });
             }
 

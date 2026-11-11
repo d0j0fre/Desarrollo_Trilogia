@@ -66,7 +66,7 @@ public sealed class SmtpPaySlipEmailSender : IPaySlipEmailSender
         var safeEmployee = WebUtility.HtmlEncode(employee);
         var safeLink = WebUtility.HtmlEncode(secureLink.AbsoluteUri);
         _emailService.SendEmail(recipient, "Boleta de pago disponible",
-            $"<p>Hola {safeEmployee},</p><p>Tu boleta de pago se encuentra adjunta y también está disponible en el portal privado.</p><p><a href=\"{safeLink}\">Consultar boleta</a></p>", pdf, "boleta-de-pago.pdf");
+            $"<p>Hola {safeEmployee},</p><p>Su boleta de pago se encuentra adjunta y también está disponible en el portal privado.</p><p><a href=\"{safeLink}\">Consultar boleta</a></p>", pdf, "boleta-de-pago.pdf");
         return Task.CompletedTask;
     }
 }
