@@ -54,9 +54,6 @@
             string.Equals(userRole, "Administrador", StringComparison.OrdinalIgnoreCase)
             || string.Equals(userRole, "Empleado", StringComparison.OrdinalIgnoreCase)
             || string.Equals(userRole, "Vendedor", StringComparison.OrdinalIgnoreCase));
-        var isEmployeePortalUser = isLoggedIn && (
-            string.Equals(userRole, "Empleado", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(userRole, "Vendedor", StringComparison.OrdinalIgnoreCase));
         var isClient = isLoggedIn && string.Equals(userRole, "Cliente", StringComparison.OrdinalIgnoreCase);
         var isGerente = isLoggedIn && string.Equals(userRole, "Gerente", StringComparison.OrdinalIgnoreCase);
         var isChofer = isLoggedIn && string.Equals(userRole, "Chofer", StringComparison.OrdinalIgnoreCase);
@@ -313,7 +310,7 @@
                                 </a>
                             }
 
-                            @if (isEmployeePortalUser)
+                            @if (isLoggedIn && !isClient && await MenuAccess.CanOpenAsync(userRole, "MyAttendance", "Index"))
                             {
                                 <a asp-controller="MyAttendance" asp-action="Index" class="nav-item nav-link nav-highlight">
                                     <i class="fa fa-clock mr-1"></i>Mis jornadas

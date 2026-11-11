@@ -5,7 +5,9 @@ using Proyecto_Final.Services;
 
 namespace Proyecto_Final.Controllers;
 
-[SessionAuthorize("Empleado", "Vendedor")]
+// Mis jornadas lo abre todo el personal con expediente que tenga el permiso de ver y registrar sus jornadas
+// (como Mi portal); un cliente no tiene esos permisos. El Administrador pasa por su rol.
+[AdminAuthorize("RRHH", "RRHH_JORNADAS_VER_PROPIAS")]
 public sealed class MyAttendanceController : Controller
 {
     private readonly IAttendanceService _attendance;
@@ -33,6 +35,7 @@ public sealed class MyAttendanceController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [AdminAuthorize("RRHH", "RRHH_JORNADAS_REGISTRAR")]
     public async Task<IActionResult> Save(AttendanceFormViewModel model, bool submit, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid) { TempData["ErrorMessage"] = string.Join(" ", ModelState.Values.SelectMany(x => x.Errors).Select(x => x.ErrorMessage)); return RedirectToAction(nameof(Index)); }

@@ -129,8 +129,9 @@ public sealed class NavigationMenuTests
         // G2-36: Mi portal ya no tiene roles fijos (se abre a todo el personal con expediente).
         Assert.True(await service.CanOpenAsync("Gerente", "EmployeePortal", "Index"));
         Assert.True(await service.CanOpenAsync("Vendedor", "EmployeePortal", "Index"));
-        // Sigue habiendo pantallas con roles fijos: Mis jornadas solo para Empleado y Vendedor.
-        Assert.False(await service.CanOpenAsync("Gerente", "MyAttendance", "Index"));
+        // Mis jornadas depende del permiso de ver las jornadas propias, no del nombre del rol.
+        Assert.True(await service.CanOpenAsync("Gerente", "MyAttendance", "Index"));
+        Assert.False(await new NavigationMenuService(new FakePermissions(Profiles["Cliente"])).CanOpenAsync("Cliente", "MyAttendance", "Index"));
         Assert.False(await service.CanOpenAsync(null, "Inventory", "Index"));
     }
 
