@@ -95,11 +95,15 @@ namespace Proyecto_Final.Services
             {
                 while (await reader.ReadAsync(cancellationToken))
                 {
+                    var groupDate = NullableDate(reader, "FechaGrupo");
                     rows.Add(new SalesReportRowViewModel
                     {
                         Clave = reader.GetString(reader.GetOrdinal("GrupoClave")),
-                        Etiqueta = reader.GetString(reader.GetOrdinal("GrupoNombre")),
-                        Fecha = NullableDate(reader, "FechaGrupo"),
+                        // Los meses no dependen del idioma del servidor SQL (DATENAME los daba en inglés).
+                        Etiqueta = filter.Agrupacion == SalesReportGrouping.Monthly && groupDate.HasValue
+                            ? MonthLabel(groupDate.Value)
+                            : reader.GetString(reader.GetOrdinal("GrupoNombre")),
+                        Fecha = groupDate,
                         Categoria = NullableString(reader, "Categoria"),
                         TotalVentas = reader.GetDecimal(reader.GetOrdinal("TotalVentas")),
                         Facturas = reader.GetInt32(reader.GetOrdinal("Facturas")),
@@ -173,6 +177,15 @@ namespace Proyecto_Final.Services
 
             return new SellerPerformanceViewModel { Filtro = filter, Filas = rows, Vendedores = sellers };
         }
+
+        private static readonly string[] SpanishMonths =
+        {
+            "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+            "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+        };
+
+        /// <summary>«Octubre 2026»: nombre del mes en español, sin depender de la cultura del servidor.</summary>
+        public static string MonthLabel(DateTime date) => $"{SpanishMonths[date.Month - 1]} {date.Year}";
 
         private static string? NullableString(SqlDataReader reader, string name)
         {
