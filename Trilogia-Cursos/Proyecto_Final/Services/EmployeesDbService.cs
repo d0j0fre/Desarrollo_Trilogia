@@ -165,19 +165,14 @@ namespace Proyecto_Final.Services
                 CommandType = CommandType.StoredProcedure
             };
 
-            AddEmployeeFormParameters(command, model, includePassword: true);
+            AddEmployeeFormParameters(command, model);
+            AddCredentialHash(command, model.Contrasena);
             command.Parameters.Add("@UsuarioCambioId", SqlDbType.Int).Value = usuarioCambioId.HasValue && usuarioCambioId.Value > 0 ? usuarioCambioId.Value : DBNull.Value;
             command.Parameters.Add("@UsuarioCambioNombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(usuarioCambioNombre) ? DBNull.Value : usuarioCambioNombre.Trim();
 
             await connection.OpenAsync();
             await using var transaction = (SqlTransaction)await connection.BeginTransactionAsync();
             command.Transaction = transaction;
-            if (await ProcedureHasParameterAsync(connection, transaction, "sp_Admin_CreateEmployee", "@ContrasenaHash"))
-            {
-                if (string.IsNullOrWhiteSpace(model.Contrasena)) throw new InvalidOperationException("La contraseña es obligatoria.");
-                command.Parameters.RemoveAt("@Contrasena");
-                command.Parameters.Add("@ContrasenaHash", SqlDbType.NVarChar, 512).Value = HashPassword(model.Contrasena.Trim());
-            }
             var result = await command.ExecuteScalarAsync();
             var employeeId = Convert.ToInt32(result ?? 0);
             await SaveIdentificationAsync(connection, transaction, employeeId, model.Identificacion);
@@ -200,7 +195,7 @@ namespace Proyecto_Final.Services
             };
 
             command.Parameters.Add("@EmpleadoId", SqlDbType.Int).Value = model.EmpleadoId;
-            AddEmployeeFormParameters(command, model, includePassword: false);
+            AddEmployeeFormParameters(command, model);
             command.Parameters.Add("@MotivoCambioSalario", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.MotivoCambioSalario) ? DBNull.Value : model.MotivoCambioSalario.Trim();
             command.Parameters.Add("@UsuarioCambioId", SqlDbType.Int).Value = usuarioCambioId.HasValue && usuarioCambioId.Value > 0 ? usuarioCambioId.Value : DBNull.Value;
             command.Parameters.Add("@UsuarioCambioNombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(usuarioCambioNombre) ? DBNull.Value : usuarioCambioNombre.Trim();
@@ -209,11 +204,8 @@ namespace Proyecto_Final.Services
             await connection.OpenAsync();
             await using var transaction = (SqlTransaction)await connection.BeginTransactionAsync();
             command.Transaction = transaction;
-            if (!await ProcedureHasParameterAsync(connection, transaction, "sp_RRHH_UpdateEmployee", "@Contrasena"))
-            {
-                if (!string.IsNullOrWhiteSpace(model.Contrasena)) throw new InvalidOperationException("La contraseña debe cambiarse desde el flujo de recuperación.");
-                command.Parameters.RemoveAt("@Contrasena");
-            }
+            // La edición no cambia la contraseña: ningún procedimiento recibe una clave en texto (0269).
+            if (!string.IsNullOrWhiteSpace(model.Contrasena)) throw new InvalidOperationException("La contraseña debe cambiarse desde el flujo de recuperación.");
             await using var salaryQuery = new SqlCommand("SELECT COALESCE((SELECT TOP 1 Salario FROM dbo.EmpleadoSalarioVigencias WHERE EmpleadoId=e.EmpleadoId AND FechaVigencia<=CONVERT(date,GETDATE()) ORDER BY FechaVigencia DESC),e.Salario) FROM dbo.Empleados e WITH (UPDLOCK,HOLDLOCK) WHERE EmpleadoId=@id", connection, transaction);
             salaryQuery.Parameters.Add("@id", SqlDbType.Int).Value = model.EmpleadoId;
             var currentSalaryValue = await salaryQuery.ExecuteScalarAsync();
@@ -254,17 +246,14 @@ namespace Proyecto_Final.Services
             await command.ExecuteNonQueryAsync();
         }
 
-        private static async Task<bool> ProcedureHasParameterAsync(SqlConnection connection, SqlTransaction transaction, string procedure, string parameter)
+        /// <summary>
+        /// La clave del empleado nuevo viaja solo como hash PBKDF2 (@ContrasenaHash): el procedimiento ya no
+        /// recibe texto plano (migración 0269). Sin clave no se crea la cuenta.
+        /// </summary>
+        internal static void AddCredentialHash(SqlCommand command, string? password)
         {
-            await using var command = new SqlCommand("SELECT COUNT(*) FROM sys.parameters WHERE object_id=OBJECT_ID(@proc) AND name=@param", connection, transaction);
-            command.Parameters.Add("@proc", SqlDbType.NVarChar, 150).Value = "dbo." + procedure;
-            command.Parameters.Add("@param", SqlDbType.NVarChar, 150).Value = parameter;
-            return Convert.ToInt32(await command.ExecuteScalarAsync()) == 1;
-        }
-
-        private static string HashPassword(string password)
-        {
-            return PasswordHasher.Hash(password);
+            if (string.IsNullOrWhiteSpace(password)) throw new InvalidOperationException("La contraseña es obligatoria.");
+            command.Parameters.Add("@ContrasenaHash", SqlDbType.NVarChar, 512).Value = PasswordHasher.Hash(password.Trim());
         }
 
         public async Task<bool> ToggleEmployeeStatusAsync(int empleadoId)
@@ -555,20 +544,11 @@ namespace Proyecto_Final.Services
             return history;
         }
 
-        private static void AddEmployeeFormParameters(SqlCommand command, EmployeeFormViewModel model, bool includePassword)
+        private static void AddEmployeeFormParameters(SqlCommand command, EmployeeFormViewModel model)
         {
             command.Parameters.Add("@PerfilId", SqlDbType.Int).Value = model.PerfilId;
             command.Parameters.Add("@NombreCompleto", SqlDbType.NVarChar, 150).Value = model.NombreCompleto.Trim();
             command.Parameters.Add("@Correo", SqlDbType.NVarChar, 150).Value = model.Correo.Trim();
-
-            if (includePassword)
-            {
-                command.Parameters.Add("@Contrasena", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.Contrasena) ? DBNull.Value : model.Contrasena.Trim();
-            }
-            else
-            {
-                command.Parameters.Add("@Contrasena", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.Contrasena) ? DBNull.Value : model.Contrasena.Trim();
-            }
 
             command.Parameters.Add("@Telefono", SqlDbType.NVarChar, 30).Value = string.IsNullOrWhiteSpace(model.Telefono) ? DBNull.Value : model.Telefono.Trim();
             command.Parameters.Add("@Direccion", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.Direccion) ? DBNull.Value : model.Direccion.Trim();
