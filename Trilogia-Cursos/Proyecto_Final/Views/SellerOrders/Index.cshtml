@@ -379,8 +379,11 @@
             const pendingOrdersPanel = document.getElementById('pendingOrdersPanel');
             const pendingOrdersList = document.getElementById('pendingOrdersList');
             const offlineMessage = document.getElementById('sellerOfflineMessage');
-            const storageKey = 'distribuidorajj_seller_offline_orders_v1';
-            const catalogKey = 'distribuidorajj_seller_catalog_v1';
+            // Pedidos y catálogo sin conexión: por usuario, con vencimiento y borrados al cerrar sesión (secure-offline-storage.js).
+            const storageScope = 'seller-offline-orders-v2';
+            const catalogScope = 'seller-catalog-v2';
+            const storageTtlMs = 24 * 60 * 60 * 1000;
+            const offlineStorage = window.DistribuidoraJJOfflineStorage;
             const syncUrl = '@Url.Action("SyncOffline", "SellerOrders")';
             const catalog = {
                 clientes: @Html.Raw(clientesCatalogoJson),
@@ -430,25 +433,30 @@
             }
 
             function loadOrders() {
-                try {
-                    const raw = localStorage.getItem(storageKey);
-                    return raw ? JSON.parse(raw) : [];
-                } catch (error) {
-                    return [];
-                }
+                const orders = offlineStorage ? offlineStorage.read(storageScope) : null;
+                return Array.isArray(orders) ? orders : [];
             }
 
             function saveOrders(orders) {
-                localStorage.setItem(storageKey, JSON.stringify(orders));
+                if (!offlineStorage) {
+                    showMessage('danger', 'El almacenamiento seguro sin conexión no está disponible.');
+                    return;
+                }
+                if (orders.length === 0) {
+                    offlineStorage.remove(storageScope);
+                } else {
+                    offlineStorage.write(storageScope, orders, storageTtlMs);
+                }
                 renderPendingOrders();
             }
 
             function cacheCatalog() {
-                localStorage.setItem(catalogKey, JSON.stringify({
+                if (!offlineStorage) return;
+                offlineStorage.write(catalogScope, {
                     actualizadoEn: new Date().toISOString(),
                     clientes: catalog.clientes,
                     productos: catalog.productos
-                }));
+                }, storageTtlMs);
             }
 
             function updateConnectionStatus() {
