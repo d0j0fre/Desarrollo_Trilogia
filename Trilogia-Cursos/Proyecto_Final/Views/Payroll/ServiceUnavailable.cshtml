@@ -1,0 +1,12 @@
+@{
+    ViewData["Title"] = "Planilla no disponible";
+}
+<div class="container py-5 text-center">
+    <h1 class="h3">No podemos cargar la planilla en este momento.</h1>
+    <p class="text-muted">El incidente fue registrado. Intente nuevamente en unos minutos.</p>
+    @if (ViewData["TraceId"] is string traceId && !string.IsNullOrWhiteSpace(traceId))
+    {
+        <p class="text-muted"><small>Identificador de seguimiento: <code>@traceId</code></small></p>
+    }
+    <a asp-controller="Payroll" asp-action="Index" class="btn btn-ds-neutral">Volver a planilla</a>
+</div>
