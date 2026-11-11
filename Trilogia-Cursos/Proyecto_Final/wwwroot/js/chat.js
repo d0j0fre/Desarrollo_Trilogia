@@ -33,7 +33,16 @@
 
         connection.on("ReceiveMessage", function (message) {
             if (state.mode === "private" && Number(message.conversacionId) === Number(state.conversationId)) {
-                appendMessage(message, Number(message.remitenteId) === Number(state.currentUserId));
+                const own = Number(message.remitenteId) === Number(state.currentUserId);
+                appendMessage(message, own);
+                // El destinatario con la conversación abierta confirma la recepción: el emisor verá el doble check.
+                if (!own) markConversationRead();
+            }
+        });
+
+        connection.on("MessagesRead", function (conversationId) {
+            if (state.mode === "private" && Number(conversationId) === Number(state.conversationId)) {
+                document.querySelectorAll("#chatMessages .chat-message.sent .chat-ticks").forEach(markTicksRead);
             }
         });
 
@@ -229,7 +238,6 @@
                 input.id = "chatMessageInput";
                 input.maxLength = 1000;
                 input.rows = 2;
-                input.required = true;
                 input.placeholder = "Escriba un mensaje...";
                 const send = document.createElement("button");
                 send.type = "submit";
@@ -248,6 +256,7 @@
                 const data = await requestJson(`/Chat/GetMessages?conversationId=${encodeURIComponent(state.conversationId)}&page=${page}&pageSize=${state.messagePageSize}`);
                 state.currentUserId = data.currentUserId;
                 renderMessages(data.messages || [], false, page);
+                if (page === 1) markConversationRead();
             } catch (error) {
                 showNotice(error.message, "danger");
             }
@@ -329,15 +338,54 @@
             content.textContent = message.contenido || "";
             const time = document.createElement("time");
             time.textContent = formatDate(message.fechaEnvio);
+            if (own && state.mode === "private") {
+                const ticks = document.createElement("span");
+                ticks.className = "chat-ticks";
+                if (message.leido) {
+                    ticks.textContent = " ✓✓";
+                    markTicksRead(ticks);
+                } else {
+                    ticks.textContent = " ✓";
+                    ticks.setAttribute("title", "Enviado");
+                    ticks.setAttribute("aria-label", "Enviado");
+                }
+                time.appendChild(ticks);
+            }
             item.append(content, time);
             return item;
+        }
+
+        function markTicksRead(ticks) {
+            ticks.textContent = " ✓✓";
+            ticks.classList.add("chat-ticks-read");
+            ticks.setAttribute("title", "Recibido");
+            ticks.setAttribute("aria-label", "Recibido");
+        }
+
+        async function markConversationRead() {
+            if (state.mode !== "private" || !state.conversationId) return;
+            try {
+                await ensureConnected();
+                await connection.invoke("MarkConversationRead", Number(state.conversationId));
+            } catch (error) {
+                console.warn("No se pudo confirmar la recepción de los mensajes.", error);
+            }
         }
 
         async function sendMessage(event) {
             event.preventDefault();
             const input = document.getElementById("chatMessageInput");
+            chatWindow.querySelector(".chat-inline-notice")?.remove();
             const content = input?.value.trim();
-            if (!content) return;
+            if (!content) {
+                showNotice("Escriba un mensaje antes de enviar.", "warning");
+                if (input) { input.value = ""; input.focus(); }
+                return;
+            }
+            if (content.length > 1000) {
+                showNotice("El mensaje no puede superar los 1000 caracteres.", "warning");
+                return;
+            }
             input.disabled = true;
             try {
                 if (state.mode === "private") {
@@ -359,12 +407,12 @@
             const body = chatWindow.querySelector(".chat-body");
             body.replaceChildren();
             const form = document.createElement("form");
-            form.className = "chat-search p-2";
+            form.className = "chat-search chat-search-form p-2";
+            form.noValidate = true;
             const input = document.createElement("input");
             input.type = "search";
-            input.minLength = 2;
             input.maxLength = 100;
-            input.required = true;
+            input.setAttribute("aria-label", "Texto a buscar");
             input.placeholder = "Buscar en el historial autorizado...";
             const scope = document.createElement("select");
             scope.setAttribute("aria-label", "Alcance de la búsqueda");
@@ -386,15 +434,32 @@
             back.addEventListener("click", function () {
                 if (previousMode === "private") openConversationFromState(); else openDepartmentFromState();
             });
-            form.append(input, scope, submit, back);
+            const exportButton = document.createElement("button");
+            exportButton.type = "button";
+            exportButton.className = "btn btn-outline-success btn-sm";
+            exportButton.textContent = "Exportar Excel";
+            exportButton.hidden = true;
+            exportButton.addEventListener("click", exportSearchResults);
+            form.append(input, scope, submit, exportButton, back);
             const results = document.createElement("div");
             results.id = "chatSearchResults";
             results.className = "chat-users-list";
             body.append(form, results);
+            const searchState = { last: null, rows: [], exportButton: exportButton };
+            searchStateRef = searchState;
             form.addEventListener("submit", async function (event) {
                 event.preventDefault();
                 const query = input.value.trim();
-                if (query.length < 2) return;
+                body.querySelector(".chat-inline-notice")?.remove();
+                if (query.length < 2) {
+                    results.replaceChildren();
+                    searchState.last = null;
+                    showNotice("Escriba al menos dos caracteres para buscar.", "warning");
+                    input.focus();
+                    return;
+                }
+                searchState.last = { query: query, scope: scope.value, origin: previousMode };
+                searchState.rows = [];
                 await executeSearch(query, scope.value, previousMode, 1);
             });
 
@@ -410,6 +475,8 @@
                         request.departmentId = state.departmentId;
                     }
                     const data = await postForm("/Chat/Search", request);
+                    searchState.rows = page > 1 ? searchState.rows.concat(data.results || []) : (data.results || []);
+                    searchState.exportButton.hidden = searchState.rows.length === 0;
                     renderSearchResults(data.results || [], page > 1);
                     if (Number(data.total) > page * 25) {
                         const more = document.createElement("button");
@@ -425,6 +492,56 @@
                 } catch (error) {
                     showNotice(error.message, "danger");
                 }
+            }
+        }
+
+        let searchStateRef = null;
+
+        // BUG-23-04: descarga en .xlsx todos los resultados de la última búsqueda (no solo la página visible).
+        async function exportSearchResults() {
+            const search = searchStateRef;
+            if (!search || !search.last || !window.XlsxExport) return;
+            const button = search.exportButton;
+            button.disabled = true;
+            try {
+                const last = search.last;
+                const rows = [];
+                const maxRows = 1000;
+                for (let page = 1; rows.length < maxRows; page++) {
+                    const request = { query: last.query, type: "all", page: page, pageSize: 100 };
+                    if (last.scope === "current" && last.origin === "private") {
+                        request.type = "private";
+                        request.conversationId = state.conversationId;
+                    }
+                    if (last.scope === "current" && last.origin === "department") {
+                        request.type = "department";
+                        request.departmentId = state.departmentId;
+                    }
+                    const data = await postForm("/Chat/Search", request);
+                    (data.results || []).forEach(function (result) { rows.push(result); });
+                    if (!data.results || data.results.length < 100 || rows.length >= Number(data.total)) break;
+                }
+                const bold = window.XlsxExport.STYLE.bold;
+                const sheet = [[
+                    { text: "Conversación", style: bold }, { text: "Tipo", style: bold }, { text: "Remitente", style: bold },
+                    { text: "Mensaje", style: bold }, { text: "Fecha y hora (Costa Rica)", style: bold }
+                ]];
+                rows.slice(0, maxRows).forEach(function (result) {
+                    sheet.push([
+                        { text: result.originName || "" },
+                        { text: result.originType === "departamento" ? "Departamento" : "Privado" },
+                        { text: result.senderName || "" },
+                        { text: result.content || "", style: window.XlsxExport.STYLE.wrap },
+                        { text: formatDate(result.sentAt) }
+                    ]);
+                });
+                const stamp = new Date().toISOString().slice(0, 10);
+                window.XlsxExport.download("chat-busqueda-" + stamp + ".xlsx", "Búsqueda", sheet, [28, 14, 26, 60, 22]);
+                if (rows.length > maxRows) showNotice("Se exportaron los primeros " + maxRows + " resultados.", "info");
+            } catch (error) {
+                showNotice(error.message, "danger");
+            } finally {
+                button.disabled = false;
             }
         }
 
@@ -600,8 +717,12 @@
         }
 
         function formatDate(value) {
-            const date = new Date(value);
-            return Number.isNaN(date.getTime()) ? "" : date.toLocaleString("es-CR", { dateStyle: "short", timeStyle: "short" });
+            // FechaEnvio se guarda en UTC; si llega sin zona horaria se interpreta como UTC y se muestra en hora de Costa Rica (UTC−6).
+            const text = typeof value === "string" && !/(Z|[+-]\d{2}:?\d{2})$/i.test(value) ? value + "Z" : value;
+            const date = new Date(text);
+            return Number.isNaN(date.getTime())
+                ? ""
+                : date.toLocaleString("es-CR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Costa_Rica" });
         }
     });
 })();
