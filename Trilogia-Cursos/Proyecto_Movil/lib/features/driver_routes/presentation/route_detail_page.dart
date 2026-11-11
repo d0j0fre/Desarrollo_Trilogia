@@ -9,6 +9,7 @@ import '../../../shared/utils/navigation_launcher.dart';
 import '../application/routes_controller.dart';
 import '../domain/delivery.dart';
 import '../domain/route.dart';
+import 'delivery_confirm_sheet.dart';
 import 'route_map.dart';
 
 class RouteDetailPage extends ConsumerWidget {
@@ -454,17 +455,15 @@ class DeliveryCard extends ConsumerWidget {
   }
 
   Future<void> _marcarEntregado(BuildContext context, WidgetRef ref) async {
-    final confirmado = await confirmSheet(
+    // G3-04: la confirmacion ofrece foto y firma del cliente (opcionales, como
+    // en la web). `null` es que el chofer cancelo.
+    final evidencias = await showDeliveryConfirmSheet(
       context,
-      title: 'Confirmar entrega',
-      message:
-          'Vas a marcar el pedido #${delivery.pedidoId} de ${delivery.cliente} como entregado. '
-          'Se le va a avisar al cliente.',
-      confirmLabel: 'Sí, fue entregado',
-      icon: Icons.check_circle_outline_rounded,
+      pedidoId: delivery.pedidoId,
+      cliente: delivery.cliente,
     );
 
-    if (!confirmado) return;
+    if (evidencias == null) return;
 
     await ref
         .read(routeDetailProvider(rutaId).notifier)
@@ -472,12 +471,19 @@ class DeliveryCard extends ConsumerWidget {
           rutaPedidoId: delivery.rutaPedidoId,
           pedidoId: delivery.pedidoId,
           estado: DeliveryStatus.entregado,
+          evidencias: evidencias,
         );
 
     if (context.mounted) {
+      final adjuntos = evidencias.length;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Pedido #${delivery.pedidoId} marcado como entregado.'),
+          content: Text(
+            adjuntos == 0
+                ? 'Pedido #${delivery.pedidoId} marcado como entregado.'
+                : 'Pedido #${delivery.pedidoId} marcado como entregado, con '
+                      '$adjuntos ${adjuntos == 1 ? "archivo de evidencia" : "archivos de evidencia"}.',
+          ),
         ),
       );
     }

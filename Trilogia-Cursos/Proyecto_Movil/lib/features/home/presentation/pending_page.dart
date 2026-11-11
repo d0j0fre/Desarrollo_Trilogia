@@ -176,6 +176,7 @@ class _EntryCard extends ConsumerWidget {
     'compra_recepcion' => Icons.move_to_inbox_rounded,
     'pedido_preparado' => Icons.inventory_rounded,
     'venta' => Icons.shopping_cart_outlined,
+    'evidencia' => Icons.photo_camera_outlined,
     _ => Icons.cloud_upload_outlined,
   };
 
