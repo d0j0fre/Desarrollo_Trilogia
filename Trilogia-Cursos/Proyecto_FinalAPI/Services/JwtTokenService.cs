@@ -15,7 +15,8 @@ namespace Proyecto_FinalAPI.Services
             string email,
             string fullName,
             string role,
-            IReadOnlyCollection<string> permissions);
+            IReadOnlyCollection<string> permissions,
+            string? securityStamp = null);
     }
 
     /// <summary>
@@ -29,6 +30,12 @@ namespace Proyecto_FinalAPI.Services
     public sealed class JwtTokenService : IJwtTokenService
     {
         public const string PermissionClaimType = "perm";
+
+        /// <summary>
+        /// Sello de seguridad del usuario al emitir el token. La API compara este claim con el sello vigente en cada
+        /// request: si el usuario se inactivó, cambió de perfil o de contraseña, el token deja de valer aunque no haya vencido.
+        /// </summary>
+        public const string SecurityStampClaimType = "stamp";
 
         private readonly JwtOptions _options;
         private readonly IJwtSigningKeyProvider _signingKey;
@@ -49,7 +56,8 @@ namespace Proyecto_FinalAPI.Services
             string email,
             string fullName,
             string role,
-            IReadOnlyCollection<string> permissions)
+            IReadOnlyCollection<string> permissions,
+            string? securityStamp = null)
         {
             if (userId <= 0) throw new ArgumentOutOfRangeException(nameof(userId));
 
@@ -65,6 +73,11 @@ namespace Proyecto_FinalAPI.Services
                 new(ClaimTypes.Name, fullName ?? string.Empty),
                 new(ClaimTypes.Role, role ?? string.Empty)
             };
+
+            if (!string.IsNullOrWhiteSpace(securityStamp))
+            {
+                claims.Add(new Claim(SecurityStampClaimType, securityStamp));
+            }
 
             foreach (var permission in permissions ?? Array.Empty<string>())
             {

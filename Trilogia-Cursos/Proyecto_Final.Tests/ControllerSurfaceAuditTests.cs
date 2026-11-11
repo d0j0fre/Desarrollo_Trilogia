@@ -135,7 +135,9 @@ public sealed class ControllerSurfaceAuditTests
         Assert.Contains("InvalidCheckout", cart, StringComparison.Ordinal);
         Assert.Contains("StatusCodes.Status422UnprocessableEntity", cart, StringComparison.Ordinal);
         Assert.Contains("StatusCodes.Status503ServiceUnavailable", payroll, StringComparison.Ordinal);
-        Assert.Contains("return UnprocessableEntity", payroll, StringComparison.Ordinal);
+        // G1-04: las acciones de Planilla ya no responden JSON 422; vuelven a la pantalla con un mensaje rojo legible.
+        Assert.DoesNotContain("return UnprocessableEntity", payroll, StringComparison.Ordinal);
+        Assert.Contains("TempData[\"ErrorMessage\"]", payroll, StringComparison.Ordinal);
     }
 
     private static IReadOnlyList<Type> GetControllers() => typeof(HomeController).Assembly

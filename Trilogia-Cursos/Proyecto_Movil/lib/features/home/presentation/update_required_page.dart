@@ -86,7 +86,7 @@ class UpdateRequiredPage extends ConsumerWidget {
                       const Center(child: BrandLogo(size: 104)),
                       const SizedBox(height: 28),
                       const Text(
-                        'Necesitás actualizar',
+                        'Necesita actualizar',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: BrandColors.white,
@@ -98,7 +98,7 @@ class UpdateRequiredPage extends ConsumerWidget {
                       Text(
                         gate?.mandatoryMessage ??
                             'Esta versión de la aplicación ya no se puede usar. '
-                                'Descargá la nueva para seguir trabajando.',
+                                'Descargue la nueva para seguir trabajando.',
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           color: BrandColors.white,

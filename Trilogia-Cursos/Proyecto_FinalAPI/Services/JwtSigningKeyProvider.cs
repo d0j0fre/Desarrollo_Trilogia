@@ -40,7 +40,7 @@ namespace Proyecto_FinalAPI.Services
                     throw new InvalidOperationException(
                         $"Jwt:SigningKey debe tener al menos {JwtOptions.MinimumSigningKeyBytes} bytes " +
                         $"({JwtOptions.MinimumSigningKeyBytes} caracteres ASCII). " +
-                        "Generá una con: openssl rand -base64 48");
+                        "Genere una con: openssl rand -base64 48");
                 }
 
                 Key = new SymmetricSecurityKey(bytes);

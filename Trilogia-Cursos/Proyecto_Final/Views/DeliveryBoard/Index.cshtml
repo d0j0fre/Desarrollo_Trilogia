@@ -4,7 +4,7 @@
 }
 
 <div class="container-fluid pt-4 backoffice-page" data-snapshot-url="@Url.Action("Snapshot", "DeliveryBoard")">
-    <div class="row px-xl-5"><div class="col-12 d-flex justify-content-between align-items-start"><div><h2>Tablero de entregas</h2><p>Estado operativo actualizado automáticamente cada 15 segundos (CU-084).</p></div><small id="board-updated" class="text-muted">Actualizado: @Model.GeneradoUtc.ToLocalTime().ToString("HH:mm:ss")</small></div></div>
+    <div class="row px-xl-5"><div class="col-12 d-flex justify-content-between align-items-start"><div><h2>Tablero de entregas</h2><p>Estado operativo actualizado automáticamente cada 15 segundos.</p></div><small id="board-updated" class="text-muted">Actualizado: @Model.GeneradoUtc.ToLocalTime().ToString("HH:mm:ss")</small></div></div>
     <div class="row px-xl-5 mb-4">
         <div class="col-md"><div class="card mb-2"><div class="card-body"><small>Rutas activas</small><h3 id="active-routes">@Model.RutasActivas</h3></div></div></div>
         <div class="col-md"><div class="card mb-2"><div class="card-body"><small>En ruta</small><h3 id="in-route-orders">@Model.PedidosEnRuta</h3></div></div></div>

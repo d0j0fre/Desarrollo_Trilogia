@@ -133,7 +133,7 @@ class SettingsPage extends ConsumerWidget {
               title: const Text('Avisos en el teléfono'),
               subtitle: Text(switch (ref.watch(_notificationsEnabledProvider).value) {
                 true => 'Activados: rutas asignadas y mensajes directos llegan a la bandeja del teléfono.',
-                false => 'Desactivados. Tocá para permitirlos.',
+                false => 'Desactivados. Toque para permitirlos.',
                 null => '…',
               }),
               isThreeLine: true,
@@ -220,9 +220,9 @@ class SettingsPage extends ConsumerWidget {
       context,
       title: 'Cerrar sesión',
       message: pendientes > 0
-          ? 'Tenés $pendientes ${pendientes == 1 ? "acción que todavía no se envió" : "acciones que todavía no se enviaron"}. '
-                'Si cerrás sesión se van a borrar del teléfono junto con tus rutas.'
-          : 'Se van a borrar del teléfono tus rutas guardadas. Podés volver a '
+          ? 'Tiene $pendientes ${pendientes == 1 ? "acción que todavía no se envió" : "acciones que todavía no se enviaron"}. '
+                'Si cierra sesión se van a borrar del teléfono junto con sus rutas.'
+          : 'Se van a borrar del teléfono sus rutas guardadas. Puede volver a '
                 'entrar cuando quieras.',
       confirmLabel: 'Cerrar sesión',
       confirmColor: BrandColors.danger,

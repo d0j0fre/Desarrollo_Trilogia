@@ -44,7 +44,7 @@ class RouteDetailPage extends ConsumerWidget {
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, _) => ErrorView(
                 message:
-                    'Esta ruta ya no está disponible para vos. Puede que operaciones la haya reasignado.',
+                    'Esta ruta ya no está disponible para usted. Puede que operaciones la haya reasignado.',
                 onRetry: () =>
                     ref.read(routeDetailProvider(rutaId).notifier).refresh(),
               ),
@@ -52,7 +52,7 @@ class RouteDetailPage extends ConsumerWidget {
                   ? const EmptyState(
                       icon: Icons.route_rounded,
                       title: 'Ruta no encontrada',
-                      message: 'Volvé a la lista y actualizá.',
+                      message: 'Vuelva a la lista y actualice.',
                     )
                   : _RouteBody(route: route, rutaId: rutaId),
             ),
@@ -627,7 +627,7 @@ class _MotivoSheetState extends State<_MotivoSheet> {
                   maxLines: 2,
                   onChanged: (_) => setState(() {}),
                   decoration: const InputDecoration(
-                    labelText: 'Escribí el motivo',
+                    labelText: 'Escriba el motivo',
                   ),
                 ),
               ],

@@ -23,8 +23,8 @@
                 <div class="s4-auth-brand-copy">
                     <span class="s4-auth-brand-name">Supermercado Mayoreo</span>
                     <small class="s4-auth-brand-subtitle">Licorera - Distribuidora</small>
-                    <h1>Crea tu cuenta</h1>
-                    <p>Compra más rápido y consulta tus pedidos desde el portal del cliente.</p>
+                    <h1>Cree su cuenta</h1>
+                    <p>Compre más rápido y consulte sus pedidos desde el portal del cliente.</p>
                 </div>
             </div>
 
@@ -32,7 +32,7 @@
                 <div class="s4-auth-card-title">
                     <span>Nueva cuenta</span>
                     <h2>Registrate en Supermercado Mayoreo</h2>
-                    <p>Completa tus datos para empezar.</p>
+                    <p>Complete sus datos para empezar.</p>
                 </div>
 
                 <form asp-controller="Account" asp-action="Register" method="post" novalidate="novalidate">
@@ -40,7 +40,7 @@
 
                     <div class="control-group mb-3 s4-auth-field">
                         <label asp-for="FullName" class="text-body"></label>
-                        <input asp-for="FullName" class="form-control" placeholder="Tu nombre completo" />
+                        <input asp-for="FullName" class="form-control" placeholder="Su nombre completo" />
                         <span asp-validation-for="FullName" class="text-danger help-block"></span>
                     </div>
 
@@ -52,13 +52,13 @@
 
                     <div class="control-group mb-3 s4-auth-field">
                         <label asp-for="Password" class="text-body"></label>
-                        <input asp-for="Password" class="form-control" placeholder="Crea una contraseña" />
+                        <input asp-for="Password" class="form-control" placeholder="Cree una contraseña" />
                         <span asp-validation-for="Password" class="text-danger help-block"></span>
                     </div>
 
                     <div class="control-group mb-4 s4-auth-field">
                         <label asp-for="ConfirmPassword" class="text-body"></label>
-                        <input asp-for="ConfirmPassword" class="form-control" placeholder="Repetí la contraseña" />
+                        <input asp-for="ConfirmPassword" class="form-control" placeholder="Repita la contraseña" />
                         <span asp-validation-for="ConfirmPassword" class="text-danger help-block"></span>
                     </div>
 
@@ -77,8 +77,8 @@
                     </div>
 
                     <div class="mt-3 text-center s4-auth-switch">
-                        <span class="text-body small">¿Ya tenés cuenta?</span>
-                        <a class="text-primary small font-weight-bold s4-auth-link" asp-controller="Account" asp-action="Login">Inicia sesión</a>
+                        <span class="text-body small">¿Ya tiene cuenta?</span>
+                        <a class="text-primary small font-weight-bold s4-auth-link" asp-controller="Account" asp-action="Login">Inicie sesión</a>
                     </div>
                 </form>
             </section>

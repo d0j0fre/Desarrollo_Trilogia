@@ -1001,6 +1001,64 @@ namespace Proyecto_Final.Services
             return registros;
         }
 
+        /// <summary>Registro general + bitácoras de RR. HH. y planilla (solo lectura), con columnas comunes (G2-29).</summary>
+        public async Task<List<AuditLogViewModel>> GetUnifiedAuditLogsAsync(string? origen, string? modulo, string? accion, string? buscar)
+        {
+            var registros = new List<AuditLogViewModel>();
+
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_GetAuditLogsUnificado", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add("@Origen", SqlDbType.NVarChar, 20).Value = AuditOrigins.Normalize(origen);
+            command.Parameters.Add("@Modulo", SqlDbType.NVarChar, 80).Value = string.IsNullOrWhiteSpace(modulo) ? DBNull.Value : modulo.Trim();
+            command.Parameters.Add("@Accion", SqlDbType.NVarChar, 100).Value = string.IsNullOrWhiteSpace(accion) ? DBNull.Value : accion.Trim();
+            command.Parameters.Add("@Buscar", SqlDbType.NVarChar, 200).Value = string.IsNullOrWhiteSpace(buscar) ? DBNull.Value : buscar.Trim();
+
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                registros.Add(new AuditLogViewModel
+                {
+                    Origen = reader.IsDBNull(0) ? AuditOrigins.GeneralLabel : reader.GetString(0),
+                    AuditoriaId = reader.IsDBNull(1) ? 0 : (int)reader.GetInt64(1),
+                    UsuarioId = reader.IsDBNull(2) ? null : reader.GetInt32(2),
+                    UsuarioNombre = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
+                    UsuarioCorreo = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
+                    Rol = reader.IsDBNull(5) ? string.Empty : reader.GetString(5),
+                    Accion = reader.IsDBNull(6) ? string.Empty : reader.GetString(6),
+                    Modulo = reader.IsDBNull(7) ? string.Empty : reader.GetString(7),
+                    Descripcion = reader.IsDBNull(8) ? string.Empty : reader.GetString(8),
+                    DireccionIp = reader.IsDBNull(9) ? null : reader.GetString(9),
+                    UserAgent = reader.IsDBNull(10) ? null : reader.GetString(10),
+                    FechaRegistro = reader.IsDBNull(11) ? DateTime.MinValue : reader.GetDateTime(11)
+                });
+            }
+
+            return registros;
+        }
+
+        /// <summary>Módulos y acciones que existen de verdad en las bitácoras, para llenar las listas de filtro.</summary>
+        public async Task<(List<string> Modulos, List<string> Acciones)> GetAuditFilterOptionsAsync()
+        {
+            var modulos = new List<string>();
+            var acciones = new List<string>();
+
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_GetAuditFilterOptions", connection) { CommandType = CommandType.StoredProcedure };
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                var tipo = reader.GetString(0);
+                var valor = reader.GetString(1);
+                (tipo == "modulo" ? modulos : acciones).Add(valor);
+            }
+
+            return (modulos, acciones);
+        }
+
         public async Task CreateAuditLogAsync(int? usuarioId, string? usuarioNombre, string? usuarioCorreo, string? rol, string accion, string modulo, string descripcion, string? direccionIp, string? userAgent)
         {
             try
@@ -1291,7 +1349,8 @@ namespace Proyecto_Final.Services
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.Add("@NombreCompleto", SqlDbType.NVarChar, 150).Value = model.NombreCompleto.Trim();
                 command.Parameters.Add("@Correo", SqlDbType.NVarChar, 150).Value = model.Correo.Trim();
-                command.Parameters.Add("@Contrasena", SqlDbType.NVarChar, 255).Value = (model.Contrasena ?? string.Empty).Trim();
+                // La contraseña viaja como hash PBKDF2: nunca en texto plano (migración 0310).
+                command.Parameters.Add("@ContrasenaHash", SqlDbType.NVarChar, 512).Value = PasswordHasher.Hash((model.Contrasena ?? string.Empty).Trim());
                 command.Parameters.Add("@Telefono", SqlDbType.NVarChar, 30).Value = string.IsNullOrWhiteSpace(model.Telefono) ? DBNull.Value : model.Telefono.Trim();
                 command.Parameters.Add("@Direccion", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.Direccion) ? DBNull.Value : model.Direccion.Trim();
                 command.Parameters.Add("@Activo", SqlDbType.Bit).Value = model.Activo;
@@ -1319,7 +1378,7 @@ namespace Proyecto_Final.Services
                 command.Parameters.Add("@Correo", SqlDbType.NVarChar, 150).Value = model.Correo.Trim();
                 command.Parameters.Add("@Telefono", SqlDbType.NVarChar, 30).Value = string.IsNullOrWhiteSpace(model.Telefono) ? DBNull.Value : model.Telefono.Trim();
                 command.Parameters.Add("@Direccion", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.Direccion) ? DBNull.Value : model.Direccion.Trim();
-                command.Parameters.Add("@Contrasena", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.Contrasena) ? DBNull.Value : model.Contrasena.Trim();
+                command.Parameters.Add("@ContrasenaHash", SqlDbType.NVarChar, 512).Value = string.IsNullOrWhiteSpace(model.Contrasena) ? DBNull.Value : PasswordHasher.Hash(model.Contrasena.Trim());
                 command.Parameters.Add("@Activo", SqlDbType.Bit).Value = model.Activo;
                 command.Parameters.Add("@MotivoInactivacion", SqlDbType.NVarChar, 255).Value = string.IsNullOrWhiteSpace(model.MotivoInactivacion) ? DBNull.Value : model.MotivoInactivacion.Trim();
 
@@ -2065,16 +2124,21 @@ namespace Proyecto_Final.Services
             await connection.OpenAsync();
 
             const string ingresosQuery = """
+        -- Misma definición de «venta» que el Reporte de ventas y el Tablero gerencial:
+        -- facturas no anuladas, por su fecha de factura y con IVA (Total).
         SELECT
-            PedidoId,
-            FechaPago,
-            MetodoPago,
-            Total
-        FROM dbo.Pedidos
-        WHERE EstadoPago = N'Confirmado simulado'
-          AND (@FechaInicio IS NULL OR FechaPago >= @FechaInicio)
-          AND (@FechaFin IS NULL OR FechaPago < DATEADD(DAY, 1, @FechaFin))
-        ORDER BY FechaPago DESC;
+            f.FacturaId,
+            f.PedidoId,
+            f.NumeroFactura,
+            f.FechaFactura,
+            p.MetodoPago,
+            f.Total
+        FROM dbo.Facturas f
+        LEFT JOIN dbo.Pedidos p ON p.PedidoId = f.PedidoId
+        WHERE f.Estado <> N'Anulada'
+          AND (@FechaInicio IS NULL OR f.FechaFactura >= @FechaInicio)
+          AND (@FechaFin IS NULL OR f.FechaFactura < DATEADD(DAY, 1, @FechaFin))
+        ORDER BY f.FechaFactura DESC;
         """;
 
             await using (var command = new SqlCommand(ingresosQuery, connection))
@@ -2093,17 +2157,23 @@ namespace Proyecto_Final.Services
 
                 while (await reader.ReadAsync())
                 {
+                    var facturaId = reader.GetInt32(reader.GetOrdinal("FacturaId"));
                     var pedidoId = reader.GetInt32(reader.GetOrdinal("PedidoId"));
                     var monto = reader.GetDecimal(reader.GetOrdinal("Total"));
-                    var metodoPago = reader.GetString(reader.GetOrdinal("MetodoPago"));
+                    var numeroOrdinal = reader.GetOrdinal("NumeroFactura");
+                    var metodoOrdinal = reader.GetOrdinal("MetodoPago");
+                    var numero = reader.IsDBNull(numeroOrdinal) ? $"#{facturaId}" : reader.GetString(numeroOrdinal);
+                    var metodoPago = reader.IsDBNull(metodoOrdinal) ? null : reader.GetString(metodoOrdinal);
 
                     modelo.Movimientos.Add(new FinancialMovementViewModel
                     {
-                        MovimientoId = pedidoId,
-                        Fecha = reader.GetDateTime(reader.GetOrdinal("FechaPago")),
+                        MovimientoId = facturaId,
+                        Fecha = reader.GetDateTime(reader.GetOrdinal("FechaFactura")),
                         Tipo = "Ingreso",
-                        Descripcion = "Venta realizada",
-                        Referencia = $"Pedido #{pedidoId} - {metodoPago}",
+                        Descripcion = "Venta facturada",
+                        Referencia = string.IsNullOrWhiteSpace(metodoPago)
+                            ? $"Factura {numero} - Pedido #{pedidoId}"
+                            : $"Factura {numero} - Pedido #{pedidoId} - {metodoPago}",
                         Monto = monto
                     });
 

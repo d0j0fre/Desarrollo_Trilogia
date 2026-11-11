@@ -18,12 +18,12 @@ void main() {
         icon: 'picking',
         enabled: true,
         section: 'Bodega',
-        description: 'Alistá los pedidos',
+        description: 'Alista los pedidos',
       );
 
       final restored = AppModule.fromJson(module.toJson());
       expect(restored.section, 'Bodega');
-      expect(restored.description, 'Alistá los pedidos');
+      expect(restored.description, 'Alista los pedidos');
     });
 
     test('capacidades guardadas por la versión anterior siguen leyéndose', () {
@@ -90,7 +90,7 @@ void main() {
 
     test('los estados de la base se muestran legibles', () {
       expect(Fmt.status('EnProceso'), 'En proceso');
-      expect(Fmt.status('CerradaConDiscrepancia'), 'Con discrepancia');
+      expect(Fmt.status('CerradaConDiscrepancia'), 'Cerrada con discrepancia');
       expect(Fmt.status('Entregado'), 'Entregado');
     });
 

@@ -12,6 +12,9 @@ public interface IPayrollService
     Task CalculateAsync(PayrollCalculationRequestViewModel model, int actorId, string actorName, CancellationToken cancellationToken);
     Task ChangeStateAsync(PayrollStateChangeViewModel model, int actorId, string actorName, CancellationToken cancellationToken);
     Task<List<PayrollListItemViewModel>> ListAsync(CancellationToken cancellationToken);
+    Task<List<PayrollRuleViewModel>> ListRulesAsync(CancellationToken cancellationToken);
+    Task<List<PayrollPeriodOptionViewModel>> ListOpenPeriodsAsync(CancellationToken cancellationToken);
+    Task<List<PayrollEmployeeOptionViewModel>> ListActiveEmployeesAsync(CancellationToken cancellationToken);
 }
 
 public sealed class PayrollDbService : IPayrollService
@@ -26,7 +29,7 @@ public sealed class PayrollDbService : IPayrollService
         await using var command = Command(connection, "dbo.sp_Payroll_CrearPeriodo");
         command.Parameters.Add("@Tipo", SqlDbType.NVarChar, 20).Value = model.Tipo;
         command.Parameters.Add("@Desde", SqlDbType.Date).Value = model.Desde.Date; command.Parameters.Add("@Hasta", SqlDbType.Date).Value = model.Hasta.Date;
-        AddRate(command, "@FactorSalario", model.FactorSalario);
+        AddFactor(command, "@FactorSalario", model.FactorSalario);
         command.Parameters.Add("@FuenteConfiguracion", SqlDbType.NVarChar, 500).Value = model.FuenteConfiguracion.Trim();
         Actor(command, actorId, actorName); await connection.OpenAsync(cancellationToken);
         return Convert.ToInt32(await command.ExecuteScalarAsync(cancellationToken));
@@ -37,7 +40,7 @@ public sealed class PayrollDbService : IPayrollService
         await using var connection = new SqlConnection(_connectionString); await using var command = Command(connection, "dbo.sp_Payroll_GuardarRegla");
         command.Parameters.Add("@Codigo", SqlDbType.NVarChar, 50).Value = model.Codigo.Trim().ToUpperInvariant(); command.Parameters.Add("@Nombre", SqlDbType.NVarChar, 150).Value = model.Nombre.Trim();
         command.Parameters.Add("@Tipo", SqlDbType.NVarChar, 20).Value = model.Tipo; command.Parameters.Add("@TipoCalculo", SqlDbType.NVarChar, 30).Value = model.TipoCalculo;
-        AddRate(command, "@Valor", model.Valor); AddMoney(command, "@Tope", model.Tope);
+        AddRuleValue(command, "@Valor", model.ValorAlmacenado); AddMoney(command, "@Tope", model.Tope);
         command.Parameters.Add("@VigenteDesde", SqlDbType.Date).Value = model.VigenteDesde.Date; command.Parameters.Add("@VigenteHasta", SqlDbType.Date).Value = model.VigenteHasta?.Date ?? (object)DBNull.Value;
         command.Parameters.Add("@Fuente", SqlDbType.NVarChar, 500).Value = model.Fuente.Trim(); Actor(command, actorId, actorName);
         await connection.OpenAsync(cancellationToken); await command.ExecuteNonQueryAsync(cancellationToken);
@@ -79,6 +82,43 @@ public sealed class PayrollDbService : IPayrollService
         }); return items;
     }
 
+    public async Task<List<PayrollRuleViewModel>> ListRulesAsync(CancellationToken cancellationToken)
+    {
+        var rules = new List<PayrollRuleViewModel>();
+        await using var connection = new SqlConnection(_connectionString); await using var command = Command(connection, "dbo.sp_Payroll_ListarReglas");
+        await connection.OpenAsync(cancellationToken); await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken)) rules.Add(new PayrollRuleViewModel
+        {
+            ReglaId=reader.GetInt32(0),Codigo=reader.GetString(1),Nombre=reader.GetString(2),Tipo=reader.GetString(3),TipoCalculo=reader.GetString(4),Valor=reader.GetDecimal(5),
+            Tope=reader.IsDBNull(6)?null:reader.GetDecimal(6),VigenteDesde=reader.GetDateTime(7),VigenteHasta=reader.IsDBNull(8)?null:reader.GetDateTime(8),Fuente=reader.GetString(9)
+        });
+        return rules;
+    }
+
+    public async Task<List<PayrollPeriodOptionViewModel>> ListOpenPeriodsAsync(CancellationToken cancellationToken)
+    {
+        var periods = new List<PayrollPeriodOptionViewModel>();
+        await using var connection = new SqlConnection(_connectionString); await using var command = Command(connection, "dbo.sp_Payroll_ListarPeriodosAbiertos");
+        await connection.OpenAsync(cancellationToken); await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken)) periods.Add(new PayrollPeriodOptionViewModel
+        {
+            PeriodoId=reader.GetInt32(0),Tipo=reader.GetString(1),Desde=reader.GetDateTime(2),Hasta=reader.GetDateTime(3),FactorSalario=reader.GetDecimal(4)
+        });
+        return periods;
+    }
+
+    public async Task<List<PayrollEmployeeOptionViewModel>> ListActiveEmployeesAsync(CancellationToken cancellationToken)
+    {
+        var employees = new List<PayrollEmployeeOptionViewModel>();
+        await using var connection = new SqlConnection(_connectionString); await using var command = Command(connection, "dbo.sp_Payroll_ListarEmpleadosActivos");
+        await connection.OpenAsync(cancellationToken); await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken)) employees.Add(new PayrollEmployeeOptionViewModel
+        {
+            EmpleadoId=reader.GetInt32(0),NombreCompleto=reader.GetString(1),Puesto=reader.IsDBNull(2)?string.Empty:reader.GetString(2)
+        });
+        return employees;
+    }
+
     private static async Task<PayrollCalculationInput> LoadInputAsync(SqlConnection connection, PayrollCalculationRequestViewModel request, CancellationToken cancellationToken)
     {
         await using var command = Command(connection, "dbo.sp_Payroll_ObtenerEntradaCalculo"); command.Parameters.Add("@PeriodoId", SqlDbType.Int).Value=request.PeriodoId; command.Parameters.Add("@EmpleadoId", SqlDbType.Int).Value=request.EmpleadoId;
@@ -111,5 +151,8 @@ public sealed class PayrollDbService : IPayrollService
     private static void Actor(SqlCommand command,int id,string name){command.Parameters.Add("@ActorUsuarioId",SqlDbType.Int).Value=id;command.Parameters.Add("@ActorNombre",SqlDbType.NVarChar,150).Value=name;}
     private static void AddMoney(SqlCommand command,string name,decimal? value){var p=command.Parameters.Add(name,SqlDbType.Decimal);p.Precision=18;p.Scale=2;p.Value=value??(object)DBNull.Value;}
     private static void AddHours(SqlCommand command,string name,decimal value){var p=command.Parameters.Add(name,SqlDbType.Decimal);p.Precision=8;p.Scale=2;p.Value=value;}
-    private static void AddRate(SqlCommand command,string name,decimal value){var p=command.Parameters.Add(name,SqlDbType.Decimal);p.Precision=9;p.Scale=6;p.Value=value;}
+    /// <summary>Factor salarial del período: la columna es decimal(9,6) (0 &lt; factor ≤ 1).</summary>
+    private static void AddFactor(SqlCommand command,string name,decimal value){var p=command.Parameters.Add(name,SqlDbType.Decimal);p.Precision=9;p.Scale=6;p.Value=value;}
+    /// <summary>Valor de una regla: la columna y el parámetro son decimal(18,6); con (9,6) un monto de 1000 o más fallaba (G1-02).</summary>
+    private static void AddRuleValue(SqlCommand command,string name,decimal value){var p=command.Parameters.Add(name,SqlDbType.Decimal);p.Precision=18;p.Scale=6;p.Value=value;}
 }

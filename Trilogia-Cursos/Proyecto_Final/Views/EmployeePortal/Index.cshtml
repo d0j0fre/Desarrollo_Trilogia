@@ -43,7 +43,7 @@
                 <h4 class="employee-card-title"><i class="fa fa-clipboard-check mr-1"></i>Mis responsabilidades</h4>
                 @if (string.IsNullOrWhiteSpace(perfil.Responsabilidades))
                 {
-                    <p class="text-muted mb-0">Aún no tenés responsabilidades registradas.</p>
+                    <p class="text-muted mb-0">Aún no tiene responsabilidades registradas.</p>
                 }
                 else
                 {
@@ -59,7 +59,7 @@
                 <h4 class="employee-card-title"><i class="fa fa-tasks mr-1"></i>Mis tareas</h4>
                 @if (!Model.Tareas.Any())
                 {
-                    <p class="text-muted mb-0">No tenés tareas asignadas.</p>
+                    <p class="text-muted mb-0">No tiene tareas asignadas.</p>
                 }
                 else
                 {
@@ -130,7 +130,7 @@
         <h4 class="employee-card-title"><i class="fa fa-history mr-1"></i>Mis solicitudes</h4>
         @if (!Model.Solicitudes.Any())
         {
-            <p class="text-muted mb-0">No tenés solicitudes registradas.</p>
+            <p class="text-muted mb-0">No tiene solicitudes registradas.</p>
         }
         else
         {

@@ -18,7 +18,7 @@ class SystemNotifier {
   static const _channel = AndroidNotificationDetails(
     'avisos',
     'Avisos',
-    channelDescription: 'Rutas asignadas, mensajes directos y otros avisos de tu cuenta',
+    channelDescription: 'Rutas asignadas, mensajes directos y otros avisos de su cuenta',
     importance: Importance.high,
     priority: Priority.high,
   );

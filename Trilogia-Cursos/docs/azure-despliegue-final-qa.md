@@ -124,6 +124,13 @@ Variables requeridas:
 | `ConnectionStrings__DefaultConnection` | Connection string a Azure SQL DEV con `<sql-user>` y `<sql-password>` | Si |
 | `ConfiguracionCorreo__Remitente` | Cuenta SMTP que envía consultas, comprobantes y boletas | No |
 | `ConfiguracionCorreo__Contrasenna` | Contraseña de aplicación SMTP (rotada tras el incidente del 2026-07-22) | Si |
+| `PaySlips__PublicBaseUrl` | URL HTTPS pública del MVC (por ejemplo `https://web-trilogia-cursos-dev-cr01.azurewebsites.net`); es la base del enlace al portal privado que lleva el correo de «Notificar» en Boletas de pago | No |
+
+Sin `PaySlips__PublicBaseUrl` (o si no es HTTPS) la pantalla Personal → Boletas de pago no envía la
+notificación y lo explica: «falta configurar la URL pública del sitio (PaySlips:PublicBaseUrl…)». En
+local el valor sale de `appsettings.Development.json` (`https://localhost:7250`); no se guarda
+ningún secreto en ese archivo. Sin las variables de correo la misma pantalla indica que el correo del
+sistema no está configurado; la boleta permanece disponible en el portal en ambos casos.
 
 Sin las variables de correo, Contacto, Facturación, Tienda y Venta móvil muestran
 que no fue posible enviar el correo. Para pruebas locales sin SMTP se puede definir

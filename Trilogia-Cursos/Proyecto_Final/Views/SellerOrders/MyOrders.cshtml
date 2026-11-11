@@ -31,7 +31,7 @@
             <div class="admin-page-header d-flex flex-column flex-md-row justify-content-between align-items-md-center">
                 <div>
                     <h2 class="mb-1">Mis pedidos</h2>
-                    <p class="mb-0">Seguimiento de los pedidos que has registrado, incluyendo su estado de aprobación.</p>
+                    <p class="mb-0">Seguimiento de los pedidos que ha registrado, incluyendo su estado de aprobación.</p>
                 </div>
                 <a asp-controller="SellerOrders" asp-action="Index" class="btn btn-ds-create mt-3 mt-md-0">
                     <i class="fa fa-plus mr-1"></i> Nuevo pedido
@@ -55,7 +55,7 @@
             {
                 <div class="admin-card text-center py-5">
                     <i class="fa fa-clipboard-list text-muted mb-3" style="font-size:48px;"></i>
-                    <p class="text-muted mb-0">No has registrado ningún pedido todavía.</p>
+                    <p class="text-muted mb-0">No ha registrado ningún pedido todavía.</p>
                 </div>
             }
             else
@@ -94,7 +94,7 @@
                                         <td>₡@pedido.Total.ToString("N2")</td>
                                         <td>
                                             <span class="badge @statusClass" style="font-size:.8rem; padding:5px 10px;">
-                                                @pedido.Estado
+                                                @Proyecto_Final.Services.OrderStatusFlow.Name(pedido.Estado)
                                             </span>
                                         </td>
                                         <td>

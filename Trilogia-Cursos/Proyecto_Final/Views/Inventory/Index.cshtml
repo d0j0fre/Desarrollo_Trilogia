@@ -6,6 +6,9 @@
     var filtro = ViewBag.Filtro as string;
     // El reporte solo lo abren quienes la autorización de InventoryReport deja pasar (mismo mecanismo del menú).
     var puedeVerReporte = await MenuAccess.CanOpenAsync(Context.Session.GetString("UserRole"), "InventoryReport", "Index");
+    // Las acciones de mutación exigen su propio permiso (INVENTARIO_CREAR / INVENTARIO_EDITAR): sin él no se dibujan los botones.
+    var puedeCrear = await MenuAccess.CanSubmitAsync(Context.Session.GetString("UserRole"), "Inventory", "Create");
+    var puedeEditar = await MenuAccess.CanSubmitAsync(Context.Session.GetString("UserRole"), "Inventory", "ToggleStatus");
 }
 
 @section Styles {
@@ -28,9 +31,12 @@
                             <i class="fa fa-file-excel mr-1"></i>Reporte / Exportar
                         </a>
                     }
-                    <a asp-controller="Inventory" asp-action="Create" class="btn btn-ds-create">
-                        <i class="fa fa-plus mr-1"></i>Nuevo producto
-                    </a>
+                    @if (puedeCrear)
+                    {
+                        <a asp-controller="Inventory" asp-action="Create" class="btn btn-ds-create">
+                            <i class="fa fa-plus mr-1"></i>Nuevo producto
+                        </a>
+                    }
                 </div>
             </div>
         </div>
@@ -175,14 +181,21 @@
                                         </td>
                                         <td>@item.Categoria</td>
                                         <td>
-                                            <form asp-controller="Inventory" asp-action="ToggleFeatured" method="post" class="mb-0">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="productoId" value="@item.ProductoId" />
-                                                <input type="hidden" name="filtro" value="@filtro" />
-                                                <button type="submit" class="btn btn-sm @(item.EsDestacado ? "btn-ds-action" : "btn-ds-neutral")">
-                                                    @(item.EsDestacado ? "Sí" : "No")
-                                                </button>
-                                            </form>
+                                            @if (puedeEditar)
+                                            {
+                                                <form asp-controller="Inventory" asp-action="ToggleFeatured" method="post" class="mb-0">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="productoId" value="@item.ProductoId" />
+                                                    <input type="hidden" name="filtro" value="@filtro" />
+                                                    <button type="submit" class="btn btn-sm @(item.EsDestacado ? "btn-ds-action" : "btn-ds-neutral")">
+                                                        @(item.EsDestacado ? "Sí" : "No")
+                                                    </button>
+                                                </form>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge badge-@(item.EsDestacado ? "success" : "secondary")">@(item.EsDestacado ? "Sí" : "No")</span>
+                                            }
                                         </td>
                                         <td>₡@item.Precio.ToString("N2")</td>
                                         <td>
@@ -202,6 +215,8 @@
                                         </td>
                                         <td>
                                             <div class="admin-actions admin-actions--products">
+                                              @if (puedeEditar)
+                                              {
                                                 <a asp-controller="Inventory" asp-action="Edit"
                                                    asp-route-id="@item.ProductoId" class="btn btn-sm btn-ds-edit"><i class="fa fa-edit mr-1"></i>Editar</a>
 
@@ -218,7 +233,7 @@
                                                         <i class="fa @(item.Activo ? "fa-eye-slash" : "fa-eye") mr-1"></i>@(item.Activo ? "Inactivar" : "Reactivar")
                                                     </button>
                                                 </form>
-
+                                              }
                                             </div>
                                         </td>
                                     </tr>

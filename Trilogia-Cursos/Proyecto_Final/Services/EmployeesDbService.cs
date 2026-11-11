@@ -8,7 +8,7 @@ namespace Proyecto_Final.Services
     public interface IEmployeesService
     {
         Task<List<EmployeeRoleOptionViewModel>> GetEmployeeRolesAsync();
-        Task<List<SelectListItem>> GetEmployeeRoleSelectListAsync(int? selectedPerfilId = null);
+        Task<List<SelectListItem>> GetEmployeeRoleSelectListAsync(string? actorRole, int? selectedPerfilId = null);
         Task<List<EmployeeListItemViewModel>> GetEmployeesAsync(string? buscar, string? estado);
         Task<EmployeeFormViewModel?> GetEmployeeFormByIdAsync(int empleadoId);
         Task<EmployeeDetailViewModel?> GetEmployeeDetailAsync(int empleadoId);
@@ -59,9 +59,10 @@ namespace Proyecto_Final.Services
             return roles;
         }
 
-        public async Task<List<SelectListItem>> GetEmployeeRoleSelectListAsync(int? selectedPerfilId = null)
+        public async Task<List<SelectListItem>> GetEmployeeRoleSelectListAsync(string? actorRole, int? selectedPerfilId = null)
         {
-            var roles = await GetEmployeeRolesAsync();
+            // G2-22: cada quien ve solo los roles de nivel menor al suyo; el Administrador ve todos.
+            var roles = EmployeeRolePolicy.FilterAssignable(actorRole, await GetEmployeeRolesAsync(), role => role.Nombre);
 
             return roles.Select(role => new SelectListItem
             {
@@ -128,8 +129,7 @@ namespace Proyecto_Final.Services
                 Activo = detail.Activo && detail.UsuarioActivo,
                 FechaRegistro = detail.FechaRegistro,
                 FechaActualizacion = detail.FechaActualizacion,
-                RowVersionBase64 = detail.RowVersionBase64,
-                RolesDisponibles = await GetEmployeeRoleSelectListAsync(detail.PerfilId)
+                RowVersionBase64 = detail.RowVersionBase64
             };
         }
 
@@ -264,10 +264,7 @@ namespace Proyecto_Final.Services
 
         private static string HashPassword(string password)
         {
-            const int iterations = 210000;
-            var salt = System.Security.Cryptography.RandomNumberGenerator.GetBytes(16);
-            var hash = System.Security.Cryptography.Rfc2898DeriveBytes.Pbkdf2(password, salt, iterations, System.Security.Cryptography.HashAlgorithmName.SHA256, 32);
-            return $"pbkdf2-sha256${iterations}${Convert.ToBase64String(salt)}${Convert.ToBase64String(hash)}";
+            return PasswordHasher.Hash(password);
         }
 
         public async Task<bool> ToggleEmployeeStatusAsync(int empleadoId)

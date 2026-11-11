@@ -94,23 +94,23 @@ namespace Proyecto_Final.Services
             new(StringComparer.OrdinalIgnoreCase)
             {
                 ["inventario"] = ("Módulo de Inventario", "Administración → Inventario → Inventario para ver productos y stock. 'Nuevo producto' para crear, el lápiz para editar, y 'Movimientos' para entradas, salidas o ajustes."),
-                ["pedidos"] = ("Módulo de Pedidos", "Administración → Ventas y Pedidos → Pedidos: revisa los pedidos por estado y, desde el detalle, cámbialo, retenlo o factúralo."),
-                ["facturacion"] = ("Cómo generar una factura", "La factura se genera desde el pedido, en el menú <strong>Administración → Ventas y Pedidos → Pedidos</strong>:<ol><li>Busca el pedido y presiona <strong>Ver</strong>.</li><li>En la sección <strong>Facturación</strong> del detalle, presiona <strong>Generar factura</strong> y confirma. Solo se puede si el pedido aún no tiene factura y está Pendiente, Aprobado, En proceso, Entregado o Liberado.</li><li>La factura queda en <strong>Ventas y Pedidos → Facturación</strong>; ábrela con <strong>Ver</strong> para imprimirla o usa <strong>Reenviar comprobante por correo</strong>.</li></ol>El inventario se descontó al registrar el pedido; no se vuelve a descontar al facturar."),
+                ["pedidos"] = ("Módulo de Pedidos", "Administración → Ventas y Pedidos → Pedidos: revise los pedidos por estado y, desde el detalle, cámbielo, reténgalo o factúrelo."),
+                ["facturacion"] = ("Cómo generar una factura", "La factura se genera desde el pedido, en el menú <strong>Administración → Ventas y Pedidos → Pedidos</strong>:<ol><li>Busque el pedido y presione <strong>Ver</strong>.</li><li>En la sección <strong>Facturación</strong> del detalle, presione <strong>Generar factura</strong> y confirme. Solo se puede si el pedido aún no tiene factura y está Pendiente, Aprobado, En proceso, Entregado o Liberado.</li><li>La factura queda en <strong>Ventas y Pedidos → Facturación</strong>; ábrala con <strong>Ver</strong> para imprimirla o use <strong>Reenviar comprobante por correo</strong>.</li></ol>El inventario se descontó al registrar el pedido; no se vuelve a descontar al facturar."),
                 ["clientes"] = ("Módulo de Clientes", "Administración → Clientes → Clientes administra los datos; desde Créditos gestionas su línea de crédito y movimientos."),
                 ["creditos"] = ("Módulo de Créditos", "Administración → Clientes → Créditos define el límite, bloquea y registra cargos/abonos de cada cliente."),
                 ["cobros"] = ("Cuentas por cobrar", "Administración → Ventas y Pedidos → Cuentas por Cobrar muestra los saldos deudores y permite registrar abonos."),
-                ["rutas"] = ("Cómo crear una ruta", "En el menú <strong>Administración → Logística y Flota → Rutas y Entregas</strong>:<ol><li>Presiona <strong>Nueva ruta</strong>.</li><li>En <strong>Datos de la ruta</strong>, indica la <strong>Zona</strong>, el <strong>Chofer</strong> y el <strong>Vehículo</strong> (las observaciones son opcionales).</li><li>En <strong>Pedidos por asignar</strong>, marca al menos un pedido de la zona.</li><li>Presiona <strong>Crear ruta</strong>; se abre el detalle de la ruta, en estado Planificada.</li><li>Ordena las paradas con <strong>Secuenciar automáticamente</strong>, o ajústalas en el mapa y presiona <strong>Guardar orden y ubicaciones</strong>.</li><li>Presiona <strong>Despachar ruta</strong>: los pedidos pasan a En ruta y se avisa a los clientes.</li><li>Al final del día, presiona <strong>Finalizar ruta</strong>; después liquida los cobros y la mercadería en <strong>Finanzas</strong>.</li></ol>"),
+                ["rutas"] = ("Cómo crear una ruta", "En el menú <strong>Administración → Logística y Flota → Rutas y Entregas</strong>:<ol><li>Presione <strong>Nueva ruta</strong>.</li><li>En <strong>Datos de la ruta</strong>, indique la <strong>Zona</strong>, el <strong>Chofer</strong> y el <strong>Vehículo</strong> (las observaciones son opcionales).</li><li>En <strong>Pedidos por asignar</strong>, marque al menos un pedido de la zona.</li><li>Presione <strong>Crear ruta</strong>; se abre el detalle de la ruta, en estado Planificada.</li><li>Ordene las paradas con <strong>Secuenciar automáticamente</strong>, o ajústelas en el mapa y presione <strong>Guardar orden y ubicaciones</strong>.</li><li>Presione <strong>Despachar ruta</strong>: los pedidos pasan a En ruta y se avisa a los clientes.</li><li>Al final del día, presione <strong>Finalizar ruta</strong>; después liquide los cobros y la mercadería en <strong>Finanzas</strong>.</li></ol>"),
                 ["vehiculos"] = ("Vehículos", "Administración → Logística y Flota → Vehículos registra la flota (placa, marca, capacidad, odómetro)."),
                 ["kilometraje"] = ("Kilometraje", "Administración → Logística y Flota → Kilometraje (el chofer lo abre en Kilometraje, en la barra superior): el chofer registra el km inicial al salir y el final al volver; el sistema valida contra el odómetro del vehículo."),
                 ["mantenimiento"] = ("Mantenimiento de flota", "Administración → Logística y Flota → Mantenimiento registra órdenes preventivas o correctivas con costo y taller."),
                 ["alertas"] = ("Alertas de flota", "Administración → Logística y Flota → Alertas de flota muestra vencimientos legales (marchamo, RTV, seguro) y mantenimientos preventivos próximos o vencidos."),
                 ["activos"] = ("Activos", "Administración → Inventario → Activos registra neveras y exhibidores con su código de activo y controla su estado (disponible, prestado, etc.)."),
-                ["devoluciones"] = ("Cómo registrar una devolución", "En el menú <strong>Administración → Inventario → Devoluciones</strong>:<ol><li>En <strong>Registrar devolución</strong>, elige el <strong>Producto</strong> y la <strong>Cantidad</strong> devuelta.</li><li>Si aplica, indica el <strong>Pedido asociado</strong> (N.º de pedido) y el <strong>Cliente / referencia</strong>.</li><li>Escribe el <strong>Motivo</strong> (por ejemplo, producto dañado o error de despacho).</li><li>Presiona <strong>Registrar devolución</strong>: queda en el <strong>Historial de devoluciones</strong> y el producto pasa a cuarentena.</li><li>Después, en <strong>Inventario → Cuarentena</strong>, libéralo (vuelve al stock) o descártalo.</li></ol>"),
+                ["devoluciones"] = ("Cómo registrar una devolución", "En el menú <strong>Administración → Inventario → Devoluciones</strong>:<ol><li>En <strong>Registrar devolución</strong>, elija el <strong>Producto</strong> y la <strong>Cantidad</strong> devuelta.</li><li>Si aplica, indique el <strong>Pedido asociado</strong> (N.º de pedido) y el <strong>Cliente / referencia</strong>.</li><li>Escriba el <strong>Motivo</strong> (por ejemplo, producto dañado o error de despacho).</li><li>Presione <strong>Registrar devolución</strong>: queda en el <strong>Historial de devoluciones</strong> y el producto pasa a cuarentena.</li><li>Después, en <strong>Inventario → Cuarentena</strong>, libérelo (vuelve al stock) o descártelo.</li></ol>"),
                 ["cuarentena"] = ("Cuarentena", "Administración → Inventario → Cuarentena libera (reintegra al stock) o descarta los productos devueltos."),
                 ["empleados"] = ("Empleados", "Administración → Personal → Empleados (el supervisor: Personal → Empleados) administra el personal, asigna tareas y aprueba solicitudes de licencia."),
                 ["roles"] = ("Roles y permisos", "Administración → Seguridad → Roles define perfiles; en Permisos asignas los permisos a cada rol."),
                 ["consultas"] = ("Consultas", "Administración → Clientes → Consultas muestra los mensajes de contacto de los clientes para atenderlos."),
-                ["asistente"] = ("Asistente", "Escríbeme una pregunta en lenguaje natural sobre métricas del negocio o sobre cómo usar un módulo. Prueba: “¿qué puedo preguntar?”."),
+                ["asistente"] = ("Asistente", "Escríbame una pregunta en lenguaje natural sobre métricas del negocio o sobre cómo usar un módulo. Pruebe: “¿qué puedo preguntar?”."),
             };
 
         // ────────────────────────────────────────────────────────
@@ -235,7 +235,7 @@ namespace Proyecto_Final.Services
                     r.Respuesta = $"Hay <strong>{m.VehiculosActivos}</strong> vehículo(s) activo(s) de {m.TotalVehiculos} registrados."; break;
                 case "kilometraje":
                     r.Titulo = "Kilometraje";
-                    r.Respuesta = $"El control de kilometraje está activo para los {m.VehiculosActivos} vehículo(s) de la flota. Consulta el odómetro de cada uno en Administración → Logística y Flota → Vehículos."; break;
+                    r.Respuesta = $"El control de kilometraje está activo para los {m.VehiculosActivos} vehículo(s) de la flota. Consulte el odómetro de cada uno en Administración → Logística y Flota → Vehículos."; break;
                 case "mantenimiento":
                     r.Titulo = "Mantenimiento";
                     r.Respuesta = $"Hay <strong>{m.MantenimientosProgramados}</strong> orden(es) de mantenimiento programada(s)."; break;
@@ -265,7 +265,7 @@ namespace Proyecto_Final.Services
                 default:
                     r.Interpretado = false; r.Tipo = "no_interpretado"; r.Titulo = "Sin datos"; r.Respuesta = "No tengo esa métrica."; break;
             }
-            r.Sugerencias.Add("¿Quieres más detalle?");
+            r.Sugerencias.Add("¿Desea más detalle?");
             r.Sugerencias.Add("Dame un resumen");
             r.Sugerencias.Add("¿Qué puedo preguntar?");
             return r;
@@ -307,7 +307,7 @@ namespace Proyecto_Final.Services
             if (permitidas.Contains(Rh))
                 sb.Append($"🧑‍💼 <strong>Personal:</strong> {m.TotalEmpleados} empleados · {m.SolicitudesPendientes} solicitudes por aprobar<br/>");
 
-            if (sb.Length == 0) sb.Append("No hay indicadores disponibles para tu rol, pero puedo ayudarte con el uso de los módulos.");
+            if (sb.Length == 0) sb.Append("No hay indicadores disponibles para su rol, pero puedo ayudarle con el uso de los módulos.");
 
             return new AssistantAnswerViewModel
             {
@@ -338,7 +338,7 @@ namespace Proyecto_Final.Services
         // ── Capacidades por rol ─────────────────────────────────
         private static AssistantAnswerViewModel Capacidades(HashSet<string> permitidas)
         {
-            var sb = new StringBuilder("Puedes preguntarme, por ejemplo:<ul style='margin:.3rem 0 0 1rem;padding:0'>");
+            var sb = new StringBuilder("Puede preguntarme, por ejemplo:<ul style='margin:.3rem 0 0 1rem;padding:0'>");
             if (permitidas.Contains(Fin)) sb.Append("<li>💰 Finanzas: ventas de hoy/mes/año, facturación, ticket promedio, cuentas por cobrar, créditos, valor del inventario.</li>");
             if (permitidas.Contains(Ops)) sb.Append("<li>🧾 Pedidos: pedidos pendientes, retenidos, en ruta, de hoy.</li>");
             if (permitidas.Contains(Inv)) sb.Append("<li>📦 Inventario: stock bajo, agotados, total de productos, cuarentena.</li>");
@@ -357,7 +357,7 @@ namespace Proyecto_Final.Services
             return new AssistantAnswerViewModel
             {
                 Tipo = "ayuda", Intent = "capacidades", Interpretado = true,
-                Titulo = "Esto es lo que puedo responderte", Respuesta = sb.ToString(), Sugerencias = sug
+                Titulo = "Esto es lo que puedo responderle", Respuesta = sb.ToString(), Sugerencias = sug
             };
         }
 
@@ -378,7 +378,7 @@ namespace Proyecto_Final.Services
             {
                 Tipo = "ayuda", Intent = "no_autorizado", Interpretado = true,
                 Titulo = "Información restringida",
-                Respuesta = $"La información de <strong>{categoria}</strong> no está disponible para tu rol. Puedo ayudarte con lo que sí tienes permitido."
+                Respuesta = $"La información de <strong>{categoria}</strong> no está disponible para su rol. Puedo ayudarle con lo que sí tiene permitido."
             };
             if (permitidas.Contains(Inv)) r.Sugerencias.Add("¿Cómo está el inventario?");
             if (permitidas.Contains(Ops)) r.Sugerencias.Add("¿Cuántos pedidos pendientes hay?");
@@ -393,7 +393,7 @@ namespace Proyecto_Final.Services
             {
                 Tipo = "no_interpretado", Intent = "desconocido", Interpretado = false,
                 Titulo = "No entendí la solicitud",
-                Respuesta = "No pude interpretar tu pregunta. Prueba con “dame un resumen” o “¿qué puedo preguntar?”. Si es un problema técnico, contacta a soporte."
+                Respuesta = "No pude interpretar su pregunta. Pruebe con “dame un resumen” o “¿qué puedo preguntar?”. Si es un problema técnico, contacte a soporte."
             };
             r.Sugerencias.Add("¿Qué puedo preguntar?");
             r.Sugerencias.Add("Dame un resumen");

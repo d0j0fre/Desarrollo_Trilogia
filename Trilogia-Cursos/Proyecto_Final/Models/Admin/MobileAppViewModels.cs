@@ -48,8 +48,8 @@ namespace Proyecto_Final.Models.Admin
     /// </summary>
     public sealed class MobileAppPublishViewModel
     {
-        [Required(ErrorMessage = "Indicá el número de versión.")]
-        [RegularExpression(@"^\d+\.\d+\.\d+$", ErrorMessage = "Usá el formato 1.0.0")]
+        [Required(ErrorMessage = "Indique el número de versión.")]
+        [RegularExpression(@"^\d+\.\d+\.\d+$", ErrorMessage = "Use el formato 1.0.0")]
         [Display(Name = "Versión")]
         public string VersionNombre { get; set; } = string.Empty;
 

@@ -10,12 +10,12 @@ public static class PaySlipPdf
         var pdf = new SimplePdfDocument("Boleta de pago privada");
         pdf.Title("Boleta de pago");
         pdf.Field("Empleado", model.Empleado);
-        pdf.Field("Periodo", model.Periodo);
+        pdf.Field("Periodo", RrhhFormat.PeriodText(model.Periodo));
         pdf.Field("Estado", model.Estado);
         pdf.Rule();
         pdf.Heading("Desglose");
         foreach (var line in model.Lineas)
-            pdf.Paragraph($"{line.Codigo} · {line.Nombre} ({line.Tipo}): {SimplePdfDocument.Money(line.Monto)}");
+            pdf.Paragraph($"{line.Codigo} · {line.Nombre} ({RrhhFormat.ConceptType(line.Tipo)}): {SimplePdfDocument.Money(line.Monto)}");
         pdf.Rule();
         pdf.Text($"Salario base: {SimplePdfDocument.Money(model.SalarioBase)}");
         pdf.Text($"Total bruto: {SimplePdfDocument.Money(model.TotalBruto)}");

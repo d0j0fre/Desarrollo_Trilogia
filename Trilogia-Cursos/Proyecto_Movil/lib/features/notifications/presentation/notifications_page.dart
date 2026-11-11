@@ -39,7 +39,7 @@ class NotificationsPage extends ConsumerWidget {
         spacing: 8,
         emptyIcon: Icons.notifications_none_rounded,
         emptyTitle: 'Sin notificaciones',
-        emptyMessage: 'Aquí aparecen los avisos de tu cuenta, como las rutas que te asignan.',
+        emptyMessage: 'Aquí aparecen los avisos de su cuenta, como las rutas que le asignan.',
         itemBuilder: (context, item) => Card(
           child: ListTile(
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -57,7 +57,7 @@ class NotificationsPage extends ConsumerWidget {
               children: [
                 Text(item.message),
                 if (item.entityType == 'Chat')
-                  Text('Respondé desde Chat en el portal web.', style: Theme.of(context).textTheme.bodySmall),
+                  Text('Responda desde Chat en el portal web.', style: Theme.of(context).textTheme.bodySmall),
                 const SizedBox(height: 4),
                 Text(Fmt.shortDateTime(item.createdAt), style: Theme.of(context).textTheme.bodySmall),
               ],

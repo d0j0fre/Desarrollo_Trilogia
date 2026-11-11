@@ -1,6 +1,19 @@
+@using Proyecto_Final.Services
+@inject NavigationMenuService MenuAccess
 @model Proyecto_Final.Models.Admin.PayrollIndexViewModel
 @{
     ViewData["Title"] = "Planilla configurable";
+    // G1-06: cada botón y formulario se muestra solo a quien tiene el permiso de esa acción.
+    var userRole = Context.Session.GetString("UserRole");
+    var canConfigure = await MenuAccess.CanSubmitAsync(userRole, "Payroll", "ConfigureRule");
+    var canCreatePeriod = await MenuAccess.CanSubmitAsync(userRole, "Payroll", "CreatePeriod");
+    var canCalculate = await MenuAccess.CanSubmitAsync(userRole, "Payroll", "Calculate");
+    var canApprove = await MenuAccess.CanSubmitAsync(userRole, "Payroll", "Approve");
+    var canPay = await MenuAccess.CanSubmitAsync(userRole, "Payroll", "Pay");
+    var canRevert = await MenuAccess.CanSubmitAsync(userRole, "Payroll", "Revert");
+    var openPeriods = Model?.PeriodosAbiertos ?? new List<Proyecto_Final.Models.Admin.PayrollPeriodOptionViewModel>();
+    var employees = Model?.Empleados ?? new List<Proyecto_Final.Models.Admin.PayrollEmployeeOptionViewModel>();
+    var rules = Model?.Reglas ?? new List<Proyecto_Final.Models.Admin.PayrollRuleViewModel>();
     var calculations = Model?.Calculos ?? new List<Proyecto_Final.Models.Admin.PayrollListItemViewModel>();
     var rule = Model?.Regla ?? new Proyecto_Final.Models.Admin.PayrollRuleFormViewModel();
     var period = Model?.Periodo ?? new Proyecto_Final.Models.Admin.PayrollPeriodFormViewModel();
@@ -93,11 +106,15 @@
         <div><strong>Configuración verificable.</strong> Las tasas legales no están precargadas: cada factor y regla requiere una fuente o aprobación responsable.</div>
     </div>
 
+    @if (canConfigure || canCreatePeriod || canCalculate)
+    {
     <section class="payroll-layout" aria-label="Configuración y cálculo de planilla">
+        @if (canConfigure)
+        {
         <article class="payroll-card">
             <div class="payroll-card__header">
                 <span class="payroll-card__icon"><i class="fa fa-list-alt"></i></span>
-                <div><h2>Regla versionada</h2><p>Defina ingresos o deducciones con vigencia y evidencia. Para comisiones use COMISION_VENTAS, ingreso y porcentaje bruto (por ejemplo 0,05 para 5 %). Para ausencias use AUSENCIA_HORA, deducción y monto fijo por hora.</p></div>
+                <div><h2>Regla versionada</h2><p>Defina ingresos o deducciones con vigencia y evidencia. Los porcentajes se escriben como se leen (por ejemplo 5 para 5 %). Para comisiones use COMISION_VENTAS, ingreso y % bruto. Para ausencias use AUSENCIA_HORA, deducción y monto fijo por hora.</p></div>
             </div>
             <div class="payroll-card__body">
                 <form asp-action="ConfigureRule" method="post" data-prevent-double-submit>
@@ -107,7 +124,7 @@
                         <div class="payroll-field"><label for="rule-name">Nombre</label><input id="rule-name" name="Nombre" value="@rule.Nombre" class="form-control" maxlength="150" required placeholder="Nombre de la regla" /></div>
                         <div class="payroll-field"><label for="rule-type">Tipo</label><select id="rule-type" name="Tipo" class="form-control" required><option value="Ingreso" selected="@(rule.Tipo == "Ingreso")">Ingreso</option><option value="Deduccion" selected="@(rule.Tipo == "Deduccion")">Deducción</option></select></div>
                         <div class="payroll-field"><label for="rule-calculation">Cálculo</label><select id="rule-calculation" name="TipoCalculo" class="form-control" required><option value="MontoFijo" selected="@(rule.TipoCalculo == "MontoFijo")">Monto fijo</option><option value="PorcentajeSalario" selected="@(rule.TipoCalculo == "PorcentajeSalario")">% de salario</option><option value="PorHoraExtra" selected="@(rule.TipoCalculo == "PorHoraExtra")">Por hora extra</option><option value="PorcentajeBruto" selected="@(rule.TipoCalculo == "PorcentajeBruto")">% bruto</option></select></div>
-                        <div class="payroll-field"><label for="rule-value">Valor</label><input id="rule-value" name="Valor" value="@rule.Valor.ToString(System.Globalization.CultureInfo.InvariantCulture)" class="form-control" inputmode="decimal" min="0" max="99999999" step="0.000001" required placeholder="0,00" /><small class="payroll-help">Acepta punto o coma decimal.</small></div>
+                        <div class="payroll-field"><label for="rule-value">Valor</label><input id="rule-value" name="Valor" value="@rule.Valor.ToString(System.Globalization.CultureInfo.InvariantCulture)" class="form-control" inputmode="decimal" min="0" max="99999999" step="0.000001" required placeholder="0,00" /><small id="rule-value-help" class="payroll-help">Acepta punto o coma decimal.</small></div>
                         <div class="payroll-field"><label for="rule-cap">Tope opcional</label><input id="rule-cap" name="Tope" value="@(rule.Tope?.ToString(System.Globalization.CultureInfo.InvariantCulture))" class="form-control" inputmode="decimal" min="0" max="99999999" step="0.01" placeholder="Sin tope" /></div>
                         <div class="payroll-field"><label for="rule-from">Vigente desde</label><input id="rule-from" name="VigenteDesde" value="@ruleStart" type="date" class="form-control" required /></div>
                         <div class="payroll-field"><label for="rule-to">Vigente hasta</label><input id="rule-to" name="VigenteHasta" value="@ruleEnd" type="date" class="form-control" /></div>
@@ -118,7 +135,10 @@
                 </form>
             </div>
         </article>
+        }
 
+        @if (canCreatePeriod)
+        {
         <article class="payroll-card">
             <div class="payroll-card__header">
                 <span class="payroll-card__icon"><i class="fa fa-calendar-alt"></i></span>
@@ -139,27 +159,83 @@
                 </form>
             </div>
         </article>
+        }
 
+        @if (canCalculate)
+        {
         <article class="payroll-card">
             <div class="payroll-card__header">
                 <span class="payroll-card__icon"><i class="fa fa-user-check"></i></span>
-                <div><h2>Calcular empleado</h2><p>Use los identificadores vigentes del período y empleado.</p></div>
+                <div><h2>Calcular empleado</h2><p>Elija un período abierto y un empleado activo.</p></div>
             </div>
             <div class="payroll-card__body">
                 <form asp-action="Calculate" method="post" data-prevent-double-submit>
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="IdempotencyKey" value="@calculation.IdempotencyKey" />
                     <div class="payroll-form-grid">
-                        <div class="payroll-field payroll-field--full"><label for="period-id">ID del período</label><input id="period-id" name="PeriodoId" value="@(calculation.PeriodoId > 0 ? calculation.PeriodoId : "")" type="number" class="form-control" min="1" step="1" required placeholder="Ej: 12" /></div>
-                        <div class="payroll-field payroll-field--full"><label for="employee-id">ID del empleado</label><input id="employee-id" name="EmpleadoId" value="@(calculation.EmpleadoId > 0 ? calculation.EmpleadoId : "")" type="number" class="form-control" min="1" step="1" required placeholder="Ej: 45" /></div>
+                        <div class="payroll-field payroll-field--full">
+                            <label for="period-id">Período</label>
+                            <select id="period-id" name="PeriodoId" class="form-control" required>
+                                <option value="">@(openPeriods.Count == 0 ? "No hay períodos abiertos" : "Seleccione un período abierto")</option>
+                                @foreach (var openPeriod in openPeriods)
+                                {
+                                    <option value="@openPeriod.PeriodoId" selected="@(calculation.PeriodoId == openPeriod.PeriodoId)">@openPeriod.Etiqueta</option>
+                                }
+                            </select>
+                            @if (openPeriods.Count == 0) { <small class="payroll-help">Cree primero un período en la tarjeta «Período»@(canCreatePeriod ? "" : " (lo hace quien gestiona períodos)").</small> }
+                        </div>
+                        <div class="payroll-field payroll-field--full">
+                            <label for="employee-id">Empleado</label>
+                            <select id="employee-id" name="EmpleadoId" class="form-control" required>
+                                <option value="">Seleccione un empleado activo</option>
+                                @foreach (var employee in employees)
+                                {
+                                    <option value="@employee.EmpleadoId" selected="@(calculation.EmpleadoId == employee.EmpleadoId)">@employee.Etiqueta</option>
+                                }
+                            </select>
+                        </div>
 
                         <p class="payroll-help">Las comisiones se calculan automáticamente con las facturas del período y la regla COMISION_VENTAS.</p>
                     </div>
-                    <button class="btn btn-ds-action" type="submit"><i class="fa fa-calculator"></i> Calcular planilla</button>
+                    <button class="btn btn-ds-action" type="submit" disabled="@(openPeriods.Count == 0)"><i class="fa fa-calculator"></i> Calcular planilla</button>
                     <p class="payroll-form-status" aria-live="polite"></p>
                 </form>
             </div>
         </article>
+        }
+    </section>
+    }
+
+    <section class="payroll-table-card" aria-labelledby="payroll-rules-heading">
+        <div class="payroll-table-heading"><div><h2 id="payroll-rules-heading">Reglas versionadas</h2><span>Los porcentajes se muestran como se leen (10,67 %); los montos, en colones.</span></div><span>@rules.Count regla(s)</span></div>
+        @if (rules.Count == 0)
+        {
+            <div class="payroll-empty"><i class="fa fa-list-alt"></i><h3>No hay reglas registradas</h3><p class="mb-0">Las reglas que se guarden aparecerán aquí con su vigencia y su fuente.</p></div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead><tr><th scope="col">Código</th><th scope="col">Nombre</th><th scope="col">Tipo</th><th scope="col">Cálculo</th><th scope="col">Valor</th><th scope="col">Tope</th><th scope="col">Vigencia</th><th scope="col">Fuente</th></tr></thead>
+                    <tbody>
+                    @foreach (var item in rules)
+                    {
+                        var calculationLabel = item.TipoCalculo switch { "MontoFijo" => "Monto fijo", "PorcentajeSalario" => "% de salario", "PorHoraExtra" => "Por hora extra", "PorcentajeBruto" => "% bruto", _ => item.TipoCalculo };
+                        <tr>
+                            <td><code>@item.Codigo</code></td>
+                            <td class="payroll-employee">@item.Nombre</td>
+                            <td>@RrhhFormat.ConceptType(item.Tipo)</td>
+                            <td>@calculationLabel</td>
+                            <td><span class="payroll-amount">@item.ValorTexto</span></td>
+                            <td>@(item.Tope.HasValue ? RrhhFormat.Money(item.Tope.Value) : "Sin tope")</td>
+                            <td>@RrhhFormat.Date(item.VigenteDesde) – @(item.VigenteHasta.HasValue ? RrhhFormat.Date(item.VigenteHasta.Value) : "vigente")</td>
+                            <td class="payroll-period">@item.Fuente</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
     </section>
 
     <section class="payroll-table-card" aria-labelledby="payroll-results-heading">
@@ -179,27 +255,27 @@
                         var status = item.Estado?.Trim() ?? string.Empty;
                         var statusClass = status switch { "Borrador" => "draft", "Aprobada" => "approved", "Pagada" => "paid", "Revertida" => "reverted", _ => "unknown" };
                         <tr>
-                            <td class="payroll-period">@(string.IsNullOrWhiteSpace(item.Periodo) ? "Sin período" : item.Periodo)</td>
+                            <td class="payroll-period">@(string.IsNullOrWhiteSpace(item.Periodo) ? "Sin período" : RrhhFormat.PeriodText(item.Periodo))</td>
                             <td class="payroll-employee">@(string.IsNullOrWhiteSpace(item.Empleado) ? "Empleado no disponible" : item.Empleado)</td>
-                            <td><span class="payroll-amount">₡@item.TotalBruto.ToString("N2")</span></td>
-                            <td><span class="payroll-amount">₡@item.TotalDeducciones.ToString("N2")</span></td>
-                            <td><span class="payroll-amount">₡@item.TotalNeto.ToString("N2")</span></td>
+                            <td><span class="payroll-amount">@RrhhFormat.Money(item.TotalBruto)</span></td>
+                            <td><span class="payroll-amount">@RrhhFormat.Money(item.TotalDeducciones)</span></td>
+                            <td><span class="payroll-amount">@RrhhFormat.Money(item.TotalNeto)</span></td>
                             <td><span class="payroll-status payroll-status--@statusClass"><i class="fa fa-circle"></i>@(string.IsNullOrWhiteSpace(status) ? "Sin estado" : status)</span></td>
                             <td>
                                 <div class="payroll-row-actions">
-                                @if (status == "Borrador")
+                                @if (status == "Borrador" && canApprove)
                                 {
                                     <form asp-action="Approve" method="post" data-prevent-double-submit><input type="hidden" name="CalculoId" value="@item.CalculoId" /><input type="hidden" name="RowVersionBase64" value="@item.RowVersionBase64" />@Html.AntiForgeryToken()<button type="submit" class="btn btn-sm btn-ds-action"><i class="fa fa-check"></i> Aprobar</button></form>
                                 }
-                                @if (status == "Aprobada")
+                                @if (status == "Aprobada" && canPay)
                                 {
                                     <form asp-action="Pay" method="post" data-prevent-double-submit><input type="hidden" name="CalculoId" value="@item.CalculoId" /><input type="hidden" name="RowVersionBase64" value="@item.RowVersionBase64" />@Html.AntiForgeryToken()<button type="submit" class="btn btn-sm btn-ds-action"><i class="fa fa-money-bill-wave"></i> Pagar</button></form>
                                 }
-                                @if (status is "Aprobada" or "Pagada")
+                                @if ((status is "Aprobada" or "Pagada") && canRevert)
                                 {
                                     <form asp-action="Revert" method="post" class="payroll-revert" data-prevent-double-submit><input type="hidden" name="CalculoId" value="@item.CalculoId" /><input type="hidden" name="RowVersionBase64" value="@item.RowVersionBase64" />@Html.AntiForgeryToken()<label class="sr-only" for="reason-@item.CalculoId">Motivo de reversión</label><input id="reason-@item.CalculoId" name="Motivo" class="form-control" maxlength="500" required placeholder="Motivo de reversión" /><button type="submit" class="btn btn-sm btn-ds-danger--soft"><i class="fa fa-undo"></i> Revertir</button></form>
                                 }
-                                @if (status is not ("Borrador" or "Aprobada" or "Pagada")) { <span class="text-muted small">Sin acciones disponibles</span> }
+                                @if (!(status == "Borrador" && canApprove) && !(status == "Aprobada" && (canPay || canRevert)) && !(status == "Pagada" && canRevert)) { <span class="text-muted small">Sin acciones disponibles para su perfil</span> }
                                 </div>
                             </td>
                         </tr>
@@ -213,6 +289,24 @@
 
 @section Scripts {
     <script>
+        // G1-03: la ayuda del Valor cambia con el tipo de cálculo (porcentaje o monto).
+        (function () {
+            var type = document.getElementById('rule-calculation');
+            var help = document.getElementById('rule-value-help');
+            var value = document.getElementById('rule-value');
+            if (!type || !help || !value) { return; }
+            function refresh() {
+                var percent = type.value === 'PorcentajeSalario' || type.value === 'PorcentajeBruto';
+                help.textContent = percent
+                    ? 'Escriba el porcentaje como se lee: 10,67 significa 10,67 %. Acepta punto o coma decimal.'
+                    : (type.value === 'PorHoraExtra' ? 'Monto en colones por cada hora extra. Acepta punto o coma decimal.' : 'Monto en colones. Acepta punto o coma decimal.');
+                value.placeholder = percent ? 'Ej: 10,67' : 'Ej: 15000';
+                value.max = percent ? '100' : '99999999';
+            }
+            type.addEventListener('change', refresh);
+            refresh();
+        })();
+
         document.querySelectorAll('[data-prevent-double-submit]').forEach(function (form) {
             form.addEventListener('submit', function (event) {
                 if (!form.checkValidity()) {

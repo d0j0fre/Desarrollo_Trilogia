@@ -43,7 +43,7 @@ namespace Proyecto_Final.Controllers
         {
             if (!ModelState.IsValid)
             {
-                TempData["ErrorMessage"] = "Revisá los datos de la meta (vendedor, período y monto).";
+                TempData["ErrorMessage"] = "Revise los datos de la meta (vendedor, período y monto).";
                 return RedirectToAction(nameof(Index), new { anio = nueva.Anio, mes = nueva.Mes });
             }
 

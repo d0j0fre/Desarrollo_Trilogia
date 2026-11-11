@@ -9,6 +9,9 @@ namespace Proyecto_FinalAPI.Services
         Task<IReadOnlyList<string>> GetPermissionsForRoleAsync(string? role, CancellationToken cancellationToken = default);
         Task<bool> HasPermissionAsync(string? role, string permissionCode, CancellationToken cancellationToken = default);
         Task<ApiUser?> GetActiveUserAsync(int userId, CancellationToken cancellationToken = default);
+
+        /// <summary>Estado vigente de la sesión de un usuario (activo, perfil y sello), o null si no existe.</summary>
+        Task<ApiSessionState?> GetSessionStateAsync(int userId, CancellationToken cancellationToken = default);
         Task<Guid> IssueRefreshTokenAsync(RefreshTokenIssueRequest request, CancellationToken cancellationToken = default);
         Task<RefreshExchangeRow> ExchangeRefreshTokenAsync(RefreshTokenExchangeRequest request, CancellationToken cancellationToken = default);
         Task RevokeChainAsync(string tokenHash, string? reason, CancellationToken cancellationToken = default);
@@ -30,6 +33,8 @@ namespace Proyecto_FinalAPI.Services
         string? IpAddress);
 
     public sealed record RefreshExchangeRow(string Outcome, int? UserId, Guid? ChainId);
+
+    public sealed record ApiSessionState(bool Active, string Role, string SecurityStamp);
 
     // Acceso a datos de la autorización móvil. Mismo patrón que el resto del
     // proyecto: ADO.NET contra procedimientos almacenados, sin EF.
@@ -112,8 +117,30 @@ namespace Proyecto_FinalAPI.Services
                 NombreCompleto = ReadString(reader, "NombreCompleto"),
                 Correo = ReadString(reader, "Correo"),
                 PerfilNombre = ReadString(reader, "PerfilNombre"),
-                Activo = reader.GetBoolean(reader.GetOrdinal("Activo"))
+                Activo = reader.GetBoolean(reader.GetOrdinal("Activo")),
+                SecurityStamp = reader.GetGuid(reader.GetOrdinal("SecurityStamp")).ToString("D")
             };
+        }
+
+        public async Task<ApiSessionState?> GetSessionStateAsync(int userId, CancellationToken cancellationToken = default)
+        {
+            if (userId <= 0) return null;
+
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Auth_GetSessionState", connection)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+            command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = userId;
+
+            await connection.OpenAsync(cancellationToken);
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+            if (!await reader.ReadAsync(cancellationToken)) return null;
+
+            return new ApiSessionState(
+                reader.GetBoolean(reader.GetOrdinal("Activo")),
+                ReadString(reader, "PerfilNombre"),
+                reader.GetGuid(reader.GetOrdinal("SecurityStamp")).ToString("D"));
         }
 
         public async Task<Guid> IssueRefreshTokenAsync(

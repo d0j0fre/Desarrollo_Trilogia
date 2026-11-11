@@ -86,7 +86,7 @@ namespace Proyecto_FinalAPI.Controllers
             if (request is null) return InvalidRequest("Falta el cuerpo de la solicitud.");
             if (!Decisions.Contains(request.Decision ?? string.Empty)) return InvalidRequest("La decisión no es válida.");
             if (request.Decision == "Rechazada" && string.IsNullOrWhiteSpace(request.Respuesta))
-                return InvalidRequest("Explicá por qué se rechaza la jornada.");
+                return InvalidRequest("Explique por qué se rechaza la jornada.");
 
             byte[] version;
             try
@@ -95,9 +95,9 @@ namespace Proyecto_FinalAPI.Controllers
             }
             catch (FormatException)
             {
-                return InvalidRequest("La versión de la jornada no es válida. Actualizá la lista.");
+                return InvalidRequest("La versión de la jornada no es válida. Actualice la lista.");
             }
-            if (version.Length != 8) return InvalidRequest("La versión de la jornada no es válida. Actualizá la lista.");
+            if (version.Length != 8) return InvalidRequest("La versión de la jornada no es válida. Actualice la lista.");
 
             return await GuardAsync(_logger, "resolver jornada", async () =>
             {

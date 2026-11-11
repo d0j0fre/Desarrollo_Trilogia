@@ -58,7 +58,7 @@ class AttendancePage extends ConsumerWidget {
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
         emptyIcon: Icons.event_available_outlined,
         emptyTitle: 'Sin jornadas registradas',
-        emptyMessage: 'Registrá las horas de cada día. Tu supervisor las aprueba desde su aplicación o el sitio web.',
+        emptyMessage: 'Registre las horas de cada día. Su supervisor las aprueba desde su aplicación o el sitio web.',
         header: const SectionTitle('Últimos 45 días'),
         itemBuilder: (context, item) => _AttendanceCard(item: item),
       ),
@@ -97,7 +97,7 @@ class _AttendanceCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                StatusChip(label: item.status, color: color),
+                StatusChip(label: Fmt.status(item.status), color: color),
               ],
             ),
             const SizedBox(height: 12),
@@ -204,7 +204,7 @@ class _AttendanceSheetState extends ConsumerState<_AttendanceSheet> {
 
     return SheetBody(
       title: 'Registrar jornada',
-      subtitle: 'Se envía a tu supervisor para aprobación.',
+      subtitle: 'Se envía a su supervisor para aprobación.',
       children: [
         TapCard(
           onTap: () async {
@@ -272,7 +272,7 @@ class AttendanceApprovalsPage extends ConsumerWidget {
         onRefresh: () async => ref.invalidate(pendingAttendanceProvider),
         emptyIcon: Icons.fact_check_outlined,
         emptyTitle: 'Nada por aprobar',
-        emptyMessage: 'Las jornadas que envíe el personal van a aparecer acá.',
+        emptyMessage: 'Las jornadas que envíe el personal van a aparecer aquí.',
         itemBuilder: (context, item) => _AttendanceCard(
           item: item,
           actions: _ResolveActions(item: item),

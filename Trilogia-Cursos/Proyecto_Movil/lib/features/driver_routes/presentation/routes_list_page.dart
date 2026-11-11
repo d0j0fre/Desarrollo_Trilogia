@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/format/status_labels.dart';
 import '../../../core/theme/brand_colors.dart';
 import '../../../core/widgets/app_widgets.dart';
 import '../application/routes_controller.dart';
@@ -61,9 +62,9 @@ class RoutesListPage extends ConsumerWidget {
                     ? llenarPantalla(
                         const EmptyState(
                           icon: Icons.route_rounded,
-                          title: 'No tenés rutas asignadas',
+                          title: 'No tiene rutas asignadas',
                           message:
-                              'Cuando operaciones te asigne una ruta va a aparecer acá.\nDeslizá hacia abajo para revisar de nuevo.',
+                              'Cuando operaciones le asigne una ruta va a aparecer aquí.\nDeslice hacia abajo para revisar de nuevo.',
                         ),
                       )
                     : ListView.separated(
@@ -128,7 +129,7 @@ class _RouteCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   StatusChip(
-                    label: route.estado,
+                    label: statusLabel(route.estado),
                     color: esActiva
                         ? BrandColors.inRoute
                         : BrandColors.textMuted,

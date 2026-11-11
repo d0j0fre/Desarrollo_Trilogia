@@ -56,7 +56,7 @@ class _SettlementsPageState extends ConsumerState<SettlementsPage> {
             filters: FilterChipsBar<String>(
               options: const ['', 'Cuadrada', 'Faltante', 'Sobrante'],
               selected: _status,
-              label: (s) => s.isEmpty ? 'Todas' : s,
+              label: (s) => s.isEmpty ? 'Todas' : Fmt.status(s),
               onSelected: (s) => setState(() => _status = s),
             ),
           ),
@@ -66,7 +66,7 @@ class _SettlementsPageState extends ConsumerState<SettlementsPage> {
               onRefresh: () async => ref.invalidate(settlementsProvider(_status)),
               emptyIcon: Icons.point_of_sale_outlined,
               emptyTitle: 'Sin liquidaciones',
-              emptyMessage: 'Las rutas liquidadas en el sitio web aparecen acá con su cuadre de caja.',
+              emptyMessage: 'Las rutas liquidadas en el sitio web aparecen aquí con su cuadre de caja.',
               itemBuilder: (context, item) {
                 final balanced = item.difference == 0;
                 final color = balanced ? BrandColors.delivered : item.difference > 0 ? BrandColors.inRoute : BrandColors.danger;
@@ -129,7 +129,7 @@ class _SettlementSheet extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(s.routeCode, style: Theme.of(context).textTheme.headlineSmall),
-                Text('Estado: ${s.status}', style: Theme.of(context).textTheme.bodySmall),
+                Text('Estado: ${Fmt.status(s.status)}', style: Theme.of(context).textTheme.bodySmall),
                 const SizedBox(height: 12),
                 InfoRow(icon: Icons.payments_outlined, label: 'Efectivo esperado', value: Fmt.money(s.expectedCash)),
                 InfoRow(icon: Icons.credit_card_outlined, label: 'Otros medios esperados', value: Fmt.money(s.expectedOther)),
@@ -240,7 +240,7 @@ class _InvoiceSheet extends ConsumerWidget {
           padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
           children: [
             Text(inv.number, style: Theme.of(context).textTheme.headlineSmall),
-            Text('${inv.status} · Pedido #${inv.orderId}', style: Theme.of(context).textTheme.bodySmall),
+            Text('${Fmt.status(inv.status)} · Pedido #${inv.orderId}', style: Theme.of(context).textTheme.bodySmall),
             const SizedBox(height: 12),
             InfoRow(icon: Icons.person_outline_rounded, label: 'Cliente', value: inv.client),
             if (inv.clientEmail.isNotEmpty) InfoRow(icon: Icons.mail_outline_rounded, label: 'Correo', value: inv.clientEmail),
@@ -480,7 +480,7 @@ class _SupportPageState extends ConsumerState<SupportPage> {
                     Row(
                       children: [
                         Expanded(child: Text(c.subject, maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.titleMedium)),
-                        StatusChip(label: c.status, color: _consultationColor(c.status)),
+                        StatusChip(label: Fmt.status(c.status), color: _consultationColor(c.status)),
                       ],
                     ),
                     const SizedBox(height: 4),

@@ -103,7 +103,7 @@ class _OrdersList extends ConsumerWidget {
             emptyIcon: Icons.local_shipping_outlined,
             emptyTitle: receivingMode ? 'Nada por recibir' : 'Sin órdenes de compra',
             emptyMessage: receivingMode
-                ? 'Cuando compras registre una orden pendiente va a aparecer acá.'
+                ? 'Cuando compras registre una orden pendiente va a aparecer aquí.'
                 : 'No hay órdenes con este filtro.',
             itemBuilder: (context, order) => TapCard(
               onTap: () => context.push('/compras/${order.id}'),

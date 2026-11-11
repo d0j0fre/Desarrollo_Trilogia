@@ -30,7 +30,7 @@
                 </div>
                 <div class="col-md-6 mb-3">
                     <div class="admin-card text-center py-4">
-                        <div class="text-muted small mb-1">Factura generada (CU-091)</div>
+                        <div class="text-muted small mb-1">Factura generada</div>
                         <div class="font-weight-bold text-success" style="font-size:1.3rem;">
                             @(string.IsNullOrWhiteSpace(numeroFactura) ? "—" : numeroFactura)
                         </div>
@@ -65,7 +65,7 @@
                     </div>
                     <div class="col-md-6 mb-2">
                         <span class="text-muted small d-block">Estado</span>
-                        <span class="admin-badge-soft warning">@Model.Estado</span>
+                        <span class="admin-badge-soft warning">@Proyecto_Final.Services.OrderStatusFlow.Name(Model.Estado)</span>
                     </div>
                     <div class="col-md-6 mb-2">
                         <span class="text-muted small d-block">Tipo de entrega</span>

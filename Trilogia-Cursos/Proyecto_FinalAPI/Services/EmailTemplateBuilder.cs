@@ -11,10 +11,10 @@ namespace Proyecto_FinalAPI.Services
 
             var contenido = $@"
                 <p style='margin:0 0 16px;color:#374151;font-size:15px;line-height:1.7;'>
-                    Hola <strong>{nombreSeguro}</strong>, recibimos una solicitud para restablecer la contraseña de tu cuenta.
+                    Hola <strong>{nombreSeguro}</strong>, recibimos una solicitud para restablecer la contraseña de su cuenta.
                 </p>
                 <p style='margin:0 0 20px;color:#374151;font-size:15px;line-height:1.7;'>
-                    Para continuar, presioná el siguiente botón. Por seguridad, este enlace vence en <strong>30 minutos</strong>.
+                    Para continuar, presione el siguiente botón. Por seguridad, este enlace vence en <strong>30 minutos</strong>.
                 </p>
                 <div style='margin:26px 0;text-align:center;'>
                     <a href='{resetUrlSeguro}' style='display:inline-block;background:#d4af37;color:#111827;text-decoration:none;font-weight:800;padding:14px 24px;border-radius:14px;font-size:15px;'>
@@ -22,7 +22,7 @@ namespace Proyecto_FinalAPI.Services
                     </a>
                 </div>
                 <p style='margin:18px 0 0;color:#6b7280;font-size:13px;line-height:1.6;'>
-                    Si no solicitaste este cambio, podés ignorar este correo. Tu contraseña actual seguirá funcionando.
+                    Si no solicitó este cambio, puede ignorar este correo. Su contraseña actual seguirá funcionando.
                 </p>";
 
             return BuildBaseTemplate(
@@ -82,7 +82,7 @@ namespace Proyecto_FinalAPI.Services
                 subtitulo: asuntoSeguro,
                 badge: "Contacto",
                 contenido: contenido,
-                notaInferior: "Recordá revisar el módulo de Consultas para darle seguimiento administrativo.");
+                notaInferior: "Recuerde revisar el módulo de Consultas para darle seguimiento administrativo.");
         }
 
         private static string BuildBaseTemplate(string titulo, string subtitulo, string badge, string contenido, string notaInferior)

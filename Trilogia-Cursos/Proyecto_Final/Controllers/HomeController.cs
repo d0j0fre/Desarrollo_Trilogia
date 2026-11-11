@@ -141,7 +141,7 @@ namespace Proyecto_Final.Controllers
                 {
                     _emailService.SendEmail(
                         model.Correo,
-                        $"Recibimos tu consulta - {model.Asunto}",
+                        $"Recibimos su consulta - {model.Asunto}",
                         EmailTemplateBuilder.BuildContactConfirmationEmail(model.Nombre, model.Asunto, model.Mensaje));
                 }
                 catch (Exception exception)
@@ -163,7 +163,7 @@ namespace Proyecto_Final.Controllers
                     _logger.LogWarning(exception, "No se pudo enviar el aviso interno de la consulta. Solicitud {TraceId}.", HttpContext.TraceIdentifier);
                 }
 
-                TempData["SuccessMessage"] = "Se guardó correctamente. Te enviamos un correo de confirmación con el resumen de tu consulta.";
+                TempData["SuccessMessage"] = "Se guardó correctamente. Le enviamos un correo de confirmación con el resumen de su consulta.";
             }
             catch (Exception exception)
             {

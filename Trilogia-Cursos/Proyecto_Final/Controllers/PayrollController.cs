@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.SqlClient;
 using Proyecto_Final.Filters;
 using Proyecto_Final.Models.Admin;
 using Proyecto_Final.Services;
@@ -9,6 +8,8 @@ namespace Proyecto_Final.Controllers;
 [AdminAuthorize("Planilla", "PLANILLA_VER")]
 public sealed class PayrollController : Controller
 {
+    private const string TechnicalFailureMessage = "No fue posible procesar la operación de planilla. El incidente quedó registrado; intente de nuevo en unos minutos.";
+
     private readonly IPayrollService _payroll; private readonly ILogger<PayrollController> _logger;
     public PayrollController(IPayrollService payroll, ILogger<PayrollController> logger){_payroll=payroll;_logger=logger;}
 
@@ -19,7 +20,10 @@ public sealed class PayrollController : Controller
         {
             return View(new PayrollIndexViewModel
             {
-                Calculos = await _payroll.ListAsync(cancellationToken)
+                Calculos = await _payroll.ListAsync(cancellationToken),
+                Reglas = await _payroll.ListRulesAsync(cancellationToken),
+                PeriodosAbiertos = await _payroll.ListOpenPeriodsAsync(cancellationToken),
+                Empleados = await _payroll.ListActiveEmployeesAsync(cancellationToken)
             });
         }
         catch (Exception exception)
@@ -29,13 +33,13 @@ public sealed class PayrollController : Controller
     }
 
     [HttpPost,ValidateAntiForgeryToken,AdminAuthorize("Planilla","PLANILLA_CONFIGURAR")]
-    public async Task<IActionResult> ConfigureRule(PayrollRuleFormViewModel model,CancellationToken cancellationToken)=>await ExecuteAsync(model,()=>_payroll.SaveRuleAsync(model,UserId(),UserName(),cancellationToken),"Regla versionada guardada.");
+    public async Task<IActionResult> ConfigureRule(PayrollRuleFormViewModel model,CancellationToken cancellationToken)=>await ExecuteAsync(()=>_payroll.SaveRuleAsync(model,UserId(),UserName(),cancellationToken),"Regla versionada guardada.");
 
     [HttpPost,ValidateAntiForgeryToken,AdminAuthorize("Planilla","PLANILLA_GESTIONAR")]
-    public async Task<IActionResult> CreatePeriod(PayrollPeriodFormViewModel model,CancellationToken cancellationToken)=>await ExecuteAsync(model,()=>_payroll.CreatePeriodAsync(model,UserId(),UserName(),cancellationToken),"Periodo creado.");
+    public async Task<IActionResult> CreatePeriod(PayrollPeriodFormViewModel model,CancellationToken cancellationToken)=>await ExecuteAsync(()=>_payroll.CreatePeriodAsync(model,UserId(),UserName(),cancellationToken),"Periodo creado.");
 
     [HttpPost,ValidateAntiForgeryToken,AdminAuthorize("Planilla","PLANILLA_CALCULAR")]
-    public async Task<IActionResult> Calculate(PayrollCalculationRequestViewModel model,CancellationToken cancellationToken)=>await ExecuteAsync(model,()=>_payroll.CalculateAsync(model,UserId(),UserName(),cancellationToken),"Planilla calculada de forma idempotente.");
+    public async Task<IActionResult> Calculate(PayrollCalculationRequestViewModel model,CancellationToken cancellationToken)=>await ExecuteAsync(()=>_payroll.CalculateAsync(model,UserId(),UserName(),cancellationToken),"Planilla calculada de forma idempotente.");
 
     [HttpPost,ValidateAntiForgeryToken,AdminAuthorize("Planilla","PLANILLA_APROBAR")]
     public Task<IActionResult> Approve(PayrollStateChangeViewModel model,CancellationToken cancellationToken)=>ChangeStateAsync(model,"Aprobada",cancellationToken);
@@ -60,7 +64,6 @@ public sealed class PayrollController : Controller
         ModelState.Remove(nameof(PayrollStateChangeViewModel.Estado));
 
         return ExecuteAsync(
-            model,
             () => _payroll.ChangeStateAsync(
                 model,
                 UserId(),
@@ -71,49 +74,48 @@ public sealed class PayrollController : Controller
         );
     }
 
-    private async Task<IActionResult> ExecuteAsync(object model,Func<Task> action,string success)
+    /// <summary>
+    /// Toda acción de planilla vuelve a la pantalla: con el mensaje verde si funcionó y con uno rojo y legible
+    /// si no (G1-04). Las reglas de negocio de los procedimientos (THROW ≥ 50000) se muestran tal cual.
+    /// </summary>
+    private async Task<IActionResult> ExecuteAsync(Func<Task> action,string success)
     {
         if (!ModelState.IsValid)
         {
-            var errors = ModelState
-                .Where(item => item.Value is { Errors.Count: > 0 })
-                .SelectMany(item => item.Value!.Errors.Select(error =>
-                {
-                    var message = !string.IsNullOrWhiteSpace(error.ErrorMessage)
-                        ? error.ErrorMessage
-                        : "El valor recibido tiene un formato inválido.";
-
-                    var field = string.IsNullOrWhiteSpace(item.Key)
-                        ? "Formulario"
-                        : item.Key;
-
-                    return $"{field}: {message}";
-                }))
+            var messages = ModelState.Values
+                .SelectMany(entry => entry.Errors)
+                .Select(error => string.IsNullOrWhiteSpace(error.ErrorMessage) ? "El valor recibido tiene un formato inválido." : error.ErrorMessage.Trim())
+                .Distinct()
                 .ToArray();
 
-            var detail = errors.Length > 0
-                ? string.Join(" | ", errors)
-                : "Error de validación no identificado.";
-
-            _logger.LogWarning(
-                "Solicitud de planilla inválida: {ValidationErrors}",
-                detail
-            );
-
-            return UnprocessableEntity(new { message = $"La solicitud no es válida: {detail}" });
+            _logger.LogWarning("Solicitud de planilla inválida: {ValidationErrors}", string.Join(" | ", messages));
+            TempData["ErrorMessage"] = messages.Length == 0
+                ? "La solicitud no es válida. Revise los datos e intente de nuevo."
+                : "La solicitud no es válida: " + string.Join(" ", messages);
+            return RedirectToAction(nameof(Index));
         }
-        try {await action();TempData["SuccessMessage"]=success;}
+
+        try
+        {
+            await action();
+            TempData["SuccessMessage"]=success;
+        }
         catch(PayrollConfigurationException exception)
         {
             _logger.LogWarning(exception,"Configuración de planilla incompleta. TraceId {TraceId}",HttpContext.TraceIdentifier);
-            return UnprocessableEntity(new { message = "Revise las reglas vigentes de comisiones, ausencias y horas extra antes de calcular la planilla." });
+            TempData["ErrorMessage"] = exception.Message;
         }
-        catch(SqlException exception) when(exception.Number>=50000)
+        catch(Exception exception) when(BusinessErrors.TryGetMessage(exception,out _) || BusinessErrors.IsApplicationRule(exception))
         {
             _logger.LogWarning(exception,"Regla de planilla rechazada. TraceId {TraceId}",HttpContext.TraceIdentifier);
-            return UnprocessableEntity(new { message = "La operación de planilla no es válida para el estado actual." });
+            TempData["ErrorMessage"] = BusinessErrors.TryGetMessage(exception,out var message) ? message : exception.Message;
         }
-        catch(Exception exception){return ServiceUnavailable(exception,"procesar la operación de planilla");}
+        catch(Exception exception)
+        {
+            _logger.LogError(exception,"Falla técnica al procesar la operación de planilla. TraceId {TraceId}",HttpContext.TraceIdentifier);
+            TempData["ErrorMessage"] = TechnicalFailureMessage;
+        }
+
         return RedirectToAction(nameof(Index));
     }
     private int UserId()=>HttpContext.Session.GetInt32("UserId")??0; private string UserName()=>HttpContext.Session.GetString("UserFullName")??"Usuario";
