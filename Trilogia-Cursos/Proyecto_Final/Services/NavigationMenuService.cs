@@ -47,6 +47,7 @@ public static class NavigationMenu
         [
             new("RoutesAdmin", "Index", "fa-route", "Rutas y Entregas"),
             new("DeliveryBoard", "Index", "fa-th-large", "Tablero de entregas"),
+            new("Finance", "Merchandise", "fa-boxes", "Liquidación de mercadería"),
             new("Vehicles", "Index", "fa-truck", "Vehículos"),
             new("Fleet", "Mileage", "fa-tachometer-alt", "Kilometraje"),
             new("Fleet", "Maintenance", "fa-wrench", "Mantenimiento"),
