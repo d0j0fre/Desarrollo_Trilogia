@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Data.SqlClient;
+using Proyecto_Final.Services;
 using Proyecto_FinalAPI.Authorization;
 using Proyecto_FinalAPI.Models;
 using Proyecto_FinalAPI.Services.Mobile;
@@ -24,16 +25,22 @@ namespace Proyecto_FinalAPI.Controllers
         private static readonly HashSet<string> AllowedStatuses =
             new(StringComparer.OrdinalIgnoreCase) { "EnRuta", "Entregado", "Fallido" };
 
+        /// <summary>Mismo tope que la web (6 MB: los 5 MB del archivo más el multipart).</summary>
+        private const int MaxEvidenceRequestBytes = 6 * 1024 * 1024;
+
         private readonly IDriverMobileDbService _driver;
+        private readonly IDriverEvidenceService _evidence;
         private readonly IMobileAuditService _audit;
         private readonly ILogger<MobileDriverController> _logger;
 
         public MobileDriverController(
             IDriverMobileDbService driver,
+            IDriverEvidenceService evidence,
             IMobileAuditService audit,
             ILogger<MobileDriverController> logger)
         {
             _driver = driver;
+            _evidence = evidence;
             _audit = audit;
             _logger = logger;
         }
@@ -178,6 +185,103 @@ namespace Proyecto_FinalAPI.Controllers
             catch (SqlException exception)
             {
                 _logger.LogError(exception, "Falló el cambio de estado de RutaPedido {RouteOrderId}.", routeOrderId);
+                return Unavailable();
+            }
+        }
+
+        /// <summary>
+        /// Sube la foto o la firma de una parada de <b>su propia</b> ruta (G3-04).
+        ///
+        /// Multipart: <c>tipo</c> (Foto|Firma), <c>syncGuid</c>, <c>archivo</c> y
+        /// <c>observaciones</c> opcional. Mismos límites que la web: imagen JPG, PNG o WEBP
+        /// de hasta 5 MB (la firma, PNG), con la firma binaria verificada. La parada debe ser
+        /// del chofer del token y su ruta estar Despachada (o cerrada hace menos de 48 horas,
+        /// para la última parada y el envío sin señal).
+        ///
+        /// Idempotente por <c>syncGuid</c>, igual que el estado: un reenvío devuelve
+        /// <c>duplicado = true</c> sin guardar el archivo otra vez.
+        /// </summary>
+        [HttpPost("deliveries/{routeOrderId:int}/evidence")]
+        [EnableRateLimiting("mobile-write")]
+        [RequestSizeLimit(MaxEvidenceRequestBytes)]
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> RegisterEvidence(
+            int routeOrderId,
+            [FromForm] RegisterEvidenceRequest request,
+            CancellationToken cancellationToken)
+        {
+            if (routeOrderId <= 0) return NotFoundOrForbidden();
+            if (request is null) return InvalidRequest("Falta el cuerpo de la solicitud.");
+
+            if (!TryReadSyncGuid(request.SyncGuid, out var syncGuid))
+            {
+                return InvalidRequest("Falta un identificador de sincronización válido.");
+            }
+
+            try
+            {
+                var result = await _evidence.RegisterAsync(
+                    routeOrderId,
+                    CurrentUserId,
+                    CurrentUserName,
+                    request.Tipo,
+                    syncGuid,
+                    request.Archivo,
+                    request.Observaciones,
+                    cancellationToken);
+
+                if (!result.Duplicado)
+                {
+                    await _audit.RecordAsync(
+                        CurrentUserId,
+                        CurrentUserName,
+                        CurrentUserEmail,
+                        CurrentRole,
+                        "Registrar evidencia",
+                        "Entregas",
+                        $"Evidencia ({result.Tipo}) registrada desde la app para la parada {routeOrderId}. ID: {result.EvidenciaId}.",
+                        ClientIp,
+                        ClientUserAgent,
+                        cancellationToken);
+                }
+
+                return Ok(new RegisterEvidenceResponse
+                {
+                    EvidenciaId = result.EvidenciaId,
+                    Tipo = result.Tipo,
+                    Duplicado = result.Duplicado
+                });
+            }
+            catch (EvidenceValidationException exception)
+            {
+                // Archivo o tipo inválido: reintentar el mismo archivo no lo arregla.
+                return BusinessRule(exception.Message);
+            }
+            catch (EvidenceStorageNotConfiguredException exception)
+            {
+                _logger.LogError(exception, "Se rechazó una evidencia porque el almacenamiento compartido no está configurado.");
+                return Unavailable();
+            }
+            catch (SqlException exception) when (exception.Number == 52087)
+            {
+                return BusinessRule("Esa ruta ya no admite evidencia: solo se puede subir en una ruta despachada o cerrada hace menos de 48 horas.");
+            }
+            catch (SqlException exception) when (exception.Number == 52088)
+            {
+                return InvalidRequest("El identificador de sincronización no es válido.");
+            }
+            catch (SqlException exception) when (exception.Number >= 50000)
+            {
+                _logger.LogWarning(
+                    exception,
+                    "Evidencia rechazada para la parada {RouteOrderId} del chofer {UserId}.",
+                    routeOrderId,
+                    CurrentUserId);
+                return NotFoundOrForbidden();
+            }
+            catch (Exception exception) when (exception is SqlException or IOException)
+            {
+                _logger.LogError(exception, "Falló el registro de evidencia de la parada {RouteOrderId}.", routeOrderId);
                 return Unavailable();
             }
         }

@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Código que el sitio web (MVC) y la API móvil comparten tal cual.
+       Hoy: el almacenamiento privado de la evidencia de entrega. La web y la app del
+       chofer deben guardar y leer las fotos y firmas con la MISMA lógica (mismos
+       límites, misma validación de firma binaria, mismas claves), así que vive en un
+       solo lugar. El espacio de nombres se conserva (Proyecto_Final.Services) para que
+       nada de lo que ya lo usa cambie. -->
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Los mismos usings implícitos que el SDK Web, para mover el archivo sin editarlo. -->
+    <Using Include="Microsoft.AspNetCore.Hosting" />
+    <Using Include="Microsoft.AspNetCore.Http" />
+    <Using Include="Microsoft.Extensions.Configuration" />
+  </ItemGroup>
+
+</Project>

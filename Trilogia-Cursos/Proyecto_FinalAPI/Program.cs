@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
+using Proyecto_Final.Services;
 using Proyecto_FinalAPI.Authorization;
 using Proyecto_FinalAPI.Middleware;
 using Proyecto_FinalAPI.Options;
@@ -45,6 +46,18 @@ builder.Services.AddAuthorization();
 
 // Superficie móvil (Fase 2).
 builder.Services.AddScoped<IDriverMobileDbService, DriverMobileDbService>();
+builder.Services.AddScoped<IDriverEvidenceService, DriverEvidenceService>();
+// La evidencia se guarda con el MISMO servicio que usa el sitio web, en la misma carpeta
+// (EvidenceStorage:RootPath, fuera de wwwroot). Sin esa ruta configurada la API rechaza la
+// subida en vez de guardar donde la web no la vería (ver docs/plan-app-movil-flutter.md §9.1).
+if (string.IsNullOrWhiteSpace(builder.Configuration["EvidenceStorage:RootPath"]))
+{
+    builder.Services.AddSingleton<IEvidenceStorageService, UnconfiguredEvidenceStorageService>();
+}
+else
+{
+    builder.Services.AddSingleton<IEvidenceStorageService, FileEvidenceStorageService>();
+}
 builder.Services.AddScoped<IMobileAuditService, MobileAuditService>();
 builder.Services.AddScoped<IAppReleaseDbService, AppReleaseDbService>();
 builder.Services.AddScoped<IInventoryMobileDbService, InventoryMobileDbService>();

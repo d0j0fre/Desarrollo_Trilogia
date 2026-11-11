@@ -18,4 +18,9 @@
     <PackageReference Include="QRCoder" Version="1.6.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Almacenamiento de evidencias de entrega, compartido con la API móvil. -->
+    <ProjectReference Include="..\Proyecto_Final.Shared\Proyecto_Final.Shared.csproj" />
+  </ItemGroup>
+
 </Project>
