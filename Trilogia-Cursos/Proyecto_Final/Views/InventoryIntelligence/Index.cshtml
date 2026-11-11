@@ -4,6 +4,7 @@
     ViewData["Title"] = "Inteligencia de inventario";
     var userRole = Context.Session.GetString("UserRole");
     var canOpenSuggestions = await MenuAccess.CanOpenAsync(userRole, "PurchaseOrders", "Suggestions");
+    var canCreatePromotion = await MenuAccess.CanOpenAsync(userRole, "Promotions", "Create");
     var maxSales = Model.TendenciaEstacional.Any() ? Model.TendenciaEstacional.Max(point => point.TotalVendido) : 0m;
     string RiskClass(string risk) => risk == "Alto" ? "danger" : risk == "Medio" ? "warning" : "info";
 }
@@ -20,6 +21,16 @@
 
     @if (TempData["ErrorMessage"] is string error) { <div class="alert alert-danger" role="alert">@error</div> }
     <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+    @if (Model.ProductosEstancados.Any())
+    {
+        @* BUG-24-03 · CU-242: alerta gerencial de productos estancados con la sugerencia de promocionarlos. *@
+        <div class="alert alert-warning" role="alert" id="stagnant-alert">
+            <strong><i class="fa fa-exclamation-triangle mr-1"></i>Alerta gerencial: @Model.ProductosEstancados.Count producto(s) estancado(s).</strong>
+            Tienen stock y no registran ventas en los últimos @Model.Filter.SlowWindowDays días. Se sugiere incluirlos en una promoción para recuperar su rotación.
+            <a href="#slow-title" class="alert-link ml-1">Ver productos</a>
+        </div>
+    }
 
     <section class="card mb-4" aria-labelledby="intelligence-filter-title">
         <div class="card-header" id="intelligence-filter-title">Parámetros del análisis</div>
@@ -58,6 +69,7 @@
 
     <section class="card mb-4" aria-labelledby="slow-title">
         <div class="card-header" id="slow-title">Productos sin rotación</div>
+        <p class="text-muted small px-3 pt-2 mb-0">Regla: producto activo, con stock, creado hace al menos @Model.Filter.SlowWindowDays días y sin ventas en los últimos @Model.Filter.SlowWindowDays días (ventana configurable de 30 a 365). La alerta se retira sola cuando el producto vuelve a venderse.</p>
         @if (!Model.ProductosEstancados.Any())
         {
             <div class="s4-empty"><i class="fa fa-check-circle"></i><h3>Sin productos estancados</h3><p class="mb-0">Ningún producto maduro con stock incumple la ventana seleccionada.</p></div>
@@ -65,8 +77,8 @@
         else
         {
             <div class="table-responsive"><table class="table table-hover">
-                <thead><tr><th>Producto</th><th>Stock</th><th>Última venta</th><th>Días sin movimiento</th><th>Venta en ventana</th><th>Riesgo</th></tr></thead>
-                <tbody>@foreach (var item in Model.ProductosEstancados) { <tr><td><strong>@item.Nombre</strong><small class="d-block text-muted">Creado @item.FechaCreacion.ToString("dd/MM/yyyy")</small></td><td>@item.Stock</td><td>@(item.UltimaVenta?.ToString("dd/MM/yyyy") ?? "Sin ventas")</td><td>@item.DiasSinMovimiento</td><td>@item.VendidoEnVentana</td><td><span class="badge badge-@RiskClass(item.NivelRiesgo)">@item.NivelRiesgo</span></td></tr> }</tbody>
+                <thead><tr><th>Producto</th><th>Stock</th><th>Última venta</th><th>Días sin movimiento</th><th>Venta en ventana</th><th>Riesgo</th><th>Sugerencia</th></tr></thead>
+                <tbody>@foreach (var item in Model.ProductosEstancados) { <tr><td><strong>@item.Nombre</strong><small class="d-block text-muted">Creado @item.FechaCreacion.ToString("dd/MM/yyyy")</small></td><td>@item.Stock</td><td>@(item.UltimaVenta?.ToString("dd/MM/yyyy") ?? "Sin ventas")</td><td>@item.DiasSinMovimiento</td><td>@item.VendidoEnVentana</td><td><span class="badge badge-@RiskClass(item.NivelRiesgo)">@item.NivelRiesgo</span></td><td>@if (canCreatePromotion) { <a class="btn btn-ds-edit btn-sm" asp-controller="Promotions" asp-action="Create" asp-route-productoId="@item.ProductoId"><i class="fa fa-tags mr-1"></i>Incluir en promoción</a> } else { <span class="text-muted small">Incluir en una promoción</span> }</td></tr> }</tbody>
             </table></div>
         }
     </section>
