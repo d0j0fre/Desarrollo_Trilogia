@@ -88,6 +88,81 @@ public sealed class RoutesCorreccionesTests
         Assert.DoesNotContain("quedaron al final", secuenciar, StringComparison.Ordinal);
     }
 
+    // ── BUG-25-02 · tiempo total estimado ───────────────────────────────────
+
+    private static RouteOrderItemViewModel Parada(int id, int secuencia, double? lat, double? lng, string estado = "Pendiente") => new()
+    {
+        RutaPedidoId = id,
+        PedidoId = id,
+        Secuencia = secuencia,
+        EstadoEntrega = estado,
+        Latitud = (decimal?)lat,
+        Longitud = (decimal?)lng
+    };
+
+    [Fact]
+    public void Estimate_SumaTramosYTiempoDeAtencionEnElOrdenDeSecuencia()
+    {
+        // Dos paradas sobre el mismo meridiano, ~11,1 km y ~22,2 km desde la bodega (9,9333 / -84,0833).
+        var estimacion = RouteEstimator.Estimate(
+        [
+            Parada(2, 2, 10.1333, -84.0833),
+            Parada(1, 1, 10.0333, -84.0833)
+        ]);
+
+        Assert.Equal(2, estimacion.Paradas);
+        Assert.Equal(0, estimacion.ParadasSinUbicacion);
+        // 22,2 km en línea recta × 1,3 = 28,9 km → 57,7 min de conducción + 2 × 10 min de atención.
+        Assert.InRange(estimacion.DistanciaKm, 28.5, 29.3);
+        Assert.InRange(estimacion.MinutosTotales, 76, 79);
+        // La primera parada en secuencia llega antes que la segunda.
+        Assert.True(estimacion.PorParada[1].MinutosAcumulados < estimacion.PorParada[2].MinutosAcumulados);
+        Assert.Equal(estimacion.MinutosTotales, estimacion.PorParada[2].MinutosAcumulados);
+    }
+
+    [Fact]
+    public void Estimate_IgnoraEntregadasYFallidasYCuentaLasQueNoTienenUbicacion()
+    {
+        var estimacion = RouteEstimator.Estimate(
+        [
+            Parada(1, 1, 10.0333, -84.0833, "Entregado"),
+            Parada(2, 2, 10.0333, -84.0833, "Fallido"),
+            Parada(3, 3, 10.0333, -84.0833, "EnRuta"),
+            Parada(4, 4, null, null)
+        ]);
+
+        Assert.Equal(1, estimacion.Paradas);
+        Assert.Equal(1, estimacion.ParadasSinUbicacion);
+        Assert.Single(estimacion.PorParada);
+        Assert.True(estimacion.PorParada.ContainsKey(3));
+    }
+
+    [Fact]
+    public void Estimate_SinParadasConUbicacionNoInventaUnTiempo()
+    {
+        var estimacion = RouteEstimator.Estimate([Parada(1, 1, null, null)]);
+
+        Assert.False(estimacion.TieneEstimacion);
+        Assert.Equal("—", estimacion.TextoTotal);
+    }
+
+    [Theory]
+    [InlineData(45, "45 min")]
+    [InlineData(60, "1 h")]
+    [InlineData(72, "1 h 12 min")]
+    public void FormatMinutes(int minutos, string esperado) =>
+        Assert.Equal(esperado, RouteEstimator.FormatMinutes(minutos));
+
+    [Fact]
+    public void ElDetalleDeLaRutaMuestraElTiempoTotalYLaLlegadaPorParada()
+    {
+        var vista = MobileCorreccionesTests.Read("Proyecto_Final", "Views", "RoutesAdmin", "Detail.cshtml");
+
+        Assert.Contains("Tiempo total estimado", vista, StringComparison.Ordinal);
+        Assert.Contains("Model.Estimacion.TextoTotal", vista, StringComparison.Ordinal);
+        Assert.Contains("Llegada estimada", vista, StringComparison.Ordinal);
+    }
+
     private static int CuantasVeces(string texto, string buscado)
     {
         var cuenta = 0;

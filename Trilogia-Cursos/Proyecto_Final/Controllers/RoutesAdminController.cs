@@ -102,10 +102,12 @@ namespace Proyecto_Final.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            var pedidos = await _logistics.GetRouteOrdersAsync(id);
             var vm = new RouteDetailViewModel
             {
                 Cabecera = cabecera,
-                Pedidos = await _logistics.GetRouteOrdersAsync(id)
+                Pedidos = pedidos,
+                Estimacion = RouteEstimator.Estimate(pedidos)
             };
 
             // Solo se pueden agregar pedidos mientras la ruta está en planificación.
@@ -242,7 +244,8 @@ namespace Proyecto_Final.Controllers
                 else
                 {
                     await RegistrarAuditoriaAsync("Secuenciar ruta", "Rutas", $"Se secuenciaron automáticamente {puntos} punto(s) de la ruta #{rutaId}.");
-                    TempData["SuccessMessage"] = $"Ruta secuenciada automáticamente ({puntos} punto(s)). Puede reordenar manualmente antes de despachar.";
+                    TempData["SuccessMessage"] =
+                        JoinSentences($"Ruta secuenciada automáticamente ({puntos} punto(s)).", await EstimateTextAsync(rutaId), "Puede reordenar manualmente antes de despachar.");
                 }
             }
             catch (SqlException ex) when (ex.Number >= 50000)
@@ -318,7 +321,7 @@ namespace Proyecto_Final.Controllers
                 else
                 {
                     await RegistrarAuditoriaAsync("Recalcular ruta", "Rutas", $"Se recalculó la ruta #{rutaId} ({puntos} punto(s) reordenados).");
-                    TempData["SuccessMessage"] = $"Ruta recalculada. {puntos} punto(s) reordenados. El chofer verá la ruta actualizada.";
+                    TempData["SuccessMessage"] = JoinSentences($"Ruta recalculada. {puntos} punto(s) reordenados.", await EstimateTextAsync(rutaId), "El chofer verá la ruta actualizada.");
                 }
             }
             catch (SqlException ex) when (ex.Number >= 50000)
@@ -381,6 +384,30 @@ namespace Proyecto_Final.Controllers
         }
 
         // ── Helpers ─────────────────────────────────────────
+
+        private static string JoinSentences(params string[] frases) =>
+            string.Join(" ", frases.Where(frase => !string.IsNullOrWhiteSpace(frase)));
+
+        // BUG-25-02: «Tiempo total estimado: 1 h 12 min (38,4 km).» para el mensaje de secuenciar y recalcular.
+        // Es informativo: si falla la lectura no debe impedir el aviso de que la ruta ya quedó ordenada.
+        private async Task<string> EstimateTextAsync(int rutaId)
+        {
+            try
+            {
+                var estimacion = RouteEstimator.Estimate(await _logistics.GetRouteOrdersAsync(rutaId));
+                if (!estimacion.TieneEstimacion) return string.Empty;
+                var texto = $"Tiempo total estimado: {estimacion.TextoTotal} ({estimacion.TextoDistancia}).";
+                return estimacion.ParadasSinUbicacion > 0
+                    ? $"{texto} No incluye {estimacion.ParadasSinUbicacion} parada(s) sin ubicación."
+                    : texto;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "No se pudo calcular el tiempo estimado de la ruta #{RutaId}.", rutaId);
+                return string.Empty;
+            }
+        }
+
         private async Task<RouteCreateViewModel> BuildCreateViewModelAsync()
         {
             var vm = new RouteCreateViewModel();

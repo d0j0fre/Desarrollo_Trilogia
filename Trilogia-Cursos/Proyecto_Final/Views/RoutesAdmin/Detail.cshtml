@@ -1,4 +1,5 @@
 @using Proyecto_Final.Models.Admin
+@using Proyecto_Final.Services
 @model Proyecto_Final.Models.Admin.RouteDetailViewModel
 @{
     ViewData["Title"] = $"Ruta {Model.Cabecera.Codigo}";
@@ -63,6 +64,18 @@
                 <dl class="row mb-0">
                     <dt class="col-5">Chofer</dt><dd class="col-7">@c.Chofer</dd>
                     <dt class="col-5">Vehículo</dt><dd class="col-7">@c.VehiculoPlaca<br /><small class="text-muted">@c.VehiculoDescripcion</small></dd>
+                    <dt class="col-5">Tiempo total estimado</dt>
+                    <dd class="col-7" id="tiempoTotalEstimado">
+                        @if (Model.Estimacion.TieneEstimacion)
+                        {
+                            <strong>@Model.Estimacion.TextoTotal</strong><br />
+                            <small class="text-muted">@Model.Estimacion.TextoDistancia · @Model.Estimacion.Paradas parada(s) con ubicación@(Model.Estimacion.ParadasSinUbicacion > 0 ? $" · {Model.Estimacion.ParadasSinUbicacion} sin ubicación (no incluidas)" : "")</small>
+                        }
+                        else
+                        {
+                            <span class="text-muted">Sin paradas con ubicación para estimar.</span>
+                        }
+                    </dd>
                     <dt class="col-5">Creada</dt><dd class="col-7">@c.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</dd>
                     @if (c.FechaDespacho.HasValue)
                     {
@@ -201,6 +214,7 @@
                                 <th>Cliente</th>
                                 <th>Dirección</th>
                                 <th>Prioridad</th>
+                                <th title="Minutos desde la salida de la bodega, con 10 min de atención por parada">Llegada estimada</th>
                                 <th>Entrega</th>
                                 <th class="text-center">Evidencias</th>
                                 @if (esPlanificada)
@@ -218,6 +232,16 @@
                                     <td>@p.Cliente</td>
                                     <td><small>@p.DireccionEntrega</small></td>
                                     <td>@RoutePriority.Texto(p.Prioridad)</td>
+                                    <td>
+                                        @if (Model.Estimacion.PorParada.TryGetValue(p.RutaPedidoId, out var llegada))
+                                        {
+                                            <span>+@RouteEstimator.FormatMinutes(llegada.MinutosAcumulados)</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">—</span>
+                                        }
+                                    </td>
                                     <td>
                                         <span class="admin-badge-soft @BadgeEntrega(p.EstadoEntrega)">@TextoEntrega(p.EstadoEntrega)</span>
                                         @if (p.EstadoEntrega == "Fallido" && !string.IsNullOrWhiteSpace(p.MotivoFallo))

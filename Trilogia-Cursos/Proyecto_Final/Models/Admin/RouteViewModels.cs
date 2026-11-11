@@ -148,6 +148,10 @@ namespace Proyecto_Final.Models.Admin
         public RouteHeaderViewModel Cabecera { get; set; } = new();
         public List<RouteOrderItemViewModel> Pedidos { get; set; } = new();
         public List<AssignableOrderViewModel> PedidosDisponibles { get; set; } = new();
+
+        // BUG-25-02: tiempo y distancia estimados de lo que falta recorrer, en el orden actual.
+        public Proyecto_Final.Services.RouteEstimate Estimacion { get; set; } =
+            Proyecto_Final.Services.RouteEstimator.Estimate(Array.Empty<RouteOrderItemViewModel>());
     }
 
     public sealed class DeliveryBoardRowViewModel
