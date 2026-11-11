@@ -6,6 +6,8 @@ public sealed class AttendanceEntryViewModel
 {
     public long JornadaId { get; set; }
     public int EmpleadoId { get; set; }
+    /// <summary>Usuario dueño del expediente; solo lo devuelve la lista por aprobar (0 si no viene).</summary>
+    public int UsuarioId { get; set; }
     public string NombreCompleto { get; set; } = string.Empty;
     public DateTime Fecha { get; set; }
     public decimal HorasOrdinarias { get; set; }

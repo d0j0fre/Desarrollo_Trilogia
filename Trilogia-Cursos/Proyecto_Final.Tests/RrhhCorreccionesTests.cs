@@ -286,7 +286,79 @@ public sealed class RrhhCorreccionesTests
         Assert.Equal("Ana Mora · Cajera", Assert.Single(model.Empleados).Etiqueta);
     }
 
+    // ───────────── G2-25 / G2-26 · Aprobar jornadas ─────────────
+
+    [Fact]
+    public async Task G2_26_LaPropiaJornadaNoSeOfreceParaAprobarla()
+    {
+        var attendance = new Mock<IAttendanceService>();
+        attendance.Setup(a => a.GetPendingAsync(It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([Jornada(1, usuarioId: 7, "Mía"), Jornada(2, usuarioId: 30, "De otra persona")]);
+        var controller = NewAttendanceController(attendance.Object, userId: 7);
+
+        var result = Assert.IsType<ViewResult>(await controller.Index(null, null, CancellationToken.None));
+
+        var shown = Assert.IsAssignableFrom<IEnumerable<AttendanceEntryViewModel>>(result.Model).ToList();
+        Assert.Equal(["De otra persona"], shown.Select(entry => entry.NombreCompleto));
+        Assert.Equal(1, (int)controller.ViewBag.PropiasOcultas);
+    }
+
+    [Fact]
+    public async Task G2_26_AprobarLaPropiaJornadaMuestraLaCausaDelProcedimiento()
+    {
+        var attendance = new Mock<IAttendanceService>();
+        attendance.Setup(a => a.DecideAsync(It.IsAny<AttendanceDecisionViewModel>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(SqlErrors.Create(55121, "No puede resolver su propia jornada."));
+        var controller = NewAttendanceController(attendance.Object, userId: 7);
+
+        await controller.Decide(new AttendanceDecisionViewModel { JornadaId = 1, Decision = "Aprobada", RowVersionBase64 = "AAAAAAAAB9E=" }, null, null, CancellationToken.None);
+
+        Assert.Equal("No puede resolver su propia jornada.", controller.TempData["ErrorMessage"]);
+    }
+
+    [Fact]
+    public async Task G2_26_UnErrorTecnicoMantieneElMensajeGenerico()
+    {
+        var attendance = new Mock<IAttendanceService>();
+        attendance.Setup(a => a.DecideAsync(It.IsAny<AttendanceDecisionViewModel>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(SqlErrors.Create(1205, "Deadlock"));
+        var controller = NewAttendanceController(attendance.Object, userId: 7);
+
+        await controller.Decide(new AttendanceDecisionViewModel { JornadaId = 1, Decision = "Aprobada", RowVersionBase64 = "AAAAAAAAB9E=" }, null, null, CancellationToken.None);
+
+        Assert.Equal("No fue posible resolver la jornada; recargue la lista.", controller.TempData["ErrorMessage"]);
+    }
+
+    [Fact]
+    public void G2_25_LaPantallaMuestraObservacionesYFiltroDeFechas()
+    {
+        var view = Read("Proyecto_Final", "Views", "Attendance", "Index.cshtml");
+
+        Assert.Contains("Observaciones del empleado", view, StringComparison.Ordinal);
+        Assert.Contains("item.Observaciones", view, StringComparison.Ordinal);
+        Assert.Contains("name=\"desde\"", view, StringComparison.Ordinal);
+        Assert.Contains("name=\"hasta\"", view, StringComparison.Ordinal);
+        // La decisión conserva el rango que se estaba mirando.
+        Assert.Contains("<input type=\"hidden\" name=\"desde\"", view, StringComparison.Ordinal);
+    }
+
     // ───────────── ayudas ─────────────
+
+    private static AttendanceEntryViewModel Jornada(long id, int usuarioId, string nombre) => new()
+    {
+        JornadaId = id, UsuarioId = usuarioId, NombreCompleto = nombre, Fecha = new DateTime(2026, 11, 3), HorasOrdinarias = 8,
+        Observaciones = "Horas extra por inventario", Estado = "Enviada", RowVersionBase64 = "AAAAAAAAB9E="
+    };
+
+    private static AttendanceController NewAttendanceController(IAttendanceService attendance, int userId)
+    {
+        var http = Http("Supervisor", userId);
+        return new AttendanceController(attendance, NullLogger<AttendanceController>.Instance)
+        {
+            ControllerContext = new ControllerContext { HttpContext = http },
+            TempData = new TempDataDictionary(http, Mock.Of<ITempDataProvider>())
+        };
+    }
 
     private static PayrollRuleFormViewModel ValidRule(string calculo, decimal valor, string codigo = "BONO") => new()
     {
