@@ -22,7 +22,7 @@
         }
         @foreach (var order in Model.EnRuta)
         {
-            <tr><td><strong>#@order.PedidoId</strong></td><td>@order.Cliente</td><td><small>@order.Direccion</small></td><td><a asp-controller="RoutesAdmin" asp-action="Detail" asp-route-id="@order.RutaId">@order.RutaCodigo</a></td><td>@order.Chofer</td><td>@order.Secuencia</td><td class="text-right">₡@order.Total.ToString("N2")</td></tr>
+            <tr><td><strong>#@order.PedidoId</strong></td><td>@order.Cliente</td><td><small>@order.Direccion</small></td><td><a asp-controller="RoutesAdmin" asp-action="Detail" asp-route-id="@order.RutaId" class="text-dark font-weight-bold">@order.RutaCodigo</a></td><td>@order.Chofer</td><td>@order.Secuencia</td><td class="text-right">₡@order.Total.ToString("N2")</td></tr>
         }
         </tbody></table></div>
     </div></div>
@@ -36,7 +36,7 @@
         }
         @foreach (var order in Model.Pendientes)
         {
-            <tr><td><strong>#@order.PedidoId</strong></td><td>@order.Cliente</td><td><small>@order.Direccion</small></td><td>@if (order.RutaId.HasValue){<a asp-controller="RoutesAdmin" asp-action="Detail" asp-route-id="@order.RutaId">@order.RutaCodigo</a>}else{<span class="text-muted">Sin ruta</span>}</td><td>@order.PrioridadTexto</td><td>@order.FechaPedido.ToString("dd/MM/yyyy HH:mm")</td><td class="text-right">₡@order.Total.ToString("N2")</td></tr>
+            <tr><td><strong>#@order.PedidoId</strong></td><td>@order.Cliente</td><td><small>@order.Direccion</small></td><td>@if (order.RutaId.HasValue){<a asp-controller="RoutesAdmin" asp-action="Detail" asp-route-id="@order.RutaId" class="text-dark font-weight-bold">@order.RutaCodigo</a>}else{<span class="text-muted">Sin ruta</span>}</td><td>@order.PrioridadTexto</td><td>@order.FechaPedido.ToString("dd/MM/yyyy HH:mm")</td><td class="text-right">₡@order.Total.ToString("N2")</td></tr>
         }
         </tbody></table></div>
     </div></div>
@@ -59,7 +59,7 @@
         const setText = (id, value) => { const node = document.getElementById(id); if (node) node.textContent = value; };
         const escapeHtml = value => { const node = document.createElement('span'); node.textContent = value ?? ''; return node.innerHTML; };
         const money = value => '₡' + Number(value ?? 0).toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        const routeLink = order => `<a href="/RoutesAdmin/Detail/${Number(order.rutaId)}">${escapeHtml(order.rutaCodigo)}</a>`;
+        const routeLink = order => `<a class="text-dark font-weight-bold" href="/RoutesAdmin/Detail/${Number(order.rutaId)}">${escapeHtml(order.rutaCodigo)}</a>`;
         const empty = text => `<tr><td colspan="7" class="text-center text-muted py-4">${text}</td></tr>`;
         const inRouteRow = order => `<tr><td><strong>#${Number(order.pedidoId)}</strong></td><td>${escapeHtml(order.cliente)}</td><td><small>${escapeHtml(order.direccion)}</small></td><td>${routeLink(order)}</td><td>${escapeHtml(order.chofer)}</td><td>${escapeHtml(order.secuencia)}</td><td class="text-right">${money(order.total)}</td></tr>`;
         const pendingRow = order => `<tr><td><strong>#${Number(order.pedidoId)}</strong></td><td>${escapeHtml(order.cliente)}</td><td><small>${escapeHtml(order.direccion)}</small></td><td>${order.rutaId ? routeLink(order) : '<span class="text-muted">Sin ruta</span>'}</td><td>${escapeHtml(order.prioridadTexto)}</td><td>${new Date(order.fechaPedido).toLocaleString('es-CR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })}</td><td class="text-right">${money(order.total)}</td></tr>`;
