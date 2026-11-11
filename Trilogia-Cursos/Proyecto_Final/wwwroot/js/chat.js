@@ -693,7 +693,13 @@
                 credentials: "same-origin",
                 headers: { "X-Requested-With": "XMLHttpRequest" }
             }, options || {}));
-            const data = await response.json().catch(function () { return {}; });
+            const data = await response.json().catch(function () { return null; });
+            if (data === null) {
+                // Una sesión vencida devuelve la página de inicio de sesión (HTML): no es un resultado vacío.
+                throw new Error(response.ok || response.redirected
+                    ? "Su sesión expiró. Inicie sesión nuevamente para usar el chat."
+                    : "No fue posible completar la operación.");
+            }
             if (!response.ok || data.success === false) {
                 throw new Error(data.message || "No fue posible completar la operación.");
             }
