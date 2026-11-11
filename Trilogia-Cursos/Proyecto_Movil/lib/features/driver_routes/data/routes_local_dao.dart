@@ -180,7 +180,11 @@ class RoutesLocalDao {
       {
         'estado_entrega': estado,
         'motivo_fallo': motivoFallo,
-        'fecha_entrega': DateTime.now().toIso8601String(),
+        // «En ruta» no cierra la entrega: la fecha de entrega solo se marca
+        // cuando queda Entregado o No entregado.
+        if (estado == DeliveryStatus.entregado ||
+            estado == DeliveryStatus.fallido)
+          'fecha_entrega': DateTime.now().toIso8601String(),
       },
       where: 'ruta_pedido_id = ?',
       whereArgs: [rutaPedidoId],

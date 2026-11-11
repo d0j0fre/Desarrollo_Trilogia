@@ -79,6 +79,11 @@ namespace Proyecto_Final.Controllers
                 if (result is null)
                     return Json(new { ok = false, message = "No se pudo actualizar la entrega." });
 
+                // El pedido toma el estado de su entrega (En ruta, Entregado, No entregado), como cuando
+                // el chofer usa la app. Es idempotente: también se llama en un reenvío duplicado, que
+                // completa un envío anterior que se cortó entre los dos pasos.
+                await _logistics.SyncOrderStatusFromDeliveryAsync(null, result.RutaPedidoId);
+
                 if (!result.Duplicado)
                 {
                     await RegisterAuditAsync(
@@ -112,7 +117,8 @@ namespace Proyecto_Final.Controllers
                     "Cambio de estado rechazado para RutaPedido {RouteOrderId} por usuario {UserId}.",
                     rutaPedidoId,
                     userId);
-                return Json(new { ok = false, message = "No fue posible aplicar el estado solicitado." });
+                // G3-09: el motivo lo escribe el procedimiento para el usuario («La entrega ya tiene un estado final.»…).
+                return Json(new { ok = false, message = BusinessErrors.MessageOr(exception, "No fue posible aplicar el estado solicitado.") });
             }
             catch (Exception exception)
             {

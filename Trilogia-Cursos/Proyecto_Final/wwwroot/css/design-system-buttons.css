@@ -491,3 +491,32 @@
     background-color: var(--brand-gold-primary, #D4AF37) !important;
     color: var(--brand-black, #1F1F1F) !important;
 }
+
+/* G2-13: la insignia de estado del detalle de una ruta (Planificada, Despachada…) es una
+   admin-badge-soft, no un badge de Bootstrap: sobre el encabezado negro-vino su tono
+   translúcido casi no se veía. Se pinta sólida, con tinta oscura sobre fondo claro. */
+.admin-page-header .admin-badge-soft.warning,
+.backoffice-page .admin-page-header .admin-badge-soft.warning {
+    background-color: var(--brand-gold-primary, #D4AF37) !important;
+    color: var(--brand-black, #1F1F1F) !important;
+}
+.admin-page-header .admin-badge-soft.dark,
+.backoffice-page .admin-page-header .admin-badge-soft.dark {
+    background-color: #FFFFFF !important;
+    color: var(--brand-black, #1F1F1F) !important;
+}
+.admin-page-header .admin-badge-soft.success,
+.backoffice-page .admin-page-header .admin-badge-soft.success {
+    background-color: #DDF3E4 !important;
+    color: #124A2A !important;
+}
+.admin-page-header .admin-badge-soft.danger,
+.backoffice-page .admin-page-header .admin-badge-soft.danger {
+    background-color: #FBE3E3 !important;
+    color: #7A1818 !important;
+}
+.admin-page-header .admin-badge-soft.info,
+.backoffice-page .admin-page-header .admin-badge-soft.info {
+    background-color: #E3ECFA !important;
+    color: #1E4F99 !important;
+}
