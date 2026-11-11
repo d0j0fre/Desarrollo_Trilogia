@@ -9,10 +9,12 @@ namespace Proyecto_Final.Controllers
     public class ProfileController : Controller
     {
         private readonly AccountDbService _accountDbService;
+        private readonly ILogger<ProfileController> _logger;
 
-        public ProfileController(AccountDbService accountDbService)
+        public ProfileController(AccountDbService accountDbService, ILogger<ProfileController> logger)
         {
             _accountDbService = accountDbService;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -25,10 +27,22 @@ namespace Proyecto_Final.Controllers
                 return RedirectToAction("Login", "Account");
             }
 
-            var model = await _accountDbService.GetProfileAsync(usuarioId.Value);
+            ProfileEditViewModel? model;
+            try
+            {
+                model = await _accountDbService.GetProfileAsync(usuarioId.Value);
+            }
+            catch (Exception ex)
+            {
+                // BUG-02-01: sin conexión se muestra una vista con un mensaje controlado, sin detalles técnicos.
+                _logger.LogError(ex, "No se pudo cargar el perfil del usuario {UsuarioId}.", usuarioId.Value);
+                Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+                return View("LoadError");
+            }
+
             if (model == null)
             {
-                TempData["ErrorMessage"] = "No fue posible cargar la informacion del perfil.";
+                TempData["ErrorMessage"] = "No fue posible cargar la información del perfil.";
                 return RedirectToAction("Index", "Home");
             }
 
@@ -64,7 +78,7 @@ namespace Proyecto_Final.Controllers
             {
                 if (await _accountDbService.EmailExistsForOtherUserAsync(model.Correo, usuarioId.Value))
                 {
-                    ModelState.AddModelError(nameof(model.Correo), "El correo indicado ya esta en uso.");
+                    ModelState.AddModelError(nameof(model.Correo), "El correo indicado ya está en uso.");
                     TempData["ErrorMessage"] = "No fue posible actualizar el perfil con ese correo.";
                     return View(model);
                 }
@@ -80,13 +94,15 @@ namespace Proyecto_Final.Controllers
             }
             catch (InvalidOperationException ex) when (ex.Message == "DuplicateEmail")
             {
-                ModelState.AddModelError(nameof(model.Correo), "El correo indicado ya esta en uso.");
+                ModelState.AddModelError(nameof(model.Correo), "El correo indicado ya está en uso.");
                 TempData["ErrorMessage"] = "No fue posible actualizar el perfil con ese correo.";
                 return View(model);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                TempData["ErrorMessage"] = "No fue posible actualizar el perfil en este momento. Intente nuevamente.";
+                // BUG-02-01: la falla no se detalla y los datos guardados no cambian; el formulario conserva lo digitado.
+                _logger.LogError(ex, "No se pudo actualizar el perfil del usuario {UsuarioId}.", usuarioId.Value);
+                ModelState.AddModelError(string.Empty, "No fue posible guardar la información en este momento. Sus datos anteriores no se modificaron; intente nuevamente en unos minutos.");
                 return View(model);
             }
         }

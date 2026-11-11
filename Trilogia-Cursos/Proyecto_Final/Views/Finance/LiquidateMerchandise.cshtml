@@ -1,0 +1,70 @@
+@using Proyecto_Final.Models.Admin
+@model RouteMerchandiseFormViewModel
+@{
+    ViewData["Title"] = "Liquidar mercadería";
+    var prep = ViewBag.Prepare as RouteMerchandisePrepareViewModel;
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5">
+        <div class="col-lg-10 offset-lg-1">
+            <div class="admin-page-header d-flex justify-content-between align-items-center flex-wrap">
+                <div>
+                    <h2 class="mb-2">Liquidar mercadería — Ruta @prep?.RutaCodigo</h2>
+                    <p class="mb-0">Cuente la mercadería que regresó en el camión@(string.IsNullOrWhiteSpace(prep?.ChoferNombre) ? "" : $" de {prep!.ChoferNombre}") y anote la cantidad real de cada producto. Lo contado debe coincidir con lo despachado.</p>
+                </div>
+                <a asp-action="Merchandise" class="btn btn-ds-neutral mt-2 mt-md-0"><i class="fa fa-arrow-left mr-2"></i>Volver</a>
+            </div>
+
+            <div class="admin-table-wrapper p-0">
+                <form asp-action="LiquidateMerchandise" method="post"
+                      data-s3-confirm="¿Registrar la liquidación? La mercadería contada regresará al inventario y la ruta quedará liquidada."
+                      data-s3-confirm-title="Liquidar mercadería"
+                      data-s3-confirm-type="warning"
+                      data-s3-confirm-ok="Sí, liquidar"
+                      data-s3-confirm-cancel="Revisar">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="RutaId" />
+                    <div asp-validation-summary="All" class="text-danger px-4 pt-3 mb-0"></div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead class="thead-light">
+                                <tr><th>Pedido</th><th>Producto</th><th class="text-center">Despachado</th><th class="text-center" style="width:160px">Contado</th></tr>
+                            </thead>
+                            <tbody>
+                                @for (int i = 0; i < Model.Lineas.Count; i++)
+                                {
+                                    var l = Model.Lineas[i];
+                                    <tr>
+                                        <td class="font-weight-bold">#@l.PedidoId</td>
+                                        <td>@l.ProductoNombre</td>
+                                        <td class="text-center">@l.Cantidad</td>
+                                        <td>
+                                            <input type="hidden" name="Lineas[@i].PedidoId" value="@l.PedidoId" />
+                                            <input type="hidden" name="Lineas[@i].ProductoId" value="@l.ProductoId" />
+                                            <input type="number" name="Lineas[@i].Contado" value="@l.Contado" min="0" step="1" class="form-control text-center" aria-label="Unidades contadas de @l.ProductoNombre del pedido @l.PedidoId" required />
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="p-4">
+                        <div class="form-group">
+                            <label asp-for="Observaciones"></label>
+                            <textarea asp-for="Observaciones" class="form-control" rows="2" maxlength="400"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-ds-create"><i class="fa fa-save mr-2"></i>Registrar liquidación de mercadería</button>
+                        <a asp-action="Merchandise" class="btn btn-ds-neutral">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

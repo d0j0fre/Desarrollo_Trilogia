@@ -119,10 +119,46 @@ namespace Proyecto_Final.Models.Admin
         public string? Observaciones { get; set; }
     }
 
+    // G2-17 — Documentos legales de la flota: lista por vehículo, edición y baja.
+    public class VehicleDocumentListItemViewModel
+    {
+        public int DocumentoId { get; set; }
+        public int VehiculoId { get; set; }
+        public string VehiculoPlaca { get; set; } = string.Empty;
+        public string Tipo { get; set; } = string.Empty;
+        public DateTime FechaVencimiento { get; set; }
+        public string Observaciones { get; set; } = string.Empty;
+        public DateTime FechaRegistro { get; set; }
+        /// <summary>El más reciente de su vehículo y tipo: el único que genera alertas.</summary>
+        public bool EsVigente { get; set; }
+        public int DiasRestantes { get; set; }
+    }
+
+    public class VehicleDocumentEditViewModel
+    {
+        public int DocumentoId { get; set; }
+        public int VehiculoId { get; set; }
+        public string VehiculoPlaca { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "El tipo de documento es obligatorio.")]
+        [StringLength(40)]
+        public string Tipo { get; set; } = "Marchamo";
+
+        [Required(ErrorMessage = "La fecha de vencimiento es obligatoria.")]
+        [DataType(DataType.Date)]
+        public DateTime FechaVencimiento { get; set; } = DateTime.Today;
+
+        [StringLength(300)]
+        public string? Observaciones { get; set; }
+    }
+
     public class FleetAlertsViewModel
     {
         public List<FleetAlertViewModel> Alertas { get; set; } = new();
         public VehicleDocumentFormViewModel NuevoDocumento { get; set; } = new();
         public int DiasAviso { get; set; } = 15;
+        public List<VehicleDocumentListItemViewModel> Documentos { get; set; } = new();
+        /// <summary>Vehículo cuyos documentos se listan (null = todos).</summary>
+        public int? VehiculoId { get; set; }
     }
 }

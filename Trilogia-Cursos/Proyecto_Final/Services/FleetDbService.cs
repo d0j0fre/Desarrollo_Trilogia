@@ -101,7 +101,8 @@ namespace Proyecto_Final.Services
             return lista;
         }
 
-        public async Task<int> CreateMaintenanceAsync(MaintenanceFormViewModel model, int usuarioId, string usuarioNombre)
+        /// <summary>Devuelve el id de la orden y si el vehículo quedó fuera de circulación (BUG-15-01).</summary>
+        public async Task<(int OrdenId, bool VehiculoFueraDeCirculacion)> CreateMaintenanceAsync(MaintenanceFormViewModel model, int usuarioId, string usuarioNombre)
         {
             await using var connection = new SqlConnection(_connectionString);
             await using var command = new SqlCommand("dbo.sp_Mantenimiento_Create", connection) { CommandType = CommandType.StoredProcedure };
@@ -119,8 +120,19 @@ namespace Proyecto_Final.Services
             command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId > 0 ? usuarioId : DBNull.Value;
             command.Parameters.Add("@Nombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(usuarioNombre) ? DBNull.Value : usuarioNombre;
             await connection.OpenAsync();
-            var result = await command.ExecuteScalarAsync();
-            return result is int id ? id : Convert.ToInt32(result);
+            await using var reader = await command.ExecuteReaderAsync();
+            if (!await reader.ReadAsync()) return (0, false);
+            return (reader.GetInt32(0), reader.FieldCount > 1 && !reader.IsDBNull(1) && reader.GetBoolean(1));
+        }
+
+        /// <summary>Programada pasa a En proceso; una correctiva En proceso saca el vehículo de circulación.</summary>
+        public async Task StartMaintenanceAsync(int ordenId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Mantenimiento_Iniciar", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.Add("@OrdenMantenimientoId", SqlDbType.Int).Value = ordenId;
+            await connection.OpenAsync();
+            await command.ExecuteNonQueryAsync();
         }
 
         public async Task CompleteMaintenanceAsync(int ordenId, DateTime? fechaRealizada, decimal? costo)
@@ -170,6 +182,75 @@ namespace Proyecto_Final.Services
             command.Parameters.Add("@Observaciones", SqlDbType.NVarChar, 300).Value = string.IsNullOrWhiteSpace(model.Observaciones) ? DBNull.Value : model.Observaciones.Trim();
             await connection.OpenAsync();
             await command.ExecuteNonQueryAsync();
+        }
+
+        /// <summary>G2-17: documentos de la flota con su vigencia (el más reciente de cada tipo es el vigente).</summary>
+        public async Task<List<VehicleDocumentListItemViewModel>> GetDocumentsAsync(int? vehiculoId)
+        {
+            var lista = new List<VehicleDocumentListItemViewModel>();
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_VehiculoDocumento_List", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.Add("@VehiculoId", SqlDbType.Int).Value = vehiculoId.HasValue ? vehiculoId.Value : DBNull.Value;
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                lista.Add(new VehicleDocumentListItemViewModel
+                {
+                    DocumentoId = reader.GetInt32(0),
+                    VehiculoId = reader.GetInt32(1),
+                    VehiculoPlaca = reader.GetString(2),
+                    Tipo = reader.GetString(3),
+                    FechaVencimiento = reader.GetDateTime(4),
+                    Observaciones = reader.GetString(5),
+                    FechaRegistro = reader.GetDateTime(6),
+                    EsVigente = reader.GetBoolean(7),
+                    DiasRestantes = reader.GetInt32(8)
+                });
+            }
+            return lista;
+        }
+
+        public async Task<VehicleDocumentEditViewModel?> GetDocumentByIdAsync(int documentoId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_VehiculoDocumento_GetById", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.Add("@DocumentoId", SqlDbType.Int).Value = documentoId;
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+            if (!await reader.ReadAsync()) return null;
+            return new VehicleDocumentEditViewModel
+            {
+                DocumentoId = reader.GetInt32(0),
+                VehiculoId = reader.GetInt32(1),
+                VehiculoPlaca = reader.GetString(2),
+                Tipo = reader.GetString(3),
+                FechaVencimiento = reader.GetDateTime(4),
+                Observaciones = reader.GetString(5)
+            };
+        }
+
+        public async Task UpdateDocumentAsync(VehicleDocumentEditViewModel model)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_VehiculoDocumento_Update", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.Add("@DocumentoId", SqlDbType.Int).Value = model.DocumentoId;
+            command.Parameters.Add("@Tipo", SqlDbType.NVarChar, 40).Value = model.Tipo;
+            command.Parameters.Add("@FechaVencimiento", SqlDbType.Date).Value = model.FechaVencimiento.Date;
+            command.Parameters.Add("@Observaciones", SqlDbType.NVarChar, 300).Value = string.IsNullOrWhiteSpace(model.Observaciones) ? DBNull.Value : model.Observaciones.Trim();
+            await connection.OpenAsync();
+            await command.ExecuteNonQueryAsync();
+        }
+
+        /// <summary>Baja del documento (conserva la fila). Devuelve (tipo, placa) para la auditoría.</summary>
+        public async Task<(string Tipo, string Placa)> DeactivateDocumentAsync(int documentoId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_VehiculoDocumento_Baja", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.Add("@DocumentoId", SqlDbType.Int).Value = documentoId;
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+            return await reader.ReadAsync() ? (reader.GetString(0), reader.GetString(1)) : (string.Empty, string.Empty);
         }
 
         // ── CU-161 Activos ──────────────────────────────────

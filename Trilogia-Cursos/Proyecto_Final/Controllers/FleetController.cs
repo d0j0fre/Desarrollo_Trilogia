@@ -114,52 +114,78 @@ namespace Proyecto_Final.Controllers
             var usuarioId = HttpContext.Session.GetInt32("UserId") ?? 0;
             var usuarioNombre = HttpContext.Session.GetString("UserFullName") ?? "Administrador";
 
+            // G2-18: una orden Completada lleva su fecha de realización (la del día si no se indica) y no puede ser futura.
+            if (nueva.FechaRealizada.HasValue && nueva.FechaRealizada.Value.Date > DateTime.Today)
+                ModelState.AddModelError(nameof(nueva.FechaRealizada), "La fecha de realización no puede ser futura.");
+            if (nueva.Estado == "Completada" && !nueva.FechaRealizada.HasValue)
+                nueva.FechaRealizada = DateTime.Today;
+
             if (!ModelState.IsValid)
             {
-                await PopulateVehiclesAsync();
-                var vm = new MaintenanceIndexViewModel { Nueva = nueva, Ordenes = await _fleet.GetMaintenanceAsync(null, null) };
-                return View(nameof(Maintenance), vm);
+                return await MaintenanceViewWithFormAsync(nueva);
             }
             try
             {
-                await _fleet.CreateMaintenanceAsync(nueva, usuarioId, usuarioNombre);
+                var (_, fueraDeCirculacion) = await _fleet.CreateMaintenanceAsync(nueva, usuarioId, usuarioNombre);
                 await RegistrarAuditoriaAsync("Registrar mantenimiento", "Flota",
-                    $"Orden {nueva.Tipo} registrada para vehículo #{nueva.VehiculoId}.");
-                TempData["SuccessMessage"] = "Orden de mantenimiento registrada.";
-            }
-            catch (SqlException ex) when (ex.Number >= 50000)
-            {
-                _logger.LogWarning(ex, "La base de datos rechazó una operación de negocio.");
-                TempData["ErrorMessage"] = "No fue posible completar la operación solicitada.";
+                    $"Orden {nueva.Tipo} ({nueva.Estado}) registrada para vehículo #{nueva.VehiculoId}."
+                    + (fueraDeCirculacion ? " El vehículo quedó fuera de circulación." : string.Empty));
+                TempData["SuccessMessage"] = fueraDeCirculacion
+                    ? "Orden de mantenimiento registrada. El vehículo quedó fuera de circulación hasta que se complete la reparación."
+                    : "Orden de mantenimiento registrada.";
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al registrar mantenimiento.");
-                TempData["ErrorMessage"] = "No fue posible registrar la orden de mantenimiento.";
+                _logger.LogWarning(ex, "No se pudo registrar la orden de mantenimiento.");
+                ModelState.AddModelError(string.Empty, BusinessErrors.MessageOr(ex, "No fue posible registrar la orden de mantenimiento."));
+                return await MaintenanceViewWithFormAsync(nueva);
             }
             return RedirectToAction(nameof(Maintenance));
         }
 
+        // BUG-15-01: Programada pasa a En proceso (una correctiva saca el vehículo de circulación).
         [HttpPost]
         [ValidateAntiForgeryToken]
         [AdminAuthorize("Flota", "FLOTA_MANTENIMIENTO")]
-        public async Task<IActionResult> CompleteMaintenance(int ordenId, decimal? costo)
+        public async Task<IActionResult> StartMaintenance(int ordenId)
         {
             try
             {
-                await _fleet.CompleteMaintenanceAsync(ordenId, DateTime.Today, costo);
-                await RegistrarAuditoriaAsync("Completar mantenimiento", "Flota", $"Orden de mantenimiento #{ordenId} marcada como completada.");
-                TempData["SuccessMessage"] = "Orden marcada como completada.";
-            }
-            catch (SqlException ex) when (ex.Number >= 50000)
-            {
-                _logger.LogWarning(ex, "La base de datos rechazó una operación de negocio.");
-                TempData["ErrorMessage"] = "No fue posible completar la operación solicitada.";
+                await _fleet.StartMaintenanceAsync(ordenId);
+                await RegistrarAuditoriaAsync("Iniciar mantenimiento", "Flota", $"Orden de mantenimiento #{ordenId} pasó a En proceso.");
+                TempData["SuccessMessage"] = "Orden en proceso. Si es correctiva, el vehículo quedó fuera de circulación.";
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al completar mantenimiento.");
-                TempData["ErrorMessage"] = "No fue posible completar la orden.";
+                _logger.LogWarning(ex, "No se pudo iniciar la orden de mantenimiento {OrdenId}.", ordenId);
+                TempData["ErrorMessage"] = BusinessErrors.MessageOr(ex, "No fue posible iniciar la orden.");
+            }
+            return RedirectToAction(nameof(Maintenance));
+        }
+
+        // G2-18: al completar se pide el costo final y la fecha de realización.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [AdminAuthorize("Flota", "FLOTA_MANTENIMIENTO")]
+        public async Task<IActionResult> CompleteMaintenance(int ordenId, decimal? costo, DateTime? fechaRealizada)
+        {
+            var fecha = (fechaRealizada ?? DateTime.Today).Date;
+            if (fecha > DateTime.Today)
+            {
+                TempData["ErrorMessage"] = "La fecha de realización no puede ser futura.";
+                return RedirectToAction(nameof(Maintenance));
+            }
+            try
+            {
+                await _fleet.CompleteMaintenanceAsync(ordenId, fecha, costo);
+                await RegistrarAuditoriaAsync("Completar mantenimiento", "Flota",
+                    $"Orden de mantenimiento #{ordenId} marcada como completada el {fecha:dd/MM/yyyy}" + (costo.HasValue ? $" con costo final ₡{costo.Value:N2}." : "."));
+                TempData["SuccessMessage"] = "Orden marcada como completada. Si era una reparación, el vehículo volvió a circulación.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "No se pudo completar la orden de mantenimiento {OrdenId}.", ordenId);
+                TempData["ErrorMessage"] = BusinessErrors.MessageOr(ex, "No fue posible completar la orden.");
             }
             return RedirectToAction(nameof(Maintenance));
         }
@@ -167,13 +193,16 @@ namespace Proyecto_Final.Controllers
         // ── CU-154 Alertas y documentos ─────────────────────
         [HttpGet]
         [AdminAuthorize("Flota", "FLOTA_MANTENIMIENTO")]
-        public async Task<IActionResult> Alerts(int diasAviso = 15)
+        public async Task<IActionResult> Alerts(int diasAviso = 15, int? vehiculoId = null)
         {
             await PopulateVehiclesAsync();
+            diasAviso = Math.Clamp(diasAviso, 1, 180);
             var vm = new FleetAlertsViewModel
             {
                 DiasAviso = diasAviso,
-                Alertas = await _fleet.GetAlertsAsync(diasAviso)
+                VehiculoId = vehiculoId,
+                Alertas = await _fleet.GetAlertsAsync(diasAviso),
+                Documentos = await _fleet.GetDocumentsAsync(vehiculoId)
             };
             return View(vm);
         }
@@ -193,24 +222,93 @@ namespace Proyecto_Final.Controllers
                 await _fleet.CreateDocumentAsync(nuevoDocumento);
                 await RegistrarAuditoriaAsync("Registrar documento", "Flota",
                     $"Documento {nuevoDocumento.Tipo} para vehículo #{nuevoDocumento.VehiculoId} (vence {nuevoDocumento.FechaVencimiento:dd/MM/yyyy}).");
-                TempData["SuccessMessage"] = "Documento registrado. Se vigilará su vencimiento.";
-            }
-            catch (SqlException ex) when (ex.Number >= 50000)
-            {
-                _logger.LogWarning(ex, "La base de datos rechazó una operación de negocio.");
-                TempData["ErrorMessage"] = "No fue posible completar la operación solicitada.";
+                TempData["SuccessMessage"] = "Documento registrado. Se vigilará su vencimiento y reemplaza como vigente a los anteriores del mismo tipo.";
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al registrar documento del vehículo.");
-                TempData["ErrorMessage"] = "No fue posible registrar el documento.";
+                _logger.LogWarning(ex, "No se pudo registrar el documento del vehículo.");
+                TempData["ErrorMessage"] = BusinessErrors.MessageOr(ex, "No fue posible registrar el documento.");
             }
             return RedirectToAction(nameof(Alerts));
         }
 
+        // G2-17: corregir un documento (por ejemplo, una fecha mal digitada).
+        [HttpGet]
+        [AdminAuthorize("Flota", "FLOTA_MANTENIMIENTO")]
+        public async Task<IActionResult> EditDocument(int id)
+        {
+            var model = await _fleet.GetDocumentByIdAsync(id);
+            if (model == null)
+            {
+                TempData["ErrorMessage"] = "No se encontró el documento solicitado.";
+                return RedirectToAction(nameof(Alerts));
+            }
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [AdminAuthorize("Flota", "FLOTA_MANTENIMIENTO")]
+        public async Task<IActionResult> EditDocument(VehicleDocumentEditViewModel model)
+        {
+            if (!ModelState.IsValid) return View(model);
+            try
+            {
+                await _fleet.UpdateDocumentAsync(model);
+                await RegistrarAuditoriaAsync("Editar documento", "Flota",
+                    $"Documento #{model.DocumentoId} ({model.Tipo}) del vehículo {model.VehiculoPlaca}: vence {model.FechaVencimiento:dd/MM/yyyy}.");
+                TempData["SuccessMessage"] = "Documento actualizado.";
+                return RedirectToAction(nameof(Alerts), new { vehiculoId = model.VehiculoId });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "No se pudo actualizar el documento {DocumentoId}.", model.DocumentoId);
+                ModelState.AddModelError(string.Empty, BusinessErrors.MessageOr(ex, "No fue posible actualizar el documento."));
+                return View(model);
+            }
+        }
+
+        // G2-17: baja de un documento (deja de contarse en la lista y en las alertas).
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [AdminAuthorize("Flota", "FLOTA_MANTENIMIENTO")]
+        public async Task<IActionResult> DeleteDocument(int documentoId, int? vehiculoId)
+        {
+            try
+            {
+                var (tipo, placa) = await _fleet.DeactivateDocumentAsync(documentoId);
+                await RegistrarAuditoriaAsync("Dar de baja documento", "Flota", $"Documento #{documentoId} ({tipo}) del vehículo {placa} dado de baja.");
+                TempData["SuccessMessage"] = "Documento dado de baja.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "No se pudo dar de baja el documento {DocumentoId}.", documentoId);
+                TempData["ErrorMessage"] = BusinessErrors.MessageOr(ex, "No fue posible dar de baja el documento.");
+            }
+            return RedirectToAction(nameof(Alerts), new { vehiculoId });
+        }
+
+        private async Task<IActionResult> MaintenanceViewWithFormAsync(MaintenanceFormViewModel nueva)
+        {
+            await PopulateVehiclesAsync();
+            var vm = new MaintenanceIndexViewModel { Nueva = nueva, Ordenes = await _fleet.GetMaintenanceAsync(null, null) };
+            return View(nameof(Maintenance), vm);
+        }
+
+        // Todos los vehículos: uno en reparación (inactivo) sigue necesitando órdenes y documentos.
         private async Task PopulateVehiclesAsync()
         {
-            ViewBag.Vehiculos = await _logistics.GetAvailableVehiclesAsync();
+            var vehiculos = await _logistics.GetVehiclesAsync(null);
+            ViewBag.Vehiculos = vehiculos
+                .Select(v => new VehicleOptionViewModel
+                {
+                    VehiculoId = v.VehiculoId,
+                    Placa = v.Placa,
+                    Descripcion = v.Descripcion + (v.EnMantenimiento ? " (en reparación)" : v.Activo ? string.Empty : " (inactivo)"),
+                    Capacidad = v.Capacidad,
+                    RutasAbiertas = v.RutasAbiertas
+                })
+                .ToList();
         }
 
         // Vehículos activos con su odómetro actual (para el kilometraje).

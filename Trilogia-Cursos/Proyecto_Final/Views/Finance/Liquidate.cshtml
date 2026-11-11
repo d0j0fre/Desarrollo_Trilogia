@@ -4,6 +4,7 @@
     ViewData["Title"] = "Liquidar cobros";
     var prep = ViewBag.Prepare as CashSettlementPrepareViewModel;
     var esperadoTotal = Model.EsperadoEfectivo + Model.EsperadoOtros;
+    var filas = Math.Max(5, Model.Comprobantes.Count);
 }
 
 @section Styles {
@@ -16,7 +17,7 @@
             <div class="admin-page-header d-flex justify-content-between align-items-center flex-wrap">
                 <div>
                     <h2 class="mb-2">Liquidar cobros — Ruta @Model.RutaCodigo</h2>
-                    <p class="mb-0">Registra el efectivo y los comprobantes entregados por el chofer.</p>
+                    <p class="mb-0">Registra el efectivo y los comprobantes entregados por el chofer@(string.IsNullOrWhiteSpace(prep?.ChoferNombre) ? "" : $" {prep!.ChoferNombre}").</p>
                 </div>
                 <a asp-action="Index" class="btn btn-ds-neutral mt-2 mt-md-0"><i class="fa fa-arrow-left mr-2"></i>Volver</a>
             </div>
@@ -25,19 +26,19 @@
                 <div class="col-md-4 mb-2">
                     <div class="admin-table-wrapper p-3 text-center">
                         <div class="text-muted small">Esperado en efectivo</div>
-                        <div class="h4 mb-0">@Model.EsperadoEfectivo.ToString("N2")</div>
+                        <div class="h4 mb-0">₡@Model.EsperadoEfectivo.ToString("N2")</div>
                     </div>
                 </div>
                 <div class="col-md-4 mb-2">
                     <div class="admin-table-wrapper p-3 text-center">
                         <div class="text-muted small">Esperado otros medios</div>
-                        <div class="h4 mb-0">@Model.EsperadoOtros.ToString("N2")</div>
+                        <div class="h4 mb-0">₡@Model.EsperadoOtros.ToString("N2")</div>
                     </div>
                 </div>
                 <div class="col-md-4 mb-2">
                     <div class="admin-table-wrapper p-3 text-center">
                         <div class="text-muted small">Total esperado</div>
-                        <div class="h4 mb-0">@esperadoTotal.ToString("N2")</div>
+                        <div class="h4 mb-0">₡@esperadoTotal.ToString("N2")</div>
                     </div>
                 </div>
             </div>
@@ -60,6 +61,7 @@
                         <div class="form-group col-md-6">
                             <label asp-for="MontoComprobantes"></label>
                             <input asp-for="MontoComprobantes" type="number" step="0.01" min="0" class="form-control" />
+                            <small class="form-text text-muted">Se calcula con el detalle de comprobantes.</small>
                             <span asp-validation-for="MontoComprobantes" class="text-danger"></span>
                         </div>
                     </div>
@@ -69,28 +71,36 @@
                         <textarea asp-for="Observaciones" class="form-control" rows="2"></textarea>
                     </div>
 
-                    <h6 class="mt-3 mb-2">Detalle de comprobantes (opcional)</h6>
-                    @for (int i = 0; i < 3; i++)
-                    {
-                        <div class="form-row">
-                            <div class="form-group col-md-4">
-                                <select name="Comprobantes[@i].Tipo" class="form-control">
-                                    <option value="">— Tipo —</option>
-                                    <option value="SINPE">SINPE</option>
-                                    <option value="Transferencia">Transferencia</option>
-                                    <option value="Depósito">Depósito</option>
-                                    <option value="Cheque">Cheque</option>
-                                    <option value="Otro">Otro</option>
-                                </select>
+                    <h6 class="mt-3 mb-1">Detalle de comprobantes</h6>
+                    <p class="text-muted small mb-2">SINPE, transferencias, depósitos y cheques recibidos. La suma de los montos debe coincidir con «Total en comprobantes».</p>
+                    <div id="voucherRows">
+                        @for (int i = 0; i < filas; i++)
+                        {
+                            var c = i < Model.Comprobantes.Count ? Model.Comprobantes[i] : null;
+                            <div class="form-row voucher-row">
+                                <div class="form-group col-md-4">
+                                    <select name="Comprobantes[@i].Tipo" class="form-control" aria-label="Tipo del comprobante @(i + 1)">
+                                        <option value="">— Tipo —</option>
+                                        @foreach (var t in new[] { "SINPE", "Transferencia", "Depósito", "Cheque", "Otro" })
+                                        {
+                                            <option value="@t" selected="@(c?.Tipo == t)">@t</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-5">
+                                    <input name="Comprobantes[@i].Referencia" value="@c?.Referencia" class="form-control" placeholder="Referencia" maxlength="80" aria-label="Referencia del comprobante @(i + 1)" />
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <input name="Comprobantes[@i].Monto" type="number" step="0.01" min="0" value="@((c?.Monto ?? 0m).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture))" class="form-control voucher-amount" placeholder="Monto" aria-label="Monto del comprobante @(i + 1)" />
+                                </div>
                             </div>
-                            <div class="form-group col-md-5">
-                                <input name="Comprobantes[@i].Referencia" class="form-control" placeholder="Referencia" />
-                            </div>
-                            <div class="form-group col-md-3">
-                                <input name="Comprobantes[@i].Monto" type="number" step="0.01" min="0" value="0" class="form-control" placeholder="Monto" />
-                            </div>
-                        </div>
-                    }
+                        }
+                    </div>
+                    <button type="button" id="addVoucher" class="btn btn-sm btn-ds-neutral mb-3"><i class="fa fa-plus mr-1"></i>Agregar comprobante</button>
+                    <div class="d-flex justify-content-between align-items-center border-top pt-3 mb-3">
+                        <span class="text-muted">Suma del detalle</span>
+                        <strong id="voucherSum">₡0.00</strong>
+                    </div>
 
                     <button type="submit" class="btn btn-ds-create"><i class="fa fa-save mr-2"></i>Registrar liquidación</button>
                     <a asp-action="Index" class="btn btn-ds-neutral">Cancelar</a>
@@ -113,7 +123,7 @@
                                         <td class="font-weight-bold">@p.PedidoId</td>
                                         <td>@p.Cliente</td>
                                         <td>@Proyecto_Final.Services.PaymentMethodNames.Display(p.MetodoPago)</td>
-                                        <td class="text-right">@p.Total.ToString("N2")</td>
+                                        <td class="text-right">₡@p.Total.ToString("N2")</td>
                                     </tr>
                                 }
                             </tbody>
@@ -127,4 +137,43 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            var rows = document.getElementById('voucherRows');
+            var total = document.getElementById('MontoComprobantes');
+            var sumLabel = document.getElementById('voucherSum');
+            if (!rows || !total) return;
+
+            function format(n) {
+                return '₡' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+            function recalc() {
+                var sum = 0;
+                rows.querySelectorAll('.voucher-amount').forEach(function (i) { sum += parseFloat(i.value) || 0; });
+                sum = Math.round(sum * 100) / 100;
+                total.value = sum;
+                if (sumLabel) sumLabel.textContent = format(sum);
+            }
+            rows.addEventListener('input', function (e) {
+                if (e.target.classList.contains('voucher-amount')) recalc();
+            });
+
+            document.getElementById('addVoucher').addEventListener('click', function () {
+                var current = rows.querySelectorAll('.voucher-row');
+                if (current.length >= 10) return;
+                var i = current.length;
+                var clone = current[0].cloneNode(true);
+                clone.querySelectorAll('select, input').forEach(function (el) {
+                    el.name = el.name.replace(/\[\d+\]/, '[' + i + ']');
+                    if (el.tagName === 'SELECT') el.selectedIndex = 0; else el.value = el.classList.contains('voucher-amount') ? '0' : '';
+                });
+                rows.appendChild(clone);
+            });
+
+            // Con comprobantes escritos el total sale del detalle; sin ellos se respeta lo digitado.
+            var hasDetail = false;
+            rows.querySelectorAll('.voucher-amount').forEach(function (i) { if ((parseFloat(i.value) || 0) > 0) hasDetail = true; });
+            if (hasDetail) recalc(); else if (sumLabel) sumLabel.textContent = format(0);
+        })();
+    </script>
 }

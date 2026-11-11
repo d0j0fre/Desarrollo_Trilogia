@@ -1,0 +1,10 @@
+@{
+    ViewData["Title"] = "Mi Perfil";
+}
+
+<div class="container py-5 text-center">
+    <h1 class="h3">No fue posible cargar la información del perfil.</h1>
+    <p class="text-muted">El incidente fue registrado. Intente nuevamente en unos minutos; sus datos no se modificaron.</p>
+    <a asp-controller="Profile" asp-action="Edit" class="btn btn-ds-action mr-2">Reintentar</a>
+    <a asp-controller="Home" asp-action="Index" class="btn btn-ds-neutral">Ir al inicio</a>
+</div>

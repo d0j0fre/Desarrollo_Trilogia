@@ -25,6 +25,17 @@ public sealed class SessionStatusService(IConfiguration configuration) : ISessio
 
 public sealed class SessionStatusMiddleware(RequestDelegate next, ILogger<SessionStatusMiddleware> logger)
 {
+    internal const string UnavailablePage = """
+        <!DOCTYPE html>
+        <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Servicio temporalmente no disponible</title></head>
+        <body style="font-family:system-ui,sans-serif;max-width:34rem;margin:4rem auto;padding:0 1rem;text-align:center">
+        <h1 style="font-size:1.4rem">No podemos completar esta solicitud en este momento.</h1>
+        <p>No fue posible conectar con el servicio. Sus datos no se modificaron. Intente nuevamente en unos minutos.</p>
+        <p><a href="">Reintentar</a> · <a href="/">Ir al inicio</a></p>
+        </body></html>
+        """;
+
     public async Task InvokeAsync(HttpContext context, ISessionStatusService status)
     {
         var id = context.Session.GetInt32("UserId");
@@ -36,7 +47,10 @@ public sealed class SessionStatusMiddleware(RequestDelegate next, ILogger<Sessio
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 logger.LogError(ex, "No se pudo verificar el estado de la sesión.");
+                // BUG-02-01: sin base de datos no hay layout ni menú que mostrar; una página sencilla en vez de una respuesta en blanco.
                 context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+                context.Response.ContentType = "text/html; charset=utf-8";
+                await context.Response.WriteAsync(UnavailablePage, context.RequestAborted);
                 return;
             }
             if (!valid)

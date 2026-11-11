@@ -131,6 +131,10 @@
                             <button type="submit" class="btn btn-ds-action"><i class="fa fa-clipboard-check mr-2"></i>Liquidar ruta</button>
                         </form>
                     }
+                    @if (c.Estado == "Completada" && Model.Pedidos.Any(p => p.EstadoEntrega != "Entregado"))
+                    {
+                        <a asp-controller="Finance" asp-action="LiquidateMerchandise" asp-route-rutaId="@c.RutaId" class="btn btn-ds-action mr-2 mb-2"><i class="fa fa-boxes mr-2"></i>Liquidar mercadería</a>
+                    }
                     @if (puedeCancelar)
                     {
                         <button type="button" class="btn btn-ds-danger mb-2" data-toggle="collapse" data-target="#cancelBox">

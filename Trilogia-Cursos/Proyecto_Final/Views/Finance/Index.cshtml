@@ -1,12 +1,16 @@
 @using Proyecto_Final.Models.Admin
-@model IEnumerable<CashSettlementListItemViewModel>
+@model FinanceIndexViewModel
 @{
     ViewData["Title"] = "Liquidación de cobros";
-    var estado = ViewBag.Estado as string;
-    var rutas = ViewBag.Rutas as List<RouteListItemViewModel> ?? new List<RouteListItemViewModel>();
-    var liquidadasIds = Model?.Select(x => x.RutaId).ToHashSet() ?? new HashSet<int>();
-    var pendientes = rutas.Where(r => !liquidadasIds.Contains(r.RutaId)).ToList();
+    var estado = Model.Estado;
+    var pendientes = Model.RutasPendientes;
+    var reciboId = TempData["ReceiptLiquidacionId"] as int?;
     string EstadoBadge(string e) => e switch { "Cuadrada" => "success", "Sobrante" => "info", _ => "danger" };
+    var faltantesPorChofer = Model.Faltantes
+        .GroupBy(f => new { f.ChoferUsuarioId, f.ChoferNombre })
+        .Select(g => new { g.Key.ChoferNombre, Total = g.Sum(x => x.Monto), Rutas = g.Count() })
+        .OrderByDescending(g => g.Total)
+        .ToList();
 }
 
 @section Styles {
@@ -16,26 +20,41 @@
 <div class="container-fluid pt-4 backoffice-page">
     <div class="row px-xl-5">
         <div class="col-12">
-            <div class="admin-page-header">
-                <h2 class="mb-2">Liquidación de cobros de ruta</h2>
-                <p class="mb-0">Cuadre del efectivo y los comprobantes recibidos por el chofer contra lo esperado de los pedidos entregados.</p>
+            <div class="admin-page-header d-flex justify-content-between align-items-center flex-wrap">
+                <div>
+                    <h2 class="mb-2">Liquidación de cobros de ruta</h2>
+                    <p class="mb-0">Cuadre del efectivo y los comprobantes recibidos por el chofer contra lo esperado de los pedidos entregados. Solo se liquidan rutas completadas.</p>
+                </div>
+                <a asp-action="Merchandise" class="btn btn-ds-neutral mt-2 mt-md-0"><i class="fa fa-boxes mr-2"></i>Liquidación de mercadería</a>
             </div>
         </div>
     </div>
 
+    @if (reciboId.HasValue)
+    {
+        <div class="row px-xl-5 pb-3">
+            <div class="col-12">
+                <div class="alert alert-success mb-0 d-flex justify-content-between align-items-center flex-wrap" role="status">
+                    <span><i class="fa fa-file-pdf mr-2"></i>La liquidación quedó registrada y ya tiene recibo.</span>
+                    <a asp-action="Receipt" asp-route-id="@reciboId" target="_blank" rel="noopener" class="btn btn-sm btn-ds-action mt-2 mt-md-0"><i class="fa fa-download mr-1"></i>Ver recibo</a>
+                </div>
+            </div>
+        </div>
+    }
+
     <div class="row px-xl-5 pb-3">
         <div class="col-12">
             <div class="admin-table-wrapper">
-                <div class="p-4 border-bottom"><h5 class="mb-0">Rutas pendientes de liquidar</h5></div>
+                <div class="p-4 border-bottom"><h5 class="mb-0">Rutas completadas pendientes de liquidar</h5></div>
                 <div class="table-responsive">
                     <table class="table table-hover mb-0 align-middle">
                         <thead class="thead-light">
-                            <tr><th>Código</th><th>Zona</th><th class="text-center">Estado</th><th class="text-center">Entregados</th><th class="text-center">Acción</th></tr>
+                            <tr><th>Código</th><th>Zona</th><th>Chofer</th><th class="text-center">Estado</th><th class="text-center">Entregados</th><th class="text-center">Acción</th></tr>
                         </thead>
                         <tbody>
                             @if (!pendientes.Any())
                             {
-                                <tr><td colspan="5" class="text-center text-muted py-4">No hay rutas despachadas pendientes de liquidación financiera.</td></tr>
+                                <tr><td colspan="6" class="text-center text-muted py-4">No hay rutas completadas pendientes de liquidación financiera. Las rutas despachadas aparecen aquí cuando finalizan.</td></tr>
                             }
                             else
                             {
@@ -44,12 +63,56 @@
                                     <tr>
                                         <td class="font-weight-bold">@r.Codigo</td>
                                         <td>@r.Zona</td>
+                                        <td>@r.Chofer</td>
                                         <td class="text-center"><span class="admin-badge-soft info">@r.Estado</span></td>
                                         <td class="text-center">@r.Entregados / @r.TotalPedidos</td>
                                         <td class="text-center">
                                             <a asp-action="Liquidate" asp-route-rutaId="@r.RutaId" class="btn btn-sm btn-ds-action"><i class="fa fa-cash-register mr-1"></i>Liquidar</a>
                                         </td>
                                     </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-3">
+        <div class="col-12">
+            <div class="admin-table-wrapper">
+                <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Faltantes a cargo de choferes</h5>
+                    <span class="text-muted">Total pendiente: ₡@Model.Faltantes.Sum(f => f.Monto).ToString("N2")</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="thead-light">
+                            <tr><th>Chofer</th><th>Ruta</th><th>Fecha</th><th class="text-right">Faltante</th></tr>
+                        </thead>
+                        <tbody>
+                            @if (!Model.Faltantes.Any())
+                            {
+                                <tr><td colspan="4" class="text-center text-muted py-4">Ningún chofer tiene faltantes pendientes.</td></tr>
+                            }
+                            else
+                            {
+                                @foreach (var g in faltantesPorChofer)
+                                {
+                                    <tr class="table-active">
+                                        <td class="font-weight-bold" colspan="3">@g.ChoferNombre <span class="text-muted font-weight-normal">· @g.Rutas liquidación(es) con faltante</span></td>
+                                        <td class="text-right font-weight-bold">₡@g.Total.ToString("N2")</td>
+                                    </tr>
+                                    @foreach (var f in Model.Faltantes.Where(x => x.ChoferNombre == g.ChoferNombre))
+                                    {
+                                        <tr>
+                                            <td class="pl-4 text-muted">@f.ChoferNombre</td>
+                                            <td>@f.RutaCodigo</td>
+                                            <td>@f.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</td>
+                                            <td class="text-right">₡@f.Monto.ToString("N2")</td>
+                                        </tr>
+                                    }
                                 }
                             }
                         </tbody>
@@ -85,6 +148,7 @@
                         <thead class="thead-light">
                             <tr>
                                 <th>Ruta</th>
+                                <th>Chofer</th>
                                 <th class="text-right">Esperado</th>
                                 <th class="text-right">Efectivo</th>
                                 <th class="text-right">Comprobantes</th>
@@ -92,27 +156,69 @@
                                 <th class="text-center">Resultado</th>
                                 <th>Liquidó</th>
                                 <th>Fecha</th>
+                                <th class="text-center">Acción</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @if (Model == null || !Model.Any())
+                            @if (!Model.Liquidaciones.Any())
                             {
-                                <tr><td colspan="8" class="text-center text-muted py-4">Sin liquidaciones registradas.</td></tr>
+                                <tr><td colspan="10" class="text-center text-muted py-4">Sin liquidaciones registradas.</td></tr>
                             }
                             else
                             {
-                                @foreach (var l in Model)
+                                @foreach (var l in Model.Liquidaciones)
                                 {
-                                    <tr>
+                                    <tr class="@(l.Anulada ? "text-muted" : "")">
                                         <td class="font-weight-bold">@l.RutaCodigo</td>
-                                        <td class="text-right">@((l.MontoEsperadoEfectivo + l.MontoEsperadoOtros).ToString("N2"))</td>
-                                        <td class="text-right">@l.MontoEfectivoRecibido.ToString("N2")</td>
-                                        <td class="text-right">@l.MontoComprobantes.ToString("N2")</td>
-                                        <td class="text-right">@l.Diferencia.ToString("N2")</td>
-                                        <td class="text-center"><span class="admin-badge-soft @EstadoBadge(l.Estado)">@l.Estado</span></td>
+                                        <td>@l.ChoferNombre</td>
+                                        <td class="text-right">₡@((l.MontoEsperadoEfectivo + l.MontoEsperadoOtros).ToString("N2"))</td>
+                                        <td class="text-right">₡@l.MontoEfectivoRecibido.ToString("N2")</td>
+                                        <td class="text-right">₡@l.MontoComprobantes.ToString("N2")</td>
+                                        <td class="text-right">₡@l.Diferencia.ToString("N2")</td>
+                                        <td class="text-center">
+                                            <span class="admin-badge-soft @EstadoBadge(l.Estado)">@l.Estado</span>
+                                            @if (l.Anulada)
+                                            {
+                                                <span class="admin-badge-soft dark">Anulada</span>
+                                            }
+                                        </td>
                                         <td>@l.LiquidadoPorNombre</td>
                                         <td>@l.FechaLiquidacion.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td class="text-center text-nowrap">
+                                            <a asp-action="Receipt" asp-route-id="@l.LiquidacionCobrosId" target="_blank" rel="noopener" class="btn btn-sm btn-ds-action" title="Ver recibo" aria-label="Ver recibo de la ruta @l.RutaCodigo"><i class="fa fa-file-pdf"></i></a>
+                                            @if (!l.Anulada)
+                                            {
+                                                <button type="button" class="btn btn-sm btn-ds-danger" data-toggle="collapse" data-target="#anular-@l.LiquidacionCobrosId" aria-label="Anular la liquidación de la ruta @l.RutaCodigo" title="Anular"><i class="fa fa-ban"></i></button>
+                                            }
+                                        </td>
                                     </tr>
+                                    @if (l.Anulada)
+                                    {
+                                        <tr class="text-muted">
+                                            <td colspan="10" class="small border-top-0 pt-0">
+                                                Anulada el @l.FechaAnulacion?.ToString("dd/MM/yyyy HH:mm") por @l.AnuladaPorNombre. Motivo: @l.MotivoAnulacion
+                                            </td>
+                                        </tr>
+                                    }
+                                    else
+                                    {
+                                        <tr class="collapse" id="anular-@l.LiquidacionCobrosId">
+                                            <td colspan="10" class="bg-light">
+                                                <form asp-action="CancelSettlement" method="post" class="form-inline"
+                                                      data-s3-confirm="¿Anular la liquidación de la ruta @l.RutaCodigo? La ruta volverá a quedar pendiente de liquidar y el faltante del chofer, si lo hay, se anula."
+                                                      data-s3-confirm-title="Anular liquidación"
+                                                      data-s3-confirm-type="danger"
+                                                      data-s3-confirm-ok="Sí, anular"
+                                                      data-s3-confirm-cancel="Volver">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="liquidacionId" value="@l.LiquidacionCobrosId" />
+                                                    <label class="font-weight-bold mr-2 mb-2" for="motivo-@l.LiquidacionCobrosId">Motivo de la anulación</label>
+                                                    <input type="text" id="motivo-@l.LiquidacionCobrosId" name="motivo" class="form-control mr-2 mb-2" style="min-width:280px" maxlength="300" required />
+                                                    <button type="submit" class="btn btn-ds-danger mb-2"><i class="fa fa-ban mr-2"></i>Anular liquidación</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    }
                                 }
                             }
                         </tbody>
