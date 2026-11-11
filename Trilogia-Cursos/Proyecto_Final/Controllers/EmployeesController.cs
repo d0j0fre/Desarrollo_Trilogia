@@ -380,9 +380,11 @@ namespace Proyecto_Final.Controllers
 
                 TempData["SuccessMessage"] = "Solicitud actualizada correctamente.";
             }
-            catch (Exception)
+            catch (Exception exception)
             {
-                TempData["ErrorMessage"] = "No fue posible actualizar la solicitud.";
+                // G2-24: el procedimiento rechaza las transiciones no válidas y explica por qué.
+                _logger.LogWarning(exception, "No fue posible actualizar la solicitud de licencia {SolicitudId}.", model.SolicitudId);
+                TempData["ErrorMessage"] = BusinessErrors.MessageOr(exception, "No fue posible actualizar la solicitud.");
             }
 
             return RedirectToAction(nameof(LeaveRequests), new { estado = estadoFiltro });
