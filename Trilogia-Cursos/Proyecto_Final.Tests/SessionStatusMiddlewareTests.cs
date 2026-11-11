@@ -13,7 +13,7 @@ public sealed class SessionStatusMiddlewareTests
     public async Task SessionIsCheckedOnEveryRequest(bool valid, bool nextCalled)
     {
         var status = new Mock<ISessionStatusService>();
-        status.Setup(s => s.IsCurrentAsync(7, "Auditor", It.IsAny<CancellationToken>())).ReturnsAsync(valid);
+        status.Setup(s => s.IsCurrentAsync(7, "Auditor", It.IsAny<string?>(), It.IsAny<CancellationToken>())).ReturnsAsync(valid);
         var context = new DefaultHttpContext { Session = new TestSession() };
         context.Session.SetInt32("UserId", 7);
         context.Session.SetString("UserRole", "Auditor");
@@ -34,7 +34,7 @@ public sealed class SessionStatusMiddlewareTests
     public async Task UnavailableDatabaseFailsClosed()
     {
         var status = new Mock<ISessionStatusService>();
-        status.Setup(s => s.IsCurrentAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ThrowsAsync(new InvalidOperationException());
+        status.Setup(s => s.IsCurrentAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>())).ThrowsAsync(new InvalidOperationException());
         var context = new DefaultHttpContext { Session = new TestSession() };
         context.Session.SetInt32("UserId", 7);
         var called = false;

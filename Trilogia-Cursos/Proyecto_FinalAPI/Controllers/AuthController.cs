@@ -192,7 +192,8 @@ namespace Proyecto_FinalAPI.Controllers
                 user.Correo,
                 user.NombreCompleto,
                 user.PerfilNombre,
-                permissions);
+                permissions,
+                user.SecurityStamp);
 
             return Ok(new AuthResult
             {
@@ -257,7 +258,8 @@ namespace Proyecto_FinalAPI.Controllers
                 user.Correo,
                 user.NombreCompleto,
                 user.PerfilNombre,
-                permissions);
+                permissions,
+                user.SecurityStamp);
 
             var refresh = await _refreshTokenService.IssueAsync(
                 user.UsuarioId,

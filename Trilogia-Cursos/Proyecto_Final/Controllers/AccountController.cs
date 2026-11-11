@@ -68,6 +68,18 @@ namespace Proyecto_Final.Controllers
                     return View(model);
                 }
 
+                // Revocación de sesiones (0311): la sesión guarda el sello de seguridad con el que inició; si el usuario se
+                // inactiva, cambia de perfil o de contraseña, el sello cambia y SessionStatusMiddleware la cierra.
+                var sessionState = await HttpContext.RequestServices
+                    .GetRequiredService<Proyecto_Final.Middleware.ISessionStatusService>()
+                    .GetStateAsync(response.UserId ?? 0, HttpContext.RequestAborted);
+                if (sessionState is not { Active: true })
+                {
+                    ModelState.AddModelError(string.Empty, "No fue posible iniciar sesión.");
+                    return View(model);
+                }
+
+                HttpContext.Session.SetString("SecurityStamp", sessionState.SecurityStamp);
                 HttpContext.Session.SetInt32("UserId", response.UserId ?? 0);
                 HttpContext.Session.SetString("UserEmail", response.Email ?? string.Empty);
                 HttpContext.Session.SetString("UserFullName", response.FullName ?? string.Empty);

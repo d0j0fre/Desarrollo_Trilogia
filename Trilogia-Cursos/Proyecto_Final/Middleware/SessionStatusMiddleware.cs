@@ -3,23 +3,49 @@ using System.Data;
 
 namespace Proyecto_Final.Middleware;
 
+public sealed record UserSessionState(bool Active, string Role, string SecurityStamp);
+
 public interface ISessionStatusService
 {
-    Task<bool> IsCurrentAsync(int userId, string role, CancellationToken cancellationToken);
+    /// <summary>
+    /// Verdadero si la sesión sigue vigente: el usuario y su perfil están activos, el perfil es el mismo con el
+    /// que inició sesión y el sello de seguridad no cambió (inactivación, cambio de perfil o de contraseña).
+    /// Una sesión sin sello (abierta antes de la migración 0311) no es vigente.
+    /// </summary>
+    Task<bool> IsCurrentAsync(int userId, string role, string? securityStamp, CancellationToken cancellationToken);
+
+    /// <summary>Estado actual del usuario; el inicio de sesión guarda su sello en la sesión.</summary>
+    Task<UserSessionState?> GetStateAsync(int userId, CancellationToken cancellationToken);
 }
 
 public sealed class SessionStatusService(IConfiguration configuration) : ISessionStatusService
 {
-    public async Task<bool> IsCurrentAsync(int userId, string role, CancellationToken cancellationToken)
+    public async Task<bool> IsCurrentAsync(int userId, string role, string? securityStamp, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(securityStamp)) return false;
+        var state = await GetStateAsync(userId, cancellationToken);
+        return IsCurrent(state, role, securityStamp);
+    }
+
+    public static bool IsCurrent(UserSessionState? state, string role, string? securityStamp) =>
+        state is { Active: true }
+        && !string.IsNullOrWhiteSpace(securityStamp)
+        && string.Equals(state.Role, role, StringComparison.OrdinalIgnoreCase)
+        && string.Equals(state.SecurityStamp, securityStamp, StringComparison.OrdinalIgnoreCase);
+
+    public async Task<UserSessionState?> GetStateAsync(int userId, CancellationToken cancellationToken)
     {
         await using var connection = new SqlConnection(configuration.GetConnectionString("DefaultConnection"));
-        await using var command = new SqlCommand(@"SELECT COUNT(1) FROM dbo.Usuarios u
-            INNER JOIN dbo.Perfiles p ON p.PerfilId = u.PerfilId
-            WHERE u.UsuarioId = @UserId AND u.Activo = 1 AND p.Activo = 1 AND p.Nombre = @Role", connection);
-        command.Parameters.Add("@UserId", SqlDbType.Int).Value = userId;
-        command.Parameters.Add("@Role", SqlDbType.NVarChar, 100).Value = role;
+        await using var command = new SqlCommand("dbo.sp_Auth_GetSessionState", connection) { CommandType = CommandType.StoredProcedure };
+        command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = userId;
         await connection.OpenAsync(cancellationToken);
-        return Convert.ToInt32(await command.ExecuteScalarAsync(cancellationToken)) == 1;
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        if (!await reader.ReadAsync(cancellationToken)) return null;
+
+        return new UserSessionState(
+            reader.GetBoolean(reader.GetOrdinal("Activo")),
+            reader.GetString(reader.GetOrdinal("PerfilNombre")),
+            reader.GetGuid(reader.GetOrdinal("SecurityStamp")).ToString("D"));
     }
 }
 
@@ -43,7 +69,7 @@ public sealed class SessionStatusMiddleware(RequestDelegate next, ILogger<Sessio
         {
             var role = context.Session.GetString("UserRole") ?? string.Empty;
             bool valid;
-            try { valid = await status.IsCurrentAsync(id.Value, role, context.RequestAborted); }
+            try { valid = await status.IsCurrentAsync(id.Value, role, context.Session.GetString("SecurityStamp"), context.RequestAborted); }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 logger.LogError(ex, "No se pudo verificar el estado de la sesión.");

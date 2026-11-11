@@ -227,7 +227,7 @@ public sealed class GdLiquidacionFlotaTests
     public async Task SinBaseDeDatos_LaRespuestaTieneUnMensajeControlado()
     {
         var status = new Mock<ISessionStatusService>();
-        status.Setup(s => s.IsCurrentAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        status.Setup(s => s.IsCurrentAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("Cannot open server 'secreto' requested by the login"));
         var body = new MemoryStream();
         var context = new DefaultHttpContext { Session = new TestSession() };

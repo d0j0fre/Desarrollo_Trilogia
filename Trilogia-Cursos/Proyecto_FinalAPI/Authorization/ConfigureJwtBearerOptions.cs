@@ -66,11 +66,41 @@ namespace Proyecto_FinalAPI.Authorization
             {
                 // Respuesta uniforme: el cliente nunca sabe por qué falló, solo
                 // que tiene que renovar o volver a autenticarse.
+                // Revocación de sesiones: aunque la firma y el vencimiento sean válidos, el token vale solo
+                // mientras el usuario siga activo, con el mismo perfil y con el mismo sello de seguridad.
+                OnTokenValidated = async context =>
+                {
+                    var services = context.HttpContext.RequestServices;
+                    var result = await SessionStateValidator.ValidateAsync(
+                        context.Principal ?? new ClaimsPrincipal(),
+                        services.GetRequiredService<IMobileAuthDbService>(),
+                        services.GetService<ILoggerFactory>()?.CreateLogger("Proyecto_FinalAPI.SessionValidation"),
+                        context.HttpContext.RequestAborted);
+
+                    if (result == SessionValidationResult.Revoked)
+                    {
+                        context.Fail(SessionStateValidator.RevokedFailure);
+                    }
+                    else if (result == SessionValidationResult.Unavailable)
+                    {
+                        context.Fail(SessionStateValidator.UnavailableFailure);
+                    }
+                },
                 OnChallenge = context =>
                 {
                     context.HandleResponse();
-                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                     context.Response.ContentType = "application/json";
+
+                    if (string.Equals(
+                            context.AuthenticateFailure?.Message,
+                            SessionStateValidator.UnavailableFailure,
+                            StringComparison.Ordinal))
+                    {
+                        context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+                        return context.Response.WriteAsync("{\"error\":\"servicio_no_disponible\"}");
+                    }
+
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                     return context.Response.WriteAsync("{\"error\":\"no_autenticado\"}");
                 },
                 OnForbidden = context =>
