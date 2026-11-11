@@ -112,7 +112,8 @@ namespace Proyecto_Final.Controllers
                     "Cambio de estado rechazado para RutaPedido {RouteOrderId} por usuario {UserId}.",
                     rutaPedidoId,
                     userId);
-                return Json(new { ok = false, message = "No fue posible aplicar el estado solicitado." });
+                // G3-09: el motivo lo escribe el procedimiento para el usuario («La entrega ya tiene un estado final.»…).
+                return Json(new { ok = false, message = BusinessErrors.MessageOr(exception, "No fue posible aplicar el estado solicitado.") });
             }
             catch (Exception exception)
             {
