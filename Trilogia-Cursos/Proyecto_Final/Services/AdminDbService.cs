@@ -1001,6 +1001,64 @@ namespace Proyecto_Final.Services
             return registros;
         }
 
+        /// <summary>Registro general + bitácoras de RR. HH. y planilla (solo lectura), con columnas comunes (G2-29).</summary>
+        public async Task<List<AuditLogViewModel>> GetUnifiedAuditLogsAsync(string? origen, string? modulo, string? accion, string? buscar)
+        {
+            var registros = new List<AuditLogViewModel>();
+
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_GetAuditLogsUnificado", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add("@Origen", SqlDbType.NVarChar, 20).Value = AuditOrigins.Normalize(origen);
+            command.Parameters.Add("@Modulo", SqlDbType.NVarChar, 80).Value = string.IsNullOrWhiteSpace(modulo) ? DBNull.Value : modulo.Trim();
+            command.Parameters.Add("@Accion", SqlDbType.NVarChar, 100).Value = string.IsNullOrWhiteSpace(accion) ? DBNull.Value : accion.Trim();
+            command.Parameters.Add("@Buscar", SqlDbType.NVarChar, 200).Value = string.IsNullOrWhiteSpace(buscar) ? DBNull.Value : buscar.Trim();
+
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                registros.Add(new AuditLogViewModel
+                {
+                    Origen = reader.IsDBNull(0) ? AuditOrigins.GeneralLabel : reader.GetString(0),
+                    AuditoriaId = reader.IsDBNull(1) ? 0 : (int)reader.GetInt64(1),
+                    UsuarioId = reader.IsDBNull(2) ? null : reader.GetInt32(2),
+                    UsuarioNombre = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
+                    UsuarioCorreo = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
+                    Rol = reader.IsDBNull(5) ? string.Empty : reader.GetString(5),
+                    Accion = reader.IsDBNull(6) ? string.Empty : reader.GetString(6),
+                    Modulo = reader.IsDBNull(7) ? string.Empty : reader.GetString(7),
+                    Descripcion = reader.IsDBNull(8) ? string.Empty : reader.GetString(8),
+                    DireccionIp = reader.IsDBNull(9) ? null : reader.GetString(9),
+                    UserAgent = reader.IsDBNull(10) ? null : reader.GetString(10),
+                    FechaRegistro = reader.IsDBNull(11) ? DateTime.MinValue : reader.GetDateTime(11)
+                });
+            }
+
+            return registros;
+        }
+
+        /// <summary>Módulos y acciones que existen de verdad en las bitácoras, para llenar las listas de filtro.</summary>
+        public async Task<(List<string> Modulos, List<string> Acciones)> GetAuditFilterOptionsAsync()
+        {
+            var modulos = new List<string>();
+            var acciones = new List<string>();
+
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Admin_GetAuditFilterOptions", connection) { CommandType = CommandType.StoredProcedure };
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                var tipo = reader.GetString(0);
+                var valor = reader.GetString(1);
+                (tipo == "modulo" ? modulos : acciones).Add(valor);
+            }
+
+            return (modulos, acciones);
+        }
+
         public async Task CreateAuditLogAsync(int? usuarioId, string? usuarioNombre, string? usuarioCorreo, string? rol, string accion, string modulo, string descripcion, string? direccionIp, string? userAgent)
         {
             try

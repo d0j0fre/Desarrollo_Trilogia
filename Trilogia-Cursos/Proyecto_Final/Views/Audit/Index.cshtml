@@ -1,4 +1,5 @@
 @model Proyecto_Final.Models.Admin.AuditLogFilterViewModel
+@using Proyecto_Final.Models.Admin
 @{
     ViewData["Title"] = "Auditoría del sistema";
 }
@@ -20,32 +21,42 @@
     <div class="row px-xl-5 pb-3">
         <div class="col-12">
             <div class="admin-card">
+                <ul class="nav nav-pills mb-3" aria-label="Origen de la bitácora">
+                    @foreach (var (code, label) in AuditOrigins.Options)
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link @(Model.Origen == code ? "active" : "text-dark")"
+                               asp-controller="Audit" asp-action="Index" asp-route-origen="@code"
+                               aria-current="@(Model.Origen == code ? "page" : null)">@label</a>
+                        </li>
+                    }
+                </ul>
+                @if (Model.Origen != AuditOrigins.General)
+                {
+                    <p class="text-muted small mb-3">Las bitácoras de RR. HH. y de planilla se muestran en modo lectura, con las mismas columnas que el registro general.</p>
+                }
                 <form asp-controller="Audit" asp-action="Index" method="get">
+                    <input type="hidden" name="origen" value="@Model.Origen" />
                     <div class="row">
                         <div class="col-lg-3 col-md-6 mb-3">
-                            <label class="font-weight-bold">Módulo</label>
-                            <select name="modulo" class="form-control">
+                            <label class="font-weight-bold" for="audit-modulo">Módulo</label>
+                            <select name="modulo" id="audit-modulo" class="form-control">
                                 <option value="">Todos</option>
-                                <option value="Autenticación" selected="@(Model.Modulo == "Autenticación")">Autenticación</option>
-                                <option value="Usuarios" selected="@(Model.Modulo == "Usuarios")">Usuarios</option>
-                                <option value="Inventario" selected="@(Model.Modulo == "Inventario")">Inventario</option>
-                                <option value="Pedidos" selected="@(Model.Modulo == "Pedidos")">Pedidos</option>
-                                <option value="Auditoría" selected="@(Model.Modulo == "Auditoría")">Auditoría</option>
+                                @foreach (var valor in Model.Modulos.Concat(string.IsNullOrWhiteSpace(Model.Modulo) ? Array.Empty<string>() : [Model.Modulo]).Distinct())
+                                {
+                                    <option value="@valor" selected="@(Model.Modulo == valor)">@valor</option>
+                                }
                             </select>
                         </div>
 
                         <div class="col-lg-3 col-md-6 mb-3">
-                            <label class="font-weight-bold">Acción</label>
-                            <select name="accion" class="form-control">
+                            <label class="font-weight-bold" for="audit-accion">Acción</label>
+                            <select name="accion" id="audit-accion" class="form-control">
                                 <option value="">Todas</option>
-                                <option value="Login" selected="@(Model.Accion == "Login")">Login</option>
-                                <option value="Logout" selected="@(Model.Accion == "Logout")">Logout</option>
-                                <option value="Registro" selected="@(Model.Accion == "Registro")">Registro</option>
-                                <option value="Crear" selected="@(Model.Accion == "Crear")">Crear</option>
-                                <option value="Editar" selected="@(Model.Accion == "Editar")">Editar</option>
-                                <option value="Eliminar/Inactivar" selected="@(Model.Accion == "Eliminar/Inactivar")">Eliminar/Inactivar</option>
-                                <option value="Movimiento" selected="@(Model.Accion == "Movimiento")">Movimiento</option>
-                                <option value="Cambio de estado" selected="@(Model.Accion == "Cambio de estado")">Cambio de estado</option>
+                                @foreach (var valor in Model.Acciones.Concat(string.IsNullOrWhiteSpace(Model.Accion) ? Array.Empty<string>() : [Model.Accion]).Distinct())
+                                {
+                                    <option value="@valor" selected="@(Model.Accion == valor)">@valor</option>
+                                }
                             </select>
                         </div>
 
@@ -73,7 +84,7 @@
                         <h5 class="mb-1">Registros recientes</h5>
                         <small class="text-muted">Se muestran máximo 200 registros.</small>
                     </div>
-                    <a asp-controller="Audit" asp-action="Index" class="btn btn-ds-neutral btn-sm mt-2 mt-md-0">
+                    <a asp-controller="Audit" asp-action="Index" asp-route-origen="@Model.Origen" class="btn btn-ds-neutral btn-sm mt-2 mt-md-0">
                         <i class="fa fa-sync-alt mr-1"></i>Limpiar filtros
                     </a>
                 </div>
@@ -85,6 +96,7 @@
                                 <th>Fecha</th>
                                 <th>Usuario</th>
                                 <th>Rol</th>
+                                <th>Origen</th>
                                 <th>Módulo</th>
                                 <th>Acción</th>
                                 <th>Descripción</th>
@@ -95,7 +107,7 @@
                             @if (Model.Registros == null || !Model.Registros.Any())
                             {
                                 <tr>
-                                    <td colspan="7" class="text-center text-muted py-4">
+                                    <td colspan="8" class="text-center text-muted py-4">
                                         No hay registros de auditoría para mostrar.
                                     </td>
                                 </tr>
@@ -111,6 +123,7 @@
                                             <small class="text-muted">@item.UsuarioCorreo</small>
                                         </td>
                                         <td>@item.Rol</td>
+                                        <td><span class="admin-badge-soft">@item.Origen</span></td>
                                         <td><span class="admin-badge-soft dark">@item.Modulo</span></td>
                                         <td><span class="admin-badge-soft success">@item.Accion</span></td>
                                         <td>@item.Descripcion</td>
