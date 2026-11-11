@@ -92,6 +92,7 @@ Cada migracion debe indicar su estrategia de rollback antes de ejecutarse. Los c
 | 0263 | `0263_vigencia_salarial.sql` | Historial salarial por fecha efectiva | 0017; historial de salarios |
 | 0264 | `0264_gasto_sin_presupuesto.sql` | Detecta exceso cuando existe gasto sin presupuesto | 0010; vista de impacto de gastos |
 | 0265 | `0265_estado_gasto_aprobacion.sql` | Estado persistente de aprobación y su inclusión en gastos pendientes | 0010, 0011 y 0264 |
+| 0290 | `0290_sugerencias_compra_promedio_real.sql` | BUG-24-02 / G1-13: `sp_Admin_GetPurchaseSuggestions` acepta `@IncluirTodos` (0 = igual que antes; 1 = todos los productos activos con el mismo cálculo de demanda) para que Sugerencias de compra e Inteligencia de inventario usen una sola fórmula. Solo lectura | **0012** (definición previa del procedimiento) |
 
 Los scripts no incluyen `USE`: el ejecutor debe seleccionar explícitamente la base antes de iniciar. Los hashes escritos por 0002–0011 son hashes de manifiesto para identificar versión; la evidencia de despliegue debe registrar además el SHA-256 real del archivo y actualizar el ledger si corresponde.
 

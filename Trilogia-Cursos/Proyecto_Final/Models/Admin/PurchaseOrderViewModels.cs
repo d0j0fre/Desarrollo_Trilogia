@@ -41,6 +41,7 @@ public sealed class PurchaseOrderLineSelectionViewModel
 
     public decimal PrecioTienda { get; set; }
     public decimal PromedioVentaMensual { get; set; }
+    public int CantidadSugerida { get; set; }
     public decimal? UltimoPrecioPagado { get; set; }
     public bool DatosInsuficientes { get; set; }
     public decimal? VariacionPorcentual => PurchasingPolicy.CalculatePriceVariation(PrecioUnitario, UltimoPrecioPagado);
@@ -55,6 +56,12 @@ public sealed class PurchaseOrderFormViewModel : IValidatableObject
     public string? Notas { get; set; }
 
     public Guid TokenOperacion { get; set; } = Guid.NewGuid();
+
+    // Pantalla Sugerencias de compra: usa los mismos parámetros que Inteligencia de inventario.
+    public bool DesdeSugerencias { get; set; }
+    public int MesesPromedio { get; set; } = InventoryIntelligenceFilterViewModel.DefaultRecentMonths;
+    public int MesesCobertura { get; set; } = InventoryIntelligenceFilterViewModel.DefaultCoverageMonths;
+
     public IReadOnlyList<SupplierListItemViewModel> Proveedores { get; set; } = [];
     public List<PurchaseOrderLineSelectionViewModel> Productos { get; set; } = [];
 

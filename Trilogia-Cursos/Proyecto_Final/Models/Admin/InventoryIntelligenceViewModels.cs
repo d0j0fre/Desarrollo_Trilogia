@@ -4,6 +4,12 @@ namespace Proyecto_Final.Models.Admin;
 
 public sealed class InventoryIntelligenceFilterViewModel : IValidatableObject
 {
+    /// <summary>Meses para el promedio de ventas: mismo valor por defecto en Inteligencia de inventario y en Sugerencias de compra.</summary>
+    public const int DefaultRecentMonths = 3;
+
+    /// <summary>Meses de cobertura: mismo valor por defecto en Inteligencia de inventario y en Sugerencias de compra.</summary>
+    public const int DefaultCoverageMonths = 2;
+
     [Range(2000, 2100)]
     public int StartYear { get; set; } = DateTime.UtcNow.Year - 2;
 
@@ -11,10 +17,10 @@ public sealed class InventoryIntelligenceFilterViewModel : IValidatableObject
     public int EndYear { get; set; } = DateTime.UtcNow.Year;
 
     [Range(1, 12)]
-    public int RecentMonths { get; set; } = 3;
+    public int RecentMonths { get; set; } = DefaultRecentMonths;
 
     [Range(1, 12)]
-    public int CoverageMonths { get; set; } = 2;
+    public int CoverageMonths { get; set; } = DefaultCoverageMonths;
 
     [Range(30, 365)]
     public int SlowWindowDays { get; set; } = 60;

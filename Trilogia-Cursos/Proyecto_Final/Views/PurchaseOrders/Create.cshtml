@@ -1,6 +1,6 @@
 @model Proyecto_Final.Models.Admin.PurchaseOrderFormViewModel
 @{
-    var fromSuggestions = ViewData["FromSuggestions"] as bool? == true;
+    var fromSuggestions = Model.DesdeSugerencias;
     ViewData["Title"] = fromSuggestions ? "Sugerencias de compra" : "Nueva orden de compra";
 }
 
@@ -10,10 +10,29 @@
         <p>@(fromSuggestions ? "Revise cantidades sugeridas y defina precios; ninguna compra se crea automáticamente." : "Seleccione proveedor, productos, cantidades y precios de compra.")</p>
     </div></div>
     <div class="row px-xl-5 pb-5"><div class="col-12">
+        @if (fromSuggestions)
+        {
+            @* BUG-24-02: mismos parámetros y mismo cálculo que Inteligencia de inventario. *@
+            <form asp-action="Suggestions" method="get" class="form-inline mb-3">
+                <label class="mr-2" for="recentMonths">Meses para promedio</label>
+                <input id="recentMonths" name="recentMonths" type="number" min="1" max="12" value="@Model.MesesPromedio" class="form-control form-control-sm mr-3" style="width:80px" />
+                <label class="mr-2" for="coverageMonths">Meses de cobertura</label>
+                <input id="coverageMonths" name="coverageMonths" type="number" min="1" max="12" value="@Model.MesesCobertura" class="form-control form-control-sm mr-3" style="width:80px" />
+                <button type="submit" class="btn btn-ds-edit btn-sm"><i class="fa fa-sync mr-1"></i>Actualizar</button>
+                <small class="text-muted ml-3">Mismo cálculo que Inteligencia de inventario.</small>
+            </form>
+        }
         <form asp-action="Create" method="post">
             @Html.AntiForgeryToken()
             <input asp-for="TokenOperacion" type="hidden" />
-            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+            <input asp-for="DesdeSugerencias" type="hidden" />
+            <input asp-for="MesesPromedio" type="hidden" />
+            <input asp-for="MesesCobertura" type="hidden" />
+            <div asp-validation-summary="All" class="alert alert-danger"></div>
+            @if (fromSuggestions && !Model.Productos.Any())
+            {
+                <div class="alert alert-info">Ningún producto necesita reabastecerse con estos parámetros: el inventario cubre la demanda estimada. Para comprar de todos modos, use <a asp-action="Create">Nueva orden de compra</a>.</div>
+            }
             <div class="form-row">
                 <div class="form-group col-md-5"><label asp-for="ProveedorId">Proveedor activo</label><select asp-for="ProveedorId" class="form-control"><option value="">Seleccione</option>@foreach (var supplier in Model.Proveedores) { <option value="@supplier.ProveedorId">@supplier.Nombre</option> }</select><span asp-validation-for="ProveedorId" class="text-danger"></span></div>
                 <div class="form-group col-md-7"><label asp-for="Notas"></label><input asp-for="Notas" class="form-control" /></div>
@@ -26,9 +45,9 @@
                     {
                         <tr class="purchase-line">
                             <td><input asp-for="Productos[index].ProductoId" type="hidden" /><input asp-for="Productos[index].Nombre" type="hidden" /><input asp-for="Productos[index].StockActual" type="hidden" /><input asp-for="Productos[index].PromedioVentaMensual" type="hidden" /><input asp-for="Productos[index].DatosInsuficientes" type="hidden" /><input asp-for="Productos[index].Seleccionado" class="select-product" /></td>
-                            <td>@Model.Productos[index].Nombre @if (Model.Productos[index].DatosInsuficientes) { <small class="d-block text-muted">Datos históricos insuficientes</small> }</td>
-                            <td>@Model.Productos[index].StockActual</td><td>@Model.Productos[index].PromedioVentaMensual.ToString("N1")</td>
-                            <td><input asp-for="Productos[index].Cantidad" type="number" min="1" class="form-control form-control-sm quantity" style="width:90px" /></td>
+                            <td>@Model.Productos[index].Nombre @if (Model.Productos[index].DatosInsuficientes) { <small class="d-block text-muted">Datos insuficientes: ingrese la cantidad manualmente</small> }</td>
+                            <td>@Model.Productos[index].StockActual</td><td>@Model.Productos[index].PromedioVentaMensual.ToString("N2")</td>
+                            <td><input asp-for="Productos[index].Cantidad" type="number" min="1" value="@(Model.Productos[index].Cantidad > 0 ? Model.Productos[index].Cantidad.ToString() : "")" class="form-control form-control-sm quantity" style="width:90px" />@if (fromSuggestions && !Model.Productos[index].DatosInsuficientes) { <small class="d-block text-muted">Sugerido: @Model.Productos[index].CantidadSugerida</small> }</td>
                             <td><input asp-for="Productos[index].PrecioUnitario" type="number" min="0.01" step="0.01" class="form-control form-control-sm price" data-last="@(Model.Productos[index].UltimoPrecioPagado?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "")" style="width:130px" /><small class="price-warning text-danger"></small></td>
                             <td>@(Model.Productos[index].UltimoPrecioPagado.HasValue ? $"₡{Model.Productos[index].UltimoPrecioPagado:N2}" : "—")</td><td class="line-total">₡0.00</td>
                         </tr>
@@ -52,6 +71,7 @@
                 document.querySelectorAll('.purchase-line').forEach(row => {
                     const selected = row.querySelector('.select-product').checked;
                     const quantity = Number(row.querySelector('.quantity').value) || 0;
+                    row.querySelector('.quantity').required = selected;
                     const priceInput = row.querySelector('.price');
                     const price = Number(priceInput.value) || 0;
                     const subtotal = selected ? quantity * price : 0;
