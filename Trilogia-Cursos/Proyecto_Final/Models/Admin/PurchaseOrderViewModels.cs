@@ -9,6 +9,18 @@ public static class PurchaseOrderStatus
     public const string Received = "Recibida";
     public const string ClosedWithDiscrepancy = "CerradaConDiscrepancia";
     public const string Cancelled = "Cancelada";
+
+    /// <summary>
+    /// Texto que ve el usuario para un estado guardado (G1-14): el código interno
+    /// («RecibidaParcial», «CerradaConDiscrepancia») no se muestra tal cual.
+    /// </summary>
+    public static string Label(string? status) => status switch
+    {
+        PartiallyReceived => "Recibida parcial",
+        ClosedWithDiscrepancy => "Cerrada con faltantes",
+        null => string.Empty,
+        _ => status
+    };
 }
 
 public sealed class PurchaseOrderListItemViewModel
