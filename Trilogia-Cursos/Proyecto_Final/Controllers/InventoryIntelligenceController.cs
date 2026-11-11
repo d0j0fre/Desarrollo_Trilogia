@@ -26,7 +26,13 @@ public sealed class InventoryIntelligenceController : Controller
     {
         if (!ModelState.IsValid)
         {
-            return View(new InventoryIntelligenceViewModel { Filter = filter });
+            // BUG-24-06: parámetros no válidos (por ejemplo, año inicial mayor que el final): se muestran
+            // los mensajes de validación y no se genera ningún análisis.
+            return View(new InventoryIntelligenceViewModel
+            {
+                Filter = filter,
+                Categorias = await TryGetCategoriesAsync(cancellationToken)
+            });
         }
 
         try
@@ -38,6 +44,19 @@ public sealed class InventoryIntelligenceController : Controller
             _logger.LogError(exception, "No fue posible consultar inteligencia de inventario.");
             ModelState.AddModelError(string.Empty, "No fue posible cargar los indicadores en este momento.");
             return View(new InventoryIntelligenceViewModel { Filter = filter });
+        }
+    }
+
+    private async Task<List<string>> TryGetCategoriesAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await _intelligence.GetCategoriesAsync(cancellationToken);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(exception, "No fue posible cargar las categorías de la tendencia estacional.");
+            return new List<string>();
         }
     }
 }

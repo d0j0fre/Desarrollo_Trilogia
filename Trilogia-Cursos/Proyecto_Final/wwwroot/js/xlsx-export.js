@@ -4,8 +4,9 @@
 (function (global) {
     'use strict';
 
-    // Estilos de celda: 0 normal, 1 negrita (encabezados), 2 texto ajustado arriba.
-    const STYLE = { normal: 0, bold: 1, wrap: 2 };
+    // Estilos de celda: 0 normal, 1 negrita (encabezados), 2 texto ajustado arriba,
+    // 3 número con miles y 2 decimales, 4 número entero con miles.
+    const STYLE = { normal: 0, bold: 1, wrap: 2, money: 3, integer: 4 };
 
     const CRC_TABLE = (function () {
         const table = new Uint32Array(256);
@@ -118,6 +119,12 @@
         rows.forEach(function (row, r) {
             out += '<row r="' + (r + 1) + '">';
             row.forEach(function (cell, c) {
+                // Celda numérica ({ num: 12.5, style: STYLE.money }): se guarda como número, no como texto.
+                if (cell && typeof cell.num === 'number' && isFinite(cell.num)) {
+                    out += '<c r="' + columnName(c) + (r + 1) + '"' + (cell.style ? ' s="' + cell.style + '"' : '') +
+                        '><v>' + cell.num + '</v></c>';
+                    return;
+                }
                 const text = String(cell && cell.text != null ? cell.text : '').slice(0, MAX_CELL);
                 if (!text) {
                     return;
@@ -174,10 +181,12 @@
                     '<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>' +
                     '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>' +
                     '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
-                    '<cellXfs count="3">' +
+                    '<cellXfs count="5">' +
                     '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' +
                     '<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +
                     '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>' +
+                    '<xf numFmtId="4" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>' +
+                    '<xf numFmtId="3" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>' +
                     '</cellXfs></styleSheet>'
             },
             { name: 'xl/worksheets/sheet1.xml', content: sheetXml(rows, widths) }
