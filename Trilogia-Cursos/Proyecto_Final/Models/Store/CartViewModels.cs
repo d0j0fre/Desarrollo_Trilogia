@@ -77,7 +77,7 @@ namespace Proyecto_Final.Models.Store
         public string? Observaciones { get; set; }
 
         [Display(Name = "Correo electrónico")]
-        [EmailAddress(ErrorMessage = "Ingresa un correo válido.")]
+        [EmailAddress(ErrorMessage = "Ingrese un correo válido.")]
         public string? CorreoElectronico { get; set; }
 
         [Display(Name = "Tipo de cliente")]

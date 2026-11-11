@@ -216,7 +216,7 @@ namespace Proyecto_Final.Controllers
         {
             if (!IsLoggedIn())
             {
-                TempData["LoginSuccess"] = "Debes iniciar sesión para finalizar la compra.";
+                TempData["LoginSuccess"] = "Debe iniciar sesión para finalizar la compra.";
                 return RedirectToAction("Login", "Account", new { returnUrl = Url.Action(nameof(Checkout), "Cart") });
             }
 
@@ -231,7 +231,7 @@ namespace Proyecto_Final.Controllers
                     return RedirectToAction(nameof(Index));
                 }
 
-                TempData["LoginSuccess"] = "Tu carrito está vacío.";
+                TempData["LoginSuccess"] = "Su carrito está vacío.";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -274,7 +274,7 @@ namespace Proyecto_Final.Controllers
             if (!IsLoggedIn())
             {
                 TempData["LoginSuccess"] =
-                    "Debes iniciar sesión para finalizar la compra.";
+                    "Debe iniciar sesión para finalizar la compra.";
 
                 return RedirectToAction(
                     "Login",
@@ -305,7 +305,7 @@ namespace Proyecto_Final.Controllers
 
             if (model.Cart.Items.Count == 0)
             {
-                TempData["LoginSuccess"] = "Tu carrito está vacío.";
+                TempData["LoginSuccess"] = "Su carrito está vacío.";
                 return RedirectToAction(nameof(Index));
             }
 

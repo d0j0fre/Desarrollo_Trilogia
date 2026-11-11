@@ -24,7 +24,7 @@ namespace Proyecto_Final.Controllers
         [HttpGet]
         public IActionResult Login(string? returnUrl = null)
         {
-            // G3-14: «Debes iniciar sesión para finalizar la compra» envía de vuelta al pago.
+            // G3-14: «Debe iniciar sesión para finalizar la compra» envía de vuelta al pago.
             returnUrl = Url.IsLocalUrl(returnUrl) ? returnUrl : null;
 
             if (!string.IsNullOrWhiteSpace(HttpContext.Session.GetString("UserEmail")))
@@ -88,7 +88,7 @@ namespace Proyecto_Final.Controllers
             catch (Exception exception)
             {
                 _logger.LogError(exception, "Falló el inicio de sesión mediante el API de autenticación.");
-                ModelState.AddModelError(string.Empty, "No fue posible iniciar sesión en este momento. Intentá nuevamente.");
+                ModelState.AddModelError(string.Empty, "No fue posible iniciar sesión en este momento. Intente nuevamente.");
                 return View(model);
             }
         }
@@ -138,12 +138,12 @@ namespace Proyecto_Final.Controllers
                     "Usuarios",
                     $"Se registró una nueva cuenta de cliente para el correo {model.Email}.");
 
-                TempData["SuccessMessage"] = "Tu cuenta fue creada correctamente. Ahora puedes iniciar sesión.";
+                TempData["SuccessMessage"] = "Su cuenta fue creada correctamente. Ahora puede iniciar sesión.";
                 return RedirectToAction(nameof(Login));
             }
             catch (Exception)
             {
-                ModelState.AddModelError(string.Empty, "No fue posible completar el registro en este momento. Intentá nuevamente.");
+                ModelState.AddModelError(string.Empty, "No fue posible completar el registro en este momento. Intente nuevamente.");
                 return View("Registro", model);
             }
         }
@@ -191,7 +191,7 @@ namespace Proyecto_Final.Controllers
             }
             catch (Exception)
             {
-                ModelState.AddModelError(string.Empty, "No fue posible procesar la solicitud en este momento. Intentá nuevamente.");
+                ModelState.AddModelError(string.Empty, "No fue posible procesar la solicitud en este momento. Intente nuevamente.");
                 return View(model);
             }
         }
@@ -243,7 +243,7 @@ namespace Proyecto_Final.Controllers
             }
             catch (Exception)
             {
-                ModelState.AddModelError(string.Empty, "No fue posible restablecer la contraseña en este momento. Intentá nuevamente.");
+                ModelState.AddModelError(string.Empty, "No fue posible restablecer la contraseña en este momento. Intente nuevamente.");
                 return View(model);
             }
         }

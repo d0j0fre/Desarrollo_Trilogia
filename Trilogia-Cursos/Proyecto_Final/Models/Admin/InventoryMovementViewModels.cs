@@ -19,7 +19,7 @@ namespace Proyecto_Final.Models.Admin
     public class InventoryMovementFormViewModel : IValidatableObject
     {
         [Display(Name = "Producto")]
-        [Range(1, int.MaxValue, ErrorMessage = "Debes seleccionar un producto.")]
+        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un producto.")]
         public int ProductoId { get; set; }
 
         [Display(Name = "Tipo de movimiento")]
@@ -62,7 +62,7 @@ namespace Proyecto_Final.Models.Admin
     public class StockTransformationFormViewModel : IValidatableObject
     {
         [Display(Name = "Producto origen")]
-        [Range(1, int.MaxValue, ErrorMessage = "Debes seleccionar el producto de origen.")]
+        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar el producto de origen.")]
         public int ProductoOrigenId { get; set; }
 
         [Display(Name = "Cantidad a descontar del origen")]
@@ -70,7 +70,7 @@ namespace Proyecto_Final.Models.Admin
         public int CantidadOrigen { get; set; } = 1;
 
         [Display(Name = "Producto destino")]
-        [Range(1, int.MaxValue, ErrorMessage = "Debes seleccionar el producto de destino.")]
+        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar el producto de destino.")]
         public int ProductoDestinoId { get; set; }
 
         [Display(Name = "Cantidad a sumar al destino")]
