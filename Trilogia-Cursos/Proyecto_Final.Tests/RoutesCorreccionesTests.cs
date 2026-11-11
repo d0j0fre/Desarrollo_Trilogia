@@ -214,6 +214,71 @@ public sealed class RoutesCorreccionesTests
         Assert.Contains("PedidosEnRuta = enRuta.Length", controlador, StringComparison.Ordinal);
     }
 
+    // ── Mensajes del manual (G2-12, G3-08, G3-09) ───────────────────────────
+
+    private static string Controlador(string nombre) =>
+        MobileCorreccionesTests.Read("Proyecto_Final", "Controllers", nombre);
+
+    // El rechazo de negocio del procedimiento se muestra tal cual: ningún bloque lo reemplaza por el texto genérico.
+    private const string GenericoSolo = @"(=|AddModelError\(string\.Empty,)\s*""No fue posible completar la operación solicitada\.""";
+
+    [Fact]
+    public void RutasMuestraElMotivoDeNegocioDelProcedimientoEnTodasLasAcciones_G2_12()
+    {
+        var controlador = Controlador("RoutesAdminController.cs");
+
+        Assert.DoesNotMatch(GenericoSolo, controlador);
+        // Crear, agregar, quitar, despachar, cancelar, secuenciar, guardar orden, recalcular y liquidar.
+        Assert.Equal(9, CuantasVeces(controlador, "BusinessErrors.MessageOr(ex, \"No fue posible completar la operación solicitada.\")"));
+    }
+
+    [Fact]
+    public void KilometrajeMuestraElMotivoDelProcedimientoAlAbrirYCerrarLaJornada_G3_08()
+    {
+        var controlador = Controlador("FleetController.cs");
+        var kilometraje = controlador[controlador.IndexOf("public async Task<IActionResult> OpenMileage(", StringComparison.Ordinal)..];
+        kilometraje = kilometraje[..kilometraje.IndexOf("// ── CU-153 Mantenimiento", StringComparison.Ordinal)];
+
+        Assert.DoesNotMatch(GenericoSolo, kilometraje);
+        Assert.Equal(2, CuantasVeces(kilometraje, "BusinessErrors.MessageOr(ex,"));
+    }
+
+    [Fact]
+    public void MisEntregasMuestraElMotivoDelProcedimientoAlCambiarElEstado_G3_09()
+    {
+        var controlador = Controlador("DriverDeliveriesController.cs");
+
+        Assert.Contains("BusinessErrors.MessageOr(exception, \"No fue posible aplicar el estado solicitado.\")", controlador, StringComparison.Ordinal);
+        Assert.DoesNotMatch("message = \"No fue posible aplicar el estado solicitado\\.\"", controlador);
+    }
+
+    // ── Pendiente heredado: el sitio web también sincroniza el estado del pedido (0220) ─
+
+    [Fact]
+    public void DespacharYRecalcularDesdeLaWebSincronizanElEstadoDeLosPedidos()
+    {
+        var controlador = Controlador("RoutesAdminController.cs");
+
+        Assert.Contains("_logistics.SyncOrderStatusFromDeliveryAsync(rutaId, null)", controlador, StringComparison.Ordinal);
+        var despachar = controlador[controlador.IndexOf("public async Task<IActionResult> Dispatch(", StringComparison.Ordinal)..];
+        despachar = despachar[..despachar.IndexOf("public async Task<IActionResult> Cancel(", StringComparison.Ordinal)];
+        Assert.Contains("SyncOrderStatusAsync(rutaId)", despachar, StringComparison.Ordinal);
+
+        var recalcular = controlador[controlador.IndexOf("public async Task<IActionResult> Recalculate(", StringComparison.Ordinal)..];
+        recalcular = recalcular[..recalcular.IndexOf("public async Task<IActionResult> Liquidate(", StringComparison.Ordinal)];
+        Assert.Contains("SyncOrderStatusAsync(rutaId)", recalcular, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MarcarUnaEntregaDesdeMisEntregasSincronizaElPedidoConElProcedimientoDeLa0220()
+    {
+        var controlador = Controlador("DriverDeliveriesController.cs");
+        var servicio = MobileCorreccionesTests.Read("Proyecto_Final", "Services", "LogisticsDbService.cs");
+
+        Assert.Contains("_logistics.SyncOrderStatusFromDeliveryAsync(null, result.RutaPedidoId)", controlador, StringComparison.Ordinal);
+        Assert.Contains("dbo.sp_Pedidos_SincronizarEstadoEntrega", servicio, StringComparison.Ordinal);
+    }
+
     private static int CuantasVeces(string texto, string buscado)
     {
         var cuenta = 0;

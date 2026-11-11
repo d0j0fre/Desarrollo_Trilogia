@@ -372,6 +372,20 @@ namespace Proyecto_Final.Services
             return destinatarios;
         }
 
+        // BUG-10-06 (0220): lleva a Pedidos.Estado el estado de la entrega (En ruta, Entregado, No entregado).
+        // Se llama después de despachar una ruta, recalcularla o cambiar una entrega desde el sitio web, igual que
+        // hace la API móvil. Es idempotente. Devuelve cuántos pedidos cambiaron de estado.
+        public async Task<int> SyncOrderStatusFromDeliveryAsync(int? rutaId, int? rutaPedidoId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Pedidos_SincronizarEstadoEntrega", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.Add("@RutaId", SqlDbType.Int).Value = rutaId.HasValue ? rutaId.Value : DBNull.Value;
+            command.Parameters.Add("@RutaPedidoId", SqlDbType.Int).Value = rutaPedidoId.HasValue ? rutaPedidoId.Value : DBNull.Value;
+            await connection.OpenAsync();
+            var result = await command.ExecuteScalarAsync();
+            return result is int n ? n : Convert.ToInt32(result ?? 0);
+        }
+
         // CU-251 E1 — Secuenciar automáticamente (vecino más cercano).
         // Devuelve (puntos secuenciados, puntos sin coordenada capturada).
         public async Task<(int Secuenciados, int SinCoordenadas)> SequenceRouteAsync(int rutaId)

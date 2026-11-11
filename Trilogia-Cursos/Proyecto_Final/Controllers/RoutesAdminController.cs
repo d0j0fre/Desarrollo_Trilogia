@@ -175,6 +175,8 @@ namespace Proyecto_Final.Controllers
             try
             {
                 var destinatarios = await _logistics.DispatchRouteAsync(rutaId, usuarioId, usuarioNombre);
+                // Los pedidos toman el estado de su entrega (En ruta), como cuando el chofer usa la app.
+                var pedidosSincronizados = await SyncOrderStatusAsync(rutaId);
 
                 await RegistrarAuditoriaAsync("Despachar ruta", "Rutas",
                     $"Se despachó la ruta #{rutaId}. {destinatarios.Count} pedido(s) pasaron a En ruta.");
@@ -185,7 +187,14 @@ namespace Proyecto_Final.Controllers
                     NotificarClienteSeguro(correo, nombre, pedidoId, "En ruta");
                 }
 
-                TempData["SuccessMessage"] = "Ruta despachada. Los pedidos están En ruta.";
+                if (pedidosSincronizados)
+                {
+                    TempData["SuccessMessage"] = "Ruta despachada. Los pedidos están En ruta.";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "La ruta se despachó, pero no se pudo actualizar el estado de sus pedidos a En ruta. Avise a soporte.";
+                }
             }
             catch (SqlException ex) when (ex.Number >= 50000)
             {
@@ -314,6 +323,8 @@ namespace Proyecto_Final.Controllers
             try
             {
                 var puntos = await _logistics.RecalculateRouteAsync(rutaId, excluirRutaPedidoId, motivoFallo);
+                // Excluir un punto lo marca Fallido: el pedido también pasa a No entregado.
+                if (excluirRutaPedidoId.HasValue) await SyncOrderStatusAsync(rutaId);
                 if (puntos == 0)
                 {
                     TempData["ErrorMessage"] = "No es posible recalcular: no quedan puntos por recalcular. Contacte al chofer manualmente.";
@@ -384,6 +395,22 @@ namespace Proyecto_Final.Controllers
         }
 
         // ── Helpers ─────────────────────────────────────────
+
+        // Lleva el estado de las entregas de la ruta a sus pedidos (sp_Pedidos_SincronizarEstadoEntrega, 0220).
+        // La operación principal ya se hizo: si esto falla se registra y se avisa, no se deshace nada.
+        private async Task<bool> SyncOrderStatusAsync(int rutaId)
+        {
+            try
+            {
+                await _logistics.SyncOrderStatusFromDeliveryAsync(rutaId, null);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "No se pudo sincronizar el estado de los pedidos de la ruta #{RutaId}.", rutaId);
+                return false;
+            }
+        }
 
         private static string JoinSentences(params string[] frases) =>
             string.Join(" ", frases.Where(frase => !string.IsNullOrWhiteSpace(frase)));
