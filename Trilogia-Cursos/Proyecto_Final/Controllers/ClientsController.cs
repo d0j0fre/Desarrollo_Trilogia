@@ -35,6 +35,7 @@ namespace Proyecto_Final.Controllers
         }
 
         [HttpGet]
+        [AdminAuthorize("Clientes", "CLIENTES_CREAR")]
         public IActionResult Create()
         {
             return View(new ClientFormViewModel { Activo = true });
@@ -42,6 +43,7 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AdminAuthorize("Clientes", "CLIENTES_CREAR")]
         public async Task<IActionResult> Create(ClientFormViewModel model)
         {
             if (string.IsNullOrWhiteSpace(model.Contrasena))
@@ -81,6 +83,7 @@ namespace Proyecto_Final.Controllers
         }
 
         [HttpGet]
+        [AdminAuthorize("Clientes", "CLIENTES_EDITAR")]
         public async Task<IActionResult> Edit(int id)
         {
             if (id <= 0) return NotFound();
@@ -93,6 +96,7 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AdminAuthorize("Clientes", "CLIENTES_EDITAR")]
         public async Task<IActionResult> Edit(ClientFormViewModel model)
         {
             if (!model.Activo && string.IsNullOrWhiteSpace(model.MotivoInactivacion))
@@ -154,6 +158,7 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AdminAuthorize("Clientes", "CLIENTES_INACTIVAR")]
         public async Task<IActionResult> ToggleStatus(int usuarioId, string? motivo, string? buscar, string? estado, string? returnTo)
         {
             if (usuarioId <= 0)

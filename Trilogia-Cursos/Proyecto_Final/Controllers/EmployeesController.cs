@@ -231,6 +231,7 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AdminAuthorize("Empleados", "EMPLEADOS_TAREAS")]
         public async Task<IActionResult> CreateTask(EmployeeTaskFormViewModel model)
         {
             if (!ModelState.IsValid)
@@ -263,6 +264,7 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AdminAuthorize("Empleados", "EMPLEADOS_TAREAS")]
         public async Task<IActionResult> UpdateTaskStatus(EmployeeTaskStatusViewModel model)
         {
             if (model.TareaId <= 0 || model.EmpleadoId <= 0 || string.IsNullOrWhiteSpace(model.Estado))
@@ -300,6 +302,7 @@ namespace Proyecto_Final.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AdminAuthorize("Empleados", "EMPLEADOS_SOLICITUDES")]
         public async Task<IActionResult> UpdateLeaveRequest(EmployeeLeaveRequestDecisionViewModel model, string? estadoFiltro)
         {
             if (model.SolicitudId <= 0 || string.IsNullOrWhiteSpace(model.Estado))
