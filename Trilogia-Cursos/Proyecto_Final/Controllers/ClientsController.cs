@@ -251,6 +251,7 @@ namespace Proyecto_Final.Controllers
             _logger.LogError(exception, "Falla técnica al {Operation}. TraceId {TraceId}", operation, HttpContext.TraceIdentifier);
             Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
             ViewData["TraceId"] = HttpContext.TraceIdentifier;
+            ViewData["VolverTexto"] = "clientes"; ViewData["VolverControlador"] = "Clients";
             return View("ServiceUnavailable");
         }
     }

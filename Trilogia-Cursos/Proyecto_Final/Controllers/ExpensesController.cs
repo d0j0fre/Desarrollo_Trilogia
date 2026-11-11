@@ -259,6 +259,7 @@ public sealed class ExpensesController : Controller
         _logger.LogError(exception, "Falla SQL controlada al consultar gasto {ExpenseId}. TraceId {TraceId}", expenseId, traceId);
         Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
         ViewData["TraceId"] = traceId;
+        ViewData["VolverTexto"] = "gastos"; ViewData["VolverControlador"] = "Expenses";
         return View("ServiceUnavailable");
     }
 }

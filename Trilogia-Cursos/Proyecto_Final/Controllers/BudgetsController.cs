@@ -249,6 +249,7 @@ public sealed class BudgetsController : Controller
     private IActionResult ServiceUnavailable()
     {
         Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+        ViewData["VolverTexto"] = "presupuestos"; ViewData["VolverControlador"] = "Budgets";
         return View("ServiceUnavailable");
     }
     private Task AuditAsync(string action, string detail) => _admin.CreateAuditLogAsync(UserId(), UserName(), HttpContext.Session.GetString("UserEmail"),
