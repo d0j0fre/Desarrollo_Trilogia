@@ -20,6 +20,14 @@ public static class RrhhFormat
     public static string Number(decimal value, int maxDecimals = 6) =>
         decimal.Round(value, maxDecimals).ToString("#,##0." + new string('#', maxDecimals), CostaRica);
 
+    /// <summary>
+    /// El período llega de la base como «2026-10-16 — 2026-10-31»: se muestra «16/10/2026 — 31/10/2026».
+    /// </summary>
+    public static string PeriodText(string? period) =>
+        string.IsNullOrEmpty(period)
+            ? string.Empty
+            : System.Text.RegularExpressions.Regex.Replace(period, @"\b(\d{4})-(\d{2})-(\d{2})\b", match => $"{match.Groups[3].Value}/{match.Groups[2].Value}/{match.Groups[1].Value}");
+
     /// <summary>Etiqueta de un tipo de concepto: «Deducción» con tilde.</summary>
     public static string ConceptType(string? type) => type switch
     {

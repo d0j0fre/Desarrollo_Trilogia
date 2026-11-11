@@ -1,6 +1,12 @@
+@using Proyecto_Final.Services
 @model IReadOnlyList<Proyecto_Final.Models.Admin.PaySlipListItemViewModel>
 @{ ViewData["Title"]="Boletas de pago"; }
 <div class="container py-4"><h2>Boletas de pago</h2><p>El correo incluye la boleta en PDF y un enlace HTTPS al portal privado.</p>
-<table class="table table-striped"><thead><tr><th>Periodo</th><th>Empleado</th><th>Bruto</th><th>Deducciones</th><th>Neto</th><th>Estado</th><th>Último envío</th><th></th></tr></thead><tbody>
-@foreach(var item in Model){<tr><td>@item.Periodo</td><td>@item.Empleado</td><td>@item.TotalBruto</td><td>@item.TotalDeducciones</td><td>@item.TotalNeto</td><td>@item.Estado</td><td>@(item.UltimoEnvio??"Sin envío")</td><td><a asp-action="Details" asp-route-id="@item.CalculoId" class="btn btn-sm btn-ds-view">Ver</a> <a asp-action="Download" asp-route-id="@item.CalculoId" class="btn btn-sm btn-ds-view">Descargar</a><form asp-action="Send" method="post" class="d-inline"><input type="hidden" name="CalculoId" value="@item.CalculoId"/><input type="hidden" name="IdempotencyKey" value="@Guid.NewGuid()"/><button class="btn btn-sm btn-ds-action" disabled="@(item.Estado!="Pagada")">Notificar</button></form></td></tr>}
-</tbody></table></div>
+<div class="table-responsive">
+<table class="table table-striped"><thead><tr><th>Período</th><th>Empleado</th><th>Bruto</th><th>Deducciones</th><th>Neto</th><th>Estado</th><th>Último envío</th><th></th></tr></thead><tbody>
+@if (Model.Count == 0)
+{
+    <tr><td colspan="8" class="text-center text-muted py-4">Todavía no hay boletas: se generan al calcular la planilla de un empleado.</td></tr>
+}
+@foreach(var item in Model){<tr><td>@RrhhFormat.PeriodText(item.Periodo)</td><td>@item.Empleado</td><td>@RrhhFormat.Money(item.TotalBruto)</td><td>@RrhhFormat.Money(item.TotalDeducciones)</td><td>@RrhhFormat.Money(item.TotalNeto)</td><td>@item.Estado</td><td>@(item.UltimoEnvio??"Sin envío")</td><td class="text-nowrap"><a asp-action="Details" asp-route-id="@item.CalculoId" class="btn btn-sm btn-ds-view">Ver</a> <a asp-action="Download" asp-route-id="@item.CalculoId" class="btn btn-sm btn-ds-view">Descargar</a><form asp-action="Send" method="post" class="d-inline"><input type="hidden" name="CalculoId" value="@item.CalculoId"/><input type="hidden" name="IdempotencyKey" value="@Guid.NewGuid()"/><button class="btn btn-sm btn-ds-action" disabled="@(item.Estado!="Pagada")" title="@(item.Estado=="Pagada" ? "Enviar la boleta por correo" : "Solo se notifican boletas pagadas")">Notificar</button></form></td></tr>}
+</tbody></table></div></div>
