@@ -1,0 +1,1465 @@
+{
+  "carpeta": "cliente",
+  "_nota": "Generado con un script del grupo 3; datos en capitulos/32_cliente/_datos_grupo3_clientes.sql.",
+  "capturas": [
+    {
+      "id": "cli-registro-01",
+      "usuario": null,
+      "url": "/Home/Index",
+      "recorte": {
+        "selector": ".main-nav-2027 > *",
+        "todos": true,
+        "margen": [
+          8,
+          70,
+          70,
+          20
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "selector": ".main-nav-2027 > a[href*='Register']",
+          "desde": "abajo",
+          "largo": 45,
+          "recuadro": true
+        }
+      ]
+    },
+    {
+      "id": "cli-registro-02",
+      "usuario": null,
+      "url": "/Account/Register",
+      "ancho": 1280,
+      "sql": "DELETE FROM Usuarios WHERE Correo='laura.mendez@correo.cr'",
+      "acciones": [
+        {
+          "rellenar": [
+            "#FullName",
+            "Laura Méndez Araya"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Email",
+            "laura.mendez@correo.cr"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Password",
+            "EjemploSeguro1"
+          ]
+        },
+        {
+          "rellenar": [
+            "#ConfirmPassword",
+            "EjemploSeguro1"
+          ]
+        },
+        {
+          "clicSinEsperar": "label[for='termsCheck']"
+        }
+      ],
+      "recorte": {
+        "selector": "form[action*='Register']",
+        "margen": [
+          20,
+          80,
+          20,
+          20
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#FullName",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#Email",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#Password",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "#ConfirmPassword",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "label[for='termsCheck']",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 6,
+          "selector": "form[action*='Register'] button[type=submit]",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "cli-registro-03",
+      "usuario": null,
+      "url": "/Account/Register",
+      "ancho": 1280,
+      "sql": "DELETE FROM Usuarios WHERE Correo='laura.mendez@correo.cr'",
+      "acciones": [
+        {
+          "rellenar": [
+            "#FullName",
+            "Laura Méndez Araya"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Email",
+            "laura.mendez@correo.cr"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Password",
+            "EjemploSeguro1"
+          ]
+        },
+        {
+          "rellenar": [
+            "#ConfirmPassword",
+            "EjemploSeguro1"
+          ]
+        },
+        {
+          "clicSinEsperar": "label[for='termsCheck']"
+        },
+        {
+          "clic": "form[action*='Register'] button[type=submit]"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert-success",
+        "margen": 16
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success"
+        }
+      ]
+    },
+    {
+      "id": "cli-registro-04",
+      "usuario": null,
+      "url": "/Account/Register",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "#FullName",
+            "Ana Rodríguez"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Email",
+            "cliente@labodega.cr"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Password",
+            "EjemploSeguro1"
+          ]
+        },
+        {
+          "rellenar": [
+            "#ConfirmPassword",
+            "EjemploSeguro1"
+          ]
+        },
+        {
+          "clicSinEsperar": "label[for='termsCheck']"
+        },
+        {
+          "clic": "form[action*='Register'] button[type=submit]"
+        }
+      ],
+      "recorte": {
+        "selector": "form[action*='Register'] .text-danger >> nth=0",
+        "margen": 16
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "form[action*='Register'] .text-danger >> nth=0"
+        }
+      ]
+    },
+    {
+      "id": "cli-tienda-01",
+      "usuario": "cliente",
+      "url": "/Home/Index",
+      "recorte": {
+        "selector": ".main-nav-2027 > *",
+        "todos": true,
+        "margen": [
+          8,
+          70,
+          70,
+          20
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": ".main-nav-2027 > a[href$='/Home/Shop']",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": ".main-nav-2027 > a[href$='/Cart']",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": ".main-nav-2027 .dropdown-toggle",
+          "posicion": "abajo"
+        }
+      ]
+    },
+    {
+      "id": "cli-tienda-02",
+      "usuario": "cliente",
+      "url": "/Home/Shop?categoria=Cerveza",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#buscar",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "button.btn-ds-search",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "a.s3-shop-filter.active",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "article.s3-product-card >> nth=0 >> a:has-text('Detalle')",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "article.s3-product-card >> nth=0 >> form[action*='/Cart/Add'] button",
+          "posicion": "abajo"
+        }
+      ]
+    },
+    {
+      "id": "cli-tienda-03",
+      "usuario": "cliente",
+      "url": "/Home/Detail/12",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": ".s4-product-detail-title"
+        },
+        {
+          "tipo": "flecha",
+          "selector": "button.s4-product-detail-primary",
+          "desde": "derecha",
+          "recuadro": true
+        }
+      ]
+    },
+    {
+      "id": "cli-carrito-01",
+      "usuario": "cliente",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "ir": "/Cart"
+        },
+        {
+          "js": "(async()=>{for(const f of document.querySelectorAll('form.s3-cart-remove-form')){await fetch(f.action,{method:'POST',body:new FormData(f)})}})()"
+        },
+        {
+          "ir": "/Home/Detail/19"
+        },
+        {
+          "clic": "button.s4-product-detail-primary"
+        },
+        {
+          "ir": "/Home/Detail/22"
+        },
+        {
+          "clic": "button.s4-product-detail-primary"
+        },
+        {
+          "rellenar": [
+            "article.s3-cart-item:has-text('Casillero') input.s3-cart-qty__input",
+            "2"
+          ]
+        },
+        {
+          "clic": "article.s3-cart-item:has-text('Casillero') .s3-cart-qty__input-form button"
+        },
+        {
+          "js": "document.querySelector(\"section[aria-labelledby='cross-sell-title']\").style.display='none'"
+        }
+      ],
+      "recorte": {
+        "selector": "main",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "article.s3-cart-item >> nth=0 >> .s3-cart-qty__buttons",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "article.s3-cart-item >> nth=0 >> .s3-cart-remove-form button",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": ".s3-cart-summary a[href*=Checkout]",
+          "posicion": "izquierda"
+        }
+      ]
+    },
+    {
+      "id": "cli-carrito-02",
+      "usuario": "cliente",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "ir": "/Cart"
+        }
+      ],
+      "recorte": {
+        "selector": "section[aria-labelledby='cross-sell-title']",
+        "margen": 16
+      },
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "selector": "section[aria-labelledby='cross-sell-title'] button >> nth=0",
+          "desde": "abajo",
+          "largo": 40
+        }
+      ]
+    },
+    {
+      "id": "cli-carrito-03",
+      "usuario": "cliente",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "ir": "/Cart"
+        },
+        {
+          "js": "(async()=>{for(const f of document.querySelectorAll('form.s3-cart-remove-form')){await fetch(f.action,{method:'POST',body:new FormData(f)})}})()"
+        },
+        {
+          "ir": "/Home/Detail/12"
+        },
+        {
+          "clic": "button.s4-product-detail-primary"
+        },
+        {
+          "ir": "/Home/Detail/13"
+        },
+        {
+          "clic": "button.s4-product-detail-primary"
+        },
+        {
+          "rellenar": [
+            "article.s3-cart-item:has-text('Imperial') input.s3-cart-qty__input",
+            "12"
+          ]
+        },
+        {
+          "clic": "article.s3-cart-item:has-text('Imperial') .s3-cart-qty__input-form button"
+        },
+        {
+          "rellenar": [
+            "article.s3-cart-item:has-text('Pilsen 6') input.s3-cart-qty__input",
+            "6"
+          ]
+        },
+        {
+          "clic": "article.s3-cart-item:has-text('Pilsen 6') .s3-cart-qty__input-form button"
+        }
+      ],
+      "recorte": {
+        "selector": "main .s3-cart-item, main .s3-cart-summary",
+        "todos": true,
+        "margen": 16
+      },
+      "ocultar": [
+        "section[aria-labelledby='cross-sell-title']"
+      ],
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "article.s3-cart-item:has-text('Regalía')"
+        }
+      ]
+    },
+    {
+      "id": "cli-carrito-04",
+      "usuario": "mayorista",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "ir": "/Cart"
+        },
+        {
+          "js": "(async()=>{for(const f of document.querySelectorAll('form.s3-cart-remove-form')){await fetch(f.action,{method:'POST',body:new FormData(f)})}})()"
+        },
+        {
+          "ir": "/Home/Detail/12"
+        },
+        {
+          "clic": "button.s4-product-detail-primary"
+        },
+        {
+          "ir": "/Home/Detail/13"
+        },
+        {
+          "clic": "button.s4-product-detail-primary"
+        },
+        {
+          "rellenar": [
+            "article.s3-cart-item:has-text('Imperial') input.s3-cart-qty__input",
+            "12"
+          ]
+        },
+        {
+          "clic": "article.s3-cart-item:has-text('Imperial') .s3-cart-qty__input-form button"
+        },
+        {
+          "rellenar": [
+            "article.s3-cart-item:has-text('Pilsen 6') input.s3-cart-qty__input",
+            "6"
+          ]
+        },
+        {
+          "clic": "article.s3-cart-item:has-text('Pilsen 6') .s3-cart-qty__input-form button"
+        }
+      ],
+      "recorte": {
+        "selector": "main .s3-cart-item, main .s3-cart-summary",
+        "todos": true,
+        "margen": 16
+      },
+      "ocultar": [
+        "section[aria-labelledby='cross-sell-title']"
+      ],
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "article.s3-cart-item:has-text('Imperial') .s3-cart-item__subtotal"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "article.s3-cart-item:has-text('Regalía')"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": ".s3-cart-summary__row.text-success >> nth=0"
+        }
+      ]
+    },
+    {
+      "id": "cli-carrito-05",
+      "usuario": "cliente",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "ir": "/Cart"
+        },
+        {
+          "js": "(async()=>{for(const f of document.querySelectorAll('form.s3-cart-remove-form')){await fetch(f.action,{method:'POST',body:new FormData(f)})}})()"
+        },
+        {
+          "ir": "/Home/Detail/19"
+        },
+        {
+          "clic": "button.s4-product-detail-primary"
+        },
+        {
+          "ir": "/Home/Detail/22"
+        },
+        {
+          "clic": "button.s4-product-detail-primary"
+        },
+        {
+          "ir": "/Cart/Checkout"
+        },
+        {
+          "clicSinEsperar": "label.s4-checkout-option:has-text('Cliente Físico')"
+        },
+        {
+          "rellenar": [
+            "#Identificacion",
+            "112340567"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Telefono",
+            "8700-0014"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#provincia",
+            "San José"
+          ]
+        },
+        {
+          "esperar": 300
+        },
+        {
+          "seleccionar": [
+            "#canton",
+            "San José"
+          ]
+        },
+        {
+          "esperar": 300
+        },
+        {
+          "seleccionar": [
+            "#distrito",
+            "Merced"
+          ]
+        },
+        {
+          "rellenar": [
+            "#DireccionDetalle",
+            "150 m sur del Mercado Central, casa portón negro"
+          ]
+        },
+        {
+          "clicSinEsperar": "label.s4-checkout-option:has-text('SINPE Móvil simulado')"
+        },
+        {
+          "rellenar": [
+            "#ReferenciaPago",
+            "SINPE 20261102-4471"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Observaciones",
+            "Llamar al llegar."
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": ".s4-checkout-section >> nth=0",
+        "margen": 16
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "label.s4-checkout-option:has-text('Cliente Físico')",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#Identificacion",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#FacturaElectronica",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "cli-carrito-06",
+      "usuario": "cliente",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "ir": "/Cart/Checkout"
+        },
+        {
+          "clicSinEsperar": "label.s4-checkout-option:has-text('Cliente Físico')"
+        },
+        {
+          "rellenar": [
+            "#Identificacion",
+            "112340567"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Telefono",
+            "8700-0014"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#provincia",
+            "San José"
+          ]
+        },
+        {
+          "esperar": 300
+        },
+        {
+          "seleccionar": [
+            "#canton",
+            "San José"
+          ]
+        },
+        {
+          "esperar": 300
+        },
+        {
+          "seleccionar": [
+            "#distrito",
+            "Merced"
+          ]
+        },
+        {
+          "rellenar": [
+            "#DireccionDetalle",
+            "150 m sur del Mercado Central, casa portón negro"
+          ]
+        },
+        {
+          "clicSinEsperar": "label.s4-checkout-option:has-text('SINPE Móvil simulado')"
+        },
+        {
+          "rellenar": [
+            "#ReferenciaPago",
+            "SINPE 20261102-4471"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Observaciones",
+            "Llamar al llegar."
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": ".s4-checkout-section >> nth=2",
+        "margen": 16
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#provincia",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#canton",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#distrito",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "#DireccionDetalle",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "cli-carrito-07",
+      "usuario": "cliente",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "ir": "/Cart/Checkout"
+        },
+        {
+          "clicSinEsperar": "label.s4-checkout-option:has-text('Cliente Físico')"
+        },
+        {
+          "rellenar": [
+            "#Identificacion",
+            "112340567"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Telefono",
+            "8700-0014"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#provincia",
+            "San José"
+          ]
+        },
+        {
+          "esperar": 300
+        },
+        {
+          "seleccionar": [
+            "#canton",
+            "San José"
+          ]
+        },
+        {
+          "esperar": 300
+        },
+        {
+          "seleccionar": [
+            "#distrito",
+            "Merced"
+          ]
+        },
+        {
+          "rellenar": [
+            "#DireccionDetalle",
+            "150 m sur del Mercado Central, casa portón negro"
+          ]
+        },
+        {
+          "clicSinEsperar": "label.s4-checkout-option:has-text('SINPE Móvil simulado')"
+        },
+        {
+          "rellenar": [
+            "#ReferenciaPago",
+            "SINPE 20261102-4471"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Observaciones",
+            "Llamar al llegar."
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": ".s4-checkout-section >> nth=3",
+        "margen": 16
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "label.s4-checkout-option:has-text('SINPE Móvil simulado')",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#ReferenciaPago",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "cli-carrito-08",
+      "usuario": "cliente",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "ir": "/Cart/Checkout"
+        },
+        {
+          "clicSinEsperar": "label.s4-checkout-option:has-text('Cliente Físico')"
+        },
+        {
+          "rellenar": [
+            "#Identificacion",
+            "112340567"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Telefono",
+            "8700-0014"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#provincia",
+            "San José"
+          ]
+        },
+        {
+          "esperar": 300
+        },
+        {
+          "seleccionar": [
+            "#canton",
+            "San José"
+          ]
+        },
+        {
+          "esperar": 300
+        },
+        {
+          "seleccionar": [
+            "#distrito",
+            "Merced"
+          ]
+        },
+        {
+          "rellenar": [
+            "#DireccionDetalle",
+            "150 m sur del Mercado Central, casa portón negro"
+          ]
+        },
+        {
+          "clicSinEsperar": "label.s4-checkout-option:has-text('SINPE Móvil simulado')"
+        },
+        {
+          "rellenar": [
+            "#ReferenciaPago",
+            "SINPE 20261102-4471"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Observaciones",
+            "Llamar al llegar."
+          ]
+        },
+        {
+          "desplazar": ".s4-checkout-submit"
+        }
+      ],
+      "recorte": {
+        "selector": ".s4-checkout-summary",
+        "margen": 16
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": ".s4-checkout-summary"
+        }
+      ]
+    },
+    {
+      "id": "cli-carrito-09",
+      "usuario": "cliente",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "ir": "/Cart/Checkout"
+        },
+        {
+          "clicSinEsperar": "label.s4-checkout-option:has-text('Cliente Físico')"
+        },
+        {
+          "rellenar": [
+            "#Identificacion",
+            "112340567"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Telefono",
+            "8700-0014"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#provincia",
+            "San José"
+          ]
+        },
+        {
+          "esperar": 300
+        },
+        {
+          "seleccionar": [
+            "#canton",
+            "San José"
+          ]
+        },
+        {
+          "esperar": 300
+        },
+        {
+          "seleccionar": [
+            "#distrito",
+            "Merced"
+          ]
+        },
+        {
+          "rellenar": [
+            "#DireccionDetalle",
+            "150 m sur del Mercado Central, casa portón negro"
+          ]
+        },
+        {
+          "clicSinEsperar": "label.s4-checkout-option:has-text('SINPE Móvil simulado')"
+        },
+        {
+          "rellenar": [
+            "#ReferenciaPago",
+            "SINPE 20261102-4471"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Observaciones",
+            "Llamar al llegar."
+          ]
+        },
+        {
+          "clic": ".s4-checkout-submit"
+        }
+      ],
+      "ocultar": [
+        "main > .container.mt-3 .alert-danger"
+      ],
+      "recorte": {
+        "selector": "main",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main h1"
+        },
+        {
+          "tipo": "flecha",
+          "selector": "main a:has-text('Mis pedidos')",
+          "desde": "abajo",
+          "largo": 40
+        }
+      ]
+    },
+    {
+      "id": "cli-carrito-10",
+      "usuario": "cliente",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "ir": "/Cart"
+        },
+        {
+          "js": "(async()=>{for(const f of document.querySelectorAll('form.s3-cart-remove-form')){await fetch(f.action,{method:'POST',body:new FormData(f)})}})()"
+        },
+        {
+          "ir": "/Home/Detail/19"
+        },
+        {
+          "clic": "button.s4-product-detail-primary"
+        },
+        {
+          "ir": "/Cart/Checkout"
+        },
+        {
+          "clic": ".s4-checkout-submit"
+        }
+      ],
+      "recorte": {
+        "selector": ".s4-checkout-section >> nth=0",
+        "margen": 16
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "span[data-valmsg-for='Identificacion']"
+        }
+      ]
+    },
+    {
+      "id": "cli-pedidos-01",
+      "usuario": "cliente",
+      "url": "/Home/Index",
+      "acciones": [
+        {
+          "clicSinEsperar": ".main-nav-2027 .dropdown-toggle"
+        },
+        {
+          "esperar": 400
+        }
+      ],
+      "recorte": {
+        "selector": ".main-nav-2027 .dropdown-toggle, .main-nav-2027 .dropdown-menu",
+        "todos": true,
+        "margen": [
+          14,
+          90,
+          14,
+          90
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": ".main-nav-2027 .dropdown-item >> nth=0",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": ".main-nav-2027 .dropdown-item >> nth=1",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": ".main-nav-2027 .dropdown-item >> nth=2",
+          "posicion": "izquierda"
+        }
+      ]
+    },
+    {
+      "id": "cli-pedidos-02",
+      "usuario": "mayorista",
+      "url": "/ClientPortal",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main a:has-text('Ver estado de cuenta')",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main table >> nth=0 >> a:has-text('Ver detalle') >> nth=0",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main a:has-text('Ver factura') >> nth=0",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "cli-pedidos-03",
+      "usuario": "cliente",
+      "url": "/ClientPortal",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clic": "main table >> nth=0 >> a:has-text('Ver detalle') >> nth=0"
+        }
+      ],
+      "recorte": {
+        "selector": "main",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "selector": "button.s4-client-danger-action",
+          "desde": "izquierda",
+          "recuadro": true
+        }
+      ]
+    },
+    {
+      "id": "cli-pedidos-04",
+      "usuario": "cliente",
+      "url": "/ClientPortal",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clic": "main table >> nth=0 >> a:has-text('Ver detalle') >> nth=0"
+        },
+        {
+          "clicSinEsperar": "button.s4-client-danger-action"
+        },
+        {
+          "esperarSelector": ".s3-modal-dialog"
+        },
+        {
+          "esperar": 300
+        }
+      ],
+      "recorte": {
+        "selector": ".s3-modal-dialog",
+        "margen": 16
+      },
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "selector": ".s3-modal-btn-confirm",
+          "desde": "abajo",
+          "largo": 40
+        }
+      ]
+    },
+    {
+      "id": "cli-pedidos-05",
+      "usuario": "cliente",
+      "url": "/ClientPortal",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clic": "main table >> nth=0 >> a:has-text('Ver detalle') >> nth=0"
+        },
+        {
+          "clicSinEsperar": "button.s4-client-danger-action"
+        },
+        {
+          "esperarSelector": ".s3-modal-dialog"
+        },
+        {
+          "clic": ".s3-modal-btn-confirm"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert-success",
+        "margen": 16
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success"
+        }
+      ]
+    },
+    {
+      "id": "cli-pedidos-06",
+      "usuario": "cliente",
+      "url": "/ClientPortal/Invoice/41",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#btnDescargarFactura",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main :is(a,button):has-text('Imprimir')",
+          "posicion": "abajo"
+        }
+      ]
+    },
+    {
+      "id": "cli-garantias-01",
+      "usuario": "cliente",
+      "url": "/ClientPortal/Detail/41",
+      "ancho": 1280,
+      "sql": "DELETE FROM Garantias WHERE UsuarioId=42",
+      "recorte": {
+        "selector": "main table",
+        "margen": [
+          60,
+          16,
+          16,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "selector": "main table a:has-text('Solicitar garantía') >> nth=0",
+          "desde": "izquierda",
+          "recuadro": true
+        }
+      ]
+    },
+    {
+      "id": "cli-garantias-02",
+      "usuario": "cliente",
+      "url": "/ClientPortal/Warranty/107",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "#Motivo",
+            "Producto dañado"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Descripcion",
+            "Una de las botellas llegó con la etiqueta rota y el corcho hundido."
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main form",
+        "margen": [
+          120,
+          70,
+          16,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#Motivo",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#Descripcion",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main form button[type=submit]",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "cli-garantias-03",
+      "usuario": "cliente",
+      "url": "/ClientPortal/Warranty/107",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "#Motivo",
+            "Producto dañado"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Descripcion",
+            "Una de las botellas llegó con la etiqueta rota y el corcho hundido."
+          ]
+        },
+        {
+          "clic": "main form button[type=submit]"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert-success",
+        "margen": 16
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success"
+        }
+      ]
+    },
+    {
+      "id": "cli-garantias-05",
+      "usuario": "cliente",
+      "url": "/ClientPortal/Warranty/107",
+      "ancho": 1280,
+      "_nota": "Va después de la 03: la línea ya tiene una solicitud abierta.",
+      "acciones": [
+        {
+          "seleccionar": [
+            "#Motivo",
+            "Producto dañado"
+          ]
+        },
+        {
+          "clic": "main form button[type=submit]"
+        }
+      ],
+      "recorte": {
+        "selector": "main .validation-summary-errors",
+        "margen": 16
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .validation-summary-errors"
+        }
+      ]
+    },
+    {
+      "id": "cli-garantias-04",
+      "usuario": "mayorista",
+      "url": "/Home/Index",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main table, main a:has-text('Volver a mis pedidos')",
+        "todos": true,
+        "margen": [
+          80,
+          20,
+          30,
+          30
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main table tbody td:nth-child(6)",
+          "todos": true
+        },
+        {
+          "tipo": "flecha",
+          "selector": "main a:has-text('Volver a mis pedidos')",
+          "desde": "izquierda"
+        }
+      ],
+      "acciones": [
+        {
+          "clicSinEsperar": ".main-nav-2027 .dropdown-toggle"
+        },
+        {
+          "esperar": 300
+        },
+        {
+          "clic": ".main-nav-2027 .dropdown-item >> nth=1"
+        }
+      ]
+    },
+    {
+      "id": "cli-estado-01",
+      "usuario": "mayorista",
+      "url": "/ClientPortal/Statement",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#btnDescargarEstado",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main :is(a,button):has-text('Imprimir')",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main h3:text-is('Crédito')",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "main h3:text-is('Facturas')",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "main h3:text-is('Cargos y pagos')",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 6,
+          "selector": "main h3:text-is('Historial de pedidos')",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "cli-estado-02",
+      "usuario": "mayorista",
+      "url": "/ClientPortal/Statement",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clicSinEsperar": "#btnDescargarEstado"
+        },
+        {
+          "esperarSelector": "#pdfDownloadStatus.alert-success"
+        },
+        {
+          "esperar": 300
+        }
+      ],
+      "recorte": {
+        "selector": "#pdfDownloadStatus",
+        "margen": 16
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "#pdfDownloadStatus.alert-success"
+        }
+      ]
+    },
+    {
+      "id": "cli-estado-03",
+      "usuario": "cliente",
+      "url": "/ClientPortal/Statement",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main",
+        "margen": 0
+      },
+      "anotaciones": []
+    }
+  ]
+}

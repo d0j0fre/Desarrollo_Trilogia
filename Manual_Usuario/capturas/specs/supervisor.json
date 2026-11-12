@@ -1,0 +1,975 @@
+{
+  "carpeta": "supervisor",
+  "_datos": "Antes de capturar: capitulos/21_supervisor/_datos_grupo2.sql (y sus requisitos).",
+  "capturas": [
+    {
+      "id": "sup-menu-01",
+      "usuario": "supervisor",
+      "url": "/Home/Index",
+      "acciones": [
+        {
+          "clicSinEsperar": ".admin-accordion-dropdown > a"
+        },
+        {
+          "esperar": 400
+        },
+        {
+          "abrir": "details.acc-sec:has(.acc-sec__label:text-is(\"Personal\"))"
+        },
+        {
+          "esperar": 300
+        }
+      ],
+      "recorte": {
+        "selector": ".admin-acc-menu",
+        "margen": [
+          80,
+          70,
+          16,
+          40
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": ".admin-accordion-dropdown > a"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "details.acc-sec:has(.acc-sec__label:text-is(\"Personal\")) > summary"
+        }
+      ]
+    },
+    {
+      "id": "sup-empleados-01",
+      "usuario": "supervisor",
+      "url": "/Employees/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "input[name=buscar]",
+            "chofer"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "form.employee-filter",
+        "margen": [
+          44,
+          20,
+          16,
+          20
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "input[name=buscar]",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "select[name=estado]",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "form.employee-filter button[type=submit]",
+          "posicion": "arriba"
+        }
+      ]
+    },
+    {
+      "id": "sup-empleados-02",
+      "usuario": "supervisor",
+      "url": "/Employees/Index?buscar=chofer",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main .employee-card",
+        "margen": [
+          50,
+          10,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "etiqueta",
+          "selector": "main table thead th >> nth=3",
+          "texto": "Tareas y solicitudes pendientes",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main table tbody tr >> nth=0 >> .employee-actions"
+        }
+      ]
+    },
+    {
+      "id": "sup-empleados-03",
+      "usuario": "supervisor",
+      "sql": "DECLARE @u INT=(SELECT UsuarioId FROM Usuarios WHERE Correo='mrojas@labodega.cr'); DELETE FROM EmpleadoSalarioVigencias WHERE EmpleadoId IN (SELECT EmpleadoId FROM Empleados WHERE UsuarioId=@u); DELETE FROM EmpleadoHistorialSalarios WHERE EmpleadoId IN (SELECT EmpleadoId FROM Empleados WHERE UsuarioId=@u); DELETE FROM EmpleadoTareas WHERE EmpleadoId IN (SELECT EmpleadoId FROM Empleados WHERE UsuarioId=@u); DELETE FROM Empleados WHERE UsuarioId=@u; DELETE FROM Usuarios WHERE UsuarioId=@u;",
+      "url": "/Employees/Create",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "#Identificacion",
+            "1-1357-0567"
+          ]
+        },
+        {
+          "rellenar": [
+            "#NombreCompleto",
+            "María Fernanda Rojas Alfaro"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Correo",
+            "mrojas@labodega.cr"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Telefono",
+            "8890-2020"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#PerfilId",
+            {
+              "label": "Bodeguero"
+            }
+          ]
+        },
+        {
+          "rellenar": [
+            "#Direccion",
+            "San Rafael de Heredia"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Contrasena",
+            "Ejemplo-2026"
+          ]
+        }
+      ],
+      "enmascarar": [
+        "#Contrasena"
+      ],
+      "recorte": {
+        "selector": "main form .row > .col-lg-6 >> nth=0",
+        "margen": [
+          10,
+          50,
+          10,
+          50
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#Identificacion",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#NombreCompleto",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#Correo",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "#Telefono",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "#PerfilId",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 6,
+          "selector": "#Contrasena",
+          "posicion": "izquierda"
+        }
+      ]
+    },
+    {
+      "id": "sup-empleados-04",
+      "usuario": "supervisor",
+      "url": "/Employees/Create",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "#Puesto",
+            "Auxiliar de bodega"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Departamento",
+            "Bodega"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Salario",
+            "420000"
+          ]
+        },
+        {
+          "rellenar": [
+            "#FechaContratacion",
+            "2026-11-02"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Responsabilidades",
+            "Recibir mercadería, acomodar producto y preparar pedidos."
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main form .row > .col-lg-6 >> nth=1",
+        "margen": [
+          10,
+          50,
+          90,
+          50
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#Puesto",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#Departamento",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#Salario",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "#FechaContratacion",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "#Responsabilidades",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 6,
+          "selector": "main form button[type=submit]",
+          "posicion": "izquierda"
+        }
+      ]
+    },
+    {
+      "id": "sup-empleados-05",
+      "usuario": "supervisor",
+      "sql": "DECLARE @u INT=(SELECT UsuarioId FROM Usuarios WHERE Correo='mrojas@labodega.cr'); DELETE FROM EmpleadoSalarioVigencias WHERE EmpleadoId IN (SELECT EmpleadoId FROM Empleados WHERE UsuarioId=@u); DELETE FROM EmpleadoHistorialSalarios WHERE EmpleadoId IN (SELECT EmpleadoId FROM Empleados WHERE UsuarioId=@u); DELETE FROM EmpleadoTareas WHERE EmpleadoId IN (SELECT EmpleadoId FROM Empleados WHERE UsuarioId=@u); DELETE FROM Empleados WHERE UsuarioId=@u; DELETE FROM Usuarios WHERE UsuarioId=@u;",
+      "url": "/Employees/Create",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "#Identificacion",
+            "1-1357-0567"
+          ]
+        },
+        {
+          "rellenar": [
+            "#NombreCompleto",
+            "María Fernanda Rojas Alfaro"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Correo",
+            "mrojas@labodega.cr"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Telefono",
+            "8890-2020"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#PerfilId",
+            {
+              "label": "Bodeguero"
+            }
+          ]
+        },
+        {
+          "rellenar": [
+            "#Direccion",
+            "San Rafael de Heredia"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Contrasena",
+            "Ejemplo-2026"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Puesto",
+            "Auxiliar de bodega"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Departamento",
+            "Bodega"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Salario",
+            "420000"
+          ]
+        },
+        {
+          "rellenar": [
+            "#FechaContratacion",
+            "2026-11-02"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Responsabilidades",
+            "Recibir mercadería, acomodar producto y preparar pedidos."
+          ]
+        },
+        {
+          "clic": "main form button[type=submit]"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert-success, .employee-profile-hero",
+        "todos": true,
+        "margen": [
+          16,
+          16,
+          16,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success"
+        }
+      ]
+    },
+    {
+      "id": "sup-empleados-06",
+      "usuario": "supervisor",
+      "_nota": "Va después de la 05: el correo ya existe.",
+      "url": "/Employees/Create",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "#Identificacion",
+            "1-1357-0567"
+          ]
+        },
+        {
+          "rellenar": [
+            "#NombreCompleto",
+            "María Fernanda Rojas Alfaro"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Correo",
+            "mrojas@labodega.cr"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#PerfilId",
+            {
+              "label": "Bodeguero"
+            }
+          ]
+        },
+        {
+          "rellenar": [
+            "#Contrasena",
+            "Ejemplo-2026"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Puesto",
+            "Auxiliar de bodega"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Salario",
+            "420000"
+          ]
+        },
+        {
+          "clic": "main form button[type=submit]"
+        }
+      ],
+      "recorte": {
+        "selector": "main form .alert-danger",
+        "margen": 16
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main form .alert-danger"
+        }
+      ]
+    },
+    {
+      "id": "sup-empleados-07",
+      "usuario": "supervisor",
+      "url": "/Employees/Edit/18",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "#Salario",
+            "530000"
+          ]
+        },
+        {
+          "rellenar": [
+            "#MotivoCambioSalario",
+            "Ajuste anual por desempeño"
+          ]
+        },
+        {
+          "rellenar": [
+            "#FechaVigenciaSalario",
+            "2026-11-01"
+          ]
+        },
+        {
+          "js": "document.activeElement && document.activeElement.blur()"
+        }
+      ],
+      "recorte": {
+        "selector": "main form .row > .col-lg-6 >> nth=1",
+        "margen": [
+          10,
+          50,
+          10,
+          50
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#Salario",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#MotivoCambioSalario",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#FechaVigenciaSalario",
+          "posicion": "izquierda"
+        }
+      ]
+    },
+    {
+      "id": "sup-empleados-08",
+      "usuario": "supervisor",
+      "sql": "DELETE FROM EmpleadoTareas WHERE EmpleadoId=25 AND Titulo=N'Inventario de hielo y bebidas frías';",
+      "url": "/Employees/Details/25",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "form[action*=CreateTask] input[name=Titulo]",
+            "Inventario de hielo y bebidas frías"
+          ]
+        },
+        {
+          "rellenar": [
+            "form[action*=CreateTask] textarea[name=Descripcion]",
+            "Contar las bolsas de hielo y las bebidas del cuarto frío antes del cierre."
+          ]
+        },
+        {
+          "seleccionar": [
+            "form[action*=CreateTask] select[name=Prioridad]",
+            "Alta"
+          ]
+        },
+        {
+          "rellenar": [
+            "form[action*=CreateTask] input[name=FechaLimite]",
+            "2026-11-05"
+          ]
+        },
+        {
+          "js": "document.activeElement && document.activeElement.blur()"
+        },
+        {
+          "desplazar": "form[action*=CreateTask]"
+        }
+      ],
+      "recorte": {
+        "selector": "form[action*=CreateTask]",
+        "margen": [
+          30,
+          80,
+          16,
+          80
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "form[action*=CreateTask] input[name=Titulo]",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "form[action*=CreateTask] textarea[name=Descripcion]",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "form[action*=CreateTask] select[name=Prioridad]",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "form[action*=CreateTask] input[name=FechaLimite]",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "form[action*=CreateTask] button[type=submit]",
+          "posicion": "izquierda"
+        }
+      ]
+    },
+    {
+      "id": "sup-empleados-09",
+      "usuario": "supervisor",
+      "url": "/Employees/Details/25",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "form[action*=CreateTask] input[name=Titulo]",
+            "Inventario de hielo y bebidas frías"
+          ]
+        },
+        {
+          "rellenar": [
+            "form[action*=CreateTask] textarea[name=Descripcion]",
+            "Contar las bolsas de hielo y las bebidas del cuarto frío antes del cierre."
+          ]
+        },
+        {
+          "seleccionar": [
+            "form[action*=CreateTask] select[name=Prioridad]",
+            "Alta"
+          ]
+        },
+        {
+          "rellenar": [
+            "form[action*=CreateTask] input[name=FechaLimite]",
+            "2026-11-05"
+          ]
+        },
+        {
+          "clic": "form[action*=CreateTask] button[type=submit]"
+        },
+        {
+          "desplazar": ".employee-task-list"
+        }
+      ],
+      "recorte": {
+        "selector": ".employee-task-list",
+        "margen": [
+          50,
+          16,
+          16,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": ".employee-task-item:has-text('Inventario de hielo') select",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": ".employee-task-item:has-text('Inventario de hielo') button",
+          "posicion": "izquierda"
+        }
+      ]
+    },
+    {
+      "id": "sup-empleados-10",
+      "usuario": "supervisor",
+      "url": "/Employees/Index?buscar=mrojas",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clicSinEsperar": "main table tbody tr >> nth=0 >> form[action*=ToggleStatus] button"
+        },
+        {
+          "esperar": 500
+        }
+      ],
+      "recorte": {
+        "selector": ".s3-modal-dialog",
+        "margen": [
+          20,
+          20,
+          80,
+          20
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "selector": ".s3-modal-btn-confirm",
+          "desde": "abajo",
+          "largo": 50,
+          "recuadro": true
+        }
+      ]
+    },
+    {
+      "id": "sup-licencias-01",
+      "usuario": "supervisor",
+      "sql": "UPDATE EmpleadoSolicitudesTiempoLibre SET Estado=N'Pendiente', RespuestaAdmin=NULL, UsuarioRespuestaId=NULL, UsuarioRespuestaNombre=NULL, FechaRespuesta=NULL WHERE EmpleadoId=18 AND FechaInicio='2026-11-16';",
+      "url": "/Employees/LeaveRequests?estado=Pendiente",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "main table tbody tr >> nth=0 >> select[name=Estado]",
+            "Aprobada"
+          ]
+        },
+        {
+          "rellenar": [
+            "main table tbody tr >> nth=0 >> input[name=RespuestaAdmin]",
+            "Aprobado. Dejar el inventario de hielo listo antes de salir."
+          ]
+        },
+        {
+          "js": "document.activeElement && document.activeElement.blur()"
+        }
+      ],
+      "recorte": {
+        "selector": "main .employee-filter, main .employee-card",
+        "todos": true,
+        "margen": [
+          40,
+          70,
+          10,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main .employee-filter select",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main table tbody tr >> nth=0 >> select[name=Estado]",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main table tbody tr >> nth=0 >> input[name=RespuestaAdmin]",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "main table tbody tr >> nth=0 >> button[type=submit]",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "sup-licencias-02",
+      "usuario": "supervisor",
+      "sql": "UPDATE EmpleadoSolicitudesTiempoLibre SET Estado=N'Pendiente', RespuestaAdmin=NULL, UsuarioRespuestaId=NULL, UsuarioRespuestaNombre=NULL, FechaRespuesta=NULL WHERE EmpleadoId=18 AND FechaInicio='2026-11-16';",
+      "url": "/Employees/LeaveRequests",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "main table tbody tr:has-text('Bodeguero Demo') select[name=Estado]",
+            "Aprobada"
+          ]
+        },
+        {
+          "rellenar": [
+            "main table tbody tr:has-text('Bodeguero Demo') input[name=RespuestaAdmin]",
+            "Aprobado. Dejar el inventario de hielo listo antes de salir."
+          ]
+        },
+        {
+          "clic": "main table tbody tr:has-text('Bodeguero Demo') button[type=submit]"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert-success, main table thead, main table tbody tr:has-text('Bodeguero Demo')",
+        "todos": true,
+        "margen": [
+          16,
+          16,
+          16,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main table tbody tr:has-text('Bodeguero Demo') td >> nth=4"
+        }
+      ]
+    },
+    {
+      "id": "sup-jornadas-01",
+      "usuario": "supervisor",
+      "sql": "UPDATE EmpleadoJornadas SET Estado=N'Enviada', SupervisorUsuarioId=NULL, SupervisorNombre=NULL, RespuestaSupervisor=NULL, FechaDecisionUtc=NULL WHERE EmpleadoId IN (16,17,18,20) AND Fecha BETWEEN '2026-10-26' AND '2026-10-30'; DELETE FROM EmpleadoJornadas WHERE EmpleadoId=15;",
+      "url": "/Attendance/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "main table tbody tr >> nth=0 >> input[name=RespuestaSupervisor]",
+            "Horas extra autorizadas"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main table",
+        "margen": [
+          20,
+          20,
+          20,
+          20
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main table tbody tr >> nth=0 >> td >> nth=3"
+        },
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main table tbody tr >> nth=0 >> input[name=RespuestaSupervisor]",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main table tbody tr >> nth=0 >> button[value=Aprobada]",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main table tbody tr >> nth=0 >> button[value=Rechazada]",
+          "posicion": "arriba"
+        }
+      ]
+    },
+    {
+      "id": "sup-jornadas-02",
+      "usuario": "supervisor",
+      "sql": "UPDATE EmpleadoJornadas SET Estado=N'Enviada', SupervisorUsuarioId=NULL, SupervisorNombre=NULL, RespuestaSupervisor=NULL, FechaDecisionUtc=NULL WHERE EmpleadoId IN (16,17,18,20) AND Fecha BETWEEN '2026-10-26' AND '2026-10-30';",
+      "url": "/Attendance/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "main table tbody tr >> nth=0 >> input[name=RespuestaSupervisor]",
+            "Horas extra autorizadas"
+          ]
+        },
+        {
+          "clic": "main table tbody tr >> nth=0 >> button[value=Aprobada]"
+        }
+      ],
+      "recorte": {
+        "selector": "main",
+        "margen": [
+          12,
+          0,
+          0,
+          0
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success"
+        }
+      ]
+    },
+    {
+      "id": "sup-boletas-01",
+      "usuario": "supervisor",
+      "url": "/PaySlips/Index",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main table",
+        "margen": [
+          40,
+          20,
+          20,
+          20
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main table tbody tr >> nth=0 >> a:has-text(\"Ver\")",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main table tbody tr >> nth=0 >> a:has-text(\"Descargar\")",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main table tbody tr >> nth=0 >> button",
+          "posicion": "abajo",
+          "recuadro": false
+        }
+      ]
+    },
+    {
+      "id": "sup-boletas-02",
+      "usuario": "supervisor",
+      "url": "/PaySlips/Index",
+      "ancho": 1024,
+      "recorte": {
+        "selector": "main",
+        "margen": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main table"
+        },
+        {
+          "tipo": "flecha",
+          "selector": "main a:has-text('Descargar PDF')",
+          "desde": "derecha",
+          "largo": 60
+        }
+      ],
+      "acciones": [
+        {
+          "clic": "main table tbody tr:has-text(\"Empleado Demo\") a:has-text(\"Ver\")"
+        }
+      ]
+    },
+    {
+      "id": "sup-boletas-03",
+      "usuario": "supervisor",
+      "url": "/PaySlips/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clic": "main table tbody tr >> nth=0 >> button"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert",
+        "margen": 16
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,776 @@
+{
+  "carpeta": "general",
+  "capturas": [
+    {
+      "id": "gen-convenciones-01",
+      "url": "/Account/Login",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "form[action*=Login]",
+        "margen": [
+          20,
+          40,
+          20,
+          80
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#Email",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "#Password"
+        },
+        {
+          "tipo": "flecha",
+          "selector": "form[action*=Login] button[type=submit]",
+          "desde": "abajo",
+          "largo": 70
+        },
+        {
+          "tipo": "etiqueta",
+          "selector": "label[for=customCheck1]",
+          "texto": "Etiqueta",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "gen-acceso-01",
+      "url": "/Home/Index",
+      "recorte": {
+        "selector": ".main-nav-2027",
+        "margen": [
+          14,
+          14,
+          70,
+          14
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "selector": ".main-nav-2027 a[href*='/Account/Login']",
+          "desde": "abajo",
+          "largo": 50,
+          "recuadro": true
+        }
+      ]
+    },
+    {
+      "id": "gen-login-01",
+      "url": "/Account/Login",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "#Email",
+            "empleado@labodega.cr"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Password",
+            "ejemplo12"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "form[action*=Login]",
+        "margen": [
+          20,
+          30,
+          20,
+          80
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#Email",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#Password",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "form[action*=Login] .custom-control",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "form[action*=Login] button[type=submit]",
+          "posicion": "izquierda"
+        }
+      ]
+    },
+    {
+      "id": "gen-login-02",
+      "usuario": "empleado",
+      "url": "/Home/Index",
+      "recorte": {
+        "selector": ".user-panel",
+        "margen": [
+          12,
+          12,
+          12,
+          280
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "selector": ".user-panel a[href*=Profile]",
+          "desde": "izquierda",
+          "largo": 70,
+          "recuadro": true,
+          "texto": "Su nombre y puesto"
+        }
+      ],
+      "sql": "UPDATE n SET Leida=0, FechaLectura=NULL FROM NotificacionesUsuario n JOIN Usuarios u ON u.UsuarioId=n.UsuarioId WHERE u.Correo='empleado@labodega.cr'"
+    },
+    {
+      "id": "gen-login-03",
+      "url": "/Account/Login",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "#Email",
+            "supervisor@labodega.cr"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Password",
+            "clave-equivocada"
+          ]
+        },
+        {
+          "clic": "form[action*=Login] button[type=submit]"
+        }
+      ],
+      "recorte": {
+        "selector": "form[action*=Login]",
+        "margen": [
+          20,
+          30,
+          20,
+          30
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "form[action*=Login] .validation-summary-errors, form[action*=Login] .text-danger:visible, form[action*=Login] .alert",
+          "todos": true
+        }
+      ]
+    },
+    {
+      "id": "gen-recuperar-01",
+      "url": "/Account/Login",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "form[action*=Login]",
+        "margen": [
+          20,
+          30,
+          20,
+          30
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "selector": "a[href*=ForgotPassword]",
+          "desde": "izquierda",
+          "recuadro": true
+        }
+      ]
+    },
+    {
+      "id": "gen-recuperar-02",
+      "url": "/Account/ForgotPassword",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "#Email",
+            "empleado@labodega.cr"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "form[action*=ForgotPassword]",
+        "margen": [
+          20,
+          30,
+          20,
+          80
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#Email",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "form[action*=ForgotPassword] button[type=submit]",
+          "posicion": "izquierda"
+        }
+      ]
+    },
+    {
+      "id": "gen-recuperar-03",
+      "url": "/Account/ResetPassword?token=ejemplo&email=empleado%40labodega.cr",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "#Password",
+            "NuevaClave2026"
+          ]
+        },
+        {
+          "rellenar": [
+            "#ConfirmPassword",
+            "NuevaClave2026"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "form[action*=ResetPassword]",
+        "margen": [
+          20,
+          30,
+          20,
+          80
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#Password",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#ConfirmPassword",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "form[action*=ResetPassword] button[type=submit]",
+          "posicion": "izquierda"
+        }
+      ]
+    },
+    {
+      "id": "gen-nav-01",
+      "usuario": "empleado",
+      "url": "/Home/Index",
+      "recorte": {
+        "selector": ".main-nav-2027 > *",
+        "todos": true,
+        "margen": [
+          14,
+          16,
+          64,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": ".main-nav-2027 > a.nav-item >> nth=0",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": ".main-nav-2027 .admin-accordion-dropdown > a",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": ".main-nav-2027 > a[href*=Shop], .main-nav-2027 > a[href*=Cart]",
+          "todos": true,
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": ".main-nav-2027 .admin-nav-dropdown:not(.admin-accordion-dropdown) > a",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": ".main-nav-2027 a.nav-highlight",
+          "todos": true,
+          "posicion": "abajo"
+        }
+      ]
+    },
+    {
+      "id": "gen-nav-02",
+      "usuario": "empleado",
+      "url": "/Home/Index",
+      "recorte": {
+        "selector": ".user-panel",
+        "margen": [
+          14,
+          14,
+          76,
+          14
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 6,
+          "selector": ".user-panel a[href*=Profile]",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 7,
+          "selector": ".user-panel a[href*=Notifications]",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 8,
+          "selector": ".logout-btn",
+          "posicion": "abajo"
+        }
+      ],
+      "sql": "UPDATE n SET Leida=0, FechaLectura=NULL FROM NotificacionesUsuario n JOIN Usuarios u ON u.UsuarioId=n.UsuarioId WHERE u.Correo='empleado@labodega.cr'"
+    },
+    {
+      "id": "gen-nav-03",
+      "usuario": "empleado",
+      "url": "/Home/Index",
+      "acciones": [
+        {
+          "clicSinEsperar": ".admin-accordion-dropdown > a"
+        },
+        {
+          "abrir": "details.acc-sec >> nth=0"
+        },
+        {
+          "esperar": 400
+        }
+      ],
+      "recorte": {
+        "selector": ".admin-acc-menu",
+        "margen": [
+          80,
+          60,
+          16,
+          60
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": ".admin-accordion-dropdown > a",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "details.acc-sec >> nth=0 >> summary",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "details.acc-sec >> nth=0 >> a.acc-item >> nth=0",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "gen-nav-04",
+      "usuario": "gerente",
+      "url": "/Home/Index",
+      "ancho": 1920,
+      "escala": 1,
+      "recorte": {
+        "selector": ".main-nav-2027 a.nav-highlight",
+        "todos": true,
+        "margen": [
+          14,
+          14,
+          64,
+          14
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": ".main-nav-2027 a.nav-highlight",
+          "todos": true
+        },
+        {
+          "tipo": "etiqueta",
+          "selector": ".main-nav-2027 a.nav-highlight",
+          "todos": true,
+          "texto": "Botones propios del Gerente",
+          "posicion": "abajo"
+        }
+      ]
+    },
+    {
+      "id": "gen-nav-05",
+      "usuario": "empleado",
+      "url": "/Roles/Index",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "#access-denied-title",
+        "margen": [
+          190,
+          260,
+          140,
+          260
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main a.btn, main .btn",
+          "posicion": "izquierda"
+        }
+      ]
+    },
+    {
+      "id": "gen-perfil-01",
+      "usuario": "empleado",
+      "url": "/Home/Index",
+      "recorte": {
+        "selector": ".user-panel",
+        "margen": [
+          14,
+          14,
+          14,
+          14
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": ".user-panel a[href*=Profile]"
+        }
+      ],
+      "sql": "UPDATE n SET Leida=0, FechaLectura=NULL FROM NotificacionesUsuario n JOIN Usuarios u ON u.UsuarioId=n.UsuarioId WHERE u.Correo='empleado@labodega.cr'"
+    },
+    {
+      "id": "gen-perfil-02",
+      "usuario": "empleado",
+      "url": "/Profile/Edit",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "#Telefono",
+            "8888-5678"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main form",
+        "margen": [
+          20,
+          30,
+          20,
+          70
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#NombreCompleto",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#Correo",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#Telefono",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "#Direccion",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "main form button[type=submit]",
+          "posicion": "izquierda"
+        }
+      ]
+    },
+    {
+      "id": "gen-notif-01",
+      "usuario": "empleado",
+      "url": "/Home/Index",
+      "recorte": {
+        "selector": ".user-panel",
+        "margen": [
+          14,
+          14,
+          70,
+          14
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "selector": ".user-panel a[href*=Notifications]",
+          "desde": "abajo",
+          "largo": 50,
+          "recuadro": true
+        }
+      ],
+      "sql": "UPDATE n SET Leida=0, FechaLectura=NULL FROM NotificacionesUsuario n JOIN Usuarios u ON u.UsuarioId=n.UsuarioId WHERE u.Correo='empleado@labodega.cr'"
+    },
+    {
+      "id": "gen-notif-02",
+      "usuario": "empleado",
+      "url": "/Notifications/Index",
+      "ancho": 1024,
+      "recorte": {
+        "selector": "main",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main .badge-danger",
+          "indice": 0,
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main button:has-text('Abrir chat')",
+          "indice": 0,
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main button:has-text('Marcar todas')",
+          "posicion": "izquierda"
+        }
+      ],
+      "sql": "UPDATE n SET Leida=0, FechaLectura=NULL FROM NotificacionesUsuario n JOIN Usuarios u ON u.UsuarioId=n.UsuarioId WHERE u.Correo='empleado@labodega.cr'"
+    },
+    {
+      "id": "gen-cerrar-01",
+      "usuario": "empleado",
+      "url": "/Home/Index",
+      "recorte": {
+        "selector": ".user-panel",
+        "margen": [
+          14,
+          14,
+          70,
+          14
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "selector": ".logout-btn",
+          "desde": "abajo",
+          "largo": 50,
+          "recuadro": true
+        }
+      ],
+      "sql": "UPDATE n SET Leida=0, FechaLectura=NULL FROM NotificacionesUsuario n JOIN Usuarios u ON u.UsuarioId=n.UsuarioId WHERE u.Correo='empleado@labodega.cr'"
+    },
+    {
+      "id": "gen-app-01",
+      "usuario": "empleado",
+      "url": "/Home/Index",
+      "recorte": {
+        "selector": ".main-nav-2027 a.nav-highlight",
+        "todos": true,
+        "margen": [
+          14,
+          14,
+          70,
+          14
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "selector": ".main-nav-2027 a[href*=MobileApp]",
+          "desde": "abajo",
+          "largo": 50,
+          "recuadro": true
+        }
+      ]
+    },
+    {
+      "id": "gen-app-02",
+      "usuario": "empleado",
+      "url": "/MobileApp/Index",
+      "ancho": 1024,
+      "recorte": {
+        "selector": "main",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main img, main canvas, main svg",
+          "indice": 0,
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main a:has-text('Descargar')",
+          "posicion": "izquierda"
+        }
+      ]
+    },
+    {
+      "id": "gen-app-login-01",
+      "plataforma": "movil",
+      "usuario": null,
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "elemento": "Correo electrónico"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "elemento": "Contraseña"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "elemento": "Ingresar"
+        }
+      ]
+    },
+    {
+      "id": "gen-app-inicio-01",
+      "plataforma": "movil",
+      "usuario": "empleado",
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "coordenadas": [
+            800,
+            95,
+            108,
+            126
+          ],
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "elemento": "Mi cuenta y ajustes",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "elemento": "Pedidos",
+          "posicion": "derecha"
+        }
+      ],
+      "sql": "UPDATE n SET Leida=0, FechaLectura=NULL FROM NotificacionesUsuario n JOIN Usuarios u ON u.UsuarioId=n.UsuarioId WHERE u.Correo='empleado@labodega.cr'"
+    },
+    {
+      "id": "gen-app-notif-01",
+      "plataforma": "movil",
+      "usuario": "empleado",
+      "acciones": [
+        {
+          "tocar": [
+            855,
+            155
+          ]
+        },
+        {
+          "esperar": 3000
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "elemento": "Marcar leídas",
+          "posicion": "abajo"
+        }
+      ],
+      "sql": "UPDATE n SET Leida=0, FechaLectura=NULL FROM NotificacionesUsuario n JOIN Usuarios u ON u.UsuarioId=n.UsuarioId WHERE u.Correo='empleado@labodega.cr'"
+    },
+    {
+      "id": "gen-app-cuenta-01",
+      "plataforma": "movil",
+      "usuario": "empleado",
+      "acciones": [
+        {
+          "tocar": "Mi cuenta y ajustes"
+        },
+        {
+          "esperar": 1500
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "elemento": "Cerrar sesión",
+          "desde": "arriba",
+          "recuadro": true
+        }
+      ]
+    }
+  ]
+}

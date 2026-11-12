@@ -1,0 +1,2497 @@
+{
+  "carpeta": "app",
+  "_nota": "Generado con un script del grupo 3. Datos: capitulos/40_app/_datos_grupo3_app.sql. El modo avión se apaga en app-por-enviar-04 y app-kilometraje-01.",
+  "capturas": [
+    {
+      "id": "app-inicio-chofer-01",
+      "plataforma": "movil",
+      "usuario": "chofer",
+      "sql": "UPDATE RutaPedidos SET EstadoEntrega=N'EnRuta', MotivoFallo=NULL, FechaEntrega=NULL WHERE RutaId=1; UPDATE Rutas SET Estado=N'Despachada', FechaCierre=NULL WHERE RutaId=1; UPDATE Pedidos SET Estado=N'Facturado' WHERE PedidoId IN (5,9); UPDATE Pedidos SET Estado=N'EnRuta' WHERE PedidoId=7;",
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "elemento": "Pendientes hoy"
+        },
+        {
+          "tipo": "paso",
+          "n": 1,
+          "elemento": "Mis rutas",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "elemento": "Kilometraje",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "elemento": "Por enviar",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "elemento": "Mis jornadas",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "app-mis-rutas-01",
+      "plataforma": "movil",
+      "usuario": "chofer",
+      "acciones": [
+        {
+          "tocar": "Mis rutas"
+        },
+        {
+          "esperar": 3000
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "elemento": "RUT-20261102102423",
+          "desde": "abajo",
+          "recuadro": true
+        }
+      ]
+    },
+    {
+      "id": "app-mis-rutas-02",
+      "plataforma": "movil",
+      "usuario": "chofer",
+      "acciones": [
+        {
+          "tocar": "Mis rutas"
+        },
+        {
+          "esperar": 2500
+        },
+        {
+          "tocar": "RUT-20261102102423"
+        },
+        {
+          "esperar": 3500
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "elemento": "paradas pendientes",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "elemento": "Secuencia de visitas",
+          "posicion": "dentro"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "elemento": "Ver mapa completo",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "elemento": "Actualizar",
+          "posicion": "abajo"
+        }
+      ]
+    },
+    {
+      "id": "app-mis-rutas-03",
+      "plataforma": "movil",
+      "usuario": "chofer",
+      "acciones": [
+        {
+          "tocar": "Mis rutas"
+        },
+        {
+          "esperar": 2500
+        },
+        {
+          "tocar": "RUT-20261102102423"
+        },
+        {
+          "esperar": 3500
+        },
+        {
+          "deslizar": [
+            540,
+            1800,
+            540,
+            700
+          ]
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "elemento": "Navegar",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "elemento": "Llamar",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "elemento": "Entregado",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "elemento": "No entregado",
+          "posicion": "abajo"
+        }
+      ]
+    },
+    {
+      "id": "app-mis-rutas-04",
+      "plataforma": "movil",
+      "usuario": "chofer",
+      "acciones": [
+        {
+          "tocar": "Mis rutas"
+        },
+        {
+          "esperar": 2500
+        },
+        {
+          "tocar": "RUT-20261102102423"
+        },
+        {
+          "esperar": 3500
+        },
+        {
+          "deslizar": [
+            540,
+            1800,
+            540,
+            700
+          ]
+        },
+        {
+          "tocar": "Entregado"
+        },
+        {
+          "esperar": 2000
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "elemento": "Sí, fue entregado",
+          "desde": "arriba"
+        }
+      ]
+    },
+    {
+      "id": "app-mis-rutas-05",
+      "plataforma": "movil",
+      "usuario": "chofer",
+      "acciones": [
+        {
+          "tocar": "Mis rutas"
+        },
+        {
+          "esperar": 2500
+        },
+        {
+          "tocar": "RUT-20261102102423"
+        },
+        {
+          "esperar": 3500
+        },
+        {
+          "deslizar": [
+            540,
+            1800,
+            540,
+            700
+          ]
+        },
+        {
+          "tocar": "Entregado"
+        },
+        {
+          "esperar": 2000
+        },
+        {
+          "tocar": "Sí, fue entregado"
+        },
+        {
+          "esperar": 600
+        }
+      ],
+      "pausa": 200,
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "elemento": "marcado como entregado"
+        }
+      ]
+    },
+    {
+      "id": "app-mis-rutas-06",
+      "plataforma": "movil",
+      "usuario": "chofer",
+      "acciones": [
+        {
+          "tocar": "Mis rutas"
+        },
+        {
+          "esperar": 2500
+        },
+        {
+          "tocar": "RUT-20261102102423"
+        },
+        {
+          "esperar": 3500
+        },
+        {
+          "deslizar": [
+            540,
+            1800,
+            540,
+            700
+          ]
+        },
+        {
+          "tocar": "No entregado"
+        },
+        {
+          "esperar": 2000
+        },
+        {
+          "tocar": "Local cerrado"
+        },
+        {
+          "esperar": 800
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "elemento": "Local cerrado",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "elemento": "Marcar como no entregado",
+          "posicion": "arriba"
+        }
+      ]
+    },
+    {
+      "id": "app-mis-rutas-07",
+      "plataforma": "movil",
+      "usuario": "chofer",
+      "acciones": [
+        {
+          "tocar": "Mis rutas"
+        },
+        {
+          "esperar": 2500
+        },
+        {
+          "tocar": "RUT-20261102102423"
+        },
+        {
+          "esperar": 3500
+        },
+        {
+          "tocar": "Ver mapa completo"
+        },
+        {
+          "esperar": 4000
+        }
+      ],
+      "anotaciones": []
+    },
+    {
+      "id": "app-por-enviar-01",
+      "plataforma": "movil",
+      "usuario": "chofer",
+      "pausa": 0,
+      "sql": "UPDATE RutaPedidos SET EstadoEntrega=N'EnRuta', MotivoFallo=NULL, FechaEntrega=NULL WHERE RutaId=1; UPDATE Rutas SET Estado=N'Despachada', FechaCierre=NULL WHERE RutaId=1; UPDATE Pedidos SET Estado=N'Facturado' WHERE PedidoId IN (5,9); UPDATE Pedidos SET Estado=N'EnRuta' WHERE PedidoId=7;",
+      "acciones": [
+        {
+          "shell": "cmd connectivity airplane-mode disable"
+        },
+        {
+          "tocar": "Mis rutas"
+        },
+        {
+          "esperar": 2500
+        },
+        {
+          "tocar": "RUT-20261102102423"
+        },
+        {
+          "esperar": 3500
+        },
+        {
+          "shell": "cmd connectivity airplane-mode enable"
+        },
+        {
+          "esperar": 4000
+        },
+        {
+          "deslizar": [
+            540,
+            1800,
+            540,
+            700
+          ]
+        },
+        {
+          "tocar": "Entregado"
+        },
+        {
+          "esperar": 2000
+        },
+        {
+          "tocar": "Sí, fue entregado"
+        },
+        {
+          "esperar": 4500
+        },
+        {
+          "shell": "nohup sh -c 'sleep 7; cmd connectivity airplane-mode disable' >/dev/null 2>&1 &"
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "elemento": "acción pendiente"
+        }
+      ]
+    },
+    {
+      "id": "app-por-enviar-02",
+      "plataforma": "movil",
+      "usuario": "chofer",
+      "pausa": 0,
+      "acciones": [
+        {
+          "esperar": 6000
+        },
+        {
+          "tocar": "Mis rutas"
+        },
+        {
+          "esperar": 2500
+        },
+        {
+          "tocar": "RUT-20261102102423"
+        },
+        {
+          "esperar": 3500
+        },
+        {
+          "shell": "cmd connectivity airplane-mode enable"
+        },
+        {
+          "esperar": 4000
+        },
+        {
+          "deslizar": [
+            540,
+            2000,
+            540,
+            500
+          ]
+        },
+        {
+          "deslizar": [
+            540,
+            2000,
+            540,
+            900
+          ]
+        },
+        {
+          "tocar": "Entregado"
+        },
+        {
+          "esperar": 2000
+        },
+        {
+          "tocar": "Sí, fue entregado"
+        },
+        {
+          "esperar": 2500
+        },
+        {
+          "atras": true
+        },
+        {
+          "atras": true
+        },
+        {
+          "esperar": 2000
+        },
+        {
+          "shell": "nohup sh -c 'sleep 7; cmd connectivity airplane-mode disable' >/dev/null 2>&1 &"
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "elemento": "acción pendiente",
+          "desde": "abajo",
+          "recuadro": true
+        }
+      ]
+    },
+    {
+      "id": "app-por-enviar-03",
+      "plataforma": "movil",
+      "usuario": "chofer",
+      "pausa": 0,
+      "acciones": [
+        {
+          "esperar": 6000
+        },
+        {
+          "tocar": "Mis rutas"
+        },
+        {
+          "esperar": 2500
+        },
+        {
+          "tocar": "RUT-20261102102423"
+        },
+        {
+          "esperar": 3500
+        },
+        {
+          "shell": "cmd connectivity airplane-mode enable"
+        },
+        {
+          "esperar": 4000
+        },
+        {
+          "deslizar": [
+            540,
+            2000,
+            540,
+            500
+          ]
+        },
+        {
+          "deslizar": [
+            540,
+            2000,
+            540,
+            900
+          ]
+        },
+        {
+          "tocar": "Entregado"
+        },
+        {
+          "esperar": 2000
+        },
+        {
+          "tocar": "Sí, fue entregado"
+        },
+        {
+          "esperar": 2500
+        },
+        {
+          "tocar": "acción pendiente"
+        },
+        {
+          "esperar": 2500
+        },
+        {
+          "shell": "nohup sh -c 'sleep 7; cmd connectivity airplane-mode disable' >/dev/null 2>&1 &"
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "elemento": "En espera"
+        },
+        {
+          "tipo": "paso",
+          "n": 1,
+          "elemento": "Enviar ahora",
+          "posicion": "abajo"
+        }
+      ]
+    },
+    {
+      "id": "app-por-enviar-04",
+      "plataforma": "movil",
+      "usuario": "chofer",
+      "acciones": [
+        {
+          "esperar": 8000
+        },
+        {
+          "tocar": "Por enviar"
+        },
+        {
+          "esperar": 3000
+        },
+        {
+          "tocar": "Enviar ahora"
+        },
+        {
+          "esperar": 5000
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "elemento": "Todo al día"
+        }
+      ]
+    },
+    {
+      "id": "app-kilometraje-01",
+      "plataforma": "movil",
+      "usuario": "chofer",
+      "sql": "UPDATE RutaPedidos SET EstadoEntrega=N'EnRuta', MotivoFallo=NULL, FechaEntrega=NULL WHERE RutaId=1; UPDATE Rutas SET Estado=N'Despachada', FechaCierre=NULL WHERE RutaId=1; UPDATE Pedidos SET Estado=N'Facturado' WHERE PedidoId IN (5,9); UPDATE Pedidos SET Estado=N'EnRuta' WHERE PedidoId=7;DELETE FROM VehiculoKilometraje WHERE ChoferUsuarioId=36 AND KmFinal IS NULL; DELETE FROM VehiculoKilometraje WHERE ChoferUsuarioId=36 AND Fecha>='2026-11-02' AND VehiculoId=1; UPDATE Vehiculos SET KilometrajeActual=48215 WHERE VehiculoId=1;",
+      "acciones": [
+        {
+          "shell": "cmd connectivity airplane-mode disable"
+        },
+        {
+          "tocar": "Kilometraje"
+        },
+        {
+          "esperar": 3000
+        },
+        {
+          "tocar": "Vehículo"
+        },
+        {
+          "esperar": 1500
+        },
+        {
+          "tocar": "CRJ-001"
+        },
+        {
+          "esperar": 1500
+        },
+        {
+          "tocar": [
+            540,
+            794
+          ]
+        },
+        {
+          "esperar": 800
+        },
+        {
+          "escribir": "48215"
+        },
+        {
+          "ocultarTeclado": true
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "elemento": "Vehículo",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "posicion": "abajo",
+          "coordenadas": [
+            89,
+            718,
+            902,
+            152
+          ]
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "elemento": "Iniciar jornada",
+          "posicion": "abajo",
+          "indice": 1
+        }
+      ]
+    },
+    {
+      "id": "app-kilometraje-02",
+      "plataforma": "movil",
+      "usuario": "chofer",
+      "sql": "DELETE FROM VehiculoKilometraje WHERE ChoferUsuarioId=36 AND KmFinal IS NULL; DELETE FROM VehiculoKilometraje WHERE ChoferUsuarioId=36 AND Fecha>='2026-11-02' AND VehiculoId=1; UPDATE Vehiculos SET KilometrajeActual=48215 WHERE VehiculoId=1;",
+      "acciones": [
+        {
+          "tocar": "Kilometraje"
+        },
+        {
+          "esperar": 3000
+        },
+        {
+          "tocar": "Vehículo"
+        },
+        {
+          "esperar": 1500
+        },
+        {
+          "tocar": "CRJ-001"
+        },
+        {
+          "esperar": 1500
+        },
+        {
+          "tocar": [
+            540,
+            794
+          ]
+        },
+        {
+          "esperar": 800
+        },
+        {
+          "escribir": "48215"
+        },
+        {
+          "ocultarTeclado": true
+        },
+        {
+          "tocar": [
+            540,
+            996
+          ]
+        },
+        {
+          "esperar": 4000
+        },
+        {
+          "tocar": [
+            540,
+            934
+          ]
+        },
+        {
+          "esperar": 800
+        },
+        {
+          "escribir": "48340"
+        },
+        {
+          "ocultarTeclado": true
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "elemento": "Jornada en curso"
+        },
+        {
+          "tipo": "paso",
+          "n": 1,
+          "posicion": "arriba",
+          "coordenadas": [
+            89,
+            858,
+            902,
+            153
+          ]
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "elemento": "Cerrar jornada",
+          "posicion": "abajo",
+          "indice": 0
+        }
+      ]
+    },
+    {
+      "id": "app-kilometraje-03",
+      "plataforma": "movil",
+      "usuario": "chofer",
+      "acciones": [
+        {
+          "tocar": "Kilometraje"
+        },
+        {
+          "esperar": 3000
+        },
+        {
+          "tocar": [
+            540,
+            934
+          ]
+        },
+        {
+          "esperar": 800
+        },
+        {
+          "escribir": "48340"
+        },
+        {
+          "ocultarTeclado": true
+        },
+        {
+          "tocar": [
+            540,
+            1294
+          ]
+        },
+        {
+          "esperar": 2000
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "desde": "arriba",
+          "coordenadas": [
+            63,
+            2012,
+            954,
+            136
+          ]
+        }
+      ]
+    },
+    {
+      "id": "app-kilometraje-04",
+      "plataforma": "movil",
+      "usuario": "chofer",
+      "acciones": [
+        {
+          "tocar": "Kilometraje"
+        },
+        {
+          "esperar": 3000
+        },
+        {
+          "tocar": [
+            540,
+            934
+          ]
+        },
+        {
+          "esperar": 800
+        },
+        {
+          "escribir": "48340"
+        },
+        {
+          "ocultarTeclado": true
+        },
+        {
+          "tocar": [
+            540,
+            1294
+          ]
+        },
+        {
+          "esperar": 2000
+        },
+        {
+          "tocar": [
+            540,
+            2080
+          ]
+        },
+        {
+          "esperar": 700
+        }
+      ],
+      "pausa": 200,
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "elemento": "Jornada cerrada"
+        }
+      ]
+    },
+    {
+      "id": "app-mis-jornadas-01",
+      "plataforma": "movil",
+      "usuario": "chofer",
+      "acciones": [
+        {
+          "tocar": "Mis jornadas"
+        },
+        {
+          "esperar": 3000
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "elemento": "Rechazada"
+        },
+        {
+          "tipo": "flecha",
+          "elemento": "Registrar jornada",
+          "desde": "arriba"
+        }
+      ]
+    },
+    {
+      "id": "app-mis-jornadas-02",
+      "plataforma": "movil",
+      "usuario": "chofer",
+      "sql": "DELETE j FROM EmpleadoJornadas j JOIN Empleados e ON e.EmpleadoId=j.EmpleadoId WHERE e.UsuarioId=36 AND j.Fecha='2026-11-02'",
+      "acciones": [
+        {
+          "tocar": "Mis jornadas"
+        },
+        {
+          "esperar": 3000
+        },
+        {
+          "tocar": "Registrar jornada"
+        },
+        {
+          "esperar": 2000
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "elemento": "Cambiar",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "elemento": "Ordinarias",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "elemento": "Extra",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "elemento": "Ausencia",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "elemento": "Observaciones (opcional)",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 6,
+          "elemento": "Enviar jornada",
+          "posicion": "arriba"
+        }
+      ]
+    },
+    {
+      "id": "app-inicio-bodega-01",
+      "plataforma": "movil",
+      "usuario": "bodeguero",
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "elemento": "Pedidos por preparar",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "elemento": "Recepción de compras",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "elemento": "Movimientos de inventario",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "elemento": "Consulta de inventario",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "app-preparar-01",
+      "plataforma": "movil",
+      "usuario": "bodeguero",
+      "sql": "DELETE FROM PedidoPreparacion WHERE PedidoId=6",
+      "acciones": [
+        {
+          "tocar": "Pedidos por preparar"
+        },
+        {
+          "esperar": 3000
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "elemento": "Por preparar",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "elemento": "Preparados hoy",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "elemento": "Super Don Beto",
+          "posicion": "dentro"
+        }
+      ]
+    },
+    {
+      "id": "app-preparar-02",
+      "plataforma": "movil",
+      "usuario": "bodeguero",
+      "acciones": [
+        {
+          "tocar": "Pedidos por preparar"
+        },
+        {
+          "esperar": 3000
+        },
+        {
+          "tocar": "Super Don Beto"
+        },
+        {
+          "esperar": 3000
+        },
+        {
+          "tocar": [
+            540,
+            1706
+          ]
+        },
+        {
+          "esperar": 700
+        },
+        {
+          "tocar": [
+            540,
+            1919
+          ]
+        },
+        {
+          "esperar": 700
+        },
+        {
+          "deslizar": [
+            540,
+            1900,
+            540,
+            1200
+          ]
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "elemento": "Bavaria Gold 6 Pack",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "elemento": "Bolsa de Hielo 2kg",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "elemento": "Marcar como preparado",
+          "posicion": "arriba"
+        }
+      ]
+    },
+    {
+      "id": "app-recepcion-01",
+      "plataforma": "movil",
+      "usuario": "bodeguero",
+      "acciones": [
+        {
+          "tocar": "Recepción de compras"
+        },
+        {
+          "esperar": 3000
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "elemento": "Orden #1",
+          "desde": "abajo",
+          "recuadro": true
+        },
+        {
+          "tipo": "recuadro",
+          "elemento": "Recibida parcial"
+        }
+      ]
+    },
+    {
+      "id": "app-recepcion-02",
+      "plataforma": "movil",
+      "usuario": "bodeguero",
+      "acciones": [
+        {
+          "tocar": "Recepción de compras"
+        },
+        {
+          "esperar": 3000
+        },
+        {
+          "tocar": "Orden #1"
+        },
+        {
+          "esperar": 3000
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "elemento": "Imperial Silver 6 Pack"
+        },
+        {
+          "tipo": "flecha",
+          "elemento": "Recibir",
+          "desde": "abajo"
+        }
+      ]
+    },
+    {
+      "id": "app-recepcion-03",
+      "plataforma": "movil",
+      "usuario": "bodeguero",
+      "acciones": [
+        {
+          "tocar": "Recepción de compras"
+        },
+        {
+          "esperar": 3000
+        },
+        {
+          "tocar": "Orden #1"
+        },
+        {
+          "esperar": 3000
+        },
+        {
+          "tocar": "Recibir"
+        },
+        {
+          "esperar": 2000
+        },
+        {
+          "tocar": "Restar"
+        },
+        {
+          "esperar": 300
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "elemento": "Restar",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "elemento": "Recibir todo lo pendiente",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "elemento": "Recibir 47 unidades",
+          "posicion": "arriba"
+        }
+      ]
+    },
+    {
+      "id": "app-movimientos-01",
+      "plataforma": "movil",
+      "usuario": "bodeguero",
+      "acciones": [
+        {
+          "tocar": "Movimientos de inventario"
+        },
+        {
+          "esperar": 3000
+        },
+        {
+          "tocar": "Tocá para elegir el producto"
+        },
+        {
+          "esperar": 2000
+        },
+        {
+          "tocar": "Bolsa de Hielo 2kg"
+        },
+        {
+          "esperar": 1500
+        },
+        {
+          "tocar": "Salida"
+        },
+        {
+          "esperar": 1000
+        },
+        {
+          "tocar": "Sumar"
+        },
+        {
+          "esperar": 400
+        },
+        {
+          "tocar": "Producto dañado"
+        },
+        {
+          "esperar": 800
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "elemento": "Stock actual",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "elemento": "Salida",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "elemento": "Sumar",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "elemento": "Producto dañado",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "elemento": "Registrar movimiento",
+          "posicion": "arriba"
+        }
+      ]
+    },
+    {
+      "id": "app-movimientos-02",
+      "plataforma": "movil",
+      "usuario": "bodeguero",
+      "acciones": [
+        {
+          "tocar": "Movimientos de inventario"
+        },
+        {
+          "esperar": 3000
+        },
+        {
+          "tocar": "Tocá para elegir el producto"
+        },
+        {
+          "esperar": 2000
+        },
+        {
+          "tocar": "Bolsa de Hielo 2kg"
+        },
+        {
+          "esperar": 1500
+        },
+        {
+          "tocar": "Salida"
+        },
+        {
+          "esperar": 1000
+        },
+        {
+          "tocar": "Sumar"
+        },
+        {
+          "esperar": 400
+        },
+        {
+          "tocar": "Producto dañado"
+        },
+        {
+          "esperar": 800
+        },
+        {
+          "tocar": "Registrar movimiento"
+        },
+        {
+          "esperar": 1500
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "elemento": "El stock pasa de"
+        },
+        {
+          "tipo": "flecha",
+          "elemento": "Registrar",
+          "desde": "arriba"
+        }
+      ]
+    },
+    {
+      "id": "app-inventario-01",
+      "plataforma": "movil",
+      "usuario": "bodeguero",
+      "acciones": [
+        {
+          "tocar": "Consulta de inventario"
+        },
+        {
+          "esperar": 3000
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "elemento": "Buscar por nombre, categoría o código",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "elemento": "Stock bajo",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "elemento": "Whisky Black Label 750ml",
+          "posicion": "dentro"
+        }
+      ]
+    },
+    {
+      "id": "app-inventario-02",
+      "plataforma": "movil",
+      "usuario": "bodeguero",
+      "acciones": [
+        {
+          "tocar": "Consulta de inventario"
+        },
+        {
+          "esperar": 3000
+        },
+        {
+          "tocar": "Whisky Black Label 750ml"
+        },
+        {
+          "esperar": 2500
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "elemento": "Existencias",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "elemento": "Registrar movimiento",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "elemento": "ÚLTIMOS MOVIMIENTOS",
+          "posicion": "arriba"
+        }
+      ]
+    },
+    {
+      "id": "app-inicio-gerente-01",
+      "plataforma": "movil",
+      "usuario": "gerente",
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "elemento": "Métricas del negocio"
+        },
+        {
+          "tipo": "recuadro",
+          "elemento": "Pedidos retenidos"
+        },
+        {
+          "tipo": "recuadro",
+          "elemento": "Rutas y choferes"
+        },
+        {
+          "tipo": "recuadro",
+          "elemento": "Pedidos"
+        }
+      ]
+    },
+    {
+      "id": "app-metricas-01",
+      "plataforma": "movil",
+      "usuario": "gerente",
+      "acciones": [
+        {
+          "tocar": "Métricas del negocio"
+        },
+        {
+          "esperar": 4000
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "elemento": "Hoy",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "elemento": "Ventas facturadas",
+          "posicion": "dentro"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "elemento": "Facturas emitidas",
+          "posicion": "dentro"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "elemento": "OPERACIÓN",
+          "posicion": "arriba"
+        }
+      ]
+    },
+    {
+      "id": "app-metricas-02",
+      "plataforma": "movil",
+      "usuario": "gerente",
+      "acciones": [
+        {
+          "tocar": "Métricas del negocio"
+        },
+        {
+          "esperar": 4000
+        },
+        {
+          "tocar": "Este mes"
+        },
+        {
+          "esperar": 3000
+        },
+        {
+          "deslizar": [
+            540,
+            2000,
+            540,
+            600
+          ]
+        },
+        {
+          "esperar": 1500
+        }
+      ],
+      "anotaciones": []
+    },
+    {
+      "id": "app-retenidos-01",
+      "plataforma": "movil",
+      "usuario": "gerente",
+      "acciones": [
+        {
+          "tocar": "Pedidos retenidos"
+        },
+        {
+          "esperar": 3000
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "elemento": "Hotel Camino Verde",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "elemento": "Aprobar",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "elemento": "Rechazar",
+          "posicion": "abajo"
+        }
+      ]
+    },
+    {
+      "id": "app-retenidos-02",
+      "plataforma": "movil",
+      "usuario": "gerente",
+      "acciones": [
+        {
+          "tocar": "Pedidos retenidos"
+        },
+        {
+          "esperar": 3000
+        },
+        {
+          "tocar": "Aprobar"
+        },
+        {
+          "esperar": 2000
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "elemento": "Aprobar y facturar",
+          "desde": "arriba"
+        }
+      ]
+    },
+    {
+      "id": "app-retenidos-03",
+      "plataforma": "movil",
+      "usuario": "gerente",
+      "acciones": [
+        {
+          "tocar": "Pedidos retenidos"
+        },
+        {
+          "esperar": 3000
+        },
+        {
+          "tocar": "Rechazar"
+        },
+        {
+          "esperar": 2000
+        },
+        {
+          "tocar": "Motivo del rechazo"
+        },
+        {
+          "esperar": 1200
+        },
+        {
+          "escribir": "Cliente con saldo vencido"
+        },
+        {
+          "esperar": 600
+        },
+        {
+          "ocultarTeclado": true
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "elemento": "Cliente con saldo",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "elemento": "Rechazar pedido",
+          "posicion": "arriba",
+          "indice": 1
+        }
+      ]
+    },
+    {
+      "id": "app-rutas-01",
+      "plataforma": "movil",
+      "usuario": "gerente",
+      "acciones": [
+        {
+          "tocar": "Rutas y choferes"
+        },
+        {
+          "esperar": 3000
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "elemento": "En calle",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "elemento": "Planificadas",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "elemento": "RUT-20261102102423",
+          "posicion": "dentro"
+        }
+      ]
+    },
+    {
+      "id": "app-rutas-02",
+      "plataforma": "movil",
+      "usuario": "gerente",
+      "acciones": [
+        {
+          "tocar": "Rutas y choferes"
+        },
+        {
+          "esperar": 3000
+        },
+        {
+          "tocar": "Planificadas"
+        },
+        {
+          "esperar": 2500
+        },
+        {
+          "tocar": "RUT-20261103070000"
+        },
+        {
+          "esperar": 3000
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "elemento": "Despachar ruta",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "elemento": "Reasignar chofer o vehículo",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "recuadro",
+          "elemento": "PARADAS"
+        }
+      ]
+    },
+    {
+      "id": "app-rutas-03",
+      "plataforma": "movil",
+      "usuario": "gerente",
+      "acciones": [
+        {
+          "tocar": "Rutas y choferes"
+        },
+        {
+          "esperar": 3000
+        },
+        {
+          "tocar": "Planificadas"
+        },
+        {
+          "esperar": 2500
+        },
+        {
+          "tocar": "RUT-20261103070000"
+        },
+        {
+          "esperar": 3000
+        },
+        {
+          "tocar": "Reasignar chofer o vehículo"
+        },
+        {
+          "esperar": 2500
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "elemento": "Chofer Demo (actual)",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "elemento": "CRJ-002 (actual)",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "elemento": "Motivo",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "elemento": "Reasignar",
+          "posicion": "arriba",
+          "indice": 0
+        }
+      ]
+    },
+    {
+      "id": "app-pedidos-01",
+      "plataforma": "movil",
+      "usuario": "gerente",
+      "acciones": [
+        {
+          "tocar": "Pedidos"
+        },
+        {
+          "esperar": 3000
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "elemento": "Cliente, vendedor o número de pedido",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "elemento": "Pendiente",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "elemento": "Licorera Pura Vida",
+          "posicion": "dentro"
+        }
+      ]
+    },
+    {
+      "id": "app-liquidacion-01",
+      "plataforma": "movil",
+      "usuario": "gerente",
+      "acciones": [
+        {
+          "tocar": "Liquidación de rutas"
+        },
+        {
+          "esperar": 3000
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "elemento": "Faltante",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "elemento": "RUT-20261031065000",
+          "posicion": "dentro"
+        }
+      ]
+    },
+    {
+      "id": "app-liquidacion-02",
+      "plataforma": "movil",
+      "usuario": "gerente",
+      "acciones": [
+        {
+          "tocar": "Liquidación de rutas"
+        },
+        {
+          "esperar": 3000
+        },
+        {
+          "tocar": "RUT-20261031065000"
+        },
+        {
+          "esperar": 2500
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "elemento": "Estado: Faltante"
+        },
+        {
+          "tipo": "recuadro",
+          "elemento": "Diferencia"
+        }
+      ]
+    },
+    {
+      "id": "app-pedidos-02",
+      "plataforma": "movil",
+      "usuario": "empleado",
+      "sql": "UPDATE Pedidos SET Estado=N'EnProceso' WHERE PedidoId=44",
+      "acciones": [
+        {
+          "tocar": "Pedidos"
+        },
+        {
+          "esperar": 3000
+        },
+        {
+          "tocar": "En proceso"
+        },
+        {
+          "esperar": 2500
+        },
+        {
+          "tocar": "Abastecedor La Bodeguita"
+        },
+        {
+          "esperar": 3000
+        },
+        {
+          "deslizar": [
+            540,
+            2000,
+            540,
+            900
+          ]
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "elemento": "Marcar como entregado",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "elemento": "Cancelar pedido",
+          "posicion": "arriba"
+        }
+      ]
+    },
+    {
+      "id": "app-productos-01",
+      "plataforma": "movil",
+      "usuario": "admin",
+      "acciones": [
+        {
+          "tocar": "Productos"
+        },
+        {
+          "esperar": 3000
+        },
+        {
+          "tocar": "Vino Tinto Reserva 750ml"
+        },
+        {
+          "esperar": 2500
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "elemento": "Inactivar producto",
+          "desde": "arriba",
+          "recuadro": true
+        }
+      ]
+    },
+    {
+      "id": "app-ventas-01",
+      "plataforma": "movil",
+      "usuario": "vendedor",
+      "acciones": [
+        {
+          "tocar": "Ventas en campo"
+        },
+        {
+          "esperar": 3000
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "elemento": "Hotel Camino Verde"
+        },
+        {
+          "tipo": "flecha",
+          "elemento": "Nuevo pedido",
+          "desde": "arriba"
+        }
+      ]
+    },
+    {
+      "id": "app-ventas-02",
+      "plataforma": "movil",
+      "usuario": "vendedor",
+      "acciones": [
+        {
+          "tocar": "Ventas en campo"
+        },
+        {
+          "esperar": 3000
+        },
+        {
+          "tocar": "Nuevo pedido"
+        },
+        {
+          "esperar": 3000
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "elemento": "Buscar cliente por nombre, correo o teléfono",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "elemento": "Bar y Restaurante El Mirador",
+          "posicion": "dentro"
+        }
+      ]
+    },
+    {
+      "id": "app-ventas-03",
+      "plataforma": "movil",
+      "usuario": "vendedor",
+      "acciones": [
+        {
+          "tocar": "Ventas en campo"
+        },
+        {
+          "esperar": 3000
+        },
+        {
+          "tocar": "Nuevo pedido"
+        },
+        {
+          "esperar": 3000
+        },
+        {
+          "tocar": "Bar y Restaurante El Mirador"
+        },
+        {
+          "esperar": 2500
+        },
+        {
+          "tocar": [
+            954,
+            596
+          ]
+        },
+        {
+          "esperar": 800
+        },
+        {
+          "tocar": [
+            954,
+            806
+          ]
+        },
+        {
+          "esperar": 800
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "elemento": "Buscar producto o categoría",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "elemento": "Bavaria Gold 6 Pack",
+          "posicion": "dentro"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "elemento": "Continuar",
+          "posicion": "arriba"
+        }
+      ]
+    },
+    {
+      "id": "app-ventas-04",
+      "plataforma": "movil",
+      "usuario": "vendedor",
+      "acciones": [
+        {
+          "tocar": "Ventas en campo"
+        },
+        {
+          "esperar": 3000
+        },
+        {
+          "tocar": "Nuevo pedido"
+        },
+        {
+          "esperar": 3000
+        },
+        {
+          "tocar": "Bar y Restaurante El Mirador"
+        },
+        {
+          "esperar": 2500
+        },
+        {
+          "tocar": [
+            954,
+            596
+          ]
+        },
+        {
+          "esperar": 800
+        },
+        {
+          "tocar": [
+            954,
+            806
+          ]
+        },
+        {
+          "esperar": 800
+        },
+        {
+          "tocar": "Continuar"
+        },
+        {
+          "esperar": 2500
+        },
+        {
+          "deslizar": [
+            540,
+            1700,
+            540,
+            1300
+          ]
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "elemento": "Entrega por vendedor",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "elemento": "contiguo a plaza comercial",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "elemento": "Observaciones (opcional)",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "elemento": "Registrar",
+          "posicion": "arriba"
+        }
+      ]
+    },
+    {
+      "id": "app-ventas-05",
+      "plataforma": "movil",
+      "usuario": "vendedor",
+      "acciones": [
+        {
+          "tocar": "Ventas en campo"
+        },
+        {
+          "esperar": 3000
+        },
+        {
+          "tocar": "Nuevo pedido"
+        },
+        {
+          "esperar": 3000
+        },
+        {
+          "tocar": "Bar y Restaurante El Mirador"
+        },
+        {
+          "esperar": 2500
+        },
+        {
+          "tocar": [
+            954,
+            596
+          ]
+        },
+        {
+          "esperar": 800
+        },
+        {
+          "tocar": [
+            954,
+            806
+          ]
+        },
+        {
+          "esperar": 800
+        },
+        {
+          "tocar": "Continuar"
+        },
+        {
+          "esperar": 2500
+        },
+        {
+          "tocar": "Registrar"
+        },
+        {
+          "esperar": 2000
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "elemento": "Registrar",
+          "desde": "arriba",
+          "indice": 1
+        }
+      ]
+    },
+    {
+      "id": "app-facturas-01",
+      "plataforma": "movil",
+      "usuario": "facturador",
+      "acciones": [
+        {
+          "tocar": "Facturas"
+        },
+        {
+          "esperar": 3000
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "elemento": "Cliente, número de factura o pedido",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "elemento": "FAC-",
+          "posicion": "dentro"
+        }
+      ]
+    },
+    {
+      "id": "app-facturas-02",
+      "plataforma": "movil",
+      "usuario": "facturador",
+      "acciones": [
+        {
+          "tocar": "Facturas"
+        },
+        {
+          "esperar": 3000
+        },
+        {
+          "tocar": "FAC-"
+        },
+        {
+          "esperar": 2500
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "elemento": "Total",
+          "indice": 0
+        }
+      ]
+    },
+    {
+      "id": "app-credito-01",
+      "plataforma": "movil",
+      "usuario": "credito",
+      "acciones": [
+        {
+          "tocar": "Crédito de clientes"
+        },
+        {
+          "esperar": 3000
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "elemento": "Buscar cliente",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "elemento": "Con deuda",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "elemento": "Abastecedor La Bodeguita",
+          "posicion": "dentro"
+        }
+      ]
+    },
+    {
+      "id": "app-credito-02",
+      "plataforma": "movil",
+      "usuario": "credito",
+      "acciones": [
+        {
+          "tocar": "Crédito de clientes"
+        },
+        {
+          "esperar": 3000
+        },
+        {
+          "tocar": "Abastecedor La Bodeguita"
+        },
+        {
+          "esperar": 2500
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "elemento": "Deuda actual"
+        },
+        {
+          "tipo": "recuadro",
+          "elemento": "MOVIMIENTOS"
+        }
+      ]
+    },
+    {
+      "id": "app-compras-01",
+      "plataforma": "movil",
+      "usuario": "compras",
+      "acciones": [
+        {
+          "tocar": "Compras"
+        },
+        {
+          "esperar": 3000
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "elemento": "Órdenes",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "elemento": "Sugerencias",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "elemento": "Abiertas",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "elemento": "Orden #1",
+          "posicion": "dentro"
+        }
+      ]
+    },
+    {
+      "id": "app-compras-02",
+      "plataforma": "movil",
+      "usuario": "compras",
+      "acciones": [
+        {
+          "tocar": "Compras"
+        },
+        {
+          "esperar": 3000
+        },
+        {
+          "tocar": "Sugerencias"
+        },
+        {
+          "esperar": 3000
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "elemento": "Calculado con las ventas"
+        }
+      ]
+    },
+    {
+      "id": "app-consultas-01",
+      "plataforma": "movil",
+      "usuario": "soporte",
+      "acciones": [
+        {
+          "tocar": "Consultas de clientes"
+        },
+        {
+          "esperar": 3000
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "elemento": "Nombre, correo o asunto",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "elemento": "Pendientes",
+          "posicion": "abajo"
+        }
+      ]
+    },
+    {
+      "id": "app-consultas-02",
+      "plataforma": "movil",
+      "usuario": "soporte",
+      "acciones": [
+        {
+          "tocar": "Consultas de clientes"
+        },
+        {
+          "esperar": 3000
+        },
+        {
+          "tocar": [
+            540,
+            700
+          ]
+        },
+        {
+          "esperar": 2500
+        },
+        {
+          "tocar": "Atendida"
+        },
+        {
+          "esperar": 800
+        },
+        {
+          "tocar": "Nota interna"
+        },
+        {
+          "esperar": 1200
+        },
+        {
+          "escribir": "Se envio lista de precios por correo"
+        },
+        {
+          "esperar": 600
+        },
+        {
+          "ocultarTeclado": true
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "elemento": "Atendida",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "elemento": "Se envio lista",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "elemento": "Guardar",
+          "posicion": "arriba"
+        }
+      ]
+    },
+    {
+      "id": "app-bitacora-01",
+      "plataforma": "movil",
+      "usuario": "auditor",
+      "acciones": [
+        {
+          "tocar": "Bitácora"
+        },
+        {
+          "esperar": 3000
+        },
+        {
+          "tocar": "Desde la aplicación"
+        },
+        {
+          "esperar": 2500
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "elemento": "Usuario, acción, módulo o detalle",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "elemento": "Desde la aplicación",
+          "posicion": "abajo"
+        }
+      ]
+    },
+    {
+      "id": "app-aprobar-jornadas-01",
+      "plataforma": "movil",
+      "usuario": "supervisor",
+      "acciones": [
+        {
+          "tocar": "Aprobar jornadas"
+        },
+        {
+          "esperar": 3000
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "elemento": "Aprobar",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "elemento": "Rechazar",
+          "posicion": "abajo"
+        }
+      ]
+    },
+    {
+      "id": "app-aprobar-jornadas-02",
+      "plataforma": "movil",
+      "usuario": "supervisor",
+      "acciones": [
+        {
+          "tocar": "Aprobar jornadas"
+        },
+        {
+          "esperar": 3000
+        },
+        {
+          "tocar": "Rechazar"
+        },
+        {
+          "esperar": 2000
+        },
+        {
+          "tocar": "Motivo del rechazo"
+        },
+        {
+          "esperar": 1200
+        },
+        {
+          "escribir": "Falta detallar horas extra"
+        },
+        {
+          "esperar": 600
+        },
+        {
+          "ocultarTeclado": true
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "elemento": "Falta detallar",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "elemento": "Rechazar",
+          "posicion": "arriba",
+          "indice": 0
+        }
+      ]
+    }
+  ]
+}

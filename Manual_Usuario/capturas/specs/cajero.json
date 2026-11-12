@@ -1,0 +1,428 @@
+{
+  "carpeta": "cajero",
+  "_datos": "Antes de capturar: capitulos/21_supervisor/_datos_grupo2.sql (ruta RUT-20261031070000 con 3 pedidos entregados).",
+  "capturas": [
+    {
+      "id": "caj-menu-01",
+      "usuario": "cajero",
+      "url": "/Home/Index",
+      "recorte": {
+        "selector": ".main-nav-2027",
+        "margen": [
+          14,
+          14,
+          14,
+          14
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": ".admin-accordion-dropdown > a"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": ".main-nav-2027 a.nav-highlight",
+          "todos": true
+        }
+      ]
+    },
+    {
+      "id": "caj-menu-02",
+      "usuario": "cajero",
+      "url": "/Home/Index",
+      "acciones": [
+        {
+          "clicSinEsperar": ".admin-accordion-dropdown > a"
+        },
+        {
+          "esperar": 400
+        },
+        {
+          "abrir": "details.acc-sec:has(.acc-sec__label:text-is(\"Finanzas\"))"
+        },
+        {
+          "esperar": 300
+        }
+      ],
+      "recorte": {
+        "selector": ".admin-acc-menu",
+        "margen": [
+          80,
+          70,
+          16,
+          40
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": ".admin-accordion-dropdown > a"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "details.acc-sec:has(.acc-sec__label:text-is(\"Finanzas\")) > summary"
+        }
+      ]
+    },
+    {
+      "id": "caj-liquidacion-01",
+      "usuario": "cajero",
+      "sql": "DELETE c FROM RutaLiquidacionComprobantes c JOIN RutaLiquidacionCobros l ON l.LiquidacionCobrosId=c.LiquidacionCobrosId JOIN Rutas r ON r.RutaId=l.RutaId WHERE r.Codigo=N'RUT-20261031070000'; DELETE FROM RutaLiquidacionCobros WHERE RutaId=(SELECT RutaId FROM Rutas WHERE Codigo=N'RUT-20261031070000');",
+      "url": "/Finance/Index",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main .admin-table-wrapper >> nth=0",
+        "margen": [
+          10,
+          10,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main table >> nth=0 >> tbody tr:has-text('RUT-20261031070000') td >> nth=3"
+        },
+        {
+          "tipo": "flecha",
+          "selector": "main table >> nth=0 >> tbody tr:has-text('RUT-20261031070000') a:has-text('Liquidar')",
+          "desde": "izquierda",
+          "largo": 70,
+          "recuadro": true
+        }
+      ]
+    },
+    {
+      "id": "caj-liquidacion-02",
+      "usuario": "cajero",
+      "sql": "DELETE c FROM RutaLiquidacionComprobantes c JOIN RutaLiquidacionCobros l ON l.LiquidacionCobrosId=c.LiquidacionCobrosId JOIN Rutas r ON r.RutaId=l.RutaId WHERE r.Codigo=N'RUT-20261031070000'; DELETE FROM RutaLiquidacionCobros WHERE RutaId=(SELECT RutaId FROM Rutas WHERE Codigo=N'RUT-20261031070000');",
+      "url": "/Finance/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clic": "main table >> nth=0 >> tbody tr:has-text('RUT-20261031070000') a:has-text('Liquidar')"
+        },
+        {
+          "desplazar": "main table"
+        }
+      ],
+      "recorte": {
+        "selector": "main .admin-table-wrapper:has(h5:has-text('Pedidos entregados'))",
+        "margen": [
+          10,
+          10,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main table tbody td:has-text('Efectivo')",
+          "todos": false
+        },
+        {
+          "tipo": "etiqueta",
+          "selector": "main table thead th >> nth=2",
+          "texto": "Efectivo o comprobante",
+          "posicion": "arriba"
+        }
+      ]
+    },
+    {
+      "id": "caj-liquidacion-03",
+      "usuario": "cajero",
+      "sql": "DELETE c FROM RutaLiquidacionComprobantes c JOIN RutaLiquidacionCobros l ON l.LiquidacionCobrosId=c.LiquidacionCobrosId JOIN Rutas r ON r.RutaId=l.RutaId WHERE r.Codigo=N'RUT-20261031070000'; DELETE FROM RutaLiquidacionCobros WHERE RutaId=(SELECT RutaId FROM Rutas WHERE Codigo=N'RUT-20261031070000');",
+      "url": "/Finance/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clic": "main table >> nth=0 >> tbody tr:has-text('RUT-20261031070000') a:has-text('Liquidar')"
+        }
+      ],
+      "recorte": {
+        "selector": "main .row.mb-3",
+        "margen": [
+          16,
+          16,
+          0,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .row.mb-3 .col-md-4 >> nth=2"
+        }
+      ]
+    },
+    {
+      "id": "caj-liquidacion-04",
+      "usuario": "cajero",
+      "sql": "DELETE c FROM RutaLiquidacionComprobantes c JOIN RutaLiquidacionCobros l ON l.LiquidacionCobrosId=c.LiquidacionCobrosId JOIN Rutas r ON r.RutaId=l.RutaId WHERE r.Codigo=N'RUT-20261031070000'; DELETE FROM RutaLiquidacionCobros WHERE RutaId=(SELECT RutaId FROM Rutas WHERE Codigo=N'RUT-20261031070000');",
+      "url": "/Finance/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clic": "main table >> nth=0 >> tbody tr:has-text('RUT-20261031070000') a:has-text('Liquidar')"
+        },
+        {
+          "rellenar": [
+            "#MontoEfectivoRecibido",
+            "65000"
+          ]
+        },
+        {
+          "rellenar": [
+            "#MontoComprobantes",
+            "32500"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Observaciones",
+            "Faltan ₡950 del pedido 9204; el chofer lo repone mañana."
+          ]
+        },
+        {
+          "seleccionar": [
+            "select[name='Comprobantes[0].Tipo']",
+            "SINPE"
+          ]
+        },
+        {
+          "rellenar": [
+            "input[name='Comprobantes[0].Referencia']",
+            "SINPE 8890-1122 · 31/10"
+          ]
+        },
+        {
+          "rellenar": [
+            "input[name='Comprobantes[0].Monto']",
+            "32500"
+          ]
+        },
+        {
+          "js": "document.activeElement && document.activeElement.blur()"
+        }
+      ],
+      "recorte": {
+        "selector": "main form[action*=Liquidate]",
+        "margen": [
+          20,
+          60,
+          16,
+          60
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#MontoEfectivoRecibido",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#MontoComprobantes",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#Observaciones",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "select[name='Comprobantes[0].Tipo']",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "main form[action*=Liquidate] button[type=submit]",
+          "posicion": "izquierda"
+        }
+      ]
+    },
+    {
+      "id": "caj-liquidacion-05",
+      "usuario": "cajero",
+      "sql": "DELETE c FROM RutaLiquidacionComprobantes c JOIN RutaLiquidacionCobros l ON l.LiquidacionCobrosId=c.LiquidacionCobrosId JOIN Rutas r ON r.RutaId=l.RutaId WHERE r.Codigo=N'RUT-20261031070000'; DELETE FROM RutaLiquidacionCobros WHERE RutaId=(SELECT RutaId FROM Rutas WHERE Codigo=N'RUT-20261031070000');",
+      "url": "/Finance/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clic": "main table >> nth=0 >> tbody tr:has-text('RUT-20261031070000') a:has-text('Liquidar')"
+        },
+        {
+          "rellenar": [
+            "#MontoEfectivoRecibido",
+            "65000"
+          ]
+        },
+        {
+          "rellenar": [
+            "#MontoComprobantes",
+            "32500"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Observaciones",
+            "Faltan ₡950 del pedido 9204; el chofer lo repone mañana."
+          ]
+        },
+        {
+          "seleccionar": [
+            "select[name='Comprobantes[0].Tipo']",
+            "SINPE"
+          ]
+        },
+        {
+          "rellenar": [
+            "input[name='Comprobantes[0].Referencia']",
+            "SINPE 8890-1122 · 31/10"
+          ]
+        },
+        {
+          "rellenar": [
+            "input[name='Comprobantes[0].Monto']",
+            "32500"
+          ]
+        },
+        {
+          "clic": "main form[action*=Liquidate] button[type=submit]"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert-success",
+        "margen": 16
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success"
+        }
+      ]
+    },
+    {
+      "id": "caj-liquidacion-06",
+      "usuario": "cajero",
+      "_nota": "Va después de la 05: la ruta ya está liquidada.",
+      "url": "/Finance/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "main .admin-filter-bar select",
+            "Faltante"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main .admin-filter-bar, main .admin-table-wrapper:has(h5:has-text(\"Liquidaciones registradas\"))",
+        "todos": true,
+        "margen": [
+          40,
+          10,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main .admin-filter-bar select",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main .admin-filter-bar button[type=submit]",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main .admin-table-wrapper:has(h5:has-text(\"Liquidaciones registradas\")) tbody tr:has-text(\"RUT-20261031070000\")"
+        }
+      ]
+    },
+    {
+      "id": "caj-liquidacion-07",
+      "usuario": "cajero",
+      "url": "/Finance/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clicSinEsperar": "button[title=Anular] >> nth=0"
+        },
+        {
+          "esperar": 600
+        },
+        {
+          "rellenar": [
+            "input[name=motivo] >> nth=0",
+            "Se contó mal el efectivo"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main .admin-table-wrapper:has(th:has-text('Liquidó'))",
+        "margen": [
+          20,
+          10,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "button[title=Anular] >> nth=0",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "input[name=motivo] >> nth=0",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "form[action*=CancelSettlement] button[type=submit] >> nth=0",
+          "posicion": "abajo"
+        }
+      ]
+    },
+    {
+      "id": "caj-liquidacion-08",
+      "usuario": "cajero",
+      "url": "/Finance/Merchandise",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main",
+        "margen": [
+          10,
+          0,
+          0,
+          0
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .admin-table-wrapper >> nth=0"
+        }
+      ]
+    }
+  ]
+}

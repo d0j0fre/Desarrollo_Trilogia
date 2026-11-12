@@ -1,0 +1,426 @@
+{
+  "carpeta": "bodeguero",
+  "_datos": "Usa el producto Bolsa de Hielo 2kg (ProductoId 23); cada captura repone su stock a 90.",
+  "capturas": [
+    {
+      "id": "bod-menu-01",
+      "usuario": "bodeguero",
+      "url": "/Home/Index",
+      "acciones": [
+        {
+          "clicSinEsperar": ".admin-accordion-dropdown > a"
+        },
+        {
+          "esperar": 400
+        },
+        {
+          "abrir": "details.acc-sec:has(.acc-sec__label:text-is(\"Inventario\"))"
+        },
+        {
+          "esperar": 300
+        }
+      ],
+      "recorte": {
+        "selector": ".admin-acc-menu",
+        "margen": [
+          80,
+          70,
+          16,
+          40
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": ".admin-accordion-dropdown > a"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "details.acc-sec:has(.acc-sec__label:text-is(\"Inventario\")) > summary"
+        }
+      ]
+    },
+    {
+      "id": "bod-movimientos-01",
+      "usuario": "bodeguero",
+      "sql": "DELETE FROM MovimientosInventario WHERE ProductoId=23 AND Motivo LIKE N'%Hielo Polar%'; UPDATE Productos SET Stock=90 WHERE ProductoId=23;",
+      "url": "/Inventory/Movements",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main .admin-table-wrapper, main a:has-text(\"Registrar movimiento\")",
+        "todos": true,
+        "margen": [
+          20,
+          10,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "selector": "main a:has-text(\"Registrar movimiento\")",
+          "desde": "izquierda",
+          "largo": 70,
+          "recuadro": true
+        }
+      ],
+      "acciones": [
+        {
+          "js": "document.querySelectorAll(\"main table tbody tr\").forEach((tr,i)=>{if(i>3)tr.remove()})"
+        }
+      ]
+    },
+    {
+      "id": "bod-movimientos-02",
+      "usuario": "bodeguero",
+      "sql": "DELETE FROM MovimientosInventario WHERE ProductoId=23 AND Motivo LIKE N'%Hielo Polar%'; UPDATE Productos SET Stock=90 WHERE ProductoId=23;",
+      "url": "/Inventory/RegisterMovement",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "#ProductoId",
+            "23"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#tipoMovimiento",
+            "Entrada"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Cantidad",
+            "20"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Motivo",
+            "Recepción de 20 bolsas de Hielo Polar, factura 4512."
+          ]
+        },
+        {
+          "js": "document.activeElement && document.activeElement.blur()"
+        }
+      ],
+      "recorte": {
+        "selector": "main form[action*=RegisterMovement]",
+        "margen": [
+          20,
+          60,
+          16,
+          60
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#ProductoId",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#tipoMovimiento",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#Cantidad",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "#generaGasto",
+          "posicion": "izquierda",
+          "recuadro": false
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "#Motivo",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 6,
+          "selector": "main form button[type=submit]",
+          "posicion": "izquierda"
+        }
+      ]
+    },
+    {
+      "id": "bod-movimientos-03",
+      "usuario": "bodeguero",
+      "sql": "DELETE FROM MovimientosInventario WHERE ProductoId=23 AND Motivo LIKE N'%Hielo Polar%'; UPDATE Productos SET Stock=90 WHERE ProductoId=23;",
+      "url": "/Inventory/RegisterMovement",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "#ProductoId",
+            "23"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#tipoMovimiento",
+            "Entrada"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Cantidad",
+            "20"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Motivo",
+            "Recepción de 20 bolsas de Hielo Polar, factura 4512."
+          ]
+        },
+        {
+          "marcar": "#generaGasto"
+        },
+        {
+          "rellenar": [
+            "#CostoUnitario",
+            "850"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#CategoriaGasto",
+            "Compra de inventario"
+          ]
+        },
+        {
+          "js": "document.activeElement && document.activeElement.blur()"
+        }
+      ],
+      "recorte": {
+        "selector": "#datosGasto",
+        "margen": [
+          16,
+          60,
+          16,
+          60
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#generaGasto",
+          "posicion": "izquierda",
+          "recuadro": false
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#CostoUnitario",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#CategoriaGasto",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "bod-movimientos-04",
+      "usuario": "bodeguero",
+      "sql": "DELETE FROM MovimientosInventario WHERE ProductoId=23 AND Motivo LIKE N'%Hielo Polar%'; UPDATE Productos SET Stock=90 WHERE ProductoId=23;",
+      "url": "/Inventory/RegisterMovement",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "#ProductoId",
+            "23"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#tipoMovimiento",
+            "Entrada"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Cantidad",
+            "20"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Motivo",
+            "Recepción de 20 bolsas de Hielo Polar, factura 4512."
+          ]
+        },
+        {
+          "clic": "main form button[type=submit]"
+        },
+        {
+          "js": "document.querySelectorAll(\"main table tbody tr\").forEach((tr,i)=>{if(i>3)tr.remove()})"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert-success, main .admin-table-wrapper",
+        "todos": true,
+        "margen": [
+          16,
+          10,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main table tbody tr >> nth=0"
+        }
+      ]
+    },
+    {
+      "id": "bod-movimientos-05",
+      "usuario": "bodeguero",
+      "sql": "DELETE FROM MovimientosInventario WHERE ProductoId=23 AND Motivo LIKE N'%Hielo Polar%'; UPDATE Productos SET Stock=90 WHERE ProductoId=23;",
+      "url": "/Inventory/RegisterMovement",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "#ProductoId",
+            "23"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#tipoMovimiento",
+            "Salida"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Cantidad",
+            "120"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Motivo",
+            "Prueba Hielo Polar"
+          ]
+        },
+        {
+          "clic": "main form button[type=submit]"
+        }
+      ],
+      "recorte": {
+        "selector": "main form .alert-danger",
+        "margen": 16
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main form .alert-danger"
+        }
+      ]
+    },
+    {
+      "id": "bod-movimientos-06",
+      "usuario": "bodeguero",
+      "url": "/Inventory/RegisterMovement",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main .col-lg-4 .admin-card",
+        "margen": 12
+      },
+      "anotaciones": []
+    },
+    {
+      "id": "bod-movimientos-07",
+      "usuario": "bodeguero",
+      "url": "/Inventory/Movements",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "main form[method=get] input[name=buscar]",
+            "Cacique"
+          ]
+        },
+        {
+          "seleccionar": [
+            "main form[method=get] select[name=tipo]",
+            "Entrada"
+          ]
+        },
+        {
+          "rellenar": [
+            "#movDesde",
+            "2026-10-01"
+          ]
+        },
+        {
+          "rellenar": [
+            "#movHasta",
+            "2026-11-02"
+          ]
+        },
+        {
+          "js": "document.activeElement && document.activeElement.blur()"
+        }
+      ],
+      "recorte": {
+        "selector": "main form[method=get]",
+        "margen": [
+          16,
+          16,
+          60,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main form[method=get] input[name=buscar]",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main form[method=get] select[name=tipo]",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#movDesde",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "main form[method=get] button[type=submit]",
+          "posicion": "abajo"
+        }
+      ]
+    }
+  ]
+}

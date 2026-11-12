@@ -1,0 +1,181 @@
+{
+  "carpeta": "gerente",
+  "capturas": [
+    {
+      "id": "ger-menu-01",
+      "usuario": "gerente",
+      "url": "/Home/Index",
+      "recorte": {
+        "selector": ".main-nav-2027",
+        "margen": [
+          14,
+          14,
+          14,
+          14
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": ".admin-accordion-dropdown > a"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": ".main-nav-2027 a.nav-highlight",
+          "todos": true
+        }
+      ]
+    },
+    {
+      "id": "ger-menu-02",
+      "usuario": "gerente",
+      "url": "/Home/Index",
+      "acciones": [
+        {
+          "clicSinEsperar": ".admin-accordion-dropdown > a"
+        },
+        {
+          "esperar": 400
+        }
+      ],
+      "recorte": {
+        "selector": ".admin-acc-menu",
+        "margen": [
+          80,
+          70,
+          16,
+          40
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": ".admin-accordion-dropdown > a"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "details.acc-sec > summary",
+          "todos": true
+        }
+      ]
+    },
+    {
+      "id": "ger-menu-03",
+      "usuario": "gerente",
+      "url": "/Home/Index",
+      "acciones": [
+        {
+          "clicSinEsperar": ".admin-accordion-dropdown > a"
+        },
+        {
+          "esperar": 400
+        },
+        {
+          "abrir": "details.acc-sec:has(.acc-sec__label:text-is(\"Logística y Flota\"))"
+        },
+        {
+          "esperar": 300
+        }
+      ],
+      "recorte": {
+        "selector": ".admin-acc-menu",
+        "margen": [
+          80,
+          70,
+          16,
+          40
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": ".admin-accordion-dropdown > a"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "details.acc-sec:has(.acc-sec__label:text-is(\"Logística y Flota\")) > summary"
+        }
+      ]
+    },
+    {
+      "id": "ger-invrep-01",
+      "usuario": "gerente",
+      "url": "/InventoryReport",
+      "ancho": 1280,
+      "recorte": {
+        "selector": ".admin-filter-bar, .row.mb-4",
+        "todos": true,
+        "margen": [
+          40,
+          20,
+          10,
+          20
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#filtro",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#estado",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#incluirInactivos",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": ".admin-filter-bar button[type=submit]",
+          "posicion": "arriba"
+        }
+      ]
+    },
+    {
+      "id": "ger-invrep-02",
+      "usuario": "gerente",
+      "url": "/InventoryReport?estado=Bajo",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "#inventoryReportTable",
+        "margen": [
+          10,
+          10,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "#inventoryReportTable tbody tr >> nth=0"
+        }
+      ]
+    },
+    {
+      "id": "ger-tablerog-04",
+      "usuario": "gerente",
+      "url": "/ManagementDashboard?rango=mes&indicador=ventas",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "#detalle, #detalle ~ .col-lg-6",
+        "todos": true,
+        "margen": [
+          10,
+          10,
+          10,
+          10
+        ]
+      },
+      "anotaciones": []
+    }
+  ]
+}

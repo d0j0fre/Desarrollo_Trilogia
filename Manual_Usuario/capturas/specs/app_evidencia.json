@@ -1,0 +1,98 @@
+{
+  "carpeta": "app",
+  "_nota": "Capturas nuevas de la app del chofer (G3-04: foto y firma de la entrega). Ruta demo: RutaId 4, RUT-20261111170200 (base finevid); cambiar el codigo y el RutaId segun la base. Cada captura repone las paradas a «En ruta».",
+  "capturas": [
+    {
+      "id": "app-inicio-chofer-01",
+      "plataforma": "movil",
+      "usuario": "chofer",
+      "sql": "UPDATE RutaPedidos SET EstadoEntrega=N'EnRuta', MotivoFallo=NULL, FechaEntrega=NULL WHERE RutaId=4; UPDATE Rutas SET Estado=N'Despachada', FechaCierre=NULL WHERE RutaId=4; UPDATE Pedidos SET Estado=N'EnRuta' WHERE PedidoId IN (5,9); DELETE FROM EntregaEvidencias WHERE RutaId=4;",
+      "acciones": [ { "shell": "cmd connectivity airplane-mode disable" }, { "esperar": 6000 } ],
+      "anotaciones": [
+        { "tipo": "recuadro", "elemento": "Pendientes hoy" },
+        { "tipo": "paso", "n": 1, "elemento": "Mis rutas", "posicion": "derecha" },
+        { "tipo": "paso", "n": 2, "elemento": "Kilometraje", "posicion": "derecha" },
+        { "tipo": "paso", "n": 3, "elemento": "Por enviar", "posicion": "derecha" },
+        { "tipo": "paso", "n": 4, "elemento": "Mis jornadas", "posicion": "derecha" }
+      ]
+    },
+    {
+      "id": "app-mis-rutas-08",
+      "plataforma": "movil",
+      "usuario": "chofer",
+      "sql": "UPDATE RutaPedidos SET EstadoEntrega=N'EnRuta', MotivoFallo=NULL, FechaEntrega=NULL WHERE RutaId=4; UPDATE Rutas SET Estado=N'Despachada', FechaCierre=NULL WHERE RutaId=4; UPDATE Pedidos SET Estado=N'EnRuta' WHERE PedidoId IN (5,9);",
+      "acciones": [
+        { "shell": "cmd connectivity airplane-mode disable" },
+        { "shell": "pm grant cr.distribuidorajj.proyecto_movil android.permission.CAMERA" },
+        { "tocar": "Mis rutas" }, { "esperar": 2500 },
+        { "tocar": "RUT-20261111170200" }, { "esperar": 3500 },
+        { "deslizar": [540, 1800, 540, 700] },
+        { "tocar": "Entregado" }, { "esperar": 2500 },
+        { "tocar": "Tomar foto" }, { "esperar": 20000 },
+        { "tocar": [540, 2240] }, { "esperar": 8000 },
+        { "tocar": [540, 2240] }, { "esperar": 10000 },
+        { "tocar": "Firma del cliente" }, { "esperar": 3000 },
+        { "deslizar": [250, 800, 700, 1200] }, { "deslizar": [700, 1200, 900, 700] }, { "deslizar": [300, 1400, 800, 1300] },
+        { "tocar": "Usar firma" }, { "esperar": 3000 }
+      ],
+      "pausa": 1200,
+      "anotaciones": [
+        { "tipo": "paso", "n": 1, "elemento": "Tomar foto", "posicion": "arriba" },
+        { "tipo": "paso", "n": 2, "elemento": "Repetir firma", "posicion": "arriba" },
+        { "tipo": "paso", "n": 3, "elemento": "Elegir de la galería", "posicion": "derecha" },
+        { "tipo": "paso", "n": 4, "elemento": "Sí, fue entregado", "posicion": "arriba" }
+      ]
+    },
+    {
+      "id": "app-mis-rutas-09",
+      "plataforma": "movil",
+      "usuario": "chofer",
+      "acciones": [
+        { "shell": "cmd connectivity airplane-mode disable" },
+        { "tocar": "Mis rutas" }, { "esperar": 2500 },
+        { "tocar": "RUT-20261111170200" }, { "esperar": 3500 },
+        { "deslizar": [540, 1800, 540, 700] },
+        { "tocar": "Entregado" }, { "esperar": 2500 },
+        { "tocar": "Firma del cliente" }, { "esperar": 3000 },
+        { "deslizar": [250, 800, 700, 1200] }, { "deslizar": [700, 1200, 900, 700] }, { "deslizar": [300, 1400, 800, 1300] },
+        { "esperar": 1000 }
+      ],
+      "pausa": 800,
+      "anotaciones": [
+        { "tipo": "paso", "n": 1, "coordenadas": [42, 410, 996, 1700], "posicion": "abajo-derecha" },
+        { "tipo": "paso", "n": 2, "elemento": "Borrar", "posicion": "arriba" },
+        { "tipo": "paso", "n": 3, "elemento": "Usar firma", "posicion": "arriba" }
+      ]
+    },
+    {
+      "id": "app-por-enviar-05",
+      "plataforma": "movil",
+      "usuario": "chofer",
+      "pausa": 0,
+      "sql": "UPDATE RutaPedidos SET EstadoEntrega=N'EnRuta', MotivoFallo=NULL, FechaEntrega=NULL WHERE RutaId=4; UPDATE Rutas SET Estado=N'Despachada', FechaCierre=NULL WHERE RutaId=4; UPDATE Pedidos SET Estado=N'EnRuta' WHERE PedidoId IN (5,9);",
+      "acciones": [
+        { "shell": "cmd connectivity airplane-mode disable" },
+        { "shell": "pm grant cr.distribuidorajj.proyecto_movil android.permission.CAMERA" },
+        { "esperar": 6000 },
+        { "tocar": "Mis rutas" }, { "esperar": 2500 },
+        { "tocar": "RUT-20261111170200" }, { "esperar": 3500 },
+        { "shell": "cmd connectivity airplane-mode enable" }, { "esperar": 5000 },
+        { "deslizar": [540, 1800, 540, 700] },
+        { "tocar": "Entregado" }, { "esperar": 2500 },
+        { "tocar": "Tomar foto" }, { "esperar": 20000 },
+        { "tocar": [540, 2240] }, { "esperar": 8000 },
+        { "tocar": [540, 2240] }, { "esperar": 10000 },
+        { "tocar": "Firma del cliente" }, { "esperar": 3000 },
+        { "deslizar": [250, 800, 700, 1200] }, { "deslizar": [700, 1200, 900, 700] }, { "deslizar": [300, 1400, 800, 1300] },
+        { "tocar": "Usar firma" }, { "esperar": 3000 },
+        { "tocar": "Sí, fue entregado" }, { "esperar": 3500 },
+        { "tocar": "acciones pendientes" }, { "esperar": 3000 }
+      ],
+      "anotaciones": [
+        { "tipo": "recuadro", "elemento": "Foto del pedido" },
+        { "tipo": "recuadro", "elemento": "Firma del pedido" },
+        { "tipo": "paso", "n": 1, "elemento": "Enviar ahora", "posicion": "abajo" }
+      ]
+    }
+  ]
+}

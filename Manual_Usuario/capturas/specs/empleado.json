@@ -1,0 +1,1103 @@
+{
+  "carpeta": "empleado",
+  "capturas": [
+    {
+      "id": "emp-menu-01",
+      "usuario": "empleado",
+      "url": "/Home/Index",
+      "recorte": {
+        "selector": ".main-nav-2027",
+        "margen": [
+          14,
+          14,
+          14,
+          14
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": ".admin-accordion-dropdown > a"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": ".main-nav-2027 a.nav-highlight",
+          "todos": true
+        }
+      ]
+    },
+    {
+      "id": "emp-menu-02",
+      "usuario": "empleado",
+      "url": "/Home/Index",
+      "acciones": [
+        {
+          "clicSinEsperar": ".admin-accordion-dropdown > a"
+        },
+        {
+          "esperar": 400
+        }
+      ],
+      "recorte": {
+        "selector": ".admin-acc-menu",
+        "margen": [
+          80,
+          70,
+          16,
+          40
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": ".admin-accordion-dropdown > a"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "details.acc-sec > summary",
+          "todos": true
+        }
+      ]
+    },
+    {
+      "id": "emp-chat-01",
+      "usuario": "empleado",
+      "url": "/Home/Index",
+      "acciones": [
+        {
+          "clicSinEsperar": ".main-nav-2027 a.dropdown-toggle:has-text(\"Chat\")"
+        },
+        {
+          "esperar": 400
+        }
+      ],
+      "recorte": {
+        "selector": "#btnPrivateChat, #btnDepartmentChat, .main-nav-2027 a.dropdown-toggle:has-text(\"Chat\")",
+        "todos": true,
+        "margen": [
+          16,
+          90,
+          16,
+          90
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": ".main-nav-2027 a.dropdown-toggle:has-text(\"Chat\")"
+        },
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#btnPrivateChat",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#btnDepartmentChat",
+          "posicion": "izquierda"
+        }
+      ]
+    },
+    {
+      "id": "emp-jornadas-01",
+      "usuario": "empleado",
+      "url": "/Home/Index",
+      "recorte": {
+        "selector": ".main-nav-2027 a.nav-highlight",
+        "todos": true,
+        "margen": [
+          14,
+          14,
+          70,
+          14
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "selector": ".main-nav-2027 a[href*=MyAttendance]",
+          "desde": "abajo",
+          "largo": 50,
+          "recuadro": true
+        }
+      ]
+    },
+    {
+      "id": "emp-jornadas-02",
+      "usuario": "empleado",
+      "sql": "DELETE j FROM EmpleadoJornadas j JOIN Empleados e ON e.EmpleadoId=j.EmpleadoId JOIN Usuarios u ON u.UsuarioId=e.UsuarioId WHERE u.Correo='empleado@labodega.cr'",
+      "url": "/MyAttendance/Index",
+      "ancho": 1024,
+      "acciones": [
+        {
+          "rellenar": [
+            "#Form_Fecha",
+            "2026-11-02"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Form_HorasOrdinarias",
+            "8"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Form_HorasExtra",
+            "1"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Form_HorasAusencia",
+            "0"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Form_Observaciones",
+            "Cierre de inventario mensual"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main form",
+        "margen": [
+          70,
+          20,
+          20,
+          20
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#Form_Fecha",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#Form_HorasOrdinarias",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#Form_HorasExtra",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "#Form_HorasAusencia",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "#Form_Observaciones",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 6,
+          "selector": "main form button[value=true]",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "emp-jornadas-03",
+      "usuario": "empleado",
+      "sql": "DELETE j FROM EmpleadoJornadas j JOIN Empleados e ON e.EmpleadoId=j.EmpleadoId JOIN Usuarios u ON u.UsuarioId=e.UsuarioId WHERE u.Correo='empleado@labodega.cr'",
+      "url": "/MyAttendance/Index",
+      "ancho": 1024,
+      "acciones": [
+        {
+          "rellenar": [
+            "#Form_Fecha",
+            "2026-11-02"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Form_HorasOrdinarias",
+            "8"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Form_HorasExtra",
+            "1"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Form_HorasAusencia",
+            "0"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Form_Observaciones",
+            "Cierre de inventario mensual"
+          ]
+        },
+        {
+          "clic": "main form button[value=true]"
+        }
+      ],
+      "recorte": {
+        "selector": "main",
+        "margen": [
+          12,
+          0,
+          0,
+          0
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main table tbody tr >> nth=0"
+        },
+        {
+          "tipo": "etiqueta",
+          "selector": "main table tbody tr >> nth=0 >> td >> nth=4",
+          "texto": "Estado",
+          "posicion": "abajo"
+        }
+      ]
+    },
+    {
+      "id": "emp-jornadas-04",
+      "usuario": "empleado",
+      "_nota": "Va después de la 03: la jornada del 02/11 ya existe y el sistema rechaza la segunda.",
+      "url": "/MyAttendance/Index",
+      "ancho": 1024,
+      "acciones": [
+        {
+          "rellenar": [
+            "#Form_Fecha",
+            "2026-11-02"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Form_HorasOrdinarias",
+            "8"
+          ]
+        },
+        {
+          "clic": "main form button[value=true]"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert-danger",
+        "margen": 16
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-danger"
+        }
+      ]
+    },
+    {
+      "id": "emp-jornadas-05",
+      "usuario": "empleado",
+      "sql": "DELETE j FROM EmpleadoJornadas j JOIN Empleados e ON e.EmpleadoId=j.EmpleadoId JOIN Usuarios u ON u.UsuarioId=e.UsuarioId WHERE u.Correo='empleado@labodega.cr'; INSERT EmpleadoJornadas (EmpleadoId,Fecha,HorasOrdinarias,HorasExtra,HorasAusencia,Observaciones,Estado,IdempotencyKey,FechaEnvioUtc,SupervisorNombre,RespuestaSupervisor) VALUES (25,'2026-10-29',8,4,0,N'Inventario de fin de mes',N'Rechazada',NEWID(),SYSUTCDATETIME(),N'Supervisor Demo',N'Fueron 2 horas extra, no 4. Corrija y envíe de nuevo.'),(25,'2026-10-30',8,0,0,NULL,N'Borrador',NEWID(),NULL,NULL,NULL);",
+      "url": "/MyAttendance/Index",
+      "ancho": 1024,
+      "recorte": {
+        "selector": "main table",
+        "margen": [
+          16,
+          16,
+          16,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main table tbody tr:has-text(\"Rechazada\") td >> nth=5"
+        },
+        {
+          "tipo": "flecha",
+          "selector": "main table tbody tr:has-text(\"Rechazada\") a:has-text(\"Completar\")",
+          "desde": "abajo",
+          "largo": 40,
+          "recuadro": true
+        }
+      ]
+    },
+    {
+      "id": "emp-jornadas-06",
+      "usuario": "empleado",
+      "sql": "DELETE j FROM EmpleadoJornadas j JOIN Empleados e ON e.EmpleadoId=j.EmpleadoId JOIN Usuarios u ON u.UsuarioId=e.UsuarioId WHERE u.Correo='empleado@labodega.cr'; INSERT EmpleadoJornadas (EmpleadoId,Fecha,HorasOrdinarias,HorasExtra,HorasAusencia,Observaciones,Estado,IdempotencyKey,FechaEnvioUtc,SupervisorNombre,RespuestaSupervisor) VALUES (25,'2026-10-29',8,4,0,N'Inventario de fin de mes',N'Rechazada',NEWID(),SYSUTCDATETIME(),N'Supervisor Demo',N'Fueron 2 horas extra, no 4. Corrija y envíe de nuevo.'),(25,'2026-10-30',8,0,0,NULL,N'Borrador',NEWID(),NULL,NULL,NULL);",
+      "url": "/MyAttendance/Index",
+      "ancho": 1024,
+      "acciones": [
+        {
+          "clic": "main table tbody tr:has-text(\"Rechazada\") a:has-text(\"Completar\")"
+        },
+        {
+          "rellenar": [
+            "#Form_HorasExtra",
+            "2"
+          ]
+        },
+        {
+          "js": "document.activeElement && document.activeElement.blur()"
+        }
+      ],
+      "recorte": {
+        "selector": "main form",
+        "margen": [
+          20,
+          20,
+          20,
+          20
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main form p"
+        },
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#Form_HorasExtra",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main form button[value=true]",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "emp-pedidos-01",
+      "usuario": "empleado",
+      "sql": "UPDATE Pedidos SET Estado=N'Pendiente' WHERE PedidoId=9201;",
+      "url": "/OrdersAdmin/Index",
+      "ancho": 1700,
+      "acciones": [
+        {
+          "seleccionar": [
+            "select[name=estado]",
+            "Pendiente"
+          ]
+        },
+        {
+          "clic": "main .admin-filter-bar button[type=submit]"
+        }
+      ],
+      "recorte": {
+        "selector": "main .admin-filter-bar, main .admin-table-wrapper",
+        "todos": true,
+        "margen": [
+          40,
+          10,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "select[name=estado]",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main .admin-filter-bar button[type=submit]",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main table tbody tr:has-text(\"#9201\") a:has-text(\"Ver\")",
+          "posicion": "izquierda"
+        }
+      ]
+    },
+    {
+      "id": "emp-pedidos-02",
+      "usuario": "empleado",
+      "sql": "UPDATE Pedidos SET Estado=N'Pendiente' WHERE PedidoId=9201;",
+      "url": "/OrdersAdmin/Detail/9201",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main .row:has(h5:has-text(\"Información general\"))",
+        "margen": [
+          10,
+          10,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .admin-badge-soft"
+        }
+      ]
+    },
+    {
+      "id": "emp-pedidos-03",
+      "usuario": "empleado",
+      "sql": "UPDATE Pedidos SET Estado=N'Pendiente' WHERE PedidoId=9201;",
+      "url": "/OrdersAdmin/Detail/9201",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "select[name=nuevoEstado]",
+            "Aprobado"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main form[action*=UpdateStatus]",
+        "margen": [
+          60,
+          40,
+          16,
+          60
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "select[name=nuevoEstado]",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main form[action*=UpdateStatus] button[type=submit]",
+          "posicion": "izquierda"
+        }
+      ]
+    },
+    {
+      "id": "emp-pedidos-04",
+      "usuario": "empleado",
+      "sql": "UPDATE Pedidos SET Estado=N'Pendiente' WHERE PedidoId=9201;",
+      "url": "/OrdersAdmin/Detail/9201",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "select[name=nuevoEstado]",
+            "Aprobado"
+          ]
+        },
+        {
+          "clic": "main form[action*=UpdateStatus] button[type=submit]"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert-success, main h2",
+        "todos": true,
+        "margen": [
+          16,
+          16,
+          16,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success"
+        }
+      ]
+    },
+    {
+      "id": "emp-pedidos-06",
+      "usuario": "empleado",
+      "sql": "UPDATE Pedidos SET Estado=N'Pendiente' WHERE PedidoId=9201;",
+      "url": "/OrdersAdmin/Detail/9201",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "desplazar": "main table"
+        }
+      ],
+      "recorte": {
+        "selector": "main .admin-table-wrapper",
+        "margen": [
+          10,
+          10,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "etiqueta",
+          "selector": "main table thead th >> nth=5",
+          "texto": "Existencias en bodega",
+          "posicion": "arriba"
+        }
+      ]
+    },
+    {
+      "id": "emp-chat-02",
+      "usuario": "empleado",
+      "url": "/Home/Index",
+      "acciones": [
+        {
+          "js": "document.getElementById(\"btnPrivateChat\").click()"
+        },
+        {
+          "esperarSelector": "#chatSelectableList .chat-user-item"
+        },
+        {
+          "rellenar": [
+            "#chatListSearch",
+            "super"
+          ]
+        },
+        {
+          "esperar": 300
+        }
+      ],
+      "recorte": {
+        "selector": "#chatWindow",
+        "margen": [
+          16,
+          60,
+          16,
+          60
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#chatListSearch",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#chatSelectableList .chat-user-item:has-text(\"Supervisor Demo\")",
+          "posicion": "izquierda"
+        }
+      ]
+    },
+    {
+      "id": "emp-chat-03",
+      "usuario": "empleado",
+      "url": "/Home/Index",
+      "acciones": [
+        {
+          "js": "document.getElementById(\"btnPrivateChat\").click()"
+        },
+        {
+          "esperarSelector": "#chatSelectableList .chat-user-item"
+        },
+        {
+          "rellenar": [
+            "#chatListSearch",
+            "supervisor demo"
+          ]
+        },
+        {
+          "clicSinEsperar": "#chatSelectableList .chat-user-item:has-text(\"Supervisor Demo\")"
+        },
+        {
+          "esperarSelector": "#chatMessageInput"
+        },
+        {
+          "esperar": 800
+        },
+        {
+          "rellenar": [
+            "#chatMessageInput",
+            "Listo, a las 10 voy a bodega."
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "#chatWindow",
+        "margen": [
+          16,
+          60,
+          16,
+          60
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "#chatMessages"
+        },
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#chatMessageInput",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": ".chat-input-area button[type=submit]",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "flecha",
+          "selector": ".chat-conversation-header button:has-text(\"Buscar\")",
+          "desde": "derecha",
+          "largo": 50
+        }
+      ]
+    },
+    {
+      "id": "emp-chat-04",
+      "usuario": "empleado",
+      "url": "/Home/Index",
+      "acciones": [
+        {
+          "js": "document.getElementById(\"btnDepartmentChat\").click()"
+        },
+        {
+          "esperarSelector": "#chatSelectableList .chat-user-item"
+        },
+        {
+          "clicSinEsperar": "#chatSelectableList .chat-user-item:has-text(\"Bodega y despacho\")"
+        },
+        {
+          "esperarSelector": "#chatMessageInput"
+        },
+        {
+          "esperar": 800
+        }
+      ],
+      "recorte": {
+        "selector": "#chatWindow",
+        "margen": [
+          16,
+          60,
+          16,
+          60
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": ".chat-conversation-header strong"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "#chatMessages"
+        }
+      ]
+    },
+    {
+      "id": "emp-chat-05",
+      "usuario": "empleado",
+      "url": "/Home/Index",
+      "acciones": [
+        {
+          "js": "document.getElementById(\"btnPrivateChat\").click()"
+        },
+        {
+          "esperarSelector": "#chatSelectableList .chat-user-item"
+        },
+        {
+          "rellenar": [
+            "#chatListSearch",
+            "supervisor demo"
+          ]
+        },
+        {
+          "clicSinEsperar": "#chatSelectableList .chat-user-item:has-text(\"Supervisor Demo\")"
+        },
+        {
+          "esperarSelector": "#chatMessageInput"
+        },
+        {
+          "esperar": 800
+        },
+        {
+          "clicSinEsperar": ".chat-conversation-header button:has-text(\"Buscar\")"
+        },
+        {
+          "esperarSelector": "#chatWindow form.chat-search input"
+        },
+        {
+          "rellenar": [
+            "#chatWindow form.chat-search input",
+            "pedido"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#chatWindow form.chat-search select",
+            "all"
+          ]
+        },
+        {
+          "clicSinEsperar": "#chatWindow form.chat-search button[type=submit]"
+        },
+        {
+          "esperar": 1200
+        }
+      ],
+      "recorte": {
+        "selector": "#chatWindow",
+        "margen": [
+          16,
+          60,
+          16,
+          60
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#chatWindow form.chat-search input",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#chatWindow form.chat-search select",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#chatWindow form.chat-search button[type=submit]",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "#chatSearchResults"
+        }
+      ]
+    },
+    {
+      "id": "emp-portal-01",
+      "usuario": "empleado",
+      "sql": "DELETE FROM EmpleadoSolicitudesTiempoLibre WHERE EmpleadoId=25; UPDATE EmpleadoTareas SET Estado=N'Pendiente' WHERE EmpleadoId=25 AND Titulo=N'Actualizar precios de cervezas';",
+      "url": "/EmployeePortal/Index",
+      "ancho": 1280,
+      "recorte": {
+        "selector": ".employee-profile-hero",
+        "margen": [
+          10,
+          10,
+          320,
+          10
+        ]
+      },
+      "anotaciones": []
+    },
+    {
+      "id": "emp-portal-02",
+      "usuario": "empleado",
+      "sql": "DELETE FROM EmpleadoSolicitudesTiempoLibre WHERE EmpleadoId=25; UPDATE EmpleadoTareas SET Estado=N'Pendiente' WHERE EmpleadoId=25 AND Titulo=N'Actualizar precios de cervezas';",
+      "url": "/EmployeePortal/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            ".employee-task-item:has-text(\"Actualizar precios\") select",
+            "En proceso"
+          ]
+        },
+        {
+          "js": "document.activeElement && document.activeElement.blur()"
+        }
+      ],
+      "recorte": {
+        "selector": ".employee-task-list",
+        "margen": [
+          50,
+          16,
+          16,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": ".employee-task-item:has-text(\"Actualizar precios\") select",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": ".employee-task-item:has-text(\"Actualizar precios\") button",
+          "posicion": "izquierda"
+        }
+      ]
+    },
+    {
+      "id": "emp-portal-03",
+      "usuario": "empleado",
+      "sql": "DELETE FROM EmpleadoSolicitudesTiempoLibre WHERE EmpleadoId=25; UPDATE EmpleadoTareas SET Estado=N'Pendiente' WHERE EmpleadoId=25 AND Titulo=N'Actualizar precios de cervezas';",
+      "url": "/EmployeePortal/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "#NuevaSolicitud_FechaInicio",
+            "2026-11-20"
+          ]
+        },
+        {
+          "rellenar": [
+            "#NuevaSolicitud_FechaFin",
+            "2026-11-21"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#NuevaSolicitud_TipoSolicitud",
+            "Con goce salarial"
+          ]
+        },
+        {
+          "rellenar": [
+            "#NuevaSolicitud_Motivo",
+            "Graduación de mi hija en Cartago."
+          ]
+        },
+        {
+          "js": "document.activeElement && document.activeElement.blur()"
+        }
+      ],
+      "recorte": {
+        "selector": "form[action*=RequestTimeOff]",
+        "margen": [
+          60,
+          60,
+          16,
+          60
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#NuevaSolicitud_FechaInicio",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#NuevaSolicitud_FechaFin",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#NuevaSolicitud_TipoSolicitud",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "#NuevaSolicitud_Motivo",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "form[action*=RequestTimeOff] button[type=submit]",
+          "posicion": "izquierda"
+        }
+      ]
+    },
+    {
+      "id": "emp-portal-04",
+      "usuario": "empleado",
+      "sql": "DELETE FROM EmpleadoSolicitudesTiempoLibre WHERE EmpleadoId=25; UPDATE EmpleadoTareas SET Estado=N'Pendiente' WHERE EmpleadoId=25 AND Titulo=N'Actualizar precios de cervezas';",
+      "url": "/EmployeePortal/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "#NuevaSolicitud_FechaInicio",
+            "2026-11-20"
+          ]
+        },
+        {
+          "rellenar": [
+            "#NuevaSolicitud_FechaFin",
+            "2026-11-21"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#NuevaSolicitud_TipoSolicitud",
+            "Con goce salarial"
+          ]
+        },
+        {
+          "rellenar": [
+            "#NuevaSolicitud_Motivo",
+            "Graduación de mi hija en Cartago."
+          ]
+        },
+        {
+          "clic": "form[action*=RequestTimeOff] button[type=submit]"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert-success",
+        "margen": 16
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success"
+        }
+      ]
+    },
+    {
+      "id": "emp-portal-05",
+      "usuario": "empleado",
+      "_nota": "Va después de la 04.",
+      "url": "/EmployeePortal/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "desplazar": "main .employee-card:has-text(\"Mis solicitudes\")"
+        }
+      ],
+      "recorte": {
+        "selector": "main .employee-card:has-text(\"Mis solicitudes\")",
+        "margen": 10
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .employee-card:has-text(\"Mis solicitudes\") tbody tr >> nth=0"
+        }
+      ]
+    },
+    {
+      "id": "emp-portal-06",
+      "usuario": "empleado",
+      "url": "/EmployeePortal/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "#NuevaSolicitud_FechaInicio",
+            "2026-11-21"
+          ]
+        },
+        {
+          "rellenar": [
+            "#NuevaSolicitud_FechaFin",
+            "2026-11-20"
+          ]
+        },
+        {
+          "rellenar": [
+            "#NuevaSolicitud_Motivo",
+            "Prueba"
+          ]
+        },
+        {
+          "clic": "form[action*=RequestTimeOff] button[type=submit]"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert-danger",
+        "margen": 16
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-danger"
+        }
+      ]
+    },
+    {
+      "id": "emp-boletas-01",
+      "usuario": "empleado",
+      "url": "/MyPaySlips/Index",
+      "ancho": 1024,
+      "recorte": {
+        "selector": "main table",
+        "margen": [
+          70,
+          16,
+          16,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main table tbody tr >> nth=0 >> a:has-text(\"Ver desglose\")",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main table tbody tr >> nth=0 >> a:has-text(\"Descargar\")",
+          "posicion": "arriba-derecha"
+        }
+      ]
+    },
+    {
+      "id": "emp-boletas-02",
+      "usuario": "empleado",
+      "url": "/MyPaySlips/Index",
+      "ancho": 1024,
+      "recorte": {
+        "selector": "main",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main table"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main dl >> nth=1"
+        },
+        {
+          "tipo": "flecha",
+          "selector": "main a:has-text(\"Descargar PDF\")",
+          "desde": "derecha",
+          "largo": 60
+        }
+      ],
+      "acciones": [
+        {
+          "clic": "main table tbody tr >> nth=0 >> a:has-text(\"Ver desglose\")"
+        }
+      ]
+    }
+  ]
+}
