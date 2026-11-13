@@ -44,9 +44,11 @@ namespace Proyecto_Final.Models.Admin
 
         [Required(ErrorMessage = "La descripción es obligatoria.")]
         [StringLength(1000, ErrorMessage = "La descripción no puede superar los 1000 caracteres.")]
+        [Display(Name = "Descripción")]
         public string Descripcion { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "La categoría es obligatoria.")]
+        [Display(Name = "Categoría")]
         public string Categoria { get; set; } = "Otro";
 
         [Required(ErrorMessage = "La prioridad es obligatoria.")]

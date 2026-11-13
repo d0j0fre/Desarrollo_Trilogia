@@ -77,7 +77,8 @@ public sealed class AttendanceDbService : IAttendanceService
                 Fecha = reader.GetDateTime(3), HorasOrdinarias = reader.GetDecimal(4), HorasExtra = reader.GetDecimal(5),
                 HorasAusencia = reader.GetDecimal(6), Observaciones = reader.IsDBNull(7) ? null : reader.GetString(7),
                 Estado = reader.GetString(8), RespuestaSupervisor = reader.IsDBNull(9) ? null : reader.GetString(9),
-                RowVersionBase64 = Convert.ToBase64String((byte[])reader.GetValue(10))
+                RowVersionBase64 = Convert.ToBase64String((byte[])reader.GetValue(10)),
+                UsuarioId = reader.FieldCount > 11 && !reader.IsDBNull(11) ? reader.GetInt32(11) : 0
             });
         }
         return result;

@@ -1,0 +1,43 @@
+{
+  "carpeta": "facturador",
+  "capturas": [
+    {
+      "id": "fac-menu-01",
+      "usuario": "facturador",
+      "url": "/Home/Index",
+      "acciones": [
+        {
+          "clicSinEsperar": ".admin-accordion-dropdown > a"
+        },
+        {
+          "esperar": 400
+        },
+        {
+          "abrir": "details.acc-sec:has(.acc-sec__label:text-is(\"Ventas y Pedidos\"))"
+        },
+        {
+          "esperar": 300
+        }
+      ],
+      "recorte": {
+        "selector": ".admin-acc-menu",
+        "margen": [
+          80,
+          70,
+          16,
+          40
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": ".admin-accordion-dropdown > a"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "details.acc-sec:has(.acc-sec__label:text-is(\"Ventas y Pedidos\")) > summary"
+        }
+      ]
+    }
+  ]
+}

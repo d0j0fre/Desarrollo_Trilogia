@@ -56,7 +56,7 @@ class SalesPage extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
               emptyIcon: Icons.shopping_bag_outlined,
               emptyTitle: 'Todavía no registraste ventas',
-              emptyMessage: 'Tocá "Nuevo pedido" para tomar el primero.',
+              emptyMessage: 'Toque "Nuevo pedido" para tomar el primero.',
               header: const Padding(padding: EdgeInsets.only(left: 4, bottom: 8), child: SectionTitle('Mis últimas ventas')),
               itemBuilder: (context, order) {
                 final color = OrderStatusStyle.color(order.status);
@@ -138,7 +138,7 @@ class _NewSalePageState extends ConsumerState<NewSalePage> {
       context,
       title: 'Registrar pedido',
       message: '${client.name} · $_units unidades · ${Fmt.money(_total)} antes de impuestos.\n'
-          '${online ? 'Se envía ahora.' : 'Estás sin señal: se guarda y se envía al recuperarla.'}',
+          '${online ? 'Se envía ahora.' : 'Está sin señal: se guarda y se envía al recuperarla.'}',
       confirmLabel: 'Registrar pedido',
       icon: Icons.shopping_cart_checkout_rounded,
     );
@@ -154,7 +154,7 @@ class _NewSalePageState extends ConsumerState<NewSalePage> {
           online: online,
         );
     if (!mounted) return;
-    showSuccess(context, online ? 'Pedido enviado. El estado aparece en tus ventas.' : 'Pedido guardado. Se envía al recuperar señal.');
+    showSuccess(context, online ? 'Pedido enviado. El estado aparece en sus ventas.' : 'Pedido guardado. Se envía al recuperar señal.');
     Navigator.of(context).pop();
   }
 

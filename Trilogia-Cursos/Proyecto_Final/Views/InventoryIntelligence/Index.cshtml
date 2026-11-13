@@ -1,6 +1,10 @@
 @model Proyecto_Final.Models.Admin.InventoryIntelligenceViewModel
+@inject Proyecto_Final.Services.NavigationMenuService MenuAccess
 @{
     ViewData["Title"] = "Inteligencia de inventario";
+    var userRole = Context.Session.GetString("UserRole");
+    var canOpenSuggestions = await MenuAccess.CanOpenAsync(userRole, "PurchaseOrders", "Suggestions");
+    var canCreatePromotion = await MenuAccess.CanOpenAsync(userRole, "Promotions", "Create");
     var maxSales = Model.TendenciaEstacional.Any() ? Model.TendenciaEstacional.Max(point => point.TotalVendido) : 0m;
     string RiskClass(string risk) => risk == "Alto" ? "danger" : risk == "Medio" ? "warning" : "info";
 }
@@ -16,7 +20,18 @@
     </header>
 
     @if (TempData["ErrorMessage"] is string error) { <div class="alert alert-danger" role="alert">@error</div> }
-    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+    @* BUG-24-06: se muestran todos los errores de validación (años, rango), no solo los del modelo. *@
+    <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+
+    @if (Model.ProductosEstancados.Any())
+    {
+        @* BUG-24-03 · CU-242: alerta gerencial de productos estancados con la sugerencia de promocionarlos. *@
+        <div class="alert alert-warning" role="alert" id="stagnant-alert">
+            <strong><i class="fa fa-exclamation-triangle mr-1"></i>Alerta gerencial: @Model.ProductosEstancados.Count producto(s) estancado(s).</strong>
+            Tienen stock y no registran ventas en los últimos @Model.Filter.SlowWindowDays días. Se sugiere incluirlos en una promoción para recuperar su rotación.
+            <a href="#slow-title" class="alert-link ml-1">Ver productos</a>
+        </div>
+    }
 
     <section class="card mb-4" aria-labelledby="intelligence-filter-title">
         <div class="card-header" id="intelligence-filter-title">Parámetros del análisis</div>
@@ -27,11 +42,23 @@
                 <div class="s4-filter"><label asp-for="Filter.RecentMonths">Meses para promedio</label><input asp-for="Filter.RecentMonths" name="RecentMonths" type="number" min="1" max="12" class="form-control" /></div>
                 <div class="s4-filter"><label asp-for="Filter.CoverageMonths">Meses de cobertura</label><input asp-for="Filter.CoverageMonths" name="CoverageMonths" type="number" min="1" max="12" class="form-control" /></div>
                 <div class="s4-filter"><label asp-for="Filter.SlowWindowDays">Ventana sin rotación</label><input asp-for="Filter.SlowWindowDays" name="SlowWindowDays" type="number" min="30" max="365" class="form-control" /></div>
+                <div class="s4-filter">
+                    <label for="Category">Categoría (tendencia estacional)</label>
+                    <select id="Category" name="Category" class="form-control">
+                        <option value="">Todas las categorías</option>
+                        @foreach (var category in Model.Categorias)
+                        {
+                            <option value="@category" selected="@(string.Equals(category, Model.Filter.Category, StringComparison.OrdinalIgnoreCase))">@category</option>
+                        }
+                    </select>
+                </div>
                 <div class="s4-filter--action"><button class="btn btn-ds-edit btn-block" type="submit"><i class="fa fa-sync mr-1"></i>Actualizar</button></div>
             </form>
         </div>
     </section>
 
+    @if (ViewData.ModelState.IsValid)
+    {
     <div class="s4-kpi-grid mb-4">
         <article class="s4-kpi s4-kpi--warning"><span class="s4-kpi__label">Sugerencias de compra</span><strong class="s4-kpi__value">@Model.SugerenciasCompra.Count</strong></article>
         <article class="s4-kpi s4-kpi--danger"><span class="s4-kpi__label">Productos estancados</span><strong class="s4-kpi__value">@Model.ProductosEstancados.Count</strong></article>
@@ -48,13 +75,14 @@
         {
             <div class="table-responsive"><table class="table table-hover">
                 <thead><tr><th>Producto</th><th>Stock / mínimo</th><th>Venta ventana</th><th>Promedio mensual</th><th>Cobertura</th><th>Sugerencia</th></tr></thead>
-                <tbody>@foreach (var item in Model.SugerenciasCompra) { <tr><td><strong>@item.Nombre</strong>@if(item.DatosInsuficientes){<small class="d-block text-warning"><i class="fa fa-info-circle"></i> Sin ventas suficientes</small>}</td><td>@item.StockActual / @item.StockMinimo</td><td>@item.UnidadesVendidasVentana u.</td><td>@item.PromedioVentaMensual.ToString("N2") u.</td><td>@item.MesesCobertura mes(es)</td><td><span class="badge badge-success">Comprar @item.CantidadSugerida</span></td></tr> }</tbody>
+                <tbody>@foreach (var item in Model.SugerenciasCompra) { <tr><td><strong>@item.Nombre</strong>@if(item.DatosInsuficientes){<small class="d-block text-warning"><i class="fa fa-info-circle"></i> Datos insuficientes</small>}</td><td>@item.StockActual / @item.StockMinimo</td><td>@item.UnidadesVendidasVentana u.</td><td>@item.PromedioVentaMensual.ToString("N2") u.</td><td>@item.MesesCobertura mes(es)</td><td>@if (item.DatosInsuficientes) { @* BUG-24-01: sin historial de ventas no se calcula una cantidad; se pide ingresarla a mano. *@ <span class="badge badge-warning">Ingresar cantidad manualmente</span> @if (canOpenSuggestions) { <a class="d-block small" asp-controller="PurchaseOrders" asp-action="Suggestions" asp-route-recentMonths="@Model.Filter.RecentMonths" asp-route-coverageMonths="@Model.Filter.CoverageMonths">Ingresarla en Sugerencias de compra</a> } } else { <span class="badge badge-success">Comprar @item.CantidadSugerida</span> }</td></tr> }</tbody>
             </table></div>
         }
     </section>
 
     <section class="card mb-4" aria-labelledby="slow-title">
         <div class="card-header" id="slow-title">Productos sin rotación</div>
+        <p class="text-muted small px-3 pt-2 mb-0">Regla: producto activo, con stock, creado hace al menos @Model.Filter.SlowWindowDays días y sin ventas en los últimos @Model.Filter.SlowWindowDays días (ventana configurable de 30 a 365). La alerta se retira sola cuando el producto vuelve a venderse.</p>
         @if (!Model.ProductosEstancados.Any())
         {
             <div class="s4-empty"><i class="fa fa-check-circle"></i><h3>Sin productos estancados</h3><p class="mb-0">Ningún producto maduro con stock incumple la ventana seleccionada.</p></div>
@@ -62,14 +90,18 @@
         else
         {
             <div class="table-responsive"><table class="table table-hover">
-                <thead><tr><th>Producto</th><th>Stock</th><th>Última venta</th><th>Días sin movimiento</th><th>Venta en ventana</th><th>Riesgo</th></tr></thead>
-                <tbody>@foreach (var item in Model.ProductosEstancados) { <tr><td><strong>@item.Nombre</strong><small class="d-block text-muted">Creado @item.FechaCreacion.ToString("dd/MM/yyyy")</small></td><td>@item.Stock</td><td>@(item.UltimaVenta?.ToString("dd/MM/yyyy") ?? "Sin ventas")</td><td>@item.DiasSinMovimiento</td><td>@item.VendidoEnVentana</td><td><span class="badge badge-@RiskClass(item.NivelRiesgo)">@item.NivelRiesgo</span></td></tr> }</tbody>
+                <thead><tr><th>Producto</th><th>Stock</th><th>Última venta</th><th>Días sin movimiento</th><th>Venta en ventana</th><th>Riesgo</th><th>Sugerencia</th></tr></thead>
+                <tbody>@foreach (var item in Model.ProductosEstancados) { <tr><td><strong>@item.Nombre</strong><small class="d-block text-muted">Creado @item.FechaCreacion.ToString("dd/MM/yyyy")</small></td><td>@item.Stock</td><td>@(item.UltimaVenta?.ToString("dd/MM/yyyy") ?? "Sin ventas")</td><td>@item.DiasSinMovimiento</td><td>@item.VendidoEnVentana</td><td><span class="badge badge-@RiskClass(item.NivelRiesgo)">@item.NivelRiesgo</span></td><td>@if (canCreatePromotion) { <a class="btn btn-ds-edit btn-sm" asp-controller="Promotions" asp-action="Create" asp-route-productoId="@item.ProductoId"><i class="fa fa-tags mr-1"></i>Incluir en promoción</a> } else { <span class="text-muted small">Incluir en una promoción</span> }</td></tr> }</tbody>
             </table></div>
         }
     </section>
 
     <section class="card" aria-labelledby="seasonal-title">
-        <div class="card-header" id="seasonal-title">Tendencia estacional @Model.Filter.StartYear–@Model.Filter.EndYear</div>
+        <div class="card-header d-flex flex-wrap justify-content-between align-items-center">
+            <span id="seasonal-title">Tendencia estacional @Model.Filter.StartYear–@Model.Filter.EndYear@(string.IsNullOrWhiteSpace(Model.Filter.Category) ? "" : " · " + Model.Filter.Category)</span>
+            <button type="button" id="exportSeasonal" class="btn btn-ds-view btn-sm"><i class="fa fa-file-excel mr-1"></i>Exportar Excel</button>
+        </div>
+        <p class="text-muted small px-3 pt-2 mb-0">Ventas = facturas no anuladas, con IVA; los mismos totales del Reporte de ventas. Cada mes suma ese mes de todos los años del rango.</p>
         <div class="card-body">
             <div class="s4-seasonal-chart" aria-label="Gráfico de ventas por mes">
                 @foreach (var point in Model.TendenciaEstacional)
@@ -84,8 +116,63 @@
             </div>
         </div>
         <div class="table-responsive"><table class="table">
-            <thead><tr><th>Mes</th><th class="text-right">Total vendido</th><th class="text-right">Unidades</th></tr></thead>
+            <thead><tr><th>Mes</th><th class="text-right">Total vendido (IVA incluido)</th><th class="text-right">Unidades</th></tr></thead>
             <tbody>@foreach (var point in Model.TendenciaEstacional) { <tr><td>@point.NombreMes</td><td class="text-right">₡@point.TotalVendido.ToString("N2")</td><td class="text-right">@point.UnidadesVendidas</td></tr> }</tbody>
         </table></div>
     </section>
+    }
 </div>
+
+@section Scripts {
+    <script src="~/js/xlsx-export.js" asp-append-version="true"></script>
+    <script>
+        (() => {
+            // BUG-24-06: validación en el navegador antes de enviar (el servidor la repite).
+            const form = document.querySelector('form.s4-filters');
+            const start = document.getElementById('Filter_StartYear');
+            const end = document.getElementById('Filter_EndYear');
+            const maxYears = @Proyecto_Final.Models.Admin.InventoryIntelligenceFilterViewModel.MaxSeasonalYears;
+            function validateYears() {
+                const first = parseInt(start.value, 10);
+                const last = parseInt(end.value, 10);
+                let message = '';
+                if (!isNaN(first) && !isNaN(last)) {
+                    if (first > last) { message = 'El año inicial no puede ser mayor que el año final.'; }
+                    else if (last - first + 1 > maxYears) { message = `El período estacional no puede superar ${maxYears} años.`; }
+                }
+                start.setCustomValidity(message);
+            }
+            if (form && start && end) {
+                start.addEventListener('input', validateYears);
+                end.addEventListener('input', validateYears);
+                validateYears();
+            }
+
+            // BUG-24-07 · CU-243-04: exporta el consolidado de la tendencia estacional a Excel (.xlsx).
+            const button = document.getElementById('exportSeasonal');
+            if (!button) { return; }
+            button.addEventListener('click', () => {
+                const points = @Json.Serialize(Model.TendenciaEstacional);
+                const filter = @Json.Serialize(new { start = Model.Filter.StartYear, end = Model.Filter.EndYear, category = Model.Filter.Category });
+                const S = window.XlsxExport.STYLE;
+                const rows = [];
+                const text = (value, style) => ({ text: String(value ?? ''), style });
+                rows.push([text('Tendencia estacional de ventas', S.bold)]);
+                rows.push([text('Período'), text(`${filter.start}–${filter.end}`)]);
+                rows.push([text('Categoría'), text(filter.category || 'Todas las categorías')]);
+                rows.push([text('Ventas'), text('Facturas no anuladas, IVA incluido (mismos totales del Reporte de ventas)')]);
+                rows.push([]);
+                rows.push([text('Mes', S.bold), text('Total vendido (IVA incluido)', S.bold), text('Unidades', S.bold)]);
+                let total = 0, units = 0;
+                points.forEach(point => {
+                    total += point.totalVendido; units += point.unidadesVendidas;
+                    rows.push([text(point.nombreMes), { num: point.totalVendido, style: S.money }, { num: point.unidadesVendidas, style: S.integer }]);
+                });
+                rows.push([text('Total', S.bold), { num: Math.round(total * 100) / 100, style: S.money }, { num: units, style: S.integer }]);
+                const slug = (filter.category || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase();
+                const fileName = `tendencia-estacional-${filter.start}-${filter.end}${slug ? '-' + slug : ''}.xlsx`;
+                window.XlsxExport.download(fileName, 'Tendencia estacional', rows, [18, 30, 14]);
+            });
+        })();
+    </script>
+}

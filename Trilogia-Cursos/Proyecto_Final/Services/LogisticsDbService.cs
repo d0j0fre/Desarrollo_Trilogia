@@ -38,7 +38,8 @@ namespace Proyecto_Final.Services
                     Activo = !reader.IsDBNull(4) && reader.GetBoolean(4),
                     RutasAbiertas = reader.IsDBNull(5) ? 0 : reader.GetInt32(5),
                     Marca = reader.IsDBNull(6) ? string.Empty : reader.GetString(6),
-                    KilometrajeActual = reader.IsDBNull(7) ? 0 : reader.GetInt32(7)
+                    KilometrajeActual = reader.IsDBNull(7) ? 0 : reader.GetInt32(7),
+                    EnMantenimiento = reader.FieldCount > 8 && !reader.IsDBNull(8) && reader.GetBoolean(8)
                 });
             }
             return lista;
@@ -177,9 +178,10 @@ namespace Proyecto_Final.Services
 
         public async Task<(int RutaId, string Codigo)> CreateRouteAsync(
             string zona, int choferUsuarioId, int vehiculoId, string? observaciones,
-            List<int> pedidos, int creadaPorUsuarioId, string creadaPorNombre)
+            List<int> pedidos, int creadaPorUsuarioId, string creadaPorNombre,
+            IReadOnlyDictionary<int, int>? prioridades = null)
         {
-            var pedidosJson = "[" + string.Join(",", pedidos.Distinct().Select(id => $"{{\"pedidoId\":{id}}}")) + "]";
+            var pedidosJson = BuildOrdersJson(pedidos, prioridades);
 
             await using var connection = new SqlConnection(_connectionString);
             await using var command = new SqlCommand("dbo.sp_Rutas_Create", connection) { CommandType = CommandType.StoredProcedure };
@@ -197,6 +199,17 @@ namespace Proyecto_Final.Services
                 return (reader.GetInt32(0), reader.IsDBNull(1) ? string.Empty : reader.GetString(1));
             }
             return (0, string.Empty);
+        }
+
+        // JSON de pedidos para sp_Rutas_Create: {"pedidoId":n,"prioridad":1..3}. Sin prioridad
+        // elegida el procedimiento usa 3 (Normal). Un valor fuera de 1 a 3 lo rechaza el procedimiento.
+        public static string BuildOrdersJson(IEnumerable<int> pedidos, IReadOnlyDictionary<int, int>? prioridades)
+        {
+            var items = pedidos.Distinct().Select(id =>
+                prioridades != null && prioridades.TryGetValue(id, out var prioridad)
+                    ? (object)new { pedidoId = id, prioridad }
+                    : new { pedidoId = id });
+            return System.Text.Json.JsonSerializer.Serialize(items);
         }
 
         public async Task<List<RouteListItemViewModel>> GetRoutesAsync(string? estado, string? buscar)
@@ -224,6 +237,35 @@ namespace Proyecto_Final.Services
                     Entregados = reader.IsDBNull(9) ? 0 : reader.GetInt32(9),
                     Fallidos = reader.IsDBNull(10) ? 0 : reader.GetInt32(10),
                     Pendientes = reader.IsDBNull(11) ? 0 : reader.GetInt32(11)
+                });
+            }
+            return lista;
+        }
+
+        // BUG-10-02: pedidos En ruta y pendientes de entrega para el tablero (sp_Entregas_PedidosTablero).
+        public async Task<List<DeliveryBoardOrderViewModel>> GetBoardOrdersAsync(CancellationToken cancellationToken = default)
+        {
+            var lista = new List<DeliveryBoardOrderViewModel>();
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Entregas_PedidosTablero", connection) { CommandType = CommandType.StoredProcedure };
+            await connection.OpenAsync(cancellationToken);
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+            while (await reader.ReadAsync(cancellationToken))
+            {
+                lista.Add(new DeliveryBoardOrderViewModel
+                {
+                    Grupo = reader.GetString(0),
+                    PedidoId = reader.GetInt32(1),
+                    Cliente = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                    Direccion = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
+                    Total = reader.IsDBNull(4) ? 0 : reader.GetDecimal(4),
+                    FechaPedido = reader.IsDBNull(5) ? DateTime.MinValue : reader.GetDateTime(5),
+                    RutaId = reader.IsDBNull(6) ? null : reader.GetInt32(6),
+                    RutaCodigo = reader.IsDBNull(7) ? string.Empty : reader.GetString(7),
+                    RutaEstado = reader.IsDBNull(8) ? string.Empty : reader.GetString(8),
+                    Chofer = reader.IsDBNull(9) ? string.Empty : reader.GetString(9),
+                    Secuencia = reader.IsDBNull(10) ? null : reader.GetInt32(10),
+                    Prioridad = reader.IsDBNull(11) ? null : Convert.ToInt32(reader.GetValue(11))
                 });
             }
             return lista;
@@ -284,7 +326,8 @@ namespace Proyecto_Final.Services
                     EstadoPedido = reader.IsDBNull(10) ? string.Empty : reader.GetString(10),
                     TotalEvidencias = reader.IsDBNull(11) ? 0 : reader.GetInt32(11),
                     Latitud = reader.IsDBNull(12) ? null : reader.GetDecimal(12),
-                    Longitud = reader.IsDBNull(13) ? null : reader.GetDecimal(13)
+                    Longitud = reader.IsDBNull(13) ? null : reader.GetDecimal(13),
+                    Prioridad = reader.FieldCount > 14 && !reader.IsDBNull(14) ? Convert.ToInt32(reader.GetValue(14)) : RoutePriority.Normal
                 });
             }
             return lista;
@@ -330,6 +373,20 @@ namespace Proyecto_Final.Services
             return destinatarios;
         }
 
+        // BUG-10-06 (0220): lleva a Pedidos.Estado el estado de la entrega (En ruta, Entregado, No entregado).
+        // Se llama después de despachar una ruta, recalcularla o cambiar una entrega desde el sitio web, igual que
+        // hace la API móvil. Es idempotente. Devuelve cuántos pedidos cambiaron de estado.
+        public async Task<int> SyncOrderStatusFromDeliveryAsync(int? rutaId, int? rutaPedidoId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Pedidos_SincronizarEstadoEntrega", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.Add("@RutaId", SqlDbType.Int).Value = rutaId.HasValue ? rutaId.Value : DBNull.Value;
+            command.Parameters.Add("@RutaPedidoId", SqlDbType.Int).Value = rutaPedidoId.HasValue ? rutaPedidoId.Value : DBNull.Value;
+            await connection.OpenAsync();
+            var result = await command.ExecuteScalarAsync();
+            return result is int n ? n : Convert.ToInt32(result ?? 0);
+        }
+
         // CU-251 E1 — Secuenciar automáticamente (vecino más cercano).
         // Devuelve (puntos secuenciados, puntos sin coordenada capturada).
         public async Task<(int Secuenciados, int SinCoordenadas)> SequenceRouteAsync(int rutaId)
@@ -370,114 +427,24 @@ namespace Proyecto_Final.Services
             return result is int n ? n : Convert.ToInt32(result ?? 0);
         }
 
-        // CU-105 — Liquidar ruta: reingresa al inventario la mercadería no entregada
-        // y cierra la ruta. Devuelve (pedidos reingresados, unidades reingresadas).
-        public async Task<(int PedidosReingresados, int UnidadesReingresadas)> LiquidateRouteAsync(int rutaId, int usuarioId, string usuarioNombre)
+        // BUG-10-07 (0289) — Finalizar ruta: una ruta Despachada pasa a Completada y las paradas sin entregar
+        // quedan Fallido (y sus pedidos, «No entregado»). No toca el inventario ni liquida: eso se hace en
+        // Finanzas (cobros y mercadería con conteo). Devuelve (entregados, no entregados).
+        public async Task<(int Entregados, int NoEntregados)> FinalizeRouteAsync(int rutaId, int usuarioId, string usuarioNombre)
         {
             await using var connection = new SqlConnection(_connectionString);
-            await using var command = new SqlCommand("dbo.sp_Rutas_Liquidar", connection) { CommandType = CommandType.StoredProcedure };
+            await using var command = new SqlCommand("dbo.sp_Rutas_Finalizar", connection) { CommandType = CommandType.StoredProcedure };
             command.Parameters.Add("@RutaId", SqlDbType.Int).Value = rutaId;
             command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId > 0 ? usuarioId : DBNull.Value;
             command.Parameters.Add("@Nombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(usuarioNombre) ? DBNull.Value : usuarioNombre.Trim();
             await connection.OpenAsync();
             await using var reader = await command.ExecuteReaderAsync();
-            if (await reader.ReadAsync())
+            // El primer resultado es el de sp_Pedidos_SincronizarEstadoEntrega; el resumen es el segundo.
+            if (await reader.NextResultAsync() && await reader.ReadAsync())
             {
-                return (reader.IsDBNull(0) ? 0 : reader.GetInt32(0), reader.IsDBNull(1) ? 0 : reader.GetInt32(1));
+                return (reader.IsDBNull(1) ? 0 : reader.GetInt32(1), reader.IsDBNull(3) ? 0 : reader.GetInt32(3));
             }
             return (0, 0);
-        }
-
-        // ── CU-106 Liquidación financiera de cobros de ruta ──
-        public async Task<CashSettlementPrepareViewModel?> PrepareCashSettlementAsync(int rutaId)
-        {
-            await using var connection = new SqlConnection(_connectionString);
-            await using var command = new SqlCommand("dbo.sp_LiquidacionCobros_Preparar", connection) { CommandType = CommandType.StoredProcedure };
-            command.Parameters.Add("@RutaId", SqlDbType.Int).Value = rutaId;
-            await connection.OpenAsync();
-            await using var reader = await command.ExecuteReaderAsync();
-
-            if (!await reader.ReadAsync()) return null;
-
-            var model = new CashSettlementPrepareViewModel
-            {
-                RutaId = reader.GetInt32(0),
-                RutaCodigo = reader.GetString(1),
-                EstadoRuta = reader.GetString(2),
-                Liquidada = reader.GetBoolean(3),
-                YaLiquidadaFinanciera = reader.GetInt32(4) > 0,
-                EsperadoEfectivo = reader.GetDecimal(5),
-                EsperadoOtros = reader.GetDecimal(6)
-            };
-
-            if (await reader.NextResultAsync())
-            {
-                while (await reader.ReadAsync())
-                {
-                    model.Pedidos.Add(new CashSettlementOrderLine
-                    {
-                        PedidoId = reader.GetInt32(0),
-                        Total = reader.GetDecimal(1),
-                        MetodoPago = reader.GetString(2),
-                        EstadoPago = reader.GetString(3),
-                        Cliente = reader.GetString(4)
-                    });
-                }
-            }
-            return model;
-        }
-
-        public async Task<(int LiquidacionId, string Estado, decimal Diferencia)> RegisterCashSettlementAsync(
-            CashSettlementFormViewModel model, string comprobantesJson, int usuarioId, string usuarioNombre)
-        {
-            await using var connection = new SqlConnection(_connectionString);
-            await using var command = new SqlCommand("dbo.sp_LiquidacionCobros_Registrar", connection) { CommandType = CommandType.StoredProcedure };
-            command.Parameters.Add("@RutaId", SqlDbType.Int).Value = model.RutaId;
-            command.Parameters.Add("@MontoEfectivoRecibido", SqlDbType.Decimal).Value = model.MontoEfectivoRecibido;
-            command.Parameters["@MontoEfectivoRecibido"].Precision = 18;
-            command.Parameters["@MontoEfectivoRecibido"].Scale = 2;
-            command.Parameters.Add("@MontoComprobantes", SqlDbType.Decimal).Value = model.MontoComprobantes;
-            command.Parameters["@MontoComprobantes"].Precision = 18;
-            command.Parameters["@MontoComprobantes"].Scale = 2;
-            command.Parameters.Add("@Observaciones", SqlDbType.NVarChar, 400).Value = string.IsNullOrWhiteSpace(model.Observaciones) ? DBNull.Value : model.Observaciones.Trim();
-            command.Parameters.Add("@ComprobantesJson", SqlDbType.NVarChar, -1).Value = string.IsNullOrWhiteSpace(comprobantesJson) ? DBNull.Value : comprobantesJson;
-            command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId > 0 ? usuarioId : DBNull.Value;
-            command.Parameters.Add("@Nombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(usuarioNombre) ? DBNull.Value : usuarioNombre.Trim();
-            await connection.OpenAsync();
-            await using var reader = await command.ExecuteReaderAsync();
-            if (await reader.ReadAsync())
-            {
-                return (reader.GetInt32(0), reader.GetString(1), reader.GetDecimal(2));
-            }
-            return (0, string.Empty, 0m);
-        }
-
-        public async Task<List<CashSettlementListItemViewModel>> GetCashSettlementsAsync(string? estado)
-        {
-            var lista = new List<CashSettlementListItemViewModel>();
-            await using var connection = new SqlConnection(_connectionString);
-            await using var command = new SqlCommand("dbo.sp_LiquidacionCobros_List", connection) { CommandType = CommandType.StoredProcedure };
-            command.Parameters.Add("@Estado", SqlDbType.NVarChar, 20).Value = string.IsNullOrWhiteSpace(estado) ? DBNull.Value : estado.Trim();
-            await connection.OpenAsync();
-            await using var reader = await command.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
-            {
-                lista.Add(new CashSettlementListItemViewModel
-                {
-                    LiquidacionCobrosId = reader.GetInt32(0),
-                    RutaId = reader.GetInt32(1),
-                    RutaCodigo = reader.GetString(2),
-                    MontoEsperadoEfectivo = reader.GetDecimal(3),
-                    MontoEsperadoOtros = reader.GetDecimal(4),
-                    MontoEfectivoRecibido = reader.GetDecimal(5),
-                    MontoComprobantes = reader.GetDecimal(6),
-                    Diferencia = reader.GetDecimal(7),
-                    Estado = reader.GetString(8),
-                    LiquidadoPorNombre = reader.GetString(9),
-                    FechaLiquidacion = reader.GetDateTime(10)
-                });
-            }
-            return lista;
         }
 
         public async Task CancelRouteAsync(int rutaId, string? motivo, int usuarioId, string usuarioNombre)

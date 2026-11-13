@@ -3,6 +3,16 @@
     ViewData["Title"] = "Tablero gerencial";
     var maxSerie = Model.Serie.Any() ? Model.Serie.Max(s => s.Total) : 0m;
     string Activo(string r) => Model.Rango == r ? "btn-ds-view" : "btn-ds-search";
+
+    // Cada tarjeta abre el detalle de su indicador conservando el rango elegido (CU-131-03).
+    string DetalleUrl(string indicador) => Url.Action("Index", "ManagementDashboard", Model.Rango == "personalizado"
+        ? new { desde = Model.Desde.ToString("yyyy-MM-dd"), hasta = Model.Hasta.ToString("yyyy-MM-dd"), indicador }
+        : new { rango = Model.Rango, desde = (string?)null, hasta = (string?)null, indicador }) + "#detalle";
+    string TarjetaClase(string indicador) => "kpi-card-link" + (Model.IndicadorSeleccionado == indicador ? " kpi-card-active" : "");
+    var nombresIndicador = new Dictionary<string, string>
+    {
+        ["ventas"] = "Ventas del período", ["stock"] = "Stock bajo", ["ruta"] = "Pedidos en ruta", ["cobros"] = "Cobros pendientes"
+    };
 }
 
 @section Styles {
@@ -12,6 +22,12 @@
         .kpi-value { font-size: 1.8rem; font-weight: 700; }
         .kpi-icon { font-size: 1.6rem; opacity: .35; }
         .serie-bar { background: linear-gradient(180deg, #6f42c1, #b98cff); border-radius: 4px 4px 0 0; min-height: 2px; }
+        a.kpi-card-link { display: block; color: inherit; text-decoration: none; }
+        a.kpi-card-link .kpi-card { transition: box-shadow .15s, border-color .15s; }
+        a.kpi-card-link:hover .kpi-card, a.kpi-card-link:focus .kpi-card { box-shadow: 0 4px 14px rgba(0,0,0,.12); border-color: #b98cff; }
+        a.kpi-card-active .kpi-card { border-color: #6f42c1; box-shadow: 0 0 0 2px rgba(111,66,193,.25); }
+        .detail-bar { background: linear-gradient(90deg, #6f42c1, #b98cff); height: 14px; border-radius: 0 4px 4px 0; min-width: 2px; }
+        .detail-label { width: 38%; min-width: 120px; }
     </style>
 }
 
@@ -21,7 +37,7 @@
             <div class="admin-page-header d-flex justify-content-between align-items-center flex-wrap">
                 <div>
                     <h2 class="mb-2">Tablero gerencial</h2>
-                    <p class="mb-0">Indicadores clave del negocio para el período seleccionado.</p>
+                    <p class="mb-0">Indicadores clave del negocio para el período seleccionado. Haga clic en un indicador para ver sus gráficos.</p>
                 </div>
                 <div class="text-muted mt-2 mt-md-0">
                     <i class="fa fa-calendar mr-1"></i>@Model.Desde.ToString("dd/MM/yyyy") – @Model.Hasta.ToString("dd/MM/yyyy")
@@ -48,6 +64,17 @@
         </div>
     </div>
 
+    @if (!string.IsNullOrEmpty(Model.AvisoRango))
+    {
+        <div class="row px-xl-5">
+            <div class="col-12">
+                <div class="alert alert-warning" role="alert">
+                    <i class="fa fa-exclamation-triangle mr-2"></i>@Model.AvisoRango
+                </div>
+            </div>
+        </div>
+    }
+
     @if (!Model.HayDatos)
     {
         <div class="row px-xl-5">
@@ -61,46 +88,98 @@
 
     <div class="row px-xl-5">
         <div class="col-lg-3 col-md-6 mb-4">
-            <div class="admin-table-wrapper kpi-card p-4 h-100">
-                <div class="d-flex justify-content-between">
-                    <span class="text-muted">Ventas del período</span>
-                    <i class="fa fa-cash-register kpi-icon text-success"></i>
+            <a href="@DetalleUrl("ventas")" class="@TarjetaClase("ventas")" aria-label="Ver gráficos de Ventas del período">
+                <div class="admin-table-wrapper kpi-card p-4 h-100">
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Ventas del período</span>
+                        <i class="fa fa-cash-register kpi-icon text-success"></i>
+                    </div>
+                    <div class="kpi-value text-success">₡@Model.VentasPeriodo.ToString("N2")</div>
+                    <small class="text-muted">@Model.FacturasPeriodo factura(s) no anulada(s) · ticket ₡@Model.TicketPromedio.ToString("N2")</small>
                 </div>
-                <div class="kpi-value text-success">₡@Model.VentasPeriodo.ToString("N2")</div>
-                <small class="text-muted">@Model.FacturasPeriodo factura(s) · ticket ₡@Model.TicketPromedio.ToString("N2")</small>
-            </div>
+            </a>
         </div>
         <div class="col-lg-3 col-md-6 mb-4">
-            <div class="admin-table-wrapper kpi-card p-4 h-100">
-                <div class="d-flex justify-content-between">
-                    <span class="text-muted">Stock bajo</span>
-                    <i class="fa fa-box-open kpi-icon text-warning"></i>
+            <a href="@DetalleUrl("stock")" class="@TarjetaClase("stock")" aria-label="Ver gráficos de Stock bajo">
+                <div class="admin-table-wrapper kpi-card p-4 h-100">
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Stock bajo</span>
+                        <i class="fa fa-box-open kpi-icon text-warning"></i>
+                    </div>
+                    <div class="kpi-value text-warning">@Model.StockBajo</div>
+                    <small class="text-muted">@Model.ProductosAgotados producto(s) agotado(s)</small>
                 </div>
-                <div class="kpi-value text-warning">@Model.StockBajo</div>
-                <small class="text-muted">@Model.ProductosAgotados producto(s) agotado(s)</small>
-            </div>
+            </a>
         </div>
         <div class="col-lg-3 col-md-6 mb-4">
-            <div class="admin-table-wrapper kpi-card p-4 h-100">
-                <div class="d-flex justify-content-between">
-                    <span class="text-muted">Pedidos en ruta</span>
-                    <i class="fa fa-truck kpi-icon text-dark"></i>
+            <a href="@DetalleUrl("ruta")" class="@TarjetaClase("ruta")" aria-label="Ver gráficos de Pedidos en ruta">
+                <div class="admin-table-wrapper kpi-card p-4 h-100">
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Pedidos en ruta</span>
+                        <i class="fa fa-truck kpi-icon text-dark"></i>
+                    </div>
+                    <div class="kpi-value">@Model.PedidosEnRuta</div>
+                    <small class="text-muted">Entregas actualmente en reparto</small>
                 </div>
-                <div class="kpi-value">@Model.PedidosEnRuta</div>
-                <small class="text-muted">Entregas actualmente en reparto</small>
-            </div>
+            </a>
         </div>
         <div class="col-lg-3 col-md-6 mb-4">
-            <div class="admin-table-wrapper kpi-card p-4 h-100">
-                <div class="d-flex justify-content-between">
-                    <span class="text-muted">Cobros pendientes</span>
-                    <i class="fa fa-file-invoice-dollar kpi-icon text-danger"></i>
+            <a href="@DetalleUrl("cobros")" class="@TarjetaClase("cobros")" aria-label="Ver gráficos de Cobros pendientes">
+                <div class="admin-table-wrapper kpi-card p-4 h-100">
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Cobros pendientes</span>
+                        <i class="fa fa-file-invoice-dollar kpi-icon text-danger"></i>
+                    </div>
+                    <div class="kpi-value text-danger">₡@Model.CobrosPendientes.ToString("N2")</div>
+                    <small class="text-muted">Saldo por cobrar a clientes</small>
                 </div>
-                <div class="kpi-value text-danger">₡@Model.CobrosPendientes.ToString("N2")</div>
-                <small class="text-muted">Saldo por cobrar a clientes</small>
-            </div>
+            </a>
         </div>
     </div>
+
+    @if (Model.IndicadorSeleccionado is not null)
+    {
+        <div class="row px-xl-5" id="detalle">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="mb-0">Detalle: @nombresIndicador[Model.IndicadorSeleccionado]</h4>
+                    <a href="@Url.Action("Index", "ManagementDashboard", Model.Rango == "personalizado" ? new { desde = Model.Desde.ToString("yyyy-MM-dd"), hasta = Model.Hasta.ToString("yyyy-MM-dd"), indicador = (string?)null } : new { rango = Model.Rango, desde = (string?)null, hasta = (string?)null, indicador = (string?)null })" class="btn btn-sm btn-ds-neutral">
+                        <i class="fa fa-times mr-1"></i>Cerrar detalle
+                    </a>
+                </div>
+                @if (Model.IndicadorSeleccionado == "stock" || Model.IndicadorSeleccionado == "ruta" || Model.IndicadorSeleccionado == "cobros")
+                {
+                    <p class="text-muted small">Este indicador refleja el estado actual del negocio; el rango de fechas no lo modifica@(Model.IndicadorSeleccionado == "cobros" ? ", salvo los movimientos de crédito, que sí se filtran por el período" : "").</p>
+                }
+            </div>
+            @foreach (var group in Model.Detalle)
+            {
+                var max = group.Items.Any() ? group.Items.Max(i => i.Valor) : 0m;
+                <div class="col-lg-6 mb-4">
+                    <div class="admin-table-wrapper p-4 h-100">
+                        <h5 class="mb-3">@group.Titulo</h5>
+                        @if (!group.Items.Any())
+                        {
+                            <p class="text-muted mb-0">No hay datos para mostrar.</p>
+                        }
+                        else
+                        {
+                            @foreach (var item in group.Items)
+                            {
+                                var ancho = max > 0 ? Math.Max(1, (int)Math.Round(item.Valor / max * 100)) : 1;
+                                var valor = group.EsMoneda ? "₡" + item.Valor.ToString("N2") : item.Valor.ToString("N0");
+                                <div class="d-flex align-items-center mb-2" title="@item.Etiqueta: @valor@(item.Detalle is null ? "" : " · " + item.Detalle)">
+                                    <div class="detail-label text-truncate small pr-2">@item.Etiqueta</div>
+                                    <div class="flex-grow-1 mr-2"><div class="detail-bar" style="width:@(ancho)%"></div></div>
+                                    <div class="small text-right" style="min-width:90px;"><strong>@valor</strong>@if (item.Detalle is not null) { <span class="text-muted d-block">@item.Detalle</span> }</div>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
 
     <div class="row px-xl-5 pb-5">
         <div class="col-12">
@@ -124,6 +203,7 @@
                         }
                     </div>
                 }
+                <p class="text-muted small mt-3 mb-0">Venta = facturas no anuladas, la misma definición del Reporte de ventas. Las pantallas por vendedor (Metas, KPIs y Desempeño) solo cuentan los pedidos con vendedor asignado.</p>
             </div>
         </div>
     </div>

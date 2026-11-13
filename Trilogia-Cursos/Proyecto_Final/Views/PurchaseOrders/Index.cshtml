@@ -20,7 +20,7 @@
                 <select name="estado" class="form-control mr-2">
                     <option value="">Todos los estados</option>
                     @foreach (var state in new[] { PurchaseOrderStatus.Pending, PurchaseOrderStatus.PartiallyReceived, PurchaseOrderStatus.Received, PurchaseOrderStatus.ClosedWithDiscrepancy, PurchaseOrderStatus.Cancelled })
-                    { <option value="@state" selected="@(ViewBag.Estado == state)">@state</option> }
+                    { <option value="@state" selected="@(ViewBag.Estado == state)">@PurchaseOrderStatus.Label(state)</option> }
                 </select>
                 <select name="proveedorId" class="form-control mr-2">
                     <option value="">Todos los proveedores</option>
@@ -39,7 +39,7 @@
                         var color = order.Estado switch { PurchaseOrderStatus.Received => "success", PurchaseOrderStatus.PartiallyReceived => "warning", PurchaseOrderStatus.ClosedWithDiscrepancy => "danger", PurchaseOrderStatus.Cancelled => "secondary", _ => "info" };
                         <tr>
                             <td>@order.OrdenCompraId</td><td>@order.ProveedorNombre</td>
-                            <td><span class="badge badge-@color">@order.Estado</span></td>
+                            <td><span class="badge badge-@color">@PurchaseOrderStatus.Label(order.Estado)</span></td>
                             <td>₡@order.MontoTotal.ToString("N2")</td><td>@order.TotalRecibido / @order.TotalOrdenado</td>
                             <td>@order.FechaCreacionUtc.ToLocalTime().ToString("dd/MM/yyyy")</td>
                             <td><a asp-action="Detail" asp-route-id="@order.OrdenCompraId" class="btn btn-sm btn-ds-view">Ver</a></td>

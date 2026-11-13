@@ -77,7 +77,7 @@ class _PickingList extends ConsumerWidget {
       emptyIcon: prepared ? Icons.inventory_2_outlined : Icons.task_alt_rounded,
       emptyTitle: prepared ? 'Nada preparado hoy' : 'Todo preparado',
       emptyMessage: prepared
-          ? 'Los pedidos que marqués como preparados hoy aparecen acá.'
+          ? 'Los pedidos que marque como preparados hoy aparecen aquí.'
           : queued.isEmpty
               ? 'No hay pedidos esperando preparación.'
               : 'Los últimos que marcaste se están enviando.',

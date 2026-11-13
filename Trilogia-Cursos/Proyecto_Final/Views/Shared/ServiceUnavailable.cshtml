@@ -1,8 +1,25 @@
 @{
     ViewData["Title"] = "Servicio temporalmente no disponible";
+    // Texto genérico para cualquier pantalla. Quien lo muestra puede indicar, con ViewData, a dónde volver:
+    //   VolverTexto (por ejemplo «el carrito»), VolverControlador y VolverAccion. Sin ellos, el botón lleva al inicio.
+    var backText = ViewData["VolverTexto"] as string;
+    var backController = ViewData["VolverControlador"] as string;
+    var backAction = ViewData["VolverAccion"] as string ?? "Index";
+    var hasBack = !string.IsNullOrWhiteSpace(backText) && !string.IsNullOrWhiteSpace(backController);
 }
 <div class="container py-5 text-center">
-    <h1 class="h3">No podemos cargar este presupuesto en este momento.</h1>
-    <p class="text-muted">El incidente fue registrado. Intente nuevamente en unos minutos o vuelva al listado de presupuestos.</p>
-    <a asp-controller="Budgets" asp-action="Index" class="btn btn-ds-neutral">Volver a presupuestos</a>
+    <h1 class="h3">No podemos completar esta solicitud en este momento.</h1>
+    <p class="text-muted">El incidente fue registrado. Intente nuevamente en unos minutos@(hasBack ? $" o vuelva a {backText}" : "").</p>
+    @if (ViewData["TraceId"] is string traceId && !string.IsNullOrWhiteSpace(traceId))
+    {
+        <p class="text-muted"><small>Identificador de seguimiento: <code>@traceId</code></small></p>
+    }
+    @if (hasBack)
+    {
+        <a asp-controller="@backController" asp-action="@backAction" class="btn btn-ds-neutral">Volver a @backText</a>
+    }
+    else
+    {
+        <a asp-controller="Home" asp-action="Index" class="btn btn-ds-neutral">Ir al inicio</a>
+    }
 </div>

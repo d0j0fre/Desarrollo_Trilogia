@@ -1,5 +1,12 @@
+@using Proyecto_Final.Services
 @model IReadOnlyList<Proyecto_Final.Models.Admin.PaySlipListItemViewModel>
 @{ ViewData["Title"]="Mis boletas"; }
-<div class="container py-4"><h2>Mis boletas de pago</h2><table class="table table-striped"><thead><tr><th>Periodo</th><th>Bruto</th><th>Deducciones</th><th>Neto</th><th></th></tr></thead><tbody>
-@foreach(var item in Model){<tr><td>@item.Periodo</td><td>@item.TotalBruto</td><td>@item.TotalDeducciones</td><td>@item.TotalNeto</td><td><a asp-action="Details" asp-route-id="@item.CalculoId">Ver desglose</a> · <a asp-action="Download" asp-route-id="@item.CalculoId">Descargar</a></td></tr>}
-</tbody></table></div>
+<div class="container py-4"><h2>Mis boletas de pago</h2>
+<div class="table-responsive">
+<table class="table table-striped"><thead><tr><th>Período</th><th>Bruto</th><th>Deducciones</th><th>Neto</th><th></th></tr></thead><tbody>
+@if (Model.Count == 0)
+{
+    <tr><td colspan="5" class="text-center text-muted py-4">Todavía no tiene boletas de pago.</td></tr>
+}
+@foreach(var item in Model){<tr><td>@RrhhFormat.PeriodText(item.Periodo)</td><td>@RrhhFormat.Money(item.TotalBruto)</td><td>@RrhhFormat.Money(item.TotalDeducciones)</td><td>@RrhhFormat.Money(item.TotalNeto)</td><td class="text-nowrap"><a asp-action="Details" asp-route-id="@item.CalculoId" class="btn btn-sm btn-ds-view">Ver desglose</a> <a asp-action="Download" asp-route-id="@item.CalculoId" class="btn btn-sm btn-ds-view">Descargar</a></td></tr>}
+</tbody></table></div></div>

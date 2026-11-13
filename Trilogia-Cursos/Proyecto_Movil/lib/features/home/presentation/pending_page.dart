@@ -129,7 +129,7 @@ class _EntryCard extends ConsumerWidget {
               // cancelo el pedido mientras el chofer estaba sin señal, decidir
               // automaticamente es como se pierde inventario.
               Text(
-                'Esta acción no se pudo aplicar. Confirmá con operaciones antes de decidir.',
+                'Esta acción no se pudo aplicar. Confirme con operaciones antes de decidir.',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               const SizedBox(height: 10),
@@ -176,6 +176,7 @@ class _EntryCard extends ConsumerWidget {
     'compra_recepcion' => Icons.move_to_inbox_rounded,
     'pedido_preparado' => Icons.inventory_rounded,
     'venta' => Icons.shopping_cart_outlined,
+    'evidencia' => Icons.photo_camera_outlined,
     _ => Icons.cloud_upload_outlined,
   };
 

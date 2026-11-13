@@ -22,13 +22,17 @@ namespace Proyecto_Final.Controllers
         }
 
         [HttpGet]
-        public IActionResult Login()
+        public IActionResult Login(string? returnUrl = null)
         {
+            // G3-14: «Debe iniciar sesión para finalizar la compra» envía de vuelta al pago.
+            returnUrl = Url.IsLocalUrl(returnUrl) ? returnUrl : null;
+
             if (!string.IsNullOrWhiteSpace(HttpContext.Session.GetString("UserEmail")))
             {
-                return RedirectToAction("Index", "Home");
+                return returnUrl is null ? RedirectToAction("Index", "Home") : LocalRedirect(returnUrl);
             }
 
+            ViewBag.ReturnUrl = returnUrl;
             return View(new Proyecto_Final.Models.LoginViewModel
             {
                 Email = string.Empty,
@@ -43,8 +47,12 @@ namespace Proyecto_Final.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [EnableRateLimiting("authentication")]
-        public async Task<IActionResult> Login(Proyecto_Final.Models.LoginViewModel model)
+        public async Task<IActionResult> Login(Proyecto_Final.Models.LoginViewModel model, string? returnUrl = null)
         {
+            // Solo direcciones de este sitio: un returnUrl externo no se sigue.
+            returnUrl = Url.IsLocalUrl(returnUrl) ? returnUrl : null;
+            ViewBag.ReturnUrl = returnUrl;
+
             if (!ModelState.IsValid)
             {
                 return View(model);
@@ -60,6 +68,18 @@ namespace Proyecto_Final.Controllers
                     return View(model);
                 }
 
+                // Revocación de sesiones (0311): la sesión guarda el sello de seguridad con el que inició; si el usuario se
+                // inactiva, cambia de perfil o de contraseña, el sello cambia y SessionStatusMiddleware la cierra.
+                var sessionState = await HttpContext.RequestServices
+                    .GetRequiredService<Proyecto_Final.Middleware.ISessionStatusService>()
+                    .GetStateAsync(response.UserId ?? 0, HttpContext.RequestAborted);
+                if (sessionState is not { Active: true })
+                {
+                    ModelState.AddModelError(string.Empty, "No fue posible iniciar sesión.");
+                    return View(model);
+                }
+
+                HttpContext.Session.SetString("SecurityStamp", sessionState.SecurityStamp);
                 HttpContext.Session.SetInt32("UserId", response.UserId ?? 0);
                 HttpContext.Session.SetString("UserEmail", response.Email ?? string.Empty);
                 HttpContext.Session.SetString("UserFullName", response.FullName ?? string.Empty);
@@ -75,12 +95,12 @@ namespace Proyecto_Final.Controllers
                     "El usuario inició sesión correctamente.");
 
                 TempData["LoginSuccess"] = $"Bienvenido, {response.FullName}.";
-                return RedirectToAction("Index", "Home");
+                return returnUrl is null ? RedirectToAction("Index", "Home") : LocalRedirect(returnUrl);
             }
             catch (Exception exception)
             {
                 _logger.LogError(exception, "Falló el inicio de sesión mediante el API de autenticación.");
-                ModelState.AddModelError(string.Empty, "No fue posible iniciar sesión en este momento. Intentá nuevamente.");
+                ModelState.AddModelError(string.Empty, "No fue posible iniciar sesión en este momento. Intente nuevamente.");
                 return View(model);
             }
         }
@@ -130,12 +150,12 @@ namespace Proyecto_Final.Controllers
                     "Usuarios",
                     $"Se registró una nueva cuenta de cliente para el correo {model.Email}.");
 
-                TempData["SuccessMessage"] = "Tu cuenta fue creada correctamente. Ahora puedes iniciar sesión.";
+                TempData["SuccessMessage"] = "Su cuenta fue creada correctamente. Ahora puede iniciar sesión.";
                 return RedirectToAction(nameof(Login));
             }
             catch (Exception)
             {
-                ModelState.AddModelError(string.Empty, "No fue posible completar el registro en este momento. Intentá nuevamente.");
+                ModelState.AddModelError(string.Empty, "No fue posible completar el registro en este momento. Intente nuevamente.");
                 return View("Registro", model);
             }
         }
@@ -183,7 +203,7 @@ namespace Proyecto_Final.Controllers
             }
             catch (Exception)
             {
-                ModelState.AddModelError(string.Empty, "No fue posible procesar la solicitud en este momento. Intentá nuevamente.");
+                ModelState.AddModelError(string.Empty, "No fue posible procesar la solicitud en este momento. Intente nuevamente.");
                 return View(model);
             }
         }
@@ -235,7 +255,7 @@ namespace Proyecto_Final.Controllers
             }
             catch (Exception)
             {
-                ModelState.AddModelError(string.Empty, "No fue posible restablecer la contraseña en este momento. Intentá nuevamente.");
+                ModelState.AddModelError(string.Empty, "No fue posible restablecer la contraseña en este momento. Intente nuevamente.");
                 return View(model);
             }
         }

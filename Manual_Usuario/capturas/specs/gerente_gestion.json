@@ -1,0 +1,1898 @@
+{
+  "carpeta": "gerente",
+  "_nota": "Parte III (Gerente): Rutas, Tablero de entregas, Vehículos, Mantenimiento, Alertas de flota, Tablero gerencial, Reporte de ventas, Desempeño, Metas y KPIs. Base Trilogia_manualgest con capitulos/20_gerente/_datos_gestion.sql. Cada captura que cambia datos repone el estado con su campo sql.",
+  "capturas": [
+    {
+      "id": "ger-rutas-01",
+      "usuario": "gerente",
+      "url": "/RoutesAdmin/Index",
+      "ancho": 1280,
+      "recorte": {
+        "selector": ".backoffice-page .admin-filter-bar, .backoffice-page .admin-table-wrapper",
+        "todos": true,
+        "margen": [
+          16,
+          16,
+          16,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "select[name=estado]",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "input[name=buscar]",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": ".admin-filter-bar button:has-text('Filtrar')",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "tbody a:has-text('Ver') >> nth=0",
+          "posicion": "izquierda"
+        }
+      ]
+    },
+    {
+      "id": "ger-rutas-02",
+      "usuario": "gerente",
+      "url": "/RoutesAdmin/Index",
+      "ancho": 1024,
+      "recorte": {
+        "selector": ".admin-page-header",
+        "margen": [
+          10,
+          10,
+          60,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "selector": "a:has-text('Nueva ruta')",
+          "desde": "abajo",
+          "largo": 45,
+          "recuadro": true
+        }
+      ]
+    },
+    {
+      "id": "ger-rutas-03",
+      "usuario": "gerente",
+      "sql": "DELETE rp FROM RutaPedidos rp JOIN Rutas r ON r.RutaId=rp.RutaId WHERE r.Zona LIKE N'Escaz_ y Santa Ana'; DELETE FROM Rutas WHERE Zona LIKE N'Escaz_ y Santa Ana'",
+      "url": "/RoutesAdmin/Create",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "js": "document.querySelectorAll('.table-responsive').forEach(e=>{e.style.maxHeight='none'})"
+        },
+        {
+          "rellenar": [
+            "#Zona",
+            "Escazú y Santa Ana"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#ChoferUsuarioId",
+            "24"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#VehiculoId",
+            "1"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Observaciones",
+            "Llamar al cliente antes de llegar."
+          ]
+        },
+        {
+          "marcar": "tr:has-text('Minisúper La Sabana') input[type=checkbox]"
+        },
+        {
+          "marcar": "tr:has-text('La Esquina del Sabor') input[type=checkbox]"
+        }
+      ],
+      "recorte": {
+        "selector": "form[action*='Create']",
+        "margen": [
+          16,
+          16,
+          16,
+          30
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#Zona",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#ChoferUsuarioId",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#VehiculoId",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "#Observaciones",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "tbody tr:has(input:checked)",
+          "todos": true,
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 6,
+          "selector": "button:has-text('Crear ruta')",
+          "posicion": "abajo"
+        }
+      ]
+    },
+    {
+      "id": "ger-rutas-04",
+      "usuario": "gerente",
+      "sql": "DELETE rp FROM RutaPedidos rp JOIN Rutas r ON r.RutaId=rp.RutaId WHERE r.Zona LIKE N'Escaz_ y Santa Ana'; DELETE FROM Rutas WHERE Zona LIKE N'Escaz_ y Santa Ana'",
+      "url": "/RoutesAdmin/Create",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "#Zona",
+            "Escazú y Santa Ana"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#ChoferUsuarioId",
+            "24"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#VehiculoId",
+            "1"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Observaciones",
+            "Llamar al cliente antes de llegar."
+          ]
+        },
+        {
+          "marcar": "tr:has-text('Minisúper La Sabana') input[type=checkbox]"
+        },
+        {
+          "marcar": "tr:has-text('La Esquina del Sabor') input[type=checkbox]"
+        },
+        {
+          "clic": "button:has-text('Crear ruta')"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert-success, .admin-page-header, .backoffice-page .row:nth-child(2) > .col-lg-8 > .admin-table-wrapper:first-child",
+        "todos": true,
+        "margen": [
+          12,
+          16,
+          16,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success"
+        },
+        {
+          "tipo": "etiqueta",
+          "selector": ".admin-page-header h2 .admin-badge-soft",
+          "texto": "Estado de la ruta",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "ger-rutas-05",
+      "usuario": "gerente",
+      "url": "/RoutesAdmin/Create",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "#Zona",
+            "Escazú y Santa Ana"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#ChoferUsuarioId",
+            "24"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#VehiculoId",
+            "1"
+          ]
+        },
+        {
+          "clic": "button:has-text('Crear ruta')"
+        }
+      ],
+      "recorte": {
+        "selector": ".validation-summary-errors li",
+        "margen": [
+          12,
+          20,
+          12,
+          40
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": ".validation-summary-errors li"
+        }
+      ]
+    },
+    {
+      "id": "ger-rutas-06",
+      "usuario": "gerente",
+      "sql": "UPDATE Rutas SET Estado=N'Planificada', FechaDespacho=NULL WHERE Codigo='RUT-20261102080000'; UPDATE rp SET EstadoEntrega=N'Pendiente', Secuencia=CASE u.UsuarioId WHEN 17 THEN 1 WHEN 6 THEN 2 ELSE 3 END FROM RutaPedidos rp JOIN Rutas r ON r.RutaId=rp.RutaId JOIN Pedidos p ON p.PedidoId=rp.PedidoId JOIN Usuarios u ON u.UsuarioId=p.UsuarioId WHERE r.Codigo='RUT-20261102080000'",
+      "url": "/RoutesAdmin/Index?buscar=Heredia",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clic": "tbody a:has-text('Ver') >> nth=0"
+        }
+      ],
+      "recorte": {
+        "selector": ".admin-page-header, .backoffice-page > .row:nth-child(2) > .col-lg-4 > .admin-table-wrapper, .backoffice-page > .row:nth-child(2) > .col-lg-8 > .admin-table-wrapper:first-child",
+        "todos": true,
+        "margen": 16
+      },
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "selector": "button:has-text('Secuenciar automáticamente')",
+          "desde": "derecha",
+          "largo": 50,
+          "recuadro": true
+        }
+      ]
+    },
+    {
+      "id": "ger-rutas-07",
+      "usuario": "gerente",
+      "url": "/RoutesAdmin/Index?buscar=Heredia",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clic": "tbody a:has-text('Ver') >> nth=0"
+        },
+        {
+          "clicSinEsperar": "button:has-text('Secuenciar automáticamente')"
+        },
+        {
+          "esperarSelector": ".s3-modal-btn-confirm"
+        },
+        {
+          "clic": ".s3-modal-btn-confirm"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert, .backoffice-page > .row:nth-child(2) > .col-lg-8 > .admin-table-wrapper:first-child",
+        "todos": true,
+        "margen": 12
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": ".col-lg-8 > .admin-table-wrapper:first-child tbody td:first-child",
+          "todos": true
+        }
+      ]
+    },
+    {
+      "id": "ger-rutas-08",
+      "usuario": "gerente",
+      "url": "/RoutesAdmin/Index?buscar=Heredia",
+      "ancho": 1280,
+      "pausa": 3000,
+      "acciones": [
+        {
+          "clic": "tbody a:has-text('Ver') >> nth=0"
+        },
+        {
+          "clicSinEsperar": "#seqForm tr.seq-row >> nth=0 >> .btn-locate"
+        },
+        {
+          "desplazar": "#seqForm"
+        }
+      ],
+      "recorte": {
+        "selector": "#routePickerMap, #seqForm",
+        "todos": true,
+        "margen": [
+          60,
+          16,
+          16,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#seqForm tr.seq-row >> nth=0 >> .seq-input",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#seqForm tr.seq-row >> nth=0 >> .btn-locate",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#routePickerMap",
+          "posicion": "dentro",
+          "recuadro": false
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "#seqForm button[type=submit]",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "ger-rutas-09",
+      "usuario": "gerente",
+      "url": "/RoutesAdmin/Index?buscar=Heredia",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clic": "tbody a:has-text('Ver') >> nth=0"
+        }
+      ],
+      "recorte": {
+        "selector": ".backoffice-page > .row:nth-child(2) > .col-lg-8 > .admin-table-wrapper:nth-child(1), .backoffice-page > .row:nth-child(2) > .col-lg-8 > .admin-table-wrapper:nth-child(2)",
+        "todos": true,
+        "margen": 16
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "form[action*='AddOrder'] select",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "form[action*='AddOrder'] button",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "form[action*='RemoveOrder'] button >> nth=0",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "ger-rutas-10",
+      "usuario": "gerente",
+      "url": "/RoutesAdmin/Index?buscar=Heredia",
+      "ancho": 1024,
+      "acciones": [
+        {
+          "clic": "tbody a:has-text('Ver') >> nth=0"
+        },
+        {
+          "clicSinEsperar": "button:has-text('Despachar ruta')"
+        },
+        {
+          "esperarSelector": ".s3-modal-btn-confirm"
+        },
+        {
+          "esperar": 400
+        }
+      ],
+      "recorte": {
+        "selector": ".s3-modal-dialog",
+        "margen": 14
+      },
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "selector": ".s3-modal-btn-confirm",
+          "desde": "arriba",
+          "largo": 40,
+          "recuadro": true
+        }
+      ]
+    },
+    {
+      "id": "ger-rutas-11",
+      "usuario": "gerente",
+      "url": "/RoutesAdmin/Index?buscar=Heredia",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clic": "tbody a:has-text('Ver') >> nth=0"
+        },
+        {
+          "clicSinEsperar": "button:has-text('Despachar ruta')"
+        },
+        {
+          "esperarSelector": ".s3-modal-btn-confirm"
+        },
+        {
+          "clic": ".s3-modal-btn-confirm"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert, .admin-page-header, .backoffice-page > .row:nth-child(2) > .col-lg-8 > .admin-table-wrapper:first-child",
+        "todos": true,
+        "margen": 12
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert"
+        },
+        {
+          "tipo": "etiqueta",
+          "selector": ".admin-page-header h2 .admin-badge-soft",
+          "texto": "Despachada",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": ".col-lg-8 > .admin-table-wrapper:first-child tbody td:nth-child(5)",
+          "todos": true
+        }
+      ]
+    },
+    {
+      "id": "ger-rutas-12",
+      "usuario": "gerente",
+      "url": "/RoutesAdmin/Index?buscar=Cartago",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clic": "tbody a:has-text('Ver') >> nth=0"
+        },
+        {
+          "clicSinEsperar": "button:has-text('Recalcular ruta')"
+        },
+        {
+          "esperar": 600
+        },
+        {
+          "seleccionar": [
+            "select[name=excluirRutaPedidoId]",
+            {
+              "index": 1
+            }
+          ]
+        },
+        {
+          "rellenar": [
+            "input[name=motivoFallo]",
+            "Cliente cerrado, abre hasta las 2 p. m."
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": ".backoffice-page > .row:nth-child(2) > .col-lg-4 > .admin-table-wrapper",
+        "margen": 16
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "button:has-text('Recalcular ruta')",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "select[name=excluirRutaPedidoId]",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "input[name=motivoFallo]",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "#recalcBox button[type=submit]",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "ger-rutas-13",
+      "usuario": "gerente",
+      "url": "/RoutesAdmin/Index?buscar=Cartago",
+      "ancho": 1024,
+      "acciones": [
+        {
+          "clic": "tbody a:has-text('Ver') >> nth=0"
+        },
+        {
+          "clicSinEsperar": "button:has-text('Finalizar ruta')"
+        },
+        {
+          "esperarSelector": ".s3-modal-btn-confirm"
+        },
+        {
+          "esperar": 400
+        }
+      ],
+      "recorte": {
+        "selector": ".s3-modal-dialog",
+        "margen": 14
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": ".s3-modal-message"
+        }
+      ]
+    },
+    {
+      "id": "ger-rutas-14",
+      "usuario": "gerente",
+      "sql": "UPDATE Rutas SET Estado=N'Planificada', FechaDespacho=NULL WHERE Codigo='RUT-20261102080000'; UPDATE rp SET EstadoEntrega=N'Pendiente' FROM RutaPedidos rp JOIN Rutas r ON r.RutaId=rp.RutaId WHERE r.Codigo='RUT-20261102080000'",
+      "url": "/RoutesAdmin/Index?buscar=Heredia",
+      "ancho": 1024,
+      "acciones": [
+        {
+          "clic": "tbody a:has-text('Ver') >> nth=0"
+        },
+        {
+          "clicSinEsperar": "button:has-text('Cancelar ruta')"
+        },
+        {
+          "esperar": 600
+        },
+        {
+          "rellenar": [
+            "#cancelBox input[name=motivo]",
+            "Vehículo en el taller"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": ".backoffice-page > .row:nth-child(2) > .col-lg-4 > .admin-table-wrapper",
+        "margen": 16
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "button:has-text('Cancelar ruta')",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#cancelBox input[name=motivo]",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#cancelBox button[type=submit]",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "ger-rutas-15",
+      "usuario": "gerente",
+      "url": "/RoutesAdmin/Index?buscar=Alajuela",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clic": "tbody a:has-text('Ver') >> nth=0"
+        },
+        {
+          "clic": "a:has-text('Evidencias')"
+        }
+      ],
+      "recorte": {
+        "selector": ".backoffice-page",
+        "margen": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": ".backoffice-page tbody",
+          "todos": true
+        }
+      ]
+    },
+    {
+      "id": "ger-tablero-01",
+      "usuario": "gerente",
+      "sql": "UPDATE Rutas SET Estado=N'Planificada', FechaDespacho=NULL WHERE Codigo='RUT-20261102080000'; UPDATE rp SET EstadoEntrega=N'Pendiente' FROM RutaPedidos rp JOIN Rutas r ON r.RutaId=rp.RutaId WHERE r.Codigo='RUT-20261102080000'",
+      "url": "/DeliveryBoard/Index",
+      "ancho": 1280,
+      "recorte": {
+        "x": 0,
+        "y": 270,
+        "ancho": 1280,
+        "alto": 520
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "#board-updated"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": ".backoffice-page .card",
+          "todos": true
+        }
+      ]
+    },
+    {
+      "id": "ger-vehiculos-01",
+      "usuario": "gerente",
+      "sql": "DELETE FROM Vehiculos WHERE Placa='CRJ-004'",
+      "url": "/Vehicles/Index",
+      "ancho": 1280,
+      "recorte": {
+        "selector": ".backoffice-page .admin-filter-bar, .backoffice-page .admin-table-wrapper",
+        "todos": true,
+        "margen": 16
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "input[name=buscar]",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": ".admin-filter-bar button:has-text('Buscar')",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "tbody a.btn-ds-edit >> nth=2",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "tbody form button >> nth=2",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "ger-vehiculos-02",
+      "usuario": "gerente",
+      "url": "/Vehicles/Index",
+      "ancho": 1024,
+      "recorte": {
+        "selector": ".admin-page-header",
+        "margen": [
+          10,
+          10,
+          60,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "selector": "a:has-text('Nuevo vehículo')",
+          "desde": "abajo",
+          "largo": 45,
+          "recuadro": true
+        }
+      ]
+    },
+    {
+      "id": "ger-vehiculos-03",
+      "usuario": "gerente",
+      "sql": "DELETE FROM Vehiculos WHERE Placa='CRJ-004'",
+      "url": "/Vehicles/Create",
+      "ancho": 1024,
+      "acciones": [
+        {
+          "rellenar": [
+            "#Placa",
+            "CRJ-004"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Marca",
+            "Hyundai"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Descripcion",
+            "Camión refrigerado zona Puntarenas (Hyundai HD65)"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Capacidad",
+            "180"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main form",
+        "margen": [
+          16,
+          16,
+          64,
+          64
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#Placa",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#Marca",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#Descripcion",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "#Capacidad",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "#Activo",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 6,
+          "selector": "main form button[type=submit]",
+          "posicion": "abajo"
+        }
+      ]
+    },
+    {
+      "id": "ger-vehiculos-04",
+      "usuario": "gerente",
+      "sql": "DELETE FROM Vehiculos WHERE Placa='CRJ-004'",
+      "url": "/Vehicles/Create",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "#Placa",
+            "CRJ-004"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Marca",
+            "Hyundai"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Descripcion",
+            "Camión refrigerado zona Puntarenas (Hyundai HD65)"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Capacidad",
+            "180"
+          ]
+        },
+        {
+          "clic": "main form button[type=submit]"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert-success, .backoffice-page .admin-table-wrapper",
+        "todos": true,
+        "margen": 12
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "tbody tr:has-text('CRJ-004')"
+        }
+      ]
+    },
+    {
+      "id": "ger-vehiculos-05",
+      "usuario": "gerente",
+      "url": "/Vehicles/Create",
+      "ancho": 1024,
+      "acciones": [
+        {
+          "rellenar": [
+            "#Placa",
+            "CRJ-001"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Descripcion",
+            "Panel de reparto GAM"
+          ]
+        },
+        {
+          "clic": "main form button[type=submit]"
+        }
+      ],
+      "recorte": {
+        "selector": "main form .validation-summary-errors, #Placa",
+        "todos": true,
+        "margen": 16
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main form .validation-summary-errors li"
+        }
+      ]
+    },
+    {
+      "id": "ger-vehiculos-06",
+      "usuario": "gerente",
+      "url": "/Vehicles/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clicSinEsperar": "tbody tr:has-text('CRJ-001') form button"
+        },
+        {
+          "esperarSelector": ".s3-modal-btn-confirm"
+        },
+        {
+          "clic": ".s3-modal-btn-confirm"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert-danger",
+        "margen": 14
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-danger"
+        }
+      ]
+    },
+    {
+      "id": "ger-mant-01",
+      "usuario": "gerente",
+      "url": "/Fleet/Maintenance",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "#Nueva_VehiculoId",
+            "3"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#Nueva_Tipo",
+            "Correctivo"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Nueva_Descripcion",
+            "Reparación del aire acondicionado de la cabina"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Nueva_Taller",
+            "Refrigeración Automotriz Zapote"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Nueva_Costo",
+            "65000"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Nueva_FechaProgramada",
+            "2026-11-06"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "form[action*='CreateMaintenance']",
+        "margen": [
+          56,
+          16,
+          16,
+          64
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#Nueva_VehiculoId",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#Nueva_Tipo",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#Nueva_Descripcion, #Nueva_Taller",
+          "todos": true,
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "#Nueva_Costo, #Nueva_Estado",
+          "todos": true,
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "#Nueva_FechaProgramada, #Nueva_KilometrajeProximo",
+          "todos": true,
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 6,
+          "selector": "button:has-text('Registrar orden')",
+          "posicion": "izquierda"
+        }
+      ]
+    },
+    {
+      "id": "ger-mant-02",
+      "usuario": "gerente",
+      "sql": "DELETE FROM OrdenesMantenimiento WHERE Descripcion LIKE N'Reparaci_n del aire%'",
+      "url": "/Fleet/Maintenance",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "#Nueva_VehiculoId",
+            "3"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#Nueva_Tipo",
+            "Correctivo"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Nueva_Descripcion",
+            "Reparación del aire acondicionado de la cabina"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Nueva_Taller",
+            "Refrigeración Automotriz Zapote"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Nueva_Costo",
+            "65000"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Nueva_FechaProgramada",
+            "2026-11-06"
+          ]
+        },
+        {
+          "clic": "button:has-text('Registrar orden')"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert-success, .col-lg-8 .admin-table-wrapper",
+        "todos": true,
+        "margen": 16
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "tbody tr:has-text('aire acondicionado')"
+        }
+      ]
+    },
+    {
+      "id": "ger-mant-03",
+      "usuario": "gerente",
+      "url": "/Fleet/Maintenance",
+      "ancho": 1280,
+      "recorte": {
+        "selector": ".col-lg-8",
+        "margen": [
+          0,
+          16,
+          16,
+          0
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": ".col-lg-8 select[name=estado]",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": ".col-lg-8 button:has-text('Filtrar')",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "flecha",
+          "selector": "tbody tr:has-text('30 000 km') button[title=Completar]",
+          "desde": "izquierda",
+          "largo": 50,
+          "recuadro": true
+        }
+      ]
+    },
+    {
+      "id": "ger-alertas-01",
+      "usuario": "gerente",
+      "sql": "DELETE FROM VehiculoDocumentos WHERE Observaciones LIKE N'Renovaci_n de p_liza de carga%'",
+      "url": "/Fleet/Alerts",
+      "ancho": 1280,
+      "recorte": {
+        "selector": ".backoffice-page .col-lg-8",
+        "margen": [
+          0,
+          16,
+          16,
+          0
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "input[name=diasAviso]",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "button:has-text('Actualizar')",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "tbody td:nth-child(4)",
+          "todos": true
+        }
+      ]
+    },
+    {
+      "id": "ger-alertas-02",
+      "usuario": "gerente",
+      "url": "/Fleet/Alerts",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "#NuevoDocumento_VehiculoId",
+            "2"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#NuevoDocumento_Tipo",
+            "Seguro"
+          ]
+        },
+        {
+          "rellenar": [
+            "#NuevoDocumento_FechaVencimiento",
+            "2026-11-14"
+          ]
+        },
+        {
+          "rellenar": [
+            "#NuevoDocumento_Observaciones",
+            "Renovación de póliza de carga"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "form[action*='CreateDocument']",
+        "margen": [
+          90,
+          16,
+          16,
+          64
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#NuevoDocumento_VehiculoId",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#NuevoDocumento_Tipo",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#NuevoDocumento_FechaVencimiento",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "#NuevoDocumento_Observaciones",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "button:has-text('Registrar documento')",
+          "posicion": "izquierda"
+        }
+      ]
+    },
+    {
+      "id": "ger-alertas-03",
+      "usuario": "gerente",
+      "sql": "DELETE FROM VehiculoDocumentos WHERE Observaciones LIKE N'Renovaci_n de p_liza de carga%'",
+      "url": "/Fleet/Alerts",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "#NuevoDocumento_VehiculoId",
+            "2"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#NuevoDocumento_Tipo",
+            "Seguro"
+          ]
+        },
+        {
+          "rellenar": [
+            "#NuevoDocumento_FechaVencimiento",
+            "2026-11-14"
+          ]
+        },
+        {
+          "rellenar": [
+            "#NuevoDocumento_Observaciones",
+            "Renovación de póliza de carga"
+          ]
+        },
+        {
+          "clic": "button:has-text('Registrar documento')"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert-success, .backoffice-page .col-lg-8 .admin-table-wrapper",
+        "todos": true,
+        "margen": 12
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "tbody tr:has-text('Seguro vence el 14/11/2026')"
+        }
+      ]
+    },
+    {
+      "id": "ger-tablerog-01",
+      "usuario": "gerente",
+      "url": "/ManagementDashboard/Index?rango=mes",
+      "ancho": 1280,
+      "recorte": {
+        "selector": ".admin-page-header, .admin-filter-bar",
+        "todos": true,
+        "margen": [
+          16,
+          16,
+          30,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": ".admin-filter-bar .btn-group",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": ".admin-filter-bar input[type=date]",
+          "todos": true,
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": ".admin-filter-bar button:has-text('Aplicar')",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "etiqueta",
+          "selector": ".admin-page-header .text-muted",
+          "texto": "Período mostrado",
+          "posicion": "abajo"
+        }
+      ]
+    },
+    {
+      "id": "ger-tablerog-02",
+      "usuario": "gerente",
+      "url": "/ManagementDashboard/Index?desde=2026-10-01&hasta=2026-10-31",
+      "ancho": 1280,
+      "recorte": {
+        "selector": ".backoffice-page > .row:nth-last-child(2), .backoffice-page > .row:last-child",
+        "todos": true,
+        "margen": [
+          8,
+          0,
+          0,
+          0
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": ".kpi-card >> nth=0",
+          "posicion": "dentro",
+          "recuadro": false
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": ".kpi-card >> nth=1",
+          "posicion": "dentro",
+          "recuadro": false
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": ".kpi-card >> nth=2",
+          "posicion": "dentro",
+          "recuadro": false
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": ".kpi-card >> nth=3",
+          "posicion": "dentro",
+          "recuadro": false
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": ".backoffice-page > .row:last-child h5",
+          "posicion": "derecha",
+          "recuadro": false
+        }
+      ]
+    },
+    {
+      "id": "ger-tablerog-03",
+      "usuario": "gerente",
+      "url": "/ManagementDashboard/Index?desde=2025-01-01&hasta=2025-01-07",
+      "ancho": 1280,
+      "recorte": {
+        "selector": ".backoffice-page .alert-info",
+        "margen": 14
+      },
+      "anotaciones": []
+    },
+    {
+      "id": "ger-ventas-01",
+      "usuario": "gerente",
+      "url": "/SalesReports/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "input[name=Desde]",
+            "2026-01-01"
+          ]
+        },
+        {
+          "rellenar": [
+            "input[name=Hasta]",
+            "2026-10-31"
+          ]
+        },
+        {
+          "seleccionar": [
+            "select[name=Agrupacion]",
+            "mensual"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "form.admin-filter-bar",
+        "margen": [
+          40,
+          16,
+          16,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "input[name=Desde]",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "input[name=Hasta]",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "select[name=Agrupacion]",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "select[name=Categoria]",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "form.admin-filter-bar button:has-text('Consultar')",
+          "posicion": "arriba"
+        }
+      ]
+    },
+    {
+      "id": "ger-ventas-02",
+      "usuario": "gerente",
+      "url": "/SalesReports/Index?Desde=2026-01-01&Hasta=2026-10-31&Agrupacion=mensual",
+      "ancho": 1280,
+      "recorte": {
+        "selector": ".backoffice-page > .row:nth-last-child(2), .backoffice-page > .row:last-child",
+        "todos": true,
+        "margen": [
+          8,
+          0,
+          0,
+          0
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": ".backoffice-page > .row:nth-last-child(2) .card",
+          "todos": true
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "table tbody tr:last-child"
+        }
+      ]
+    },
+    {
+      "id": "ger-ventas-03",
+      "usuario": "gerente",
+      "url": "/SalesReports/Index?Desde=2026-01-01&Hasta=2026-10-31&Agrupacion=mensual",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "form.admin-filter-bar",
+        "margen": [
+          12,
+          16,
+          64,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "form.admin-filter-bar a:has-text('Imprimir')",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "form.admin-filter-bar a:has-text('CSV')",
+          "posicion": "abajo"
+        }
+      ]
+    },
+    {
+      "id": "ger-ventas-04",
+      "usuario": "gerente",
+      "url": "/SalesReports/Print?Desde=2026-01-01&Hasta=2026-10-31&Agrupacion=mensual",
+      "ancho": 1280,
+      "recorte": {
+        "selector": ".backoffice-page > .row:first-child",
+        "margen": [
+          12,
+          16,
+          40,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "selector": "button:has-text('Imprimir')",
+          "desde": "izquierda",
+          "largo": 60,
+          "recuadro": true
+        }
+      ]
+    },
+    {
+      "id": "ger-ventas-05",
+      "usuario": "gerente",
+      "url": "/SalesReports/Index?Desde=2026-10-31&Hasta=2026-10-01&Agrupacion=diario",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "form.admin-filter-bar",
+        "margen": 12
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "form.admin-filter-bar .validation-summary-errors ul",
+          "todos": true
+        }
+      ]
+    },
+    {
+      "id": "ger-desempeno-01",
+      "usuario": "gerente",
+      "url": "/SellerPerformance/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "input[name=Desde]",
+            "2026-10-01"
+          ]
+        },
+        {
+          "rellenar": [
+            "input[name=Hasta]",
+            "2026-10-31"
+          ]
+        },
+        {
+          "seleccionar": [
+            "select[name=Orden]",
+            "cumplimiento_desc"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "form.admin-filter-bar",
+        "margen": [
+          40,
+          16,
+          16,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "input[name=Desde]",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "input[name=Hasta]",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "select[name=VendedorUsuarioId]",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "select[name=Orden]",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "form.admin-filter-bar button:has-text('Consultar')",
+          "posicion": "arriba"
+        }
+      ]
+    },
+    {
+      "id": "ger-desempeno-02",
+      "usuario": "gerente",
+      "url": "/SellerPerformance/Index?Desde=2026-10-01&Hasta=2026-10-31&Orden=cumplimiento_desc",
+      "ancho": 1280,
+      "recorte": {
+        "selector": ".backoffice-page > .row:nth-last-child(2), .backoffice-page > .row:last-child",
+        "todos": true,
+        "margen": [
+          8,
+          0,
+          0,
+          0
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "table td:nth-child(7), table th:nth-child(7), table td:nth-child(8), table th:nth-child(8)",
+          "todos": true
+        }
+      ]
+    },
+    {
+      "id": "ger-metas-01",
+      "usuario": "gerente",
+      "url": "/Kpis/Index",
+      "ancho": 1280,
+      "recorte": {
+        "selector": ".admin-page-header, .backoffice-page > .row:nth-child(2)",
+        "todos": true,
+        "margen": [
+          16,
+          16,
+          16,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "form[action*='Kpis'][method=get] input[name=anio]",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "form[action*='Kpis'][method=get] select[name=mes]",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "button:has-text('Ver período')",
+          "posicion": "arriba-derecha"
+        }
+      ]
+    },
+    {
+      "id": "ger-metas-02",
+      "usuario": "gerente",
+      "url": "/Kpis/Index?anio=2026&mes=11",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "select[name=VendedorUsuarioId]",
+            "32"
+          ]
+        },
+        {
+          "rellenar": [
+            "input[name=MontoMeta]",
+            "300000"
+          ]
+        },
+        {
+          "rellenar": [
+            "textarea[name=Observaciones]",
+            "Incluye la campaña de Navidad en la zona sur."
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "form[action*='Save']",
+        "margen": [
+          56,
+          16,
+          16,
+          64
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "select[name=VendedorUsuarioId]",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "input[name=MontoMeta]",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "textarea[name=Observaciones]",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "form[action*='Save'] p.small",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "button:has-text('Guardar meta')",
+          "posicion": "izquierda"
+        }
+      ]
+    },
+    {
+      "id": "ger-metas-03",
+      "usuario": "gerente",
+      "sql": "DELETE m FROM MetasVendedor m JOIN Usuarios u ON u.UsuarioId=m.VendedorUsuarioId WHERE u.Correo='vendedor@labodega.cr' AND m.Anio=2026 AND m.Mes=11",
+      "url": "/Kpis/Index?anio=2026&mes=11",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "select[name=VendedorUsuarioId]",
+            "32"
+          ]
+        },
+        {
+          "rellenar": [
+            "input[name=MontoMeta]",
+            "300000"
+          ]
+        },
+        {
+          "rellenar": [
+            "textarea[name=Observaciones]",
+            "Incluye la campaña de Navidad en la zona sur."
+          ]
+        },
+        {
+          "clic": "button:has-text('Guardar meta')"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert-success, .backoffice-page > .row:last-child .col-lg-8 .admin-table-wrapper",
+        "todos": true,
+        "margen": 12
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "tbody tr:has-text('Vendedor Demo')"
+        }
+      ]
+    },
+    {
+      "id": "ger-metas-04",
+      "usuario": "gerente",
+      "url": "/Kpis/Index?anio=2026&mes=10",
+      "ancho": 1280,
+      "recorte": {
+        "selector": ".backoffice-page > .row:last-child .col-lg-8 .admin-table-wrapper",
+        "margen": 12
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "tbody td:nth-child(4)",
+          "todos": true
+        }
+      ]
+    },
+    {
+      "id": "ger-kpis-01",
+      "usuario": "gerente",
+      "url": "/Kpis/Report?anio=2026&mes=10",
+      "ancho": 1280,
+      "recorte": {
+        "selector": ".admin-page-header, .backoffice-page > .row:nth-child(2), .backoffice-page > .row:nth-child(3)",
+        "todos": true,
+        "margen": [
+          16,
+          16,
+          8,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "input[name=anio]",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "select[name=mes]",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "button:has-text('Generar reporte')",
+          "posicion": "arriba-derecha"
+        }
+      ]
+    },
+    {
+      "id": "ger-kpis-02",
+      "usuario": "gerente",
+      "url": "/Kpis/Report?anio=2026&mes=10",
+      "ancho": 1280,
+      "recorte": {
+        "selector": ".backoffice-page > .row:nth-last-child(2), .backoffice-page > .row:last-child",
+        "todos": true,
+        "margen": [
+          8,
+          0,
+          0,
+          0
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "table tbody td:last-child",
+          "todos": true
+        }
+      ]
+    },
+    {
+      "id": "ger-alertas-04",
+      "usuario": "gerente",
+      "url": "/Fleet/Alerts",
+      "ancho": 1280,
+      "recorte": {
+        "selector": ".backoffice-page .col-lg-8 .admin-table-wrapper >> nth=1",
+        "margen": 12
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": ".backoffice-page .col-lg-8 .admin-table-wrapper >> nth=1 >> tbody tr >> nth=0 >> td >> nth=5"
+        }
+      ]
+    }
+  ]
+}

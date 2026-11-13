@@ -1,4 +1,5 @@
 ﻿@model Proyecto_Final.Models.Store.ClientPortalStatementViewModel
+@using Proyecto_Final.Services
 @{
     ViewData["Title"] = "Estado de cuenta";
 }
@@ -83,7 +84,7 @@
             <div>
                 <span>Portal del cliente</span>
                 <h1>Estado de cuenta</h1>
-                <p>Consulta tu saldo, facturas, pagos y pedidos, y descárgalo en PDF.</p>
+                <p>Consulte su saldo, facturas, pagos y pedidos, y descárguelo en PDF.</p>
             </div>
 
             <div class="s4-client-invoice-actions no-print">
@@ -156,19 +157,19 @@
                             <dd>&#8353;@Model.Cliente.TotalComprado.ToString("N2")</dd>
                         </div>
                         <div>
-                            <dt>Ultimo pedido</dt>
+                            <dt>Último pedido</dt>
                             <dd>@(Model.Cliente.UltimoPedido.HasValue ? Model.Cliente.UltimoPedido.Value.ToString("dd/MM/yyyy") : "Sin pedidos")</dd>
                         </div>
                     </dl>
                 </div>
 
                 <aside class="s4-client-invoice-totals">
-                    <h3>Credito</h3>
+                    <h3>Crédito</h3>
 
                     @if (Model.Cuenta != null)
                     {
                         <div>
-                            <span>Limite</span>
+                            <span>Límite</span>
                             <strong>&#8353;@Model.Cuenta.LimiteCredito.ToString("N2")</strong>
                         </div>
                         <div>
@@ -186,12 +187,12 @@
                     }
                     else if (Model.Credito == null)
                     {
-                        <p class="s4-client-empty-text">No hay credito asignado actualmente.</p>
+                        <p class="s4-client-empty-text">No hay crédito asignado actualmente.</p>
                     }
                     else
                     {
                         <div>
-                            <span>Limite</span>
+                            <span>Límite</span>
                             <strong>&#8353;@Model.Credito.LimiteCredito.ToString("N2")</strong>
                         </div>
                         <div>
@@ -322,7 +323,7 @@
                                     <tr>
                                         <td><strong>#@pedido.PedidoId</strong></td>
                                         <td>@pedido.FechaPedido.ToString("dd/MM/yyyy HH:mm")</td>
-                                        <td>@pedido.Estado</td>
+                                        <td>@OrderStatusFlow.Name(pedido.Estado)</td>
                                         <td>@(string.IsNullOrWhiteSpace(pedido.TipoEntrega) ? "No indicado" : pedido.TipoEntrega)</td>
                                         <td>&#8353;@pedido.Total.ToString("N2")</td>
                                     </tr>

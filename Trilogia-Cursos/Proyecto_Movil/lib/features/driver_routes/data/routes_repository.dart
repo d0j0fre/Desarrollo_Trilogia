@@ -6,6 +6,7 @@ import '../../../core/sync/outbox_entry.dart';
 import '../../../core/sync/sync_service.dart';
 import '../../home/domain/day_summary.dart';
 import '../domain/delivery.dart';
+import '../domain/evidence_draft.dart';
 import '../domain/route.dart';
 import 'routes_local_dao.dart';
 
@@ -74,6 +75,7 @@ class RoutesRepository {
     required int pedidoId,
     required String estado,
     String? motivoFallo,
+    List<EvidenceDraft> evidencias = const [],
   }) async {
     final syncGuid = _uuid.v4();
 
@@ -94,14 +96,39 @@ class RoutesRepository {
           if (motivoFallo != null && motivoFallo.trim().isNotEmpty)
             'motivoFallo': motivoFallo.trim(),
         },
-        descripcion: estado == DeliveryStatus.entregado
-            ? 'Pedido #$pedidoId entregado'
-            : 'Pedido #$pedidoId no entregado',
+        descripcion: switch (estado) {
+          DeliveryStatus.entregado => 'Pedido #$pedidoId entregado',
+          DeliveryStatus.enRuta => 'Pedido #$pedidoId en ruta',
+          _ => 'Pedido #$pedidoId no entregado',
+        },
         estado: OutboxStatus.pendiente,
         intentos: 0,
         creadoEn: DateTime.now(),
       ),
     );
+
+    // Los archivos entran DESPUES del estado y esperan a que salga: el servidor
+    // recibe primero «Entregado» y despues la foto y la firma.
+    for (final evidencia in evidencias) {
+      await _sync.enqueue(
+        OutboxEntry(
+          syncGuid: evidencia.syncGuid,
+          tipo: OutboxEntry.tipoEvidencia,
+          endpoint: 'api/mobile/v1/driver/deliveries/$rutaPedidoId/evidence',
+          payload: {
+            'tipo': evidencia.tipo,
+            'archivo': evidencia.path,
+            'dependeDe': syncGuid,
+          },
+          descripcion: evidencia.esFirma
+              ? 'Firma del pedido #$pedidoId'
+              : 'Foto del pedido #$pedidoId',
+          estado: OutboxStatus.pendiente,
+          intentos: 0,
+          creadoEn: DateTime.now(),
+        ),
+      );
+    }
   }
 
   Future<DaySummary> daySummary() async {

@@ -9,6 +9,7 @@ import '../../../shared/utils/navigation_launcher.dart';
 import '../application/routes_controller.dart';
 import '../domain/delivery.dart';
 import '../domain/route.dart';
+import 'delivery_confirm_sheet.dart';
 import 'route_map.dart';
 
 class RouteDetailPage extends ConsumerWidget {
@@ -22,7 +23,8 @@ class RouteDetailPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(detail.value?.codigo ?? 'Ruta'),
+        // Sin señal el detalle puede llegar con error: `.value` lo relanzaria al dibujar.
+        title: Text(detail.valueOrNull?.codigo ?? 'Ruta'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
@@ -42,7 +44,7 @@ class RouteDetailPage extends ConsumerWidget {
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, _) => ErrorView(
                 message:
-                    'Esta ruta ya no está disponible para vos. Puede que operaciones la haya reasignado.',
+                    'Esta ruta ya no está disponible para usted. Puede que operaciones la haya reasignado.',
                 onRetry: () =>
                     ref.read(routeDetailProvider(rutaId).notifier).refresh(),
               ),
@@ -50,7 +52,7 @@ class RouteDetailPage extends ConsumerWidget {
                   ? const EmptyState(
                       icon: Icons.route_rounded,
                       title: 'Ruta no encontrada',
-                      message: 'Volvé a la lista y actualizá.',
+                      message: 'Vuelva a la lista y actualice.',
                     )
                   : _RouteBody(route: route, rutaId: rutaId),
             ),
@@ -343,6 +345,11 @@ class DeliveryCard extends ConsumerWidget {
                 ],
               ),
             ],
+            // No hay boton «En ruta»: despachar la ruta ya pone TODAS sus paradas En ruta
+            // (sp_Rutas_Dispatch), y una parada Pendiente solo existe en una ruta
+            // Planificada, donde el servidor rechaza cualquier cambio de estado. El boton
+            // no tenia ningun caso en que sirviera. El estado se ve en la etiqueta de la
+            // tarjeta.
             if (!delivery.estaCerrada) ...[
               const SizedBox(height: 10),
               Row(
@@ -411,17 +418,15 @@ class DeliveryCard extends ConsumerWidget {
   }
 
   Future<void> _marcarEntregado(BuildContext context, WidgetRef ref) async {
-    final confirmado = await confirmSheet(
+    // G3-04: la confirmacion ofrece foto y firma del cliente (opcionales, como
+    // en la web). `null` es que el chofer cancelo.
+    final evidencias = await showDeliveryConfirmSheet(
       context,
-      title: 'Confirmar entrega',
-      message:
-          'Vas a marcar el pedido #${delivery.pedidoId} de ${delivery.cliente} como entregado. '
-          'Se le va a avisar al cliente.',
-      confirmLabel: 'Sí, fue entregado',
-      icon: Icons.check_circle_outline_rounded,
+      pedidoId: delivery.pedidoId,
+      cliente: delivery.cliente,
     );
 
-    if (!confirmado) return;
+    if (evidencias == null) return;
 
     await ref
         .read(routeDetailProvider(rutaId).notifier)
@@ -429,12 +434,19 @@ class DeliveryCard extends ConsumerWidget {
           rutaPedidoId: delivery.rutaPedidoId,
           pedidoId: delivery.pedidoId,
           estado: DeliveryStatus.entregado,
+          evidencias: evidencias,
         );
 
     if (context.mounted) {
+      final adjuntos = evidencias.length;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Pedido #${delivery.pedidoId} marcado como entregado.'),
+          content: Text(
+            adjuntos == 0
+                ? 'Pedido #${delivery.pedidoId} marcado como entregado.'
+                : 'Pedido #${delivery.pedidoId} marcado como entregado, con '
+                      '$adjuntos ${adjuntos == 1 ? "archivo de evidencia" : "archivos de evidencia"}.',
+          ),
         ),
       );
     }
@@ -578,7 +590,7 @@ class _MotivoSheetState extends State<_MotivoSheet> {
                   maxLines: 2,
                   onChanged: (_) => setState(() {}),
                   decoration: const InputDecoration(
-                    labelText: 'Escribí el motivo',
+                    labelText: 'Escriba el motivo',
                   ),
                 ),
               ],

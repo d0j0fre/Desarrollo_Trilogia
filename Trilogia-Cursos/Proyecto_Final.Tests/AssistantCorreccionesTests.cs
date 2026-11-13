@@ -8,15 +8,15 @@ namespace Proyecto_Final.Tests;
 public sealed class AssistantCorreccionesTests
 {
     [Fact]
-    public void BUG_26_01_LaPreguntaVaciaMuestraEscribeUnaPregunta()
+    public void BUG_26_01_LaPreguntaVaciaMuestraEscribaUnaPregunta()
     {
         var view = Read("Proyecto_Final", "Views", "Assistant", "Index.cshtml");
         var controller = Read("Proyecto_Final", "Controllers", "AssistantController.cs");
 
         // El cliente no envía la pregunta vacía, pero la avisa en la conversación
         // con el mismo texto que devuelve el servidor.
-        Assert.Contains("escapeHtml('Escribe una pregunta.')", view, StringComparison.Ordinal);
-        Assert.Contains("\"Escribe una pregunta.\"", controller, StringComparison.Ordinal);
+        Assert.Contains("escapeHtml('Escriba una pregunta.')", view, StringComparison.Ordinal);
+        Assert.Contains("\"Escriba una pregunta.\"", controller, StringComparison.Ordinal);
     }
 
     [Theory]
@@ -45,7 +45,6 @@ public sealed class AssistantCorreccionesTests
     [InlineData("consultas")]
     public void BUG_26_02_LaNavegacionDeLaAyudaExisteEnElMenu(string modulo)
     {
-        var layout = Read("Proyecto_Final", "Views", "Shared", "_Layout.cshtml");
         var texto = System.Text.RegularExpressions.Regex.Replace(AssistantService.ResponderAyuda(modulo).Respuesta, "<[^>]+>", string.Empty);
 
         Assert.DoesNotContain("Operación →", texto, StringComparison.Ordinal);
@@ -53,13 +52,11 @@ public sealed class AssistantCorreccionesTests
         Assert.NotEmpty(rutas);
         foreach (System.Text.RegularExpressions.Match ruta in rutas)
         {
-            // El área es una sección del menú y lo que sigue empieza con una opción de esa sección.
+            // El área es una sección del panel Administración y lo que sigue empieza con una opción de esa sección.
             var area = ruta.Groups[1].Value.Trim();
-            var inicioSeccion = layout.IndexOf($"acc-sec__label\">{area}</span>", StringComparison.Ordinal);
-            Assert.True(inicioSeccion >= 0, $"No existe la sección «{area}» en el menú.");
-            var finSeccion = layout.IndexOf("</details>", inicioSeccion, StringComparison.Ordinal);
-            var opciones = System.Text.RegularExpressions.Regex.Matches(layout[inicioSeccion..finSeccion], "<span>([^<]+)</span>")
-                .Select(m => m.Groups[1].Value);
+            var seccion = Proyecto_Final.Services.NavigationMenu.AdminPanel.SingleOrDefault(s => s.Label == area);
+            Assert.True(seccion is not null, $"No existe la sección «{area}» en el menú.");
+            var opciones = seccion!.Links.Select(l => l.Label);
             var resto = texto[(ruta.Index + ruta.Length)..];
             Assert.True(opciones.Any(o => resto.StartsWith(o, StringComparison.Ordinal)),
                 $"«{resto[..Math.Min(40, resto.Length)]}» no es una opción de «{area}» en el menú.");
@@ -113,6 +110,50 @@ public sealed class AssistantCorreccionesTests
         Assert.NotNull(respuesta);
         Assert.Contains("Inventario", respuesta!.Respuesta, StringComparison.Ordinal);
         Assert.DoesNotContain("Finanzas", respuesta.Respuesta, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("Vendedor")]
+    [InlineData("Empleado")]
+    [InlineData("Chofer")]
+    [InlineData("Bodeguero")]
+    public void G3_05_LasSugerenciasInicialesNoOfrecenVentasSinFinanzas(string rol)
+    {
+        var sugerencias = AssistantService.SugerenciasIniciales(rol);
+
+        Assert.DoesNotContain("¿Cuánto vendimos este mes?", sugerencias);
+        Assert.Contains("¿Qué puedo preguntar?", sugerencias);
+        Assert.Contains("¿Cómo uso el módulo de rutas?", sugerencias);
+        // Ninguna sugerencia termina en "Información restringida" para ese rol.
+        Assert.All(sugerencias, s => Assert.Null(AssistantService.Restringida(AssistantService.Normalizar(s), rol)));
+    }
+
+    [Theory]
+    [InlineData("Administrador")]
+    [InlineData("Gerente")]
+    public void G3_05_QuienVeFinanzasConservaTodasLasSugerencias(string rol)
+    {
+        Assert.Equal(
+            ["¿Qué puedo preguntar?", "Dame un resumen", "¿Cuánto vendimos este mes?", "¿Cómo está el inventario?", "¿Cómo uso el módulo de rutas?"],
+            AssistantService.SugerenciasIniciales(rol));
+    }
+
+    [Theory]
+    [InlineData("Chofer", false)]   // solo Logística
+    [InlineData("Vendedor", true)]
+    [InlineData("Bodeguero", true)]
+    public void G3_05_ElInventarioSeSugiereSoloSiElRolLoPuedeVer(string rol, bool sugerido)
+    {
+        Assert.Equal(sugerido, AssistantService.SugerenciasIniciales(rol).Contains("¿Cómo está el inventario?"));
+    }
+
+    [Fact]
+    public void G3_05_LaVistaUsaLasSugerenciasDelRol()
+    {
+        var view = Read("Proyecto_Final", "Views", "Assistant", "Index.cshtml");
+
+        Assert.Contains("AssistantService.SugerenciasIniciales(Context.Session.GetString(\"UserRole\"))", view, StringComparison.Ordinal);
+        Assert.DoesNotContain("'¿Cuánto vendimos este mes?'", view, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -1,0 +1,2168 @@
+{
+  "carpeta": "gerente",
+  "_nota": "Parte III (Gerente), módulos comerciales y de inventario. Datos: capitulos/20_gerente/_datos_comercial.sql. Correr en orden (algunas capturas dependen de la anterior).",
+  "capturas": [
+    {
+      "id": "ger-devoluciones-01",
+      "usuario": "gerente",
+      "sql": "UPDATE p SET p.Stock = p.Stock - d.Cantidad FROM Productos p JOIN Devoluciones d ON d.ProductoId = p.ProductoId WHERE d.Motivo = N'Botellas con la tapa floja' AND d.Estado = N'Reintegrada'; DELETE m FROM MovimientosInventario m JOIN Devoluciones d ON m.Motivo = CONCAT(N'Reintegro desde cuarentena (devolución #', d.DevolucionId, N')') WHERE d.Motivo = N'Botellas con la tapa floja'; DELETE FROM Devoluciones WHERE Motivo = N'Botellas con la tapa floja';",
+      "url": "/Returns/Index",
+      "ancho": 1440,
+      "acciones": [
+        {
+          "seleccionar": [
+            "#Nueva_ProductoId",
+            "11"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Nueva_Cantidad",
+            "2"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Nueva_PedidoId",
+            "8"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Nueva_ClienteInfo",
+            "Abastecedor Los Lagos"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Nueva_Motivo",
+            "Botellas con la tapa floja"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main form[action*=Create]",
+        "margen": [
+          60,
+          60,
+          20,
+          20
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#Nueva_ProductoId",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#Nueva_Cantidad",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#Nueva_PedidoId",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "#Nueva_ClienteInfo",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "#Nueva_Motivo",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 6,
+          "selector": "main form[action*=Create] button[type=submit]",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "ger-devoluciones-02",
+      "usuario": "gerente",
+      "_nota": "Registra la devolución de la 01 (queda en cuarentena; la usa ger-cuarentena-03).",
+      "url": "/Returns/Index",
+      "ancho": 1440,
+      "acciones": [
+        {
+          "seleccionar": [
+            "#Nueva_ProductoId",
+            "11"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Nueva_Cantidad",
+            "2"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Nueva_PedidoId",
+            "8"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Nueva_ClienteInfo",
+            "Abastecedor Los Lagos"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Nueva_Motivo",
+            "Botellas con la tapa floja"
+          ]
+        },
+        {
+          "clic": "main form[action*=Create] button[type=submit]"
+        }
+      ],
+      "recorte": {
+        "selector": "main .col-lg-8 .admin-table-wrapper",
+        "margen": 10
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main table tbody tr >> nth=0"
+        }
+      ]
+    },
+    {
+      "id": "ger-devoluciones-03",
+      "usuario": "gerente",
+      "url": "/Returns/Index",
+      "ancho": 1600,
+      "acciones": [
+        {
+          "rellenar": [
+            "main input[name=buscar]",
+            "Pura Vida"
+          ]
+        },
+        {
+          "seleccionar": [
+            "main select[name=estado]",
+            "EnCuarentena"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main .admin-filter-bar",
+        "margen": [
+          16,
+          16,
+          70,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main input[name=buscar]",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main select[name=estado]",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main .admin-filter-bar button[type=submit]",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "flecha",
+          "selector": "main .admin-filter-bar a[href*=Report]",
+          "desde": "abajo",
+          "largo": 45
+        }
+      ]
+    },
+    {
+      "id": "ger-devoluciones-04",
+      "usuario": "gerente",
+      "url": "/Returns/Report",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main .backoffice-page > .row:nth-child(-n+3)",
+        "todos": true,
+        "margen": [
+          10,
+          10,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#desde",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#hasta",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main form[action*=Report] button[type=submit]",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "main a[href*=ExportCsv]",
+          "posicion": "arriba"
+        }
+      ],
+      "acciones": [
+        {
+          "rellenar": [
+            "#desde",
+            "2026-10-01"
+          ]
+        },
+        {
+          "clic": "main form[action*=Report] button[type=submit]"
+        }
+      ]
+    },
+    {
+      "id": "ger-devoluciones-05",
+      "usuario": "gerente",
+      "url": "/Returns/Index",
+      "ancho": 1440,
+      "acciones": [
+        {
+          "clic": "main form[action*=Create] button[type=submit]"
+        }
+      ],
+      "recorte": {
+        "selector": "main form[action*=Create] .validation-summary-errors",
+        "margen": 16
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main form[action*=Create] .validation-summary-errors"
+        }
+      ]
+    },
+    {
+      "id": "ger-devoluciones-06",
+      "usuario": "gerente",
+      "url": "/Returns/Index",
+      "ancho": 1440,
+      "acciones": [
+        {
+          "seleccionar": [
+            "#Nueva_ProductoId",
+            "11"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Nueva_PedidoId",
+            "9999"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Nueva_Motivo",
+            "Prueba de pedido inexistente"
+          ]
+        },
+        {
+          "clic": "main form[action*=Create] button[type=submit]"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert-danger",
+        "margen": 16
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-danger"
+        }
+      ]
+    },
+    {
+      "id": "ger-cuarentena-01",
+      "usuario": "gerente",
+      "url": "/Returns/Quarantine",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main .backoffice-page",
+        "margen": [
+          0,
+          0,
+          45,
+          0
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main table tbody tr:has-text('Pura Vida') .js-observacion-cuarentena",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main table tbody tr:has-text('Pura Vida') button:has-text('Liberar')",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main table tbody tr:has-text('Pura Vida') button:has-text('Descartar')",
+          "posicion": "abajo"
+        }
+      ],
+      "acciones": [
+        {
+          "rellenar": [
+            "main table tbody tr:has-text('Pura Vida') .js-observacion-cuarentena",
+            "Sello intacto, se revisaron las 2 botellas"
+          ]
+        },
+        {
+          "js": "document.activeElement && document.activeElement.blur()"
+        }
+      ]
+    },
+    {
+      "id": "ger-cuarentena-02",
+      "usuario": "gerente",
+      "url": "/Returns/Quarantine",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clicSinEsperar": "main table tbody tr:has-text('tapa floja') button:has-text('Liberar')"
+        },
+        {
+          "esperar": 500
+        }
+      ],
+      "recorte": {
+        "selector": ".s3-modal-dialog",
+        "margen": [
+          20,
+          20,
+          80,
+          20
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "selector": ".s3-modal-btn-confirm",
+          "desde": "abajo",
+          "largo": 50,
+          "recuadro": true
+        }
+      ]
+    },
+    {
+      "id": "ger-cuarentena-03",
+      "usuario": "gerente",
+      "_nota": "Libera la devolución creada en ger-devoluciones-02.",
+      "url": "/Returns/Quarantine",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "main table tbody tr:has-text('tapa floja') .js-observacion-cuarentena",
+            "Tapas revisadas y bien selladas. Apto para la venta."
+          ]
+        },
+        {
+          "clicSinEsperar": "main table tbody tr:has-text('tapa floja') button:has-text('Liberar')"
+        },
+        {
+          "esperar": 500
+        },
+        {
+          "clic": ".s3-modal-btn-confirm"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert-success",
+        "margen": 16
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success"
+        }
+      ]
+    },
+    {
+      "id": "ger-cuarentena-04",
+      "usuario": "gerente",
+      "url": "/Returns/Index?estado=Reintegrada",
+      "ancho": 1440,
+      "recorte": {
+        "selector": "main .admin-table-wrapper:has(table)",
+        "margen": 10
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main table tbody tr:has-text('tapa floja')"
+        }
+      ]
+    },
+    {
+      "id": "ger-activos-01",
+      "usuario": "gerente",
+      "sql": "DELETE c FROM Comodatos c JOIN Activos a ON a.ActivoId = c.ActivoId WHERE a.CodigoActivo = N'ACT-0107'; DELETE FROM Activos WHERE CodigoActivo = N'ACT-0107'; UPDATE Activos SET Estado = N'Mantenimiento', ClientePrestamo = NULL WHERE CodigoActivo = N'ACT-0106';",
+      "url": "/Assets/Index",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main .backoffice-page",
+        "margen": [
+          0,
+          0,
+          10,
+          0
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "selector": "main a[href*='Assets/Create']",
+          "desde": "abajo",
+          "largo": 40
+        }
+      ]
+    },
+    {
+      "id": "ger-activos-02",
+      "usuario": "gerente",
+      "url": "/Assets/Create",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "#CodigoActivo",
+            "ACT-0107"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Nombre",
+            "Nevera exhibidora 3 puertas"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#Tipo",
+            "Nevera"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Descripcion",
+            "Marca Imperial, 1 200 litros, con luz LED"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main form[action*=Create]",
+        "margen": [
+          20,
+          60,
+          60,
+          20
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#CodigoActivo",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#Nombre",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#Tipo",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "#Descripcion",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "main form[action*=Create] button[type=submit]",
+          "posicion": "abajo"
+        }
+      ]
+    },
+    {
+      "id": "ger-activos-03",
+      "usuario": "gerente",
+      "url": "/Assets/Create",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "#CodigoActivo",
+            "ACT-0107"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Nombre",
+            "Nevera exhibidora 3 puertas"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#Tipo",
+            "Nevera"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Descripcion",
+            "Marca Imperial, 1 200 litros, con luz LED"
+          ]
+        },
+        {
+          "clic": "main form[action*=Create] button[type=submit]"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert-success, main .admin-table-wrapper",
+        "todos": true,
+        "margen": 12
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main table tbody tr:has-text('ACT-0107')"
+        }
+      ]
+    },
+    {
+      "id": "ger-activos-04",
+      "usuario": "gerente",
+      "url": "/Assets/Index?buscar=ACT-0104",
+      "ancho": 1760,
+      "acciones": [
+        {
+          "clic": "main table tbody tr:has-text('ACT-0104') a.btn-ds-view"
+        }
+      ],
+      "recorte": {
+        "selector": "main .col-lg-8",
+        "margen": [
+          10,
+          10,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .admin-table-wrapper >> nth=0"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main .admin-table-wrapper >> nth=1"
+        }
+      ]
+    },
+    {
+      "id": "ger-activos-05",
+      "usuario": "gerente",
+      "url": "/Assets/Create",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "#CodigoActivo",
+            "ACT-0101"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Nombre",
+            "Nevera de prueba"
+          ]
+        },
+        {
+          "clic": "main form[action*=Create] button[type=submit]"
+        }
+      ],
+      "recorte": {
+        "selector": "main form[action*=Create] .validation-summary-errors",
+        "margen": 16
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main form[action*=Create] .validation-summary-errors"
+        }
+      ]
+    },
+    {
+      "id": "ger-activos-06",
+      "usuario": "gerente",
+      "url": "/Assets/Index",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main table thead, main table tbody tr:nth-last-child(-n+3)",
+        "todos": true,
+        "margen": [
+          10,
+          10,
+          60,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main table tbody tr:last-child a.btn-ds-view",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main table tbody tr:last-child a.btn-ds-edit",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main table tbody tr:last-child button.btn-ds-danger",
+          "posicion": "abajo"
+        }
+      ]
+    },
+    {
+      "id": "ger-activos-07",
+      "usuario": "gerente",
+      "sql": "UPDATE Activos SET Estado = N'Mantenimiento', ClientePrestamo = NULL WHERE CodigoActivo = N'ACT-0106';",
+      "url": "/Assets/Index?buscar=ACT-0106",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clic": "main table tbody tr:has-text('ACT-0106') a.btn-ds-view"
+        }
+      ],
+      "recorte": {
+        "selector": "main .admin-page-header, main .admin-table-wrapper.p-4",
+        "todos": true,
+        "margen": [
+          10,
+          10,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main form[action*=MarkAvailable] button"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main .admin-table-wrapper.p-4 .admin-badge-soft"
+        }
+      ]
+    },
+    {
+      "id": "ger-activos-08",
+      "usuario": "gerente",
+      "sql": "UPDATE Activos SET Estado = N'Mantenimiento', ClientePrestamo = NULL WHERE CodigoActivo = N'ACT-0106';",
+      "url": "/Assets/Index?buscar=ACT-0106",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clic": "main table tbody tr:has-text('ACT-0106') a.btn-ds-view"
+        },
+        {
+          "clicSinEsperar": "main form[action*=MarkAvailable] button"
+        },
+        {
+          "esperar": 500
+        }
+      ],
+      "recorte": {
+        "selector": ".s3-modal-dialog",
+        "margen": [
+          20,
+          20,
+          80,
+          20
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "selector": ".s3-modal-btn-confirm",
+          "desde": "abajo",
+          "largo": 50,
+          "recuadro": true
+        }
+      ]
+    },
+    {
+      "id": "ger-activos-09",
+      "usuario": "gerente",
+      "sql": "UPDATE Activos SET Estado = N'Mantenimiento', ClientePrestamo = NULL WHERE CodigoActivo = N'ACT-0106';",
+      "url": "/Assets/Index?buscar=ACT-0106",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clic": "main table tbody tr:has-text('ACT-0106') a.btn-ds-view"
+        },
+        {
+          "clicSinEsperar": "main form[action*=MarkAvailable] button"
+        },
+        {
+          "esperar": 500
+        },
+        {
+          "clic": ".s3-modal-btn-confirm"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert-success, main .admin-page-header, main .admin-table-wrapper.p-4",
+        "todos": true,
+        "margen": [
+          12,
+          10,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main .admin-table-wrapper.p-4 .admin-badge-soft"
+        }
+      ]
+    },
+    {
+      "id": "ger-comodatos-01",
+      "usuario": "gerente",
+      "sql": "DELETE FROM ClienteCreditoMovimientos WHERE Referencia = N'MANUAL-GER'; DELETE c FROM Comodatos c JOIN Activos a ON a.ActivoId = c.ActivoId WHERE a.CodigoActivo = N'ACT-0105'; UPDATE Activos SET Estado = N'Disponible', ClientePrestamo = NULL WHERE CodigoActivo = N'ACT-0105';",
+      "url": "/Comodatos/Index",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main .backoffice-page",
+        "margen": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "selector": "main a[href*='Comodatos/Profitability']",
+          "desde": "abajo",
+          "largo": 40
+        },
+        {
+          "tipo": "flecha",
+          "selector": "main a[href*='Comodatos/Assign']",
+          "desde": "abajo",
+          "largo": 40
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main table tbody tr:has-text('ACT-0101') >> td >> nth=7"
+        }
+      ]
+    },
+    {
+      "id": "ger-comodatos-02",
+      "usuario": "gerente",
+      "url": "/Comodatos/Assign",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "#ActivoId",
+            {
+              "label": "ACT-0105 — Exhibidor de piso Red Bull (Exhibidor)"
+            }
+          ]
+        },
+        {
+          "js": "const s=document.getElementById('comodato-cliente'); s.value=[...s.options].find(o=>o.text.includes('Super Don Beto')).value; s.dispatchEvent(new Event('change'));"
+        },
+        {
+          "rellenar": [
+            "#Ubicacion",
+            "Pasillo de bebidas, Alajuela centro"
+          ]
+        },
+        {
+          "rellenar": [
+            "#CondicionEntrega",
+            "Nuevo, con rótulo luminoso"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main form[action*=Assign]",
+        "margen": [
+          20,
+          60,
+          20,
+          20
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#ActivoId",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#comodato-cliente",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#Ubicacion",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "#FechaAsignacion",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "#CondicionEntrega",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 6,
+          "selector": "main form[action*=Assign] button[type=submit]",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "ger-comodatos-03",
+      "usuario": "gerente",
+      "url": "/Comodatos/Assign",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "#ActivoId",
+            {
+              "label": "ACT-0105 — Exhibidor de piso Red Bull (Exhibidor)"
+            }
+          ]
+        },
+        {
+          "js": "const s=document.getElementById('comodato-cliente'); s.value=[...s.options].find(o=>o.text.includes('Super Don Beto')).value; s.dispatchEvent(new Event('change'));"
+        },
+        {
+          "rellenar": [
+            "#Ubicacion",
+            "Pasillo de bebidas, Alajuela centro"
+          ]
+        },
+        {
+          "rellenar": [
+            "#CondicionEntrega",
+            "Nuevo, con rótulo luminoso"
+          ]
+        },
+        {
+          "clic": "main form[action*=Assign] button[type=submit]"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert-success",
+        "todos": true,
+        "margen": 12
+      },
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "selector": "main a[href*='Comodatos/Contract']:has-text('Descargar contrato')",
+          "desde": "abajo",
+          "largo": 40,
+          "recuadro": true
+        }
+      ]
+    },
+    {
+      "id": "ger-comodatos-04",
+      "usuario": "gerente",
+      "url": "/Comodatos/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clicSinEsperar": "main table tbody tr:has-text('ACT-0105') button:has-text('Devolver')"
+        },
+        {
+          "esperar": 600
+        },
+        {
+          "seleccionar": [
+            "main tr.collapse.show select[name=Destino]",
+            "Inventario"
+          ]
+        },
+        {
+          "rellenar": [
+            "main tr.collapse.show input[name=CondicionDevolucion]",
+            "Buen estado, rótulo funcionando"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main table tbody tr:has-text('ACT-0105'), main tr.collapse.show",
+        "todos": true,
+        "margen": [
+          10,
+          10,
+          70,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main table tbody tr:has-text('ACT-0105') button:has-text('Devolver')",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main tr.collapse.show select[name=Destino]",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main tr.collapse.show input[name=CondicionDevolucion]",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "main tr.collapse.show button[type=submit]",
+          "posicion": "abajo"
+        }
+      ]
+    },
+    {
+      "id": "ger-comodatos-05",
+      "usuario": "gerente",
+      "_nota": "Cierra el comodato de ACT-0105 que crea ger-comodatos-03.",
+      "url": "/Comodatos/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clicSinEsperar": "main table tbody tr:has-text('ACT-0105') button:has-text('Devolver')"
+        },
+        {
+          "esperar": 600
+        },
+        {
+          "seleccionar": [
+            "main tr.collapse.show select[name=Destino]",
+            "Inventario"
+          ]
+        },
+        {
+          "rellenar": [
+            "main tr.collapse.show input[name=CondicionDevolucion]",
+            "Buen estado, rótulo funcionando"
+          ]
+        },
+        {
+          "clicSinEsperar": "main tr.collapse.show button[type=submit]"
+        },
+        {
+          "esperar": 500
+        },
+        {
+          "clic": ".s3-modal-btn-confirm"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert-success, main table tbody tr:has-text('ACT-0105')",
+        "todos": true,
+        "margen": 12
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main table tbody tr:has-text('ACT-0105') >> td >> nth=6"
+        }
+      ]
+    },
+    {
+      "id": "ger-comodatos-06",
+      "usuario": "gerente",
+      "url": "/Comodatos/Profitability",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main .backoffice-page",
+        "margen": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-danger"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main table tbody tr.table-danger"
+        }
+      ]
+    },
+    {
+      "id": "ger-comodatos-07",
+      "usuario": "gerente",
+      "sql": "DELETE FROM ClienteCreditoMovimientos WHERE Referencia = N'MANUAL-GER'; INSERT INTO ClienteCreditoMovimientos (UsuarioId, TipoMovimiento, Monto, Descripcion, Referencia, RegistradoPorUsuarioId, RegistradoPorNombre, FechaMovimiento) SELECT UsuarioId, N'Cargo', 64500, N'Factura a crédito (ejemplo del manual)', N'MANUAL-GER', NULL, N'Manual', DATEADD(DAY, -45, SYSDATETIME()) FROM Usuarios WHERE Correo = N'mayorista@labodega.cr';",
+      "url": "/Comodatos/Assign",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "#ActivoId",
+            {
+              "label": "ACT-0105 — Exhibidor de piso Red Bull (Exhibidor)"
+            }
+          ]
+        },
+        {
+          "js": "const s=document.getElementById('comodato-cliente'); s.value=[...s.options].find(o=>o.text.includes('Mayorista')).value; s.dispatchEvent(new Event('change'));"
+        },
+        {
+          "clic": "main form[action*=Assign] button[type=submit]"
+        }
+      ],
+      "recorte": {
+        "selector": "main form[action*=Assign] .alert-danger",
+        "margen": 16
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main form[action*=Assign] .alert-danger"
+        }
+      ]
+    },
+    {
+      "id": "ger-comodatos-08",
+      "usuario": "gerente",
+      "_nota": "Aviso que aparece al elegir un cliente moroso (usa el cargo de la 07). Al final se borra el cargo.",
+      "url": "/Comodatos/Assign",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "js": "const s=document.getElementById('comodato-cliente'); s.value=[...s.options].find(o=>o.text.includes('Mayorista')).value; s.dispatchEvent(new Event('change'));"
+        }
+      ],
+      "recorte": {
+        "selector": "#comodato-cliente, #comodato-cliente-riesgo",
+        "todos": true,
+        "margen": [
+          40,
+          16,
+          16,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "#comodato-cliente-riesgo"
+        }
+      ]
+    },
+    {
+      "id": "ger-promociones-01",
+      "usuario": "gerente",
+      "sql": "DELETE FROM ClienteCreditoMovimientos WHERE Referencia = N'MANUAL-GER'; DELETE FROM PromocionAplicaciones WHERE PromocionId IN (SELECT PromocionId FROM Promociones WHERE Nombre IN (N'Flor de Caña en oferta', N'Pilsen al por mayor')); DELETE FROM Promociones WHERE Nombre IN (N'Flor de Caña en oferta', N'Pilsen al por mayor');",
+      "url": "/Promotions/Index",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main .backoffice-page",
+        "margen": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "selector": "main a[href*='Promotions/Segments']",
+          "desde": "abajo",
+          "largo": 40
+        },
+        {
+          "tipo": "flecha",
+          "selector": "main a[href*='Promotions/Create']",
+          "desde": "abajo",
+          "largo": 40
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main table tbody tr:has-text('Pilsen de temporada') >> td >> nth=6"
+        }
+      ]
+    },
+    {
+      "id": "ger-promociones-02",
+      "usuario": "gerente",
+      "url": "/Promotions/Create",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "#Nombre",
+            "Flor de Caña en oferta"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Descripcion",
+            "12 % al llevar 3 botellas o más"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#promoTipo",
+            "DescuentoPorcentual"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#SegmentoCliente",
+            "Todos"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#ProductoId",
+            "15"
+          ]
+        },
+        {
+          "rellenar": [
+            "#CantidadMinima",
+            "3"
+          ]
+        },
+        {
+          "rellenar": [
+            "#PorcentajeDescuento",
+            "12"
+          ]
+        },
+        {
+          "rellenar": [
+            "#FechaInicio",
+            "2026-11-02"
+          ]
+        },
+        {
+          "rellenar": [
+            "#FechaFin",
+            "2026-11-30"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Prioridad",
+            "1"
+          ]
+        },
+        {
+          "rellenar": [
+            "#LimiteUnidades",
+            "60"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main form[action*=Create]",
+        "margen": [
+          20,
+          60,
+          20,
+          60
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#Nombre, #Descripcion",
+          "todos": true,
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#promoTipo, #SegmentoCliente",
+          "todos": true,
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#ProductoId, #CantidadMinima",
+          "todos": true,
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "#PorcentajeDescuento",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "#FechaInicio, #FechaFin, #Prioridad, #LimiteUnidades",
+          "todos": true,
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 6,
+          "selector": "main form[action*=Create] button[type=submit]",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "ger-promociones-03",
+      "usuario": "gerente",
+      "url": "/Promotions/Create",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "#promoTipo",
+            "RegaliaPorVolumen"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#ProductoRegaloId",
+            "23"
+          ]
+        },
+        {
+          "rellenar": [
+            "#CantidadRegalo",
+            "1"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "#promoTipo, .promo-regalia",
+        "todos": true,
+        "margen": [
+          40,
+          20,
+          4,
+          20
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "#promoTipo"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": ".promo-regalia"
+        }
+      ]
+    },
+    {
+      "id": "ger-promociones-04",
+      "usuario": "gerente",
+      "url": "/Promotions/Create",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "#Nombre",
+            "Flor de Caña en oferta"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Descripcion",
+            "12 % al llevar 3 botellas o más"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#ProductoId",
+            "15"
+          ]
+        },
+        {
+          "rellenar": [
+            "#CantidadMinima",
+            "3"
+          ]
+        },
+        {
+          "rellenar": [
+            "#PorcentajeDescuento",
+            "12"
+          ]
+        },
+        {
+          "rellenar": [
+            "#FechaInicio",
+            "2026-11-02"
+          ]
+        },
+        {
+          "rellenar": [
+            "#FechaFin",
+            "2026-11-30"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Prioridad",
+            "1"
+          ]
+        },
+        {
+          "rellenar": [
+            "#LimiteUnidades",
+            "60"
+          ]
+        },
+        {
+          "clic": "main form[action*=Create] button[type=submit]"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert-success, main table tbody tr:has-text('Flor de Caña en oferta')",
+        "todos": true,
+        "margen": 12
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main table tbody tr:has-text('Flor de Caña en oferta')"
+        }
+      ]
+    },
+    {
+      "id": "ger-promociones-05",
+      "usuario": "gerente",
+      "url": "/Promotions/Create",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "#Nombre",
+            "Pilsen al por mayor"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#ProductoId",
+            "13"
+          ]
+        },
+        {
+          "rellenar": [
+            "#CantidadMinima",
+            "10"
+          ]
+        },
+        {
+          "rellenar": [
+            "#PorcentajeDescuento",
+            "15"
+          ]
+        },
+        {
+          "rellenar": [
+            "#FechaInicio",
+            "2026-11-15"
+          ]
+        },
+        {
+          "rellenar": [
+            "#FechaFin",
+            "2026-12-15"
+          ]
+        },
+        {
+          "clic": "main form[action*=Create] button[type=submit]"
+        }
+      ],
+      "recorte": {
+        "selector": "main form[action*=Create] .validation-summary-errors",
+        "margen": 16
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main form[action*=Create] .validation-summary-errors"
+        }
+      ]
+    },
+    {
+      "id": "ger-promociones-06",
+      "usuario": "gerente",
+      "url": "/Promotions/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clicSinEsperar": "main table tbody tr:has-text('Flor de Caña en oferta') button.btn-ds-danger"
+        },
+        {
+          "esperar": 500
+        }
+      ],
+      "recorte": {
+        "selector": ".s3-modal-dialog",
+        "margen": [
+          20,
+          20,
+          80,
+          20
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "selector": ".s3-modal-btn-confirm",
+          "desde": "abajo",
+          "largo": 50,
+          "recuadro": true
+        }
+      ]
+    },
+    {
+      "id": "ger-promociones-07",
+      "usuario": "gerente",
+      "url": "/Promotions/Segments",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main .admin-page-header, main .admin-filter-bar, main table thead, main table tbody tr:nth-child(-n+5)",
+        "todos": true,
+        "margen": 12
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main table tbody tr >> nth=0 >> td >> nth=2"
+        },
+        {
+          "tipo": "flecha",
+          "selector": "main table tbody tr >> nth=0 >> button",
+          "desde": "derecha",
+          "largo": 45
+        }
+      ]
+    },
+    {
+      "id": "ger-reclamos-01",
+      "usuario": "gerente",
+      "sql": "DELETE FROM Reclamos WHERE Asunto = N'Faltaron 6 botellas de agua';",
+      "url": "/Reclamos/Index",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main > .container-fluid",
+        "margen": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "selector": "main a[href*='Reclamos/Create']",
+          "desde": "abajo",
+          "largo": 40
+        }
+      ]
+    },
+    {
+      "id": "ger-reclamos-02",
+      "usuario": "gerente",
+      "url": "/Reclamos/Create",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "js": "const s=document.getElementById('UsuarioId'); s.value=[...s.options].find(o=>o.text.includes('Hotel Camino Verde')).value; s.dispatchEvent(new Event('change'));"
+        },
+        {
+          "esperar": 800
+        },
+        {
+          "seleccionar": [
+            "#FacturaId",
+            {
+              "index": 1
+            }
+          ]
+        },
+        {
+          "seleccionar": [
+            "#Categoria",
+            "Entrega"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#Prioridad",
+            "Media"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Asunto",
+            "Faltaron 6 botellas de agua"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Descripcion",
+            "El cliente recibió el pedido completo excepto un paquete de 6 botellas de agua de 600 ml. El chofer no dejó nota."
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main form[action*=Create]",
+        "margen": [
+          20,
+          60,
+          20,
+          20
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#UsuarioId",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#FacturaId",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#Categoria, #Prioridad",
+          "todos": true,
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "#Asunto",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "#Descripcion",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 6,
+          "selector": "main form[action*=Create] button[type=submit]",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "ger-reclamos-03",
+      "usuario": "gerente",
+      "url": "/Reclamos/Create",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "js": "const s=document.getElementById('UsuarioId'); s.value=[...s.options].find(o=>o.text.includes('Hotel Camino Verde')).value; s.dispatchEvent(new Event('change'));"
+        },
+        {
+          "esperar": 800
+        },
+        {
+          "seleccionar": [
+            "#FacturaId",
+            {
+              "index": 1
+            }
+          ]
+        },
+        {
+          "seleccionar": [
+            "#Categoria",
+            "Entrega"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#Prioridad",
+            "Media"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Asunto",
+            "Faltaron 6 botellas de agua"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Descripcion",
+            "El cliente recibió el pedido completo excepto un paquete de 6 botellas de agua de 600 ml. El chofer no dejó nota."
+          ]
+        },
+        {
+          "clic": "main form[action*=Create] button[type=submit]"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert-success, main > .container-fluid",
+        "todos": true,
+        "margen": [
+          10,
+          0,
+          0,
+          0
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main .admin-card >> nth=0 >> .admin-badge-soft >> nth=0"
+        }
+      ]
+    },
+    {
+      "id": "ger-reclamos-04",
+      "usuario": "gerente",
+      "url": "/Reclamos/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clic": "main table tbody tr:has-text('Faltaron 6 botellas') a:has-text('Ver')"
+        },
+        {
+          "seleccionar": [
+            "#EstadoSelect",
+            "Cerrado"
+          ]
+        },
+        {
+          "rellenar": [
+            "#ResolucionTxt",
+            "Se repuso el paquete de agua en la entrega del día siguiente sin costo para el cliente."
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main form[action*=UpdateStatus]",
+        "margen": [
+          60,
+          60,
+          20,
+          20
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#EstadoSelect",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#ResolucionTxt",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main form[action*=UpdateStatus] button[type=submit]",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "ger-reclamos-05",
+      "usuario": "gerente",
+      "url": "/Reclamos/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clic": "main table tbody tr:has-text('Faltaron 6 botellas') a:has-text('Ver')"
+        },
+        {
+          "seleccionar": [
+            "#EstadoSelect",
+            "Cerrado"
+          ]
+        },
+        {
+          "rellenar": [
+            "#ResolucionTxt",
+            "Se repuso el paquete de agua en la entrega del día siguiente sin costo para el cliente."
+          ]
+        },
+        {
+          "clic": "main form[action*=UpdateStatus] button[type=submit]"
+        }
+      ],
+      "recorte": {
+        "selector": "main > .container.mt-3, main > .container-fluid",
+        "todos": true,
+        "margen": [
+          10,
+          0,
+          0,
+          0
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success >> nth=0"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main .admin-card .alert-success"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-secondary"
+        }
+      ]
+    },
+    {
+      "id": "ger-reclamos-06",
+      "usuario": "gerente",
+      "url": "/Reclamos/Index",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main .admin-card form, main .admin-table-wrapper thead, main .admin-table-wrapper tbody tr:first-child",
+        "todos": true,
+        "margen": [
+          40,
+          16,
+          12,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main select[name=estado]",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main input[name=buscar]",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main form[action*=Reclamos] button[type=submit]",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main table tbody tr >> nth=0 >> a:has-text('Ver')"
+        }
+      ]
+    },
+    {
+      "id": "ger-retenidos-01",
+      "usuario": "gerente",
+      "sql": "DECLARE @p INT = (SELECT PedidoId FROM Pedidos WHERE PedidoOfflineGuid = '6A1F0C11-0000-4000-8000-000000000302'); IF EXISTS (SELECT 1 FROM Pedidos WHERE PedidoId = @p AND InventarioDescontado = 1) BEGIN UPDATE pr SET pr.Stock = pr.Stock + d.Cantidad FROM Productos pr JOIN PedidoDetalle d ON d.ProductoId = pr.ProductoId WHERE d.PedidoId = @p; DELETE FROM MovimientosInventario WHERE Motivo LIKE CONCAT(N'Pedido #', @p, N' liberado por %'); DELETE fd FROM FacturaDetalle fd JOIN Facturas f ON f.FacturaId = fd.FacturaId WHERE f.PedidoId = @p; DELETE FROM Facturas WHERE PedidoId = @p; END; UPDATE Pedidos SET Estado = N'Retenido', InventarioDescontado = 0, MotivoRechazo = NULL WHERE PedidoOfflineGuid IN ('6A1F0C11-0000-4000-8000-000000000302', '6A1F0C11-0000-4000-8000-000000000303');",
+      "url": "/ManagerOrders/Index",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main > .container-fluid",
+        "margen": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .admin-page-header .badge"
+        },
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main input[name=buscar]",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main table tbody tr:has-text('Camino Verde') a:has-text('Revisar')",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "ger-retenidos-02",
+      "usuario": "gerente",
+      "url": "/ManagerOrders/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clic": "main table tbody tr:has-text('Camino Verde') a:has-text('Revisar')"
+        }
+      ],
+      "recorte": {
+        "selector": "main > .container-fluid",
+        "margen": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main table thead th:has-text('Stock actual')"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": ".approve-card"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": ".reject-card"
+        }
+      ]
+    },
+    {
+      "id": "ger-retenidos-03",
+      "usuario": "gerente",
+      "url": "/ManagerOrders/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clic": "main table tbody tr:has-text('Camino Verde') a:has-text('Revisar')"
+        },
+        {
+          "clicSinEsperar": ".approve-card button[type=submit]"
+        },
+        {
+          "esperar": 500
+        }
+      ],
+      "recorte": {
+        "selector": ".s3-modal-dialog",
+        "margen": [
+          20,
+          20,
+          80,
+          20
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "selector": ".s3-modal-btn-confirm",
+          "desde": "abajo",
+          "largo": 50,
+          "recuadro": true
+        }
+      ]
+    },
+    {
+      "id": "ger-retenidos-04",
+      "usuario": "gerente",
+      "url": "/ManagerOrders/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clic": "main table tbody tr:has-text('Camino Verde') a:has-text('Revisar')"
+        },
+        {
+          "clicSinEsperar": ".approve-card button[type=submit]"
+        },
+        {
+          "esperar": 500
+        },
+        {
+          "clic": ".s3-modal-btn-confirm"
+        }
+      ],
+      "recorte": {
+        "selector": "main > .container-fluid",
+        "margen": [
+          0,
+          0,
+          16,
+          0
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .admin-card >> nth=3"
+        },
+        {
+          "tipo": "flecha",
+          "selector": "main a[href*='OrdersAdmin/Detail']",
+          "desde": "derecha",
+          "largo": 45
+        }
+      ]
+    },
+    {
+      "id": "ger-retenidos-05",
+      "usuario": "gerente",
+      "url": "/ManagerOrders/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clic": "main table tbody tr:has-text('Puerto Azul') a:has-text('Revisar')"
+        },
+        {
+          "rellenar": [
+            "#RechazarForm_MotivoRechazo",
+            "El cliente pidió cambiar el Cacique por Flor de Caña. El vendedor registrará un pedido nuevo."
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": ".reject-card",
+        "margen": [
+          40,
+          60,
+          20,
+          20
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#RechazarForm_MotivoRechazo",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": ".reject-card button[type=submit]",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "ger-retenidos-06",
+      "usuario": "gerente",
+      "url": "/ManagerOrders/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clic": "main table tbody tr:has-text('Puerto Azul') a:has-text('Revisar')"
+        },
+        {
+          "rellenar": [
+            "#RechazarForm_MotivoRechazo",
+            "El cliente pidió cambiar el Cacique por Flor de Caña."
+          ]
+        },
+        {
+          "clicSinEsperar": ".reject-card button[type=submit]"
+        },
+        {
+          "esperar": 500
+        }
+      ],
+      "recorte": {
+        "selector": ".s3-modal-dialog",
+        "margen": [
+          20,
+          20,
+          80,
+          20
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "selector": ".s3-modal-btn-confirm",
+          "desde": "abajo",
+          "largo": 50,
+          "recuadro": true
+        }
+      ]
+    },
+    {
+      "id": "ger-retenidos-07",
+      "usuario": "gerente",
+      "url": "/ManagerOrders/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clic": "main table tbody tr:has-text('Puerto Azul') a:has-text('Revisar')"
+        },
+        {
+          "clicSinEsperar": ".reject-card button[type=submit]"
+        },
+        {
+          "esperar": 400
+        }
+      ],
+      "recorte": {
+        "selector": ".reject-card",
+        "margen": 16
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": ".reject-card textarea"
+        }
+      ]
+    },
+    {
+      "id": "ger-retenidos-08",
+      "usuario": "gerente",
+      "url": "/ManagerOrders/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clic": "main table tbody tr:has-text('Puerto Azul') a:has-text('Revisar')"
+        },
+        {
+          "rellenar": [
+            "#RechazarForm_MotivoRechazo",
+            "El cliente pidió cambiar el Cacique por Flor de Caña. El vendedor registrará un pedido nuevo."
+          ]
+        },
+        {
+          "clicSinEsperar": ".reject-card button[type=submit]"
+        },
+        {
+          "esperar": 500
+        },
+        {
+          "clic": ".s3-modal-btn-confirm"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert-success",
+        "margen": 12
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success"
+        }
+      ]
+    }
+  ]
+}

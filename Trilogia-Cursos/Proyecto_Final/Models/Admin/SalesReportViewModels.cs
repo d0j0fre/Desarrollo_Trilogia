@@ -26,9 +26,9 @@ public sealed class SalesReportFilterViewModel : IValidatableObject
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
         if (Desde.Date > Hasta.Date)
-            yield return new ValidationResult("La fecha inicial no puede superar la final.", [nameof(Desde), nameof(Hasta)]);
+            yield return new ValidationResult("La fecha inicial no puede superar la final.", [nameof(Hasta)]);
         if ((Hasta.Date - Desde.Date).TotalDays > 731)
-            yield return new ValidationResult("El reporte admite un rango máximo de dos años.", [nameof(Desde), nameof(Hasta)]);
+            yield return new ValidationResult("El reporte admite un rango máximo de dos años.", [nameof(Hasta)]);
         if (!SalesReportGrouping.Allowed.Contains(Agrupacion ?? string.Empty))
             yield return new ValidationResult("La agrupación solicitada no es válida.", [nameof(Agrupacion)]);
     }
@@ -69,9 +69,9 @@ public sealed class SellerPerformanceFilterViewModel : IValidatableObject
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
         if (Desde.Date > Hasta.Date)
-            yield return new ValidationResult("La fecha inicial no puede superar la final.", [nameof(Desde), nameof(Hasta)]);
+            yield return new ValidationResult("La fecha inicial no puede superar la final.", [nameof(Hasta)]);
         if ((Hasta.Date - Desde.Date).TotalDays > 731)
-            yield return new ValidationResult("El reporte admite un rango máximo de dos años.", [nameof(Desde), nameof(Hasta)]);
+            yield return new ValidationResult("El reporte admite un rango máximo de dos años.", [nameof(Hasta)]);
         if (VendedorUsuarioId is <= 0)
             yield return new ValidationResult("El vendedor seleccionado no es válido.", [nameof(VendedorUsuarioId)]);
         if (Orden is not ("ventas_desc" or "ventas_asc" or "nombre" or "cumplimiento_desc"))

@@ -63,10 +63,10 @@ class _MovementPageState extends ConsumerState<MovementPage> {
   }
 
   String? get _problem {
-    if (_product == null) return 'Elegí el producto.';
+    if (_product == null) return 'Elija el producto.';
     if (_type != 'Ajuste' && _qty <= 0) return 'La cantidad debe ser mayor a cero.';
     if ((_resultingStock ?? 0) < 0) return 'No hay suficiente stock para esa salida.';
-    if (_type != 'Entrada' && _reason.text.trim().isEmpty) return 'Indicá el motivo.';
+    if (_type != 'Entrada' && _reason.text.trim().isEmpty) return 'Indique el motivo.';
     if (_type == 'Ajuste' && _qty == _product!.stock) return 'El ajuste no cambia el stock actual.';
     return null;
   }
@@ -135,7 +135,7 @@ class _MovementPageState extends ConsumerState<MovementPage> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: product == null
-                            ? Text('Tocá para elegir el producto', style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: BrandColors.textMuted))
+                            ? Text('Toque para elegir el producto', style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: BrandColors.textMuted))
                             : Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -307,7 +307,7 @@ class _ProductPickerState extends ConsumerState<_ProductPicker> {
               data: (items) {
                 final active = items.where((product) => product.active).toList();
                 if (active.isEmpty) {
-                  return const EmptyState(icon: Icons.search_off_rounded, title: 'Sin resultados', message: 'Probá con otro nombre.');
+                  return const EmptyState(icon: Icons.search_off_rounded, title: 'Sin resultados', message: 'Pruebe con otro nombre.');
                 }
                 return ListView.builder(
                   controller: controller,

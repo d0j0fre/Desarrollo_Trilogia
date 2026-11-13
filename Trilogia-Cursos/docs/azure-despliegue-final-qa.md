@@ -6,6 +6,58 @@ Este documento resume el estado final del despliegue Azure DEV del proyecto `Tri
 
 No contiene contrasenas reales, connection strings completas ni secretos.
 
+## Actualización 11/11/2026: versión corregida publicada
+
+Las secciones 2 a 12 describen el despliegue original (julio, grupo `rg-trilogia-cursos-dev`). El
+ambiente vigente es otro y desde el 11/11/2026 tiene publicada la rama `correcciones-finales`
+(91 errores del reporte QA y 76 defectos del manual).
+
+| Recurso | Valor |
+| ------- | ----- |
+| Suscripción | Azure for Students (cuenta del administrador Entra del servidor SQL) |
+| Resource Group | `rg-trilogia-cursos-free` |
+| Azure SQL | `sql-trilogia-free-cr01` / base `DistribuidoraJJ_DB` (serverless, oferta gratuita, se pausa sola) |
+| Plan | `asp-trilogia-cursos-dev`, Linux, F1, Central US, `DOTNETCORE\|9.0` |
+| API | `https://api-trilogia-free-cr01.azurewebsites.net` (`/health`, `/api/productos`) |
+| MVC | `https://web-trilogia-free-cr01.azurewebsites.net` |
+
+Pasos que se siguieron (repetibles para una próxima versión):
+
+1. **Copia de seguridad** sin costo en Azure: `sqlpackage /Action:Export` con token de `az account
+   get-access-token --resource https://database.windows.net/` hacia un `.bacpac` local. La copia previa
+   a esta publicación es `Azure_DistribuidoraJJ_DB_antes_correcciones_20261111.bacpac` (se guarda
+   fuera del repositorio porque contiene datos de usuarios).
+2. **Ensayo**: importar ese `.bacpac` en una instancia LocalDB (requiere `sp_configure 'contained
+   database authentication', 1`) y correr ahí `tools/azure/aplicar_migraciones.ps1`.
+3. **Migraciones en Azure**: el mismo script con `-Azure`. La base tenía hasta la 0028; se aplicaron
+   65: `0023_supervisor_rrhh_permisos`, `0023_toggle_product_status_returns_state` y 0200–0313.
+   La `0269` se aplica al final porque exige la `0310`. La `0310` no se puede revertir: las
+   contraseñas quedan solo como hash (los 58 usuarios conservan su clave; se comprobó que ninguno
+   quedó sin hash).
+4. **Publicación**: `dotnet publish -c Release`, comprimir con `tar -a -c -f x.zip *` (el
+   `Compress-Archive` de PowerShell 5.1 usa `\` y el servidor Linux falla con `rsync ... Invalid
+   argument`) y `az webapp deploy --type zip --clean true --restart true`.
+5. **Revisión rápida**: `/health` de ambos (200), `/api/productos` (200), inicio y login del MVC
+   (200, con el texto corregido «Regístrese»).
+
+Avisos de verificación que se aceptaron (la migración quedó aplicada; el aviso viene de datos que
+solo existen en Azure):
+
+- `0251`: «Hay un perfil del personal sin MOVIL_ACCESO». Son perfiles de prueba creados en Azure
+  (`Auditor QA0710 Editado`, `Auditor QA 2`, `QA Rol temporal`, `QA Pagador`). No se modificaron.
+- `0253`: la tabla de la verificación declara `TipoMovimiento NVARCHAR(20)` y en Azure existe el tipo
+  `TransformacionEntrada` (21 caracteres). La pantalla no filtra por ese tipo; el listado funciona.
+
+Variables agregadas el 11/11/2026: `PaySlips__PublicBaseUrl` (MVC) y `PasswordRecovery__PublicBaseUrl`
+(API), ambas con la URL del MVC.
+
+Pendiente en Azure:
+
+- `ConfiguracionCorreo__Remitente` y `ConfiguracionCorreo__Contrasenna` no están en ninguno de los dos
+  App Service: sin ellas no salen correos (recuperación de contraseña, comprobantes, boletas). Las
+  debe cargar el dueño de la cuenta SMTP desde el portal.
+- Probar a mano cada función contra Azure (verificación final del listado de errores).
+
 ## 2. Estado final del despliegue Azure
 
 | Bloque | Estado |
@@ -124,6 +176,13 @@ Variables requeridas:
 | `ConnectionStrings__DefaultConnection` | Connection string a Azure SQL DEV con `<sql-user>` y `<sql-password>` | Si |
 | `ConfiguracionCorreo__Remitente` | Cuenta SMTP que envía consultas, comprobantes y boletas | No |
 | `ConfiguracionCorreo__Contrasenna` | Contraseña de aplicación SMTP (rotada tras el incidente del 2026-07-22) | Si |
+| `PaySlips__PublicBaseUrl` | URL HTTPS pública del MVC (por ejemplo `https://web-trilogia-cursos-dev-cr01.azurewebsites.net`); es la base del enlace al portal privado que lleva el correo de «Notificar» en Boletas de pago | No |
+
+Sin `PaySlips__PublicBaseUrl` (o si no es HTTPS) la pantalla Personal → Boletas de pago no envía la
+notificación y lo explica: «falta configurar la URL pública del sitio (PaySlips:PublicBaseUrl…)». En
+local el valor sale de `appsettings.Development.json` (`https://localhost:7250`); no se guarda
+ningún secreto en ese archivo. Sin las variables de correo la misma pantalla indica que el correo del
+sistema no está configurado; la boleta permanece disponible en el portal en ambos casos.
 
 Sin las variables de correo, Contacto, Facturación, Tienda y Venta móvil muestran
 que no fue posible enviar el correo. Para pruebas locales sin SMTP se puede definir

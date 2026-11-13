@@ -13,13 +13,15 @@ namespace Proyecto_Final.Controllers
         private readonly EmailService _emailService;
         private readonly ILogger<SellerOrdersController> _logger;
         private readonly ICrossSellService _crossSell;
+        private readonly ISellerOrderAccess _orderAccess;
 
-        public SellerOrdersController(AdminDbService adminDbService, EmailService emailService, ILogger<SellerOrdersController> logger, ICrossSellService crossSell)
+        public SellerOrdersController(AdminDbService adminDbService, EmailService emailService, ILogger<SellerOrdersController> logger, ICrossSellService crossSell, ISellerOrderAccess orderAccess)
         {
             _adminDbService = adminDbService;
             _emailService = emailService;
             _logger = logger;
             _crossSell = crossSell;
+            _orderAccess = orderAccess;
         }
 
         [HttpGet]
@@ -196,6 +198,20 @@ namespace Proyecto_Final.Controllers
                     pedidoOfflineGuid,
                     "Venta móvil offline");
 
+                // Un GUID ya sincronizado devuelve el pedido existente (idempotencia de
+                // sp_Seller_CreateOrder). Si es de otro vendedor no se reenvía su
+                // comprobante ni se informa su número.
+                if (!await _orderAccess.IsOwnOrderAsync(vendedorId, result.PedidoId))
+                {
+                    _logger.LogWarning("El usuario {UserId} sincronizó un GUID offline que pertenece al pedido {PedidoId} de otro vendedor.", vendedorId, result.PedidoId);
+                    return Json(new SellerOfflineOrderSyncResponseViewModel
+                    {
+                        Success = false,
+                        Message = "Ese pedido offline ya fue sincronizado por otro usuario.",
+                        PedidoOfflineGuid = request.PedidoOfflineGuid
+                    });
+                }
+
                 await RegistrarAuditoriaAsync(
                     result.EsRetenido ? "Sincronizar pedido offline retenido" : "Sincronizar pedido offline",
                     "Venta móvil",
@@ -284,9 +300,9 @@ namespace Proyecto_Final.Controllers
             if (!IsAuthorizedSeller())
                 return RedirectToAction("Login", "Account");
 
-            var pedido = await _adminDbService.GetOrderDetailAsync(id);
+            var pedido = await GetOwnOrderAsync(id);
             if (pedido == null)
-                return RedirectToAction(nameof(Index));
+                return NotOwnOrder();
 
             var factura = await _adminDbService.GetInvoiceSummaryByOrderAsync(id);
             if (factura.HasValue)
@@ -312,9 +328,9 @@ namespace Proyecto_Final.Controllers
             if (!IsAuthorizedSeller())
                 return RedirectToAction("Login", "Account");
 
-            var pedido = await _adminDbService.GetOrderDetailAsync(id);
+            var pedido = await GetOwnOrderAsync(id);
             if (pedido == null)
-                return RedirectToAction(nameof(Index));
+                return NotOwnOrder();
 
             return View(pedido);
         }
@@ -328,6 +344,41 @@ namespace Proyecto_Final.Controllers
             var vendedorId = HttpContext.Session.GetInt32("UserId") ?? 0;
             var pedidos = await _adminDbService.GetSellerMyOrdersAsync(vendedorId);
             return View(pedidos);
+        }
+
+        // G3-02: detalle de solo lectura de un pedido propio. El detalle de
+        // OrdersAdmin exige permisos de administración de pedidos que el
+        // vendedor no tiene; aquí solo se muestra si el pedido es suyo.
+        [HttpGet]
+        public async Task<IActionResult> Detail(int id)
+        {
+            if (!IsAuthorizedSeller())
+                return RedirectToAction("Login", "Account");
+
+            var pedido = await GetOwnOrderAsync(id);
+            if (pedido == null)
+                return NotOwnOrder();
+
+            var factura = await _adminDbService.GetInvoiceSummaryByOrderAsync(id);
+            if (factura.HasValue)
+            {
+                pedido.FacturaId = factura.Value.FacturaId;
+                pedido.NumeroFactura = factura.Value.NumeroFactura;
+                pedido.HasInvoice = true;
+            }
+
+            ViewData["SoloLectura"] = true;
+            return View("~/Views/OrdersAdmin/Detail.cshtml", pedido);
+        }
+
+        // Confirmaciones y detalle: solo pedidos que registró el usuario de la sesión.
+        private Task<OrderDetailViewModel?> GetOwnOrderAsync(int id) =>
+            _orderAccess.GetOwnOrderAsync(HttpContext.Session.GetInt32("UserId") ?? 0, id);
+
+        private IActionResult NotOwnOrder()
+        {
+            TempData["ErrorMessage"] = "No se encontró el pedido entre sus pedidos.";
+            return RedirectToAction(nameof(MyOrders));
         }
 
         private async Task<SellerOrderCreateViewModel> BuildCreateModelAsync(SellerOrderCreateViewModel model)

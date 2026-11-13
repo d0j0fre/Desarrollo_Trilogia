@@ -19,8 +19,7 @@ public sealed class AuthenticationContractTests
         using var connection = new SqlConnection();
         using var command = AccountApiDbService.CreateValidateUserCommand(
             connection,
-            "  admin@example.com  ",
-            " password with spaces ");
+            "  admin@example.com  ");
 
         Assert.Equal("dbo.sp_Auth_GetLoginCredential", command.CommandText);
         Assert.Equal(CommandType.StoredProcedure, command.CommandType);
@@ -30,10 +29,9 @@ public sealed class AuthenticationContractTests
         Assert.Equal(150, email.Size);
         Assert.Equal("admin@example.com", email.Value);
 
-        var password = Assert.IsType<SqlParameter>(command.Parameters["@Contrasena"]);
-        Assert.Equal(SqlDbType.NVarChar, password.SqlDbType);
-        Assert.Equal(255, password.Size);
-        Assert.Equal(" password with spaces ", password.Value);
+        // Migración 0310: la contraseña no viaja a la base; la API verifica el hash que el procedimiento devuelve.
+        Assert.False(command.Parameters.Contains("@Contrasena"));
+        Assert.Single(command.Parameters);
     }
 
     [Fact]

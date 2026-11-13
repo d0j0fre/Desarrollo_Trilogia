@@ -43,7 +43,7 @@ namespace Proyecto_Final.Controllers
         {
             if (!ModelState.IsValid)
             {
-                TempData["ErrorMessage"] = "Revisá los datos de la meta (vendedor, período y monto).";
+                TempData["ErrorMessage"] = "Revise los datos de la meta (vendedor, período y monto).";
                 return RedirectToAction(nameof(Index), new { anio = nueva.Anio, mes = nueva.Mes });
             }
 
@@ -52,19 +52,19 @@ namespace Proyecto_Final.Controllers
             try
             {
                 await _kpis.UpsertMetaAsync(nueva, usuarioId, usuarioNombre);
-                await RegistrarAuditoriaAsync("Definir meta de ventas", "Metas y KPIs",
-                    $"Meta de ₡{nueva.MontoMeta:N2} para vendedor #{nueva.VendedorUsuarioId} en {nueva.Mes:00}/{nueva.Anio}.");
-                TempData["SuccessMessage"] = "Meta guardada correctamente.";
-            }
-            catch (SqlException ex) when (ex.Number >= 50000)
-            {
-                _logger.LogWarning(ex, "La base de datos rechazó una operación de negocio.");
-                TempData["ErrorMessage"] = "No fue posible completar la operación solicitada.";
+                await RegistrarAuditoriaAsync(nueva.Reemplazar ? "Reemplazar meta de ventas" : "Definir meta de ventas", "Metas y KPIs",
+                    $"Meta de ₡{nueva.MontoMeta:N2} para vendedor #{nueva.VendedorUsuarioId} en {nueva.Mes:00}/{nueva.Anio}" +
+                    (nueva.Reemplazar ? " (reemplaza la meta existente, confirmado)." : "."));
+                TempData["SuccessMessage"] = nueva.Reemplazar ? "Meta reemplazada correctamente." : "Meta guardada correctamente.";
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al guardar meta.");
-                TempData["ErrorMessage"] = "No fue posible guardar la meta.";
+                // Las reglas de negocio del procedimiento («Ya existe una meta…», vendedor inválido…) se muestran tal cual.
+                if (BusinessErrors.TryGetMessage(ex, out _))
+                    _logger.LogWarning(ex, "La base de datos rechazó una operación de negocio.");
+                else
+                    _logger.LogError(ex, "Error al guardar meta.");
+                TempData["ErrorMessage"] = BusinessErrors.MessageOr(ex, "No fue posible guardar la meta.");
             }
             return RedirectToAction(nameof(Index), new { anio = nueva.Anio, mes = nueva.Mes });
         }

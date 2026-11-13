@@ -49,6 +49,7 @@ namespace Proyecto_Final.Services
             command.Parameters.Add("@Observaciones", SqlDbType.NVarChar, 300).Value = string.IsNullOrWhiteSpace(model.Observaciones) ? DBNull.Value : model.Observaciones.Trim();
             command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId > 0 ? usuarioId : DBNull.Value;
             command.Parameters.Add("@Nombre", SqlDbType.NVarChar, 150).Value = string.IsNullOrWhiteSpace(usuarioNombre) ? DBNull.Value : usuarioNombre;
+            command.Parameters.Add("@Reemplazar", SqlDbType.Bit).Value = model.Reemplazar;
             await connection.OpenAsync();
             await command.ExecuteNonQueryAsync();
         }
@@ -137,6 +138,7 @@ namespace Proyecto_Final.Services
                 model.MetaGlobal = reader.GetDecimal(0);
                 model.VentaGlobal = reader.GetDecimal(1);
                 model.VendedoresConMeta = reader.GetInt32(2);
+                if (reader.FieldCount > 3 && !reader.IsDBNull(3)) model.VentaSinMeta = reader.GetDecimal(3);
             }
             return model;
         }

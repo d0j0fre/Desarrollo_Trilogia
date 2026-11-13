@@ -1,9 +1,8 @@
 ﻿@model Proyecto_Final.Models.Store.StoreProductViewModel
 @{
     ViewData["Title"] = Model.Nombre;
-    var imagen = string.IsNullOrWhiteSpace(Model.ImagenUrl)
-        ? Url.Content("~/img/whisky-premium.webp")
-        : Url.Content(Model.ImagenUrl);
+    var imagen = Url.Content(Proyecto_Final.Services.ProductImageFallback.Resolve(Model.ImagenUrl, Model.Categoria));
+    var respaldo = Url.Content(Proyecto_Final.Services.ProductImageFallback.ForCategory(Model.Categoria));
     var stockClass = Model.Stock <= 0 ? "out" : Model.Stock <= 5 ? "low" : "ok";
     var stockText = Model.Stock <= 0 ? "Agotado" : Model.Stock <= 5 ? "Stock bajo" : "Disponible";
 }
@@ -29,7 +28,7 @@
 
                     <div class="s4-product-detail-image">
                         <img src="@imagen" alt="Producto @Model.Nombre" loading="eager" width="600" height="600"
-                             onerror="this.onerror=null;this.src='/img/whisky-premium.webp';" />
+                             onerror="this.onerror=null;this.src='@respaldo';" />
                     </div>
                 </div>
 

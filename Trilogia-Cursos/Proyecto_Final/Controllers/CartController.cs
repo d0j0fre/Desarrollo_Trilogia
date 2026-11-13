@@ -216,7 +216,7 @@ namespace Proyecto_Final.Controllers
         {
             if (!IsLoggedIn())
             {
-                TempData["LoginSuccess"] = "Debes iniciar sesión para finalizar la compra.";
+                TempData["LoginSuccess"] = "Debe iniciar sesión para finalizar la compra.";
                 return RedirectToAction("Login", "Account", new { returnUrl = Url.Action(nameof(Checkout), "Cart") });
             }
 
@@ -231,7 +231,7 @@ namespace Proyecto_Final.Controllers
                     return RedirectToAction(nameof(Index));
                 }
 
-                TempData["LoginSuccess"] = "Tu carrito está vacío.";
+                TempData["LoginSuccess"] = "Su carrito está vacío.";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -274,7 +274,7 @@ namespace Proyecto_Final.Controllers
             if (!IsLoggedIn())
             {
                 TempData["LoginSuccess"] =
-                    "Debes iniciar sesión para finalizar la compra.";
+                    "Debe iniciar sesión para finalizar la compra.";
 
                 return RedirectToAction(
                     "Login",
@@ -305,7 +305,7 @@ namespace Proyecto_Final.Controllers
 
             if (model.Cart.Items.Count == 0)
             {
-                TempData["LoginSuccess"] = "Tu carrito está vacío.";
+                TempData["LoginSuccess"] = "Su carrito está vacío.";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -387,6 +387,17 @@ namespace Proyecto_Final.Controllers
                     model,
                     model.Cart.Items,
                     HttpContext.RequestAborted);
+
+                // G3-15: los datos para facturar quedan con el pedido. El pedido ya existe:
+                // si este guardado falla se registra y la compra sigue confirmada.
+                try
+                {
+                    await _storeDbService.SaveOrderCustomerDataAsync(order.PedidoId, usuarioId, model, HttpContext.RequestAborted);
+                }
+                catch (Exception exception)
+                {
+                    _logger.LogWarning(exception, "No se guardaron los datos del cliente del pedido {PedidoId}.", order.PedidoId);
+                }
 
                 var confirmedItems = order.Items.Concat(order.Gifts).ToList();
 
@@ -515,6 +526,7 @@ namespace Proyecto_Final.Controllers
             _logger.LogError(exception, "Falla técnica durante checkout para usuario {UserId}. TraceId {TraceId}", HttpContext.Session.GetInt32("UserId"), traceId);
             Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
             ViewData["TraceId"] = traceId;
+            ViewData["VolverTexto"] = "el carrito"; ViewData["VolverControlador"] = "Cart";
             return View("ServiceUnavailable");
         }
 

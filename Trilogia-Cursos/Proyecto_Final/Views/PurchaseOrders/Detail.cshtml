@@ -5,7 +5,7 @@
 }
 
 <div class="container-fluid pt-4 backoffice-page">
-    <div class="row px-xl-5"><div class="col-12 d-flex justify-content-between"><div><h2>Orden #@Model.OrdenCompraId</h2><p>Proveedor: <strong>@Model.ProveedorNombre</strong> · <span class="badge badge-info">@Model.Estado</span></p></div><a asp-action="Index" class="btn btn-ds-neutral align-self-start">Volver</a></div></div>
+    <div class="row px-xl-5"><div class="col-12 d-flex justify-content-between"><div><h2>Orden #@Model.OrdenCompraId</h2><p>Proveedor: <strong>@Model.ProveedorNombre</strong> · <span class="badge badge-info">@Proyecto_Final.Models.Admin.PurchaseOrderStatus.Label(Model.Estado)</span></p></div><a asp-action="Index" class="btn btn-ds-neutral align-self-start">Volver</a></div></div>
     @if (!string.IsNullOrWhiteSpace(Model.MotivoCierre)) { <div class="row px-xl-5"><div class="col-12 alert alert-warning"><strong>Motivo de cierre:</strong> @Model.MotivoCierre</div></div> }
     <div class="row px-xl-5"><div class="col-12 table-responsive">
         <table class="table table-hover"><thead><tr><th>Producto</th><th>Ordenado</th><th>Recibido</th><th>Pendiente</th><th>Precio</th><th>Recepción</th></tr></thead><tbody>

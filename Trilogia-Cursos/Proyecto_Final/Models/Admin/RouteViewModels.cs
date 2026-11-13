@@ -55,6 +55,29 @@ namespace Proyecto_Final.Models.Admin
         public int TotalEvidencias { get; set; }
         public decimal? Latitud { get; set; }
         public decimal? Longitud { get; set; }
+        public int Prioridad { get; set; } = RoutePriority.Normal;
+    }
+
+    // Prioridad de una parada (BUG-10-01). La secuenciación automática visita primero las
+    // paradas de prioridad 1, luego las de 2 y al final las de 3; dentro de cada nivel
+    // sigue el vecino más cercano. Los valores son los que guarda RutaPedidos.Prioridad.
+    public static class RoutePriority
+    {
+        public const int Urgente = 1;
+        public const int Alta = 2;
+        public const int Normal = 3;
+
+        public static IReadOnlyList<(int Valor, string Texto)> Opciones { get; } = new[]
+        {
+            (Urgente, "Urgente"), (Alta, "Alta"), (Normal, "Normal")
+        };
+
+        public static string Texto(int prioridad) => prioridad switch
+        {
+            Urgente => "Urgente",
+            Alta => "Alta",
+            _ => "Normal"
+        };
     }
 
     // ── Pedido asignable a una ruta ─────────────────────────
@@ -108,6 +131,9 @@ namespace Proyecto_Final.Models.Admin
 
         public List<int> PedidosSeleccionados { get; set; } = new();
 
+        // Prioridad elegida por pedido (BUG-10-01): Prioridades[pedidoId] = 1 Urgente, 2 Alta, 3 Normal.
+        public Dictionary<int, int> Prioridades { get; set; } = new();
+
         // Datos para poblar el formulario
         public List<AssignableOrderViewModel> PedidosDisponibles { get; set; } = new();
         public List<DriverOptionViewModel> Choferes { get; set; } = new();
@@ -122,6 +148,10 @@ namespace Proyecto_Final.Models.Admin
         public RouteHeaderViewModel Cabecera { get; set; } = new();
         public List<RouteOrderItemViewModel> Pedidos { get; set; } = new();
         public List<AssignableOrderViewModel> PedidosDisponibles { get; set; } = new();
+
+        // BUG-25-02: tiempo y distancia estimados de lo que falta recorrer, en el orden actual.
+        public Proyecto_Final.Services.RouteEstimate Estimacion { get; set; } =
+            Proyecto_Final.Services.RouteEstimator.Estimate(Array.Empty<RouteOrderItemViewModel>());
     }
 
     public sealed class DeliveryBoardRowViewModel
@@ -139,13 +169,35 @@ namespace Proyecto_Final.Models.Admin
         public DateTime? FechaDespacho { get; init; }
     }
 
+    // BUG-10-02 (CU-104): un pedido del tablero, En ruta o pendiente de entrega.
+    public sealed class DeliveryBoardOrderViewModel
+    {
+        public string Grupo { get; init; } = string.Empty;   // "EnRuta" | "Pendiente"
+        public int PedidoId { get; init; }
+        public string Cliente { get; init; } = string.Empty;
+        public string Direccion { get; init; } = string.Empty;
+        public decimal Total { get; init; }
+        public DateTime FechaPedido { get; init; }
+        public int? RutaId { get; init; }                     // null: todavía sin ruta
+        public string RutaCodigo { get; init; } = string.Empty;
+        public string RutaEstado { get; init; } = string.Empty;
+        public string Chofer { get; init; } = string.Empty;
+        public int? Secuencia { get; init; }
+        public int? Prioridad { get; init; }
+        public string PrioridadTexto => Prioridad.HasValue ? RoutePriority.Texto(Prioridad.Value) : string.Empty;
+    }
+
     public sealed class DeliveryBoardViewModel
     {
         public DateTimeOffset GeneradoUtc { get; init; }
         public int RutasActivas { get; init; }
+        // Pedidos a domicilio que todavía no salieron (con ruta planificada o sin ruta).
         public int EntregasPendientes { get; init; }
+        public int PedidosEnRuta { get; init; }
         public int EntregasCompletadas { get; init; }
         public int EntregasFallidas { get; init; }
         public IReadOnlyList<DeliveryBoardRowViewModel> Rutas { get; init; } = [];
+        public IReadOnlyList<DeliveryBoardOrderViewModel> EnRuta { get; init; } = [];
+        public IReadOnlyList<DeliveryBoardOrderViewModel> Pendientes { get; init; } = [];
     }
 }

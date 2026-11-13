@@ -16,15 +16,20 @@ namespace Proyecto_Final.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index(string? modulo, string? accion, string? buscar)
+        public async Task<IActionResult> Index(string? origen, string? modulo, string? accion, string? buscar)
         {
-            var registros = await _adminDbService.GetAuditLogsAsync(modulo, accion, buscar);
+            var origin = AuditOrigins.Normalize(origen);
+            var registros = await _adminDbService.GetUnifiedAuditLogsAsync(origin, modulo, accion, buscar);
+            var (modulos, acciones) = await _adminDbService.GetAuditFilterOptionsAsync();
 
             var model = new AuditLogFilterViewModel
             {
+                Origen = origin,
                 Modulo = modulo,
                 Accion = accion,
                 Buscar = buscar,
+                Modulos = modulos,
+                Acciones = acciones,
                 Registros = registros
             };
 

@@ -1,0 +1,660 @@
+{
+  "carpeta": "chofer",
+  "_nota": "RESET_RUTA deja la ruta 1 despachada con sus 3 paradas en ruta (datos de capitulos/30_vendedor/_datos_grupo3_operacion.sql).",
+  "capturas": [
+    {
+      "id": "cho-menu-01",
+      "usuario": "chofer",
+      "url": "/Home/Index",
+      "recorte": {
+        "selector": ".main-nav-2027 > *",
+        "todos": true,
+        "margen": [
+          8,
+          70,
+          70,
+          20
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": ".main-nav-2027 > a[href*=DriverDeliveries]",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": ".main-nav-2027 > a[href*=Mileage]",
+          "posicion": "abajo-izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": ".main-nav-2027 > a[href*=Assistant]",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": ".main-nav-2027 > .admin-nav-dropdown >> nth=0",
+          "posicion": "abajo"
+        }
+      ]
+    },
+    {
+      "id": "cho-entregas-01",
+      "usuario": "chofer",
+      "sql": "UPDATE RutaPedidos SET EstadoEntrega=N'EnRuta', MotivoFallo=NULL, FechaEntrega=NULL WHERE RutaId=1; UPDATE Rutas SET Estado=N'Despachada', FechaCierre=NULL WHERE RutaId=1; UPDATE Pedidos SET Estado=N'Facturado' WHERE PedidoId IN (5,9); UPDATE Pedidos SET Estado=N'EnRuta' WHERE PedidoId=7; DELETE FROM EntregaEvidencias WHERE RutaId=1;",
+      "url": "/DriverDeliveries",
+      "ancho": 1024,
+      "recorte": {
+        "selector": "main",
+        "margen": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .admin-table-wrapper >> nth=0"
+        },
+        {
+          "tipo": "flecha",
+          "selector": "main .admin-table-wrapper >> nth=0 >> a:has-text('Ver entregas')",
+          "desde": "abajo",
+          "largo": 50
+        }
+      ]
+    },
+    {
+      "id": "cho-entregas-02",
+      "usuario": "chofer",
+      "url": "/DriverDeliveries/Route/1",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "esperar": 2500
+        }
+      ],
+      "recorte": {
+        "selector": "main .admin-page-header, main .admin-table-wrapper",
+        "todos": true,
+        "margen": [
+          10,
+          10,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#connectionBadge",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#routeMap",
+          "posicion": "dentro"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "a:has-text('Navegar ruta completa')",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "#refreshRouteBtn",
+          "posicion": "abajo"
+        }
+      ]
+    },
+    {
+      "id": "cho-entregas-03",
+      "usuario": "chofer",
+      "url": "/DriverDeliveries/Route/1",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "desplazar": ".delivery-card-root[data-rutapedidoid='3']"
+        }
+      ],
+      "recorte": {
+        "selector": ".delivery-card-root[data-rutapedidoid='3']",
+        "margen": [
+          16,
+          16,
+          16,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": ".delivery-card-root[data-rutapedidoid='3'] .delivery-status-label"
+        },
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": ".delivery-card-root[data-rutapedidoid='3'] .delivery-nav",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": ".delivery-card-root[data-rutapedidoid='3'] [data-action='Entregado']",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": ".delivery-card-root[data-rutapedidoid='3'] [data-action='Fallido']",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": ".delivery-card-root[data-rutapedidoid='3'] [data-toggle='collapse']",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "cho-entregas-04",
+      "usuario": "chofer",
+      "sql": "UPDATE RutaPedidos SET EstadoEntrega=N'EnRuta', MotivoFallo=NULL, FechaEntrega=NULL WHERE RutaId=1; UPDATE Rutas SET Estado=N'Despachada', FechaCierre=NULL WHERE RutaId=1; UPDATE Pedidos SET Estado=N'Facturado' WHERE PedidoId IN (5,9); UPDATE Pedidos SET Estado=N'EnRuta' WHERE PedidoId=7;",
+      "url": "/DriverDeliveries/Route/1",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "desplazar": ".delivery-card-root[data-rutapedidoid='3']"
+        },
+        {
+          "clicSinEsperar": ".delivery-card-root[data-rutapedidoid='3'] [data-action='Entregado']"
+        },
+        {
+          "esperar": 1200
+        }
+      ],
+      "recorte": {
+        "selector": ".delivery-card-root[data-rutapedidoid='3']",
+        "margen": [
+          16,
+          16,
+          16,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": ".delivery-card-root[data-rutapedidoid='3'] .delivery-status-label"
+        }
+      ]
+    },
+    {
+      "id": "cho-entregas-05",
+      "usuario": "chofer",
+      "url": "/DriverDeliveries/Route/1",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "desplazar": ".delivery-card-root[data-rutapedidoid='1']"
+        },
+        {
+          "clicSinEsperar": ".delivery-card-root[data-rutapedidoid='1'] [data-action='Fallido']"
+        },
+        {
+          "rellenar": [
+            ".delivery-card-root[data-rutapedidoid='1'] .fallido-motivo",
+            "Local cerrado, sin encargado para recibir"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": ".delivery-card-root[data-rutapedidoid='1']",
+        "margen": [
+          16,
+          16,
+          16,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": ".delivery-card-root[data-rutapedidoid='1'] [data-action='Fallido']",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": ".delivery-card-root[data-rutapedidoid='1'] .fallido-motivo",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": ".delivery-card-root[data-rutapedidoid='1'] [data-action='Fallido-confirm']",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "cho-entregas-06",
+      "usuario": "chofer",
+      "url": "/DriverDeliveries/Route/1",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "desplazar": ".delivery-card-root[data-rutapedidoid='1']"
+        },
+        {
+          "clicSinEsperar": ".delivery-card-root[data-rutapedidoid='1'] [data-toggle='collapse']"
+        },
+        {
+          "esperar": 700
+        }
+      ],
+      "recorte": {
+        "selector": "#ev-1",
+        "margen": [
+          70,
+          120,
+          16,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#ev-1 a[href='#foto-1']",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#foto-1 input[type=file]",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#foto-1 input[name=observaciones]",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "#foto-1 button[type=submit]",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "cho-entregas-07",
+      "usuario": "chofer",
+      "url": "/DriverDeliveries/Route/1",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "desplazar": ".delivery-card-root[data-rutapedidoid='1']"
+        },
+        {
+          "clicSinEsperar": ".delivery-card-root[data-rutapedidoid='1'] [data-toggle='collapse']"
+        },
+        {
+          "esperar": 700
+        },
+        {
+          "clicSinEsperar": "#ev-1 a[href='#firma-1']"
+        },
+        {
+          "esperar": 700
+        },
+        {
+          "js": "const c=document.querySelector('#firma-1 canvas'),x=c.getContext('2d');x.lineWidth=2.5;x.strokeStyle='#1d2a5b';x.beginPath();x.moveTo(30,95);x.bezierCurveTo(60,20,90,130,120,70);x.bezierCurveTo(140,40,160,110,190,80);x.bezierCurveTo(215,55,240,100,290,60);x.stroke();"
+        }
+      ],
+      "recorte": {
+        "selector": "#ev-1",
+        "margen": [
+          70,
+          120,
+          16,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#ev-1 a[href='#firma-1']",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#firma-1 canvas",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#firma-1 input[name=observaciones]",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "#firma-1 button[type=submit]",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "cho-entregas-08",
+      "usuario": "chofer",
+      "url": "/DriverDeliveries/Route/1",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "js": "Object.defineProperty(navigator,'onLine',{get:()=>false,configurable:true}); window.dispatchEvent(new Event('offline'))"
+        },
+        {
+          "esperar": 500
+        },
+        {
+          "desplazar": ".delivery-card-root[data-rutapedidoid='2']"
+        },
+        {
+          "clicSinEsperar": ".delivery-card-root[data-rutapedidoid='2'] [data-action='Entregado']"
+        },
+        {
+          "esperar": 800
+        },
+        {
+          "js": "localStorage.removeItem('driverDeliveryQueue')"
+        },
+        {
+          "js": "document.querySelectorAll('.delivery-card-root:not([data-rutapedidoid=\"2\"])').forEach(e=>e.closest('.col-lg-6').style.display='none'); document.querySelector('#routeMap').closest('.row').style.display='none'; window.scrollTo(0,0)"
+        }
+      ],
+      "recorte": {
+        "selector": "#driverToast, .delivery-card-root[data-rutapedidoid='2']",
+        "todos": true,
+        "margen": [
+          16,
+          16,
+          16,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "#driverToast"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": ".delivery-card-root[data-rutapedidoid='2'] .delivery-status-label"
+        }
+      ]
+    },
+    {
+      "id": "cho-km-01",
+      "usuario": "chofer",
+      "sql": "DELETE FROM VehiculoKilometraje WHERE ChoferUsuarioId=36 AND KmFinal IS NULL; DELETE FROM VehiculoKilometraje WHERE ChoferUsuarioId=36 AND Fecha >= '2026-11-01'; UPDATE Vehiculos SET KilometrajeActual=31078 WHERE VehiculoId=3;",
+      "url": "/Fleet/Mileage",
+      "ancho": 1440,
+      "acciones": [
+        {
+          "seleccionar": [
+            "#kmVehiculo",
+            "3"
+          ]
+        },
+        {
+          "esperar": 300
+        },
+        {
+          "rellenar": [
+            "input[name='Nueva.Observaciones']",
+            "Ruta Alajuela y Heredia"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main form[action*=OpenMileage]",
+        "margen": [
+          60,
+          60,
+          16,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#kmVehiculo",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#kmInicial",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "input[name='Nueva.Observaciones']",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "main form[action*=OpenMileage] button[type=submit]",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "cho-km-02",
+      "usuario": "chofer",
+      "url": "/Fleet/Mileage",
+      "ancho": 1100,
+      "acciones": [
+        {
+          "seleccionar": [
+            "#kmVehiculo",
+            "3"
+          ]
+        },
+        {
+          "esperar": 300
+        },
+        {
+          "rellenar": [
+            "input[name='Nueva.Observaciones']",
+            "Ruta Alajuela y Heredia"
+          ]
+        },
+        {
+          "clic": "main form[action*=OpenMileage] button[type=submit]"
+        },
+        {
+          "rellenar": [
+            "main table input[name=kmFinal]",
+            "31196"
+          ]
+        },
+        {
+          "js": "document.querySelector('form[action*=OpenMileage]').closest('[class*=col-]').style.display='none'; document.querySelector('main .admin-page-header').style.display='none'; window.scrollTo(0,0)"
+        },
+        {
+          "js": "document.querySelector('main table').closest('[class*=col-]').className='col-12'"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert-success, main table",
+        "todos": true,
+        "margen": [
+          12,
+          16,
+          40,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success"
+        },
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main table input[name=kmFinal]",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main table button[aria-label='Cerrar jornada']",
+          "posicion": "abajo"
+        }
+      ]
+    },
+    {
+      "id": "cho-km-03",
+      "usuario": "chofer",
+      "url": "/Fleet/Mileage",
+      "ancho": 1440,
+      "acciones": [
+        {
+          "rellenar": [
+            "main table input[name=kmFinal]",
+            "31196"
+          ]
+        },
+        {
+          "clicSinEsperar": "main table button[aria-label='Cerrar jornada']"
+        },
+        {
+          "esperarSelector": ".s3-modal-dialog"
+        },
+        {
+          "esperar": 400
+        }
+      ],
+      "recorte": {
+        "selector": ".s3-modal-dialog",
+        "margen": [
+          16,
+          16,
+          16,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "selector": ".s3-modal-btn-confirm",
+          "desde": "abajo",
+          "largo": 40
+        }
+      ]
+    },
+    {
+      "id": "cho-km-04",
+      "usuario": "chofer",
+      "url": "/Fleet/Mileage",
+      "ancho": 1100,
+      "acciones": [
+        {
+          "rellenar": [
+            "main table input[name=kmFinal]",
+            "31196"
+          ]
+        },
+        {
+          "clicSinEsperar": "main table button[aria-label='Cerrar jornada']"
+        },
+        {
+          "esperarSelector": ".s3-modal-dialog"
+        },
+        {
+          "clic": ".s3-modal-btn-confirm"
+        },
+        {
+          "js": "document.querySelector('form[action*=OpenMileage]').closest('[class*=col-]').style.display='none'; document.querySelector('main .admin-page-header').style.display='none'; window.scrollTo(0,0)"
+        },
+        {
+          "js": "document.querySelector('main table').closest('[class*=col-]').className='col-12'"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert-success, main table",
+        "todos": true,
+        "margen": [
+          12,
+          16,
+          40,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main table tbody tr >> nth=0"
+        }
+      ]
+    },
+    {
+      "id": "cho-km-05",
+      "usuario": "chofer",
+      "url": "/Fleet/Mileage",
+      "ancho": 1440,
+      "acciones": [
+        {
+          "seleccionar": [
+            "#kmVehiculo",
+            "1"
+          ]
+        },
+        {
+          "js": "const k=document.getElementById('kmInicial'); k.removeAttribute('min'); k.value='48000';"
+        },
+        {
+          "clic": "main form[action*=OpenMileage] button[type=submit]"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert-danger",
+        "margen": 16
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-danger"
+        }
+      ]
+    }
+  ]
+}

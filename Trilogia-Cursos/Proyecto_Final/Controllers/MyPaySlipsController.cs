@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Proyecto_Final.Filters;
 using Proyecto_Final.Services;
 using System.Text;
@@ -9,7 +10,21 @@ namespace Proyecto_Final.Controllers;
 public sealed class MyPaySlipsController : Controller
 {
     private readonly IPaySlipService _service;
-    public MyPaySlipsController(IPaySlipService service)=>_service=service;
+    private readonly IEmployeesService _employees;
+    public MyPaySlipsController(IPaySlipService service, IEmployeesService employees){_service=service;_employees=employees;}
+
+    // Las boletas son del personal con expediente de empleado: quien no lo tiene no abre estas
+    // pantallas ni escribiendo la dirección (el menú tampoco se las ofrece).
+    public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
+    {
+        var portal = await _employees.GetEmployeePortalAsync(UserId());
+        if (portal.Perfil is null)
+        {
+            context.Result = AuthorizationResults.AccessDenied();
+            return;
+        }
+        await next();
+    }
 
     [HttpGet]
     public async Task<IActionResult> Index(CancellationToken cancellationToken)=>View(await _service.ListAsync(UserId(),false,cancellationToken));

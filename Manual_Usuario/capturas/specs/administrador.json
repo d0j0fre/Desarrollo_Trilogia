@@ -1,0 +1,5102 @@
+{
+  "carpeta": "administrador",
+  "_nota": "Parte II. Base: copia limpia v2 (DistribuidoraJJ_base_v2.bak) + 0251_perfiles_oficina_permisos.sql + datos_demo_manual.sql + capitulos/10_administrador/_datos_ejemplo.sql + _preparar_datos.js (todos los pasos). Variables: MANUAL_WEB, MANUAL_INSTANCIA (base de la sesión). Las capturas que cambian datos traen su sql para reponer el estado.",
+  "capturas": [
+    {
+      "id": "adm-menu-01",
+      "usuario": "admin",
+      "url": "/Home/Index",
+      "acciones": [
+        {
+          "clicSinEsperar": ".admin-accordion-dropdown > a"
+        },
+        {
+          "esperar": 400
+        }
+      ],
+      "recorte": {
+        "selector": ".admin-acc-menu",
+        "margen": [
+          80,
+          60,
+          16,
+          60
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": ".admin-accordion-dropdown > a"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "details.acc-sec > summary",
+          "todos": true
+        }
+      ]
+    },
+    {
+      "id": "adm-dashboard-01",
+      "usuario": "admin",
+      "url": "/Home/Index",
+      "acciones": [
+        {
+          "clicSinEsperar": ".admin-accordion-dropdown > a"
+        },
+        {
+          "abrir": "details.acc-sec >> nth=4"
+        },
+        {
+          "esperar": 400
+        }
+      ],
+      "recorte": {
+        "selector": ".admin-acc-menu",
+        "margen": [
+          80,
+          60,
+          16,
+          60
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": ".admin-accordion-dropdown > a",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "details.acc-sec >> nth=4 >> summary",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "details.acc-sec >> nth=4 >> a.acc-item >> nth=0",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "adm-dashboard-02",
+      "usuario": "admin",
+      "url": "/Admin/Index",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main .backoffice-page > .row:nth-child(-n+4)",
+        "todos": true,
+        "margen": [
+          10,
+          10,
+          0,
+          40
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main .backoffice-page > .row:nth-child(2) .admin-card",
+          "posicion": "izquierda",
+          "todos": true
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main .backoffice-page > .row:nth-child(3) .admin-card",
+          "posicion": "izquierda",
+          "todos": true
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main .backoffice-page > .row:nth-child(4) .admin-card",
+          "posicion": "izquierda",
+          "todos": true
+        }
+      ]
+    },
+    {
+      "id": "adm-dashboard-03",
+      "usuario": "admin",
+      "url": "/Admin/Index",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main .backoffice-page > .row:nth-child(n+5)",
+        "todos": true,
+        "margen": [
+          10,
+          10,
+          0,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "main .backoffice-page > .row:nth-child(5) .admin-table-wrapper >> nth=0",
+          "posicion": "arriba-derecha",
+          "recuadro": false
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "main .backoffice-page > .row:nth-child(5) .admin-table-wrapper >> nth=1",
+          "posicion": "arriba-derecha",
+          "recuadro": false
+        },
+        {
+          "tipo": "paso",
+          "n": 6,
+          "selector": "main .backoffice-page > .row:nth-child(6) .admin-card",
+          "posicion": "arriba-derecha",
+          "recuadro": false
+        }
+      ]
+    },
+    {
+      "id": "adm-inventario-01",
+      "usuario": "admin",
+      "url": "/Inventory/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "main form.admin-filter-grid input[name=filtro]",
+            "ron"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main .backoffice-page > .row:nth-child(-n+3)",
+        "todos": true,
+        "margen": [
+          10,
+          10,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main form.admin-filter-grid input[name=filtro]",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main form.admin-filter-grid button",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-warning"
+        }
+      ]
+    },
+    {
+      "id": "adm-inventario-02",
+      "usuario": "admin",
+      "url": "/Inventory/Index?filtro=ron",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main .admin-table-wrapper",
+        "margen": 10
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main table tbody td:nth-child(7)",
+          "todos": true
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main table tbody td:nth-child(9)",
+          "todos": true
+        }
+      ]
+    },
+    {
+      "id": "adm-inventario-03",
+      "usuario": "admin",
+      "url": "/Inventory/Index",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main .admin-page-header",
+        "margen": [
+          10,
+          10,
+          30,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "selector": "main a[href$='/Inventory/Create']",
+          "desde": "izquierda",
+          "recuadro": true
+        }
+      ]
+    },
+    {
+      "id": "adm-inventario-04",
+      "usuario": "admin",
+      "url": "/Inventory/Create",
+      "ancho": 1024,
+      "acciones": [
+        {
+          "rellenar": [
+            "#Nombre",
+            "Ron Centenario 7 Años 750ml"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#Categoria",
+            "Ron"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Descripcion",
+            "Ron añejo centroamericano de 7 años, botella de 750 ml."
+          ]
+        },
+        {
+          "rellenar": [
+            "#Precio",
+            "14500"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Stock",
+            "24"
+          ]
+        },
+        {
+          "rellenar": [
+            "#StockMinimo",
+            "6"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main .col-lg-8 .admin-card",
+        "margen": [
+          10,
+          50,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#Nombre",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#Categoria",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#Descripcion",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "#Precio, #Stock, #StockMinimo",
+          "posicion": "derecha",
+          "todos": true
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "main form .form-group:has(#ImagenArchivo)",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 6,
+          "selector": "main form button[type=submit]",
+          "posicion": "abajo"
+        }
+      ]
+    },
+    {
+      "id": "adm-inventario-05",
+      "usuario": "admin",
+      "sql": "DELETE FROM MovimientosInventario WHERE ProductoId IN (SELECT ProductoId FROM Productos WHERE Nombre LIKE N'Ron Centenario%'); DELETE FROM Productos WHERE Nombre LIKE N'Ron Centenario%';",
+      "url": "/Inventory/Create",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "#Nombre",
+            "Ron Centenario 7 Años 750ml"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#Categoria",
+            "Ron"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Descripcion",
+            "Ron añejo centroamericano de 7 años, botella de 750 ml."
+          ]
+        },
+        {
+          "rellenar": [
+            "#Precio",
+            "14500"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Stock",
+            "24"
+          ]
+        },
+        {
+          "rellenar": [
+            "#StockMinimo",
+            "6"
+          ]
+        },
+        {
+          "clic": "main form button[type=submit]"
+        },
+        {
+          "js": "document.querySelectorAll('main table tbody tr').forEach(tr => { if (!/Ron/.test(tr.innerText)) tr.remove(); })"
+        }
+      ],
+      "recorte": {
+        "selector": "main",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main table tbody tr:has-text('Centenario')"
+        }
+      ]
+    },
+    {
+      "id": "adm-inventario-06",
+      "usuario": "admin",
+      "sql": "DELETE FROM MovimientosInventario WHERE ProductoId IN (SELECT ProductoId FROM Productos WHERE Nombre LIKE N'Ron Centenario%'); DELETE FROM Productos WHERE Nombre LIKE N'Ron Centenario%';",
+      "url": "/Inventory/Index?filtro=cacique",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main .admin-table-wrapper",
+        "margen": [
+          10,
+          10,
+          30,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "selector": "main table tbody tr >> nth=0 >> form[action*=ToggleFeatured] button",
+          "posicion": "abajo",
+          "tipo": "paso",
+          "n": 1
+        },
+        {
+          "selector": "main table tbody tr >> nth=0 >> a:has-text('Editar')",
+          "posicion": "izquierda",
+          "tipo": "paso",
+          "n": 2
+        },
+        {
+          "selector": "main table tbody tr >> nth=0 >> form[action*=ToggleStatus] button",
+          "posicion": "izquierda",
+          "tipo": "paso",
+          "n": 3
+        }
+      ],
+      "acciones": [
+        {
+          "js": "document.querySelectorAll('main table tbody tr:nth-child(n+2)').forEach(e => e.remove())"
+        }
+      ]
+    },
+    {
+      "id": "adm-inventario-07",
+      "usuario": "admin",
+      "url": "/Inventory/Edit/1",
+      "ancho": 1024,
+      "acciones": [
+        {
+          "rellenar": [
+            "#Precio",
+            "6900"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main .col-lg-8 .admin-card",
+        "margen": [
+          10,
+          50,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#Precio",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#Stock",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#StockMinimo",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "#FechaVencimiento",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "main form .custom-control:has(#Activo), main form .form-check:has(#Activo)",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 6,
+          "selector": "main form button[type=submit]",
+          "posicion": "abajo"
+        }
+      ]
+    },
+    {
+      "id": "adm-inventario-08",
+      "usuario": "admin",
+      "sql": "UPDATE Productos SET Activo = 1 WHERE Nombre = N'Vino Tinto Reserva 750ml';",
+      "url": "/Inventory/Index?filtro=vino",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clicSinEsperar": "main table tbody tr:has-text('Vino Tinto Reserva') form[action*=ToggleStatus] button"
+        },
+        {
+          "esperar": 500
+        }
+      ],
+      "recorte": {
+        "margen": [
+          20,
+          20,
+          80,
+          20
+        ],
+        "selector": ".s3-modal-dialog"
+      },
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "selector": ".s3-modal-btn-confirm",
+          "desde": "abajo",
+          "largo": 50,
+          "recuadro": true
+        }
+      ]
+    },
+    {
+      "id": "adm-inventario-09",
+      "usuario": "admin",
+      "sql": "UPDATE Productos SET Activo = 1 WHERE Nombre = N'Vino Tinto Reserva 750ml';",
+      "url": "/Inventory/Index?filtro=vino",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clicSinEsperar": "main table tbody tr:has-text('Vino Tinto Reserva') form[action*=ToggleStatus] button"
+        },
+        {
+          "esperar": 400
+        },
+        {
+          "clic": ".s3-modal-btn-confirm"
+        }
+      ],
+      "recorte": {
+        "selector": "main",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "selector": "main .alert-success",
+          "tipo": "recuadro"
+        },
+        {
+          "selector": "main table tbody tr:has-text('Vino Tinto Reserva') td:nth-child(9)",
+          "tipo": "recuadro"
+        }
+      ]
+    },
+    {
+      "id": "adm-inventario-10",
+      "usuario": "admin",
+      "sql": "UPDATE Productos SET Activo = 1 WHERE Nombre = N'Vino Tinto Reserva 750ml';",
+      "url": "/Inventory/Index?filtro=agua",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clicSinEsperar": "main table tbody tr:has-text('Agua 600ml') form[action*=ToggleStatus] button"
+        },
+        {
+          "esperar": 400
+        },
+        {
+          "clic": ".s3-modal-btn-confirm"
+        }
+      ],
+      "recorte": {
+        "margen": 14,
+        "selector": "main .alert-danger"
+      },
+      "anotaciones": [
+        {
+          "selector": "main .alert-danger",
+          "tipo": "recuadro"
+        }
+      ]
+    },
+    {
+      "id": "adm-inventario-11",
+      "usuario": "admin",
+      "url": "/InventoryReport/Index",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main .backoffice-page",
+        "margen": 10
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#filtro",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#estado",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#incluirInactivos",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "main form button[type=submit]",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "flecha",
+          "selector": "#exportInventoryXlsx",
+          "desde": "abajo",
+          "largo": 40
+        }
+      ]
+    },
+    {
+      "id": "adm-transformar-01",
+      "usuario": "admin",
+      "url": "/Inventory/TransformStock",
+      "ancho": 1024,
+      "acciones": [
+        {
+          "seleccionar": [
+            "#ProductoOrigenId",
+            {
+              "index": 7
+            }
+          ]
+        },
+        {
+          "rellenar": [
+            "#CantidadOrigen",
+            "2"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#ProductoDestinoId",
+            {
+              "index": 15
+            }
+          ]
+        },
+        {
+          "rellenar": [
+            "#CantidadDestino",
+            "2"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Motivo",
+            "Paso de presentación de mayoreo a la góndola de la tienda"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main .kpi-card",
+        "margen": [
+          10,
+          60,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#ProductoOrigenId",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#CantidadOrigen",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#ProductoDestinoId",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "#CantidadDestino",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "#Motivo",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 6,
+          "selector": "main form button[type=submit]",
+          "posicion": "derecha"
+        }
+      ],
+      "sql": "UPDATE Productos SET Stock = 15 WHERE Nombre = N'Cerveza Pilsen 6 Pack'; UPDATE Productos SET Stock = 48 WHERE Nombre = N'Pilsen 6 Pack';"
+    },
+    {
+      "id": "adm-transformar-02",
+      "usuario": "admin",
+      "url": "/Inventory/TransformStock",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "#ProductoOrigenId",
+            {
+              "index": 7
+            }
+          ]
+        },
+        {
+          "rellenar": [
+            "#CantidadOrigen",
+            "2"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#ProductoDestinoId",
+            {
+              "index": 15
+            }
+          ]
+        },
+        {
+          "rellenar": [
+            "#CantidadDestino",
+            "2"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Motivo",
+            "Paso de presentación de mayoreo a la góndola de la tienda"
+          ]
+        },
+        {
+          "clic": "main form button[type=submit]"
+        },
+        {
+          "js": "document.querySelectorAll('main table tbody tr:nth-child(n+3)').forEach(e => e.remove())"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert-success",
+        "margen": [
+          14,
+          14,
+          14,
+          14
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success"
+        }
+      ],
+      "sql": "UPDATE Productos SET Stock = 15 WHERE Nombre = N'Cerveza Pilsen 6 Pack'; UPDATE Productos SET Stock = 48 WHERE Nombre = N'Pilsen 6 Pack';"
+    },
+    {
+      "id": "adm-transformar-03",
+      "usuario": "admin",
+      "url": "/Inventory/TransformStock",
+      "ancho": 1024,
+      "acciones": [
+        {
+          "seleccionar": [
+            "#ProductoOrigenId",
+            {
+              "index": 21
+            }
+          ]
+        },
+        {
+          "rellenar": [
+            "#CantidadOrigen",
+            "1"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#ProductoDestinoId",
+            {
+              "index": 6
+            }
+          ]
+        },
+        {
+          "rellenar": [
+            "#CantidadDestino",
+            "1"
+          ]
+        },
+        {
+          "clic": "main form button[type=submit]"
+        }
+      ],
+      "recorte": {
+        "selector": "main .validation-summary-errors, main .alert-danger, main .text-danger.validation-summary-errors",
+        "margen": 14
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .validation-summary-errors, main .alert-danger"
+        }
+      ]
+    },
+    {
+      "id": "adm-combos-01",
+      "usuario": "admin",
+      "sql": "DELETE d FROM ComboDetalle d JOIN Combos c ON c.ComboId = d.ComboId WHERE c.Nombre = N'Combo Ron y Cola'; DELETE FROM Combos WHERE Nombre = N'Combo Ron y Cola';",
+      "url": "/Combos/Index",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main .container-fluid",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main .s4-kpi-grid",
+          "posicion": "izquierda",
+          "recuadro": true
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main section.card table",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main a[href$='/Combos/Create']",
+          "posicion": "izquierda"
+        }
+      ]
+    },
+    {
+      "id": "adm-combos-02",
+      "usuario": "admin",
+      "url": "/Combos/Create",
+      "ancho": 1024,
+      "acciones": [
+        {
+          "rellenar": [
+            "#Nombre",
+            "Combo Ron y Cola"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Descripcion",
+            "Ron Añejo 750ml con 2 Coca-Cola 2.5L."
+          ]
+        },
+        {
+          "rellenar": [
+            "#Precio",
+            "15500"
+          ]
+        },
+        {
+          "marcar": "main table tbody tr:has-text('Coca-Cola 2.5L') input[type=checkbox]"
+        },
+        {
+          "rellenar": [
+            "main table tbody tr:has-text('Coca-Cola 2.5L') input[name$='.Cantidad']",
+            "2"
+          ]
+        },
+        {
+          "marcar": "main table tbody tr:has-text('Ron Añejo') input[type=checkbox]"
+        },
+        {
+          "js": "document.querySelectorAll('main table tbody tr').forEach(tr => { if (!/Coca-Cola 2.5L|Ron Añejo|Red Bull|Agua 600ml/.test(tr.innerText)) tr.remove(); })"
+        }
+      ],
+      "recorte": {
+        "selector": "main form",
+        "margen": [
+          10,
+          60,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#Nombre",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#Descripcion",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#Precio",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "main table tbody tr:has-text('Coca-Cola 2.5L') input[type=checkbox]",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "main table tbody tr:has-text('Coca-Cola 2.5L') input[name$='.Cantidad']",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 6,
+          "selector": "main form button[type=submit]",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "adm-combos-03",
+      "usuario": "admin",
+      "sql": "DELETE d FROM ComboDetalle d JOIN Combos c ON c.ComboId = d.ComboId WHERE c.Nombre = N'Combo Ron y Cola'; DELETE FROM Combos WHERE Nombre = N'Combo Ron y Cola';",
+      "url": "/Combos/Create",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "#Nombre",
+            "Combo Ron y Cola"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Descripcion",
+            "Ron Añejo 750ml con 2 Coca-Cola 2.5L."
+          ]
+        },
+        {
+          "rellenar": [
+            "#Precio",
+            "15500"
+          ]
+        },
+        {
+          "marcar": "main table tbody tr:has-text('Coca-Cola 2.5L') input[type=checkbox]"
+        },
+        {
+          "rellenar": [
+            "main table tbody tr:has-text('Coca-Cola 2.5L') input[name$='.Cantidad']",
+            "2"
+          ]
+        },
+        {
+          "marcar": "main table tbody tr:has-text('Ron Añejo') input[type=checkbox]"
+        },
+        {
+          "clic": "main form button[type=submit]"
+        }
+      ],
+      "recorte": {
+        "selector": "main",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main table"
+        }
+      ]
+    },
+    {
+      "id": "adm-combos-04",
+      "usuario": "admin",
+      "url": "/Combos/Detail/1",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main .container-fluid",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main article:has-text('DISPONIBILIDAD REAL'), main .s4-kpi:has-text('DISPONIBILIDAD')"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main table tbody tr:has-text('Coca-Cola')"
+        }
+      ]
+    },
+    {
+      "id": "adm-combos-05",
+      "usuario": "admin",
+      "sql": "DELETE d FROM ComboDetalle d JOIN Combos c ON c.ComboId = d.ComboId WHERE c.Nombre = N'Combo Ron y Cola'; DELETE FROM Combos WHERE Nombre = N'Combo Ron y Cola';",
+      "url": "/Combos/Index",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main section.card",
+        "margen": 10
+      },
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "selector": "main table tbody tr >> nth=0 >> a:has-text('Detalle')",
+          "desde": "abajo",
+          "recuadro": true,
+          "texto": "Detalle"
+        },
+        {
+          "tipo": "flecha",
+          "selector": "main table tbody tr >> nth=0 >> form button",
+          "desde": "derecha",
+          "recuadro": true,
+          "texto": "Inactivar"
+        }
+      ]
+    },
+    {
+      "id": "adm-inteligencia-01",
+      "usuario": "admin",
+      "url": "/InventoryIntelligence/Index",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main section.card >> nth=0",
+        "margen": 10
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#Filter_StartYear",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#Filter_EndYear",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#Filter_RecentMonths",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "#Filter_CoverageMonths",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "#Filter_SlowWindowDays",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 6,
+          "selector": "main section.card >> nth=0 >> button[type=submit]",
+          "posicion": "abajo"
+        }
+      ]
+    },
+    {
+      "id": "adm-inteligencia-02",
+      "usuario": "admin",
+      "url": "/InventoryIntelligence/Index",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main .s4-kpi-grid, main section.card:has-text('Sugerencias de abastecimiento')",
+        "todos": true,
+        "margen": 10
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main section.card:has-text('Sugerencias de abastecimiento') table tbody td:last-child",
+          "todos": true
+        },
+        {
+          "tipo": "etiqueta",
+          "selector": "main section.card:has-text('Sugerencias de abastecimiento') table thead th:last-child",
+          "texto": "Cantidad a comprar",
+          "posicion": "arriba"
+        }
+      ]
+    },
+    {
+      "id": "adm-inteligencia-03",
+      "usuario": "admin",
+      "url": "/InventoryIntelligence/Index",
+      "ancho": 1280,
+      "recorte": {
+        "margen": 10,
+        "selector": "main section.card:has-text('Tendencia estacional')"
+      },
+      "anotaciones": []
+    },
+    {
+      "id": "adm-inteligencia-04",
+      "usuario": "admin",
+      "sql": "UPDATE Productos SET FechaCreacion = '2026-05-01' WHERE ProductoId IN (7, 8, 9);",
+      "url": "/InventoryIntelligence/Index",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "#stagnant-alert, main section.card:has(#slow-title)",
+        "todos": true,
+        "margen": 10
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "#stagnant-alert"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main section.card:has(#slow-title) table tbody td:last-child",
+          "todos": true
+        }
+      ]
+    },
+    {
+      "id": "adm-facturacion-01",
+      "usuario": "admin",
+      "url": "/Billing/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "js": "document.querySelectorAll('main table tbody tr:nth-child(n+7)').forEach(e => e.remove())"
+        }
+      ],
+      "recorte": {
+        "selector": "main .billing-page > .row:nth-child(-n+3)",
+        "todos": true,
+        "margen": [
+          10,
+          10,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main .billing-page > .row:nth-child(2)",
+          "posicion": "izquierda",
+          "recuadro": false
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main table thead th:nth-child(9)",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main table tbody tr >> nth=3 >> a:has-text('Ver')",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "adm-facturacion-02",
+      "usuario": "admin",
+      "url": "/Billing/Detail/9",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main .billing-detail-page > .row:nth-child(2)",
+        "margen": 10
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main .billing-detail-actions button:has-text('Imprimir'), main .billing-detail-actions a:has-text('Imprimir')",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main .billing-detail-actions form button",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main .billing-detail-actions a[href*='wa.me']",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main .admin-card .row .col-md-6:has-text('Correo')"
+        }
+      ]
+    },
+    {
+      "id": "adm-facturacion-03",
+      "usuario": "admin",
+      "url": "/Billing/Detail/9",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clic": "main .billing-detail-actions form button"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert-success, main .alert-danger",
+        "margen": 14
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success, main .alert-danger"
+        }
+      ]
+    },
+    {
+      "id": "adm-clientes-01",
+      "usuario": "admin",
+      "url": "/Clients/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "main form input[name=buscar]",
+            "hotel"
+          ]
+        },
+        {
+          "seleccionar": [
+            "main form select[name=estado]",
+            "Activos"
+          ]
+        },
+        {
+          "js": "document.querySelectorAll('main table tbody tr:nth-child(n+4)').forEach(e => e.remove())"
+        }
+      ],
+      "recorte": {
+        "selector": "main .container-fluid > .row:nth-child(-n+3)",
+        "todos": true,
+        "margen": 10
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main form input[name=buscar]",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main form select[name=estado]",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main form.admin-filter-grid button",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "main a[href$='/Clients/Create']",
+          "posicion": "izquierda"
+        }
+      ]
+    },
+    {
+      "id": "adm-clientes-02",
+      "usuario": "admin",
+      "sql": "DELETE FROM ClienteCreditos WHERE UsuarioId IN (SELECT UsuarioId FROM Usuarios WHERE Correo = N'elroble@clientes.labodega.cr'); DELETE FROM Usuarios WHERE Correo = N'elroble@clientes.labodega.cr';",
+      "url": "/Clients/Create",
+      "ancho": 1024,
+      "acciones": [
+        {
+          "rellenar": [
+            "#NombreCompleto",
+            "Distribuidora El Roble"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Correo",
+            "elroble@clientes.labodega.cr"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Telefono",
+            "2445-7788"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Contrasena",
+            "Temporal2026"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Direccion",
+            "Grecia centro, 200 m norte de la iglesia"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main .col-lg-8 .admin-card",
+        "margen": [
+          10,
+          50,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#NombreCompleto",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#Correo",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#Telefono",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "#Contrasena",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "#Direccion",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 6,
+          "selector": "main form button[type=submit]",
+          "posicion": "abajo"
+        }
+      ]
+    },
+    {
+      "id": "adm-clientes-03",
+      "usuario": "admin",
+      "sql": "DELETE FROM ClienteCreditos WHERE UsuarioId IN (SELECT UsuarioId FROM Usuarios WHERE Correo = N'elroble@clientes.labodega.cr'); DELETE FROM Usuarios WHERE Correo = N'elroble@clientes.labodega.cr';",
+      "url": "/Clients/Create",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "#NombreCompleto",
+            "Distribuidora El Roble"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Correo",
+            "elroble@clientes.labodega.cr"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Telefono",
+            "2445-7788"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Contrasena",
+            "Temporal2026"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Direccion",
+            "Grecia centro, 200 m norte de la iglesia"
+          ]
+        },
+        {
+          "clic": "main form button[type=submit]"
+        },
+        {
+          "js": "document.querySelectorAll('main table tbody tr').forEach(tr => { if (!/El Roble/.test(tr.innerText)) tr.remove(); })"
+        }
+      ],
+      "recorte": {
+        "selector": "main",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main table tbody tr:has-text('El Roble')"
+        }
+      ]
+    },
+    {
+      "id": "adm-clientes-04",
+      "usuario": "admin",
+      "url": "/Clients/Create",
+      "ancho": 1024,
+      "acciones": [
+        {
+          "rellenar": [
+            "#NombreCompleto",
+            "Distribuidora El Roble"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Correo",
+            "elroble@clientes.labodega.cr"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Telefono",
+            "2445-7788"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Contrasena",
+            "Temporal2026"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Direccion",
+            "Grecia centro, 200 m norte de la iglesia"
+          ]
+        },
+        {
+          "clic": "main form button[type=submit]"
+        }
+      ],
+      "recorte": {
+        "selector": "main .validation-summary-errors, main .alert-danger",
+        "margen": 14
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .validation-summary-errors, main .alert-danger"
+        }
+      ]
+    },
+    {
+      "id": "adm-clientes-05",
+      "usuario": "admin",
+      "sql": "DELETE FROM ClienteCreditos WHERE UsuarioId IN (SELECT UsuarioId FROM Usuarios WHERE Correo = N'elroble@clientes.labodega.cr'); DELETE FROM Usuarios WHERE Correo = N'elroble@clientes.labodega.cr';",
+      "url": "/Clients/Details/13",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main .container-fluid",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main .container-fluid > .row:nth-child(2) .admin-card >> nth=0",
+          "posicion": "arriba-izquierda",
+          "recuadro": false
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main .container-fluid > .row:nth-child(2) .admin-card >> nth=1",
+          "posicion": "arriba-izquierda",
+          "recuadro": false
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main .container-fluid > .row:nth-child(2) .admin-card >> nth=2",
+          "posicion": "arriba-izquierda",
+          "recuadro": false
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "main .container-fluid > .row:nth-child(3) .admin-card >> nth=0",
+          "posicion": "arriba-izquierda",
+          "recuadro": false
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "main .container-fluid > .row:nth-child(3) .admin-table-wrapper",
+          "posicion": "arriba-izquierda",
+          "recuadro": false
+        },
+        {
+          "tipo": "paso",
+          "n": 6,
+          "selector": "main .container-fluid > .row:nth-child(4) .admin-table-wrapper",
+          "posicion": "arriba-izquierda",
+          "recuadro": false
+        }
+      ]
+    },
+    {
+      "id": "adm-clientes-06",
+      "usuario": "admin",
+      "url": "/Clients/Edit/13",
+      "ancho": 1024,
+      "acciones": [
+        {
+          "rellenar": [
+            "#Telefono",
+            "8530-5523"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main .col-lg-8 .admin-card",
+        "margen": [
+          10,
+          50,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#NombreCompleto",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#Correo",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#Telefono",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "#Contrasena",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "main form .custom-control:has(#Activo), main form .form-check:has(#Activo)",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 6,
+          "selector": "main form button[type=submit]",
+          "posicion": "abajo"
+        }
+      ]
+    },
+    {
+      "id": "adm-clientes-07",
+      "usuario": "admin",
+      "sql": "UPDATE Usuarios SET Activo = 1 WHERE UsuarioId = 16;",
+      "url": "/Clients/Index?buscar=esquina",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clicSinEsperar": "main table tbody tr:has-text('Esquina') form[action*=ToggleStatus] button"
+        },
+        {
+          "esperar": 400
+        },
+        {
+          "clic": ".s3-modal-btn-confirm"
+        }
+      ],
+      "recorte": {
+        "selector": "main",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main table tbody tr:has-text('Esquina') td:nth-child(7)"
+        }
+      ]
+    },
+    {
+      "id": "adm-clientes-08",
+      "usuario": "admin",
+      "sql": "UPDATE Usuarios SET Activo = 1 WHERE UsuarioId = 16;",
+      "url": "/Clients/Index?buscar=camino",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clicSinEsperar": "main table tbody tr:has-text('Camino Verde') form[action*=ToggleStatus] button"
+        },
+        {
+          "esperar": 400
+        },
+        {
+          "clic": ".s3-modal-btn-confirm"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert-danger",
+        "margen": 14
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-danger"
+        }
+      ]
+    },
+    {
+      "id": "adm-creditos-01",
+      "usuario": "admin",
+      "sql": "DELETE FROM ClienteCreditoMovimientos WHERE Referencia = N'REC-1045'; UPDATE ClienteCreditos SET LimiteCredito = 600000, CreditoActivo = 1, CreditoBloqueado = 0, MotivoBloqueo = NULL, PlazoCreditoDias = 30 WHERE UsuarioId = 13;",
+      "url": "/Credits/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "main form select[name=estadoCredito]",
+            "Con deuda"
+          ]
+        },
+        {
+          "js": "document.querySelectorAll('main table tbody tr:nth-child(n+4)').forEach(e => e.remove())"
+        }
+      ],
+      "recorte": {
+        "selector": "main .container-fluid > .row:nth-child(-n+3)",
+        "todos": true,
+        "margen": 10
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main form input[name=buscar]",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main form select[name=estadoCredito]",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main form button",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "main table tbody tr >> nth=0 >> a:has-text('Administrar')",
+          "posicion": "izquierda"
+        }
+      ]
+    },
+    {
+      "id": "adm-creditos-02",
+      "usuario": "admin",
+      "sql": "DELETE FROM ClienteCreditoMovimientos WHERE Referencia = N'REC-1045'; UPDATE ClienteCreditos SET LimiteCredito = 600000, CreditoActivo = 1, CreditoBloqueado = 0, MotivoBloqueo = NULL, PlazoCreditoDias = 30 WHERE UsuarioId = 13;",
+      "url": "/Credits/Details/13",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main .container-fluid > .row:nth-child(2)",
+        "margen": 10
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .container-fluid > .row:nth-child(2) .mt-2"
+        }
+      ]
+    },
+    {
+      "id": "adm-creditos-03",
+      "usuario": "admin",
+      "sql": "DELETE FROM ClienteCreditoMovimientos WHERE Referencia = N'REC-1045'; UPDATE ClienteCreditos SET LimiteCredito = 600000, CreditoActivo = 1, CreditoBloqueado = 0, MotivoBloqueo = NULL, PlazoCreditoDias = 30 WHERE UsuarioId = 13;",
+      "url": "/Credits/Details/13",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "main form[action*=UpdateSettings] input[name=LimiteCredito]",
+            "700000"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main .container-fluid > .row:nth-child(3) .col-lg-5 .admin-card",
+        "margen": [
+          10,
+          50,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main form[action*=UpdateSettings] input[name=LimiteCredito]",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#PlazoCreditoDias",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main form[action*=UpdateSettings] .form-group:has(#CreditoActivo)",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "main form[action*=UpdateSettings] textarea",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "main form[action*=UpdateSettings] button",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "adm-creditos-04",
+      "usuario": "admin",
+      "sql": "DELETE FROM ClienteCreditoMovimientos WHERE Referencia = N'REC-1045'; UPDATE ClienteCreditos SET LimiteCredito = 600000, CreditoActivo = 1, CreditoBloqueado = 0, MotivoBloqueo = NULL, PlazoCreditoDias = 30 WHERE UsuarioId = 13;",
+      "url": "/Credits/Details/13",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "main form[action*=RegisterMovement] select",
+            "Abono"
+          ]
+        },
+        {
+          "rellenar": [
+            "main form[action*=RegisterMovement] input[name=Monto]",
+            "25000"
+          ]
+        },
+        {
+          "rellenar": [
+            "main form[action*=RegisterMovement] input[name=Referencia]",
+            "REC-1045"
+          ]
+        },
+        {
+          "rellenar": [
+            "main form[action*=RegisterMovement] textarea",
+            "Abono por transferencia del 02/11/2026"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main .container-fluid > .row:nth-child(3) .col-lg-7 .admin-card",
+        "margen": [
+          10,
+          10,
+          10,
+          50
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main form[action*=RegisterMovement] select",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main form[action*=RegisterMovement] input[name=Monto]",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main form[action*=RegisterMovement] input[name=Referencia]",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "main form[action*=RegisterMovement] textarea",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "main form[action*=RegisterMovement] button",
+          "posicion": "izquierda"
+        }
+      ]
+    },
+    {
+      "id": "adm-creditos-05",
+      "usuario": "admin",
+      "sql": "DELETE FROM ClienteCreditoMovimientos WHERE Referencia = N'REC-1045'; UPDATE ClienteCreditos SET LimiteCredito = 600000, CreditoActivo = 1, CreditoBloqueado = 0, MotivoBloqueo = NULL, PlazoCreditoDias = 30 WHERE UsuarioId = 13;",
+      "url": "/Credits/Details/13",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "main form[action*=RegisterMovement] select",
+            "Abono"
+          ]
+        },
+        {
+          "rellenar": [
+            "main form[action*=RegisterMovement] input[name=Monto]",
+            "25000"
+          ]
+        },
+        {
+          "rellenar": [
+            "main form[action*=RegisterMovement] input[name=Referencia]",
+            "REC-1045"
+          ]
+        },
+        {
+          "rellenar": [
+            "main form[action*=RegisterMovement] textarea",
+            "Abono por transferencia del 02/11/2026"
+          ]
+        },
+        {
+          "clicSinEsperar": "main form[action*=RegisterMovement] button"
+        },
+        {
+          "esperar": 400
+        },
+        {
+          "clic": ".s3-modal-btn-confirm"
+        },
+        {
+          "js": "document.querySelectorAll('main .alert-success').forEach((e, i) => { if (i > 0) e.closest('.row, .container').remove(); }); const f = document.querySelector('main form[action*=UpdateSettings]'); f.closest('.row').remove();"
+        }
+      ],
+      "recorte": {
+        "selector": "main",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main .admin-card:has-text('Deuda actual')"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main table tbody tr:has-text('REC-1045')"
+        }
+      ]
+    },
+    {
+      "id": "adm-creditos-06",
+      "usuario": "admin",
+      "sql": "DELETE FROM ClienteCreditoMovimientos WHERE Referencia = N'REC-1045'; UPDATE ClienteCreditos SET LimiteCredito = 600000, CreditoActivo = 1, CreditoBloqueado = 0, MotivoBloqueo = NULL, PlazoCreditoDias = 30 WHERE UsuarioId = 13;",
+      "url": "/Credits/Details/13",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "main form[action*=UpdateSettings] input[name=LimiteCredito]",
+            "600000"
+          ]
+        },
+        {
+          "clicSinEsperar": "label[for=CreditoBloqueado]"
+        },
+        {
+          "clicSinEsperar": "main form[action*=UpdateSettings] button"
+        },
+        {
+          "esperar": 400
+        },
+        {
+          "clic": ".s3-modal-btn-confirm"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert-danger",
+        "indice": 0,
+        "margen": 14
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-danger"
+        }
+      ]
+    },
+    {
+      "id": "adm-cxc-01",
+      "usuario": "admin",
+      "sql": "DELETE FROM ClienteCreditoMovimientos WHERE Referencia = N'REC-1045'; UPDATE ClienteCreditos SET LimiteCredito = 600000, CreditoActivo = 1, CreditoBloqueado = 0, MotivoBloqueo = NULL, PlazoCreditoDias = 30 WHERE UsuarioId = 13;",
+      "url": "/AccountsReceivableAdmin/Index",
+      "ancho": 1700,
+      "acciones": [
+        {
+          "js": "document.querySelectorAll('main table tbody tr:nth-child(n+5)').forEach(e => e.remove())"
+        }
+      ],
+      "recorte": {
+        "selector": "main .backoffice-page > .row:nth-child(-n+3)",
+        "todos": true,
+        "margen": 10
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main form input[name=buscar]",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main form select[name=estadoCredito]",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main form button:has-text('Filtrar')",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "main table tbody tr >> nth=0 >> a:has-text('Ver')",
+          "posicion": "izquierda"
+        }
+      ],
+      "escala": 1
+    },
+    {
+      "id": "adm-cxc-02",
+      "usuario": "admin",
+      "sql": "DELETE FROM ClienteCreditoMovimientos WHERE Referencia = N'REC-1045'; UPDATE ClienteCreditos SET LimiteCredito = 600000, CreditoActivo = 1, CreditoBloqueado = 0, MotivoBloqueo = NULL, PlazoCreditoDias = 30 WHERE UsuarioId = 13;",
+      "url": "/AccountsReceivableAdmin/Detail/13",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main .backoffice-page > .row:nth-child(n+3):nth-child(-n+4)",
+        "todos": true,
+        "margen": 10
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .admin-card:has-text('Deuda actual')"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main .admin-card:has-text('Crédito disponible')"
+        }
+      ]
+    },
+    {
+      "id": "adm-cxc-03",
+      "usuario": "admin",
+      "sql": "DELETE FROM ClienteCreditoMovimientos WHERE Referencia = N'REC-1045'; UPDATE ClienteCreditos SET LimiteCredito = 600000, CreditoActivo = 1, CreditoBloqueado = 0, MotivoBloqueo = NULL, PlazoCreditoDias = 30 WHERE UsuarioId = 13;",
+      "url": "/AccountsReceivableAdmin/Detail/13",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "#MovementForm_TipoMovimiento",
+            "Abono"
+          ]
+        },
+        {
+          "rellenar": [
+            "#MovementForm_Monto",
+            "25000"
+          ]
+        },
+        {
+          "rellenar": [
+            "#MovementForm_Referencia",
+            "REC-1045"
+          ]
+        },
+        {
+          "rellenar": [
+            "#MovementForm_Descripcion",
+            "Abono por transferencia del 02/11/2026"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main .admin-card:has(form[action*=RegisterMovement])",
+        "margen": 10
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#MovementForm_TipoMovimiento",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#MovementForm_Monto",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#MovementForm_Referencia",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "#MovementForm_Descripcion",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "main form[action*=RegisterMovement] button",
+          "posicion": "izquierda"
+        }
+      ]
+    },
+    {
+      "id": "adm-cxc-04",
+      "usuario": "admin",
+      "sql": "DELETE FROM ClienteCreditoMovimientos WHERE Referencia = N'REC-1045'; UPDATE ClienteCreditos SET LimiteCredito = 600000, CreditoActivo = 1, CreditoBloqueado = 0, MotivoBloqueo = NULL, PlazoCreditoDias = 30 WHERE UsuarioId = 13;",
+      "url": "/AccountsReceivableAdmin/Detail/13",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "#MovementForm_TipoMovimiento",
+            "Abono"
+          ]
+        },
+        {
+          "rellenar": [
+            "#MovementForm_Monto",
+            "25000"
+          ]
+        },
+        {
+          "rellenar": [
+            "#MovementForm_Referencia",
+            "REC-1045"
+          ]
+        },
+        {
+          "rellenar": [
+            "#MovementForm_Descripcion",
+            "Abono por transferencia del 02/11/2026"
+          ]
+        },
+        {
+          "clic": "main form[action*=RegisterMovement] button"
+        }
+      ],
+      "recorte": {
+        "selector": "main",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main table tbody tr:has-text('REC-1045')"
+        }
+      ]
+    },
+    {
+      "id": "adm-garantias-01",
+      "usuario": "admin",
+      "sql": "UPDATE Garantias SET Estado = CASE WHEN PedidoDetalleId = 8 THEN N'En revisión' ELSE N'Pendiente' END, Resolucion = NULL, FechaResolucion = NULL, ResueltoPorUsuarioId = NULL, ResueltoPorNombre = NULL WHERE FechaSolicitud IN ('20261028 09:15', '20261021 14:40', '20261018 11:05');",
+      "url": "/WarrantyRequestsAdmin/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "main table tbody tr >> nth=0 >> select[name=estado]",
+            "Aprobada"
+          ]
+        },
+        {
+          "rellenar": [
+            "main table tbody tr >> nth=0 >> textarea",
+            "Se reponen 2 botellas en la próxima entrega."
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main .card",
+        "margen": 10
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main table tbody tr >> nth=0 >> td >> nth=1",
+          "posicion": "arriba",
+          "recuadro": true
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main table tbody tr >> nth=0 >> td >> nth=3",
+          "posicion": "arriba",
+          "recuadro": true
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main table tbody tr >> nth=0 >> select[name=estado]",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "main table tbody tr >> nth=0 >> textarea",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "main table tbody tr >> nth=0 >> button",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "adm-garantias-02",
+      "usuario": "admin",
+      "sql": "UPDATE Garantias SET Estado = CASE WHEN PedidoDetalleId = 8 THEN N'En revisión' ELSE N'Pendiente' END, Resolucion = NULL, FechaResolucion = NULL, ResueltoPorUsuarioId = NULL, ResueltoPorNombre = NULL WHERE FechaSolicitud IN ('20261028 09:15', '20261021 14:40', '20261018 11:05');",
+      "url": "/WarrantyRequestsAdmin/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "main table tbody tr >> nth=0 >> select[name=estado]",
+            "Aprobada"
+          ]
+        },
+        {
+          "rellenar": [
+            "main table tbody tr >> nth=0 >> textarea",
+            "Se reponen 2 botellas en la próxima entrega."
+          ]
+        },
+        {
+          "clic": "main table tbody tr >> nth=0 >> button"
+        }
+      ],
+      "recorte": {
+        "selector": "main",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main table tbody tr:has-text('Solicitud cerrada') >> nth=0"
+        }
+      ]
+    },
+    {
+      "id": "adm-garantias-03",
+      "usuario": "admin",
+      "sql": "UPDATE Garantias SET Estado = CASE WHEN PedidoDetalleId = 8 THEN N'En revisión' ELSE N'Pendiente' END, Resolucion = NULL, FechaResolucion = NULL, ResueltoPorUsuarioId = NULL, ResueltoPorNombre = NULL WHERE FechaSolicitud IN ('20261028 09:15', '20261021 14:40', '20261018 11:05');",
+      "url": "/WarrantyRequestsAdmin/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "main table tbody tr >> nth=0 >> select[name=estado]",
+            "Rechazada"
+          ]
+        },
+        {
+          "clic": "main table tbody tr >> nth=0 >> button"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert-danger",
+        "margen": 14
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-danger"
+        }
+      ]
+    },
+    {
+      "id": "adm-presupuestos-01",
+      "usuario": "admin",
+      "sql": "DELETE a FROM PresupuestoAuditoria a JOIN PresupuestosAnuales p ON p.PresupuestoId = a.PresupuestoId WHERE p.DepartamentoId = 5 AND p.Anio = 2026; DELETE d FROM PresupuestoDetalles d JOIN PresupuestosAnuales p ON p.PresupuestoId = d.PresupuestoId WHERE p.DepartamentoId = 5 AND p.Anio = 2026; DELETE FROM PresupuestosAnuales WHERE DepartamentoId = 5 AND Anio = 2026;",
+      "url": "/Budgets/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "#NewBudget_Year",
+            "2026"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#NewBudget_DepartmentId",
+            {
+              "label": "Recursos Humanos"
+            }
+          ]
+        },
+        {
+          "seleccionar": [
+            "#NewBudget_CategoryId",
+            {
+              "label": "Otros"
+            }
+          ]
+        },
+        {
+          "rellenar": [
+            "#NewBudget_AnnualAmount",
+            "2400000"
+          ]
+        },
+        {
+          "rellenar": [
+            "#NewBudget_Notes",
+            "Capacitaciones y actividades de bienestar del personal"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#NewBudget_Year",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#NewBudget_DepartmentId",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#NewBudget_CategoryId",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "#NewBudget_AnnualAmount",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "#NewBudget_Notes",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 6,
+          "selector": "form[action*='Budgets/Create'] button",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "adm-presupuestos-02",
+      "usuario": "admin",
+      "sql": "DELETE a FROM PresupuestoAuditoria a JOIN PresupuestosAnuales p ON p.PresupuestoId = a.PresupuestoId WHERE p.DepartamentoId = 5 AND p.Anio = 2026; DELETE d FROM PresupuestoDetalles d JOIN PresupuestosAnuales p ON p.PresupuestoId = d.PresupuestoId WHERE p.DepartamentoId = 5 AND p.Anio = 2026; DELETE FROM PresupuestosAnuales WHERE DepartamentoId = 5 AND Anio = 2026;",
+      "url": "/Budgets/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "#NewBudget_Year",
+            "2026"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#NewBudget_DepartmentId",
+            {
+              "label": "Recursos Humanos"
+            }
+          ]
+        },
+        {
+          "seleccionar": [
+            "#NewBudget_CategoryId",
+            {
+              "label": "Otros"
+            }
+          ]
+        },
+        {
+          "rellenar": [
+            "#NewBudget_AnnualAmount",
+            "2400000"
+          ]
+        },
+        {
+          "rellenar": [
+            "#NewBudget_Notes",
+            "Capacitaciones y actividades de bienestar del personal"
+          ]
+        },
+        {
+          "clic": "form[action*='Budgets/Create'] button"
+        },
+        {
+          "js": "document.querySelectorAll('main .alert-success').forEach((e, i) => { if (i > 0) e.remove(); })"
+        },
+        {
+          "js": "document.querySelectorAll('main table tbody tr:nth-child(n+5)').forEach(e => e.remove())"
+        }
+      ],
+      "recorte": {
+        "selector": "main",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success >> nth=0"
+        },
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main form[action*=Submit] button",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main form[action*=Distribute] button",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main form[action*='Budgets/SaveDetail'] button:has-text('Guardar línea')",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "main form[action*=UpdateDraft] button",
+          "posicion": "arriba"
+        }
+      ]
+    },
+    {
+      "id": "adm-presupuestos-03",
+      "usuario": "admin",
+      "sql": "DELETE a FROM PresupuestoAuditoria a JOIN PresupuestosAnuales p ON p.PresupuestoId = a.PresupuestoId WHERE p.DepartamentoId = 5 AND p.Anio = 2026; DELETE d FROM PresupuestoDetalles d JOIN PresupuestosAnuales p ON p.PresupuestoId = d.PresupuestoId WHERE p.DepartamentoId = 5 AND p.Anio = 2026; DELETE FROM PresupuestosAnuales WHERE DepartamentoId = 5 AND Anio = 2026;",
+      "url": "/Budgets/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "#NewBudget_Year",
+            "2026"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#NewBudget_DepartmentId",
+            {
+              "label": "Recursos Humanos"
+            }
+          ]
+        },
+        {
+          "seleccionar": [
+            "#NewBudget_CategoryId",
+            {
+              "label": "Otros"
+            }
+          ]
+        },
+        {
+          "rellenar": [
+            "#NewBudget_AnnualAmount",
+            "2400000"
+          ]
+        },
+        {
+          "rellenar": [
+            "#NewBudget_Notes",
+            "Capacitaciones y actividades de bienestar del personal"
+          ]
+        },
+        {
+          "clic": "form[action*='Budgets/Create'] button"
+        },
+        {
+          "clicSinEsperar": "main form[action*=Submit] button"
+        },
+        {
+          "esperar": 400
+        },
+        {
+          "js": "const b = document.querySelector('.s3-modal-backdrop.is-open .s3-modal-btn-confirm'); if (b) b.click();"
+        },
+        {
+          "esperar": 2500
+        },
+        {
+          "js": "document.querySelectorAll('main .alert-success').forEach((e, i) => { if (i > 0) e.remove(); })"
+        },
+        {
+          "js": "document.querySelectorAll('main table tbody tr:nth-child(n+5)').forEach(e => { if (!/Total/.test(e.innerText)) e.remove(); })"
+        }
+      ],
+      "recorte": {
+        "selector": "main",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success >> nth=0"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main :text('· Presentado')"
+        }
+      ]
+    },
+    {
+      "id": "adm-presupuestos-04",
+      "usuario": "admin",
+      "url": "/Budgets/Details/3",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "js": "document.querySelectorAll('main table tbody tr:nth-child(n+4)').forEach(e => e.remove())"
+        }
+      ],
+      "recorte": {
+        "selector": "main",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main form[action*=Approve] button",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main form[action*=Reject] input[name=reason]",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main form[action*=Reject] button",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "main form[action*=Copy] input",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "main form[action*=Copy] button",
+          "posicion": "abajo"
+        }
+      ]
+    },
+    {
+      "id": "adm-presupuestos-05",
+      "usuario": "admin",
+      "url": "/Budgets/Details/3",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clicSinEsperar": "main form[action*=Approve] button"
+        },
+        {
+          "esperar": 400
+        },
+        {
+          "js": "const b = document.querySelector('.s3-modal-backdrop.is-open .s3-modal-btn-confirm'); if (b) b.click();"
+        },
+        {
+          "esperar": 2500
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert-danger >> nth=0",
+        "margen": 14
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-danger >> nth=0"
+        }
+      ]
+    },
+    {
+      "id": "adm-gastos-01",
+      "usuario": "admin",
+      "sql": "DELETE a FROM GastoOperativoAuditoria a JOIN GastosOperativos g ON g.GastoId = a.GastoId WHERE g.NumeroDocumento IN (N'FE-4410', N'FE-4411'); DELETE FROM GastosOperativos WHERE NumeroDocumento IN (N'FE-4410', N'FE-4411'); UPDATE GastosOperativos SET Estado = N'Registrado', MotivoCancelacion = NULL, AnuladoPorUsuarioId = NULL, FechaAnulacionUtc = NULL WHERE NumeroDocumento = N'FE-3307';",
+      "url": "/Expenses/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "js": "document.querySelectorAll('main table tbody tr:nth-child(n+5)').forEach(e => e.remove())"
+        }
+      ],
+      "recorte": {
+        "selector": "main",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main a[href$='/Expenses/Create'] >> nth=0",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main form[method=get] input[name=Search]",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main form[method=get] select[name=Status]",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "main form[method=get] button",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "main table tbody tr >> nth=0 >> a >> nth=-1",
+          "posicion": "izquierda"
+        }
+      ]
+    },
+    {
+      "id": "adm-gastos-02",
+      "usuario": "admin",
+      "sql": "DELETE a FROM GastoOperativoAuditoria a JOIN GastosOperativos g ON g.GastoId = a.GastoId WHERE g.NumeroDocumento IN (N'FE-4410', N'FE-4411'); DELETE FROM GastosOperativos WHERE NumeroDocumento IN (N'FE-4410', N'FE-4411'); UPDATE GastosOperativos SET Estado = N'Registrado', MotivoCancelacion = NULL, AnuladoPorUsuarioId = NULL, FechaAnulacionUtc = NULL WHERE NumeroDocumento = N'FE-3307';",
+      "url": "/Expenses/Create",
+      "ancho": 1024,
+      "acciones": [
+        {
+          "rellenar": [
+            "#ExpenseDate",
+            "2026-11-02"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#DepartmentId",
+            {
+              "label": "Operaciones"
+            }
+          ]
+        },
+        {
+          "seleccionar": [
+            "#CategoryId",
+            {
+              "label": "Combustible"
+            }
+          ]
+        },
+        {
+          "rellenar": [
+            "#SupplierName",
+            "Estación de Servicio La Uruca"
+          ]
+        },
+        {
+          "rellenar": [
+            "#DocumentNumber",
+            "FE-4410"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#DocumentType",
+            {
+              "label": "Factura"
+            }
+          ]
+        },
+        {
+          "rellenar": [
+            "#Description",
+            "Combustible camiones de reparto, primera semana de noviembre"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Subtotal",
+            "120000"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Tax",
+            "15600"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#PaymentMethod",
+            {
+              "label": "Transferencia"
+            }
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main form[action*='Expenses/Create']",
+        "margen": [
+          10,
+          50,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#ExpenseDate",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#CategoryId",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#DocumentNumber",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "#Description",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "#Tax",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 6,
+          "selector": "main form[action*='Expenses/Create'] button[type=submit]",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "adm-gastos-03",
+      "usuario": "admin",
+      "sql": "DELETE a FROM GastoOperativoAuditoria a JOIN GastosOperativos g ON g.GastoId = a.GastoId WHERE g.NumeroDocumento IN (N'FE-4410', N'FE-4411'); DELETE FROM GastosOperativos WHERE NumeroDocumento IN (N'FE-4410', N'FE-4411'); UPDATE GastosOperativos SET Estado = N'Registrado', MotivoCancelacion = NULL, AnuladoPorUsuarioId = NULL, FechaAnulacionUtc = NULL WHERE NumeroDocumento = N'FE-3307';",
+      "url": "/Expenses/Create",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "#ExpenseDate",
+            "2026-11-02"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#DepartmentId",
+            {
+              "label": "Operaciones"
+            }
+          ]
+        },
+        {
+          "seleccionar": [
+            "#CategoryId",
+            {
+              "label": "Combustible"
+            }
+          ]
+        },
+        {
+          "rellenar": [
+            "#SupplierName",
+            "Estación de Servicio La Uruca"
+          ]
+        },
+        {
+          "rellenar": [
+            "#DocumentNumber",
+            "FE-4410"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#DocumentType",
+            {
+              "label": "Factura"
+            }
+          ]
+        },
+        {
+          "rellenar": [
+            "#Description",
+            "Combustible camiones de reparto, primera semana de noviembre"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Subtotal",
+            "120000"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Tax",
+            "15600"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#PaymentMethod",
+            {
+              "label": "Transferencia"
+            }
+          ]
+        },
+        {
+          "clic": "main form[action*='Expenses/Create'] button[type=submit]"
+        },
+        {
+          "js": "document.querySelectorAll('main .alert-success').forEach((e, i) => { if (i > 0) e.remove(); })"
+        }
+      ],
+      "recorte": {
+        "selector": "main",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success >> nth=0"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main dd:has-text('Registrado'), main .badge:has-text('Registrado')",
+          "indice": 0
+        }
+      ]
+    },
+    {
+      "id": "adm-gastos-04",
+      "usuario": "admin",
+      "sql": "DELETE a FROM GastoOperativoAuditoria a JOIN GastosOperativos g ON g.GastoId = a.GastoId WHERE g.NumeroDocumento IN (N'FE-4410', N'FE-4411'); DELETE FROM GastosOperativos WHERE NumeroDocumento IN (N'FE-4410', N'FE-4411'); UPDATE GastosOperativos SET Estado = N'Registrado', MotivoCancelacion = NULL, AnuladoPorUsuarioId = NULL, FechaAnulacionUtc = NULL WHERE NumeroDocumento = N'FE-3307';",
+      "url": "/Expenses/Create",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "#ExpenseDate",
+            "2026-11-02"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#DepartmentId",
+            {
+              "label": "Recursos Humanos"
+            }
+          ]
+        },
+        {
+          "seleccionar": [
+            "#CategoryId",
+            {
+              "label": "Otros"
+            }
+          ]
+        },
+        {
+          "rellenar": [
+            "#SupplierName",
+            "Estación de Servicio La Uruca"
+          ]
+        },
+        {
+          "rellenar": [
+            "#DocumentNumber",
+            "FE-4411"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#DocumentType",
+            {
+              "label": "Factura"
+            }
+          ]
+        },
+        {
+          "rellenar": [
+            "#Description",
+            "Refrigerio para la capacitación de seguridad en bodega"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Subtotal",
+            "85000"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Tax",
+            "11050"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#PaymentMethod",
+            {
+              "label": "Transferencia"
+            }
+          ]
+        },
+        {
+          "clic": "main form[action*='Expenses/Create'] button[type=submit]"
+        },
+        {
+          "js": "document.querySelectorAll('main .alert-success').forEach((e, i) => { if (i > 0) e.remove(); })"
+        }
+      ],
+      "recorte": {
+        "selector": "main",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-danger:has-text('Presupuesto Excedido')"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main dd:has-text('Requiere Aprobación')",
+          "indice": 0
+        }
+      ]
+    },
+    {
+      "id": "adm-gastos-05",
+      "usuario": "admin",
+      "sql": "DELETE a FROM GastoOperativoAuditoria a JOIN GastosOperativos g ON g.GastoId = a.GastoId WHERE g.NumeroDocumento IN (N'FE-4410', N'FE-4411'); DELETE FROM GastosOperativos WHERE NumeroDocumento IN (N'FE-4410', N'FE-4411'); UPDATE GastosOperativos SET Estado = N'Registrado', MotivoCancelacion = NULL, AnuladoPorUsuarioId = NULL, FechaAnulacionUtc = NULL WHERE NumeroDocumento = N'FE-3307';",
+      "url": "/Expenses/Details/12",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main .card:has(.card-header:text-is('Acciones'))",
+        "margen": [
+          10,
+          90,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#override, main form[action*=Approve] .custom-control, main form[action*=Approve] .form-check",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main form[action*=Approve] button",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main form[action*=Reject] input[name=reason]",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "main form[action*=Reject] button",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "main form[action*=Cancel] input[name=reason]",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 6,
+          "selector": "main form[action*=Cancel] button",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "adm-gastos-06",
+      "usuario": "admin",
+      "sql": "DELETE a FROM GastoOperativoAuditoria a JOIN GastosOperativos g ON g.GastoId = a.GastoId WHERE g.NumeroDocumento IN (N'FE-4410', N'FE-4411'); DELETE FROM GastosOperativos WHERE NumeroDocumento IN (N'FE-4410', N'FE-4411'); UPDATE GastosOperativos SET Estado = N'Registrado', MotivoCancelacion = NULL, AnuladoPorUsuarioId = NULL, FechaAnulacionUtc = NULL WHERE NumeroDocumento = N'FE-3307';",
+      "url": "/Expenses/Details/12",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clicSinEsperar": "main form[action*=Approve] button"
+        },
+        {
+          "esperar": 400
+        },
+        {
+          "js": "const b = document.querySelector('.s3-modal-backdrop.is-open .s3-modal-btn-confirm'); if (b) b.click();"
+        },
+        {
+          "esperar": 2500
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert-danger >> nth=0",
+        "margen": 14
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-danger >> nth=0"
+        }
+      ]
+    },
+    {
+      "id": "adm-gastos-07",
+      "usuario": "admin",
+      "sql": "DELETE a FROM GastoOperativoAuditoria a JOIN GastosOperativos g ON g.GastoId = a.GastoId WHERE g.NumeroDocumento IN (N'FE-4410', N'FE-4411'); DELETE FROM GastosOperativos WHERE NumeroDocumento IN (N'FE-4410', N'FE-4411'); UPDATE GastosOperativos SET Estado = N'Registrado', MotivoCancelacion = NULL, AnuladoPorUsuarioId = NULL, FechaAnulacionUtc = NULL WHERE NumeroDocumento = N'FE-3307';",
+      "url": "/Expenses/Details/12",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "main form[action*=Cancel] input[name=reason]",
+            "Factura duplicada: el proveedor la emitió dos veces."
+          ]
+        },
+        {
+          "clicSinEsperar": "main form[action*=Cancel] button"
+        },
+        {
+          "esperar": 400
+        },
+        {
+          "js": "const b = document.querySelector('.s3-modal-backdrop.is-open .s3-modal-btn-confirm'); if (b) b.click();"
+        },
+        {
+          "esperar": 2500
+        },
+        {
+          "js": "document.querySelectorAll('main .alert-success').forEach((e, i) => { if (i > 0) e.remove(); })"
+        }
+      ],
+      "recorte": {
+        "selector": "main",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success >> nth=0"
+        }
+      ]
+    },
+    {
+      "id": "adm-presreal-01",
+      "usuario": "admin",
+      "url": "/BudgetComparison/Index?Year=2026",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "main form select[name=DepartmentId]",
+            "Operaciones"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main .s4-admin-page > div:nth-child(-n+2)",
+        "todos": true,
+        "margen": 10
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main form input[name=Year]",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main form select[name=DepartmentId]",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main form select[name=Month]",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "main form select[name=CategoryId]",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "main form select[name=ExpenseStatus]",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 6,
+          "selector": "main form button",
+          "posicion": "abajo"
+        }
+      ]
+    },
+    {
+      "id": "adm-presreal-02",
+      "usuario": "admin",
+      "url": "/BudgetComparison/Index?Year=2026",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main .s4-admin-page > .row.mb-3",
+        "todos": true,
+        "margen": 10
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .s4-admin-page > .row.mb-3 >> nth=0 >> .card",
+          "todos": true
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main .s4-admin-page > .row.mb-3 >> nth=1 >> tbody tr:has-text('Operaciones')"
+        }
+      ]
+    },
+    {
+      "id": "adm-presreal-03",
+      "usuario": "admin",
+      "url": "/BudgetComparison/Index?Year=2026",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "js": "document.querySelectorAll(\"main .s4-admin-page > .card:last-child table tbody tr:nth-child(n+6)\").forEach(e => e.remove())"
+        }
+      ],
+      "recorte": {
+        "selector": "main .s4-admin-page > .alert-info, main .s4-admin-page > .card:last-child",
+        "todos": true,
+        "margen": 10
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .s4-admin-page > .alert-info"
+        },
+        {
+          "tipo": "flecha",
+          "selector": "main .s4-admin-page > .card:last-child table tbody tr >> nth=0 >> a",
+          "desde": "derecha",
+          "largo": 60
+        }
+      ]
+    },
+    {
+      "id": "adm-presreal-04",
+      "usuario": "admin",
+      "url": "/BudgetComparison/Index?Year=2026",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "#exportComparison, main .s4-admin-page > div:first-child",
+        "todos": true,
+        "margen": [
+          10,
+          10,
+          20,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#exportComparison",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main a:has-text('CSV')",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main a:has-text('Imprimir')",
+          "posicion": "abajo"
+        }
+      ]
+    },
+    {
+      "id": "adm-ingresos-01",
+      "usuario": "admin",
+      "url": "/FinancialReportAdmin/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "#FechaInicio",
+            "2026-09-01"
+          ]
+        },
+        {
+          "rellenar": [
+            "#FechaFin",
+            "2026-10-31"
+          ]
+        },
+        {
+          "js": "document.activeElement.blur()"
+        }
+      ],
+      "recorte": {
+        "selector": "main .container > h2, main .container > form",
+        "todos": true,
+        "margen": [
+          14,
+          14,
+          14,
+          14
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#FechaInicio",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#FechaFin",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main .container > form button",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "adm-ingresos-02",
+      "usuario": "admin",
+      "url": "/FinancialReportAdmin/Index?FechaInicio=2026-09-01&FechaFin=2026-10-31",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "js": "document.querySelectorAll(\"main table tbody tr:nth-child(n+9)\").forEach(e => e.remove())"
+        }
+      ],
+      "recorte": {
+        "selector": "main .container > div.row, main .container > div.mt-4",
+        "todos": true,
+        "margen": 14
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .container > .row .card:has-text('Balance')"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main table tbody td:nth-child(2)",
+          "todos": true
+        }
+      ]
+    },
+    {
+      "id": "adm-proveedores-01",
+      "usuario": "admin",
+      "sql": "DELETE FROM Proveedores WHERE Nombre = N'Cervecería Artesanal del Pacífico';",
+      "url": "/Suppliers/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "#Nombre",
+            "Cervecería Artesanal del Pacífico"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Contacto",
+            "Diego Salas"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Telefono",
+            "2661-4040"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Email",
+            "ventas@cervepacifico.example"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "#supplier-form-card",
+        "margen": [
+          10,
+          50,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#Nombre",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#Contacto",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#Telefono",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "#Email",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "#supplier-form-card label:has-text('Proveedor activo')",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 6,
+          "selector": "#supplier-form-card button[type=submit]",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "adm-proveedores-02",
+      "usuario": "admin",
+      "sql": "DELETE FROM Proveedores WHERE Nombre = N'Cervecería Artesanal del Pacífico';",
+      "url": "/Suppliers/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "#Nombre",
+            "Cervecería Artesanal del Pacífico"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Contacto",
+            "Diego Salas"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Telefono",
+            "2661-4040"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Email",
+            "ventas@cervepacifico.example"
+          ]
+        },
+        {
+          "clic": "#supplier-form-card button[type=submit]"
+        }
+      ],
+      "recorte": {
+        "selector": "main",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main table tbody tr:has-text('Pacífico')"
+        }
+      ]
+    },
+    {
+      "id": "adm-proveedores-03",
+      "usuario": "admin",
+      "sql": "DELETE FROM Proveedores WHERE Nombre = N'Cervecería Artesanal del Pacífico';",
+      "url": "/Suppliers/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clicSinEsperar": "main table tbody tr:has-text('Hielo y Bebidas') button.edit-supplier"
+        },
+        {
+          "esperar": 300
+        }
+      ],
+      "recorte": {
+        "selector": "main .backoffice-page > .row:nth-child(2)",
+        "margen": [
+          10,
+          160,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main table tbody tr:has-text('Hielo y Bebidas') button.edit-supplier",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#supplier-form-title",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#supplier-form-card button[type=submit]",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "flecha",
+          "selector": "main table tbody tr:has-text('Hielo y Bebidas') form[action*=ChangeStatus] button",
+          "desde": "derecha",
+          "largo": 50,
+          "texto": "Inactivar"
+        }
+      ]
+    },
+    {
+      "id": "adm-proveedores-04",
+      "usuario": "admin",
+      "url": "/Suppliers/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "#Nombre",
+            "Cervecería Artesanal del Pacífico"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Nombre",
+            "Distribuidora Central de Licores"
+          ]
+        },
+        {
+          "clic": "#supplier-form-card button[type=submit]"
+        }
+      ],
+      "recorte": {
+        "selector": "main .validation-summary-errors, main .alert-danger, #supplier-form-card .text-danger:not(:empty)",
+        "margen": 14
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .validation-summary-errors, main .alert-danger, #supplier-form-card .text-danger:not(:empty)"
+        }
+      ]
+    },
+    {
+      "id": "adm-ordenes-01",
+      "usuario": "admin",
+      "sql": "DELETE d FROM DetalleOrdenCompra d JOIN OrdenesCompra o ON o.OrdenCompraId = d.OrdenCompraId WHERE o.Notas = N'Pedido semanal de snacks'; DELETE FROM OrdenesCompra WHERE Notas = N'Pedido semanal de snacks'; UPDATE p SET Stock = p.Stock - d.CantidadRecibida FROM Productos p JOIN DetalleOrdenCompra d ON d.ProductoId = p.ProductoId WHERE d.OrdenCompraId = 3; DELETE FROM MovimientosInventario WHERE Motivo LIKE N'Recepci_n orden #3.'; DELETE FROM ComprasRecepcionOperaciones WHERE OrdenCompraId = 3; UPDATE DetalleOrdenCompra SET CantidadRecibida = 0 WHERE OrdenCompraId = 3; UPDATE OrdenesCompra SET Estado = N'Pendiente', FechaRecepcionUtc = NULL WHERE OrdenCompraId = 3; UPDATE OrdenesCompra SET Estado = N'RecibidaParcial', FechaCierreUtc = NULL, MotivoCierre = NULL, TokenFinalizacion = NULL, FinalizacionHash = NULL WHERE OrdenCompraId = 2;",
+      "url": "/PurchaseOrders/Index",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main .backoffice-page",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main form select[name=estado]",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main form select[name=proveedorId]",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main form button:has-text('Filtrar')",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "main a[href$='/PurchaseOrders/Suggestions']",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "main a[href$='/PurchaseOrders/Create']",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 6,
+          "selector": "main table tbody tr >> nth=0 >> a:has-text('Ver')",
+          "posicion": "izquierda"
+        }
+      ]
+    },
+    {
+      "id": "adm-ordenes-02",
+      "usuario": "admin",
+      "sql": "DELETE d FROM DetalleOrdenCompra d JOIN OrdenesCompra o ON o.OrdenCompraId = d.OrdenCompraId WHERE o.Notas = N'Pedido semanal de snacks'; DELETE FROM OrdenesCompra WHERE Notas = N'Pedido semanal de snacks';",
+      "url": "/PurchaseOrders/Create",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "#ProveedorId",
+            {
+              "label": "Snacks La Cosecha"
+            }
+          ]
+        },
+        {
+          "rellenar": [
+            "#Notas",
+            "Pedido semanal de snacks"
+          ]
+        },
+        {
+          "marcar": "main table tbody tr:has-text('Yucas Tostadas') input[type=checkbox]"
+        },
+        {
+          "rellenar": [
+            "main table tbody tr:has-text('Yucas Tostadas') input[name$='.Cantidad']",
+            "48"
+          ]
+        },
+        {
+          "rellenar": [
+            "main table tbody tr:has-text('Yucas Tostadas') input[name$='.PrecioUnitario']",
+            "950"
+          ]
+        },
+        {
+          "js": "document.querySelectorAll('main table tbody tr').forEach(tr => { if (!/Yucas|Red Bull|Whisky|Vodka Premium/.test(tr.innerText)) tr.remove(); })"
+        }
+      ],
+      "recorte": {
+        "selector": "main form",
+        "margen": [
+          10,
+          10,
+          10,
+          50
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#ProveedorId",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#Notas",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main table tbody tr:has-text('Yucas Tostadas') input[type=checkbox]",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "main table tbody tr:has-text('Yucas Tostadas') input[name$='.Cantidad']",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "main table tbody tr:has-text('Yucas Tostadas') input[name$='.PrecioUnitario']",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 6,
+          "selector": "main form button[type=submit]",
+          "posicion": "izquierda"
+        }
+      ]
+    },
+    {
+      "id": "adm-ordenes-03",
+      "usuario": "admin",
+      "sql": "DELETE d FROM DetalleOrdenCompra d JOIN OrdenesCompra o ON o.OrdenCompraId = d.OrdenCompraId WHERE o.Notas = N'Pedido semanal de snacks'; DELETE FROM OrdenesCompra WHERE Notas = N'Pedido semanal de snacks';",
+      "url": "/PurchaseOrders/Create",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "#ProveedorId",
+            {
+              "label": "Snacks La Cosecha"
+            }
+          ]
+        },
+        {
+          "rellenar": [
+            "#Notas",
+            "Pedido semanal de snacks"
+          ]
+        },
+        {
+          "marcar": "main table tbody tr:has-text('Yucas Tostadas') input[type=checkbox]"
+        },
+        {
+          "rellenar": [
+            "main table tbody tr:has-text('Yucas Tostadas') input[name$='.Cantidad']",
+            "48"
+          ]
+        },
+        {
+          "rellenar": [
+            "main table tbody tr:has-text('Yucas Tostadas') input[name$='.PrecioUnitario']",
+            "950"
+          ]
+        },
+        {
+          "clic": "main form button[type=submit]"
+        }
+      ],
+      "recorte": {
+        "selector": "main",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main h2"
+        }
+      ]
+    },
+    {
+      "id": "adm-ordenes-04",
+      "usuario": "admin",
+      "sql": "UPDATE p SET Stock = p.Stock - d.CantidadRecibida FROM Productos p JOIN DetalleOrdenCompra d ON d.ProductoId = p.ProductoId WHERE d.OrdenCompraId = 3; DELETE FROM MovimientosInventario WHERE Motivo LIKE N'Recepci_n orden #3.'; DELETE FROM ComprasRecepcionOperaciones WHERE OrdenCompraId = 3; UPDATE DetalleOrdenCompra SET CantidadRecibida = 0 WHERE OrdenCompraId = 3; UPDATE OrdenesCompra SET Estado = N'Pendiente', FechaRecepcionUtc = NULL WHERE OrdenCompraId = 3;",
+      "url": "/PurchaseOrders/Detail/3",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "main table tbody tr:has-text('Bolsa de Hielo') input[name=CantidadRecibidaAhora]",
+            "60"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main .backoffice-page",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main table tbody tr:has-text('Bolsa de Hielo') td:nth-child(4)",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main table tbody tr:has-text('Bolsa de Hielo') input[name=CantidadRecibidaAhora]",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main table tbody tr:has-text('Bolsa de Hielo') button",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main .card:has-text('Cancelar orden')"
+        }
+      ]
+    },
+    {
+      "id": "adm-ordenes-05",
+      "usuario": "admin",
+      "url": "/PurchaseOrders/Detail/3",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "main table tbody tr:has-text('Bolsa de Hielo') input[name=CantidadRecibidaAhora]",
+            "60"
+          ]
+        },
+        {
+          "clic": "main table tbody tr:has-text('Bolsa de Hielo') button"
+        }
+      ],
+      "recorte": {
+        "selector": "main",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main table tbody tr:has-text('Bolsa de Hielo')"
+        }
+      ],
+      "sql": "UPDATE p SET Stock = p.Stock - d.CantidadRecibida FROM Productos p JOIN DetalleOrdenCompra d ON d.ProductoId = p.ProductoId WHERE d.OrdenCompraId = 3; DELETE FROM MovimientosInventario WHERE Motivo LIKE N'Recepci_n orden #3.'; DELETE FROM ComprasRecepcionOperaciones WHERE OrdenCompraId = 3; UPDATE DetalleOrdenCompra SET CantidadRecibida = 0 WHERE OrdenCompraId = 3; UPDATE OrdenesCompra SET Estado = N'Pendiente', FechaRecepcionUtc = NULL WHERE OrdenCompraId = 3;"
+    },
+    {
+      "id": "adm-ordenes-06",
+      "usuario": "admin",
+      "url": "/PurchaseOrders/Detail/2",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "main form[action*=CloseWithDiscrepancy] textarea",
+            "El proveedor no tiene el Vino Tinto Reserva hasta enero."
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main .backoffice-page",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main table tbody tr:has-text('Vino Tinto') td:nth-child(4)"
+        },
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main form[action*=CloseWithDiscrepancy] textarea",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main form[action*=CloseWithDiscrepancy] button",
+          "posicion": "derecha"
+        }
+      ],
+      "sql": "UPDATE OrdenesCompra SET Estado = N'RecibidaParcial', FechaCierreUtc = NULL, MotivoCierre = NULL, TokenFinalizacion = NULL, FinalizacionHash = NULL WHERE OrdenCompraId = 2;"
+    },
+    {
+      "id": "adm-ordenes-08",
+      "usuario": "admin",
+      "sql": "UPDATE OrdenesCompra SET Estado = N'RecibidaParcial', FechaCierreUtc = NULL, MotivoCierre = NULL, TokenFinalizacion = NULL, FinalizacionHash = NULL WHERE OrdenCompraId = 2;",
+      "url": "/PurchaseOrders/Detail/2",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "main form[action*=CloseWithDiscrepancy] textarea",
+            "El proveedor no tiene el Vino Tinto Reserva hasta enero."
+          ]
+        },
+        {
+          "clic": "main form[action*=CloseWithDiscrepancy] button"
+        }
+      ],
+      "recorte": {
+        "selector": "main",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main .backoffice-page > .row:first-child p, main .backoffice-page > .row:first-child .badge",
+          "todos": true
+        }
+      ]
+    },
+    {
+      "id": "adm-ordenes-07",
+      "usuario": "admin",
+      "sql": "DELETE d FROM DetalleOrdenCompra d JOIN OrdenesCompra o ON o.OrdenCompraId = d.OrdenCompraId WHERE o.Notas = N'Pedido semanal de snacks'; DELETE FROM OrdenesCompra WHERE Notas = N'Pedido semanal de snacks';",
+      "url": "/PurchaseOrders/Suggestions",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "js": "document.querySelectorAll('main table tbody tr').forEach(tr => { if (!/Yucas|Red Bull|Whisky|Vino Tinto|Agua 600/.test(tr.innerText)) tr.remove(); })"
+        }
+      ],
+      "recorte": {
+        "selector": "main .backoffice-page",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main table tbody td:has-text('Datos insuficientes')",
+          "todos": true
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main table tbody tr input[name$='.Cantidad']",
+          "todos": true
+        }
+      ]
+    },
+    {
+      "id": "adm-historico-01",
+      "usuario": "admin",
+      "url": "/PriceHistory/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "main form select[name=productoId]",
+            {
+              "label": "Cacique Superior 1L"
+            }
+          ]
+        },
+        {
+          "clic": "main form button"
+        }
+      ],
+      "recorte": {
+        "selector": "main .backoffice-page",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main form select[name=productoId]",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main form button",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main table tbody tr >> nth=0"
+        }
+      ]
+    },
+    {
+      "id": "adm-planilla-01",
+      "usuario": "admin",
+      "url": "/Payroll",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "#rule-code",
+            "COMISION_VENTAS"
+          ]
+        },
+        {
+          "rellenar": [
+            "#rule-name",
+            "Comisión sobre ventas facturadas"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#rule-type",
+            {
+              "label": "Ingreso"
+            }
+          ]
+        },
+        {
+          "seleccionar": [
+            "#rule-calculation",
+            {
+              "label": "% bruto"
+            }
+          ]
+        },
+        {
+          "rellenar": [
+            "#rule-value",
+            "3"
+          ]
+        },
+        {
+          "rellenar": [
+            "#rule-from",
+            "2026-11-01"
+          ]
+        },
+        {
+          "rellenar": [
+            "#rule-source",
+            "Política comercial de vendedores 2026, aprobada por Gerencia"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main article.payroll-card >> nth=0",
+        "margen": [
+          10,
+          50,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#rule-code",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#rule-name",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#rule-type",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "#rule-calculation",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "#rule-value",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 6,
+          "selector": "form[action*=ConfigureRule] button[type=submit]",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "adm-planilla-02",
+      "usuario": "admin",
+      "url": "/Payroll",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "#period-type",
+            {
+              "label": "Quincenal"
+            }
+          ]
+        },
+        {
+          "rellenar": [
+            "#period-from",
+            "2026-11-01"
+          ]
+        },
+        {
+          "rellenar": [
+            "#period-to",
+            "2026-11-15"
+          ]
+        },
+        {
+          "rellenar": [
+            "#salary-factor",
+            "0,5"
+          ]
+        },
+        {
+          "rellenar": [
+            "#factor-source",
+            "Política de pago quincenal aprobada por Gerencia"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main article.payroll-card >> nth=1",
+        "margen": [
+          10,
+          50,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#period-type",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#period-from",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#period-to",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "#salary-factor",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "#factor-source",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 6,
+          "selector": "form[action*=CreatePeriod] button[type=submit]",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "adm-planilla-03",
+      "usuario": "admin",
+      "url": "/Payroll",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "#period-id",
+            "1"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#employee-id",
+            "3"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main article.payroll-card >> nth=2",
+        "margen": [
+          10,
+          50,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#period-id",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#employee-id",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main article.payroll-card >> nth=2 >> .payroll-help"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "form[action*=Calculate] button[type=submit]",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "adm-planilla-04",
+      "usuario": "admin",
+      "sql": "UPDATE PlanillaCalculos SET Estado = N'Borrador', AprobadoPorUsuarioId = NULL, AprobadoPorNombre = NULL, FechaAprobacionUtc = NULL, PagadoPorUsuarioId = NULL, PagadoPorNombre = NULL, FechaPagoUtc = NULL WHERE PeriodoId = 1; UPDATE PlanillaCalculos SET Estado = N'Aprobada', AprobadoPorUsuarioId = 30, AprobadoPorNombre = N'Gerente Demo', FechaAprobacionUtc = SYSUTCDATETIME() WHERE PeriodoId = 1 AND EmpleadoId IN (6, 9); UPDATE PlanillaCalculos SET Estado = N'Pagada', PagadoPorUsuarioId = 1, PagadoPorNombre = N'Administrador General', FechaPagoUtc = SYSUTCDATETIME() WHERE PeriodoId = 1 AND EmpleadoId = 9;",
+      "url": "/Payroll",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main section.payroll-table-card:has-text('Cálculos registrados')",
+        "margen": 10
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main section.payroll-table-card:has-text('Cálculos registrados') tbody tr:has-text('Borrador') button:has-text('Aprobar')",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main section.payroll-table-card:has-text('Cálculos registrados') tbody tr:has-text('Aprobada') button:has-text('Pagar')",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main section.payroll-table-card:has-text('Cálculos registrados') tbody tr:has-text('Pagada') form.payroll-revert",
+          "posicion": "izquierda"
+        }
+      ]
+    },
+    {
+      "id": "adm-planilla-05",
+      "usuario": "admin",
+      "sql": "UPDATE PlanillaCalculos SET Estado = N'Borrador', AprobadoPorUsuarioId = NULL, AprobadoPorNombre = NULL, FechaAprobacionUtc = NULL, PagadoPorUsuarioId = NULL, PagadoPorNombre = NULL, FechaPagoUtc = NULL WHERE PeriodoId = 1; UPDATE PlanillaCalculos SET Estado = N'Aprobada', AprobadoPorUsuarioId = 30, AprobadoPorNombre = N'Gerente Demo', FechaAprobacionUtc = SYSUTCDATETIME() WHERE PeriodoId = 1 AND EmpleadoId IN (6, 9); UPDATE PlanillaCalculos SET Estado = N'Pagada', PagadoPorUsuarioId = 1, PagadoPorNombre = N'Administrador General', FechaPagoUtc = SYSUTCDATETIME() WHERE PeriodoId = 1 AND EmpleadoId = 9;",
+      "url": "/Payroll",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clicSinEsperar": "main section.payroll-table-card tbody tr:has-text('Borrador') button:has-text('Aprobar')"
+        },
+        {
+          "esperar": 400
+        },
+        {
+          "clic": ".s3-modal-btn-confirm"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert-danger, .alert-danger",
+        "margen": [
+          10,
+          10,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": ".alert-danger"
+        }
+      ]
+    },
+    {
+      "id": "adm-planilla-06",
+      "usuario": "admin",
+      "url": "/Payroll",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main section.payroll-table-card:has-text('Reglas versionadas')",
+        "margen": 10
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main section.payroll-table-card:has-text('Reglas versionadas') tbody td:nth-child(5)",
+          "todos": true
+        },
+        {
+          "tipo": "etiqueta",
+          "selector": "main section.payroll-table-card:has-text('Reglas versionadas') thead th:nth-child(5)",
+          "texto": "Porcentaje como se lee",
+          "posicion": "arriba"
+        }
+      ],
+      "sql": "UPDATE PlanillaReglas SET Fuente = N'Política comercial de vendedores 2026, aprobada por Gerencia' WHERE Codigo = N'COMISION_VENTAS'; UPDATE PlanillaReglas SET Fuente = N'Acuerdo de Gerencia del 20/10/2026' WHERE Codigo IN (N'AUSENCIA_HORA', N'HORA_EXTRA_PAGO');"
+    },
+    {
+      "id": "adm-roles-01",
+      "usuario": "admin",
+      "sql": "DELETE FROM PerfilPermisos WHERE PerfilId IN (SELECT PerfilId FROM Perfiles WHERE Nombre = N'Encargado de ruta'); DELETE FROM Perfiles WHERE Nombre = N'Encargado de ruta';",
+      "url": "/Roles/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "js": "document.querySelectorAll('main table tbody tr:nth-child(n+6)').forEach(e => e.remove())"
+        }
+      ],
+      "recorte": {
+        "selector": "main .backoffice-page",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main form.admin-filter-grid input",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main a[href$='/Roles/Create']",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main table tbody tr >> nth=2 >> a:has-text('Editar')",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "main table tbody tr >> nth=2 >> form button",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main table tbody tr >> nth=0 >> td:last-child"
+        }
+      ]
+    },
+    {
+      "id": "adm-roles-02",
+      "usuario": "admin",
+      "sql": "DELETE FROM PerfilPermisos WHERE PerfilId IN (SELECT PerfilId FROM Perfiles WHERE Nombre = N'Encargado de ruta'); DELETE FROM Perfiles WHERE Nombre = N'Encargado de ruta';",
+      "url": "/Roles/Create",
+      "ancho": 1024,
+      "acciones": [
+        {
+          "rellenar": [
+            "#Nombre",
+            "Encargado de ruta"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Descripcion",
+            "Coordina las rutas del día y revisa las liquidaciones de los choferes."
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main .col-lg-8 .admin-card",
+        "margen": [
+          10,
+          50,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#Nombre",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#Descripcion",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main form label[for=Activo], main form .custom-control:has(#Activo)",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "main form button[type=submit]",
+          "posicion": "abajo"
+        }
+      ]
+    },
+    {
+      "id": "adm-roles-03",
+      "usuario": "admin",
+      "sql": "DELETE FROM PerfilPermisos WHERE PerfilId IN (SELECT PerfilId FROM Perfiles WHERE Nombre = N'Encargado de ruta'); DELETE FROM Perfiles WHERE Nombre = N'Encargado de ruta';",
+      "url": "/Roles/Create",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "#Nombre",
+            "Encargado de ruta"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Descripcion",
+            "Coordina las rutas del día y revisa las liquidaciones de los choferes."
+          ]
+        },
+        {
+          "clic": "main form button[type=submit]"
+        },
+        {
+          "js": "document.querySelectorAll('main table tbody tr').forEach(tr => { if (!/Encargado de ruta|Chofer|Cajero/.test(tr.innerText)) tr.remove(); })"
+        }
+      ],
+      "recorte": {
+        "selector": "main",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main table tbody tr:has-text('Encargado de ruta')"
+        }
+      ]
+    },
+    {
+      "id": "adm-roles-04",
+      "usuario": "admin",
+      "url": "/Roles/Edit/3",
+      "ancho": 1024,
+      "recorte": {
+        "selector": "main .col-lg-8 .admin-card",
+        "margen": 10
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main form .form-group:has(#Nombre)"
+        }
+      ]
+    },
+    {
+      "id": "adm-roles-05",
+      "usuario": "admin",
+      "url": "/Roles/Index?buscar=Bodeguero",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clicSinEsperar": "main table tbody tr:has-text('Bodeguero') form[action*=ToggleStatus] button"
+        },
+        {
+          "esperar": 400
+        },
+        {
+          "clic": ".s3-modal-btn-confirm"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert-danger",
+        "margen": 14
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-danger"
+        }
+      ]
+    },
+    {
+      "id": "adm-permisos-01",
+      "usuario": "admin",
+      "url": "/Permissions/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "js": "document.querySelectorAll('main table tbody tr:nth-child(n+8)').forEach(e => e.remove())"
+        }
+      ],
+      "recorte": {
+        "selector": "main .backoffice-page",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main form input[name=buscar]",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main table tbody tr:has-text('Cajero') a:has-text('Administrar')",
+          "posicion": "izquierda"
+        }
+      ]
+    },
+    {
+      "id": "adm-permisos-02",
+      "usuario": "admin",
+      "url": "/Permissions/Edit/8",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main .backoffice-page > .row:nth-child(-n+2), main form .row > div:nth-child(-n+3)",
+        "todos": true,
+        "margen": 10
+      },
+      "acciones": [
+        {
+          "js": "document.querySelectorAll('main form .row > div:nth-child(n+4)').forEach(e => e.style.display = 'none')"
+        },
+        {
+          "js": "document.querySelectorAll('main form .admin-card').forEach(card => [...card.querySelectorAll('.border.rounded.p-3.mb-2')].slice(3).forEach(e => e.remove()))"
+        }
+      ],
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .admin-card:has-text('Permisos asignados')"
+        },
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main form .form-check >> nth=0",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "adm-permisos-03",
+      "usuario": "admin",
+      "url": "/Permissions/Edit/8",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main form > .admin-card",
+        "margen": 10
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main form > .admin-card button[type=submit]",
+          "posicion": "izquierda"
+        }
+      ]
+    },
+    {
+      "id": "adm-documentos-01",
+      "usuario": "admin",
+      "url": "/Documents",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main .container-fluid",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main form input[name=Search]",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main form select[name=Expiration]",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main form button",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "main a[href$='/Documents/Create']",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "main table tbody tr >> nth=0 >> a:has-text('Ver')",
+          "posicion": "izquierda"
+        }
+      ]
+    },
+    {
+      "id": "adm-documentos-02",
+      "usuario": "admin",
+      "url": "/Documents/Create",
+      "ancho": 1024,
+      "acciones": [
+        {
+          "seleccionar": [
+            "#TypeId",
+            {
+              "label": "Certificación"
+            }
+          ]
+        },
+        {
+          "seleccionar": [
+            "#DepartmentId",
+            {
+              "label": "Recursos Humanos"
+            }
+          ]
+        },
+        {
+          "rellenar": [
+            "#Title",
+            "Certificado de brigada de emergencias"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Description",
+            "Capacitación del personal de bodega en primeros auxilios y uso de extintores."
+          ]
+        },
+        {
+          "rellenar": [
+            "#ReferenceNumber",
+            "CERT-BE-2026-07"
+          ]
+        },
+        {
+          "rellenar": [
+            "#IssueDate",
+            "2026-07-15"
+          ]
+        },
+        {
+          "rellenar": [
+            "#ExpirationDate",
+            "2027-07-15"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main .card",
+        "margen": [
+          10,
+          50,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#TypeId",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#Title",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#ReferenceNumber",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "#ExpirationDate",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "#File",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 6,
+          "selector": "main form button",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "adm-documentos-03",
+      "usuario": "admin",
+      "url": "/Documents/Details/4",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main .s4-admin-page",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main a:has-text('Descarga autorizada')",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#replacement-file",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main form[action*=ReplaceFile] button",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "main form[action*=SetActive] button",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "main a:has-text('Editar')",
+          "posicion": "abajo"
+        }
+      ]
+    },
+    {
+      "id": "adm-documentos-04",
+      "usuario": "admin",
+      "url": "/Documents/Details/4",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main .card:has-text('Historial de versiones')",
+        "margen": 10
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .card:has-text('Historial de versiones') :text('Versión 2')"
+        },
+        {
+          "tipo": "flecha",
+          "selector": "main a[href*='versionId'] >> nth=1",
+          "desde": "izquierda",
+          "largo": 60
+        }
+      ]
+    },
+    {
+      "id": "adm-documentos-05",
+      "usuario": "admin",
+      "url": "/Documents/Edit/4",
+      "ancho": 1024,
+      "recorte": {
+        "selector": "main form",
+        "margen": [
+          10,
+          50,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#ExpirationDate",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#Status",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main form button[type=submit], main form button",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "adm-alertas-02",
+      "usuario": "admin",
+      "url": "/Documents/Alerts",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clic": "main form[action*=GenerateAlerts] button"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert-success",
+        "margen": 14
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-success"
+        }
+      ]
+    },
+    {
+      "id": "adm-alertas-01",
+      "usuario": "admin",
+      "url": "/Documents/Alerts",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main .container-fluid",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main form[action*=GenerateAlerts] button",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#Filter_Status",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#Filter_DepartmentId",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "#Filter_MaxDays",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "main form[action*=MarkAlertHandled] button >> nth=0",
+          "posicion": "izquierda"
+        }
+      ]
+    },
+    {
+      "id": "adm-chat-01",
+      "usuario": "admin",
+      "sql": "DELETE m FROM ChatDepartamentoMiembros m JOIN ChatDepartamentos d ON d.DepartamentoId = m.DepartamentoId WHERE d.Nombre = N'Facturación'; DELETE FROM ChatDepartamentos WHERE Nombre = N'Facturación';",
+      "url": "/Chat",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "#departmentName",
+            "Facturación"
+          ]
+        },
+        {
+          "rellenar": [
+            "#departmentDescription",
+            "Dudas sobre facturas, notas de crédito y comprobantes"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main .card:has(#departmentName)",
+        "margen": 10
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#departmentName",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#departmentDescription",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "form[action*=CreateDepartment] button",
+          "posicion": "abajo"
+        }
+      ]
+    },
+    {
+      "id": "adm-chat-02",
+      "usuario": "admin",
+      "sql": "DELETE m FROM ChatDepartamentoMiembros m JOIN ChatDepartamentos d ON d.DepartamentoId = m.DepartamentoId WHERE d.Nombre = N'Facturación'; DELETE FROM ChatDepartamentos WHERE Nombre = N'Facturación';",
+      "url": "/Chat",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "js": "const c = [...document.querySelectorAll('main .card')].find(x => x.querySelector('input[value=\"Bodega\"]')); c.querySelector('form[action*=AddMember] select').value = c.querySelector('form[action*=AddMember] select option:nth-child(6)').value;"
+        }
+      ],
+      "recorte": {
+        "selector": "main .card:has(input[value='Bodega'])",
+        "margen": 10
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main .card:has(input[value='Bodega']) input[name=Name]",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main .card:has(input[value='Bodega']) form[action*=UpdateDepartment] .custom-control, main .card:has(input[value='Bodega']) form[action*=UpdateDepartment] .form-check",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main .card:has(input[value='Bodega']) form[action*=UpdateDepartment] button",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "main .card:has(input[value='Bodega']) table",
+          "posicion": "izquierda",
+          "recuadro": false
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "main .card:has(input[value='Bodega']) form[action*=AddMember] select",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 6,
+          "selector": "main .card:has(input[value='Bodega']) form[action*=AddMember] button",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "adm-app-01",
+      "usuario": "admin",
+      "url": "/MobileApp/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "js": "document.querySelectorAll('main details').forEach(d => d.open = true)"
+        },
+        {
+          "desplazar": "#VersionNombre"
+        },
+        {
+          "rellenar": [
+            "#VersionNombre",
+            "1.3.0"
+          ]
+        },
+        {
+          "rellenar": [
+            "#BuildNumero",
+            "2006"
+          ]
+        },
+        {
+          "rellenar": [
+            "#MinBuildSoportado",
+            "2005"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Notas",
+            "Recepción de compras con lector de código de barras."
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main form[action*=Publish]",
+        "margen": [
+          60,
+          50,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#archivo",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#VersionNombre",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#BuildNumero",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "#MinBuildSoportado",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "#Notas",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 6,
+          "selector": "main form[action*=Publish] button[type=submit]",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "adm-app-02",
+      "usuario": "admin",
+      "url": "/MobileApp/Index",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main .card:has(h3:has-text('Instale la aplicación'))",
+        "margen": 10
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main :text('Versión 1.2.0')"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main a[href$='/MobileApp/Download']"
+        }
+      ]
+    },
+    {
+      "id": "adm-app-03",
+      "usuario": "admin",
+      "url": "/MobileApp/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "js": "document.querySelectorAll('main details').forEach(d => d.open = true)"
+        },
+        {
+          "desplazar": "main table"
+        }
+      ],
+      "recorte": {
+        "selector": "main table",
+        "margen": [
+          40,
+          10,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "selector": "main form[action*=Unpublish] button",
+          "desde": "izquierda",
+          "largo": 60,
+          "recuadro": true
+        }
+      ]
+    }
+  ]
+}

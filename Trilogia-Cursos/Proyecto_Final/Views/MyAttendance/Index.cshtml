@@ -1,9 +1,16 @@
 @model Proyecto_Final.Models.Admin.MyAttendanceIndexViewModel
+@using Proyecto_Final.Models.Admin
 @{ ViewData["Title"] = "Mis jornadas"; }
 <div class="container py-4">
     <h2>Mis jornadas</h2>
     <form asp-action="Save" method="post" class="card card-body mb-4">
         <input type="hidden" asp-for="Form.IdempotencyKey" name="IdempotencyKey" />
+        <input type="hidden" asp-for="Form.JornadaId" name="JornadaId" />
+        <input type="hidden" asp-for="Form.RowVersionBase64" name="RowVersionBase64" />
+        @if (Model.Form.JornadaId > 0)
+        {
+            <p class="mb-2">Completando la jornada del <strong>@Model.Form.Fecha.ToString("dd/MM/yyyy")</strong>. <a asp-action="Index">Registrar otra fecha</a></p>
+        }
         <div class="form-row">
             <div class="col-md-3"><label>Fecha</label><input asp-for="Form.Fecha" name="Fecha" class="form-control" /></div>
             <div class="col-md-2"><label>Ordinarias</label><input asp-for="Form.HorasOrdinarias" name="HorasOrdinarias" class="form-control" /></div>
@@ -13,6 +20,6 @@
         </div>
         <div class="mt-3"><button name="submit" value="false" class="btn btn-ds-action">Guardar borrador</button> <button name="submit" value="true" class="btn btn-ds-action">Enviar</button></div>
     </form>
-    <table class="table"><thead><tr><th>Fecha</th><th>Ordinarias</th><th>Extra</th><th>Ausencia</th><th>Estado</th><th>Respuesta</th></tr></thead>
-    <tbody>@foreach(var item in Model.Jornadas){<tr><td>@item.Fecha.ToString("dd/MM/yyyy")</td><td>@item.HorasOrdinarias</td><td>@item.HorasExtra</td><td>@item.HorasAusencia</td><td>@item.Estado</td><td>@item.RespuestaSupervisor</td></tr>}</tbody></table>
+    <table class="table"><thead><tr><th>Fecha</th><th>Ordinarias</th><th>Extra</th><th>Ausencia</th><th>Estado</th><th>Respuesta</th><th></th></tr></thead>
+    <tbody>@foreach(var item in Model.Jornadas){<tr><td>@item.Fecha.ToString("dd/MM/yyyy")</td><td>@item.HorasOrdinarias</td><td>@item.HorasExtra</td><td>@item.HorasAusencia</td><td>@item.Estado</td><td>@item.RespuestaSupervisor</td><td>@if (AttendanceRules.IsEditable(item.Estado)){<a asp-action="Index" asp-route-editar="@item.JornadaId" class="btn btn-sm btn-ds-edit">Completar</a>}</td></tr>}</tbody></table>
 </div>

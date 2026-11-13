@@ -1,0 +1,925 @@
+{
+  "carpeta": "vendedor",
+  "capturas": [
+    {
+      "id": "ven-menu-01",
+      "usuario": "vendedor",
+      "url": "/Home/Index",
+      "recorte": {
+        "selector": ".main-nav-2027 > *",
+        "todos": true,
+        "margen": [
+          8,
+          70,
+          70,
+          20
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": ".main-nav-2027 > a[href*=SellerOrders]",
+          "posicion": "abajo-izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": ".main-nav-2027 > a[href*=MyGoal]",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": ".main-nav-2027 > a[href*=Assistant]",
+          "posicion": "izquierda"
+        }
+      ]
+    },
+    {
+      "id": "ven-venta-01",
+      "usuario": "vendedor",
+      "url": "/Home/Index",
+      "recorte": {
+        "selector": ".main-nav-2027 > *",
+        "todos": true,
+        "margen": [
+          8,
+          70,
+          70,
+          20
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "selector": ".main-nav-2027 > a[href*=SellerOrders]",
+          "desde": "abajo",
+          "largo": 45,
+          "recuadro": true
+        }
+      ]
+    },
+    {
+      "id": "ven-venta-02",
+      "usuario": "vendedor",
+      "url": "/SellerOrders/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "js": "document.querySelector('#sellerOrderForm .col-lg-4 .admin-card').classList.remove('h-100')"
+        },
+        {
+          "seleccionar": [
+            "#ClienteUsuarioId",
+            "8"
+          ]
+        },
+        {
+          "rellenar": [
+            "#IdentificacionCliente",
+            "3101456789"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#TipoEntrega",
+            "Entrega por vendedor"
+          ]
+        },
+        {
+          "rellenar": [
+            "#Observaciones",
+            "Entregar por la puerta de bodega."
+          ]
+        }
+      ],
+      "ocultar": [
+        ".seller-mobile-summary",
+        "#crossSellPopup"
+      ],
+      "recorte": {
+        "selector": "#sellerOrderForm .col-lg-4 .admin-card",
+        "margen": [
+          16,
+          80,
+          16,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#ClienteUsuarioId",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#IdentificacionCliente",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#TipoEntrega",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "#MetodoPago",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "#DireccionEntrega",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 6,
+          "selector": "#Observaciones",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "ven-venta-03",
+      "usuario": "vendedor",
+      "url": "/SellerOrders/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "#productSearch",
+            "cerveza"
+          ]
+        },
+        {
+          "rellenar": [
+            ".seller-product-item[data-product-id='12'] .seller-quantity",
+            "2"
+          ]
+        },
+        {
+          "esperar": 300
+        }
+      ],
+      "ocultar": [
+        ".seller-mobile-summary",
+        "#crossSellPopup"
+      ],
+      "recorte": {
+        "selector": "#sellerOrderForm .col-lg-8",
+        "margen": [
+          10,
+          10,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#productSearch",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": ".seller-product-item[data-product-id='12'] .seller-quantity",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "ven-venta-04",
+      "usuario": "vendedor",
+      "url": "/SellerOrders/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "#ClienteUsuarioId",
+            "8"
+          ]
+        },
+        {
+          "rellenar": [
+            ".seller-product-item[data-product-id='12'] .seller-quantity",
+            "2"
+          ]
+        },
+        {
+          "esperarSelector": "#crossSellPopup:not(.d-none)"
+        },
+        {
+          "esperar": 500
+        }
+      ],
+      "recorte": {
+        "selector": "#crossSellPopup",
+        "margen": [
+          20,
+          80,
+          80,
+          70
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#crossSellReason",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#crossSellAdd",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#crossSellDismiss",
+          "posicion": "derecha"
+        }
+      ]
+    },
+    {
+      "id": "ven-venta-05",
+      "usuario": "vendedor",
+      "url": "/SellerOrders/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "#ClienteUsuarioId",
+            "8"
+          ]
+        },
+        {
+          "rellenar": [
+            ".seller-product-item[data-product-id='12'] .seller-quantity",
+            "2"
+          ]
+        },
+        {
+          "rellenar": [
+            ".seller-product-item[data-product-id='23'] .seller-quantity",
+            "1"
+          ]
+        },
+        {
+          "esperar": 300
+        }
+      ],
+      "ocultar": [
+        "#crossSellPopup"
+      ],
+      "recorte": {
+        "selector": ".seller-mobile-summary .admin-card",
+        "margen": [
+          16,
+          16,
+          16,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "#selectedTotal"
+        },
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": ".seller-mobile-summary button[type=submit]",
+          "posicion": "abajo"
+        }
+      ]
+    },
+    {
+      "id": "ven-venta-06",
+      "usuario": "vendedor",
+      "url": "/SellerOrders/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "#ClienteUsuarioId",
+            "8"
+          ]
+        },
+        {
+          "rellenar": [
+            "#IdentificacionCliente",
+            "3101456789"
+          ]
+        },
+        {
+          "rellenar": [
+            ".seller-product-item[data-product-id='12'] .seller-quantity",
+            "2"
+          ]
+        },
+        {
+          "rellenar": [
+            ".seller-product-item[data-product-id='23'] .seller-quantity",
+            "1"
+          ]
+        },
+        {
+          "clic": ".seller-mobile-summary button[type=submit]"
+        }
+      ],
+      "recorte": {
+        "selector": "main",
+        "margen": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main h2"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main .text-success >> nth=0"
+        },
+        {
+          "tipo": "flecha",
+          "selector": "main a[href*='wa.me']",
+          "desde": "derecha",
+          "texto": "WhatsApp"
+        }
+      ],
+      "ocultar": [
+        "main > .container.mt-3"
+      ]
+    },
+    {
+      "id": "ven-venta-07",
+      "usuario": "vendedor",
+      "url": "/SellerOrders/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "js": "document.querySelector('#sellerOrderForm .col-lg-4 .admin-card').classList.remove('h-100')"
+        },
+        {
+          "seleccionar": [
+            "#ClienteUsuarioId",
+            "7"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#MetodoPago",
+            "Crédito"
+          ]
+        },
+        {
+          "esperar": 300
+        }
+      ],
+      "ocultar": [
+        ".seller-mobile-summary",
+        "#crossSellPopup"
+      ],
+      "recorte": {
+        "selector": "#MetodoPago",
+        "margen": [
+          60,
+          300,
+          70,
+          30
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "selector": "#MetodoPago",
+          "desde": "derecha",
+          "recuadro": true,
+          "texto": "Crédito del cliente"
+        }
+      ]
+    },
+    {
+      "id": "ven-venta-08",
+      "usuario": "vendedor",
+      "url": "/SellerOrders/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "js": "document.querySelector('#sellerOrderForm .col-lg-4 .admin-card').classList.remove('h-100')"
+        },
+        {
+          "seleccionar": [
+            "#ClienteUsuarioId",
+            "42"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#MetodoPago",
+            "Crédito"
+          ]
+        },
+        {
+          "rellenar": [
+            ".seller-product-item[data-product-id='13'] .seller-quantity",
+            "1"
+          ]
+        },
+        {
+          "clic": ".seller-mobile-summary button[type=submit]"
+        },
+        {
+          "js": "document.querySelector('#sellerOrderForm .col-lg-4 .admin-card').classList.remove('h-100')"
+        }
+      ],
+      "ocultar": [
+        ".seller-mobile-summary",
+        "#crossSellPopup"
+      ],
+      "recorte": {
+        "selector": "#sellerOrderForm .text-danger >> nth=0",
+        "margen": [
+          16,
+          16,
+          16,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "#sellerOrderForm .text-danger >> nth=0"
+        }
+      ]
+    },
+    {
+      "id": "ven-venta-09",
+      "usuario": "vendedor",
+      "url": "/SellerOrders/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "#ClienteUsuarioId",
+            "13"
+          ]
+        },
+        {
+          "seleccionar": [
+            "#MetodoPago",
+            "Contra entrega"
+          ]
+        },
+        {
+          "rellenar": [
+            ".seller-product-item[data-product-id='4'] .seller-quantity",
+            "1"
+          ]
+        },
+        {
+          "rellenar": [
+            ".seller-product-item[data-product-id='18'] .seller-quantity",
+            "2"
+          ]
+        },
+        {
+          "clic": ".seller-mobile-summary button[type=submit]"
+        }
+      ],
+      "recorte": {
+        "selector": "main",
+        "margen": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main h2"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-info"
+        }
+      ]
+    },
+    {
+      "id": "ven-venta-10",
+      "usuario": "vendedor",
+      "url": "/SellerOrders/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "js": "localStorage.removeItem('distribuidorajj_seller_offline_orders_v1'); Object.defineProperty(navigator,'onLine',{get:()=>false,configurable:true}); window.dispatchEvent(new Event('offline'))"
+        },
+        {
+          "seleccionar": [
+            "#ClienteUsuarioId",
+            "9"
+          ]
+        },
+        {
+          "rellenar": [
+            ".seller-product-item[data-product-id='14'] .seller-quantity",
+            "3"
+          ]
+        },
+        {
+          "clicSinEsperar": "#saveOfflineOrder"
+        },
+        {
+          "esperar": 500
+        },
+        {
+          "esperar": 500
+        },
+        {
+          "js": "document.getElementById('pendingOrdersPanel').classList.add('is-visible')"
+        },
+        {
+          "desplazarY": -2000
+        }
+      ],
+      "ocultar": [
+        ".seller-mobile-summary",
+        "#crossSellPopup"
+      ],
+      "recorte": {
+        "selector": "main .offline-status-card, main #sellerOfflineMessage, main #pendingOrdersPanel",
+        "todos": true,
+        "margen": [
+          16,
+          16,
+          16,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "#connectionStatus"
+        },
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "#togglePendingOrders",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#syncPendingOrders",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "#pendingOrdersList .offline-order-card >> nth=0"
+        }
+      ]
+    },
+    {
+      "id": "ven-venta-11",
+      "usuario": "vendedor",
+      "url": "/SellerOrders/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "js": "localStorage.removeItem('distribuidorajj_seller_offline_orders_v1'); Object.defineProperty(navigator,'onLine',{get:()=>false,configurable:true}); window.dispatchEvent(new Event('offline'))"
+        },
+        {
+          "seleccionar": [
+            "#ClienteUsuarioId",
+            "9"
+          ]
+        },
+        {
+          "rellenar": [
+            ".seller-product-item[data-product-id='14'] .seller-quantity",
+            "3"
+          ]
+        },
+        {
+          "clicSinEsperar": "#saveOfflineOrder"
+        },
+        {
+          "esperar": 500
+        },
+        {
+          "js": "Object.defineProperty(navigator,'onLine',{get:()=>true,configurable:true}); window.dispatchEvent(new Event('online'))"
+        },
+        {
+          "esperar": 3000
+        },
+        {
+          "esperar": 500
+        },
+        {
+          "js": "document.getElementById('pendingOrdersPanel').classList.add('is-visible')"
+        },
+        {
+          "desplazarY": -2000
+        }
+      ],
+      "ocultar": [
+        ".seller-mobile-summary",
+        "#crossSellPopup"
+      ],
+      "recorte": {
+        "selector": "main .offline-status-card, main #sellerOfflineMessage, main #pendingOrdersPanel",
+        "todos": true,
+        "margen": [
+          16,
+          16,
+          16,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "#sellerOfflineMessage"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "#pendingOrdersList .offline-order-card >> nth=0"
+        }
+      ]
+    },
+    {
+      "id": "ven-venta-12",
+      "usuario": "vendedor",
+      "url": "/SellerOrders/MyOrders",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main",
+        "margen": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "etiqueta",
+          "selector": "main table thead th >> nth=4",
+          "texto": "Estado",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main table tbody tr:has-text('Retenido') >> nth=0"
+        }
+      ]
+    },
+    {
+      "id": "ven-venta-13",
+      "usuario": "vendedor",
+      "url": "/SellerOrders/MyOrders",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clic": "main table tbody tr:has-text('Bar y Restaurante El Mirador') >> nth=0 >> a"
+        }
+      ],
+      "recorte": {
+        "selector": "main",
+        "margen": 0
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "main :text-is('Información general')",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "main :text-is('Facturación')",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main :text-is('Detalle de productos')",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "main a:has-text('Volver a mis pedidos')",
+          "posicion": "abajo"
+        }
+      ]
+    },
+    {
+      "id": "ven-meta-01",
+      "usuario": "vendedor",
+      "url": "/Home/Index",
+      "recorte": {
+        "selector": ".main-nav-2027 > *",
+        "todos": true,
+        "margen": [
+          8,
+          70,
+          70,
+          20
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "selector": ".main-nav-2027 > a[href*=MyGoal]",
+          "desde": "abajo",
+          "largo": 45,
+          "recuadro": true
+        }
+      ]
+    },
+    {
+      "id": "ven-meta-02",
+      "usuario": "vendedor",
+      "url": "/MyGoal",
+      "ancho": 1024,
+      "recorte": {
+        "selector": "main .admin-page-header, main .admin-card.p-4",
+        "todos": true,
+        "margen": [
+          12,
+          12,
+          60,
+          12
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": ".progreso-valor",
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": ".progreso-bar-track",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main .row.text-center .col-md-4 >> nth=0",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "main .row.text-center .col-md-4 >> nth=1",
+          "posicion": "abajo"
+        },
+        {
+          "tipo": "paso",
+          "n": 5,
+          "selector": "main .row.text-center .col-md-4 >> nth=2",
+          "posicion": "abajo"
+        }
+      ]
+    },
+    {
+      "id": "ven-asis-01",
+      "usuario": "vendedor",
+      "url": "/Assistant",
+      "ancho": 1280,
+      "recorte": {
+        "selector": ".assistant-panel",
+        "margen": [
+          16,
+          16,
+          16,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "button.assistant-chip",
+          "todos": true,
+          "posicion": "derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "#assistantInput",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "#assistantSubmit",
+          "posicion": "arriba"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "#assistantExport",
+          "posicion": "arriba"
+        }
+      ]
+    },
+    {
+      "id": "ven-asis-02",
+      "usuario": "vendedor",
+      "url": "/Assistant",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "clicSinEsperar": "button.assistant-chip:has-text('Dame un resumen')"
+        },
+        {
+          "esperarSelector": "#assistantWindow .assistant-message.bot >> nth=1"
+        },
+        {
+          "esperar": 800
+        }
+      ],
+      "recorte": {
+        "selector": ".assistant-panel",
+        "margen": [
+          16,
+          16,
+          16,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "#assistantWindow .assistant-message.user >> nth=0"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "#assistantWindow .assistant-message.bot >> nth=1"
+        }
+      ]
+    },
+    {
+      "id": "ven-asis-03",
+      "usuario": "vendedor",
+      "url": "/Assistant",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "rellenar": [
+            "#assistantInput",
+            "¿Cuánto vendimos este mes?"
+          ]
+        },
+        {
+          "clicSinEsperar": "#assistantSubmit"
+        },
+        {
+          "esperarSelector": "#assistantWindow .assistant-message.bot >> nth=1"
+        },
+        {
+          "esperar": 800
+        }
+      ],
+      "recorte": {
+        "selector": "#assistantWindow .assistant-message.bot >> nth=1",
+        "margen": [
+          16,
+          16,
+          16,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "#assistantWindow .assistant-message.bot >> nth=1 >> .assistant-title"
+        }
+      ]
+    }
+  ]
+}

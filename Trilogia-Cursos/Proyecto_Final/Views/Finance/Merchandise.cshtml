@@ -1,0 +1,97 @@
+@using Proyecto_Final.Models.Admin
+@model List<RouteMerchandiseListItemViewModel>
+@{
+    ViewData["Title"] = "Liquidación de mercadería";
+    var pendientes = Model.Where(r => r.Pendiente).ToList();
+    var liquidadas = Model.Where(r => !r.Pendiente).ToList();
+}
+
+@section Styles {
+    <link href="~/css/custom-theme.css" rel="stylesheet" />
+}
+
+<div class="container-fluid pt-4 backoffice-page">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-page-header d-flex justify-content-between align-items-center flex-wrap">
+                <div>
+                    <h2 class="mb-2">Liquidación de mercadería de ruta</h2>
+                    <p class="mb-0">Cuando una ruta finaliza con pedidos sin entregar, esa mercadería regresa en el camión: se cuenta, se compara con lo despachado y vuelve al inventario. Si falta mercadería, la ruta no se cierra.</p>
+                </div>
+                <a asp-action="Index" class="btn btn-ds-neutral mt-2 mt-md-0"><i class="fa fa-cash-register mr-2"></i>Liquidación de cobros</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-3">
+        <div class="col-12">
+            <div class="admin-table-wrapper">
+                <div class="p-4 border-bottom"><h5 class="mb-0">Rutas completadas con mercadería por devolver</h5></div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="thead-light">
+                            <tr><th>Ruta</th><th>Zona</th><th>Chofer</th><th class="text-center">Pedidos sin entregar</th><th class="text-center">Unidades</th><th class="text-center">Acción</th></tr>
+                        </thead>
+                        <tbody>
+                            @if (!pendientes.Any())
+                            {
+                                <tr><td colspan="6" class="text-center text-muted py-4">No hay rutas completadas pendientes de liquidar mercadería.</td></tr>
+                            }
+                            else
+                            {
+                                @foreach (var r in pendientes)
+                                {
+                                    <tr>
+                                        <td class="font-weight-bold">@r.Codigo</td>
+                                        <td>@r.Zona</td>
+                                        <td>@r.ChoferNombre</td>
+                                        <td class="text-center">@r.PedidosNoEntregados</td>
+                                        <td class="text-center">@r.Unidades</td>
+                                        <td class="text-center">
+                                            <a asp-action="LiquidateMerchandise" asp-route-rutaId="@r.RutaId" class="btn btn-sm btn-ds-action"><i class="fa fa-boxes mr-1"></i>Liquidar mercadería</a>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5 pb-5">
+        <div class="col-12">
+            <div class="admin-table-wrapper">
+                <div class="p-4 border-bottom"><h5 class="mb-0">Rutas con la mercadería ya liquidada</h5></div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="thead-light">
+                            <tr><th>Ruta</th><th>Chofer</th><th class="text-center">Pedidos sin entregar</th><th class="text-center">Unidades devueltas</th><th>Liquidó</th><th>Fecha</th></tr>
+                        </thead>
+                        <tbody>
+                            @if (!liquidadas.Any())
+                            {
+                                <tr><td colspan="6" class="text-center text-muted py-4">Todavía no se ha liquidado mercadería de ninguna ruta.</td></tr>
+                            }
+                            else
+                            {
+                                @foreach (var r in liquidadas)
+                                {
+                                    <tr>
+                                        <td class="font-weight-bold">@r.Codigo</td>
+                                        <td>@r.ChoferNombre</td>
+                                        <td class="text-center">@r.PedidosNoEntregados</td>
+                                        <td class="text-center">@r.Unidades</td>
+                                        <td>@r.LiquidadoPorNombre</td>
+                                        <td>@r.FechaLiquidacion?.ToString("dd/MM/yyyy HH:mm")</td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

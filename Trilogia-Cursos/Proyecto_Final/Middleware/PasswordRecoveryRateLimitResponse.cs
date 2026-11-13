@@ -6,7 +6,7 @@ namespace Proyecto_Final.Middleware
 {
     /// <summary>
     /// Cuando la política "password-recovery" rechaza una solicitud, el usuario
-    /// vuelve a «¿Olvidaste tu contraseña?» con un mensaje de espera en lugar de
+    /// vuelve a «¿Olvidó su contraseña?» con un mensaje de espera en lugar de
     /// la página vacía con HTTP 429. Las demás políticas conservan el 429.
     /// </summary>
     public static class PasswordRecoveryRateLimitResponse
@@ -42,6 +42,6 @@ namespace Proyecto_Final.Middleware
             Math.Max(1, (int)Math.Ceiling(retryAfter.TotalMinutes));
 
         public static string BuildMessage(int minutes) =>
-            $"Alcanzaste el límite de solicitudes de recuperación de contraseña. Intentá nuevamente en {minutes} {(minutes == 1 ? "minuto" : "minutos")}.";
+            $"Alcanzó el límite de solicitudes de recuperación de contraseña. Intente nuevamente en {minutes} {(minutes == 1 ? "minuto" : "minutos")}.";
     }
 }

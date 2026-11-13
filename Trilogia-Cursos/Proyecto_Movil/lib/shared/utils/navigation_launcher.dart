@@ -83,7 +83,7 @@ class NavigationLauncher {
     final uri = Uri.parse('tel:$limpio');
     try {
       if (await canLaunchUrl(uri)) {
-        return launchUrl(uri);
+        return await launchUrl(uri);
       }
     } catch (_) {
       return false;

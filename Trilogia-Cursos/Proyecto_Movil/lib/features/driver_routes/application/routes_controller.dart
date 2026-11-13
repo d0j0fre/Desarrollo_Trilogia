@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/providers.dart';
+import '../domain/evidence_draft.dart';
 import '../domain/route.dart';
 
 /// Lista de rutas del chofer.
@@ -57,6 +58,7 @@ class RouteDetailController extends FamilyAsyncNotifier<DriverRoute?, int> {
     required int pedidoId,
     required String estado,
     String? motivoFallo,
+    List<EvidenceDraft> evidencias = const [],
   }) async {
     await ref
         .read(routesRepositoryProvider)
@@ -65,6 +67,7 @@ class RouteDetailController extends FamilyAsyncNotifier<DriverRoute?, int> {
           pedidoId: pedidoId,
           estado: estado,
           motivoFallo: motivoFallo,
+          evidencias: evidencias,
         );
 
     state = await AsyncValue.guard(

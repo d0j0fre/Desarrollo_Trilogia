@@ -488,7 +488,7 @@
                     <h1>Asistente del negocio</h1>
 
                     <p>
-                        Consulta indicadores de ventas, inventario, pedidos,
+                        Consulte indicadores de ventas, inventario, pedidos,
                         logística y personal, o solicita ayuda para utilizar
                         cualquiera de los módulos del sistema.
                     </p>
@@ -546,7 +546,7 @@
                            autocomplete="off"
                            maxlength="500"
                            aria-label="Pregunta para el asistente"
-                           placeholder="Escribe una consulta sobre el negocio o un módulo..." />
+                           placeholder="Escriba una consulta sobre el negocio o un módulo..." />
 
                     <button type="submit"
                             id="assistantSubmit"
@@ -569,7 +569,7 @@
 
                 <p class="assistant-composer__note">
                     Las respuestas y métricas disponibles dependen de los
-                    permisos asignados a tu rol.
+                    permisos asignados a su rol.
                 </p>
 
             </form>
@@ -861,7 +861,7 @@
                         // CU-261-03: la pregunta vacía no se envía, pero se avisa por qué.
                         addBotMessage(
                             'No fue posible responder',
-                            escapeHtml('Escribe una pregunta.'),
+                            escapeHtml('Escriba una pregunta.'),
                             []
                         );
                         input.value = '';
@@ -882,7 +882,7 @@
                     if (conversation.length === 0) {
                         addBotMessage(
                             'Nada que exportar',
-                            escapeHtml('Aún no hay respuestas en la conversación. Haz una pregunta y luego exporta.'),
+                            escapeHtml('Aún no hay respuestas en la conversación. Haga una pregunta y luego exporte.'),
                             []
                         );
                         return;
@@ -944,15 +944,10 @@
                 `
                             Puedo consultar métricas del negocio y explicarte
                             cómo utilizar los diferentes módulos del sistema.
-                            Selecciona una opción o escribe tu propia pregunta.
+                            Seleccione una opción o escriba su propia pregunta.
                         `,
-                [
-                    '¿Qué puedo preguntar?',
-                    'Dame un resumen',
-                    '¿Cuánto vendimos este mes?',
-                    '¿Cómo está el inventario?',
-                    '¿Cómo uso el módulo de rutas?'
-                ]
+                // G3-05: solo las preguntas de las categorías que el rol puede consultar.
+                @Json.Serialize(Proyecto_Final.Services.AssistantService.SugerenciasIniciales(Context.Session.GetString("UserRole")))
             );
 
             input.focus();

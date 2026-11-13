@@ -69,7 +69,7 @@ namespace Proyecto_Final.Controllers
             catch (SqlException ex) when (ex.Number >= 50000)
             {
                 _logger.LogWarning(ex, "La base de datos rechazó una operación de negocio.");
-                ModelState.AddModelError(string.Empty, "No fue posible completar la operación solicitada.");
+                ModelState.AddModelError(string.Empty, BusinessErrors.MessageOr(ex, "No fue posible completar la operación solicitada."));
             }
             catch (Exception ex)
             {
@@ -112,7 +112,7 @@ namespace Proyecto_Final.Controllers
         {
             if (!ModelState.IsValid)
             {
-                TempData["ErrorMessage"] = "Revisá el estado y la resolución ingresada.";
+                TempData["ErrorMessage"] = "Revise el estado y la resolución ingresada.";
                 return RedirectToAction(nameof(Details), new { id = model.ReclamoId });
             }
 
@@ -130,7 +130,7 @@ namespace Proyecto_Final.Controllers
             catch (SqlException ex) when (ex.Number >= 50000)
             {
                 _logger.LogWarning(ex, "La base de datos rechazó una operación de negocio.");
-                TempData["ErrorMessage"] = "No fue posible completar la operación solicitada.";
+                TempData["ErrorMessage"] = BusinessErrors.MessageOr(ex, "No fue posible completar la operación solicitada.");
             }
             catch (Exception ex)
             {

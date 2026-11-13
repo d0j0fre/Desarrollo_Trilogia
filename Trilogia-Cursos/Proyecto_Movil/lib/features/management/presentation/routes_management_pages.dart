@@ -83,7 +83,7 @@ class _ManagedRoutesPageState extends ConsumerState<ManagedRoutesPage> {
                             ],
                           ),
                         ),
-                        StatusChip(label: route.status, color: routeStatusColor(route.status)),
+                        StatusChip(label: Fmt.status(route.status), color: routeStatusColor(route.status)),
                       ],
                     ),
                     const SizedBox(height: 12),
@@ -193,7 +193,8 @@ class _ManagedRouteDetailPageState extends ConsumerState<ManagedRouteDetailPage>
     final route = ref.watch(managedRouteProvider(widget.routeId));
 
     return Scaffold(
-      appBar: AppBar(title: Text(route.value?.code ?? 'Ruta')),
+      // Sin señal la ruta puede llegar con error: `.value` lo relanzaria al dibujar.
+      appBar: AppBar(title: Text(route.valueOrNull?.code ?? 'Ruta')),
       body: AsyncDetailBody<ManagedRouteDetail>(
         value: route,
         onRefresh: () async => _refresh(),
@@ -210,7 +211,7 @@ class _ManagedRouteDetailPageState extends ConsumerState<ManagedRouteDetailPage>
                     Row(
                       children: [
                         Expanded(child: Text(detail.zone, style: Theme.of(context).textTheme.titleLarge)),
-                        StatusChip(label: detail.status, color: routeStatusColor(detail.status)),
+                        StatusChip(label: Fmt.status(detail.status), color: routeStatusColor(detail.status)),
                       ],
                     ),
                     const SizedBox(height: 6),
@@ -342,7 +343,7 @@ class _ReassignSheetState extends ConsumerState<_ReassignSheet> {
       title: 'Reasignar ruta',
       subtitle: widget.route.status == 'Despachada'
           ? 'La ruta ya está en calle. Las entregas cerradas conservan su historia; las pendientes pasan al chofer nuevo.'
-          : 'Elegí quién sale con esta ruta.',
+          : 'Elija quién sale con esta ruta.',
       children: [
         drivers.when(
           loading: () => const LinearProgressIndicator(),
@@ -394,7 +395,7 @@ class _ReassignSheetState extends ConsumerState<_ReassignSheet> {
           decoration: const InputDecoration(labelText: 'Motivo', hintText: 'Ej.: el chofer se reportó enfermo'),
         ),
         if (!_changed)
-          Text('Elegí otro chofer o vehículo para continuar.', style: Theme.of(context).textTheme.bodySmall),
+          Text('Elija otro chofer o vehículo para continuar.', style: Theme.of(context).textTheme.bodySmall),
         const SizedBox(height: 12),
         BusyButton(label: 'Reasignar', icon: Icons.swap_horiz_rounded, busy: _busy, color: BrandColors.action,
             onPressed: _valid ? _save : null),

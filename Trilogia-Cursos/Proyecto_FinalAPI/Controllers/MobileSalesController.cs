@@ -71,11 +71,11 @@ namespace Proyecto_FinalAPI.Controllers
         public async Task<IActionResult> Create([FromBody] CreateSaleRequest request, CancellationToken cancellationToken)
         {
             if (request is null) return InvalidRequest("Falta el cuerpo de la solicitud.");
-            if (request.ClienteId <= 0) return InvalidRequest("Elegí el cliente.");
+            if (request.ClienteId <= 0) return InvalidRequest("Elija el cliente.");
             if (!DeliveryTypes.Contains(request.TipoEntrega?.Trim() ?? string.Empty))
                 return InvalidRequest("El tipo de entrega no es válido.");
             if (string.IsNullOrWhiteSpace(request.DireccionEntrega))
-                return InvalidRequest("Indicá la dirección de entrega.");
+                return InvalidRequest("Indique la dirección de entrega.");
 
             var items = (request.Items ?? new List<CreateSaleItem>())
                 .Where(item => item.ProductoId > 0 && item.Cantidad > 0)

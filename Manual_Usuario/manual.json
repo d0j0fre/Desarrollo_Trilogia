@@ -1,0 +1,36 @@
+{
+  "titulo": "Manual de usuario",
+  "sistema": "Sistema de gestión comercial y logística",
+  "empresa": "Distribuidora JJ · Licorera La Bodega",
+  "curso": "Implantación de Sistemas · Ingeniería en Sistemas",
+  "version": "1.2",
+  "estado": "Edición para la implantación",
+  "fecha": "Noviembre de 2026",
+  "salida": "salida/Manual_de_Usuario_Distribuidora_JJ.docx",
+  "versiones": [
+    [
+      "0.1",
+      "02/11/2026",
+      "Versión preliminar: parte general, convenciones, glosario, mapa de puestos y estructura de las partes por puesto.",
+      "Equipo del proyecto"
+    ],
+    [
+      "1.0",
+      "02/11/2026",
+      "Manual completo: Parte I, las 14 partes por puesto, la aplicación móvil y los anexos. Menú según el puesto con el panel Administración.",
+      "Equipo del proyecto"
+    ],
+    [
+      "1.1",
+      "02/11/2026",
+      "Actualización con las correcciones del sistema: estados de pedido legibles, filtros de Movimientos, «Marcar como disponible» en Activos, vuelta al pago después de iniciar sesión, mensajes de error con la causa y capturas nuevas.",
+      "Equipo del proyecto"
+    ],
+    [
+      "1.2",
+      "11/11/2026",
+      "Actualización con todas las correcciones del sistema: trato de usted en todas las pantallas, Planilla con aprobación del Gerente, Mi portal, Mis boletas y Mis jornadas para todo el personal, finanzas y auditoría unificadas, seguridad de sesiones y permisos por acción, liquidación con conteo y Finalizar ruta, Reporte de inventario, Inteligencia de inventario, foto y firma de entrega en la app, y capturas nuevas.",
+      "Equipo del proyecto"
+    ]
+  ]
+}

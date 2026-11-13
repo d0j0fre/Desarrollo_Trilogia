@@ -13,7 +13,7 @@
         <div class="col-12">
             <div class="admin-page-header">
                 <h2 class="mb-2">Devoluciones de productos</h2>
-                <p class="mb-0">Registra la mercadería devuelta. Todo producto devuelto pasa a <strong>cuarentena</strong> antes de reintegrarse.</p>
+                <p class="mb-0">Registre la mercadería devuelta. Todo producto devuelto pasa a <strong>cuarentena</strong> antes de reintegrarse.</p>
             </div>
         </div>
     </div>
@@ -114,7 +114,14 @@
                                         <td class="text-center">@(d.PedidoId.HasValue ? $"#{d.PedidoId}" : "—")</td>
                                         <td>@(string.IsNullOrWhiteSpace(d.ClienteInfo) ? "—" : d.ClienteInfo)</td>
                                         <td>@d.Motivo</td>
-                                        <td class="text-center"><span class="admin-badge-soft @badge">@label</span></td>
+                                        <td class="text-center">
+                                            <span class="admin-badge-soft @badge">@label</span>
+                                            @if (!string.IsNullOrWhiteSpace(d.ObservacionResolucion))
+                                            {
+                                                @* G2-07: observación que se escribió al liberar o descartar de cuarentena. *@
+                                                <small class="d-block text-muted mt-1">@d.ObservacionResolucion</small>
+                                            }
+                                        </td>
                                         <td>@d.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</td>
                                     </tr>
                                 }

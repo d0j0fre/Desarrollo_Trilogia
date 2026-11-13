@@ -15,15 +15,16 @@ public sealed class ControllerSurfaceAuditTests
             .Count(type => type.IsClass && !type.IsAbstract && type.Namespace == typeof(Proyecto_FinalAPI.Controllers.AuthController).Namespace && type.Name.EndsWith("Controller", StringComparison.Ordinal));
 
         // 56 originales + MobileAppController (página de descarga con QR, Fase 7)
-        // + NotificationsController (campana de avisos, BUG-08-01).
-        Assert.Equal(58, controllers.Count);
+        // + NotificationsController (campana de avisos, BUG-08-01)
+        // + InventoryReportController (reporte de inventario, BUG-13-01).
+        Assert.Equal(59, controllers.Count);
         // 2 originales (Auth, Products) + 2 de la superficie móvil Fase 2 +
         // MobileAppController (compuerta de versión, Fase 7) + 6 de la
         // aplicación por rol (inventario, pedidos, ventas, gestión, personal y
         // oficina) + notificaciones (BUG-10-08). MobileControllerBase es
         // abstracta y no cuenta.
         Assert.Equal(12, apiControllers);
-        Assert.Equal(70, controllers.Count + apiControllers);
+        Assert.Equal(71, controllers.Count + apiControllers);
         Assert.Contains(typeof(BudgetsController), controllers);
         Assert.Contains(typeof(ChatController), controllers);
         Assert.Contains(typeof(PayrollController), controllers);
@@ -134,7 +135,9 @@ public sealed class ControllerSurfaceAuditTests
         Assert.Contains("InvalidCheckout", cart, StringComparison.Ordinal);
         Assert.Contains("StatusCodes.Status422UnprocessableEntity", cart, StringComparison.Ordinal);
         Assert.Contains("StatusCodes.Status503ServiceUnavailable", payroll, StringComparison.Ordinal);
-        Assert.Contains("return UnprocessableEntity", payroll, StringComparison.Ordinal);
+        // G1-04: las acciones de Planilla ya no responden JSON 422; vuelven a la pantalla con un mensaje rojo legible.
+        Assert.DoesNotContain("return UnprocessableEntity", payroll, StringComparison.Ordinal);
+        Assert.Contains("TempData[\"ErrorMessage\"]", payroll, StringComparison.Ordinal);
     }
 
     private static IReadOnlyList<Type> GetControllers() => typeof(HomeController).Assembly

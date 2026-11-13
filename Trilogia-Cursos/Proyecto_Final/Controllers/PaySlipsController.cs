@@ -42,10 +42,17 @@ public sealed class PaySlipsController : Controller
     public async Task<IActionResult> Send(PaySlipSendViewModel model,CancellationToken cancellationToken)
     {
         if(model.CalculoId<=0||model.IdempotencyKey==Guid.Empty)return BadRequest();
+        // G2-27: si falta la configuración se explica el motivo, sin registrar un intento de envío fallido.
+        var problem=PaySlipDeliveryDiagnostics.GetConfigurationProblem(_configuration);
+        if(problem is not null)
+        {
+            _logger.LogWarning("No se notificó la boleta {CalculationId}: {Problem}",model.CalculoId,problem);
+            TempData["ErrorMessage"]=problem;
+            return RedirectToAction(nameof(Index));
+        }
         try
         {
-            var configuredBase=_configuration["PaySlips:PublicBaseUrl"];
-            if(!Uri.TryCreate(configuredBase,UriKind.Absolute,out var baseUri)||baseUri.Scheme!=Uri.UriSchemeHttps)throw new InvalidOperationException("PaySlips:PublicBaseUrl debe ser una URL HTTPS absoluta.");
+            var baseUri=new Uri(_configuration["PaySlips:PublicBaseUrl"]!.Trim());
             var relative=Url.Action("Details","MyPaySlips",new{id=model.CalculoId})??throw new InvalidOperationException("No se pudo generar el enlace de boleta.");
             await _delivery.SendAsync(model.CalculoId,model.IdempotencyKey,UserId(),UserName(),new Uri(baseUri,relative),cancellationToken);
             TempData["SuccessMessage"]="Notificación de boleta procesada.";

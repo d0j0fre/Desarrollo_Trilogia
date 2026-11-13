@@ -7,9 +7,9 @@
     <div class="s3-cart-hero">
         <div>
             <span class="s3-eyebrow"><i class="fa fa-shopping-cart"></i> Carrito de compras</span>
-            <h1>Revisá tu pedido</h1>
+            <h1>Revise su pedido</h1>
             <p>
-                Verificá cantidades, stock disponible y subtotal antes de finalizar la compra.
+                Verifique cantidades, stock disponible y subtotal antes de finalizar la compra.
             </p>
         </div>
 
@@ -25,9 +25,9 @@
                 <div class="s3-cart-empty__icon">
                     <i class="fa fa-shopping-cart"></i>
                 </div>
-                <h2>Tu carrito está vacío</h2>
+                <h2>Su carrito está vacío</h2>
                 <p>
-                    Agregá productos desde la tienda para preparar tu pedido. Podés revisar whiskies, vinos, rones, cervezas y más categorías disponibles.
+                    Agregue productos desde la tienda para preparar su pedido. Puede revisar whiskies, vinos, rones, cervezas y más categorías disponibles.
                 </p>
                 <a asp-controller="Home" asp-action="Shop" class="btn btn-ds-create btn-lg">
                     <i class="fa fa-store mr-1"></i>Ir a la tienda
@@ -41,13 +41,15 @@
             <div class="s3-cart-list">
                 @foreach (var item in Model.Items)
                 {
-                    var imagen = string.IsNullOrWhiteSpace(item.ImagenUrl) ? Url.Content("~/img/whisky-premium.webp") : Url.Content(item.ImagenUrl);
+                    var imagen = Url.Content(Proyecto_Final.Services.ProductImageFallback.Resolve(item.ImagenUrl, item.Categoria));
+                    var respaldo = Url.Content(Proyecto_Final.Services.ProductImageFallback.ForCategory(item.Categoria));
                     var puedeAumentar = item.Cantidad < item.StockDisponible;
                     var puedeDisminuir = item.Cantidad > 1;
 
                     <article class="s3-cart-item">
                         <div class="s3-cart-item__image">
-                            <img src="@imagen" alt="Producto @item.Nombre en el carrito" loading="lazy" width="120" height="120" />
+                            <img src="@imagen" alt="Producto @item.Nombre en el carrito" loading="lazy" width="120" height="120"
+                                 onerror="this.onerror=null;this.src='@respaldo';" />
                         </div>
 
                         <div class="s3-cart-item__info">
@@ -139,7 +141,8 @@
                     {
                         <article class="s3-cart-item">
                             <div class="s3-cart-item__image">
-                                <img src="@Url.Content("~/img/whisky-premium.webp")" alt="Producto de regalo @regalo.Nombre" loading="lazy" width="120" height="120" />
+                                <img src="@Url.Content(Proyecto_Final.Services.ProductImageFallback.Resolve(regalo.ImagenUrl, regalo.Categoria))" alt="Producto de regalo @regalo.Nombre" loading="lazy" width="120" height="120"
+                                     onerror="this.onerror=null;this.src='@Url.Content(Proyecto_Final.Services.ProductImageFallback.ForCategory(regalo.Categoria))';" />
                             </div>
                             <div class="s3-cart-item__info">
                                 <span class="s3-cart-item__category"><span class="badge badge-success"><i class="fa fa-gift mr-1"></i>Regalía</span></span>
@@ -219,11 +222,12 @@
             <div class="row">
                 @foreach (var suggestion in Model.Recomendaciones)
                 {
-                    var suggestionImage = string.IsNullOrWhiteSpace(suggestion.ImagenUrl) ? Url.Content("~/img/whisky-premium.webp") : Url.Content(suggestion.ImagenUrl);
+                    var suggestionImage = Url.Content(Proyecto_Final.Services.ProductImageFallback.Resolve(suggestion.ImagenUrl, suggestion.Categoria));
                     <div class="col-md-6 mb-3">
                         <article class="card h-100 p-3">
                             <div class="d-flex">
-                                <img src="@suggestionImage" alt="Producto recomendado @suggestion.Nombre" loading="lazy" width="96" height="96" style="object-fit:cover;aspect-ratio:1/1" />
+                                <img src="@suggestionImage" alt="Producto recomendado @suggestion.Nombre" loading="lazy" width="96" height="96" style="object-fit:cover;aspect-ratio:1/1"
+                                     onerror="this.onerror=null;this.src='@Url.Content(Proyecto_Final.Services.ProductImageFallback.ForCategory(suggestion.Categoria))';" />
                                 <div class="ml-3">
                                     <h4 class="h6">@suggestion.Nombre</h4>
                                     <strong>₡@suggestion.Precio.ToString("N2")</strong>

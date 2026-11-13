@@ -1,4 +1,6 @@
 @model IEnumerable<Proyecto_Final.Models.Admin.InventoryMovementViewModel>
+@using Microsoft.AspNetCore.Http
+@inject Proyecto_Final.Services.NavigationMenuService MenuAccess
 @{
     ViewData["Title"] = "Movimientos de inventario";
 }
@@ -12,7 +14,7 @@
         <div class="col-12">
             <div class="admin-page-header">
                 <h2 class="mb-2">Movimientos de inventario</h2>
-                <p>Consulta entradas, salidas y ajustes realizados sobre el stock de productos.</p>
+                <p>Consulte entradas, salidas y ajustes realizados sobre el stock de productos.</p>
             </div>
         </div>
     </div>
@@ -25,11 +27,40 @@
                     <span class="text-muted">Total registros: @(Model?.Count() ?? 0)</span>
                 </div>
 
+                @* Registrar exige INVENTARIO_MOVIMIENTOS; consultar la lista, solo el módulo. *@
+                @if (await MenuAccess.CanOpenAsync(Context.Session.GetString("UserRole"), "Inventory", "RegisterMovement"))
+                {
                 <div>
                     <a asp-controller="Inventory" asp-action="RegisterMovement" class="btn btn-ds-create">
                         <i class="fa fa-plus mr-2"></i>Registrar movimiento
                     </a>
                 </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    @{
+        var tipo = ViewData["Tipo"] as string;
+    }
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <div class="admin-filter-bar mb-3">
+                <form asp-action="Movements" method="get" class="form-inline">
+                    <input type="text" name="buscar" value="@ViewData["Buscar"]" class="form-control mr-2 mb-2" placeholder="Producto" aria-label="Producto" />
+                    <select name="tipo" class="form-control mr-2 mb-2" aria-label="Tipo de movimiento">
+                        <option value="">Todos los tipos</option>
+                        <option value="Entrada" selected="@(tipo == "Entrada")">Entrada</option>
+                        <option value="Salida" selected="@(tipo == "Salida")">Salida</option>
+                        <option value="Ajuste" selected="@(tipo == "Ajuste")">Ajuste</option>
+                    </select>
+                    <label class="mr-2 mb-2" for="movDesde">Desde</label>
+                    <input type="date" id="movDesde" name="desde" value="@ViewData["Desde"]" class="form-control mr-2 mb-2" />
+                    <label class="mr-2 mb-2" for="movHasta">Hasta</label>
+                    <input type="date" id="movHasta" name="hasta" value="@ViewData["Hasta"]" class="form-control mr-2 mb-2" />
+                    <button type="submit" class="btn btn-ds-search mr-2 mb-2"><i class="fa fa-search mr-2"></i>Buscar</button>
+                    <a asp-action="Movements" class="btn btn-ds-neutral mb-2"><i class="fa fa-eraser mr-2"></i>Limpiar</a>
+                </form>
             </div>
         </div>
     </div>

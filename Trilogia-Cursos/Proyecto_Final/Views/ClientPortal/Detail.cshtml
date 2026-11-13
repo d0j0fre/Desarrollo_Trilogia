@@ -1,4 +1,5 @@
 @model Proyecto_Final.Models.Store.ClientPortalOrderDetailViewModel
+@using Proyecto_Final.Services
 @{
     ViewData["Title"] = "Detalle de pedido";
     var claseEstado = Model.Estado == "Pendiente" ? "warning" : Model.Estado == "Entregado" ? "success" : Model.Estado == "Cancelado" ? "danger" : "dark";
@@ -30,10 +31,10 @@
                 <article class="s4-client-detail-card">
                     <div class="s4-client-detail-card__head">
                         <div>
-                            <span>Informacion general</span>
+                            <span>Información general</span>
                             <h2>Estado y entrega</h2>
                         </div>
-                        <span class="s4-client-status-pill @claseEstado">@Model.Estado</span>
+                        <span class="s4-client-status-pill @claseEstado">@OrderStatusFlow.Name(Model.Estado)</span>
                     </div>
 
                     <div class="s4-client-detail-facts">
@@ -52,7 +53,7 @@
                     </div>
 
                     <div class="s4-client-detail-note">
-                        <span>Direccion de entrega</span>
+                        <span>Dirección de entrega</span>
                         <p>@(string.IsNullOrWhiteSpace(Model.DireccionEntrega) ? "No registrada" : Model.DireccionEntrega)</p>
                     </div>
 
@@ -151,10 +152,10 @@
                     @if (Model.CanCancel)
                     {
                         <form asp-controller="ClientPortal" asp-action="Cancel" method="post"
-                              data-s3-confirm="Desea cancelar este pedido pendiente?"
-                              data-s3-confirm-title="Confirmar cancelacion"
+                              data-s3-confirm="¿Desea cancelar este pedido pendiente?"
+                              data-s3-confirm-title="Confirmar cancelación"
                               data-s3-confirm-type="warning"
-                              data-s3-confirm-ok="Si, cancelar"
+                              data-s3-confirm-ok="Sí, cancelar"
                               data-s3-confirm-cancel="Volver">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="id" value="@Model.PedidoId" />
@@ -169,7 +170,8 @@
                     }
                 </div>
 
-                <span class="s4-client-status-pill @claseEstado">@Model.Estado</span>
+                @* G3-12: separada del botón «Cancelar pedido». *@
+                <span class="s4-client-status-pill @claseEstado d-inline-block mt-3">@OrderStatusFlow.Name(Model.Estado)</span>
             </aside>
         </div>
     </div>

@@ -107,7 +107,17 @@ public sealed class ExpensesDashboardViewModel
     public decimal AvailableBudget { get; set; }
 }
 
-public sealed record ExpenseCreationResult(int ExpenseId, bool Duplicate, string ConsumptionLevel, decimal ExecutionPercent);
+public sealed record ExpenseCreationResult(int ExpenseId, bool Duplicate, string ConsumptionLevel, decimal ExecutionPercent)
+{
+    /// <summary>Sin presupuesto el porcentaje siempre es 0 %: se dice «sin presupuesto» en vez de «0,00 %».</summary>
+    public bool WithoutBudget => ConsumptionLevel == "Excedido" && ExecutionPercent == 0;
+
+    public string BudgetMessage() => ConsumptionLevel == "Normal"
+        ? "Gasto registrado."
+        : WithoutBudget
+            ? "Gasto registrado. Nivel presupuestario: Excedido (sin presupuesto)."
+            : $"Gasto registrado. Nivel presupuestario: {ConsumptionLevel} ({ExecutionPercent:N2}%).";
+}
 
 public static class ExpenseRules
 {

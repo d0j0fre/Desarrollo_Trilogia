@@ -49,7 +49,7 @@
             '    <div class="s3-modal-icon"><i class="fa fa-question-circle"></i></div>' +
             '    <div>' +
             '      <h2 class="s3-modal-title" id="s3ModalTitle">Confirmar acción</h2>' +
-            '      <p class="s3-modal-kicker">Revisá la información antes de continuar.</p>' +
+            '      <p class="s3-modal-kicker">Revise la información antes de continuar.</p>' +
             '    </div>' +
             '    <button type="button" class="s3-modal-close" aria-label="Cerrar"><i class="fa fa-times"></i></button>' +
             '  </div>' +
@@ -130,7 +130,7 @@
         modalState.dialog.setAttribute('data-type', type);
         modalState.icon.className = 'fa ' + iconFor(type);
         modalState.title.textContent = settings.title || (isAlert ? 'Mensaje del sistema' : 'Confirmar acción');
-        modalState.kicker.textContent = settings.kicker || (isAlert ? 'Información importante.' : 'Revisá la información antes de continuar.');
+        modalState.kicker.textContent = settings.kicker || (isAlert ? 'Información importante.' : 'Revise la información antes de continuar.');
         modalState.message.textContent = settings.message || '¿Desea continuar?';
         modalState.confirmBtn.textContent = settings.okText || (isAlert ? 'Entendido' : 'Continuar');
         modalState.cancelBtn.textContent = settings.cancelText || 'Cancelar';

@@ -28,9 +28,14 @@
                     <h2 class="mb-2">Cumplimiento global de KPIs</h2>
                     <p>Rendimiento de la fuerza de ventas — @meses[Model.Mes] @Model.Anio</p>
                 </div>
-                <a asp-controller="Kpis" asp-action="Index" asp-route-anio="@Model.Anio" asp-route-mes="@Model.Mes" class="btn btn-ds-view mt-3 mt-md-0">
-                    <i class="fa fa-bullseye mr-1"></i>Gestionar metas
-                </a>
+                <div class="mt-3 mt-md-0">
+                    <button type="button" id="exportKpiXlsx" class="btn btn-ds-view mr-2"@(Model.HayDatos ? "" : " disabled")>
+                        <i class="fa fa-file-excel mr-1"></i>Exportar Excel
+                    </button>
+                    <a asp-controller="Kpis" asp-action="Index" asp-route-anio="@Model.Anio" asp-route-mes="@Model.Mes" class="btn btn-ds-view">
+                        <i class="fa fa-bullseye mr-1"></i>Gestionar metas
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -60,6 +65,10 @@
         </div>
     </div>
 
+    <div class="row px-xl-5"><div class="col-12">
+        <p class="text-muted small">Venta = facturas no anuladas de pedidos con vendedor asignado. El cumplimiento global compara la venta de los vendedores con meta contra la meta global; la de quien no tiene meta se muestra aparte. Por eso estas cifras pueden diferir del Tablero gerencial y del Reporte de ventas, que suman todas las facturas no anuladas.</p>
+    </div></div>
+
     @if (!Model.HayDatos)
     {
         <div class="row px-xl-5"><div class="col-12">
@@ -79,7 +88,11 @@
             <div class="admin-table-wrapper kpi-card p-4 h-100">
                 <div class="d-flex justify-content-between"><span class="text-muted">Venta global</span><i class="fa fa-cash-register kpi-icon text-success"></i></div>
                 <div class="kpi-value text-success">₡@Model.VentaGlobal.ToString("N2")</div>
-                <small class="text-muted">Ingreso facturado del período</small>
+                <small class="text-muted">Facturado a vendedores con meta</small>
+                @if (Model.VentaSinMeta > 0)
+                {
+                    <small class="text-muted d-block">Aparte, sin meta: ₡@Model.VentaSinMeta.ToString("N2")</small>
+                }
             </div>
         </div>
         <div class="col-lg-3 col-md-6 mb-4">
@@ -162,3 +175,47 @@
         </div>
     }
 </div>
+
+@section Scripts {
+    <script src="~/js/xlsx-export.js" asp-append-version="true"></script>
+    <script>
+        (function () {
+            const button = document.getElementById('exportKpiXlsx');
+            if (!button) return;
+            const data = @Json.Serialize(new
+            {
+                periodo = meses[Model.Mes] + " " + Model.Anio,
+                metaGlobal = Model.MetaGlobal.ToString("N2"),
+                ventaGlobal = Model.VentaGlobal.ToString("N2"),
+                ventaSinMeta = Model.VentaSinMeta.ToString("N2"),
+                cumplimiento = Model.PorcentajeGlobal.ToString("N1") + "%",
+                metasCumplidas = Model.Items.Count(i => i.Clasificacion == "Cumplida") + " de " + Model.Items.Count(i => i.Clasificacion != "SinMeta"),
+                items = Model.Items.Select(i => new
+                {
+                    vendedor = i.VendedorNombre,
+                    meta = i.MontoMeta > 0 ? i.MontoMeta.ToString("N2") : "—",
+                    venta = i.VentasReales.ToString("N2"),
+                    facturas = i.Facturas.ToString(),
+                    cumplimiento = i.PorcentajeCumplimiento.HasValue ? i.PorcentajeCumplimiento.Value.ToString("N1") + "%" : "—",
+                    estado = ClasTexto(i.Clasificacion)
+                })
+            });
+            button.addEventListener('click', function () {
+                const bold = window.XlsxExport.STYLE.bold;
+                const rows = [];
+                const row = function () { rows.push(Array.prototype.map.call(arguments, function (v) { return { text: String(v == null ? '' : v) }; })); };
+                const head = function () { rows.push(Array.prototype.map.call(arguments, function (v) { return { text: String(v), style: bold }; })); };
+                head('Cumplimiento global de KPIs', data.periodo);
+                row('Meta global', data.metaGlobal);
+                row('Venta global (vendedores con meta)', data.ventaGlobal);
+                row('Venta de vendedores sin meta', data.ventaSinMeta);
+                row('Cumplimiento', data.cumplimiento);
+                row('Metas cumplidas', data.metasCumplidas);
+                row();
+                head('Vendedor', 'Meta', 'Venta real', 'Facturas', 'Cumplimiento', 'Estado');
+                data.items.forEach(function (i) { row(i.vendedor, i.meta, i.venta, i.facturas, i.cumplimiento, i.estado); });
+                window.XlsxExport.download('kpis-' + @Model.Anio + '-' + String(@Model.Mes).padStart(2, '0') + '.xlsx', 'KPIs', rows, [32, 18, 18, 12, 16, 14]);
+            });
+        })();
+    </script>
+}

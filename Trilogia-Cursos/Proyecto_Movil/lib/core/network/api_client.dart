@@ -95,6 +95,9 @@ class ApiClient {
     try {
       final options = error.requestOptions;
       options.extra['reintentado'] = true;
+      // Un FormData solo se puede leer una vez: el reintento necesita una copia.
+      final data = options.data;
+      if (data is FormData) options.data = data.clone();
 
       final token = await _store.readAccessToken();
       if (token != null) options.headers['Authorization'] = 'Bearer $token';
@@ -173,6 +176,7 @@ class ApiClient {
     Object? body,
     bool anonymous = false,
     Duration? receiveTimeout,
+    Duration? sendTimeout,
   }) async {
     try {
       final response = await _dio.post<T>(
@@ -181,6 +185,8 @@ class ApiClient {
         options: Options(
           extra: {'anonimo': anonymous},
           receiveTimeout: receiveTimeout,
+          // Subir una foto por datos moviles tarda mas que un JSON.
+          sendTimeout: sendTimeout,
         ),
       );
       return response.data as T;

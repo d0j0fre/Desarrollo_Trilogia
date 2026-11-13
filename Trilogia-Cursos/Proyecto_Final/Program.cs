@@ -2,6 +2,7 @@
 using Proyecto_Final.Middleware;
 using Proyecto_Final.Services;
 using Proyecto_Final.Hubs;
+using Microsoft.AspNetCore.SignalR;
 using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,7 +14,11 @@ builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(optio
 {
     options.ValueCountLimit = 4096;
 });
-builder.Services.AddSignalR();
+// Revocación de sesiones (0311): el hub valida el sello de seguridad al conectar y en cada invocación, y un
+// proceso periódico corta las conexiones de quien ya no tiene sesión vigente (por ejemplo, solo recibe mensajes).
+builder.Services.AddSingleton<IChatConnectionRegistry, ChatConnectionRegistry>();
+builder.Services.AddHostedService<ChatSessionRevocationWorker>();
+builder.Services.AddSignalR().AddHubOptions<ChatHub>(options => options.AddFilter<ChatSessionHubFilter>());
 builder.Services.AddAntiforgery(options => options.HeaderName = "X-CSRF-TOKEN");
 builder.Services.AddRateLimiter(options =>
 {
@@ -151,6 +156,8 @@ builder.Services.AddScoped<AdminDbService>();
 builder.Services.AddScoped<IMobileAppReleaseService, MobileAppReleaseDbService>();
 builder.Services.AddSingleton<IMobileAppPackageStorage, MobileAppPackageStorageService>();
 builder.Services.AddScoped<IRolePermissionService, RolePermissionService>();
+builder.Services.AddScoped<NavigationMenuService>();
+builder.Services.AddScoped<ISellerOrderAccess, SellerOrderAccess>();
 builder.Services.AddScoped<ISessionStatusService, SessionStatusService>();
 builder.Services.AddScoped<IEmployeesService, EmployeesDbService>();
 builder.Services.AddScoped<IAttendanceService, AttendanceDbService>();
@@ -162,6 +169,7 @@ builder.Services.AddScoped<StoreDbService>();
 builder.Services.AddScoped<AccountDbService>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<LogisticsDbService>();
+builder.Services.AddScoped<FinanceDbService>();
 builder.Services.AddScoped<ReportsDbService>();
 builder.Services.AddScoped<WarehouseDbService>();
 builder.Services.AddScoped<ClientAccountDbService>(); // BUG-06-03 / BUG-12-01: estado de cuenta del cliente

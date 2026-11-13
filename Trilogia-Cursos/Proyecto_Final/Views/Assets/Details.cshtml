@@ -18,7 +18,19 @@
                     <h2 class="mb-2">Activo @Model.Activo.CodigoActivo</h2>
                     <p class="mb-0">@Model.Activo.Nombre</p>
                 </div>
-                <div class="mt-2 mt-md-0">
+                <div class="mt-2 mt-md-0 d-flex flex-wrap align-items-center">
+                    @if (Model.Activo.Estado == "Mantenimiento")
+                    {
+                        <form asp-action="MarkAvailable" asp-route-id="@Model.Activo.ActivoId" method="post" class="mr-2 mb-0"
+                              data-s3-confirm="¿El equipo ya está reparado? Quedará disponible para asignarlo en comodato."
+                              data-s3-confirm-title="Marcar como disponible"
+                              data-s3-confirm-type="warning"
+                              data-s3-confirm-ok="Sí, marcar disponible"
+                              data-s3-confirm-cancel="Cancelar">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-ds-action"><i class="fa fa-check mr-2"></i>Marcar como disponible</button>
+                        </form>
+                    }
                     <a asp-action="Edit" asp-route-id="@Model.Activo.ActivoId" class="btn btn-ds-edit mr-2"><i class="fa fa-edit mr-2"></i>Editar</a>
                     <a asp-action="Index" class="btn btn-ds-neutral"><i class="fa fa-arrow-left mr-2"></i>Volver</a>
                 </div>

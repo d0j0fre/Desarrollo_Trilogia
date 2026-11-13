@@ -372,6 +372,8 @@
 .s3-footer .btn-ds-neutral,
 .topbar .btn-ds-neutral,
 .modern-nav-shell .btn-ds-neutral,
+.admin-page-header .btn-ds-neutral,
+.s4-client-portal-hero .btn-ds-neutral,
 .btn-ds-neutral--on-dark {
     background-color: transparent !important;
     border-color: rgba(255, 255, 255, .55) !important;
@@ -390,6 +392,10 @@
 .topbar .btn-ds-neutral:focus,
 .modern-nav-shell .btn-ds-neutral:hover,
 .modern-nav-shell .btn-ds-neutral:focus,
+.admin-page-header .btn-ds-neutral:hover,
+.admin-page-header .btn-ds-neutral:focus,
+.s4-client-portal-hero .btn-ds-neutral:hover,
+.s4-client-portal-hero .btn-ds-neutral:focus,
 .btn-ds-neutral--on-dark:hover,
 .btn-ds-neutral--on-dark:focus {
     background-color: rgba(255, 255, 255, .16) !important;
@@ -477,4 +483,40 @@
     .btn-ds-danger:focus {
         transform: none;
     }
+}
+
+/* G2-09: insignias dentro de los encabezados oscuros (p. ej. «N pendiente(s)» de Pedidos
+   retenidos). El tono translúcido de las insignias de backoffice no se lee sobre negro. */
+.admin-page-header .badge-warning {
+    background-color: var(--brand-gold-primary, #D4AF37) !important;
+    color: var(--brand-black, #1F1F1F) !important;
+}
+
+/* G2-13: la insignia de estado del detalle de una ruta (Planificada, Despachada…) es una
+   admin-badge-soft, no un badge de Bootstrap: sobre el encabezado negro-vino su tono
+   translúcido casi no se veía. Se pinta sólida, con tinta oscura sobre fondo claro. */
+.admin-page-header .admin-badge-soft.warning,
+.backoffice-page .admin-page-header .admin-badge-soft.warning {
+    background-color: var(--brand-gold-primary, #D4AF37) !important;
+    color: var(--brand-black, #1F1F1F) !important;
+}
+.admin-page-header .admin-badge-soft.dark,
+.backoffice-page .admin-page-header .admin-badge-soft.dark {
+    background-color: #FFFFFF !important;
+    color: var(--brand-black, #1F1F1F) !important;
+}
+.admin-page-header .admin-badge-soft.success,
+.backoffice-page .admin-page-header .admin-badge-soft.success {
+    background-color: #DDF3E4 !important;
+    color: #124A2A !important;
+}
+.admin-page-header .admin-badge-soft.danger,
+.backoffice-page .admin-page-header .admin-badge-soft.danger {
+    background-color: #FBE3E3 !important;
+    color: #7A1818 !important;
+}
+.admin-page-header .admin-badge-soft.info,
+.backoffice-page .admin-page-header .admin-badge-soft.info {
+    background-color: #E3ECFA !important;
+    color: #1E4F99 !important;
 }

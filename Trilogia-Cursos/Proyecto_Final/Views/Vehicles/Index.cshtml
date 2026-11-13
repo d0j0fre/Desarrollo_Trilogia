@@ -71,7 +71,14 @@
                                         <td class="text-center">@v.KilometrajeActual km</td>
                                         <td class="text-center">@v.RutasAbiertas</td>
                                         <td class="text-center">
-                                            <span class="admin-badge-soft @(v.Activo ? "success" : "danger")">@(v.Activo ? "Activo" : "Inactivo")</span>
+                                            @if (v.EnMantenimiento)
+                                            {
+                                                <span class="admin-badge-soft warning" title="Tiene una orden correctiva en proceso; vuelve a circulación al completarla.">En reparación</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="admin-badge-soft @(v.Activo ? "success" : "danger")">@(v.Activo ? "Activo" : "Inactivo")</span>
+                                            }
                                         </td>
                                         <td class="text-center">
                                             <a asp-action="Edit" asp-route-id="@v.VehiculoId" class="btn btn-sm btn-ds-edit mb-1" aria-label="Editar vehiculo"><i class="fa fa-edit"></i></a>
@@ -84,7 +91,7 @@
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="vehiculoId" value="@v.VehiculoId" />
                                                 <input type="hidden" name="buscar" value="@buscar" />
-                                                <button type="submit" class="btn btn-sm @(v.Activo ? "btn-ds-danger" : "btn-ds-action") mb-1" aria-label="@(v.Activo ? "Inactivar vehiculo" : "Reactivar vehiculo")">
+                                                <button type="submit" class="btn btn-sm @(v.Activo ? "btn-ds-danger" : "btn-ds-action") mb-1" aria-label="@(v.Activo ? "Inactivar vehiculo" : "Reactivar vehiculo")" disabled="@v.EnMantenimiento" title="@(v.EnMantenimiento ? "En reparación: complete la orden correctiva en Mantenimiento" : "")">
                                                     <i class="fa fa-@(v.Activo ? "ban" : "check")"></i>
                                                 </button>
                                             </form>

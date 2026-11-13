@@ -1,0 +1,874 @@
+{
+  "_leeme": "Fuente única del reparto. 'dueno' es la parte del manual donde se escribe el procedimiento (una sola vez). 'usuarios': perfil:nivel (completo | parcial | consulta). Si se cambia, ejecutar: node herramientas/estructura.js",
+  "partes": [
+    {
+      "id": "general",
+      "titulo": "Información general",
+      "grupo": 0,
+      "carpeta": "capitulos/00_general"
+    },
+    {
+      "id": "administrador",
+      "titulo": "Administrador",
+      "perfil": "Administrador",
+      "grupo": 1,
+      "carpeta": "capitulos/10_administrador",
+      "resumen": "Configura el sistema: catálogo de productos, facturación, clientes y crédito, finanzas, compras, planilla, seguridad (roles y permisos) y documentos. Tiene acceso a todos los módulos."
+    },
+    {
+      "id": "gerente",
+      "titulo": "Gerente",
+      "perfil": "Gerente",
+      "grupo": 2,
+      "carpeta": "capitulos/20_gerente",
+      "resumen": "Supervisa la operación: aprueba pedidos retenidos, organiza rutas y flota, gestiona devoluciones, activos y comodatos, promociones y reclamos, y consulta reportes, metas y KPIs."
+    },
+    {
+      "id": "supervisor",
+      "titulo": "Supervisor",
+      "perfil": "Supervisor",
+      "grupo": 2,
+      "carpeta": "capitulos/21_supervisor",
+      "resumen": "Gestiona al personal: expedientes de empleados, licencias, aprobación de jornadas y boletas de pago."
+    },
+    {
+      "id": "auditor",
+      "titulo": "Auditor Interno",
+      "perfil": "Auditor Interno",
+      "grupo": 2,
+      "carpeta": "capitulos/22_auditor",
+      "resumen": "Revisa la bitácora de auditoría: quién hizo qué y cuándo en el sistema."
+    },
+    {
+      "id": "empleado",
+      "titulo": "Empleado",
+      "perfil": "Empleado",
+      "grupo": 2,
+      "carpeta": "capitulos/23_empleado",
+      "resumen": "Atiende pedidos y consultas en oficina, registra ventas y usa su portal de empleado (jornadas, boletas y solicitudes). Incluye el chat interno, que usa todo el personal."
+    },
+    {
+      "id": "cajero",
+      "titulo": "Cajero",
+      "perfil": "Cajero",
+      "grupo": 2,
+      "carpeta": "capitulos/24_cajero",
+      "resumen": "Liquida los cobros que traen los choferes de cada ruta."
+    },
+    {
+      "id": "bodeguero",
+      "titulo": "Bodeguero",
+      "perfil": "Bodeguero",
+      "grupo": 2,
+      "carpeta": "capitulos/25_bodeguero",
+      "resumen": "Controla las existencias: registra entradas, salidas y ajustes, prepara pedidos y recibe compras (sobre todo desde la aplicación móvil)."
+    },
+    {
+      "id": "facturador",
+      "titulo": "Facturador",
+      "perfil": "Facturador",
+      "grupo": 2,
+      "carpeta": "capitulos/26_facturador",
+      "resumen": "Consulta facturas y pedidos para atender a clientes y conciliar."
+    },
+    {
+      "id": "credito",
+      "titulo": "Crédito y Cobro",
+      "perfil": "Crédito y Cobro",
+      "grupo": 2,
+      "carpeta": "capitulos/27_credito",
+      "resumen": "Consulta clientes, límites de crédito, deudas y cuentas por cobrar."
+    },
+    {
+      "id": "compras",
+      "titulo": "Compras",
+      "perfil": "Compras",
+      "grupo": 2,
+      "carpeta": "capitulos/28_compras",
+      "resumen": "Consulta proveedores, órdenes de compra, sugerencias de reposición e inventario."
+    },
+    {
+      "id": "soporte",
+      "titulo": "Soporte",
+      "perfil": "Soporte",
+      "grupo": 2,
+      "carpeta": "capitulos/29_soporte",
+      "resumen": "Atiende las consultas que envían los clientes."
+    },
+    {
+      "id": "vendedor",
+      "titulo": "Vendedor",
+      "perfil": "Vendedor",
+      "grupo": 3,
+      "carpeta": "capitulos/30_vendedor",
+      "resumen": "Toma pedidos de clientes en campo, sigue su meta de ventas y usa el asistente."
+    },
+    {
+      "id": "chofer",
+      "titulo": "Chofer",
+      "perfil": "Chofer",
+      "grupo": 3,
+      "carpeta": "capitulos/31_chofer",
+      "resumen": "Entrega los pedidos de su ruta, registra el resultado de cada entrega y el kilometraje del vehículo (sobre todo desde la aplicación móvil)."
+    },
+    {
+      "id": "cliente",
+      "titulo": "Cliente",
+      "perfil": "Cliente",
+      "grupo": 3,
+      "carpeta": "capitulos/32_cliente",
+      "resumen": "Compra en la tienda en línea y consulta sus pedidos, garantías y estado de cuenta."
+    },
+    {
+      "id": "app",
+      "titulo": "Aplicación móvil",
+      "grupo": 3,
+      "carpeta": "capitulos/40_app",
+      "resumen": "Funciones de la aplicación Android, agrupadas por sección. Cada persona ve solo las de su puesto."
+    },
+    {
+      "id": "anexos",
+      "titulo": "Anexos",
+      "grupo": 0,
+      "carpeta": "capitulos/90_anexos"
+    }
+  ],
+  "modulos": [
+    {
+      "id": "mod-dashboard",
+      "nombre": "Dashboard administrativo",
+      "plataforma": "web",
+      "acceso": "Administración → Reportes y Gerencia → Dashboard",
+      "dueno": "administrador",
+      "usuarios": "Administrador:completo, Empleado:consulta"
+    },
+    {
+      "id": "mod-inventario",
+      "nombre": "Inventario (catálogo de productos)",
+      "plataforma": "web",
+      "acceso": "Administración → Inventario → Inventario",
+      "dueno": "administrador",
+      "usuarios": "Administrador:completo, Gerente:consulta, Empleado:consulta, Bodeguero:consulta, Compras:consulta"
+    },
+    {
+      "id": "mod-transformar",
+      "nombre": "Transformar producto",
+      "plataforma": "web",
+      "acceso": "Administración → Inventario → Transformar producto",
+      "dueno": "administrador",
+      "usuarios": "Administrador:completo"
+    },
+    {
+      "id": "mod-combos",
+      "nombre": "Combos",
+      "plataforma": "web",
+      "acceso": "Administración → Inventario → Combos",
+      "dueno": "administrador",
+      "usuarios": "Administrador:completo"
+    },
+    {
+      "id": "mod-reporte-inventario",
+      "nombre": "Reporte de inventario",
+      "plataforma": "web",
+      "acceso": "Administración → Reportes y Gerencia → Reporte de inventario",
+      "dueno": "gerente",
+      "usuarios": "Administrador:completo, Gerente:completo"
+    },
+    {
+      "id": "mod-inteligencia",
+      "nombre": "Inteligencia de inventario",
+      "plataforma": "web",
+      "acceso": "Administración → Reportes y Gerencia → Inteligencia de inventario",
+      "dueno": "administrador",
+      "usuarios": "Administrador:completo, Gerente:completo"
+    },
+    {
+      "id": "mod-facturacion",
+      "nombre": "Facturación",
+      "plataforma": "web",
+      "acceso": "Administración → Ventas y Pedidos → Facturación",
+      "dueno": "administrador",
+      "usuarios": "Administrador:completo, Empleado:consulta, Facturador:consulta"
+    },
+    {
+      "id": "mod-clientes",
+      "nombre": "Clientes",
+      "plataforma": "web",
+      "acceso": "Administración → Clientes → Clientes",
+      "dueno": "administrador",
+      "usuarios": "Administrador:completo, Crédito y Cobro:consulta"
+    },
+    {
+      "id": "mod-creditos",
+      "nombre": "Créditos",
+      "plataforma": "web",
+      "acceso": "Administración → Clientes → Créditos",
+      "dueno": "administrador",
+      "usuarios": "Administrador:completo, Crédito y Cobro:consulta"
+    },
+    {
+      "id": "mod-cxc",
+      "nombre": "Cuentas por cobrar",
+      "plataforma": "web",
+      "acceso": "Administración → Ventas y Pedidos → Cuentas por Cobrar",
+      "dueno": "administrador",
+      "usuarios": "Administrador:completo, Crédito y Cobro:consulta"
+    },
+    {
+      "id": "mod-garantias",
+      "nombre": "Solicitudes de garantía",
+      "plataforma": "web",
+      "acceso": "Administración → Ventas y Pedidos → Solicitudes de Garantía",
+      "dueno": "administrador",
+      "usuarios": "Administrador:completo"
+    },
+    {
+      "id": "mod-presupuestos",
+      "nombre": "Presupuestos anuales",
+      "plataforma": "web",
+      "acceso": "Administración → Finanzas → Presupuestos anuales",
+      "dueno": "administrador",
+      "usuarios": "Administrador:completo, Gerente:parcial",
+      "nota": "El Gerente consulta y aprueba (permisos del PR #131, ya en main)."
+    },
+    {
+      "id": "mod-gastos",
+      "nombre": "Gastos operativos",
+      "plataforma": "web",
+      "acceso": "Administración → Finanzas → Gastos operativos",
+      "dueno": "administrador",
+      "usuarios": "Administrador:completo, Gerente:consulta",
+      "nota": "El Gerente consulta (PR #131, ya en main)."
+    },
+    {
+      "id": "mod-presupuesto-real",
+      "nombre": "Presupuesto vs. real",
+      "plataforma": "web",
+      "acceso": "Administración → Finanzas → Presupuesto vs. real",
+      "dueno": "administrador",
+      "usuarios": "Administrador:completo, Gerente:consulta",
+      "nota": "El Gerente consulta (PR #131, ya en main)."
+    },
+    {
+      "id": "mod-ingresos-egresos",
+      "nombre": "Ingresos y egresos",
+      "plataforma": "web",
+      "acceso": "Administración → Finanzas → Ingresos y Egresos",
+      "dueno": "administrador",
+      "usuarios": "Administrador:completo, Gerente:consulta, Cajero:consulta"
+    },
+    {
+      "id": "mod-proveedores",
+      "nombre": "Proveedores",
+      "plataforma": "web",
+      "acceso": "Administración → Finanzas → Proveedores",
+      "dueno": "administrador",
+      "usuarios": "Administrador:completo, Compras:consulta"
+    },
+    {
+      "id": "mod-ordenes-compra",
+      "nombre": "Órdenes de compra",
+      "plataforma": "web",
+      "acceso": "Administración → Finanzas → Órdenes de compra",
+      "dueno": "administrador",
+      "usuarios": "Administrador:completo, Compras:consulta, Bodeguero:parcial"
+    },
+    {
+      "id": "mod-historico-precios",
+      "nombre": "Histórico de precios",
+      "plataforma": "web",
+      "acceso": "Administración → Finanzas → Histórico de precios",
+      "dueno": "administrador",
+      "usuarios": "Administrador:completo",
+      "nota": "Compras no tiene COMPRAS_PRECIOS_VER: el panel ya no le muestra la opción."
+    },
+    {
+      "id": "mod-planilla",
+      "nombre": "Planilla",
+      "plataforma": "web",
+      "acceso": "Administración → Personal → Planilla",
+      "dueno": "administrador",
+      "usuarios": "Administrador:completo, Gerente:parcial",
+      "nota": "El Gerente consulta y aprueba los cálculos (PLANILLA_VER y PLANILLA_APROBAR). El Supervisor no tiene PLANILLA_VER: el panel no le muestra la opción."
+    },
+    {
+      "id": "mod-roles",
+      "nombre": "Roles",
+      "plataforma": "web",
+      "acceso": "Administración → Seguridad → Roles",
+      "dueno": "administrador",
+      "usuarios": "Administrador:completo"
+    },
+    {
+      "id": "mod-permisos",
+      "nombre": "Permisos",
+      "plataforma": "web",
+      "acceso": "Administración → Seguridad → Permisos",
+      "dueno": "administrador",
+      "usuarios": "Administrador:completo"
+    },
+    {
+      "id": "mod-documentos",
+      "nombre": "Documentos digitales",
+      "plataforma": "web",
+      "acceso": "Administración → Seguridad → Documentos digitales",
+      "dueno": "administrador",
+      "usuarios": "Administrador:completo"
+    },
+    {
+      "id": "mod-alertas-documentales",
+      "nombre": "Alertas documentales",
+      "plataforma": "web",
+      "acceso": "Administración → Seguridad → Alertas documentales",
+      "dueno": "administrador",
+      "usuarios": "Administrador:completo",
+      "nota": "Solo Administrador (el Gerente no tiene el permiso; el panel no se lo muestra)."
+    },
+    {
+      "id": "mod-chat-departamentos",
+      "nombre": "Departamentos del chat",
+      "plataforma": "web",
+      "acceso": "Chat → Administrar departamentos",
+      "dueno": "administrador",
+      "usuarios": "Administrador:completo"
+    },
+    {
+      "id": "mod-app-publicar",
+      "nombre": "Publicar versiones de la aplicación móvil",
+      "plataforma": "web",
+      "acceso": "Administración → Logística y Flota → Aplicación móvil",
+      "dueno": "administrador",
+      "usuarios": "Administrador:completo"
+    },
+    {
+      "id": "mod-devoluciones",
+      "nombre": "Devoluciones",
+      "plataforma": "web",
+      "acceso": "Administración → Inventario → Devoluciones",
+      "dueno": "gerente",
+      "usuarios": "Gerente:completo, Administrador:completo"
+    },
+    {
+      "id": "mod-cuarentena",
+      "nombre": "Cuarentena",
+      "plataforma": "web",
+      "acceso": "Administración → Inventario → Cuarentena",
+      "dueno": "gerente",
+      "usuarios": "Gerente:completo, Administrador:completo"
+    },
+    {
+      "id": "mod-activos",
+      "nombre": "Activos (equipos)",
+      "plataforma": "web",
+      "acceso": "Administración → Inventario → Activos",
+      "dueno": "gerente",
+      "usuarios": "Gerente:completo, Administrador:completo"
+    },
+    {
+      "id": "mod-comodatos",
+      "nombre": "Comodatos",
+      "plataforma": "web",
+      "acceso": "Administración → Logística y Flota → Comodatos",
+      "dueno": "gerente",
+      "usuarios": "Gerente:completo, Administrador:completo, Auditor Interno:consulta (rentabilidad)"
+    },
+    {
+      "id": "mod-promociones",
+      "nombre": "Promociones",
+      "plataforma": "web",
+      "acceso": "Administración → Ventas y Pedidos → Promociones",
+      "dueno": "gerente",
+      "usuarios": "Gerente:completo, Administrador:completo"
+    },
+    {
+      "id": "mod-reclamos",
+      "nombre": "Reclamos",
+      "plataforma": "web",
+      "acceso": "Administración → Clientes → Reclamos",
+      "dueno": "gerente",
+      "usuarios": "Gerente:completo, Administrador:completo"
+    },
+    {
+      "id": "mod-pedidos-retenidos",
+      "nombre": "Pedidos retenidos",
+      "plataforma": "web",
+      "acceso": "Menú superior → Pedidos retenidos",
+      "dueno": "gerente",
+      "usuarios": "Gerente:completo, Administrador:completo"
+    },
+    {
+      "id": "mod-rutas",
+      "nombre": "Rutas y entregas",
+      "plataforma": "web",
+      "acceso": "Administración → Logística y Flota → Rutas y Entregas",
+      "dueno": "gerente",
+      "usuarios": "Gerente:completo, Administrador:completo"
+    },
+    {
+      "id": "mod-tablero-entregas",
+      "nombre": "Tablero de entregas",
+      "plataforma": "web",
+      "acceso": "Administración → Logística y Flota → Tablero de entregas",
+      "dueno": "gerente",
+      "usuarios": "Gerente:completo, Administrador:completo"
+    },
+    {
+      "id": "mod-vehiculos",
+      "nombre": "Vehículos",
+      "plataforma": "web",
+      "acceso": "Administración → Logística y Flota → Vehículos",
+      "dueno": "gerente",
+      "usuarios": "Gerente:completo, Administrador:completo"
+    },
+    {
+      "id": "mod-mantenimiento",
+      "nombre": "Mantenimiento de flota",
+      "plataforma": "web",
+      "acceso": "Administración → Logística y Flota → Mantenimiento",
+      "dueno": "gerente",
+      "usuarios": "Gerente:completo, Administrador:completo"
+    },
+    {
+      "id": "mod-alertas-flota",
+      "nombre": "Alertas de flota",
+      "plataforma": "web",
+      "acceso": "Administración → Logística y Flota → Alertas de flota",
+      "dueno": "gerente",
+      "usuarios": "Gerente:completo, Administrador:completo"
+    },
+    {
+      "id": "mod-tablero-gerencial",
+      "nombre": "Tablero gerencial",
+      "plataforma": "web",
+      "acceso": "Menú superior → Tablero",
+      "dueno": "gerente",
+      "usuarios": "Gerente:completo, Administrador:completo"
+    },
+    {
+      "id": "mod-reporte-ventas",
+      "nombre": "Reporte de ventas",
+      "plataforma": "web",
+      "acceso": "Menú superior → Ventas",
+      "dueno": "gerente",
+      "usuarios": "Gerente:completo, Administrador:completo"
+    },
+    {
+      "id": "mod-desempeno",
+      "nombre": "Desempeño de vendedores",
+      "plataforma": "web",
+      "acceso": "Menú superior → Vendedores",
+      "dueno": "gerente",
+      "usuarios": "Gerente:completo, Administrador:completo"
+    },
+    {
+      "id": "mod-metas",
+      "nombre": "Metas de ventas",
+      "plataforma": "web",
+      "acceso": "Administración → Reportes y Gerencia → Metas de ventas",
+      "dueno": "gerente",
+      "usuarios": "Gerente:completo, Administrador:completo"
+    },
+    {
+      "id": "mod-kpis",
+      "nombre": "Reporte de KPIs",
+      "plataforma": "web",
+      "acceso": "Menú superior → KPIs",
+      "dueno": "gerente",
+      "usuarios": "Gerente:completo, Administrador:completo"
+    },
+    {
+      "id": "mod-empleados",
+      "nombre": "Empleados",
+      "plataforma": "web",
+      "acceso": "Administración → Personal → Empleados",
+      "dueno": "supervisor",
+      "usuarios": "Supervisor:completo, Administrador:completo"
+    },
+    {
+      "id": "mod-licencias",
+      "nombre": "Solicitudes de licencia",
+      "plataforma": "web",
+      "acceso": "Administración → Personal → Solicitudes (licencias)",
+      "dueno": "supervisor",
+      "usuarios": "Supervisor:completo, Administrador:completo"
+    },
+    {
+      "id": "mod-aprobar-jornadas",
+      "nombre": "Aprobar jornadas",
+      "plataforma": "web",
+      "acceso": "Administración → Personal → Aprobar jornadas",
+      "dueno": "supervisor",
+      "usuarios": "Supervisor:completo, Administrador:completo"
+    },
+    {
+      "id": "mod-boletas",
+      "nombre": "Boletas de pago",
+      "plataforma": "web",
+      "acceso": "Administración → Personal → Boletas de pago",
+      "dueno": "supervisor",
+      "usuarios": "Supervisor:completo, Administrador:completo"
+    },
+    {
+      "id": "mod-auditoria",
+      "nombre": "Auditoría",
+      "plataforma": "web",
+      "acceso": "Administración → Seguridad → Auditoría",
+      "dueno": "auditor",
+      "usuarios": "Auditor Interno:consulta, Administrador:completo"
+    },
+    {
+      "id": "mod-pedidos",
+      "nombre": "Pedidos (administración)",
+      "plataforma": "web",
+      "acceso": "Administración → Ventas y Pedidos → Pedidos",
+      "dueno": "empleado",
+      "usuarios": "Empleado:completo, Administrador:completo, Gerente:consulta, Bodeguero:consulta, Facturador:consulta"
+    },
+    {
+      "id": "mod-mi-portal",
+      "nombre": "Mi portal de empleado",
+      "plataforma": "web",
+      "acceso": "Menú superior → Mi portal",
+      "dueno": "empleado",
+      "usuarios": "Empleado:completo, Vendedor:completo, Administrador:completo, Gerente:completo, Supervisor:completo, Auditor Interno:completo, Cajero:completo, Bodeguero:completo, Facturador:completo, Crédito y Cobro:completo, Compras:completo, Soporte:completo, Chofer:completo"
+    },
+    {
+      "id": "mod-mis-jornadas",
+      "nombre": "Mis jornadas (web)",
+      "plataforma": "web",
+      "acceso": "Menú superior → Mis jornadas",
+      "dueno": "empleado",
+      "usuarios": "Empleado:completo, Vendedor:completo"
+    },
+    {
+      "id": "mod-mis-boletas",
+      "nombre": "Mis boletas de pago",
+      "plataforma": "web",
+      "acceso": "Menú superior → Mis boletas",
+      "dueno": "empleado",
+      "usuarios": "Empleado:completo, Vendedor:completo, Administrador:completo, Gerente:completo, Supervisor:completo, Auditor Interno:completo, Cajero:completo, Bodeguero:completo, Facturador:completo, Crédito y Cobro:completo, Compras:completo, Soporte:completo, Chofer:completo"
+    },
+    {
+      "id": "mod-chat",
+      "nombre": "Chat interno",
+      "plataforma": "web",
+      "acceso": "Menú superior → Chat",
+      "dueno": "empleado",
+      "usuarios": "Empleado:completo, Administrador:completo, Gerente:completo, Supervisor:completo, Auditor Interno:completo, Cajero:completo, Bodeguero:completo, Facturador:completo, Crédito y Cobro:completo, Compras:completo, Soporte:completo, Vendedor:completo, Chofer:completo"
+    },
+    {
+      "id": "mod-liquidacion",
+      "nombre": "Liquidación de cobros",
+      "plataforma": "web",
+      "acceso": "Menú superior → Liquidación de cobros",
+      "dueno": "cajero",
+      "usuarios": "Cajero:completo, Administrador:completo, Gerente:completo"
+    },
+    {
+      "id": "mod-movimientos",
+      "nombre": "Movimientos de inventario",
+      "plataforma": "web",
+      "acceso": "Administración → Inventario → Movimientos",
+      "dueno": "bodeguero",
+      "usuarios": "Bodeguero:completo, Administrador:completo, Empleado:completo, Gerente:consulta, Compras:consulta"
+    },
+    {
+      "id": "mod-consultas",
+      "nombre": "Consultas de clientes",
+      "plataforma": "web",
+      "acceso": "Administración → Clientes → Consultas",
+      "dueno": "soporte",
+      "usuarios": "Soporte:completo, Empleado:completo, Administrador:completo"
+    },
+    {
+      "id": "mod-venta-movil",
+      "nombre": "Venta móvil (web)",
+      "plataforma": "web",
+      "acceso": "Menú superior → Venta móvil",
+      "dueno": "vendedor",
+      "usuarios": "Vendedor:completo, Empleado:completo, Administrador:completo"
+    },
+    {
+      "id": "mod-mi-meta",
+      "nombre": "Mi meta",
+      "plataforma": "web",
+      "acceso": "Menú superior → Mi meta",
+      "dueno": "vendedor",
+      "usuarios": "Vendedor:completo"
+    },
+    {
+      "id": "mod-asistente",
+      "nombre": "Asistente virtual",
+      "plataforma": "web",
+      "acceso": "Menú superior → Asistente",
+      "dueno": "vendedor",
+      "usuarios": "Vendedor:completo, Administrador:completo, Gerente:completo, Empleado:completo, Chofer:completo, Bodeguero:completo"
+    },
+    {
+      "id": "mod-mis-entregas",
+      "nombre": "Mis entregas (web)",
+      "plataforma": "web",
+      "acceso": "Menú superior → Mis entregas",
+      "dueno": "chofer",
+      "usuarios": "Chofer:completo, Administrador:consulta"
+    },
+    {
+      "id": "mod-kilometraje",
+      "nombre": "Kilometraje (web)",
+      "plataforma": "web",
+      "acceso": "Menú superior → Kilometraje (también en Administración → Logística y Flota)",
+      "dueno": "chofer",
+      "usuarios": "Chofer:completo, Administrador:completo"
+    },
+    {
+      "id": "mod-registro",
+      "nombre": "Crear una cuenta de cliente",
+      "plataforma": "web",
+      "acceso": "Menú superior → Registro",
+      "dueno": "cliente",
+      "usuarios": "Cliente:completo"
+    },
+    {
+      "id": "mod-tienda",
+      "nombre": "Tienda en línea",
+      "plataforma": "web",
+      "acceso": "Menú superior → Tienda",
+      "dueno": "cliente",
+      "usuarios": "Cliente:completo"
+    },
+    {
+      "id": "mod-carrito",
+      "nombre": "Carrito y pago",
+      "plataforma": "web",
+      "acceso": "Menú superior → Carrito",
+      "dueno": "cliente",
+      "usuarios": "Cliente:completo"
+    },
+    {
+      "id": "mod-mis-pedidos",
+      "nombre": "Mis pedidos",
+      "plataforma": "web",
+      "acceso": "Mi cuenta → Mis pedidos",
+      "dueno": "cliente",
+      "usuarios": "Cliente:completo"
+    },
+    {
+      "id": "mod-mis-garantias",
+      "nombre": "Mis garantías",
+      "plataforma": "web",
+      "acceso": "Mi cuenta → Mis garantías",
+      "dueno": "cliente",
+      "usuarios": "Cliente:completo"
+    },
+    {
+      "id": "mod-estado-cuenta",
+      "nombre": "Estado de cuenta",
+      "plataforma": "web",
+      "acceso": "Mi cuenta → Estado de cuenta",
+      "dueno": "cliente",
+      "usuarios": "Cliente:completo"
+    },
+    {
+      "id": "app-mis-rutas",
+      "nombre": "Mis rutas",
+      "plataforma": "app",
+      "acceso": "Inicio → Operación en ruta → Mis rutas",
+      "dueno": "app",
+      "usuarios": "Chofer:completo"
+    },
+    {
+      "id": "app-kilometraje",
+      "nombre": "Kilometraje",
+      "plataforma": "app",
+      "acceso": "Inicio → Operación en ruta → Kilometraje",
+      "dueno": "app",
+      "usuarios": "Chofer:completo"
+    },
+    {
+      "id": "app-por-enviar",
+      "nombre": "Por enviar (trabajo sin señal)",
+      "plataforma": "app",
+      "acceso": "Inicio → Operación en ruta → Por enviar",
+      "dueno": "app",
+      "usuarios": "Chofer:completo"
+    },
+    {
+      "id": "app-preparar",
+      "nombre": "Pedidos por preparar",
+      "plataforma": "app",
+      "acceso": "Inicio → Bodega → Pedidos por preparar",
+      "dueno": "app",
+      "usuarios": "Bodeguero:completo, Administrador:completo"
+    },
+    {
+      "id": "app-recepcion",
+      "nombre": "Recepción de compras",
+      "plataforma": "app",
+      "acceso": "Inicio → Bodega → Recepción de compras",
+      "dueno": "app",
+      "usuarios": "Bodeguero:completo, Administrador:completo"
+    },
+    {
+      "id": "app-movimientos",
+      "nombre": "Movimientos de inventario",
+      "plataforma": "app",
+      "acceso": "Inicio → Bodega → Movimientos de inventario",
+      "dueno": "app",
+      "usuarios": "Bodeguero:completo, Empleado:completo, Administrador:completo"
+    },
+    {
+      "id": "app-inventario",
+      "nombre": "Consulta de inventario",
+      "plataforma": "app",
+      "acceso": "Inicio → Bodega → Consulta de inventario",
+      "dueno": "app",
+      "usuarios": "Bodeguero:consulta, Gerente:consulta, Empleado:consulta, Compras:consulta, Administrador:consulta"
+    },
+    {
+      "id": "app-metricas",
+      "nombre": "Métricas del negocio",
+      "plataforma": "app",
+      "acceso": "Inicio → Gestión → Métricas del negocio",
+      "dueno": "app",
+      "usuarios": "Gerente:consulta, Administrador:consulta"
+    },
+    {
+      "id": "app-retenidos",
+      "nombre": "Pedidos retenidos",
+      "plataforma": "app",
+      "acceso": "Inicio → Gestión → Pedidos retenidos",
+      "dueno": "app",
+      "usuarios": "Gerente:completo, Administrador:completo"
+    },
+    {
+      "id": "app-rutas",
+      "nombre": "Rutas y choferes",
+      "plataforma": "app",
+      "acceso": "Inicio → Gestión → Rutas y choferes",
+      "dueno": "app",
+      "usuarios": "Gerente:completo, Administrador:completo"
+    },
+    {
+      "id": "app-pedidos",
+      "nombre": "Pedidos",
+      "plataforma": "app",
+      "acceso": "Inicio → Gestión → Pedidos",
+      "dueno": "app",
+      "usuarios": "Empleado:completo, Gerente:consulta, Facturador:consulta, Administrador:completo"
+    },
+    {
+      "id": "app-productos",
+      "nombre": "Productos",
+      "plataforma": "app",
+      "acceso": "Inicio → Gestión → Productos",
+      "dueno": "app",
+      "usuarios": "Administrador:completo"
+    },
+    {
+      "id": "app-ventas",
+      "nombre": "Ventas en campo",
+      "plataforma": "app",
+      "acceso": "Inicio → Ventas → Ventas en campo",
+      "dueno": "app",
+      "usuarios": "Vendedor:completo, Empleado:completo, Administrador:completo"
+    },
+    {
+      "id": "app-liquidacion",
+      "nombre": "Liquidación de rutas",
+      "plataforma": "app",
+      "acceso": "Inicio → Oficina → Liquidación de rutas",
+      "dueno": "app",
+      "usuarios": "Cajero:completo, Gerente:completo, Administrador:completo"
+    },
+    {
+      "id": "app-facturas",
+      "nombre": "Facturas",
+      "plataforma": "app",
+      "acceso": "Inicio → Oficina → Facturas",
+      "dueno": "app",
+      "usuarios": "Facturador:consulta, Empleado:consulta, Administrador:consulta"
+    },
+    {
+      "id": "app-credito",
+      "nombre": "Crédito de clientes",
+      "plataforma": "app",
+      "acceso": "Inicio → Oficina → Crédito de clientes",
+      "dueno": "app",
+      "usuarios": "Crédito y Cobro:consulta, Administrador:consulta"
+    },
+    {
+      "id": "app-compras",
+      "nombre": "Compras",
+      "plataforma": "app",
+      "acceso": "Inicio → Oficina → Compras",
+      "dueno": "app",
+      "usuarios": "Compras:consulta, Administrador:consulta"
+    },
+    {
+      "id": "app-consultas",
+      "nombre": "Consultas de clientes",
+      "plataforma": "app",
+      "acceso": "Inicio → Oficina → Consultas de clientes",
+      "dueno": "app",
+      "usuarios": "Soporte:completo, Empleado:completo, Administrador:completo"
+    },
+    {
+      "id": "app-bitacora",
+      "nombre": "Bitácora",
+      "plataforma": "app",
+      "acceso": "Inicio → Oficina → Bitácora",
+      "dueno": "app",
+      "usuarios": "Auditor Interno:consulta, Administrador:consulta"
+    },
+    {
+      "id": "app-aprobar-jornadas",
+      "nombre": "Aprobar jornadas",
+      "plataforma": "app",
+      "acceso": "Inicio → Personal → Aprobar jornadas",
+      "dueno": "app",
+      "usuarios": "Supervisor:completo, Administrador:completo"
+    },
+    {
+      "id": "app-mis-jornadas",
+      "nombre": "Mis jornadas",
+      "plataforma": "app",
+      "acceso": "Inicio → Personal → Mis jornadas",
+      "dueno": "app",
+      "usuarios": "Gerente:completo, Supervisor:completo, Auditor Interno:completo, Empleado:completo, Cajero:completo, Bodeguero:completo, Facturador:completo, Crédito y Cobro:completo, Compras:completo, Soporte:completo, Vendedor:completo, Chofer:completo, Administrador:completo"
+    }
+  ],
+  "comunes": [
+    {
+      "id": "gen-login",
+      "nombre": "Iniciar sesión"
+    },
+    {
+      "id": "gen-recuperar",
+      "nombre": "Recuperar la contraseña"
+    },
+    {
+      "id": "gen-navegacion",
+      "nombre": "Navegación y menú según el puesto"
+    },
+    {
+      "id": "gen-perfil",
+      "nombre": "Mi perfil"
+    },
+    {
+      "id": "gen-notificaciones",
+      "nombre": "Notificaciones"
+    },
+    {
+      "id": "gen-cerrar-sesion",
+      "nombre": "Cerrar sesión"
+    },
+    {
+      "id": "gen-app-instalar",
+      "nombre": "Instalar la aplicación móvil"
+    },
+    {
+      "id": "gen-app-login",
+      "nombre": "Iniciar sesión en la aplicación móvil"
+    }
+  ]
+}

@@ -13,7 +13,7 @@
             <div class="admin-page-header d-flex flex-column flex-md-row justify-content-between align-items-md-center">
                 <div>
                     <h2 class="mb-2"><i class="fa fa-bell mr-2"></i>Notificaciones</h2>
-                    <p class="mb-0">Avisos de tu cuenta, como las rutas que te asignan o te reasignan.</p>
+                    <p class="mb-0">Avisos de su cuenta, como las rutas que le asignan o le reasignan.</p>
                 </div>
                 @if (Model != null && Model.Any(n => !n.Leida))
                 {
@@ -30,7 +30,7 @@
         <div class="col-12">
             @if (Model == null || !Model.Any())
             {
-                <div class="alert alert-info">No tienes notificaciones.</div>
+                <div class="alert alert-info">No tiene notificaciones.</div>
             }
             else
             {

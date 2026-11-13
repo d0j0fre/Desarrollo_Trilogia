@@ -53,16 +53,103 @@
                             {
                                 @foreach (var a in Model.Alertas)
                                 {
-                                    var badge = a.Severidad == "Vencido" ? "danger" : "warning";
-                                    var texto = a.Severidad == "Vencido"
-                                        ? "Vencido"
-                                        : (a.DiasRestantes.HasValue ? $"En {a.DiasRestantes} día(s)" : "Por vencer");
+                                    var badge = a.Severidad switch { "Vencido" => "danger", "EnCurso" => "info", "Pendiente" => "dark", _ => "warning" };
+                                    var texto = a.Severidad switch
+                                    {
+                                        "Vencido" => "Vencido",
+                                        "EnCurso" => "En reparación",
+                                        "Pendiente" => "Pendiente",
+                                        _ => a.DiasRestantes.HasValue ? $"En {a.DiasRestantes} día(s)" : "Por vencer"
+                                    };
                                     var icono = a.Categoria == "Documento" ? "fa-file-contract" : "fa-wrench";
                                     <tr>
                                         <td><i class="fa @icono mr-2 text-muted"></i>@a.Categoria</td>
                                         <td class="font-weight-bold">@a.VehiculoPlaca</td>
                                         <td>@a.Detalle</td>
                                         <td class="text-center"><span class="admin-badge-soft @badge">@texto</span></td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="admin-table-wrapper mt-4">
+                <div class="p-3 border-bottom d-flex justify-content-between align-items-center flex-wrap">
+                    <h5 class="mb-0">Documentos legales</h5>
+                    <form asp-action="Alerts" method="get" class="form-inline">
+                        <input type="hidden" name="diasAviso" value="@Model.DiasAviso" />
+                        <label class="mr-2 mb-0" for="docVehiculo">Vehículo</label>
+                        <select id="docVehiculo" name="vehiculoId" class="form-control form-control-sm mr-2" onchange="this.form.submit()">
+                            <option value="">Todos</option>
+                            @foreach (var v in vehiculos)
+                            {
+                                <option value="@v.VehiculoId" selected="@(Model.VehiculoId == v.VehiculoId)">@v.Placa</option>
+                            }
+                        </select>
+                        <noscript><button type="submit" class="btn btn-sm btn-ds-search">Filtrar</button></noscript>
+                    </form>
+                </div>
+                <p class="text-muted small px-3 pt-2 mb-0">Solo el documento vigente (el más reciente de cada vehículo y tipo) genera alertas; los anteriores quedan como historial.</p>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Vehículo</th>
+                                <th>Tipo</th>
+                                <th>Vence</th>
+                                <th>Observaciones</th>
+                                <th class="text-center">Estado</th>
+                                <th class="text-center">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!Model.Documentos.Any())
+                            {
+                                <tr><td colspan="6" class="text-center text-muted py-4">No hay documentos registrados.</td></tr>
+                            }
+                            else
+                            {
+                                @foreach (var d in Model.Documentos)
+                                {
+                                    <tr class="@(d.EsVigente ? "" : "text-muted")">
+                                        <td class="font-weight-bold">@d.VehiculoPlaca</td>
+                                        <td>@d.Tipo</td>
+                                        <td>@d.FechaVencimiento.ToString("dd/MM/yyyy")</td>
+                                        <td>@d.Observaciones</td>
+                                        <td class="text-center">
+                                            @if (!d.EsVigente)
+                                            {
+                                                <span class="admin-badge-soft dark">Reemplazado</span>
+                                            }
+                                            else if (d.DiasRestantes < 0)
+                                            {
+                                                <span class="admin-badge-soft danger">Vencido</span>
+                                            }
+                                            else if (d.DiasRestantes <= Model.DiasAviso)
+                                            {
+                                                <span class="admin-badge-soft warning">En @d.DiasRestantes día(s)</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="admin-badge-soft success">Vigente</span>
+                                            }
+                                        </td>
+                                        <td class="text-center text-nowrap">
+                                            <a asp-action="EditDocument" asp-route-id="@d.DocumentoId" class="btn btn-sm btn-ds-edit" title="Editar" aria-label="Editar el documento @d.Tipo de @d.VehiculoPlaca"><i class="fa fa-edit"></i></a>
+                                            <form asp-action="DeleteDocument" method="post" class="d-inline"
+                                                  data-s3-confirm="¿Dar de baja el documento @d.Tipo de @d.VehiculoPlaca? Dejará de contarse en las alertas."
+                                                  data-s3-confirm-title="Dar de baja documento"
+                                                  data-s3-confirm-type="danger"
+                                                  data-s3-confirm-ok="Sí, dar de baja"
+                                                  data-s3-confirm-cancel="Cancelar">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="documentoId" value="@d.DocumentoId" />
+                                                <input type="hidden" name="vehiculoId" value="@Model.VehiculoId" />
+                                                <button type="submit" class="btn btn-sm btn-ds-danger" title="Dar de baja" aria-label="Dar de baja el documento @d.Tipo de @d.VehiculoPlaca"><i class="fa fa-trash"></i></button>
+                                            </form>
+                                        </td>
                                     </tr>
                                 }
                             }

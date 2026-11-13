@@ -1,0 +1,221 @@
+{
+  "carpeta": "soporte",
+  "_datos": "Usa la consulta #1 (María Fernanda Rojas, Consulta sobre mayoreo) de la base demo; cada captura la deja Pendiente.",
+  "capturas": [
+    {
+      "id": "sop-menu-01",
+      "usuario": "soporte",
+      "url": "/Home/Index",
+      "acciones": [
+        {
+          "clicSinEsperar": ".admin-accordion-dropdown > a"
+        },
+        {
+          "esperar": 400
+        },
+        {
+          "abrir": "details.acc-sec:has(.acc-sec__label:text-is(\"Clientes\"))"
+        },
+        {
+          "esperar": 300
+        }
+      ],
+      "recorte": {
+        "selector": ".admin-acc-menu",
+        "margen": [
+          80,
+          70,
+          16,
+          40
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": ".admin-accordion-dropdown > a"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "details.acc-sec:has(.acc-sec__label:text-is(\"Clientes\")) > summary"
+        }
+      ]
+    },
+    {
+      "id": "sop-consultas-01",
+      "usuario": "soporte",
+      "sql": "UPDATE Consultas SET Estado=N'Pendiente', RespuestaInterna=NULL, AtendidoPorUsuarioId=NULL, AtendidoPorNombre=NULL, FechaAtencion=NULL WHERE ConsultaId=1;",
+      "url": "/Consultations/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "select[name=estado]",
+            "Pendiente"
+          ]
+        },
+        {
+          "rellenar": [
+            "input[name=buscar]",
+            "mayoreo"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main form[method=get]",
+        "margen": [
+          44,
+          16,
+          16,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "select[name=estado]",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "input[name=buscar]",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main form[method=get] button[type=submit]",
+          "posicion": "arriba"
+        }
+      ]
+    },
+    {
+      "id": "sop-consultas-02",
+      "usuario": "soporte",
+      "sql": "UPDATE Consultas SET Estado=N'Pendiente', RespuestaInterna=NULL, AtendidoPorUsuarioId=NULL, AtendidoPorNombre=NULL, FechaAtencion=NULL WHERE ConsultaId=1;",
+      "url": "/Consultations/Index?estado=Pendiente",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main .admin-table-wrapper",
+        "margen": 10
+      },
+      "anotaciones": [
+        {
+          "tipo": "flecha",
+          "selector": "main table tbody tr:has-text(\"Consulta sobre mayoreo\") a:has-text(\"Ver\")",
+          "desde": "izquierda",
+          "largo": 60,
+          "recuadro": true
+        }
+      ]
+    },
+    {
+      "id": "sop-consultas-03",
+      "usuario": "soporte",
+      "sql": "UPDATE Consultas SET Estado=N'Pendiente', RespuestaInterna=NULL, AtendidoPorUsuarioId=NULL, AtendidoPorNombre=NULL, FechaAtencion=NULL WHERE ConsultaId=1;",
+      "url": "/Consultations/Details/1",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "select[name=Estado]",
+            "Atendida"
+          ]
+        },
+        {
+          "rellenar": [
+            "textarea[name=RespuestaInterna]",
+            "Se llamó a la cliente. Se le envió la lista de precios de mayoreo por correo."
+          ]
+        },
+        {
+          "js": "document.activeElement && document.activeElement.blur()"
+        }
+      ],
+      "recorte": {
+        "selector": "main .row:has(form[action*=UpdateStatus])",
+        "margen": 10
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main h4 >> nth=0"
+        },
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "select[name=Estado]",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "textarea[name=RespuestaInterna]",
+          "posicion": "izquierda"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "main form[action*=UpdateStatus] button[type=submit]",
+          "posicion": "izquierda"
+        }
+      ]
+    },
+    {
+      "id": "sop-consultas-04",
+      "usuario": "soporte",
+      "sql": "UPDATE Consultas SET Estado=N'Pendiente', RespuestaInterna=NULL, AtendidoPorUsuarioId=NULL, AtendidoPorNombre=NULL, FechaAtencion=NULL WHERE ConsultaId=1;",
+      "url": "/Consultations/Details/1",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "select[name=Estado]",
+            "Atendida"
+          ]
+        },
+        {
+          "rellenar": [
+            "textarea[name=RespuestaInterna]",
+            "Se llamó a la cliente. Se le envió la lista de precios de mayoreo por correo."
+          ]
+        },
+        {
+          "clic": "main form[action*=UpdateStatus] button[type=submit]"
+        }
+      ],
+      "recorte": {
+        "selector": "main .alert-warning",
+        "margen": 16
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .alert-warning"
+        }
+      ]
+    },
+    {
+      "id": "sop-consultas-05",
+      "usuario": "soporte",
+      "_nota": "Va después de la 04: la consulta ya fue atendida.",
+      "url": "/Consultations/Details/1",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main .admin-card >> nth=0",
+        "margen": 10
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main .admin-badge-soft"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "main div:has(> strong:has-text(\"Última atención\"))"
+        }
+      ]
+    }
+  ]
+}

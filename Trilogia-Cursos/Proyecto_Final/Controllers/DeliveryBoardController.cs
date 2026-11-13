@@ -49,14 +49,23 @@ public sealed class DeliveryBoardController : Controller
             })
             .ToArray();
 
+        // BUG-10-02 (CU-104): además de las rutas y los contadores, el tablero lista los pedidos
+        // que están En ruta y los que siguen pendientes de entrega.
+        var orders = await _logistics.GetBoardOrdersAsync(cancellationToken);
+        var enRuta = orders.Where(order => order.Grupo == "EnRuta").ToArray();
+        var pendientes = orders.Where(order => order.Grupo == "Pendiente").ToArray();
+
         return new DeliveryBoardViewModel
         {
             GeneradoUtc = DateTimeOffset.UtcNow,
             RutasActivas = rows.Count(route => route.Estado is "Despachada" or "Planificada"),
-            EntregasPendientes = rows.Sum(route => route.Pendientes),
+            EntregasPendientes = pendientes.Length,
+            PedidosEnRuta = enRuta.Length,
             EntregasCompletadas = rows.Sum(route => route.Entregados),
             EntregasFallidas = rows.Sum(route => route.Fallidos),
-            Rutas = rows
+            Rutas = rows,
+            EnRuta = enRuta,
+            Pendientes = pendientes
         };
     }
 }

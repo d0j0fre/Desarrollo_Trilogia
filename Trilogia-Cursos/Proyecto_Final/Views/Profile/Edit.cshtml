@@ -9,7 +9,7 @@
         <div class="col-12">
             <div class="admin-page-header">
                 <h2 class="mb-2">Mi Perfil</h2>
-                <p>Actualiza tu informacion personal basica.</p>
+                <p>Actualice su información personal básica.</p>
             </div>
         </div>
     </div>
@@ -35,7 +35,7 @@
 
                     <div class="form-group">
                         <label asp-for="Telefono" class="font-weight-bold"></label>
-                        <input asp-for="Telefono" class="form-control" autocomplete="tel" />
+                        <input asp-for="Telefono" class="form-control" autocomplete="tel" inputmode="tel" maxlength="30" />
                         <span asp-validation-for="Telefono" class="text-danger"></span>
                     </div>
 

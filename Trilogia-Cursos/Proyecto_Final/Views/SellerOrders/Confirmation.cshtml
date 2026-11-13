@@ -1,6 +1,11 @@
 @model Proyecto_Final.Models.Admin.OrderDetailViewModel
+@using Microsoft.AspNetCore.Http
+@inject Proyecto_Final.Services.NavigationMenuService MenuAccess
 @{
     ViewData["Title"] = "Pedido registrado";
+    // G3-02: quien administra pedidos abre el detalle completo; el vendedor, el de solo lectura de sus pedidos.
+    var detalleController = await MenuAccess.CanOpenAsync(Context.Session.GetString("UserRole"), "OrdersAdmin", "Detail")
+        ? "OrdersAdmin" : "SellerOrders";
     var numeroFactura = ViewBag.NumeroFactura as string ?? Model.NumeroFactura;
 }
 
@@ -25,7 +30,7 @@
                 </div>
                 <div class="col-md-6 mb-3">
                     <div class="admin-card text-center py-4">
-                        <div class="text-muted small mb-1">Factura generada (CU-091)</div>
+                        <div class="text-muted small mb-1">Factura generada</div>
                         <div class="font-weight-bold text-success" style="font-size:1.3rem;">
                             @(string.IsNullOrWhiteSpace(numeroFactura) ? "—" : numeroFactura)
                         </div>
@@ -60,7 +65,7 @@
                     </div>
                     <div class="col-md-6 mb-2">
                         <span class="text-muted small d-block">Estado</span>
-                        <span class="admin-badge-soft warning">@Model.Estado</span>
+                        <span class="admin-badge-soft warning">@Proyecto_Final.Services.OrderStatusFlow.Name(Model.Estado)</span>
                     </div>
                     <div class="col-md-6 mb-2">
                         <span class="text-muted small d-block">Tipo de entrega</span>
@@ -109,7 +114,7 @@
                 <a asp-controller="SellerOrders" asp-action="MyOrders" class="btn btn-ds-view btn-lg">
                     <i class="fa fa-list mr-1"></i> Mis pedidos
                 </a>
-                <a asp-controller="OrdersAdmin" asp-action="Detail" asp-route-id="@Model.PedidoId" class="btn btn-ds-view btn-lg">
+                <a asp-controller="@detalleController" asp-action="Detail" asp-route-id="@Model.PedidoId" class="btn btn-ds-view btn-lg">
                     <i class="fa fa-eye mr-1"></i> Ver detalle completo
                 </a>
             </div>

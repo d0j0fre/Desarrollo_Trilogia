@@ -9,6 +9,9 @@ public interface IInventoryIntelligenceService
     Task<InventoryIntelligenceViewModel> GetAsync(
         InventoryIntelligenceFilterViewModel filter,
         CancellationToken cancellationToken = default);
+
+    /// <summary>Categorías de producto para el filtro de la tendencia estacional.</summary>
+    Task<List<string>> GetCategoriesAsync(CancellationToken cancellationToken = default);
 }
 
 public sealed class InventoryIntelligenceDbService : IInventoryIntelligenceService
@@ -38,7 +41,30 @@ public sealed class InventoryIntelligenceDbService : IInventoryIntelligenceServi
         await LoadSlowMovingAsync(connection, model, cancellationToken);
         await LoadSeasonalAsync(connection, model, cancellationToken);
         model.TendenciaEstacional = InventoryIntelligencePolicy.NormalizeTwelveMonths(model.TendenciaEstacional);
+        model.Categorias = await LoadCategoriesAsync(connection, cancellationToken);
         return model;
+    }
+
+    public async Task<List<string>> GetCategoriesAsync(CancellationToken cancellationToken = default)
+    {
+        await using var connection = new SqlConnection(_connectionString);
+        await connection.OpenAsync(cancellationToken);
+        return await LoadCategoriesAsync(connection, cancellationToken);
+    }
+
+    private static async Task<List<string>> LoadCategoriesAsync(
+        SqlConnection connection,
+        CancellationToken cancellationToken)
+    {
+        var categories = new List<string>();
+        await using var command = Procedure("dbo.sp_Store_GetCategories", connection);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            categories.Add(reader.GetString(0));
+        }
+
+        return categories;
     }
 
     private static async Task LoadSuggestionsAsync(
@@ -100,6 +126,8 @@ public sealed class InventoryIntelligenceDbService : IInventoryIntelligenceServi
         await using var command = Procedure("dbo.sp_Admin_GetSeasonalSalesTrend", connection);
         command.Parameters.Add("@AnioInicio", SqlDbType.Int).Value = model.Filter.StartYear;
         command.Parameters.Add("@AnioFin", SqlDbType.Int).Value = model.Filter.EndYear;
+        command.Parameters.Add("@Categoria", SqlDbType.NVarChar, 100).Value =
+            string.IsNullOrWhiteSpace(model.Filter.Category) ? DBNull.Value : model.Filter.Category.Trim();
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         while (await reader.ReadAsync(cancellationToken))
         {

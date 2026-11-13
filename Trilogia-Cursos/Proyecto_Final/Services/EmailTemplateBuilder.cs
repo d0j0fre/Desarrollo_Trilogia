@@ -11,10 +11,10 @@ namespace Proyecto_Final.Services
 
             var contenido = $@"
                 <p style='margin:0 0 16px;color:#374151;font-size:15px;line-height:1.7;'>
-                    Hola <strong>{nombreSeguro}</strong>, recibimos una solicitud para restablecer la contrasenna de tu cuenta.
+                    Hola <strong>{nombreSeguro}</strong>, recibimos una solicitud para restablecer la contrasenna de su cuenta.
                 </p>
                 <p style='margin:0 0 20px;color:#374151;font-size:15px;line-height:1.7;'>
-                    Para continuar, presiona el siguiente boton. Por seguridad, este enlace vence en <strong>30 minutos</strong>.
+                    Para continuar, presione el siguiente boton. Por seguridad, este enlace vence en <strong>30 minutos</strong>.
                 </p>
                 <div style='margin:26px 0;text-align:center;'>
                     <a href='{resetUrlSeguro}' style='display:inline-block;background:#d4af37;color:#111827;text-decoration:none;font-weight:800;padding:14px 24px;border-radius:14px;font-size:15px;'>
@@ -22,7 +22,7 @@ namespace Proyecto_Final.Services
                     </a>
                 </div>
                 <p style='margin:18px 0 0;color:#6b7280;font-size:13px;line-height:1.6;'>
-                    Si no solicitaste este cambio, puedes ignorar este correo. Tu contrasenna actual seguira funcionando.
+                    Si no solicitó este cambio, puede ignorar este correo. Su contrasenna actual seguira funcionando.
                 </p>";
 
             return BuildBaseTemplate(
@@ -40,7 +40,7 @@ namespace Proyecto_Final.Services
 
             var contenido = $@"
                 <p style='margin:0 0 16px;color:#374151;font-size:15px;line-height:1.7;'>
-                    Hola <strong>{nombreSeguro}</strong>, tu compra fue procesada correctamente y adjuntamos el resumen de tu comprobante.
+                    Hola <strong>{nombreSeguro}</strong>, su compra fue procesada correctamente y adjuntamos el resumen de su comprobante.
                 </p>
 
                 <table role='presentation' width='100%' cellspacing='0' cellpadding='0' style='border-collapse:collapse;margin:0 0 20px;'>
@@ -76,7 +76,7 @@ namespace Proyecto_Final.Services
                 </div>
 
                 <p style='margin:18px 0 0;color:#6b7280;font-size:13px;line-height:1.6;'>
-                    Puedes consultar el detalle completo de tu comprobante desde el portal del cliente, en la seccion Mis pedidos.
+                    Puede consultar el detalle completo de su comprobante desde el portal del cliente, en la seccion Mis pedidos.
                 </p>";
 
             return BuildBaseTemplate(
@@ -147,7 +147,7 @@ namespace Proyecto_Final.Services
 
             var contenido = $@"
                 <p style='margin:0 0 18px;color:#374151;font-size:15px;line-height:1.7;'>
-                    Hola <strong>{nombreSeguro}</strong>, recibimos tu consulta y nuestro equipo le dara seguimiento. Este es el resumen de lo que nos enviaste.
+                    Hola <strong>{nombreSeguro}</strong>, recibimos su consulta y nuestro equipo le dara seguimiento. Este es el resumen de lo que nos envió.
                 </p>
 
                 <table role='presentation' width='100%' cellspacing='0' cellpadding='0' style='border-collapse:collapse;margin:0 0 20px;'>
@@ -165,11 +165,11 @@ namespace Proyecto_Final.Services
                 </div>";
 
             return BuildBaseTemplate(
-                titulo: "Recibimos tu consulta",
+                titulo: "Recibimos su consulta",
                 subtitulo: asuntoSeguro,
                 badge: "Contacto",
                 contenido: contenido,
-                notaInferior: "Te avisaremos por este medio cuando tu consulta sea resuelta.");
+                notaInferior: "Le avisaremos por este medio cuando su consulta sea resuelta.");
         }
 
         public static string BuildConsultationResolvedEmail(string nombre, string asunto, string estado)
@@ -180,7 +180,7 @@ namespace Proyecto_Final.Services
 
             var contenido = $@"
                 <p style='margin:0 0 18px;color:#374151;font-size:15px;line-height:1.7;'>
-                    Hola <strong>{nombreSeguro}</strong>, tu consulta fue atendida por nuestro equipo.
+                    Hola <strong>{nombreSeguro}</strong>, su consulta fue atendida por nuestro equipo.
                 </p>
 
                 <table role='presentation' width='100%' cellspacing='0' cellpadding='0' style='border-collapse:collapse;margin:0 0 20px;'>
@@ -202,11 +202,11 @@ namespace Proyecto_Final.Services
                 </table>";
 
             return BuildBaseTemplate(
-                titulo: "Tu consulta fue resuelta",
+                titulo: "Su consulta fue resuelta",
                 subtitulo: asuntoSeguro,
                 badge: "Contacto",
                 contenido: contenido,
-                notaInferior: "Si necesitas mas ayuda, puedes enviarnos una nueva consulta desde el sitio web.");
+                notaInferior: "Si necesita mas ayuda, puede enviarnos una nueva consulta desde el sitio web.");
         }
 
         private static string BuildBaseTemplate(string titulo, string subtitulo, string badge, string contenido, string notaInferior)

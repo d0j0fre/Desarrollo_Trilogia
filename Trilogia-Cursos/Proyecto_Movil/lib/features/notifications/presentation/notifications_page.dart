@@ -15,7 +15,7 @@ class NotificationsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final inbox = ref.watch(notificationsInboxProvider);
-    final unread = inbox.value?.unread ?? 0;
+    final unread = inbox.valueOrNull?.unread ?? 0;
 
     return Scaffold(
       appBar: AppBar(
@@ -27,7 +27,9 @@ class NotificationsPage extends ConsumerWidget {
                 await ref.read(notificationsApiProvider).markAllRead();
                 ref.invalidate(notificationsInboxProvider);
               },
-              child: const Text('Marcar leídas', style: TextStyle(color: BrandColors.white)),
+              // La barra es clara (AppBarTheme usa BrandColors.surface): el texto toma el
+              // color del tema de TextButton, no blanco, para que se lea.
+              child: const Text('Marcar leídas'),
             ),
         ],
       ),
@@ -37,7 +39,7 @@ class NotificationsPage extends ConsumerWidget {
         spacing: 8,
         emptyIcon: Icons.notifications_none_rounded,
         emptyTitle: 'Sin notificaciones',
-        emptyMessage: 'Aquí aparecen los avisos de tu cuenta, como las rutas que te asignan.',
+        emptyMessage: 'Aquí aparecen los avisos de su cuenta, como las rutas que le asignan.',
         itemBuilder: (context, item) => Card(
           child: ListTile(
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -55,7 +57,7 @@ class NotificationsPage extends ConsumerWidget {
               children: [
                 Text(item.message),
                 if (item.entityType == 'Chat')
-                  Text('Respondé desde Chat en el portal web.', style: Theme.of(context).textTheme.bodySmall),
+                  Text('Responda desde Chat en el portal web.', style: Theme.of(context).textTheme.bodySmall),
                 const SizedBox(height: 4),
                 Text(Fmt.shortDateTime(item.createdAt), style: Theme.of(context).textTheme.bodySmall),
               ],

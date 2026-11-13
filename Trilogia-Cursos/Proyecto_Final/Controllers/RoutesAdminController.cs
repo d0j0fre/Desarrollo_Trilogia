@@ -67,7 +67,7 @@ namespace Proyecto_Final.Controllers
             {
                 var (rutaId, codigo) = await _logistics.CreateRouteAsync(
                     model.Zona, model.ChoferUsuarioId, model.VehiculoId, model.Observaciones,
-                    model.PedidosSeleccionados, usuarioId, usuarioNombre);
+                    model.PedidosSeleccionados, usuarioId, usuarioNombre, model.Prioridades);
 
                 await RegistrarAuditoriaAsync(
                     "Crear ruta", "Rutas",
@@ -79,7 +79,7 @@ namespace Proyecto_Final.Controllers
             catch (SqlException ex) when (ex.Number >= 50000)
             {
                 _logger.LogWarning(ex, "La base de datos rechazó una operación de negocio.");
-                ModelState.AddModelError(string.Empty, "No fue posible completar la operación solicitada.");
+                ModelState.AddModelError(string.Empty, BusinessErrors.MessageOr(ex, "No fue posible completar la operación solicitada."));
                 await PopulateCreateOptionsAsync(model);
                 return View(model);
             }
@@ -102,10 +102,12 @@ namespace Proyecto_Final.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            var pedidos = await _logistics.GetRouteOrdersAsync(id);
             var vm = new RouteDetailViewModel
             {
                 Cabecera = cabecera,
-                Pedidos = await _logistics.GetRouteOrdersAsync(id)
+                Pedidos = pedidos,
+                Estimacion = RouteEstimator.Estimate(pedidos)
             };
 
             // Solo se pueden agregar pedidos mientras la ruta está en planificación.
@@ -130,7 +132,7 @@ namespace Proyecto_Final.Controllers
             catch (SqlException ex) when (ex.Number >= 50000)
             {
                 _logger.LogWarning(ex, "La base de datos rechazó una operación de negocio.");
-                TempData["ErrorMessage"] = "No fue posible completar la operación solicitada.";
+                TempData["ErrorMessage"] = BusinessErrors.MessageOr(ex, "No fue posible completar la operación solicitada.");
             }
             catch (Exception ex)
             {
@@ -153,7 +155,7 @@ namespace Proyecto_Final.Controllers
             catch (SqlException ex) when (ex.Number >= 50000)
             {
                 _logger.LogWarning(ex, "La base de datos rechazó una operación de negocio.");
-                TempData["ErrorMessage"] = "No fue posible completar la operación solicitada.";
+                TempData["ErrorMessage"] = BusinessErrors.MessageOr(ex, "No fue posible completar la operación solicitada.");
             }
             catch (Exception ex)
             {
@@ -173,6 +175,8 @@ namespace Proyecto_Final.Controllers
             try
             {
                 var destinatarios = await _logistics.DispatchRouteAsync(rutaId, usuarioId, usuarioNombre);
+                // Los pedidos toman el estado de su entrega (En ruta), como cuando el chofer usa la app.
+                var pedidosSincronizados = await SyncOrderStatusAsync(rutaId);
 
                 await RegistrarAuditoriaAsync("Despachar ruta", "Rutas",
                     $"Se despachó la ruta #{rutaId}. {destinatarios.Count} pedido(s) pasaron a En ruta.");
@@ -183,12 +187,19 @@ namespace Proyecto_Final.Controllers
                     NotificarClienteSeguro(correo, nombre, pedidoId, "En ruta");
                 }
 
-                TempData["SuccessMessage"] = "Ruta despachada. Los pedidos están En ruta.";
+                if (pedidosSincronizados)
+                {
+                    TempData["SuccessMessage"] = "Ruta despachada. Los pedidos están En ruta.";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "La ruta se despachó, pero no se pudo actualizar el estado de sus pedidos a En ruta. Avise a soporte.";
+                }
             }
             catch (SqlException ex) when (ex.Number >= 50000)
             {
                 _logger.LogWarning(ex, "La base de datos rechazó una operación de negocio.");
-                TempData["ErrorMessage"] = "No fue posible completar la operación solicitada.";
+                TempData["ErrorMessage"] = BusinessErrors.MessageOr(ex, "No fue posible completar la operación solicitada.");
             }
             catch (Exception ex)
             {
@@ -214,7 +225,7 @@ namespace Proyecto_Final.Controllers
             catch (SqlException ex) when (ex.Number >= 50000)
             {
                 _logger.LogWarning(ex, "La base de datos rechazó una operación de negocio.");
-                TempData["ErrorMessage"] = "No fue posible completar la operación solicitada.";
+                TempData["ErrorMessage"] = BusinessErrors.MessageOr(ex, "No fue posible completar la operación solicitada.");
             }
             catch (Exception ex)
             {
@@ -231,7 +242,10 @@ namespace Proyecto_Final.Controllers
         {
             try
             {
-                var (puntos, sinCoord) = await _logistics.SequenceRouteAsync(rutaId);
+                // BUG-25-01: sp_Rutas_Secuenciar ya no procesa una ruta con paradas sin coordenada:
+                // la rechaza (54012) diciendo cuántas faltan y no cambia el orden. Ese texto es el
+                // que se muestra; hay que ubicar los puntos en el mapa y volver a secuenciar.
+                var (puntos, _) = await _logistics.SequenceRouteAsync(rutaId);
                 if (puntos == 0)
                 {
                     TempData["ErrorMessage"] = "No hay pedidos pendientes para secuenciar en esta ruta.";
@@ -239,20 +253,14 @@ namespace Proyecto_Final.Controllers
                 else
                 {
                     await RegistrarAuditoriaAsync("Secuenciar ruta", "Rutas", $"Se secuenciaron automáticamente {puntos} punto(s) de la ruta #{rutaId}.");
-                    if (sinCoord > 0)
-                    {
-                        TempData["ErrorMessage"] = $"{sinCoord} de {puntos} punto(s) no tienen coordenada y quedaron al final. Ubícalos en el mapa para que aparezcan en la app del chofer.";
-                    }
-                    else
-                    {
-                        TempData["SuccessMessage"] = $"Ruta secuenciada automáticamente ({puntos} punto(s)). Puede reordenar manualmente antes de despachar.";
-                    }
+                    TempData["SuccessMessage"] =
+                        JoinSentences($"Ruta secuenciada automáticamente ({puntos} punto(s)).", await EstimateTextAsync(rutaId), "Puede reordenar manualmente antes de despachar.");
                 }
             }
             catch (SqlException ex) when (ex.Number >= 50000)
             {
                 _logger.LogWarning(ex, "La base de datos rechazó una operación de negocio.");
-                TempData["ErrorMessage"] = "No fue posible completar la operación solicitada.";
+                TempData["ErrorMessage"] = BusinessErrors.MessageOr(ex, "No fue posible completar la operación solicitada.");
             }
             catch (Exception ex)
             {
@@ -268,7 +276,7 @@ namespace Proyecto_Final.Controllers
         // de la cultura regional del servidor.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SaveSequence(int rutaId, List<int> rutaPedidoId, List<int> secuencia, List<string?> lat, List<string?> lng)
+        public async Task<IActionResult> SaveSequence(int rutaId, List<int> rutaPedidoId, List<int> secuencia, List<string?> lat, List<string?> lng, List<int>? prioridad = null)
         {
             try
             {
@@ -285,7 +293,8 @@ namespace Proyecto_Final.Controllers
                         rutaPedidoId = rutaPedidoId[i],
                         secuencia = i < secuencia.Count ? secuencia[i] : i + 1,
                         lat = latVal,
-                        lng = lngVal
+                        lng = lngVal,
+                        prioridad = prioridad != null && i < prioridad.Count ? prioridad[i] : (int?)null
                     });
                 }
                 var json = System.Text.Json.JsonSerializer.Serialize(items);
@@ -296,7 +305,7 @@ namespace Proyecto_Final.Controllers
             catch (SqlException ex) when (ex.Number >= 50000)
             {
                 _logger.LogWarning(ex, "La base de datos rechazó una operación de negocio.");
-                TempData["ErrorMessage"] = "No fue posible completar la operación solicitada.";
+                TempData["ErrorMessage"] = BusinessErrors.MessageOr(ex, "No fue posible completar la operación solicitada.");
             }
             catch (Exception ex)
             {
@@ -314,6 +323,8 @@ namespace Proyecto_Final.Controllers
             try
             {
                 var puntos = await _logistics.RecalculateRouteAsync(rutaId, excluirRutaPedidoId, motivoFallo);
+                // Excluir un punto lo marca Fallido: el pedido también pasa a No entregado.
+                if (excluirRutaPedidoId.HasValue) await SyncOrderStatusAsync(rutaId);
                 if (puntos == 0)
                 {
                     TempData["ErrorMessage"] = "No es posible recalcular: no quedan puntos por recalcular. Contacte al chofer manualmente.";
@@ -321,13 +332,13 @@ namespace Proyecto_Final.Controllers
                 else
                 {
                     await RegistrarAuditoriaAsync("Recalcular ruta", "Rutas", $"Se recalculó la ruta #{rutaId} ({puntos} punto(s) reordenados).");
-                    TempData["SuccessMessage"] = $"Ruta recalculada. {puntos} punto(s) reordenados. El chofer verá la ruta actualizada.";
+                    TempData["SuccessMessage"] = JoinSentences($"Ruta recalculada. {puntos} punto(s) reordenados.", await EstimateTextAsync(rutaId), "El chofer verá la ruta actualizada.");
                 }
             }
             catch (SqlException ex) when (ex.Number >= 50000)
             {
                 _logger.LogWarning(ex, "La base de datos rechazó una operación de negocio.");
-                TempData["ErrorMessage"] = "No fue posible completar la operación solicitada.";
+                TempData["ErrorMessage"] = BusinessErrors.MessageOr(ex, "No fue posible completar la operación solicitada.");
             }
             catch (Exception ex)
             {
@@ -337,32 +348,33 @@ namespace Proyecto_Final.Controllers
             return RedirectToAction(nameof(Detail), new { id = rutaId });
         }
 
-        // CU-105 — Liquidar la ruta al final del día (reingresa inventario no entregado).
+        // BUG-10-07 — Finalizar la ruta despachada. NO reingresa inventario ni liquida: la ruta Completada se
+        // liquida en Finanzas (cobros y mercadería con conteo), el único camino para devolver mercadería al stock.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Liquidate(int rutaId)
+        public async Task<IActionResult> Finalize(int rutaId)
         {
             var usuarioId = HttpContext.Session.GetInt32("UserId") ?? 0;
             var usuarioNombre = HttpContext.Session.GetString("UserFullName") ?? "Administrador";
 
             try
             {
-                var (pedidos, unidades) = await _logistics.LiquidateRouteAsync(rutaId, usuarioId, usuarioNombre);
-                await RegistrarAuditoriaAsync("Liquidar ruta", "Rutas",
-                    $"Se liquidó la ruta #{rutaId}. {pedidos} pedido(s) y {unidades} unidad(es) reingresadas al inventario.");
-                TempData["SuccessMessage"] = pedidos > 0
-                    ? $"Ruta liquidada. Se reingresaron {unidades} unidad(es) de {pedidos} pedido(s) no entregado(s)."
-                    : "Ruta liquidada. No había mercadería pendiente por reingresar.";
+                var (entregados, noEntregados) = await _logistics.FinalizeRouteAsync(rutaId, usuarioId, usuarioNombre);
+                await RegistrarAuditoriaAsync("Finalizar ruta", "Rutas",
+                    $"Se finalizó la ruta #{rutaId}: {entregados} entrega(s) y {noEntregados} sin entregar.");
+                TempData["SuccessMessage"] = noEntregados > 0
+                    ? $"Ruta finalizada. {noEntregados} pedido(s) quedaron como No entregado. Liquide la mercadería para devolverla al inventario y los cobros en Finanzas."
+                    : "Ruta finalizada. Todos los pedidos se entregaron; liquide los cobros en Finanzas.";
             }
             catch (SqlException ex) when (ex.Number >= 50000)
             {
                 _logger.LogWarning(ex, "La base de datos rechazó una operación de negocio.");
-                TempData["ErrorMessage"] = "No fue posible completar la operación solicitada.";
+                TempData["ErrorMessage"] = BusinessErrors.MessageOr(ex, "No fue posible completar la operación solicitada.");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al liquidar ruta.");
-                TempData["ErrorMessage"] = "No fue posible liquidar la ruta.";
+                _logger.LogError(ex, "Error al finalizar ruta.");
+                TempData["ErrorMessage"] = "No fue posible finalizar la ruta.";
             }
             return RedirectToAction(nameof(Detail), new { id = rutaId });
         }
@@ -384,6 +396,46 @@ namespace Proyecto_Final.Controllers
         }
 
         // ── Helpers ─────────────────────────────────────────
+
+        // Lleva el estado de las entregas de la ruta a sus pedidos (sp_Pedidos_SincronizarEstadoEntrega, 0220).
+        // La operación principal ya se hizo: si esto falla se registra y se avisa, no se deshace nada.
+        private async Task<bool> SyncOrderStatusAsync(int rutaId)
+        {
+            try
+            {
+                await _logistics.SyncOrderStatusFromDeliveryAsync(rutaId, null);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "No se pudo sincronizar el estado de los pedidos de la ruta #{RutaId}.", rutaId);
+                return false;
+            }
+        }
+
+        private static string JoinSentences(params string[] frases) =>
+            string.Join(" ", frases.Where(frase => !string.IsNullOrWhiteSpace(frase)));
+
+        // BUG-25-02: «Tiempo total estimado: 1 h 12 min (38,4 km).» para el mensaje de secuenciar y recalcular.
+        // Es informativo: si falla la lectura no debe impedir el aviso de que la ruta ya quedó ordenada.
+        private async Task<string> EstimateTextAsync(int rutaId)
+        {
+            try
+            {
+                var estimacion = RouteEstimator.Estimate(await _logistics.GetRouteOrdersAsync(rutaId));
+                if (!estimacion.TieneEstimacion) return string.Empty;
+                var texto = $"Tiempo total estimado: {estimacion.TextoTotal} ({estimacion.TextoDistancia}).";
+                return estimacion.ParadasSinUbicacion > 0
+                    ? $"{texto} No incluye {estimacion.ParadasSinUbicacion} parada(s) sin ubicación."
+                    : texto;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "No se pudo calcular el tiempo estimado de la ruta #{RutaId}.", rutaId);
+                return string.Empty;
+            }
+        }
+
         private async Task<RouteCreateViewModel> BuildCreateViewModelAsync()
         {
             var vm = new RouteCreateViewModel();

@@ -17,16 +17,16 @@ String friendlyError(Object error) {
   if (error is ApiException) {
     return switch (error.failure) {
       ApiFailure.sinConexion =>
-        'No hay conexión con el servidor. Revisá la señal e intentá de nuevo.',
+        'No hay conexión con el servidor. Revise la señal e intente de nuevo.',
       ApiFailure.tiempoAgotado =>
-        'El servidor está tardando en responder. Intentá de nuevo en unos segundos.',
-      ApiFailure.sinPermiso => 'Tu perfil no tiene permiso para esta acción.',
+        'El servidor está tardando en responder. Intente de nuevo en unos segundos.',
+      ApiFailure.sinPermiso => 'Su perfil no tiene permiso para esta acción.',
       ApiFailure.servidor =>
-        'El servidor no está disponible en este momento. Intentá más tarde.',
+        'El servidor no está disponible en este momento. Intente más tarde.',
       _ => error.message,
     };
   }
-  return 'Ocurrió un problema inesperado. Intentá de nuevo.';
+  return 'Ocurrió un problema inesperado. Intente de nuevo.';
 }
 
 void showSuccess(BuildContext context, String message) {

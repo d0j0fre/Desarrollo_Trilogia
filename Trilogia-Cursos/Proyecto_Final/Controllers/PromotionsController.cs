@@ -43,9 +43,10 @@ namespace Proyecto_Final.Controllers
 
         // CU-171/172 — Crear
         [HttpGet]
-        public async Task<IActionResult> Create()
+        public async Task<IActionResult> Create(int? productoId = null)
         {
-            var model = new PromotionFormViewModel { Productos = await _promos.GetProductOptionsAsync() };
+            // BUG-24-03: Inteligencia de inventario sugiere incluir un producto estancado en una promoción.
+            var model = new PromotionFormViewModel { Productos = await _promos.GetProductOptionsAsync(), ProductoId = productoId ?? 0 };
             return View(model);
         }
 
@@ -78,7 +79,7 @@ namespace Proyecto_Final.Controllers
             catch (SqlException ex) when (ex.Number >= 50000)
             {
                 _logger.LogWarning(ex, "La base de datos rechazó una operación de negocio.");
-                ModelState.AddModelError(string.Empty, "No fue posible completar la operación solicitada.");
+                ModelState.AddModelError(string.Empty, BusinessErrors.MessageOr(ex, "No fue posible completar la operación solicitada."));
                 model.Productos = await _promos.GetProductOptionsAsync();
                 return View(model);
             }
@@ -130,7 +131,7 @@ namespace Proyecto_Final.Controllers
             catch (SqlException ex) when (ex.Number >= 50000)
             {
                 _logger.LogWarning(ex, "La base de datos rechazó una operación de negocio.");
-                ModelState.AddModelError(string.Empty, "No fue posible completar la operación solicitada.");
+                ModelState.AddModelError(string.Empty, BusinessErrors.MessageOr(ex, "No fue posible completar la operación solicitada."));
                 model.Productos = await _promos.GetProductOptionsAsync();
                 return View(model);
             }
@@ -159,7 +160,7 @@ namespace Proyecto_Final.Controllers
             catch (SqlException ex) when (ex.Number >= 50000)
             {
                 _logger.LogWarning(ex, "La base de datos rechazó una operación de negocio.");
-                TempData["ErrorMessage"] = "No fue posible completar la operación solicitada.";
+                TempData["ErrorMessage"] = BusinessErrors.MessageOr(ex, "No fue posible completar la operación solicitada.");
             }
             catch (Exception ex)
             {
@@ -192,7 +193,7 @@ namespace Proyecto_Final.Controllers
             catch (SqlException ex) when (ex.Number >= 50000)
             {
                 _logger.LogWarning(ex, "La base de datos rechazó una operación de negocio.");
-                TempData["ErrorMessage"] = "No fue posible completar la operación solicitada.";
+                TempData["ErrorMessage"] = BusinessErrors.MessageOr(ex, "No fue posible completar la operación solicitada.");
             }
             catch (Exception ex)
             {

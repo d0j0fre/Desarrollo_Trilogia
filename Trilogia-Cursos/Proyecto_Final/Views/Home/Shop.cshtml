@@ -30,7 +30,7 @@
 
             <h1>@Model.Titulo</h1>
             <p>
-                Navegá por categorías, buscá productos específicos y agregá al carrito desde una vista más limpia y ordenada.
+                Navegue por categorías, busque productos específicos y agregue al carrito desde una vista más limpia y ordenada.
             </p>
 
             <div class="s3-shop-hero__stats">
@@ -74,7 +74,7 @@
                 <i class="fa fa-filter"></i>
                 <div>
                     <h3>Filtros</h3>
-                    <p>Seleccioná una categoría</p>
+                    <p>Seleccione una categoría</p>
                 </div>
             </div>
 
@@ -176,7 +176,7 @@
                 <div class="s3-empty-state s3-empty-state--shop">
                     <i class="fa fa-search"></i>
                     <h3>No se encontraron productos</h3>
-                    <p>Probá con otra categoría o con otro texto de búsqueda.</p>
+                    <p>Pruebe con otra categoría o con otro texto de búsqueda.</p>
                     <a asp-controller="Home" asp-action="Shop" class="btn btn-ds-view">
                         Ver todo el catálogo
                     </a>
@@ -188,12 +188,13 @@
                     @foreach (var producto in productos)
                     {
                         var claseStock = producto.Stock <= 0 ? "out" : producto.Stock <= 5 ? "low" : "ok";
-                        var imagen = string.IsNullOrWhiteSpace(producto.ImagenUrl) ? Url.Content("~/img/whisky-premium.webp") : Url.Content(producto.ImagenUrl);
+                        var imagen = Url.Content(Proyecto_Final.Services.ProductImageFallback.Resolve(producto.ImagenUrl, producto.Categoria));
+                        var respaldo = Url.Content(Proyecto_Final.Services.ProductImageFallback.ForCategory(producto.Categoria));
 
                         <article class="s3-product-card">
                             <a asp-controller="Home" asp-action="Detail" asp-route-id="@producto.ProductoId" class="s3-product-card__image">
                                 <img src="@imagen" alt="Producto @producto.Nombre" loading="lazy" width="360" height="360"
-                                     onerror="this.onerror=null;this.src='/img/whisky-premium.webp';" />
+                                     onerror="this.onerror=null;this.src='@respaldo';" />
                             </a>
 
                             <div class="s3-product-card__body">

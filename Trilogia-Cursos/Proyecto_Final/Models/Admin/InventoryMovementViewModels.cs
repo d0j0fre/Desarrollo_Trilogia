@@ -16,18 +16,19 @@ namespace Proyecto_Final.Models.Admin
         public DateTime FechaMovimiento { get; set; }
     }
 
-    public class InventoryMovementFormViewModel
+    public class InventoryMovementFormViewModel : IValidatableObject
     {
         [Display(Name = "Producto")]
-        [Range(1, int.MaxValue, ErrorMessage = "Debes seleccionar un producto.")]
+        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un producto.")]
         public int ProductoId { get; set; }
 
         [Display(Name = "Tipo de movimiento")]
         [Required(ErrorMessage = "El tipo de movimiento es obligatorio.")]
         public string TipoMovimiento { get; set; } = "Entrada";
 
+        // En un Ajuste la cantidad es el stock final y puede ser 0 (G2-41); entradas y salidas, desde 1.
         [Display(Name = "Cantidad")]
-        [Range(1, int.MaxValue, ErrorMessage = "La cantidad debe ser mayor que cero.")]
+        [Range(0, int.MaxValue, ErrorMessage = "La cantidad no puede ser negativa.")]
         public int Cantidad { get; set; } = 1;
 
         [Display(Name = "Motivo")]
@@ -47,13 +48,21 @@ namespace Proyecto_Final.Models.Admin
         public string? CategoriaGasto { get; set; }
 
         public List<ProductAdminViewModel> ProductosDisponibles { get; set; } = new();
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (TipoMovimiento != "Ajuste" && Cantidad < 1)
+            {
+                yield return new ValidationResult("La cantidad debe ser mayor que cero.", [nameof(Cantidad)]);
+            }
+        }
     }
 
     // CU-182 — Transforma stock de un producto "origen" (ej. caja) a un producto "destino" (ej. unidad).
     public class StockTransformationFormViewModel : IValidatableObject
     {
         [Display(Name = "Producto origen")]
-        [Range(1, int.MaxValue, ErrorMessage = "Debes seleccionar el producto de origen.")]
+        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar el producto de origen.")]
         public int ProductoOrigenId { get; set; }
 
         [Display(Name = "Cantidad a descontar del origen")]
@@ -61,7 +70,7 @@ namespace Proyecto_Final.Models.Admin
         public int CantidadOrigen { get; set; } = 1;
 
         [Display(Name = "Producto destino")]
-        [Range(1, int.MaxValue, ErrorMessage = "Debes seleccionar el producto de destino.")]
+        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar el producto de destino.")]
         public int ProductoDestinoId { get; set; }
 
         [Display(Name = "Cantidad a sumar al destino")]

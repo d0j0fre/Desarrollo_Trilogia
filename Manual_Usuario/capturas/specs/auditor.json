@@ -1,0 +1,153 @@
+{
+  "carpeta": "auditor",
+  "_datos": "Usa las acciones que dejan las capturas del Supervisor (registro de empleados, tareas, licencias).",
+  "capturas": [
+    {
+      "id": "aud-menu-01",
+      "usuario": "auditor",
+      "url": "/Home/Index",
+      "acciones": [
+        {
+          "clicSinEsperar": ".admin-accordion-dropdown > a"
+        },
+        {
+          "esperar": 400
+        },
+        {
+          "abrir": "details.acc-sec:has(.acc-sec__label:text-is(\"Seguridad\"))"
+        },
+        {
+          "esperar": 300
+        }
+      ],
+      "recorte": {
+        "selector": ".admin-acc-menu",
+        "margen": [
+          80,
+          70,
+          16,
+          40
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": ".admin-accordion-dropdown > a"
+        },
+        {
+          "tipo": "recuadro",
+          "selector": "details.acc-sec:has(.acc-sec__label:text-is(\"Seguridad\")) > summary"
+        }
+      ]
+    },
+    {
+      "id": "aud-auditoria-01",
+      "usuario": "auditor",
+      "url": "/Audit/Index",
+      "ancho": 1280,
+      "acciones": [
+        {
+          "seleccionar": [
+            "select[name=modulo]",
+            ""
+          ]
+        },
+        {
+          "seleccionar": [
+            "select[name=accion]",
+            "Crear"
+          ]
+        },
+        {
+          "rellenar": [
+            "input[name=buscar]",
+            "supervisor@labodega.cr"
+          ]
+        }
+      ],
+      "recorte": {
+        "selector": "main .admin-card",
+        "margen": [
+          40,
+          16,
+          16,
+          16
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "paso",
+          "n": 1,
+          "selector": "select[name=modulo]",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 2,
+          "selector": "select[name=accion]",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 3,
+          "selector": "input[name=buscar]",
+          "posicion": "arriba-derecha"
+        },
+        {
+          "tipo": "paso",
+          "n": 4,
+          "selector": "main .admin-card button[type=submit]",
+          "posicion": "arriba"
+        }
+      ]
+    },
+    {
+      "id": "aud-auditoria-02",
+      "usuario": "auditor",
+      "url": "/Audit/Index?accion=Crear&buscar=supervisor%40labodega.cr",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main .admin-table-wrapper",
+        "margen": [
+          10,
+          10,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main table tbody tr >> nth=0"
+        },
+        {
+          "tipo": "flecha",
+          "selector": "main a:has-text('Limpiar filtros')",
+          "desde": "izquierda",
+          "largo": 60
+        }
+      ]
+    },
+    {
+      "id": "aud-auditoria-03",
+      "usuario": "auditor",
+      "url": "/Audit/Index?buscar=solicitud",
+      "ancho": 1280,
+      "recorte": {
+        "selector": "main .admin-table-wrapper",
+        "margen": [
+          10,
+          10,
+          10,
+          10
+        ]
+      },
+      "anotaciones": [
+        {
+          "tipo": "recuadro",
+          "selector": "main table tbody tr >> nth=0 >> td >> nth=5"
+        }
+      ]
+    }
+  ]
+}

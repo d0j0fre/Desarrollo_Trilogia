@@ -31,7 +31,7 @@ namespace Proyecto_Final.Controllers
             pregunta = pregunta?.Trim() ?? string.Empty;
 
             if (pregunta.Length == 0)
-                return Json(new { ok = false, message = "Escribe una pregunta." });
+                return Json(new { ok = false, message = "Escriba una pregunta." });
 
             if (pregunta.Length > 500)
                 return Json(new { ok = false, message = "La pregunta no puede superar 500 caracteres." });

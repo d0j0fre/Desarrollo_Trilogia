@@ -40,6 +40,19 @@ class OutboxEntry {
 
   static const int maxIntentos = 10;
 
+  /// Tipo de las entradas que suben una foto o firma (multipart, no JSON).
+  static const String tipoEvidencia = 'evidencia';
+
+  bool get esEvidencia => tipo == tipoEvidencia;
+
+  /// `syncGuid` de la entrada que debe salir antes que esta. La evidencia de una
+  /// entrega espera al estado de esa entrega: el servidor recibe primero
+  /// «Entregado» y despues los archivos, aunque el estado este reintentandose.
+  String? get dependeDe => payload['dependeDe'] as String?;
+
+  /// Ruta del archivo en el almacenamiento de la aplicacion (solo evidencia).
+  String? get archivo => payload['archivo'] as String?;
+
   bool get agotado => intentos >= maxIntentos;
 
   bool listaParaEnviar(DateTime ahora) =>

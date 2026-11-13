@@ -4,35 +4,48 @@ namespace Proyecto_Final.Models.Admin;
 
 public sealed class InventoryIntelligenceFilterViewModel : IValidatableObject
 {
-    [Range(2000, 2100)]
+    /// <summary>Meses para el promedio de ventas: mismo valor por defecto en Inteligencia de inventario y en Sugerencias de compra.</summary>
+    public const int DefaultRecentMonths = 3;
+
+    /// <summary>Meses de cobertura: mismo valor por defecto en Inteligencia de inventario y en Sugerencias de compra.</summary>
+    public const int DefaultCoverageMonths = 2;
+
+    /// <summary>Máximo de años que puede abarcar la tendencia estacional (ambos extremos incluidos).</summary>
+    public const int MaxSeasonalYears = 10;
+
+    [Range(2000, 2100, ErrorMessage = "El año inicial debe estar entre 2000 y 2100.")]
     public int StartYear { get; set; } = DateTime.UtcNow.Year - 2;
 
-    [Range(2000, 2100)]
+    [Range(2000, 2100, ErrorMessage = "El año final debe estar entre 2000 y 2100.")]
     public int EndYear { get; set; } = DateTime.UtcNow.Year;
 
-    [Range(1, 12)]
-    public int RecentMonths { get; set; } = 3;
+    [Range(1, 12, ErrorMessage = "Los meses para el promedio deben estar entre 1 y 12.")]
+    public int RecentMonths { get; set; } = DefaultRecentMonths;
 
-    [Range(1, 12)]
-    public int CoverageMonths { get; set; } = 2;
+    [Range(1, 12, ErrorMessage = "Los meses de cobertura deben estar entre 1 y 12.")]
+    public int CoverageMonths { get; set; } = DefaultCoverageMonths;
 
-    [Range(30, 365)]
+    [Range(30, 365, ErrorMessage = "La ventana sin rotación debe estar entre 30 y 365 días.")]
     public int SlowWindowDays { get; set; } = 60;
+
+    /// <summary>Categoría de producto de la tendencia estacional; vacía = todas.</summary>
+    [StringLength(100, ErrorMessage = "La categoría no es válida.")]
+    public string? Category { get; set; }
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
+        // BUG-24-06: un solo mensaje por problema (si se asociara a los dos campos saldría repetido).
         if (StartYear > EndYear)
         {
             yield return new ValidationResult(
-                "El año inicial no puede ser posterior al año final.",
-                new[] { nameof(StartYear), nameof(EndYear) });
+                "El año inicial no puede ser mayor que el año final.",
+                new[] { nameof(StartYear) });
         }
-
-        if (EndYear - StartYear > 9)
+        else if (EndYear - StartYear + 1 > MaxSeasonalYears)
         {
             yield return new ValidationResult(
-                "El período estacional no puede superar diez años.",
-                new[] { nameof(StartYear), nameof(EndYear) });
+                $"El período estacional no puede superar {MaxSeasonalYears} años.",
+                new[] { nameof(StartYear) });
         }
     }
 }
@@ -43,6 +56,7 @@ public sealed class InventoryIntelligenceViewModel
     public List<PurchaseSuggestionItem> SugerenciasCompra { get; set; } = new();
     public List<SlowMovingProductItem> ProductosEstancados { get; set; } = new();
     public List<SeasonalTrendPoint> TendenciaEstacional { get; set; } = new();
+    public List<string> Categorias { get; set; } = new();
     public DateTime GeneratedUtc { get; set; } = DateTime.UtcNow;
 }
 

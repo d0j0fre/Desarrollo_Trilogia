@@ -66,7 +66,7 @@ public sealed class SmtpPaySlipEmailSender : IPaySlipEmailSender
         var safeEmployee = WebUtility.HtmlEncode(employee);
         var safeLink = WebUtility.HtmlEncode(secureLink.AbsoluteUri);
         _emailService.SendEmail(recipient, "Boleta de pago disponible",
-            $"<p>Hola {safeEmployee},</p><p>Tu boleta de pago se encuentra adjunta y también está disponible en el portal privado.</p><p><a href=\"{safeLink}\">Consultar boleta</a></p>", pdf, "boleta-de-pago.pdf");
+            $"<p>Hola {safeEmployee},</p><p>Su boleta de pago se encuentra adjunta y también está disponible en el portal privado.</p><p><a href=\"{safeLink}\">Consultar boleta</a></p>", pdf, "boleta-de-pago.pdf");
         return Task.CompletedTask;
     }
 }
@@ -78,12 +78,12 @@ public static class PaySlipHtmlBuilder
         ArgumentNullException.ThrowIfNull(model);
         var rows = new StringBuilder();
         foreach (var line in model.Lineas)
-            rows.Append($"<tr><td>{WebUtility.HtmlEncode(line.Codigo)}</td><td>{WebUtility.HtmlEncode(line.Nombre)}</td><td>{WebUtility.HtmlEncode(line.Tipo)}</td><td>{line.Monto:N2}</td></tr>");
+            rows.Append($"<tr><td>{WebUtility.HtmlEncode(line.Codigo)}</td><td>{WebUtility.HtmlEncode(line.Nombre)}</td><td>{WebUtility.HtmlEncode(RrhhFormat.ConceptType(line.Tipo))}</td><td>{RrhhFormat.Money(line.Monto)}</td></tr>");
         return $"""
 <!doctype html><html lang="es"><head><meta charset="utf-8"><title>Boleta de pago</title></head><body>
-<h1>Boleta de pago</h1><p><strong>Empleado:</strong> {WebUtility.HtmlEncode(model.Empleado)}</p><p><strong>Periodo:</strong> {WebUtility.HtmlEncode(model.Periodo)}</p>
+<h1>Boleta de pago</h1><p><strong>Empleado:</strong> {WebUtility.HtmlEncode(model.Empleado)}</p><p><strong>Periodo:</strong> {WebUtility.HtmlEncode(RrhhFormat.PeriodText(model.Periodo))}</p>
 <table><thead><tr><th>Código</th><th>Concepto</th><th>Tipo</th><th>Monto</th></tr></thead><tbody>{rows}</tbody></table>
-<p><strong>Salario base:</strong> {model.SalarioBase:N2}</p><p><strong>Total bruto:</strong> {model.TotalBruto:N2}</p><p><strong>Deducciones:</strong> {model.TotalDeducciones:N2}</p><p><strong>Total neto:</strong> {model.TotalNeto:N2}</p>
+<p><strong>Salario base:</strong> {RrhhFormat.Money(model.SalarioBase)}</p><p><strong>Total bruto:</strong> {RrhhFormat.Money(model.TotalBruto)}</p><p><strong>Deducciones:</strong> {RrhhFormat.Money(model.TotalDeducciones)}</p><p><strong>Total neto:</strong> {RrhhFormat.Money(model.TotalNeto)}</p>
 </body></html>
 """;
     }

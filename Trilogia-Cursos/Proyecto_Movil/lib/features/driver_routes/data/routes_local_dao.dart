@@ -34,24 +34,40 @@ class RoutesLocalDao {
       }
 
       for (final route in routes) {
-        await txn.insert(
-          'rutas',
-          {
-            'ruta_id': route.rutaId,
-            'codigo': route.codigo,
-            'zona': route.zona,
-            'estado': route.estado,
-            'vehiculo_placa': route.vehiculoPlaca,
-            'fecha_despacho': route.fechaDespacho?.toIso8601String(),
-            'total_pedidos': route.totalPedidos,
-            'pendientes': route.pendientes,
-            'entregados': route.entregados,
-            'sincronizado_en': ahora,
-          },
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
+        await _guardarRuta(txn, {
+          'ruta_id': route.rutaId,
+          'codigo': route.codigo,
+          'zona': route.zona,
+          'estado': route.estado,
+          'vehiculo_placa': route.vehiculoPlaca,
+          'fecha_despacho': route.fechaDespacho?.toIso8601String(),
+          'total_pedidos': route.totalPedidos,
+          'pendientes': route.pendientes,
+          'entregados': route.entregados,
+          'sincronizado_en': ahora,
+        });
       }
     });
+  }
+
+  /// Inserta o actualiza una ruta SIN usar `ConflictAlgorithm.replace`.
+  ///
+  /// `replace` borra la fila y la vuelve a crear, y con `foreign_keys = ON` ese
+  /// borrado arrastra (`ON DELETE CASCADE`) todas las entregas de la ruta. Resultado:
+  /// al refrescar la lista de rutas con señal, el detalle de una ruta quedaba sin
+  /// paradas en el telefono, y las marcas hechas sin señal (todavia en la cola)
+  /// desaparecian de la pantalla antes de enviarse.
+  static Future<void> _guardarRuta(
+    DatabaseExecutor txn,
+    Map<String, Object?> valores,
+  ) async {
+    final actualizadas = await txn.update(
+      'rutas',
+      valores,
+      where: 'ruta_id = ?',
+      whereArgs: [valores['ruta_id']],
+    );
+    if (actualizadas == 0) await txn.insert('rutas', valores);
   }
 
   Future<List<DriverRoute>> readRoutes() async {
@@ -63,24 +79,20 @@ class RoutesLocalDao {
     final ahora = DateTime.now().toIso8601String();
 
     await _db.transaction((txn) async {
-      await txn.insert(
-        'rutas',
-        {
-          'ruta_id': route.rutaId,
-          'codigo': route.codigo,
-          'zona': route.zona,
-          'estado': route.estado,
-          'vehiculo_placa': route.vehiculoPlaca,
-          'fecha_despacho': route.fechaDespacho?.toIso8601String(),
-          'total_pedidos': route.entregas.length,
-          'pendientes': route.entregas.where((d) => !d.estaCerrada).length,
-          'entregados': route.entregas
-              .where((d) => d.estadoEntrega == DeliveryStatus.entregado)
-              .length,
-          'sincronizado_en': ahora,
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      await _guardarRuta(txn, {
+        'ruta_id': route.rutaId,
+        'codigo': route.codigo,
+        'zona': route.zona,
+        'estado': route.estado,
+        'vehiculo_placa': route.vehiculoPlaca,
+        'fecha_despacho': route.fechaDespacho?.toIso8601String(),
+        'total_pedidos': route.entregas.length,
+        'pendientes': route.entregas.where((d) => !d.estaCerrada).length,
+        'entregados': route.entregas
+            .where((d) => d.estadoEntrega == DeliveryStatus.entregado)
+            .length,
+        'sincronizado_en': ahora,
+      });
 
       // Solo se reemplazan las entregas que el servidor todavia ve como
       // abiertas. Si el chofer marco una sin señal, su estado local es mas
@@ -180,7 +192,11 @@ class RoutesLocalDao {
       {
         'estado_entrega': estado,
         'motivo_fallo': motivoFallo,
-        'fecha_entrega': DateTime.now().toIso8601String(),
+        // «En ruta» no cierra la entrega: la fecha de entrega solo se marca
+        // cuando queda Entregado o No entregado.
+        if (estado == DeliveryStatus.entregado ||
+            estado == DeliveryStatus.fallido)
+          'fecha_entrega': DateTime.now().toIso8601String(),
       },
       where: 'ruta_pedido_id = ?',
       whereArgs: [rutaPedidoId],

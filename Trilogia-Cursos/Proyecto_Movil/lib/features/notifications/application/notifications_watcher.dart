@@ -84,7 +84,7 @@ class NotificationsWatcher with WidgetsBindingObserver {
       } else {
         await notifier.show(
           id: fresh.last.id,
-          title: 'Tenés ${fresh.length} avisos nuevos',
+          title: 'Tiene ${fresh.length} avisos nuevos',
           body: fresh.map((item) => item.title).take(4).join(' · '),
           location: '/notificaciones',
         );

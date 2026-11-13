@@ -10,7 +10,7 @@ Los archivos compartidos `Proyecto_Final/appsettings*.json` y `Proyecto_FinalAPI
 
 - Desarrollo: .NET User Secrets o variables de entorno.
 - Azure: App Service Configuration; Key Vault puede incorporarse posteriormente.
-- Evidencias: `EvidenceStorage__RootPath`, siempre fuera de `wwwroot`.
+- Evidencias: `EvidenceStorage__RootPath`, siempre fuera de `wwwroot`. **Debe configurarse con la MISMA carpeta en el sitio web y en la API móvil**: la app del chofer sube fotos y firmas a la API (`POST api/mobile/v1/driver/deliveries/{id}/evidence`) y el sitio las lee de esa carpeta. Sin el valor, la API rechaza la subida (503) y la app conserva el archivo en el teléfono, en vez de guardarlo donde la web no lo vería. Si la web y la API se despliegan como App Services distintos, la carpeta debe ser un almacenamiento compartido (ver `docs/plan-app-movil-flutter.md` §9.1).
 - Documentos y comprobantes: `PrivateStorage__RootPath`, persistente y siempre fuera de `wwwroot`.
 - Correo de alertas: `DocumentAlerts__EmailEnabled=false` hasta completar SMTP; los umbrales no son secretos.
 

@@ -1,5 +1,9 @@
 @model Proyecto_Final.Models.Admin.ClientCreditDetailViewModel
+@inject Proyecto_Final.Services.NavigationMenuService MenuAccess
 @{
+    // Configurar crédito y registrar movimientos exigen su propio permiso (CREDITOS_CONFIGURAR / CREDITOS_MOVIMIENTOS).
+    var puedeConfigurar = await MenuAccess.CanSubmitAsync(Context.Session.GetString("UserRole"), "Credits", "UpdateSettings");
+    var puedeMovimientos = await MenuAccess.CanSubmitAsync(Context.Session.GetString("UserRole"), "Credits", "RegisterMovement");
     ViewData["Title"] = "Detalle de crédito";
 }
 
@@ -109,7 +113,9 @@
             <div class="admin-card h-100">
                 <h5 class="mb-3">Configurar crédito</h5>
 
-                <form asp-controller="Credits" asp-action="UpdateSettings" method="post"
+                @if (puedeConfigurar)
+{
+<form asp-controller="Credits" asp-action="UpdateSettings" method="post"
                       data-s3-confirm="¿Desea guardar la configuración de crédito de este cliente?"
                       data-s3-confirm-title="Confirmar configuración de crédito"
                       data-s3-confirm-type="warning"
@@ -120,7 +126,9 @@
 
                     <div class="form-group">
                         <label class="font-weight-bold">Límite de crédito</label>
-                        <input type="number" step="0.01" min="0" name="LimiteCredito" value="@Model.LimiteCredito" class="form-control" required />
+                        <input type="number" step="0.01" min="0" name="LimiteCredito" value="@Model.LimiteCredito.ToString(System.Globalization.CultureInfo.InvariantCulture)" class="form-control" required />
+                        @* El campo numérico usa punto decimal: se lee en cultura invariante, como hace asp-for. *@
+                        <input type="hidden" name="__Invariant" value="LimiteCredito" />
                     </div>
 
                     <div class="form-group">
@@ -152,6 +160,11 @@
                         Guardar configuración
                     </button>
                 </form>
+}
+else
+{
+    <p class="text-muted mb-0">Su perfil puede consultar el crédito, pero no configurarlo.</p>
+}
             </div>
         </div>
 
@@ -160,7 +173,9 @@
                 <h5 class="mb-3">Registrar movimiento</h5>
                 <p class="text-muted">Los movimientos no se eliminan. La deuda se calcula con base en cargos, abonos y ajustes.</p>
 
-                <form asp-controller="Credits" asp-action="RegisterMovement" method="post"
+                @if (puedeMovimientos)
+{
+<form asp-controller="Credits" asp-action="RegisterMovement" method="post"
                       data-s3-confirm="¿Desea registrar este movimiento financiero?"
                       data-s3-confirm-title="Confirmar movimiento financiero"
                       data-s3-confirm-type="warning"
@@ -183,6 +198,7 @@
                         <div class="form-group col-md-4">
                             <label class="font-weight-bold">Monto</label>
                             <input type="number" step="0.01" min="1" name="Monto" class="form-control" required />
+                            <input type="hidden" name="__Invariant" value="Monto" />
                         </div>
 
                         <div class="form-group col-md-4">
@@ -200,6 +216,11 @@
                         Registrar movimiento
                     </button>
                 </form>
+}
+else
+{
+    <p class="text-muted mb-0">Su perfil puede consultar el crédito, pero no registrar movimientos.</p>
+}
             </div>
         </div>
     </div>

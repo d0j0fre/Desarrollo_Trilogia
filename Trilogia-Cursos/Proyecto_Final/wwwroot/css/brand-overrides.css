@@ -2309,3 +2309,29 @@ body .employee-page .table tbody tr:hover {
         flex-direction: column;
     }
 }
+
+/* Barra principal con muchos botones (Gerente, Empleado, Vendedor) entre 992 y 1600 px:
+   el logo no se encoge ni queda debajo de «Inicio»; los botones pasan a otra línea
+   dentro de su propio espacio en vez de salirse de la pantalla. */
+@media (min-width: 992px) {
+    .brand-navbar-shell .brand-navbar {
+        flex: 0 0 auto;
+    }
+
+    .brand-navbar-shell .navbar-collapse {
+        flex: 1 1 0%;
+        min-width: 0;
+    }
+
+    .brand-navbar-shell .main-nav-2027 {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        min-width: 0;
+        row-gap: .15rem;
+        padding: .45rem 0;
+    }
+
+    .brand-navbar-shell .main-nav-2027 .nav-link {
+        white-space: nowrap;
+    }
+}

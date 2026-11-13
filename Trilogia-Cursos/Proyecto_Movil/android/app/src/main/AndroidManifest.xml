@@ -8,6 +8,11 @@
          directo). Android 13 o superior descarta las notificaciones sin este
          permiso; la aplicacion lo pide al iniciar sesion. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Foto de evidencia de la entrega (G3-04). La aplicacion no graba video ni
+         audio, y la camara es opcional: un telefono sin ella igual puede elegir
+         una foto de la galeria o recoger la firma del cliente. -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
 
     <application
         android:label="Distribuidora JJ"

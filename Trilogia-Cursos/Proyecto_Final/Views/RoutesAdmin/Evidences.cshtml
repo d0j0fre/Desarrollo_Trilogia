@@ -41,7 +41,7 @@
                                 <tr>
                                     <td class="font-weight-bold">#@s.PedidoId</td>
                                     <td>@s.Cliente</td>
-                                    <td>@s.EstadoEntrega</td>
+                                    <td>@(s.EstadoEntrega == "EnRuta" ? "En ruta" : s.EstadoEntrega)</td>
                                     <td class="text-center">
                                         @if (s.SinEvidencia)
                                         {

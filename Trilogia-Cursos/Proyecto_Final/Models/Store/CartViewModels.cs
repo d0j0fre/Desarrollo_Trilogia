@@ -20,7 +20,7 @@ namespace Proyecto_Final.Models.Store
         public decimal Precio { get; set; }
         public int StockDisponible { get; set; }
         public int Cantidad { get; set; }
-        public string ImagenUrl { get; set; } = "~/img/product-1.jpg";
+        public string ImagenUrl { get; set; } = string.Empty;
         // El checkout confirmado puede conservar un subtotal bruto exacto aunque el precio
         // persistido ya incluya un descuento distribuido por unidad.
         public decimal? SubtotalAntesDescuento { get; set; }
@@ -77,7 +77,7 @@ namespace Proyecto_Final.Models.Store
         public string? Observaciones { get; set; }
 
         [Display(Name = "Correo electrónico")]
-        [EmailAddress(ErrorMessage = "Ingresa un correo válido.")]
+        [EmailAddress(ErrorMessage = "Ingrese un correo válido.")]
         public string? CorreoElectronico { get; set; }
 
         [Display(Name = "Tipo de cliente")]

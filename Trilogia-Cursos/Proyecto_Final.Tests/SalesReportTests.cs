@@ -78,6 +78,29 @@ public sealed class SalesReportTests
         Assert.Contains("THROW", verify, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void InvertedRange_ProducesASingleMessage()
+    {
+        var sales = new SalesReportFilterViewModel { Desde = new DateTime(2026, 10, 9), Hasta = new DateTime(2026, 10, 1) };
+        var seller = new SellerPerformanceFilterViewModel { Desde = new DateTime(2026, 10, 9), Hasta = new DateTime(2026, 10, 1) };
+
+        foreach (var errors in new[] { Validate(sales), Validate(seller) })
+        {
+            var error = Assert.Single(errors);
+            Assert.Equal("La fecha inicial no puede superar la final.", error.ErrorMessage);
+            Assert.Single(error.MemberNames);
+        }
+    }
+
+    [Theory]
+    [InlineData(2026, 1, "Enero 2026")]
+    [InlineData(2026, 9, "Septiembre 2026")]
+    [InlineData(2026, 12, "Diciembre 2026")]
+    public void MonthLabel_IsSpanishRegardlessOfServerLanguage(int year, int month, string expected)
+    {
+        Assert.Equal(expected, Proyecto_Final.Services.ReportsDbService.MonthLabel(new DateTime(year, month, 1)));
+    }
+
     private static List<ValidationResult> Validate(object model)
     {
         var results = new List<ValidationResult>();

@@ -1,3 +1,4 @@
+@using Proyecto_Final.Services
 @model IEnumerable<Proyecto_Final.Models.Admin.EmployeeLeaveRequestViewModel>
 @{
     ViewData["Title"] = "Solicitudes de empleados";
@@ -13,7 +14,7 @@
         <div>
             <span class="s3-eyebrow"><i class="fa fa-calendar-check"></i> Días libres</span>
             <h1>Solicitudes de empleados</h1>
-            <p>Revisá, aprobá o rechazá solicitudes con o sin goce salarial.</p>
+            <p>Revise, apruebe o rechace solicitudes con o sin goce salarial.</p>
         </div>
         <a asp-controller="Employees" asp-action="Index" class="btn btn-ds-view"><i class="fa fa-arrow-left mr-1"></i>Empleados</a>
     </div>
@@ -72,19 +73,30 @@
                                     }
                                 </td>
                                 <td>
+                                    @{
+                                        // G2-24: solo se ofrecen las transiciones válidas (el procedimiento también las exige).
+                                        var nextStates = EmployeeLeaveTransitions.NextStates(item.Estado, item.FechaInicio, DateTime.Today);
+                                    }
+                                    @if (nextStates.Count == 0)
+                                    {
+                                        <span class="text-muted">@(item.Estado == "Aprobada" ? "Aprobada: ya empezó, no se puede cambiar" : "Resuelta: sin cambios posibles")</span>
+                                    }
+                                    else
+                                    {
                                     <form asp-controller="Employees" asp-action="UpdateLeaveRequest" method="post" class="employee-decision-form">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="SolicitudId" value="@item.SolicitudId" />
                                         <input type="hidden" name="estadoFiltro" value="@estado" />
-                                        <select name="Estado" class="form-control form-control-sm">
-                                            <option selected="@(item.Estado == "Pendiente")">Pendiente</option>
-                                            <option selected="@(item.Estado == "Aprobada")">Aprobada</option>
-                                            <option selected="@(item.Estado == "Rechazada")">Rechazada</option>
-                                            <option selected="@(item.Estado == "Cancelada")">Cancelada</option>
+                                        <select name="Estado" class="form-control form-control-sm" aria-label="Nuevo estado de la solicitud">
+                                            @foreach (var next in nextStates)
+                                            {
+                                                <option value="@next">@next</option>
+                                            }
                                         </select>
                                         <input type="text" name="RespuestaAdmin" class="form-control form-control-sm" placeholder="Respuesta u observación" value="@item.RespuestaAdmin" />
                                         <button type="submit" class="btn btn-sm btn-ds-action">Guardar</button>
                                     </form>
+                                    }
                                 </td>
                             </tr>
                         }

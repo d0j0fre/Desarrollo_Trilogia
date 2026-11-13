@@ -1,0 +1,3 @@
+# Reversión de 0301
+
+Solo cambia textos: «Indicá…» pasa a «Indique…» en `sp_Movil_Inventario_RegistrarMovimiento` (error 55813), `sp_Movil_Producto_CambiarEstado` (55821) y `sp_Movil_Rutas_Reasignar` (55841); y «Te reasignaron una ruta» / «a tu cargo» pasan a «Le reasignaron una ruta» / «a su cargo» en el disparador `TR_Rutas_NotificarChofer`. No cambia parámetros, lógica, tablas ni datos. Para revertir, ejecutar `CREATE OR ALTER` de esos cuatro objetos con la definición previa (migraciones 0028–0033 de la capa móvil y 0221/0222 del disparador) y marcar la fila `0301_trato_de_usted_procedimientos` como `RolledBack` en `dbo.SchemaMigrationHistory`.
