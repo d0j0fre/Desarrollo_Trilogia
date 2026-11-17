@@ -49,7 +49,8 @@ namespace Proyecto_FinalAPI.Services.Mobile
                 reader.GetString(1),
                 reader.GetInt32(2),
                 reader.GetInt32(3),
-                reader.GetString(4),
+                // UrlDescarga es NULL cuando el APK se subió al propio sistema (0027).
+                reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
                 reader.GetString(5),
                 reader.IsDBNull(6) ? null : reader.GetInt64(6),
                 reader.IsDBNull(7) ? null : reader.GetString(7),

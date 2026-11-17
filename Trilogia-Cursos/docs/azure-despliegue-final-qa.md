@@ -51,6 +51,61 @@ solo existen en Azure):
 Variables agregadas el 11/11/2026: `PaySlips__PublicBaseUrl` (MVC) y `PasswordRecovery__PublicBaseUrl`
 (API), ambas con la URL del MVC.
 
+### 17/11/2026: archivos subidos y aplicación móvil
+
+**Incidente.** El paso 4 se hizo con `--clean true`. Como `PrivateStorage:RootPath` no estaba
+configurado, los archivos subidos vivían dentro de `/home/site/wwwroot/App_Data` y la publicación
+limpia los borró: el APK 1.2.0 (la página «Aplicación móvil» decía que el archivo no estaba
+disponible), 10 versiones de documentos (`DocumentoVersiones`) y 4 evidencias de entrega
+(`EntregaEvidencias`). Eran datos de prueba; las filas siguen en la base pero sus archivos no se
+pueden recuperar (el plan F1 no tiene copias de seguridad del sitio).
+
+**Corrección.** Los archivos viven ahora en `/home/data`, que es permanente y no se toca al publicar:
+
+| App Service | Variable | Valor |
+| ----------- | -------- | ----- |
+| MVC | `PrivateStorage__RootPath` | `/home/data/PrivateStorage` |
+| MVC | `ProductImages__StoragePath` | `/home/data/product-images` |
+
+Con eso `--clean true` ya no borra nada subido por los usuarios. **Antes de publicar en otro
+ambiente, configure estas variables primero.**
+
+**Aplicación móvil 1.3.0 (compilación 2006)** publicada como versión vigente; la 1.2.0 se retiró
+porque su archivo se perdió.
+
+- APK universal (arm64, armv7 y x86_64) de 59 MB, apuntando a la API de Azure:
+  `flutter build apk --release --dart-define=API_BASE_URL=https://api-trilogia-free-cr01.azurewebsites.net/`.
+- Firmado con la llave oficial nueva del proyecto (`CN=Distribuidora JJ`). La llave **no** está en
+  el repositorio: está en `C:\dev\_llaves\` de la máquina de Esteban, junto con su `key.properties`.
+  Sin ella no se puede publicar una actualización que se instale encima. Hay que respaldarla. Las
+  versiones anteriores estaban firmadas con una llave de depuración, así que los teléfonos que tengan
+  la 1.2.0 deben desinstalarla antes de instalar la 1.3.0 (el mensaje obligatorio lo indica).
+- El archivo se subió a `/home/data/PrivateStorage/AppMovil/` y se registró con
+  `sp_AppMovil_Publicar` (mismo resultado que publicarlo desde la pantalla). La huella SHA-256
+  del archivo en el servidor coincide con la del APK compilado.
+
+Errores corregidos en el código del módulo:
+
+- `GET /api/mobile/v1/app/version` respondía 500 cuando el APK estaba en el sistema: leía
+  `UrlDescarga` (NULL) con `GetString`. Por eso la app no podía revisar si había versión nueva.
+- La misma respuesta devolvía `downloadUrl` vacío para un APK en el sistema y la pantalla de
+  actualización obligatoria quedaba sin botón. Ahora apunta a `<sitio>/MobileApp/Download`
+  (toma la dirección de `PasswordRecovery:PublicBaseUrl`).
+- Sin sesión, el sitio mandaba al inicio de sesión y después al inicio. Ahora, en consultas GET,
+  vuelve a la página pedida (`returnUrl`), así el enlace de descarga de la app termina en la descarga.
+
+Prueba de punta a punta en local (sitio y API locales sobre una base de prueba): sin sesión, la
+descarga manda al login con `returnUrl`; el login vuelve a la página; publicar desde la pantalla
+funciona; la descarga entrega el APK con tipo `application/vnd.android.package-archive` y la misma
+huella; el APK descargado se instaló en el emulador (Android 16) y abrió en el inicio de sesión
+contra la API de Azure.
+
+Pendiente detectado: la evidencia de entrega de la app (foto y firma) la guarda la API en
+`EvidenceStorage:RootPath`, que en Azure no está configurada, así que la API rechaza la subida.
+Además, el sitio y la API son App Service separados y no comparten disco, así que configurarla en la
+API no basta para que el sitio vea las fotos: hace falta un almacenamiento compartido (por ejemplo
+Azure Files montado en ambos) o que el sitio pida el archivo a la API.
+
 Pendiente en Azure:
 
 - `ConfiguracionCorreo__Remitente` y `ConfiguracionCorreo__Contrasenna` no están en ninguno de los dos

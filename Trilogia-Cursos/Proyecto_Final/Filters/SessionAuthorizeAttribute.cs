@@ -25,7 +25,15 @@ namespace Proyecto_Final.Filters
 
             if (!userId.HasValue || userId.Value <= 0 || string.IsNullOrWhiteSpace(userEmail))
             {
-                context.Result = new RedirectToActionResult("Login", "Account", null);
+                // En una consulta GET se recuerda la página pedida para volver a ella
+                // después de iniciar sesión (por ejemplo, el enlace de descarga que
+                // abre la aplicación móvil). Account/Login solo sigue direcciones locales.
+                var request = context.HttpContext.Request;
+                var returnUrl = HttpMethods.IsGet(request.Method)
+                    ? $"{request.PathBase}{request.Path}{request.QueryString}"
+                    : null;
+                context.Result = new RedirectToActionResult(
+                    "Login", "Account", returnUrl is null ? null : new { returnUrl });
                 return;
             }
 

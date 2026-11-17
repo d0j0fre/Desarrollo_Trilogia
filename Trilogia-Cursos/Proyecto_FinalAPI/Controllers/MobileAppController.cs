@@ -23,11 +23,16 @@ namespace Proyecto_FinalAPI.Controllers
     public sealed class MobileAppController : ControllerBase
     {
         private readonly IAppReleaseDbService _releases;
+        private readonly IConfiguration _configuration;
         private readonly ILogger<MobileAppController> _logger;
 
-        public MobileAppController(IAppReleaseDbService releases, ILogger<MobileAppController> logger)
+        public MobileAppController(
+            IAppReleaseDbService releases,
+            IConfiguration configuration,
+            ILogger<MobileAppController> logger)
         {
             _releases = releases;
+            _configuration = configuration;
             _logger = logger;
         }
 
@@ -59,7 +64,7 @@ namespace Proyecto_FinalAPI.Controllers
                     LatestBuild = release.BuildNumero,
                     LatestVersion = release.VersionNombre,
                     MinSupportedBuild = release.MinBuildSoportado,
-                    DownloadUrl = release.UrlDescarga,
+                    DownloadUrl = ResolveDownloadUrl(release.UrlDescarga),
                     MandatoryMessage = release.MensajeObligatorio
                 });
             }
@@ -70,6 +75,30 @@ namespace Proyecto_FinalAPI.Controllers
                     StatusCodes.Status503ServiceUnavailable,
                     new MobileError("servicio_no_disponible", "No fue posible verificar la versión. Intente de nuevo."));
             }
+        }
+
+        /// <summary>
+        /// Enlace que la aplicación abre para actualizarse.
+        ///
+        /// Si la versión apunta a una dirección externa, se usa esa. Si el APK
+        /// se subió al propio sistema (UrlDescarga vacía), el enlace es la
+        /// descarga del sitio web, que pide sesión y deja constancia. Sin este
+        /// respaldo la pantalla de actualización obligatoria quedaba sin botón
+        /// de descarga. La dirección pública del sitio es la misma que usa la
+        /// recuperación de contraseña (PasswordRecovery:PublicBaseUrl).
+        /// </summary>
+        internal string ResolveDownloadUrl(string? urlDescarga)
+        {
+            if (!string.IsNullOrWhiteSpace(urlDescarga)) return urlDescarga;
+
+            var baseUrl = _configuration["PasswordRecovery:PublicBaseUrl"]?.TrimEnd('/');
+            if (Uri.TryCreate(baseUrl, UriKind.Absolute, out var site) &&
+                string.Equals(site.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+            {
+                return baseUrl + "/MobileApp/Download";
+            }
+
+            return string.Empty;
         }
     }
 }
