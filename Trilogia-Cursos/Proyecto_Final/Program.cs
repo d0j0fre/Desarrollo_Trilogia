@@ -193,7 +193,12 @@ builder.Services.AddHostedService<DocumentAlertDailyWorker>();
 builder.Services.AddScoped<AssistantService>();
 builder.Services.AddScoped<IChatDbService, ChatDbService>();
 builder.Services.AddScoped<IChatAuthorizationService, ChatAuthorizationService>();
-builder.Services.AddSingleton<IEvidenceStorageService, FileEvidenceStorageService>();
+// Evidencia de entrega: en la base si EvidenceStorage:Provider = Database (Azure, donde el sitio
+// y la API no comparten disco); si no, en la carpeta EvidenceStorage:RootPath.
+if (DatabaseEvidenceStorageService.IsSelected(builder.Configuration))
+    builder.Services.AddSingleton<IEvidenceStorageService, DatabaseEvidenceStorageService>();
+else
+    builder.Services.AddSingleton<IEvidenceStorageService, FileEvidenceStorageService>();
 builder.Services.AddSingleton<IPrivateFileStorageService, PrivateFileStorageService>();
 builder.Services.AddSingleton<IProductImageStorageService, ProductImageStorageService>();
 builder.Services.AddSingleton(TimeProvider.System);

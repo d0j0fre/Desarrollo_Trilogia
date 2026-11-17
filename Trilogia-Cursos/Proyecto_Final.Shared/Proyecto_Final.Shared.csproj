@@ -17,6 +17,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Evidencia guardada en la base (DatabaseEvidenceStorageService). Misma versión que el sitio y la API. -->
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Los mismos usings implícitos que el SDK Web, para mover el archivo sin editarlo. -->
     <Using Include="Microsoft.AspNetCore.Hosting" />
     <Using Include="Microsoft.AspNetCore.Http" />

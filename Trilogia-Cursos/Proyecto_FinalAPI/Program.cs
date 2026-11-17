@@ -47,10 +47,16 @@ builder.Services.AddAuthorization();
 // Superficie móvil (Fase 2).
 builder.Services.AddScoped<IDriverMobileDbService, DriverMobileDbService>();
 builder.Services.AddScoped<IDriverEvidenceService, DriverEvidenceService>();
-// La evidencia se guarda con el MISMO servicio que usa el sitio web, en la misma carpeta
-// (EvidenceStorage:RootPath, fuera de wwwroot). Sin esa ruta configurada la API rechaza la
-// subida en vez de guardar donde la web no la vería (ver docs/plan-app-movil-flutter.md §9.1).
-if (string.IsNullOrWhiteSpace(builder.Configuration["EvidenceStorage:RootPath"]))
+// La evidencia se guarda con el MISMO servicio que usa el sitio web. Con
+// EvidenceStorage:Provider = Database va a la base (0306), que el sitio y la API comparten
+// aunque estén en servidores distintos (Azure). Si no, va a la misma carpeta del sitio
+// (EvidenceStorage:RootPath, fuera de wwwroot); sin esa ruta la API rechaza la subida en vez
+// de guardar donde la web no la vería (ver docs/plan-app-movil-flutter.md §9.1).
+if (DatabaseEvidenceStorageService.IsSelected(builder.Configuration))
+{
+    builder.Services.AddSingleton<IEvidenceStorageService, DatabaseEvidenceStorageService>();
+}
+else if (string.IsNullOrWhiteSpace(builder.Configuration["EvidenceStorage:RootPath"]))
 {
     builder.Services.AddSingleton<IEvidenceStorageService, UnconfiguredEvidenceStorageService>();
 }

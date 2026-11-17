@@ -14,6 +14,60 @@ namespace Proyecto_Final.Services
         public EvidenceValidationException(string message) : base(message) { }
     }
 
+    /// <summary>
+    /// Reglas de entrada comunes a todo almacenamiento de evidencia (carpeta o base de
+    /// datos): mismos formatos, mismo tamaño máximo y mismos mensajes.
+    /// </summary>
+    public static class EvidenceInput
+    {
+        public const long MaximumBytes = 5 * 1024 * 1024;
+
+        /// <summary>Devuelve el tipo y la extensión normalizados de una imagen subida.</summary>
+        public static (string ContentType, string Extension) ValidateUpload(IFormFile file)
+        {
+            if (file.Length > MaximumBytes)
+                throw new EvidenceValidationException("La imagen supera el tamaño máximo permitido de 5 MB.");
+
+            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            var expectedContentType = extension switch
+            {
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                ".webp" => "image/webp",
+                _ => throw new EvidenceValidationException("La imagen debe estar en formato JPG, JPEG, PNG o WEBP.")
+            };
+
+            if (!string.Equals(file.ContentType, expectedContentType, StringComparison.OrdinalIgnoreCase))
+                throw new EvidenceValidationException("El tipo declarado no coincide con la extensión de la imagen.");
+
+            return (expectedContentType, extension);
+        }
+
+        /// <summary>Decodifica la firma del lienzo (PNG en base64). Null si viene vacía.</summary>
+        public static byte[]? DecodeSignature(string? dataUrl)
+        {
+            if (string.IsNullOrWhiteSpace(dataUrl)) return null;
+            const string prefix = "data:image/png;base64,";
+            if (!dataUrl.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                throw new EvidenceValidationException("La firma debe ser una imagen PNG válida.");
+
+            byte[] bytes;
+            try
+            {
+                bytes = Convert.FromBase64String(dataUrl[prefix.Length..]);
+            }
+            catch (FormatException)
+            {
+                throw new EvidenceValidationException("La firma capturada no es válida.");
+            }
+
+            if (bytes.Length == 0) return null;
+            if (bytes.Length > MaximumBytes)
+                throw new EvidenceValidationException("La firma supera el tamaño máximo permitido de 5 MB.");
+            return bytes;
+        }
+    }
+
     public interface IEvidenceStorageService
     {
         Task<StagedEvidence?> StageUploadAsync(IFormFile? file, CancellationToken cancellationToken = default);
@@ -59,20 +113,7 @@ namespace Proyecto_Final.Services
             CancellationToken cancellationToken = default)
         {
             if (file is null || file.Length == 0) return null;
-            if (file.Length > MaximumBytes)
-                throw new EvidenceValidationException("La imagen supera el tamaño máximo permitido de 5 MB.");
-
-            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-            var expectedContentType = extension switch
-            {
-                ".jpg" or ".jpeg" => "image/jpeg",
-                ".png" => "image/png",
-                ".webp" => "image/webp",
-                _ => throw new EvidenceValidationException("La imagen debe estar en formato JPG, JPEG, PNG o WEBP.")
-            };
-
-            if (!string.Equals(file.ContentType, expectedContentType, StringComparison.OrdinalIgnoreCase))
-                throw new EvidenceValidationException("El tipo declarado no coincide con la extensión de la imagen.");
+            var (expectedContentType, extension) = EvidenceInput.ValidateUpload(file);
 
             await using var source = file.OpenReadStream();
             return await StageStreamAsync(source, expectedContentType, extension, file.Length, cancellationToken);
@@ -82,24 +123,8 @@ namespace Proyecto_Final.Services
             string? dataUrl,
             CancellationToken cancellationToken = default)
         {
-            if (string.IsNullOrWhiteSpace(dataUrl)) return null;
-            const string prefix = "data:image/png;base64,";
-            if (!dataUrl.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
-                throw new EvidenceValidationException("La firma debe ser una imagen PNG válida.");
-
-            byte[] bytes;
-            try
-            {
-                bytes = Convert.FromBase64String(dataUrl[prefix.Length..]);
-            }
-            catch (FormatException)
-            {
-                throw new EvidenceValidationException("La firma capturada no es válida.");
-            }
-
-            if (bytes.Length == 0) return null;
-            if (bytes.Length > MaximumBytes)
-                throw new EvidenceValidationException("La firma supera el tamaño máximo permitido de 5 MB.");
+            var bytes = EvidenceInput.DecodeSignature(dataUrl);
+            if (bytes is null) return null;
 
             await using var stream = new MemoryStream(bytes, writable: false);
             return await StageStreamAsync(stream, "image/png", ".png", bytes.Length, cancellationToken);
