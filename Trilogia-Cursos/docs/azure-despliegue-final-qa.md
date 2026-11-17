@@ -100,11 +100,26 @@ funciona; la descarga entrega el APK con tipo `application/vnd.android.package-a
 huella; el APK descargado se instaló en el emulador (Android 16) y abrió en el inicio de sesión
 contra la API de Azure.
 
-Pendiente detectado: la evidencia de entrega de la app (foto y firma) la guarda la API en
-`EvidenceStorage:RootPath`, que en Azure no está configurada, así que la API rechaza la subida.
-Además, el sitio y la API son App Service separados y no comparten disco, así que configurarla en la
-API no basta para que el sitio vea las fotos: hace falta un almacenamiento compartido (por ejemplo
-Azure Files montado en ambos) o que el sitio pida el archivo a la API.
+### 17/11/2026: evidencia de entrega (foto y firma) en Azure
+
+La API guardaba la evidencia en `EvidenceStorage:RootPath`, que en Azure no estaba configurada (la
+API rechazaba la subida), y el sitio y la API son App Service separados que no comparten disco.
+Solución: la migración `0306_evidencia_archivos_en_base` guarda el contenido en la base
+(`dbo.EvidenciaArchivos`, máximo 5 MB por imagen, mismas reglas que la carpeta), que ambos comparten.
+
+| App Service | Variable | Valor |
+| ----------- | -------- | ----- |
+| API | `EvidenceStorage__Provider` | `Database` |
+| MVC | `EvidenceStorage__Provider` | `Database` |
+
+Sin esa variable (por ejemplo en local) se sigue usando la carpeta. Se tomó una copia previa
+(`Azure_DistribuidoraJJ_DB_antes_0306_20261117.bacpac`), se aplicó 0306 con
+`tools/azure/aplicar_migraciones.ps1 -Azure` (verificación correcta) y se publicaron sitio y API.
+
+Prueba de punta a punta en local, con ambas aplicaciones en modo `Database`: el chofer de prueba sube
+una foto y una firma por `POST /api/mobile/v1/driver/deliveries/{id}/evidence` (el reenvío con el
+mismo `SyncGuid` responde `duplicado`), las imágenes quedan confirmadas en `EvidenciaArchivos` y el
+administrador las abre en el sitio (`/DeliveryEvidence/View/{id}`) idénticas a las subidas.
 
 Pendiente en Azure:
 
