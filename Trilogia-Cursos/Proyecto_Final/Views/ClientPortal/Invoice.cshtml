@@ -160,9 +160,9 @@
                     <div class="s4-client-invoice-card-title">
                         <span>Cliente</span>
                         @{
-                            var claseEstado = Model.Estado == "Generada" ? "success" : "dark";
+                            var claseEstado = Proyecto_Final.Services.InvoiceDisplayStatus.CssClass(Model.EstadoVisible);
                         }
-                        <span class="s4-client-invoice-status @claseEstado">@Model.Estado</span>
+                        <span class="s4-client-invoice-status @claseEstado">@Model.EstadoVisible</span>
                     </div>
 
                     <dl class="s4-client-invoice-facts">

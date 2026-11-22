@@ -101,9 +101,18 @@ namespace Proyecto_Final.Controllers
                 TempData["ErrorMessage"] = "No se encontró la promoción.";
                 return RedirectToAction(nameof(Index));
             }
+            // M-13: solo las promociones activas se editan; se avisa al abrir y no hasta guardar.
+            if (!string.IsNullOrEmpty(model.Estado) && !string.Equals(model.Estado, "Activa", StringComparison.Ordinal))
+            {
+                TempData["ErrorMessage"] = EditInactiveMessage(model.Nombre, model.Estado);
+                return RedirectToAction(nameof(Index));
+            }
             model.Productos = await _promos.GetProductOptionsAsync();
             return View(model);
         }
+
+        public static string EditInactiveMessage(string nombre, string estado) =>
+            $"Solo se pueden editar promociones activas. La promoción «{nombre}» está {estado.ToLowerInvariant()}.";
 
         [HttpPost]
         [ValidateAntiForgeryToken]

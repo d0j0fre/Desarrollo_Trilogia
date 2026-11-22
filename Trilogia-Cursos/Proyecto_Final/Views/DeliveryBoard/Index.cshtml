@@ -22,7 +22,7 @@
         }
         @foreach (var order in Model.EnRuta)
         {
-            <tr><td><strong>#@order.PedidoId</strong></td><td>@order.Cliente</td><td><small>@order.Direccion</small></td><td><a asp-controller="RoutesAdmin" asp-action="Detail" asp-route-id="@order.RutaId" class="text-dark font-weight-bold">@order.RutaCodigo</a></td><td>@order.Chofer</td><td>@order.Secuencia</td><td class="text-right">₡@order.Total.ToString("N2")</td></tr>
+            <tr><td><strong>#@order.PedidoId</strong></td><td>@order.Cliente</td><td><small>@order.Direccion</small></td><td><a asp-controller="RoutesAdmin" asp-action="Detail" asp-route-id="@order.RutaId" class="text-dark font-weight-bold">@order.RutaCodigo</a></td><td>@order.Chofer</td><td>@order.Secuencia</td><td class="text-right">@Proyecto_Final.Services.OrderReceiptHtmlBuilder.FormatCurrency(order.Total)</td></tr>
         }
         </tbody></table></div>
     </div></div>
@@ -36,7 +36,7 @@
         }
         @foreach (var order in Model.Pendientes)
         {
-            <tr><td><strong>#@order.PedidoId</strong></td><td>@order.Cliente</td><td><small>@order.Direccion</small></td><td>@if (order.RutaId.HasValue){<a asp-controller="RoutesAdmin" asp-action="Detail" asp-route-id="@order.RutaId" class="text-dark font-weight-bold">@order.RutaCodigo</a>}else{<span class="text-muted">Sin ruta</span>}</td><td>@order.PrioridadTexto</td><td>@order.FechaPedido.ToString("dd/MM/yyyy HH:mm")</td><td class="text-right">₡@order.Total.ToString("N2")</td></tr>
+            <tr><td><strong>#@order.PedidoId</strong></td><td>@order.Cliente</td><td><small>@order.Direccion</small></td><td>@if (order.RutaId.HasValue){<a asp-controller="RoutesAdmin" asp-action="Detail" asp-route-id="@order.RutaId" class="text-dark font-weight-bold">@order.RutaCodigo</a>}else{<span class="text-muted">Sin ruta</span>}</td><td>@order.PrioridadTexto</td><td>@order.FechaPedido.ToString("dd/MM/yyyy HH:mm")</td><td class="text-right">@Proyecto_Final.Services.OrderReceiptHtmlBuilder.FormatCurrency(order.Total)</td></tr>
         }
         </tbody></table></div>
     </div></div>

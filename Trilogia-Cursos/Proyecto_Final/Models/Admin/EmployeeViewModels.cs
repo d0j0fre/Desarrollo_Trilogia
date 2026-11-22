@@ -245,7 +245,13 @@ namespace Proyecto_Final.Models.Admin
         public string? Motivo { get; set; }
         public string? UsuarioCambioNombre { get; set; }
         public DateTime FechaCambio { get; set; }
+
+        /// <summary>M-08: desde cuándo rige el salario (puede ser posterior o anterior a la fecha de registro).</summary>
+        public DateTime? FechaVigencia { get; set; }
     }
+
+    /// <summary>Fila de dbo.EmpleadoSalarioVigencias.</summary>
+    public sealed record EmployeeSalaryEffectiveViewModel(DateTime FechaVigencia, decimal Salario, string? Motivo);
 
     public class EmployeePortalViewModel
     {

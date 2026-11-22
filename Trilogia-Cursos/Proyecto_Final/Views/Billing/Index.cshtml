@@ -95,7 +95,7 @@
                             {
                                 @foreach (var item in Model.Facturas)
                                 {
-                                    var claseEstado = item.Estado == "Generada" ? "success" : "dark";
+                                    var claseEstado = Proyecto_Final.Services.InvoiceDisplayStatus.CssClass(item.EstadoVisible);
 
                                     <tr>
                                         <td>@item.FacturaId</td>
@@ -107,7 +107,7 @@
                                         <td>₡@item.Impuesto.ToString("N2")</td>
                                         <td>₡@item.Total.ToString("N2")</td>
                                         <td>
-                                            <span class="admin-badge-soft @claseEstado">@item.Estado</span>
+                                            <span class="admin-badge-soft @claseEstado">@item.EstadoVisible</span>
                                         </td>
                                         <td class="text-center billing-action-cell">
                                             <a asp-controller="Billing"

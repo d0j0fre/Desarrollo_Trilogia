@@ -72,6 +72,7 @@
                                 <th>Fecha</th>
                                 <th>Motivo</th>
                                 <th>Estado</th>
+                                <th>Resolución</th>
                             </tr>
                         </thead>
 
@@ -114,6 +115,22 @@
                                             };
                                         }
                                         <span class="s4-client-status-pill @claseEstado">@solicitud.Estado</span>
+                                    </td>
+
+                                    <td>
+                                        @* M-04: la respuesta escrita por el encargado al resolver la solicitud. *@
+                                        @if (!string.IsNullOrWhiteSpace(solicitud.Resolucion))
+                                        {
+                                            <div style="white-space:pre-line">@solicitud.Resolucion</div>
+                                            @if (solicitud.FechaResolucion.HasValue)
+                                            {
+                                                <small class="text-muted">Resuelta el @solicitud.FechaResolucion.Value.ToString("dd/MM/yyyy")</small>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Aún sin resolución</span>
+                                        }
                                     </td>
 
                                 </tr>

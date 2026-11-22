@@ -108,13 +108,12 @@ namespace Proyecto_Final.Controllers
         public async Task<IActionResult> AddCombo(int comboId, int cantidad = 1, CancellationToken cancellationToken = default)
         {
             var combo = await _combos.GetStoreComboAsync(comboId, cancellationToken);
-            if (combo is null)
+            if (combo is null || !combo.Disponible)
             {
-                return NotFound();
-            }
-            if (!combo.Disponible)
-            {
-                return UnprocessableEntity(new { message = "El combo no está disponible en este momento." });
+                // M-05: el formulario de la tienda recibe un mensaje que dice qué producto del combo falta
+                // (antes: página 404 en blanco o un JSON genérico).
+                TempData["ErrorMessage"] = await ExplicarComboNoDisponibleAsync(comboId, cancellationToken);
+                return RedirectToAction("Shop", "Home");
             }
 
             var items = GetCartItems();
@@ -187,7 +186,9 @@ namespace Proyecto_Final.Controllers
                     if (combo is null || !combo.Disponible)
                     {
                         items.Remove(item);
-                        TempData["ErrorMessage"] = "Un combo del carrito ya no está disponible.";
+                        TempData["ErrorMessage"] = comboId.HasValue
+                            ? "Se quitó un combo del carrito. " + await ExplicarComboNoDisponibleAsync(comboId.Value, cancellationToken)
+                            : "Un combo del carrito ya no está disponible.";
                     }
                     else
                     {
@@ -226,6 +227,20 @@ namespace Proyecto_Final.Controllers
         }
 
         /// <summary>Aviso cuando la cantidad pedida se ajusta al stock disponible.</summary>
+        // M-05: dice qué producto del combo no alcanza; si no se puede averiguar, el mensaje genérico.
+        private async Task<string> ExplicarComboNoDisponibleAsync(int comboId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                return ComboAvailability.Explain(await _combos.GetDetailAsync(comboId, cancellationToken));
+            }
+            catch (Exception exception)
+            {
+                _logger.LogWarning(exception, "No fue posible explicar por qué el combo {ComboId} no está disponible.", comboId);
+                return ComboAvailability.GenericMessage;
+            }
+        }
+
         internal static string MensajeAjusteStock(string nombre, int stockDisponible, int cantidadFinal)
         {
             if (stockDisponible <= 0)

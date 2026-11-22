@@ -23,6 +23,10 @@ namespace Proyecto_Final.Models.Admin
         public decimal Impuesto { get; set; }
         public decimal Total { get; set; }
         public string Estado { get; set; } = string.Empty;
+
+        /// <summary>M-07: solo pantalla. Factura a crédito con saldo ₡0; Estado guardado no cambia.</summary>
+        public bool Pagada { get; set; }
+        public string EstadoVisible => Proyecto_Final.Services.InvoiceDisplayStatus.Visible(Estado, Pagada);
     }
 
     public class InvoiceDetailViewModel
@@ -37,6 +41,10 @@ namespace Proyecto_Final.Models.Admin
         public decimal Impuesto { get; set; }
         public decimal Total { get; set; }
         public string Estado { get; set; } = string.Empty;
+
+        /// <summary>M-07: solo pantalla. Factura a crédito con saldo ₡0; Estado guardado no cambia.</summary>
+        public bool Pagada { get; set; }
+        public string EstadoVisible => Proyecto_Final.Services.InvoiceDisplayStatus.Visible(Estado, Pagada);
         public string? Telefono { get; set; }
         public string? WhatsAppUrl { get; set; }
         public List<InvoiceDetailLineViewModel> Detalles { get; set; } = new();

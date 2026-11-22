@@ -232,9 +232,10 @@ public sealed class DocumentsController : Controller
     {
         try
         {
-            var count = await _alerts.GenerateAsync(UserId(), cancellationToken);
-            await AuditAsync("GENERAR_ALERTAS_DOCUMENTO", $"Generación idempotente: {count} alertas candidatas.");
-            TempData["SuccessMessage"] = $"Proceso completado: {count} alerta(s) nueva(s) o pendiente(s) de notificación.";
+            var result = await _alerts.GenerateDetailedAsync(UserId(), cancellationToken);
+            await AuditAsync("GENERAR_ALERTAS_DOCUMENTO", $"Generación idempotente: {result.Candidates} alertas candidatas, {result.EmailsSent} correos enviados, {result.EmailsFailed} fallidos.");
+            // M-03: el mensaje dice si salieron correos (o por qué no).
+            TempData["SuccessMessage"] = result.Describe();
         }
         catch (Exception exception) { HandleDatabaseError(exception, "generar alertas"); }
         return RedirectToAction(nameof(Alerts));

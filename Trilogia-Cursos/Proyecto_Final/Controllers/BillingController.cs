@@ -20,6 +20,15 @@ namespace Proyecto_Final.Controllers
         public async Task<IActionResult> Index()
         {
             var model = await _adminDbService.GetSalesReportAsync();
+
+            // M-07 (0336): una factura a crédito con saldo ₡0 se muestra «Pagada» (solo en pantalla).
+            var logger = HttpContext.RequestServices.GetRequiredService<ILogger<BillingController>>();
+            var saldos = (await _adminDbService.TryGetInvoiceBalancesAsync(null, null, logger)).ToDictionary(s => s.FacturaId);
+            foreach (var factura in model.Facturas)
+            {
+                factura.Pagada = saldos.TryGetValue(factura.FacturaId, out var saldo) && saldo.Pagada;
+            }
+
             return View(model);
         }
 
@@ -42,6 +51,10 @@ namespace Proyecto_Final.Controllers
             var logger = HttpContext.RequestServices.GetRequiredService<ILogger<BillingController>>();
             var vencidas = await _adminDbService.TryGetOverdueInvoicesAsync(null, logger);
             ViewBag.FacturaVencida = vencidas.FirstOrDefault(v => v.FacturaId == id);
+
+            // M-07 (0336): con saldo ₡0 la factura se muestra «Pagada»; Facturas.Estado no cambia.
+            var saldos = await _adminDbService.TryGetInvoiceBalancesAsync(null, id, logger);
+            factura.Pagada = saldos.Any(s => s.FacturaId == id && s.Pagada);
 
             return View(factura);
         }

@@ -19,13 +19,23 @@ namespace Proyecto_Final.Controllers
         public async Task<IActionResult> Index(string? origen, string? modulo, string? accion, string? buscar)
         {
             var origin = AuditOrigins.Normalize(origen);
-            var registros = await _adminDbService.GetUnifiedAuditLogsAsync(origin, modulo, accion, buscar);
-            var (modulos, acciones) = await _adminDbService.GetAuditFilterOptionsAsync();
+            var (storedModules, acciones) = await _adminDbService.GetAuditFilterOptionsAsync();
+            var registros = await _adminDbService.GetUnifiedAuditLogsByModuleAsync(origin, modulo, accion, buscar, storedModules);
+
+            // M-14: una sola entrada por módulo, con tildes; los registros viejos sin tilde se agrupan con los nuevos.
+            var modulos = AuditModuleNames.Options(storedModules);
+            var moduloElegido = string.IsNullOrWhiteSpace(modulo)
+                ? modulo
+                : AuditModuleNames.Options(AuditModuleNames.StoredVariants(modulo, storedModules)).First();
+            foreach (var registro in registros)
+            {
+                registro.Modulo = AuditModuleNames.DisplayName(registro.Modulo);
+            }
 
             var model = new AuditLogFilterViewModel
             {
                 Origen = origin,
-                Modulo = modulo,
+                Modulo = moduloElegido,
                 Accion = accion,
                 Buscar = buscar,
                 Modulos = modulos,

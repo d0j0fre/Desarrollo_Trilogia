@@ -73,6 +73,7 @@ namespace Proyecto_Final.Services
                     SegmentoCliente = reader.GetString(9),
                     FechaInicio = reader.GetDateTimeCR(10),
                     FechaFin = reader.GetDateTimeCR(11),
+                    Estado = reader.GetString(12),
                     Prioridad = reader.GetInt32(13),
                     LimiteUnidades = reader.FieldCount > 14 && !reader.IsDBNull(14) ? reader.GetInt32(14) : null,
                     UnidadesConsumidas = reader.FieldCount > 15 && !reader.IsDBNull(15) ? reader.GetInt32(15) : 0

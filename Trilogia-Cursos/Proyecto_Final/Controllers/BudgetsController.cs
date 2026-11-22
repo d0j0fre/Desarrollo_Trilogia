@@ -258,7 +258,9 @@ public sealed class BudgetsController : Controller
     {
         if (exception is SqlException sql && sql.Number >= 50000) _logger.LogWarning(exception, "Regla de negocio al {Operation}.", operation);
         else _logger.LogError(exception, "Error al {Operation}.", operation);
+        // M-06: la segregación de funciones (aprobar lo propio) se explica; el resto sigue la regla de POST-qa3-R3-05.
+        if (FinanceApprovalMessages.TrySegregation(exception, out var segregacion)) TempData["ErrorMessage"] = segregacion;
         // POST-qa3-R3-05: una regla de negocio de la base trae su propio texto en espanol (por ejemplo "Ya existe un presupuesto activo para el departamento y año."); se muestra en vez del aviso generico.
-        TempData["ErrorMessage"] = exception is SqlException { Number: >= 50000 } rule && !string.IsNullOrWhiteSpace(rule.Message) ? rule.Message : $"No fue posible {operation}.";
+        else TempData["ErrorMessage"] = exception is SqlException { Number: >= 50000 } rule && !string.IsNullOrWhiteSpace(rule.Message) ? rule.Message : $"No fue posible {operation}.";
     }
 }

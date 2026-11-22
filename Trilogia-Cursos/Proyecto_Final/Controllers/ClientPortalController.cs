@@ -227,6 +227,10 @@ namespace Proyecto_Final.Controllers
                     return RedirectToAction(nameof(Index));
                 }
 
+                // M-07 (0336): con saldo ₡0 la factura se muestra «Pagada»; Facturas.Estado no cambia.
+                var saldos = await _adminDbService.TryGetInvoiceBalancesAsync(usuarioId, null, _logger);
+                comprobante.Pagada = saldos.Any(s => s.PedidoId == comprobante.PedidoId && s.Pagada);
+
                 return View(comprobante);
             }
             catch (Exception exception)
