@@ -442,7 +442,11 @@
                 RenderBody().WriteTo(bodyWriter, HtmlEncoder);
                 bodyHtml = bodyWriter.ToString();
             }
-            bool ShownByView(string message) => bodyHtml.Contains(HtmlEncoder.Encode(message), StringComparison.Ordinal);
+            // POST-qa3-R3-07: solo cuenta el texto visible; antes un mensaje que aparecia dentro de un atributo (por ejemplo data-val-range)
+            // hacia que el layout no pintara el aviso y la pantalla no dijera nada (Mis jornadas con horas fuera de rango).
+            var bodyText = System.Text.RegularExpressions.Regex.Replace(bodyHtml, @"<(script|style)[\s\S]*?</\1>", " ", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            bodyText = System.Text.RegularExpressions.Regex.Replace(bodyText, @"<[^>]*>", " ");
+            bool ShownByView(string message) => bodyText.Contains(HtmlEncoder.Encode(message), StringComparison.Ordinal);
         }
         @if (TempData["LoginSuccess"] is string loginSuccess && !string.IsNullOrWhiteSpace(loginSuccess) && !ShownByView(loginSuccess))
         {
