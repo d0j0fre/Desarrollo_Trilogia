@@ -38,7 +38,7 @@ public sealed class MyAttendanceController : Controller
     [AdminAuthorize("RRHH", "RRHH_JORNADAS_REGISTRAR")]
     public async Task<IActionResult> Save(AttendanceFormViewModel model, bool submit, CancellationToken cancellationToken)
     {
-        if (!ModelState.IsValid) { TempData["ErrorMessage"] = string.Join(" ", ModelState.Values.SelectMany(x => x.Errors).Select(x => x.ErrorMessage)); return RedirectToAction(nameof(Index)); }
+        if (!ModelState.IsValid) { TempData["ErrorMessage"] = AttendanceRules.ComposeErrorMessage(ModelState.Values.SelectMany(x => x.Errors).Select(x => x.ErrorMessage)); return RedirectToAction(nameof(Index)); }
         var userId = HttpContext.Session.GetInt32("UserId") ?? 0;
         try
         {

@@ -23,17 +23,24 @@ public static class FinanceApprovalMessages
         "No puede aprobar este presupuesto porque usted mismo lo creó. Por segregación de funciones, " +
         "debe aprobarlo otra persona con permiso de aprobación.";
 
-    public static string For(Exception exception, string operation)
+    /// <summary>Si el error es «aprobar lo propio» (gasto o presupuesto), devuelve el texto que explica la segregación.</summary>
+    public static bool TrySegregation(Exception exception, out string message)
     {
         for (Exception? current = exception; current is not null; current = current.InnerException)
         {
             if (current is SqlException sql)
             {
-                if (sql.Number == ExpenseSelfApprovalNumber) return ExpenseSelfApprovalMessage;
-                if (sql.Number == BudgetSelfApprovalNumber) return BudgetSelfApprovalMessage;
+                if (sql.Number == ExpenseSelfApprovalNumber) { message = ExpenseSelfApprovalMessage; return true; }
+                if (sql.Number == BudgetSelfApprovalNumber) { message = BudgetSelfApprovalMessage; return true; }
             }
         }
 
-        return BusinessErrors.MessageOr(exception, $"No fue posible {operation}.");
+        message = string.Empty;
+        return false;
     }
+
+    public static string For(Exception exception, string operation) =>
+        TrySegregation(exception, out var segregation)
+            ? segregation
+            : BusinessErrors.MessageOr(exception, $"No fue posible {operation}.");
 }

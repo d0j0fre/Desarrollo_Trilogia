@@ -246,8 +246,8 @@ public sealed class MejorasMenoresTests
     [Fact]
     public void M06_BothControllersUseTheSharedMessages()
     {
-        Assert.Contains("FinanceApprovalMessages.For(exception, operation)", Read("Proyecto_Final", "Controllers", "ExpensesController.cs"), StringComparison.Ordinal);
-        Assert.Contains("FinanceApprovalMessages.For(exception, operation)", Read("Proyecto_Final", "Controllers", "BudgetsController.cs"), StringComparison.Ordinal);
+        Assert.Contains("FinanceApprovalMessages.TrySegregation(exception, out var segregacion)", Read("Proyecto_Final", "Controllers", "ExpensesController.cs"), StringComparison.Ordinal);
+        Assert.Contains("FinanceApprovalMessages.TrySegregation(exception, out var segregacion)", Read("Proyecto_Final", "Controllers", "BudgetsController.cs"), StringComparison.Ordinal);
     }
 
     // ---------------------------------------------------------------- M-07

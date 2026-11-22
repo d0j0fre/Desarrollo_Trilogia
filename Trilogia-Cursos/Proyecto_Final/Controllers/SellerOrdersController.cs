@@ -95,6 +95,14 @@ namespace Proyecto_Final.Controllers
                 ModelState.AddModelError(string.Empty, BusinessErrors.MissingIdentificationMessage + " Escríbala en «Identificación del cliente» y registre el pedido de nuevo.");
                 return View("Index", await BuildCreateModelAsync(model));
             }
+            catch (Exception ex) when (BusinessErrors.TryGetMessage(ex, out _))
+            {
+                // POST-qa1-07 (CU-071-02): la regla del procedimiento («No hay stock suficiente para uno o más productos.»)
+                // está escrita para el usuario y se muestra tal cual, como en el resto de pantallas.
+                BusinessErrors.TryGetMessage(ex, out var mensaje);
+                ModelState.AddModelError(string.Empty, mensaje);
+                return View("Index", await BuildCreateModelAsync(model));
+            }
             catch (Exception)
             {
                 ModelState.AddModelError(string.Empty, "No fue posible registrar el pedido en este momento. Intente nuevamente.");

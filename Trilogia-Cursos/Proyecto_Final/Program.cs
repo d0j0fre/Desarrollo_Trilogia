@@ -8,7 +8,13 @@ using System.Threading.RateLimiting;
 var builder = WebApplication.CreateBuilder(args);
 
 // MVC
-builder.Services.AddControllersWithViews(options => Proyecto_Final.Services.SpanishModelBindingMessages.Apply(options));
+builder.Services.AddControllersWithViews(options =>
+{
+    // POST-qa2-09 / POST-qa3-R3-02: mensajes de enlace de datos en español (antes "The value '' is invalid.").
+    Proyecto_Final.Services.SpanishModelBindingMessages.Apply(options);
+    // POST-qa3-R3-04: mensajes de validación por defecto en español (atributos sin ErrorMessage propio).
+    options.ModelMetadataDetailsProviders.Add(new Proyecto_Final.Services.SpanishValidationMetadataProvider());
+});
 // Sube el límite de campos de formulario: la orden de compra envía 8 campos por producto del catálogo
 builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
 {
