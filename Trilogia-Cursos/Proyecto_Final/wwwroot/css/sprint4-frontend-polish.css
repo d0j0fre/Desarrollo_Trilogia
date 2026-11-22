@@ -2224,3 +2224,8 @@
         padding: 0.8rem 0.62rem !important;
     }
 }
+
+/* POST-qa3-05: el resumen de validacion sin errores no debe verse como una barra roja vacia. */
+.alert.validation-summary-valid {
+    display: none;
+}
