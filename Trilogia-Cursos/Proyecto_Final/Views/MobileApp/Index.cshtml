@@ -40,7 +40,7 @@
 
                         <small class="text-muted d-block">
                             Versión @v.VersionNombre · @v.TamanoLegible ·
-                            @v.FechaPublicacion.ToLocalTime().ToString("dd/MM/yyyy")
+                            @v.FechaPublicacion.ToString("dd/MM/yyyy")
                         </small>
                     </div>
                 </div>
@@ -242,7 +242,7 @@
                                                         <small class="text-muted">Externo</small>
                                                     }
                                                 </td>
-                                                <td><small>@release.FechaPublicacion.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small></td>
+                                                <td><small>@release.FechaPublicacion.ToString("dd/MM/yyyy HH:mm")</small></td>
                                                 <td><small>@release.PublicadaPorNombre</small></td>
                                                 <td>
                                                     @if (release.Publicada)

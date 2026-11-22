@@ -233,7 +233,7 @@ namespace Proyecto_Final.Services
                     SenderId = reader.GetInt32(reader.GetOrdinal("RemitenteId")),
                     SenderName = reader.GetString(reader.GetOrdinal("RemitenteNombre")),
                     Content = reader.GetString(reader.GetOrdinal("Contenido")),
-                    SentAt = DateTime.SpecifyKind(reader.GetDateTime(reader.GetOrdinal("FechaEnvio")), DateTimeKind.Utc),
+                    SentAt = DateTime.SpecifyKind(reader.GetUtcDateTime(reader.GetOrdinal("FechaEnvio")), DateTimeKind.Utc),
                     TotalResults = reader.GetInt32(reader.GetOrdinal("TotalResultados"))
                 });
             }
@@ -344,7 +344,7 @@ namespace Proyecto_Final.Services
             ConversacionId = reader.GetInt32(reader.GetOrdinal("ConversacionId")),
             RemitenteId = reader.GetInt32(reader.GetOrdinal("RemitenteId")),
             Contenido = reader.GetString(reader.GetOrdinal("Contenido")),
-            FechaEnvio = DateTime.SpecifyKind(reader.GetDateTime(reader.GetOrdinal("FechaEnvio")), DateTimeKind.Utc),
+            FechaEnvio = DateTime.SpecifyKind(reader.GetUtcDateTime(reader.GetOrdinal("FechaEnvio")), DateTimeKind.Utc),
             Leido = reader.GetBoolean(reader.GetOrdinal("Leido"))
         };
 
@@ -354,7 +354,7 @@ namespace Proyecto_Final.Services
             DepartamentoId = reader.GetInt32(reader.GetOrdinal("DepartamentoId")),
             RemitenteId = reader.GetInt32(reader.GetOrdinal("RemitenteId")),
             Contenido = reader.GetString(reader.GetOrdinal("Contenido")),
-            FechaEnvio = DateTime.SpecifyKind(reader.GetDateTime(reader.GetOrdinal("FechaEnvio")), DateTimeKind.Utc),
+            FechaEnvio = DateTime.SpecifyKind(reader.GetUtcDateTime(reader.GetOrdinal("FechaEnvio")), DateTimeKind.Utc),
             RemitenteNombre = reader.GetString(reader.GetOrdinal("RemitenteNombre"))
         };
 

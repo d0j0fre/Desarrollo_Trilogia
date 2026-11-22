@@ -93,7 +93,7 @@ namespace Proyecto_Final.Services
                 items,
                 totalConfirmado,
                 descuentoTotal,
-                DateTime.Now);
+                CostaRicaClock.Now);
 
             SendEmail(
                 destinatario,

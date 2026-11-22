@@ -42,7 +42,7 @@ public sealed class ComboDbService : IComboDbService
                 Descripcion = ReadNullableString(reader, "Descripcion"),
                 Precio = reader.GetDecimal(reader.GetOrdinal("Precio")),
                 Activo = reader.GetBoolean(reader.GetOrdinal("Activo")),
-                FechaCreacionUtc = reader.GetDateTime(reader.GetOrdinal("FechaCreacionUtc")),
+                FechaCreacionUtc = reader.GetUtcDateTime(reader.GetOrdinal("FechaCreacionUtc")),
                 RegistradoPorNombre = reader.GetString(reader.GetOrdinal("RegistradoPorNombre")),
                 CantidadProductos = reader.GetInt32(reader.GetOrdinal("CantidadProductos")),
                 StockDisponibleCombo = reader.GetInt32(reader.GetOrdinal("StockDisponibleCombo")),
@@ -76,7 +76,7 @@ public sealed class ComboDbService : IComboDbService
             Precio = reader.GetDecimal(reader.GetOrdinal("Precio")),
             Activo = reader.GetBoolean(reader.GetOrdinal("Activo")),
             RegistradoPorNombre = reader.GetString(reader.GetOrdinal("RegistradoPorNombre")),
-            FechaCreacionUtc = reader.GetDateTime(reader.GetOrdinal("FechaCreacionUtc")),
+            FechaCreacionUtc = reader.GetUtcDateTime(reader.GetOrdinal("FechaCreacionUtc")),
             StockDisponibleCombo = reader.GetInt32(reader.GetOrdinal("StockDisponibleCombo")),
             EstadoDisponibilidad = reader.GetString(reader.GetOrdinal("EstadoDisponibilidad"))
         };

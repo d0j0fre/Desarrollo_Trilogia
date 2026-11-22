@@ -75,7 +75,7 @@
                                 <td>
                                     @{
                                         // G2-24: solo se ofrecen las transiciones válidas (el procedimiento también las exige).
-                                        var nextStates = EmployeeLeaveTransitions.NextStates(item.Estado, item.FechaInicio, DateTime.Today);
+                                        var nextStates = EmployeeLeaveTransitions.NextStates(item.Estado, item.FechaInicio, CostaRicaClock.Today);
                                     }
                                     @if (nextStates.Count == 0)
                                     {

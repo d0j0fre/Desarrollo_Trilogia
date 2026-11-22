@@ -81,7 +81,7 @@ namespace Proyecto_Final.Controllers
 
         private static (int anio, int mes) NormalizarPeriodo(int? anio, int? mes)
         {
-            var hoy = DateTime.Now;
+            var hoy = CostaRicaClock.Now;
             var a = anio is >= 2000 and <= 2100 ? anio.Value : hoy.Year;
             var m = mes is >= 1 and <= 12 ? mes.Value : hoy.Month;
             return (a, m);

@@ -42,12 +42,12 @@ namespace Proyecto_Final.Services
                     PlazoCreditoDias = reader.GetInt32(8),
                     Saldo = reader.GetDecimal(9),
                     DeudaVencida = reader.GetDecimal(10),
-                    VencimientoMasAntiguo = reader.IsDBNull(11) ? null : reader.GetDateTime(11),
+                    VencimientoMasAntiguo = reader.IsDBNull(11) ? null : reader.GetDateTimeCR(11),
                     CreditoDisponible = reader.GetDecimal(12),
                     CantidadFacturas = reader.GetInt32(13),
                     TotalFacturado = reader.GetDecimal(14),
                     TotalPagado = reader.GetDecimal(15),
-                    FechaCorte = reader.GetDateTime(16)
+                    FechaCorte = reader.GetDateTimeCR(16)
                 };
 
                 await reader.NextResultAsync(cancellationToken);
@@ -58,7 +58,7 @@ namespace Proyecto_Final.Services
                         FacturaId = reader.GetInt32(0),
                         NumeroFactura = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
                         PedidoId = reader.IsDBNull(2) ? 0 : reader.GetInt32(2),
-                        FechaFactura = reader.GetDateTime(3),
+                        FechaFactura = reader.GetDateTimeCR(3),
                         Subtotal = reader.GetDecimal(4),
                         Impuesto = reader.GetDecimal(5),
                         Total = reader.GetDecimal(6),
@@ -73,7 +73,7 @@ namespace Proyecto_Final.Services
                     model.Movimientos.Add(new ClientAccountMovementViewModel
                     {
                         CreditoMovimientoId = reader.GetInt32(0),
-                        FechaMovimiento = reader.GetDateTime(1),
+                        FechaMovimiento = reader.GetDateTimeCR(1),
                         TipoMovimiento = reader.GetString(2),
                         Descripcion = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
                         Referencia = reader.IsDBNull(4) ? null : reader.GetString(4),

@@ -38,7 +38,7 @@
                 @foreach (var combo in Model)
                 {
                     <tr>
-                        <td><a asp-action="Detail" asp-route-id="@combo.ComboId"><strong>@combo.Nombre</strong></a><small class="d-block text-muted">Creado @combo.FechaCreacionUtc.ToLocalTime().ToString("dd/MM/yyyy") por @combo.RegistradoPorNombre</small></td>
+                        <td><a asp-action="Detail" asp-route-id="@combo.ComboId"><strong>@combo.Nombre</strong></a><small class="d-block text-muted">Creado @combo.FechaCreacionUtc.ToCostaRica().ToString("dd/MM/yyyy") por @combo.RegistradoPorNombre</small></td>
                         <td>₡@combo.Precio.ToString("N2")</td>
                         <td>@combo.CantidadProductos</td>
                         <td><span class="badge badge-@(combo.PuedeVenderse ? "success" : "danger")">@combo.StockDisponibleCombo @(combo.StockDisponibleCombo == 1 ? "unidad" : "unidades")</span></td>

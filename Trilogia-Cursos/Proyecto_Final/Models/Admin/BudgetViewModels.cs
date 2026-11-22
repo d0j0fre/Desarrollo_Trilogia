@@ -29,7 +29,7 @@ public sealed class BudgetListItemViewModel
 public sealed class BudgetCreateViewModel
 {
     [Range(2000, 2100, ErrorMessage = "El año debe estar entre 2000 y 2100.")]
-    public int Year { get; set; } = DateTime.Today.Year;
+    public int Year { get; set; } = CostaRicaClock.Today.Year;
 
     [Range(1, int.MaxValue, ErrorMessage = "Seleccione un departamento.")]
     public int DepartmentId { get; set; }

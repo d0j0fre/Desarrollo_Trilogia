@@ -136,7 +136,7 @@
                 const rows = [];
                 const row = function () { rows.push(Array.prototype.map.call(arguments, function (v) { return { text: String(v == null ? '' : v) }; })); };
                 const head = function () { rows.push(Array.prototype.map.call(arguments, function (v) { return { text: String(v), style: bold }; })); };
-                head('Reporte de inventario', new Date().toLocaleDateString('es-CR'));
+                head('Reporte de inventario', new Date().toLocaleDateString('es-CR', { timeZone: 'America/Costa_Rica' }));
                 row('Productos', data.resumen.productos);
                 row('Unidades en existencia', data.resumen.unidades);
                 row('Valor a precio de venta (₡)', data.resumen.valor);

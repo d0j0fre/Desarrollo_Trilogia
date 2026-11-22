@@ -30,11 +30,11 @@
                     <input asp-for="ProductoId" type="hidden" />
                     <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3"></div>
 
-                    @if (ProductExpiration.RequiereAviso(Model.FechaVencimiento, DateTime.Today))
+                    @if (ProductExpiration.RequiereAviso(Model.FechaVencimiento, CostaRicaClock.Today))
                     {
                         <div class="alert alert-warning" role="alert">
-                            <strong>@(ProductExpiration.DiasParaVencer(Model.FechaVencimiento, DateTime.Today) < 0 ? "Producto vencido:" : "Producto próximo a vencer:")</strong>
-                            @ProductExpiration.Describir(Model.FechaVencimiento, DateTime.Today).
+                            <strong>@(ProductExpiration.DiasParaVencer(Model.FechaVencimiento, CostaRicaClock.Today) < 0 ? "Producto vencido:" : "Producto próximo a vencer:")</strong>
+                            @ProductExpiration.Describir(Model.FechaVencimiento, CostaRicaClock.Today).
                         </div>
                     }
 

@@ -22,13 +22,13 @@ public sealed class MyAttendanceController : Controller
     public async Task<IActionResult> Index(DateTime? desde, DateTime? hasta, long? editar, CancellationToken cancellationToken)
     {
         var userId = HttpContext.Session.GetInt32("UserId") ?? 0;
-        var end = (hasta ?? DateTime.Today).Date; var start = (desde ?? end.AddDays(-30)).Date;
+        var end = (hasta ?? CostaRicaClock.Today).Date; var start = (desde ?? end.AddDays(-30)).Date;
         var jornadas = await _attendance.GetMineAsync(userId, start, end, cancellationToken);
         // «Completar» un borrador o una jornada rechazada carga sus datos en el formulario.
         var editable = jornadas.FirstOrDefault(j => j.JornadaId == editar && AttendanceRules.IsEditable(j.Estado));
         return View(new MyAttendanceIndexViewModel
         {
-            Form = editable is null ? new AttendanceFormViewModel { Fecha = DateTime.Today } : AttendanceRules.ToForm(editable),
+            Form = editable is null ? new AttendanceFormViewModel { Fecha = CostaRicaClock.Today } : AttendanceRules.ToForm(editable),
             Jornadas = jornadas
         });
     }

@@ -37,7 +37,7 @@ namespace Proyecto_Final.Controllers
         [AdminAuthorize("Activos", "ACTIVOS_GESTIONAR")]
         public async Task<IActionResult> Assign()
         {
-            var model = new ComodatoAssignViewModel { FechaAsignacion = DateTime.Today };
+            var model = new ComodatoAssignViewModel { FechaAsignacion = CostaRicaClock.Today };
             await CargarOpcionesAsync(model);
             return View(model);
         }

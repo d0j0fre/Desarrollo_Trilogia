@@ -41,6 +41,7 @@ La fuente de verdad es el último `origin/main`. Todo cambio se hace en una rama
 - El asistente se describe como: **Asistente conversacional basado en reglas e interpretación de intenciones**.
 - El chat usa servicios especializados; no agregar nueva lógica de chat a `AdminDbService`.
 - Evidencias de entrega se almacenan fuera de `wwwroot` mediante `IEvidenceStorageService`.
+- Fechas y horas: todo lo que ve una persona va en hora de Costa Rica (UTC-6, sin horario de verano) aunque el servidor corra en UTC (Azure). Usar `CostaRicaClock.Now/Today` en lugar de `DateTime.Now/Today`; leer fechas de SQL con `GetDateTimeCR` (marca de GETDATE/SYSDATETIME), `GetUtcDateTime` (propiedades `...Utc`, se muestran con `.ToCostaRica()`) o `GetDateTimeCRFromUtc`; en SQL usar `dbo.fn_HoyCR()`, `dbo.fn_AhoraCR()`, `dbo.fn_FechaHoraCR()` y `dbo.fn_DiaCRaReloj()` (0340) en vez de GETDATE()/SYSDATETIME() para «hoy» o para comparar con un día que escribe el usuario. Las fechas sin hora no se convierten. Una prueba falla si vuelve a entrar `DateTime.Now` o un `GetDateTime` crudo.
 
 ## Validación mínima antes de publicar
 

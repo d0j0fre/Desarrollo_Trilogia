@@ -27,7 +27,7 @@ namespace Proyecto_Final.Services
             // Un solo beneficio por producto (mayor prioridad primero).
             var yaPromocionados = new HashSet<int>();
 
-            var date = (evaluationDate ?? DateTime.UtcNow).Date;
+            var date = (evaluationDate ?? CostaRicaClock.Today).Date;
             foreach (var promo in promociones
                          .Where(p => p.FechaInicio.Date <= date && p.FechaFin.Date >= date)
                          .Where(p => string.Equals(p.SegmentoCliente, "Todos", StringComparison.OrdinalIgnoreCase) ||

@@ -48,7 +48,7 @@ namespace Proyecto_Final.Services
                 TamanoBytes = reader.IsDBNull(6) ? null : reader.GetInt64(6),
                 Notas = Texto(reader, 7),
                 MensajeObligatorio = Texto(reader, 8),
-                FechaPublicacion = reader.GetDateTime(9),
+                FechaPublicacion = reader.GetDateTimeCRFromUtc(9),
                 ArchivoAlmacenado = Texto(reader, 10),
                 ArchivoNombre = Texto(reader, 11),
                 Publicada = true
@@ -80,7 +80,7 @@ namespace Proyecto_Final.Services
                     TamanoBytes = reader.IsDBNull(6) ? null : reader.GetInt64(6),
                     Notas = Texto(reader, 7),
                     Publicada = reader.GetBoolean(8),
-                    FechaPublicacion = reader.GetDateTime(9),
+                    FechaPublicacion = reader.GetDateTimeCRFromUtc(9),
                     PublicadaPorNombre = Texto(reader, 10),
                     ArchivoAlmacenado = Texto(reader, 11),
                     ArchivoNombre = Texto(reader, 12)

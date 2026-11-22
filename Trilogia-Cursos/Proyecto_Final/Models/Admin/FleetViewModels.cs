@@ -113,7 +113,7 @@ namespace Proyecto_Final.Models.Admin
 
         [Required(ErrorMessage = "La fecha de vencimiento es obligatoria.")]
         [DataType(DataType.Date)]
-        public DateTime FechaVencimiento { get; set; } = DateTime.Today;
+        public DateTime FechaVencimiento { get; set; } = CostaRicaClock.Today;
 
         [StringLength(300)]
         public string? Observaciones { get; set; }
@@ -146,7 +146,7 @@ namespace Proyecto_Final.Models.Admin
 
         [Required(ErrorMessage = "La fecha de vencimiento es obligatoria.")]
         [DataType(DataType.Date)]
-        public DateTime FechaVencimiento { get; set; } = DateTime.Today;
+        public DateTime FechaVencimiento { get; set; } = CostaRicaClock.Today;
 
         [StringLength(300)]
         public string? Observaciones { get; set; }

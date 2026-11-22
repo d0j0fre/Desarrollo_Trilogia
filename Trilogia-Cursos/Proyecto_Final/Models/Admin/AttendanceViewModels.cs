@@ -25,7 +25,7 @@ public sealed class AttendanceFormViewModel : IValidatableObject
 
     [DataType(DataType.Date)]
     [Display(Name = "Fecha de jornada")]
-    public DateTime Fecha { get; set; } = DateTime.Today;
+    public DateTime Fecha { get; set; } = CostaRicaClock.Today;
 
     [Range(typeof(decimal), "0", "24")]
     [Display(Name = "Horas ordinarias")]

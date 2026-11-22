@@ -77,7 +77,7 @@
                     </div>
                     <div class="form-group" id="fechaRealizadaGrupo">
                         <label class="font-weight-bold">Fecha de realización</label>
-                        <input asp-for="Nueva.FechaRealizada" class="form-control" type="date" max="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                        <input asp-for="Nueva.FechaRealizada" class="form-control" type="date" max="@CostaRicaClock.Today.ToString("yyyy-MM-dd")" />
                         <small class="form-text text-muted">Para una orden Completada; si se deja vacía se usa la fecha de hoy.</small>
                     </div>
                     <button type="submit" class="btn btn-ds-create btn-block"><i class="fa fa-wrench mr-2"></i>Registrar orden</button>
@@ -182,7 +182,7 @@
                                                     <label class="font-weight-bold mr-2 mb-2" for="costo-@o.OrdenMantenimientoId">Costo final (₡)</label>
                                                     <input type="number" id="costo-@o.OrdenMantenimientoId" name="costo" step="0.01" min="0" value="@o.Costo.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)" class="form-control mr-3 mb-2" style="width:150px" />
                                                     <label class="font-weight-bold mr-2 mb-2" for="fecha-@o.OrdenMantenimientoId">Fecha de realización</label>
-                                                    <input type="date" id="fecha-@o.OrdenMantenimientoId" name="fechaRealizada" value="@DateTime.Today.ToString("yyyy-MM-dd")" max="@DateTime.Today.ToString("yyyy-MM-dd")" class="form-control mr-3 mb-2" />
+                                                    <input type="date" id="fecha-@o.OrdenMantenimientoId" name="fechaRealizada" value="@CostaRicaClock.Today.ToString("yyyy-MM-dd")" max="@CostaRicaClock.Today.ToString("yyyy-MM-dd")" class="form-control mr-3 mb-2" />
                                                     <button type="submit" class="btn btn-ds-create mb-2"><i class="fa fa-check mr-2"></i>Completar orden</button>
                                                 </form>
                                             </td>

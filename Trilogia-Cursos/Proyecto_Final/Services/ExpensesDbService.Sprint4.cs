@@ -68,7 +68,7 @@ public partial class ExpensesDbService
         await reader.NextResultAsync();
         while (await reader.ReadAsync()) audit.Add(new()
         {
-            Action = reader.GetString(0), UserName = reader.GetString(1), CreatedUtc = reader.GetDateTime(2), Detail = reader.IsDBNull(3) ? null : reader.GetString(3)
+            Action = reader.GetString(0), UserName = reader.GetString(1), CreatedUtc = reader.GetUtcDateTime(2), Detail = reader.IsDBNull(3) ? null : reader.GetString(3)
         });
         result.Audit = audit;
         return result;
@@ -84,7 +84,7 @@ public partial class ExpensesDbService
         if (!await reader.ReadAsync()) return null;
         return new()
         {
-            ExpenseId = reader.GetInt32(0), ExpenseDate = reader.GetDateTime(1), DepartmentId = reader.GetInt32(2),
+            ExpenseId = reader.GetInt32(0), ExpenseDate = reader.GetDateTimeCR(1), DepartmentId = reader.GetInt32(2),
             CategoryId = reader.GetInt32(3), SupplierName = reader.IsDBNull(4) ? null : reader.GetString(4),
             DocumentNumber = reader.GetString(5), DocumentType = reader.GetString(6), Description = reader.GetString(7),
             Subtotal = reader.GetDecimal(8), Tax = reader.GetDecimal(9), PaymentMethod = reader.GetString(10),
@@ -179,7 +179,7 @@ public partial class ExpensesDbService
     {
         command.Parameters.Add("@GastoId", SqlDbType.Int).Value = model.ExpenseId > 0 ? model.ExpenseId : DBNull.Value;
         command.Parameters.Add("@FechaGasto", SqlDbType.Date).Value = model.ExpenseDate.Date;
-        command.Parameters.Add("@FechaNegocio", SqlDbType.Date).Value = DocumentExpirationPolicy.BusinessDate(DateTimeOffset.UtcNow);
+        command.Parameters.Add("@FechaNegocio", SqlDbType.Date).Value = CostaRicaClock.Today;
         command.Parameters.Add("@DepartamentoId", SqlDbType.Int).Value = model.DepartmentId;
         command.Parameters.Add("@CategoriaId", SqlDbType.Int).Value = model.CategoryId;
         command.Parameters.Add("@Proveedor", SqlDbType.NVarChar, 180).Value = ExpenseDb(model.SupplierName);
@@ -204,13 +204,13 @@ public partial class ExpensesDbService
 
     private static OperatingExpenseListItemViewModel ReadOperatingExpense(SqlDataReader reader) => new()
     {
-        ExpenseId = reader.GetInt32(reader.GetOrdinal("GastoId")), ExpenseDate = reader.GetDateTime(reader.GetOrdinal("FechaGasto")),
+        ExpenseId = reader.GetInt32(reader.GetOrdinal("GastoId")), ExpenseDate = reader.GetDateTimeCR(reader.GetOrdinal("FechaGasto")),
         DepartmentName = reader.GetString(reader.GetOrdinal("Departamento")), CategoryName = reader.GetString(reader.GetOrdinal("Categoria")),
         SupplierName = ExpenseNullableString(reader, "Proveedor"), DocumentNumber = reader.GetString(reader.GetOrdinal("NumeroDocumento")),
         Description = reader.GetString(reader.GetOrdinal("Descripcion")), Subtotal = reader.GetDecimal(reader.GetOrdinal("Subtotal")),
         Tax = reader.GetDecimal(reader.GetOrdinal("Impuesto")), Total = reader.GetDecimal(reader.GetOrdinal("Total")),
         Status = reader.GetString(reader.GetOrdinal("Estado")), CreatedByName = reader.GetString(reader.GetOrdinal("CreadoPorNombre")),
-        CreatedUtc = reader.GetDateTime(reader.GetOrdinal("FechaCreacionUtc")), HasReceipt = reader.GetBoolean(reader.GetOrdinal("TieneComprobante")),
+        CreatedUtc = reader.GetUtcDateTime(reader.GetOrdinal("FechaCreacionUtc")), HasReceipt = reader.GetBoolean(reader.GetOrdinal("TieneComprobante")),
         BudgetAmount = reader.GetDecimal(reader.GetOrdinal("MontoPresupuesto")), RealSpent = reader.GetDecimal(reader.GetOrdinal("GastoReal")),
         CommittedSpent = reader.GetDecimal(reader.GetOrdinal("GastoComprometido")), ExecutionPercent = reader.GetDecimal(reader.GetOrdinal("PorcentajeEjecucion")),
         ConsumptionLevel = reader.GetString(reader.GetOrdinal("NivelConsumo"))

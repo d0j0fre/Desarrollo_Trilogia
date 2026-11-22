@@ -57,7 +57,7 @@ public sealed class PayrollRuleFormViewModel : IValidatableObject
     [Range(typeof(decimal), "0", "99999999", ErrorMessage = "El tope debe estar entre 0 y 99 999 999.")]
     public decimal? Tope { get; set; }
 
-    [DataType(DataType.Date)] public DateTime VigenteDesde { get; set; } = DateTime.Today;
+    [DataType(DataType.Date)] public DateTime VigenteDesde { get; set; } = CostaRicaClock.Today;
     [DataType(DataType.Date)] public DateTime? VigenteHasta { get; set; }
 
     [Required(ErrorMessage = "Indique la fuente oficial o aprobación responsable.")]
@@ -107,10 +107,10 @@ public sealed class PayrollPeriodFormViewModel : IValidatableObject
     public string Tipo { get; set; } = "Quincenal";
 
     [DataType(DataType.Date)]
-    public DateTime Desde { get; set; } = DateTime.Today;
+    public DateTime Desde { get; set; } = CostaRicaClock.Today;
 
     [DataType(DataType.Date)]
-    public DateTime Hasta { get; set; } = DateTime.Today;
+    public DateTime Hasta { get; set; } = CostaRicaClock.Today;
 
     [ModelBinder(BinderType = typeof(FlexibleDecimalModelBinder))]
     public decimal FactorSalario { get; set; }

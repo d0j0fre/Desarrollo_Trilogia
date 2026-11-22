@@ -26,7 +26,7 @@ namespace Proyecto_Final.Services
                     UsuarioId = reader.GetInt32(3),
                     MontoCargo = reader.GetDecimal(4),
                     Pendiente = reader.GetDecimal(5),
-                    Vencimiento = reader.GetDateTime(6),
+                    Vencimiento = reader.GetDateTimeCR(6),
                     DiasAtraso = reader.GetInt32(7)
                 });
             }

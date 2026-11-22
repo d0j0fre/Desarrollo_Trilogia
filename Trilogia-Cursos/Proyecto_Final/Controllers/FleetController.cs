@@ -124,10 +124,10 @@ namespace Proyecto_Final.Controllers
             var usuarioNombre = HttpContext.Session.GetString("UserFullName") ?? "Administrador";
 
             // G2-18: una orden Completada lleva su fecha de realización (la del día si no se indica) y no puede ser futura.
-            if (nueva.FechaRealizada.HasValue && nueva.FechaRealizada.Value.Date > DateTime.Today)
+            if (nueva.FechaRealizada.HasValue && nueva.FechaRealizada.Value.Date > CostaRicaClock.Today)
                 ModelState.AddModelError(nameof(nueva.FechaRealizada), "La fecha de realización no puede ser futura.");
             if (nueva.Estado == "Completada" && !nueva.FechaRealizada.HasValue)
-                nueva.FechaRealizada = DateTime.Today;
+                nueva.FechaRealizada = CostaRicaClock.Today;
 
             if (!ModelState.IsValid)
             {
@@ -178,8 +178,8 @@ namespace Proyecto_Final.Controllers
         [AdminAuthorize("Flota", "FLOTA_MANTENIMIENTO")]
         public async Task<IActionResult> CompleteMaintenance(int ordenId, decimal? costo, DateTime? fechaRealizada)
         {
-            var fecha = (fechaRealizada ?? DateTime.Today).Date;
-            if (fecha > DateTime.Today)
+            var fecha = (fechaRealizada ?? CostaRicaClock.Today).Date;
+            if (fecha > CostaRicaClock.Today)
             {
                 TempData["ErrorMessage"] = "La fecha de realización no puede ser futura.";
                 return RedirectToAction(nameof(Maintenance));

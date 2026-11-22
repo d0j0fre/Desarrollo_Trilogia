@@ -109,8 +109,8 @@ public sealed class InventoryIntelligenceDbService : IInventoryIntelligenceServi
                 ProductoId = reader.GetInt32(reader.GetOrdinal("ProductoId")),
                 Nombre = reader.GetString(reader.GetOrdinal("Nombre")),
                 Stock = reader.GetInt32(reader.GetOrdinal("Stock")),
-                FechaCreacion = reader.GetDateTime(reader.GetOrdinal("FechaCreacion")),
-                UltimaVenta = reader.IsDBNull(lastSaleOrdinal) ? null : reader.GetDateTime(lastSaleOrdinal),
+                FechaCreacion = reader.GetDateTimeCR(reader.GetOrdinal("FechaCreacion")),
+                UltimaVenta = reader.IsDBNull(lastSaleOrdinal) ? null : reader.GetDateTimeCR(lastSaleOrdinal),
                 DiasSinMovimiento = reader.GetInt32(reader.GetOrdinal("DiasSinMovimiento")),
                 VendidoEnVentana = reader.GetInt32(reader.GetOrdinal("VendidoEnVentana")),
                 NivelRiesgo = reader.GetString(reader.GetOrdinal("NivelRiesgo"))

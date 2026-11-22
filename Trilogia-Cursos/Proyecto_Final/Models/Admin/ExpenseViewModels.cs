@@ -55,7 +55,7 @@ namespace Proyecto_Final.Models.Admin
         public int CuentaId { get; set; }
 
         [DataType(DataType.Date)]
-        public DateTime Fecha { get; set; } = DateTime.Today;
+        public DateTime Fecha { get; set; } = CostaRicaClock.Today;
 
         [Range(0.01, 999999999, ErrorMessage = "El monto debe ser mayor que cero.")]
         [Display(Name = "Monto (₡)")]
@@ -87,8 +87,8 @@ namespace Proyecto_Final.Models.Admin
     // Pantalla principal de gastos (CU-222): filtro de período + resumen presupuestario + registro + listado.
     public class ExpensesIndexViewModel
     {
-        public int Anio { get; set; } = DateTime.Now.Year;
-        public int Mes { get; set; } = DateTime.Now.Month;
+        public int Anio { get; set; } = CostaRicaClock.Now.Year;
+        public int Mes { get; set; } = CostaRicaClock.Now.Month;
         public int? CuentaId { get; set; }
         public List<GastoListItemViewModel> Gastos { get; set; } = new();
         public List<PresupuestoResumenViewModel> Resumen { get; set; } = new();

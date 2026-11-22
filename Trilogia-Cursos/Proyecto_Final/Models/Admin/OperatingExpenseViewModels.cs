@@ -19,7 +19,7 @@ public sealed class OperatingExpenseFormViewModel
     public int ExpenseId { get; set; }
 
     [DataType(DataType.Date)]
-    public DateTime ExpenseDate { get; set; } = DateTime.Today;
+    public DateTime ExpenseDate { get; set; } = CostaRicaClock.Today;
 
     [Range(1, int.MaxValue, ErrorMessage = "Seleccione un departamento.")]
     public int DepartmentId { get; set; }

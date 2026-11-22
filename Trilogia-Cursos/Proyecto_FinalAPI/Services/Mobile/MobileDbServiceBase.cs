@@ -149,12 +149,17 @@ namespace Proyecto_FinalAPI.Services.Mobile
             var ordinal = reader.GetOrdinal(column);
             if (reader.IsDBNull(ordinal)) return null;
             var value = reader.GetValue(ordinal);
+            // La app recibe hora de Costa Rica. Las columnas "...Utc" son instantes UTC; el resto lo
+            // puso la base con SYSDATETIME() (UTC en Azure). Una fecha sin hora no se mueve.
+            var isUtc = column.EndsWith("Utc", StringComparison.OrdinalIgnoreCase);
             return value switch
             {
-                DateTime dateTime => dateTime,
-                DateTimeOffset offset => offset.DateTime,
+                DateTime dateTime => isUtc && dateTime.TimeOfDay != TimeSpan.Zero
+                    ? Proyecto_Final.Services.CostaRicaClock.FromUtc(dateTime)
+                    : Proyecto_Final.Services.CostaRicaClock.FromDatabase(dateTime),
+                DateTimeOffset offset => Proyecto_Final.Services.CostaRicaClock.FromUtc(offset),
                 DateOnly dateOnly => dateOnly.ToDateTime(TimeOnly.MinValue),
-                _ => Convert.ToDateTime(value)
+                _ => Proyecto_Final.Services.CostaRicaClock.FromDatabase(Convert.ToDateTime(value))
             };
         }
 

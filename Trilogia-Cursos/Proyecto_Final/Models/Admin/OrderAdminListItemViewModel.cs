@@ -21,6 +21,6 @@ namespace Proyecto_Final.Models.Admin
         public bool EstaVencida =>
             SaldoPendiente > 0 &&
             FechaVencimiento.HasValue &&
-            FechaVencimiento.Value.Date < DateTime.Today;
+            FechaVencimiento.Value.Date < CostaRicaClock.Today;
     }
 }

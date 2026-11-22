@@ -185,7 +185,7 @@ namespace Proyecto_FinalAPI.Controllers
             // Costa Rica no tiene horario de verano: UTC-6 todo el año. El App
             // Service corre en UTC, y "hoy" a las 7 p. m. en San José ya es
             // mañana en UTC.
-            return _time.GetUtcNow().ToOffset(TimeSpan.FromHours(-6)).Date;
+            return Proyecto_Final.Services.CostaRicaClock.FromUtc(_time.GetUtcNow()).Date;
         }
     }
 }

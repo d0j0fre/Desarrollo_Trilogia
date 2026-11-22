@@ -19,7 +19,7 @@ public sealed class AttendanceController : Controller
     [HttpGet]
     public async Task<IActionResult> Index(DateTime? desde, DateTime? hasta, CancellationToken cancellationToken)
     {
-        var end = (hasta ?? DateTime.Today).Date;
+        var end = (hasta ?? CostaRicaClock.Today).Date;
         var start = (desde ?? end.AddDays(-30)).Date;
         if (start > end) (start, end) = (end, start);
         ViewBag.Desde = start; ViewBag.Hasta = end;

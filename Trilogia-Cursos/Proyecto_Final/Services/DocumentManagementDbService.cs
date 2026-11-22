@@ -111,7 +111,7 @@ public sealed class DocumentManagementDbService : IDocumentManagementDbService
             SizeBytes = reader.GetInt64(reader.GetOrdinal("TamanoBytes")),
             Sha256 = reader.GetString(reader.GetOrdinal("HashSha256")),
             CreatedByName = reader.GetString(reader.GetOrdinal("CreadoPorNombre")),
-            CreatedUtc = reader.GetDateTime(reader.GetOrdinal("FechaCreacionUtc"))
+            CreatedUtc = reader.GetUtcDateTime(reader.GetOrdinal("FechaCreacionUtc"))
         };
         var versions = new List<DocumentVersionViewModel>();
         await reader.NextResultAsync();
@@ -122,7 +122,7 @@ public sealed class DocumentManagementDbService : IDocumentManagementDbService
                 VersionId = reader.GetInt32(0), Version = reader.GetInt32(1), OriginalName = reader.GetString(2),
                 MimeType = reader.GetString(3), SizeBytes = reader.GetInt64(4), Sha256 = reader.GetString(5),
                 StorageStatus = reader.GetString(6), CreatedByUserId = reader.GetInt32(7),
-                CreatedByName = reader.GetString(8), CreatedUtc = reader.GetDateTime(9)
+                CreatedByName = reader.GetString(8), CreatedUtc = reader.GetUtcDateTime(9)
             });
         }
         model.Versions = versions;
@@ -241,7 +241,7 @@ public sealed class DocumentManagementDbService : IDocumentManagementDbService
         while (await reader.ReadAsync()) list.Add(new()
         {
             AlertId = reader.GetInt32(0), DocumentId = reader.GetInt32(1), ThresholdDays = reader.GetInt32(2),
-            DocumentTitle = reader.GetString(3), ExpirationDate = reader.GetDateTime(4), Recipient = reader.GetString(5)
+            DocumentTitle = reader.GetString(3), ExpirationDate = reader.GetDateTimeCR(4), Recipient = reader.GetString(5)
         });
         return list;
     }
@@ -269,8 +269,8 @@ public sealed class DocumentManagementDbService : IDocumentManagementDbService
             {
                 AlertId = reader.GetInt32(0), DocumentId = reader.GetInt32(1), DocumentTitle = reader.GetString(2),
                 TypeName = reader.GetString(3), DepartmentName = NullableString(reader, 4), ResponsibleName = reader.GetString(5),
-                ExpirationDate = reader.GetDateTime(6), DaysRemaining = reader.GetInt32(7), ExpirationStatus = reader.GetString(8),
-                Status = reader.GetString(9), CreatedUtc = reader.GetDateTime(10)
+                ExpirationDate = reader.GetDateTimeCR(6), DaysRemaining = reader.GetInt32(7), ExpirationStatus = reader.GetString(8),
+                Status = reader.GetString(9), CreatedUtc = reader.GetUtcDateTime(10)
             });
         }
         return new() { Items = items, Page = page, PageSize = size, Total = total };
@@ -350,7 +350,7 @@ public sealed class DocumentManagementDbService : IDocumentManagementDbService
         ReferenceNumber = NullableString(reader, "NumeroReferencia"), IssueDate = NullableDate(reader, "FechaEmision"),
         ExpirationDate = NullableDate(reader, "FechaVencimiento"), DoesNotExpire = reader.GetBoolean(reader.GetOrdinal("NoVence")),
         Status = reader.GetString(reader.GetOrdinal("Estado")), Active = reader.GetBoolean(reader.GetOrdinal("Activo")),
-        Version = reader.GetInt32(reader.GetOrdinal("Version")), UpdatedUtc = reader.GetDateTime(reader.GetOrdinal("FechaActualizacionUtc")),
+        Version = reader.GetInt32(reader.GetOrdinal("Version")), UpdatedUtc = reader.GetUtcDateTime(reader.GetOrdinal("FechaActualizacionUtc")),
         ExpirationStatus = reader.GetString(reader.GetOrdinal("EstadoVencimiento")), DaysToExpiration = NullableInt(reader, reader.GetOrdinal("DiasRestantes"))
     };
 
@@ -362,5 +362,5 @@ public sealed class DocumentManagementDbService : IDocumentManagementDbService
     private static string? NullableString(SqlDataReader reader, int ordinal) => reader.IsDBNull(ordinal) ? null : reader.GetString(ordinal);
     private static int? NullableInt(SqlDataReader reader, int ordinal) => reader.IsDBNull(ordinal) ? null : reader.GetInt32(ordinal);
     private static DateTime? NullableDate(SqlDataReader reader, string name) => NullableDate(reader, reader.GetOrdinal(name));
-    private static DateTime? NullableDate(SqlDataReader reader, int ordinal) => reader.IsDBNull(ordinal) ? null : reader.GetDateTime(ordinal);
+    private static DateTime? NullableDate(SqlDataReader reader, int ordinal) => reader.IsDBNull(ordinal) ? null : reader.GetDateTimeCR(ordinal);
 }
