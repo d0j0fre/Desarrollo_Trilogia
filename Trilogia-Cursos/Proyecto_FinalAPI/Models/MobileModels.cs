@@ -117,7 +117,7 @@ namespace Proyecto_FinalAPI.Models
     public sealed class OpenMileageRequest
     {
         public int VehiculoId { get; set; }
-        public int KmInicial { get; set; }
+        public int? KmInicial { get; set; }
         public string SyncGuid { get; set; } = string.Empty;
         public string? Observaciones { get; set; }
     }
@@ -125,7 +125,7 @@ namespace Proyecto_FinalAPI.Models
     public sealed class CloseMileageRequest
     {
         public int KilometrajeId { get; set; }
-        public int KmFinal { get; set; }
+        public int? KmFinal { get; set; }
         public string SyncGuid { get; set; } = string.Empty;
     }
 

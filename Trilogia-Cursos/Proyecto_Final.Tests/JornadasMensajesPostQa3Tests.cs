@@ -50,6 +50,18 @@ public class JornadasMensajesPostQa3Tests
         Assert.Contains("SetValueMustBeANumberAccessor", program, StringComparison.Ordinal);
     }
 
+    // POST-qa3-R3-03 (CU-152-06): por la API de la app un km vacio se tomaba como 0 y abria la jornada.
+    [Fact]
+    public void MobileMileageRequests_RejectAMissingKilometer()
+    {
+        Assert.Equal(typeof(int?), typeof(Proyecto_FinalAPI.Models.OpenMileageRequest).GetProperty("KmInicial")!.PropertyType);
+        Assert.Equal(typeof(int?), typeof(Proyecto_FinalAPI.Models.CloseMileageRequest).GetProperty("KmFinal")!.PropertyType);
+        var source = File.ReadAllText(SourcePath("Proyecto_FinalAPI", "Controllers", "MobileDriverController.cs"));
+        Assert.Contains("request.KmInicial is null", source, StringComparison.Ordinal);
+        Assert.Contains("Indique el kilometraje inicial.", source, StringComparison.Ordinal);
+        Assert.Contains("request.KmFinal is null", source, StringComparison.Ordinal);
+    }
+
     private static string SourcePath(params string[] parts)
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
