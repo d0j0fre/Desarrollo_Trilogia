@@ -65,6 +65,15 @@ public class JornadasMensajesPostQa3Tests
         Assert.Contains("request.KmFinal is null", source, StringComparison.Ordinal);
     }
 
+    // POST-qa3-R3-07 (CU-112-03): el layout no pintaba el aviso si el mensaje aparecia dentro de un atributo de la vista.
+    [Fact]
+    public void Layout_OnlyHidesATempDataMessageWhenItIsVisibleText()
+    {
+        var layout = File.ReadAllText(SourcePath("Proyecto_Final", "Views", "Shared", "_Layout.cshtml"));
+        Assert.Contains("bodyText.Contains(HtmlEncoder.Encode(message)", layout, StringComparison.Ordinal);
+        Assert.DoesNotContain("bodyHtml.Contains(HtmlEncoder.Encode(message)", layout, StringComparison.Ordinal);
+    }
+
     private static string SourcePath(params string[] parts)
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
