@@ -7,7 +7,10 @@ import '../../../core/providers.dart';
 import '../../../core/sync/outbox_entry.dart';
 import '../../../core/sync/sync_service.dart';
 import '../../../shared/utils/formatters.dart';
+import 'sale_quote.dart';
 import 'sales_catalog_cache.dart';
+
+export 'sale_quote.dart';
 
 class SaleClient {
   const SaleClient(this.id, this.name, this.email, this.phone, this.address);
@@ -145,6 +148,25 @@ class SalesApi {
       .map((item) => SellerOrder.fromJson(item as Map<String, dynamic>))
       .toList();
 
+  /// Cotiza el pedido con las promociones activas (y el segmento del cliente,
+  /// si ya se eligió). Solo informa: no registra nada. Sin reintento automático;
+  /// la pantalla decide qué hacer si falla.
+  Future<SaleQuote> quote({int? clientId, required Map<SaleProduct, int> items}) async {
+    final data = await _api.post<Map<String, dynamic>>('api/mobile/v1/sales/quote', body: {
+      'clienteId': ?clientId,
+      'items': [
+        for (final entry in items.entries) {'productoId': entry.key.id, 'cantidad': entry.value},
+      ],
+    });
+    return SaleQuote.fromJson(data);
+  }
+
+  /// Estimado local a precio de lista con IVA, para cuando no hay cotización.
+  static SaleQuote estimate(Map<SaleProduct, int> items) => SaleQuote.estimate([
+        for (final entry in items.entries)
+          (productId: entry.key.id, name: entry.key.name, price: entry.key.price, quantity: entry.value),
+      ]);
+
   Future<void> submit({
     required SaleClient client,
     required String deliveryType,
@@ -153,9 +175,11 @@ class SalesApi {
     required Map<SaleProduct, int> items,
     required bool online,
     String identification = '',
+    double? total,
   }) async {
     final syncGuid = _uuid.v4();
-    final total = items.entries.fold<double>(0, (sum, entry) => sum + entry.key.price * entry.value);
+    // Solo para la descripción en la cola: el total real lo calcula el servidor.
+    final shownTotal = total ?? estimate(items).total;
 
     await _sync.enqueue(OutboxEntry(
       syncGuid: syncGuid,
@@ -174,7 +198,7 @@ class SalesApi {
         'syncGuid': syncGuid,
         'registradoSinConexion': !online,
       },
-      descripcion: 'Venta a ${client.name} · ${Fmt.money(total)}',
+      descripcion: 'Venta a ${client.name} · ${Fmt.money(shownTotal)}',
       estado: OutboxStatus.pendiente,
       intentos: 0,
       creadoEn: DateTime.now(),

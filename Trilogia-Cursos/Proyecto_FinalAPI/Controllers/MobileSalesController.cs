@@ -64,6 +64,28 @@ namespace Proyecto_FinalAPI.Controllers
                 Ok(await _orders.GetSellerOrdersAsync(CurrentUserId, cancellationToken)));
 
         /// <summary>
+        /// Cotiza el pedido antes de confirmar: precio con las promociones activas (descuento y regalías), subtotal, IVA 13 %
+        /// y total, y si quedará retenido. Es lo mismo que registra <c>sp_Seller_CreateOrder</c> (comparten funciones).
+        /// </summary>
+        [HttpPost("quote")]
+        [EnableRateLimiting("mobile-read")]
+        [RequirePermission(MobilePermissions.SellerOrders)]
+        public async Task<IActionResult> Quote([FromBody] SaleQuoteRequest request, CancellationToken cancellationToken)
+        {
+            if (request is null) return InvalidRequest("Falta el cuerpo de la solicitud.");
+            var items = (request.Items ?? new List<CreateSaleItem>())
+                .Where(item => item.ProductoId > 0 && item.Cantidad > 0)
+                .ToList();
+            if (items.Count == 0) return InvalidRequest("Agregue al menos un producto.");
+            if (items.Count > MaxLines) return InvalidRequest($"Un pedido admite hasta {MaxLines} productos.");
+            if (items.Any(item => item.Cantidad > 10_000)) return InvalidRequest("Una de las cantidades no es válida.");
+            request.Items = items;
+
+            return await GuardAsync(_logger, "cotizar venta en campo", async () =>
+                Ok(await _orders.QuoteSaleAsync(request, cancellationToken)));
+        }
+
+        /// <summary>
         /// Registra la venta. Idempotente por <c>syncGuid</c>, que viaja como
         /// <c>PedidoOfflineGuid</c>: si la cola reintenta, la base devuelve el
         /// pedido ya creado en vez de crear otro.

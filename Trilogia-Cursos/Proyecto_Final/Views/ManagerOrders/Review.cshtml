@@ -108,8 +108,21 @@
                             }
                         </tbody>
                         <tfoot>
+                            @if (Model.Pedido.Impuesto > 0)
+                            {
+                                <tr>
+                                    <td colspan="3" class="text-right">Subtotal:</td>
+                                    <td class="text-right">₡@Model.Pedido.Subtotal.ToString("N2")</td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3" class="text-right">@Proyecto_Final.Services.OrderTax.Label:</td>
+                                    <td class="text-right">₡@Model.Pedido.Impuesto.ToString("N2")</td>
+                                    <td></td>
+                                </tr>
+                            }
                             <tr>
-                                <td colspan="3" class="text-right font-weight-bold">Total del pedido:</td>
+                                <td colspan="3" class="text-right font-weight-bold">Total del pedido@(Model.Pedido.Impuesto > 0 ? " (con IVA)" : ""):</td>
                                 <td class="text-right font-weight-bold text-primary">
                                     ₡@Model.Pedido.Total.ToString("N2")
                                 </td>

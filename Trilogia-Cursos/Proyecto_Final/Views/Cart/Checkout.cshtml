@@ -245,6 +245,10 @@
                 </div>
 
                 <div class="s4-checkout-summary-total">
+                    <div class="s4-checkout-summary-row">
+                        <span>Subtotal</span>
+                        <strong>₡@Model.Cart.Subtotal.ToString("N2")</strong>
+                    </div>
                     @if (Model.Cart.DescuentoTotal > 0)
                     {
                         <div class="s4-checkout-summary-row text-success">
@@ -252,6 +256,10 @@
                             <strong>-₡@Model.Cart.DescuentoTotal.ToString("N2")</strong>
                         </div>
                     }
+                    <div class="s4-checkout-summary-row">
+                        <span>@Proyecto_Final.Services.OrderTax.Label</span>
+                        <strong>₡@Model.Cart.Impuesto.ToString("N2")</strong>
+                    </div>
                     <div class="s4-checkout-summary-row">
                         <span>Total</span>
                         <strong>₡@Model.Cart.Total.ToString("N2")</strong>

@@ -46,8 +46,19 @@
                             <span>Tipo de entrega</span>
                             <strong>@(string.IsNullOrWhiteSpace(Model.TipoEntrega) ? "No indicado" : Model.TipoEntrega)</strong>
                         </div>
+                        @if (Model.Impuesto > 0)
+                        {
+                            <div>
+                                <span>Subtotal</span>
+                                <strong>&#8353;@Model.Subtotal.ToString("N2")</strong>
+                            </div>
+                            <div>
+                                <span>@Proyecto_Final.Services.OrderTax.Label</span>
+                                <strong>&#8353;@Model.Impuesto.ToString("N2")</strong>
+                            </div>
+                        }
                         <div>
-                            <span>Total</span>
+                            <span>Total@(Model.Impuesto > 0 ? " (con IVA)" : "")</span>
                             <strong>&#8353;@Model.Total.ToString("N2")</strong>
                         </div>
                     </div>
@@ -129,8 +140,19 @@
                     <p>Total del pedido</p>
                 </div>
 
+                @if (Model.Impuesto > 0)
+                {
+                    <div class="s4-client-order-total">
+                        <span>Subtotal</span>
+                        <strong>&#8353;@Model.Subtotal.ToString("N2")</strong>
+                    </div>
+                    <div class="s4-client-order-total">
+                        <span>@Proyecto_Final.Services.OrderTax.Label</span>
+                        <strong>&#8353;@Model.Impuesto.ToString("N2")</strong>
+                    </div>
+                }
                 <div class="s4-client-order-total">
-                    <span>Total</span>
+                    <span>Total@(Model.Impuesto > 0 ? " (con IVA)" : "")</span>
                     <strong>&#8353;@Model.Total.ToString("N2")</strong>
                 </div>
 

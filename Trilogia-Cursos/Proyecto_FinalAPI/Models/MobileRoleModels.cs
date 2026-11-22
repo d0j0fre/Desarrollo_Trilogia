@@ -141,6 +141,11 @@ namespace Proyecto_FinalAPI.Models
         public string Estado { get; set; } = string.Empty;
         public string TipoEntrega { get; set; } = string.Empty;
         public string DireccionEntrega { get; set; } = string.Empty;
+        /// <summary>Suma de las líneas (con promociones aplicadas), sin IVA (0330/0333).</summary>
+        public decimal Subtotal { get; set; }
+        /// <summary>IVA del pedido (13 %, la misma regla de la factura).</summary>
+        public decimal Impuesto { get; set; }
+        /// <summary>Total con IVA: el mismo que cobra la factura.</summary>
         public decimal Total { get; set; }
         public string Observaciones { get; set; } = string.Empty;
         public string VendedorNombre { get; set; } = string.Empty;
@@ -274,6 +279,41 @@ namespace Proyecto_FinalAPI.Models
     {
         public int ProductoId { get; set; }
         public int Cantidad { get; set; }
+    }
+
+    /// <summary>Lo que el vendedor ve antes de confirmar: líneas con descuento y regalías, subtotal, IVA y total.</summary>
+    public sealed class SaleQuoteRequest
+    {
+        public int? ClienteId { get; set; }
+        public List<CreateSaleItem> Items { get; set; } = new();
+    }
+
+    public sealed class SaleQuoteLine
+    {
+        public int ProductoId { get; set; }
+        public string Nombre { get; set; } = string.Empty;
+        public int Cantidad { get; set; }
+        public decimal PrecioLista { get; set; }
+        public decimal MontoDescuento { get; set; }
+        public decimal PrecioUnitario { get; set; }
+        public decimal Subtotal { get; set; }
+        public bool EsRegalo { get; set; }
+        public string Promocion { get; set; } = string.Empty;
+    }
+
+    public sealed class SaleQuote
+    {
+        public List<SaleQuoteLine> Lineas { get; set; } = new();
+        /// <summary>Suma a precio de lista, antes del descuento.</summary>
+        public decimal SubtotalLista { get; set; }
+        public decimal Descuento { get; set; }
+        /// <summary>Después del descuento, sin IVA.</summary>
+        public decimal Subtotal { get; set; }
+        public decimal Impuesto { get; set; }
+        public decimal Total { get; set; }
+        public decimal UmbralRetencion { get; set; }
+        /// <summary>El total con IVA supera el umbral: el pedido quedará retenido para el Gerente.</summary>
+        public bool Retenido { get; set; }
     }
 
     public sealed class CreateSaleResponse

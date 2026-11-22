@@ -228,6 +228,18 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
                             ),
                     ],
                     const Divider(),
+                    if (detail.hasTaxBreakdown) ...[
+                      ListTile(
+                        dense: true,
+                        title: const Text('Subtotal'),
+                        trailing: Text(Fmt.money(detail.subtotal), style: const TextStyle(fontWeight: FontWeight.w600)),
+                      ),
+                      ListTile(
+                        dense: true,
+                        title: const Text('IVA (13 %)'),
+                        trailing: Text(Fmt.money(detail.tax), style: const TextStyle(fontWeight: FontWeight.w600)),
+                      ),
+                    ],
                     ListTile(
                       title: const Text('Total', style: TextStyle(fontWeight: FontWeight.w800)),
                       trailing: Text(Fmt.money(detail.total), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),

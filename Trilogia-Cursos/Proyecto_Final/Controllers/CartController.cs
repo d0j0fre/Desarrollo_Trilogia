@@ -445,6 +445,8 @@ namespace Proyecto_Final.Controllers
                     PedidoId = order.PedidoId,
                     TipoEntrega = model.TipoEntrega,
                     DireccionEntrega = model.DireccionEntrega,
+                    Subtotal = order.Subtotal,
+                    Impuesto = order.Impuesto,
                     Total = order.Total,
                     Items = confirmedItems
                 };

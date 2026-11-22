@@ -102,6 +102,38 @@ namespace Proyecto_Final.Controllers
             }
         }
 
+        /// <summary>
+        /// Cotización antes de confirmar (obs. 3 y 1 de las pruebas post instalación): precio con las promociones activas,
+        /// IVA y total, igual a lo que registrará sp_Seller_CreateOrder. items = «productoId:cantidad,productoId:cantidad».
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> Quote(int clienteUsuarioId, string? items)
+        {
+            if (!IsAuthorizedSeller())
+                return Unauthorized();
+
+            var parsed = new List<(int ProductoId, int Cantidad)>();
+            foreach (var part in (items ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Take(200))
+            {
+                var pieces = part.Split(':');
+                if (pieces.Length == 2 && int.TryParse(pieces[0], out var productId) && int.TryParse(pieces[1], out var quantity)
+                    && productId > 0 && quantity is > 0 and <= 9999)
+                    parsed.Add((productId, quantity));
+            }
+            if (parsed.Count == 0)
+                return Json(new SellerOrderQuoteViewModel());
+
+            try
+            {
+                return Json(await _adminDbService.QuoteSellerOrderAsync(clienteUsuarioId > 0 ? clienteUsuarioId : null, parsed));
+            }
+            catch (Exception exception)
+            {
+                _logger.LogWarning(exception, "No fue posible cotizar el pedido de Venta móvil.");
+                return StatusCode(StatusCodes.Status503ServiceUnavailable);
+            }
+        }
+
         /// <summary>BUG-06-02 · CU-062: mensaje para cada rechazo del pedido a crédito (errores de 0230).</summary>
         public static string? CreditRejectionMessage(int sqlErrorNumber) => sqlErrorNumber switch
         {

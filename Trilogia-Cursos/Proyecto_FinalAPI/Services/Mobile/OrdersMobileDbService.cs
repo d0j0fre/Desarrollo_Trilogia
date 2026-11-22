@@ -18,6 +18,8 @@ namespace Proyecto_FinalAPI.Services.Mobile
         Task<IReadOnlyList<MobileSaleProduct>> GetSaleProductsAsync(string? search, CancellationToken cancellationToken = default);
         Task<IReadOnlyList<MobileSellerOrder>> GetSellerOrdersAsync(int sellerUserId, CancellationToken cancellationToken = default);
         Task<CreateSaleResponse?> CreateSaleAsync(CreateSaleRequest request, Guid syncGuid, int sellerUserId, string sellerName, CancellationToken cancellationToken = default);
+        /// <summary>Precio con las promociones activas, IVA y total antes de confirmar (mismas funciones que el registro).</summary>
+        Task<SaleQuote> QuoteSaleAsync(SaleQuoteRequest request, CancellationToken cancellationToken = default);
     }
 
     /// <summary>
@@ -73,6 +75,8 @@ namespace Proyecto_FinalAPI.Services.Mobile
                         Estado = r.Str("Estado"),
                         TipoEntrega = r.Str("TipoEntrega"),
                         DireccionEntrega = r.Str("DireccionEntrega"),
+                        Subtotal = r.Dec("Subtotal"),
+                        Impuesto = r.Dec("Impuesto"),
                         Total = r.Dec("Total"),
                         Observaciones = r.Str("Observaciones"),
                         VendedorNombre = r.Str("VendedorNombre"),
@@ -261,6 +265,47 @@ namespace Proyecto_FinalAPI.Services.Mobile
                     Retenido = string.Equals(status, "Retenido", StringComparison.OrdinalIgnoreCase)
                 };
             }, cancellationToken);
+        }
+
+        public async Task<SaleQuote> QuoteSaleAsync(SaleQuoteRequest request, CancellationToken cancellationToken = default)
+        {
+            var itemsJson = JsonSerializer.Serialize(request.Items
+                .Where(item => item.ProductoId > 0 && item.Cantidad > 0)
+                .Select(item => new { productoId = item.ProductoId, cantidad = item.Cantidad }));
+            var quote = new SaleQuote();
+
+            await ReadAsync("dbo.sp_Seller_CotizarPedido", p =>
+            {
+                p.Add("@ClienteUsuarioId", SqlDbType.Int).Value = request.ClienteId is > 0 ? request.ClienteId.Value : DBNull.Value;
+                p.Add("@ItemsJson", SqlDbType.NVarChar, -1).Value = itemsJson;
+            }, async r =>
+            {
+                while (await r.ReadAsync(cancellationToken))
+                {
+                    quote.Lineas.Add(new SaleQuoteLine
+                    {
+                        ProductoId = r.Int("ProductoId"),
+                        Nombre = r.Str("ProductoNombre"),
+                        Cantidad = r.Int("Cantidad"),
+                        PrecioLista = r.Dec("PrecioLista"),
+                        MontoDescuento = r.Dec("MontoDescuento"),
+                        PrecioUnitario = r.Dec("PrecioUnitario"),
+                        Subtotal = r.Dec("SubtotalLinea"),
+                        EsRegalo = r.Bool("EsRegalo"),
+                        Promocion = r.Str("PromocionNombre")
+                    });
+                }
+                if (!await r.NextResultAsync(cancellationToken) || !await r.ReadAsync(cancellationToken)) return;
+                quote.SubtotalLista = r.Dec("SubtotalLista");
+                quote.Descuento = r.Dec("Descuento");
+                quote.Subtotal = r.Dec("Subtotal");
+                quote.Impuesto = r.Dec("Impuesto");
+                quote.Total = r.Dec("Total");
+                quote.UmbralRetencion = r.Dec("UmbralRetencion");
+                quote.Retenido = r.Bool("Retenido");
+            }, cancellationToken);
+
+            return quote;
         }
 
         /// <summary>Igual que el sitio web: la identificación se guarda solo con dígitos (cédula física, jurídica, DIMEX o NITE).</summary>
