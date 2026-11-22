@@ -486,4 +486,40 @@ public sealed class MejorasMenoresTests
         var migrations = Directory.GetFiles(Path.Combine(Root(), "database", "migrations"), "03[3-4]*.sql");
         Assert.DoesNotContain(migrations, f => File.ReadAllText(f).Contains("UPDATE dbo.AuditoriaSistema", StringComparison.OrdinalIgnoreCase));
     }
+
+    // ---------------------------------------------------------------- M-16
+    [Fact]
+    public void M16_DispatchSummary_ConfirmsTheMail_OrWarnsWhenItFailedOrIsMissing()
+    {
+        var ok = DispatchNotificationSummary.Describe(1, 0, 0);
+        Assert.Equal(" Se notificó al cliente por correo.", ok.Success);
+        Assert.Null(ok.Warning);
+
+        var many = DispatchNotificationSummary.Describe(3, 0, 0);
+        Assert.Equal(" Se notificó a 3 clientes por correo.", many.Success);
+
+        var failed = DispatchNotificationSummary.Describe(1, 2, 1);
+        Assert.Equal(" Se notificó al cliente por correo.", failed.Success);
+        Assert.Equal("La ruta se despachó, pero no fue posible enviar el correo a 2 clientes y 1 cliente no tiene correo registrado.", failed.Warning);
+
+        var none = DispatchNotificationSummary.Describe(0, 1, 0);
+        Assert.Equal(string.Empty, none.Success);
+        Assert.Equal("La ruta se despachó, pero no fue posible enviar el correo a 1 cliente.", none.Warning);
+
+        Assert.Equal(string.Empty, DispatchNotificationSummary.Describe(0, 0, 0).Success);
+        Assert.Null(DispatchNotificationSummary.Describe(0, 0, 0).Warning);
+    }
+
+    [Fact]
+    public void M16_DispatchAndClaimClose_ReportTheMailOnScreen()
+    {
+        var routes = Read("Proyecto_Final", "Controllers", "RoutesAdminController.cs");
+        Assert.Contains("DispatchNotificationSummary.Describe(enviados, fallidos, sinCorreo)", routes, StringComparison.Ordinal);
+        Assert.Contains("\"Ruta despachada. Los pedidos están En ruta.\" + resumenCorreo.Success", routes, StringComparison.Ordinal);
+        Assert.Contains("TempData[\"WarningMessage\"] = resumenCorreo.Warning", routes, StringComparison.Ordinal);
+
+        var claims = Read("Proyecto_Final", "Controllers", "ReclamosController.cs");
+        Assert.Contains("Se notificó al cliente por correo.", claims, StringComparison.Ordinal);
+        Assert.Contains("TempData[\"WarningMessage\"] = \"El reclamo se cerró y la resolución quedó documentada, pero no fue posible enviar el correo al cliente.\"", claims, StringComparison.Ordinal);
+    }
 }
