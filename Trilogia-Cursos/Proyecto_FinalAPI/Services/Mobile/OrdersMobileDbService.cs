@@ -244,7 +244,7 @@ namespace Proyecto_FinalAPI.Services.Mobile
                 p.Add("@TipoEntrega", SqlDbType.NVarChar, 100).Value = request.TipoEntrega!.Trim();
                 p.Add("@DireccionEntrega", SqlDbType.NVarChar, 500).Value = DbText(request.DireccionEntrega, 500);
                 p.Add("@Observaciones", SqlDbType.NVarChar, 500).Value = DbText(request.Observaciones, 500);
-                p.Add("@IdentificacionCliente", SqlDbType.NVarChar, 100).Value = DBNull.Value;
+                p.Add("@IdentificacionCliente", SqlDbType.NVarChar, 100).Value = DbText(NormalizeIdentification(request.IdentificacionCliente), 100);
                 p.Add("@ItemsJson", SqlDbType.NVarChar, -1).Value = itemsJson;
                 p.Add("@PedidoOfflineGuid", SqlDbType.UniqueIdentifier).Value = syncGuid;
                 p.Add("@CanalPedido", SqlDbType.NVarChar, 50).Value = request.RegistradoSinConexion ? OfflineChannel : OnlineChannel;
@@ -261,6 +261,17 @@ namespace Proyecto_FinalAPI.Services.Mobile
                     Retenido = string.Equals(status, "Retenido", StringComparison.OrdinalIgnoreCase)
                 };
             }, cancellationToken);
+        }
+
+        /// <summary>Igual que el sitio web: la identificación se guarda solo con dígitos (cédula física, jurídica, DIMEX o NITE).</summary>
+        public static string NormalizeIdentification(string? value) =>
+            string.IsNullOrWhiteSpace(value) ? string.Empty : string.Concat(value.Where(char.IsDigit));
+
+        /// <summary>Una identificación escrita debe tener entre 9 y 12 dígitos.</summary>
+        public static bool IsValidIdentification(string? value)
+        {
+            var digits = NormalizeIdentification(value);
+            return digits.Length == 0 || digits.Length is >= 9 and <= 12;
         }
 
         private static OrderDecisionResponse MapDecision(Microsoft.Data.SqlClient.SqlDataReader r) => new()

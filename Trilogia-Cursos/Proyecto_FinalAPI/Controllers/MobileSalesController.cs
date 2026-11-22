@@ -25,6 +25,9 @@ namespace Proyecto_FinalAPI.Controllers
 
         private const int MaxLines = 60;
 
+        /// <summary>Error de sp_Seller_CreateOrder (0325): el pedido se factura y no trae la identificación del cliente.</summary>
+        public const int MissingIdentificationError = 50718;
+
         private readonly IOrdersMobileDbService _orders;
         private readonly IMobileAuditService _audit;
         private readonly ILogger<MobileSalesController> _logger;
@@ -86,11 +89,24 @@ namespace Proyecto_FinalAPI.Controllers
             if (!TryReadSyncGuid(request.SyncGuid, out var syncGuid))
                 return InvalidRequest("Falta un identificador de sincronización válido.");
 
+            if (!OrdersMobileDbService.IsValidIdentification(request.IdentificacionCliente))
+                return InvalidRequest("La identificación del cliente no es válida (cédula física, jurídica, DIMEX o NITE).");
+
             request.Items = items;
 
             return await GuardAsync(_logger, "registrar venta en campo", async () =>
             {
-                var result = await _orders.CreateSaleAsync(request, syncGuid, CurrentUserId, CurrentUserName, cancellationToken);
+                CreateSaleResponse? result;
+                try
+                {
+                    result = await _orders.CreateSaleAsync(request, syncGuid, CurrentUserId, CurrentUserName, cancellationToken);
+                }
+                catch (Microsoft.Data.SqlClient.SqlException exception) when (exception.Number == MissingIdentificationError)
+                {
+                    // POST-qa2-02 (CU-091-03): el pedido se factura al registrarlo y no trae la identificación del cliente.
+                    // 400 con el mensaje: la cola sin conexión lo deja con error visible en el teléfono; no se pierde.
+                    return InvalidRequest("Falta la identificación del cliente para facturar.");
+                }
                 if (result is null) return Unavailable();
 
                 await _audit.RecordAsync(CurrentUserId, CurrentUserName, CurrentUserEmail, CurrentRole,

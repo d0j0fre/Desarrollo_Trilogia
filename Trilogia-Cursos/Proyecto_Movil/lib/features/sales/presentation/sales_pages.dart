@@ -107,6 +107,7 @@ class _NewSalePageState extends ConsumerState<NewSalePage> {
   String _deliveryType = SalesApi.deliveryTypes.first;
   final _address = TextEditingController();
   final _notes = TextEditingController();
+  final _identification = TextEditingController();
   String _clientSearch = '';
   String _productSearch = '';
   bool _saving = false;
@@ -115,6 +116,7 @@ class _NewSalePageState extends ConsumerState<NewSalePage> {
   void dispose() {
     _address.dispose();
     _notes.dispose();
+    _identification.dispose();
     super.dispose();
   }
 
@@ -150,6 +152,7 @@ class _NewSalePageState extends ConsumerState<NewSalePage> {
           deliveryType: _deliveryType,
           address: _address.text.trim(),
           notes: _notes.text.trim(),
+          identification: _identification.text.trim(),
           items: Map.of(_cart),
           online: online,
         );
@@ -340,6 +343,17 @@ class _NewSalePageState extends ConsumerState<NewSalePage> {
           maxLines: 2,
           onChanged: (_) => setState(() {}),
           decoration: const InputDecoration(labelText: 'Dirección de entrega', prefixIcon: Icon(Icons.location_on_outlined)),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: _identification,
+          maxLength: 20,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(
+            labelText: 'Identificación del cliente',
+            helperText: 'Obligatoria para facturar el pedido (cédula física, jurídica, DIMEX o NITE).',
+            prefixIcon: Icon(Icons.badge_outlined),
+          ),
         ),
         const SizedBox(height: 8),
         TextField(

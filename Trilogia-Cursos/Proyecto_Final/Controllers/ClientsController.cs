@@ -153,6 +153,10 @@ namespace Proyecto_Final.Controllers
                 _logger.LogError(exception, "No se pudo cargar el estado de cuenta del cliente {UsuarioId}.", id);
             }
 
+            // POST-qa2-03 (CU-093-04): insignia «Vencida» en las facturas a crédito con cargo vencido.
+            var vencidas = await _adminDbService.TryGetOverdueInvoicesAsync(id, _logger);
+            ViewBag.FacturasVencidas = vencidas.GroupBy(v => v.FacturaId).ToDictionary(g => g.Key, g => g.First());
+
             return View(cliente);
         }
 

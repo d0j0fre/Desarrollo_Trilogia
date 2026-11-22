@@ -263,6 +263,8 @@ namespace Proyecto_FinalAPI.Models
         public string? TipoEntrega { get; set; }
         public string? DireccionEntrega { get; set; }
         public string? Observaciones { get; set; }
+        /// <summary>POST-qa2-02: identificación del cliente; se exige cuando el pedido se factura al registrarlo.</summary>
+        public string? IdentificacionCliente { get; set; }
         public List<CreateSaleItem> Items { get; set; } = new();
         public string? SyncGuid { get; set; }
         public bool RegistradoSinConexion { get; set; }

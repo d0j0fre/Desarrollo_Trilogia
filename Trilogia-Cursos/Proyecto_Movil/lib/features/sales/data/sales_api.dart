@@ -152,6 +152,7 @@ class SalesApi {
     required String notes,
     required Map<SaleProduct, int> items,
     required bool online,
+    String identification = '',
   }) async {
     final syncGuid = _uuid.v4();
     final total = items.entries.fold<double>(0, (sum, entry) => sum + entry.key.price * entry.value);
@@ -165,6 +166,8 @@ class SalesApi {
         'tipoEntrega': deliveryType,
         'direccionEntrega': address,
         'observaciones': notes,
+        // La factura exige la identificación del cliente (POST-qa2-02); sin ella el servidor rechaza el pedido.
+        if (identification.trim().isNotEmpty) 'identificacionCliente': identification.trim(),
         'items': [
           for (final entry in items.entries) {'productoId': entry.key.id, 'cantidad': entry.value},
         ],
