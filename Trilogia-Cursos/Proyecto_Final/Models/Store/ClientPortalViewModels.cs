@@ -51,6 +51,10 @@ namespace Proyecto_Final.Models.Store
         public string Estado { get; set; } = string.Empty;
         public string? TipoEntrega { get; set; }
         public string? DireccionEntrega { get; set; }
+        /// <summary>Suma de las líneas, sin IVA (0330).</summary>
+        public decimal Subtotal { get; set; }
+        public decimal Impuesto { get; set; }
+        /// <summary>Total con IVA: el mismo que cobra la factura.</summary>
         public decimal Total { get; set; }
         public string? Observaciones { get; set; }
         public bool HasInvoice { get; set; }

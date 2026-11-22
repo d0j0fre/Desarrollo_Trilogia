@@ -134,6 +134,32 @@ namespace Proyecto_Final.Models.Admin
         public bool TieneFactura => FacturaId > 0;
     }
 
+    /// <summary>Cotización de Venta móvil antes de confirmar (sp_Seller_CotizarPedido, 0332): promociones, IVA y total.</summary>
+    public class SellerOrderQuoteViewModel
+    {
+        public List<SellerOrderQuoteLineViewModel> Lineas { get; set; } = new();
+        public decimal SubtotalLista { get; set; }
+        public decimal Descuento { get; set; }
+        public decimal Subtotal { get; set; }
+        public decimal Impuesto { get; set; }
+        public decimal Total { get; set; }
+        public decimal UmbralRetencion { get; set; }
+        public bool Retenido { get; set; }
+    }
+
+    public class SellerOrderQuoteLineViewModel
+    {
+        public int ProductoId { get; set; }
+        public string Nombre { get; set; } = string.Empty;
+        public int Cantidad { get; set; }
+        public decimal PrecioLista { get; set; }
+        public decimal MontoDescuento { get; set; }
+        public decimal PrecioUnitario { get; set; }
+        public decimal Subtotal { get; set; }
+        public bool EsRegalo { get; set; }
+        public string Promocion { get; set; } = string.Empty;
+    }
+
     public class SellerMyOrderViewModel
     {
         public int PedidoId { get; set; }

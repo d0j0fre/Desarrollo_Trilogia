@@ -156,7 +156,15 @@ namespace Proyecto_Final.Services
                 ? $"<tr><td>Descuentos</td><td align=\"right\">-{FormatCurrency(descuentoTotal)}</td></tr>"
                 : string.Empty;
 
+            // El total confirmado por SQL ya incluye el IVA (0330): se muestra la diferencia con el subtotal menos
+            // los descuentos, de modo que las filas del correo sumen al total que cobra la factura.
+            var impuesto = totalConfirmado - (subtotal - descuentoTotal);
+            var taxSummary = impuesto > 0.004m
+                ? $"<tr><td>IVA (13 %)</td><td align=\"right\">{FormatCurrency(impuesto)}</td></tr>"
+                : string.Empty;
+
             return template
+                .Replace("{{IMPUESTO}}", taxSummary)
                 .Replace("{{CLIENTE}}", Encode(cliente))
                 .Replace("{{PEDIDO}}", Encode("#" + pedidoId))
                 .Replace("{{FECHA}}", Encode(fecha.ToString("dd/MM/yyyy HH:mm", CostaRicaCulture)))

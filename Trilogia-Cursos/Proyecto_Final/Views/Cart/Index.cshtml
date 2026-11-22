@@ -170,27 +170,28 @@
                         <span>Líneas del pedido</span>
                         <strong>@Model.Items.Count</strong>
                     </div>
-                    @if (Model.TienePromociones)
+                    <div class="s3-cart-summary__row">
+                        <span>Subtotal</span>
+                        <strong>₡@Model.Subtotal.ToString("N2")</strong>
+                    </div>
+                    @if (Model.DescuentoTotal > 0)
                     {
-                        <div class="s3-cart-summary__row">
-                            <span>Subtotal</span>
-                            <strong>₡@Model.Subtotal.ToString("N2")</strong>
+                        <div class="s3-cart-summary__row text-success">
+                            <span><i class="fa fa-tags mr-1"></i>Descuento por promociones</span>
+                            <strong>-₡@Model.DescuentoTotal.ToString("N2")</strong>
                         </div>
-                        @if (Model.DescuentoTotal > 0)
-                        {
-                            <div class="s3-cart-summary__row text-success">
-                                <span><i class="fa fa-tags mr-1"></i>Descuento por promociones</span>
-                                <strong>-₡@Model.DescuentoTotal.ToString("N2")</strong>
-                            </div>
-                        }
-                        @if (Model.Regalias.Any())
-                        {
-                            <div class="s3-cart-summary__row text-success">
-                                <span><i class="fa fa-gift mr-1"></i>Regalías incluidas</span>
-                                <strong>@Model.Regalias.Sum(r => r.Cantidad) u.</strong>
-                            </div>
-                        }
                     }
+                    @if (Model.Regalias.Any())
+                    {
+                        <div class="s3-cart-summary__row text-success">
+                            <span><i class="fa fa-gift mr-1"></i>Regalías incluidas</span>
+                            <strong>@Model.Regalias.Sum(r => r.Cantidad) u.</strong>
+                        </div>
+                    }
+                    <div class="s3-cart-summary__row">
+                        <span>@Proyecto_Final.Services.OrderTax.Label</span>
+                        <strong>₡@Model.Impuesto.ToString("N2")</strong>
+                    </div>
                     <div class="s3-cart-summary__total">
                         <span>Total</span>
                         <strong>₡@Model.Total.ToString("N2")</strong>

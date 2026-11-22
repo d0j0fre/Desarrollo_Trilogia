@@ -102,6 +102,14 @@
                                     </tr>
                                 }
                             </tbody>
+                            <tfoot>
+                                @if (Model.Impuesto > 0)
+                                {
+                                    <tr><td colspan="3" class="text-right">Subtotal:</td><td class="text-right">₡@Model.Subtotal.ToString("N2")</td></tr>
+                                    <tr><td colspan="3" class="text-right">@Proyecto_Final.Services.OrderTax.Label:</td><td class="text-right">₡@Model.Impuesto.ToString("N2")</td></tr>
+                                }
+                                <tr><td colspan="3" class="text-right font-weight-bold">Total@(Model.Impuesto > 0 ? " (con IVA)" : ""):</td><td class="text-right font-weight-bold">₡@Model.Total.ToString("N2")</td></tr>
+                            </tfoot>
                         </table>
                     </div>
                 }

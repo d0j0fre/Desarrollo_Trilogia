@@ -31,6 +31,17 @@
                     <span>Productos</span>
                     <strong>@Model.Items.Sum(x => x.Cantidad)</strong>
                 </div>
+                @if (Model.Impuesto > 0)
+                {
+                    <div class="s3-confirmation-fact">
+                        <span>Subtotal</span>
+                        <strong>₡@Model.Subtotal.ToString("N2")</strong>
+                    </div>
+                    <div class="s3-confirmation-fact">
+                        <span>@Proyecto_Final.Services.OrderTax.Label</span>
+                        <strong>₡@Model.Impuesto.ToString("N2")</strong>
+                    </div>
+                }
                 <div class="s3-confirmation-fact">
                     <span>Total</span>
                     <strong>₡@Model.Total.ToString("N2")</strong>

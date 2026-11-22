@@ -291,6 +291,8 @@ class OrderDetail {
     required this.deliveryType,
     required this.address,
     required this.total,
+    this.subtotal = 0,
+    this.tax = 0,
     required this.notes,
     required this.seller,
     required this.channel,
@@ -313,7 +315,10 @@ class OrderDetail {
   final String status;
   final String deliveryType;
   final String address;
+  /// `total` ya incluye IVA. `subtotal` e `impuesto` solo vienen en el detalle.
   final double total;
+  final double subtotal;
+  final double tax;
   final String notes;
   final String seller;
   final String channel;
@@ -327,6 +332,10 @@ class OrderDetail {
   final List<String> allowedTransitions;
   final List<OrderLine> lines;
 
+  /// Hay desglose de IVA para mostrar. Un pedido sin desglose trae ceros: se
+  /// muestra solo el total, como siempre.
+  bool get hasTaxBreakdown => tax > 0 && subtotal > 0;
+
   factory OrderDetail.fromJson(Map<String, dynamic> json) => OrderDetail(
         id: J.integer(json['pedidoId']),
         client: J.text(json['cliente']),
@@ -337,6 +346,8 @@ class OrderDetail {
         deliveryType: J.text(json['tipoEntrega']),
         address: J.text(json['direccionEntrega']),
         total: J.decimal(json['total']),
+        subtotal: J.decimal(json['subtotal']),
+        tax: J.decimal(json['impuesto']),
         notes: J.text(json['observaciones']),
         seller: J.text(json['vendedorNombre']),
         channel: J.text(json['canalPedido']),

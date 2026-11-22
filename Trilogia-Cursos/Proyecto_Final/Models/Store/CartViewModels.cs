@@ -46,7 +46,12 @@ namespace Proyecto_Final.Models.Store
         public List<CartItemViewModel> Regalias { get; set; } = new();
         public IReadOnlyList<CrossSellSuggestion> Recomendaciones { get; set; } = [];
         public decimal DescuentoTotal => Items.Sum(x => x.MontoDescuento);
-        public decimal Total => Subtotal - DescuentoTotal;
+
+        // Total del pedido con IVA (decisión de Esteban, 0330): subtotal con descuentos + IVA 13 %,
+        // lo mismo que guarda el pedido y cobra la factura.
+        public decimal SubtotalConDescuento => Subtotal - DescuentoTotal;
+        public decimal Impuesto => Proyecto_Final.Services.OrderTax.Calculate(SubtotalConDescuento);
+        public decimal Total => SubtotalConDescuento + Impuesto;
         public bool TienePromociones => DescuentoTotal > 0 || Regalias.Count > 0;
     }
 
@@ -130,6 +135,10 @@ namespace Proyecto_Final.Models.Store
         public int PedidoId { get; set; }
         public string TipoEntrega { get; set; } = string.Empty;
         public string? DireccionEntrega { get; set; }
+        /// <summary>Suma de las líneas con las promociones aplicadas, sin IVA (0330).</summary>
+        public decimal Subtotal { get; set; }
+        public decimal Impuesto { get; set; }
+        /// <summary>Total con IVA: el mismo que cobra la factura.</summary>
         public decimal Total { get; set; }
         public List<CartItemViewModel> Items { get; set; } = new();
     }
@@ -137,6 +146,8 @@ namespace Proyecto_Final.Models.Store
     public sealed class OrderCreationResult
     {
         public int PedidoId { get; set; }
+        public decimal Subtotal { get; set; }
+        public decimal Impuesto { get; set; }
         public decimal Total { get; set; }
         public List<CartItemViewModel> Items { get; set; } = new();
         public List<CartItemViewModel> Gifts { get; set; } = new();

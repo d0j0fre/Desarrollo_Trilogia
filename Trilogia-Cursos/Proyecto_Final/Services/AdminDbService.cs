@@ -1162,7 +1162,10 @@ namespace Proyecto_Final.Services
                         EstadoPago = reader.FieldCount > 11 && !reader.IsDBNull(11) ? reader.GetString(11) : string.Empty,
                         ReferenciaPago = reader.FieldCount > 12 && !reader.IsDBNull(12) ? reader.GetString(12) : null,
                         FechaPago = reader.FieldCount > 13 && !reader.IsDBNull(13) ? reader.GetDateTime(13) : null,
-                        MotivoRechazo = reader.FieldCount > 14 && !reader.IsDBNull(14) ? reader.GetString(14) : null
+                        MotivoRechazo = reader.FieldCount > 14 && !reader.IsDBNull(14) ? reader.GetString(14) : null,
+                        // 0330: Total ya incluye el IVA; Subtotal e Impuesto vienen al final del procedimiento.
+                        Subtotal = reader.FieldCount > 15 && !reader.IsDBNull(15) ? reader.GetDecimal(15) : (reader.IsDBNull(9) ? 0 : reader.GetDecimal(9)),
+                        Impuesto = reader.FieldCount > 16 && !reader.IsDBNull(16) ? reader.GetDecimal(16) : 0
                     };
                 }
             }
@@ -1733,6 +1736,51 @@ namespace Proyecto_Final.Services
             }
 
             return productos;
+        }
+
+        /// <summary>
+        /// Lo que verá el cliente en el pedido, antes de confirmar: descuentos y regalías de las promociones activas, subtotal,
+        /// IVA 13 % y total (sp_Seller_CotizarPedido, 0332; las mismas funciones que usa el registro del pedido).
+        /// </summary>
+        public async Task<SellerOrderQuoteViewModel> QuoteSellerOrderAsync(int? clienteUsuarioId, IEnumerable<(int ProductoId, int Cantidad)> items)
+        {
+            var itemsJson = System.Text.Json.JsonSerializer.Serialize(items
+                .Where(x => x.ProductoId > 0 && x.Cantidad > 0)
+                .Select(x => new { productoId = x.ProductoId, cantidad = x.Cantidad }));
+            var quote = new SellerOrderQuoteViewModel();
+
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_Seller_CotizarPedido", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.Add("@ClienteUsuarioId", SqlDbType.Int).Value = clienteUsuarioId is > 0 ? clienteUsuarioId.Value : DBNull.Value;
+            command.Parameters.Add("@ItemsJson", SqlDbType.NVarChar, -1).Value = itemsJson;
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                quote.Lineas.Add(new SellerOrderQuoteLineViewModel
+                {
+                    ProductoId = reader.GetInt32(reader.GetOrdinal("ProductoId")),
+                    Nombre = reader.GetString(reader.GetOrdinal("ProductoNombre")),
+                    Cantidad = reader.GetInt32(reader.GetOrdinal("Cantidad")),
+                    PrecioLista = reader.GetDecimal(reader.GetOrdinal("PrecioLista")),
+                    MontoDescuento = reader.GetDecimal(reader.GetOrdinal("MontoDescuento")),
+                    PrecioUnitario = reader.GetDecimal(reader.GetOrdinal("PrecioUnitario")),
+                    Subtotal = reader.GetDecimal(reader.GetOrdinal("SubtotalLinea")),
+                    EsRegalo = reader.GetBoolean(reader.GetOrdinal("EsRegalo")),
+                    Promocion = reader.IsDBNull(reader.GetOrdinal("PromocionNombre")) ? string.Empty : reader.GetString(reader.GetOrdinal("PromocionNombre"))
+                });
+            }
+            if (await reader.NextResultAsync() && await reader.ReadAsync())
+            {
+                quote.SubtotalLista = reader.GetDecimal(reader.GetOrdinal("SubtotalLista"));
+                quote.Descuento = reader.GetDecimal(reader.GetOrdinal("Descuento"));
+                quote.Subtotal = reader.GetDecimal(reader.GetOrdinal("Subtotal"));
+                quote.Impuesto = reader.GetDecimal(reader.GetOrdinal("Impuesto"));
+                quote.Total = reader.GetDecimal(reader.GetOrdinal("Total"));
+                quote.UmbralRetencion = reader.GetDecimal(reader.GetOrdinal("UmbralRetencion"));
+                quote.Retenido = reader.GetBoolean(reader.GetOrdinal("Retenido"));
+            }
+            return quote;
         }
 
         public async Task<SellerOrderResultViewModel> CreateSellerOrderAsync(

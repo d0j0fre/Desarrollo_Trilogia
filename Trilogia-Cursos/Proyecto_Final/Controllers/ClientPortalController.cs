@@ -570,6 +570,8 @@ namespace Proyecto_Final.Controllers
                 Estado = pedido.Estado,
                 TipoEntrega = pedido.TipoEntrega,
                 DireccionEntrega = pedido.DireccionEntrega,
+                Subtotal = pedido.Subtotal,
+                Impuesto = pedido.Impuesto,
                 Total = pedido.Total,
                 Observaciones = pedido.Observaciones,
                 HasInvoice = hasInvoice,

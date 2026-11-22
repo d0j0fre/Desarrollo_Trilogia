@@ -87,6 +87,8 @@ public sealed class StoreDbService
         var result = new OrderCreationResult
         {
             PedidoId = reader.GetInt32(reader.GetOrdinal("PedidoId")),
+            Subtotal = reader.GetDecimal(reader.GetOrdinal("Subtotal")),
+            Impuesto = reader.GetDecimal(reader.GetOrdinal("Impuesto")),
             Total = reader.GetDecimal(reader.GetOrdinal("Total"))
         };
 

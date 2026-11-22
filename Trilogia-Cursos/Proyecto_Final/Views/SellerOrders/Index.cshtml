@@ -316,6 +316,7 @@
                                        min="0"
                                        max="@Model.Productos[i].Stock"
                                        class="form-control seller-quantity"
+                                       data-producto-id="@Model.Productos[i].ProductoId"
                                        data-price="@Model.Productos[i].Precio.ToString(System.Globalization.CultureInfo.InvariantCulture)"
                                        data-stock="@Model.Productos[i].Stock" />
                             </div>
@@ -330,7 +331,8 @@
                 <div>
                     <strong>Total seleccionado:</strong>
                     <span id="selectedItems">0</span> producto(s) / <span id="selectedUnits">0</span> unidad(es)
-                    <div class="text-muted small">Total estimado: <strong id="selectedTotal">₡0,00</strong></div>
+                    <div class="text-muted small">Total estimado (con IVA): <strong id="selectedTotal">₡0,00</strong></div>
+                    <div class="small mt-1" id="quoteDetail" aria-live="polite"></div>
                 </div>
                 <div class="d-flex flex-column flex-md-row" style="gap:10px;">
                     <button type="button" id="saveOfflineOrder" class="btn btn-ds-action btn-lg">
@@ -386,6 +388,11 @@
             const storageTtlMs = 24 * 60 * 60 * 1000;
             const offlineStorage = window.DistribuidoraJJOfflineStorage;
             const syncUrl = '@Url.Action("SyncOffline", "SellerOrders")';
+            const quoteUrl = '@Url.Action("Quote", "SellerOrders")';
+            const quoteDetail = document.getElementById('quoteDetail');
+            const ivaRate = 0.13;
+            let quoteTimer = null;
+            let quoteNumber = 0;
             const catalog = {
                 clientes: @Html.Raw(clientesCatalogoJson),
                 productos: @Html.Raw(productosCatalogoJson)
@@ -489,7 +496,56 @@
 
                 selectedItems.textContent = productCount;
                 selectedUnits.textContent = unitCount;
-                selectedTotal.textContent = formatCurrency(total);
+                // Estimado local a precio de lista: el servidor aplica las promociones y la cotización (abajo) lo corrige.
+                selectedTotal.textContent = formatCurrency(total + Math.round(total * ivaRate * 100) / 100);
+                scheduleQuote(productCount);
+            }
+
+            // Cotización del servidor (promociones activas + IVA 13 %): lo mismo que registrará el pedido.
+            function scheduleQuote(productCount) {
+                if (!quoteDetail) { return; }
+                clearTimeout(quoteTimer);
+                if (productCount === 0 || !navigator.onLine) {
+                    quoteDetail.innerHTML = productCount > 0
+                        ? '<span class="text-muted">Sin conexión: estimado a precio de lista; las promociones se aplican al sincronizar.</span>'
+                        : '';
+                    return;
+                }
+                quoteTimer = setTimeout(requestQuote, 350);
+            }
+
+            async function requestQuote() {
+                const parts = [];
+                quantities.forEach(input => {
+                    const qty = parseInt(input.value || '0', 10);
+                    if (qty > 0 && input.dataset.productoId) { parts.push(input.dataset.productoId + ':' + qty); }
+                });
+                if (parts.length === 0) { return; }
+                const number = ++quoteNumber;
+                try {
+                    const response = await fetch(quoteUrl + '?clienteUsuarioId=' + encodeURIComponent(clientSelect.value || '0') +
+                        '&items=' + encodeURIComponent(parts.join(',')), { headers: { 'Accept': 'application/json' } });
+                    if (!response.ok || number !== quoteNumber) { return; }
+                    renderQuote(await response.json());
+                } catch (error) {
+                    quoteDetail.innerHTML = '';
+                }
+            }
+
+            function renderQuote(quote) {
+                if (!quote || !quote.lineas || quote.lineas.length === 0) { quoteDetail.innerHTML = ''; return; }
+                selectedTotal.textContent = formatCurrency(quote.total);
+                const rows = [];
+                quote.lineas.filter(line => line.esRegalo || line.montoDescuento > 0).forEach(line => {
+                    rows.push(line.esRegalo
+                        ? '<div class="text-success"><i class="fa fa-gift mr-1"></i>' + escapeHtml(line.nombre) + ' x' + line.cantidad + ': GRATIS (' + escapeHtml(line.promocion) + ')</div>'
+                        : '<div class="text-success"><i class="fa fa-tags mr-1"></i>' + escapeHtml(line.nombre) + ': -' + formatCurrency(line.montoDescuento) + ' (' + escapeHtml(line.promocion) + ')</div>');
+                });
+                rows.push('<div class="text-muted">Subtotal ' + formatCurrency(quote.subtotal) + ' · IVA (13 %) ' + formatCurrency(quote.impuesto) + ' · Total ' + formatCurrency(quote.total) + '</div>');
+                if (quote.retenido) {
+                    rows.push('<div class="text-warning"><i class="fa fa-exclamation-triangle mr-1"></i>El total supera ' + formatCurrency(quote.umbralRetencion) + ': el pedido quedará retenido para revisión del Gerente.</div>');
+                }
+                quoteDetail.innerHTML = rows.join('');
             }
 
             function filterProducts() {
@@ -784,6 +840,7 @@
                 if (savedAddress && !address.value.trim()) {
                     address.value = savedAddress;
                 }
+                updateSummary();   // la promoción puede depender del segmento del cliente
             });
 
             form.addEventListener('submit', function (event) {

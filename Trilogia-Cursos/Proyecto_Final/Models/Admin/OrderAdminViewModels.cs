@@ -23,6 +23,11 @@ namespace Proyecto_Final.Models.Admin
         public string Estado { get; set; } = string.Empty;
         public string? TipoEntrega { get; set; }
         public string? DireccionEntrega { get; set; }
+        /// <summary>Suma de las líneas con las promociones aplicadas, sin IVA (0330).</summary>
+        public decimal Subtotal { get; set; }
+        /// <summary>IVA del pedido (13 %, la regla de la factura).</summary>
+        public decimal Impuesto { get; set; }
+        /// <summary>Total con IVA: el mismo que cobra la factura.</summary>
         public decimal Total { get; set; }
         public string? Observaciones { get; set; }
         public string MetodoPago { get; set; } = string.Empty;
