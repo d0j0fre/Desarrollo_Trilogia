@@ -5,6 +5,8 @@
 
     var buscarActual = ViewBag.Buscar as string;
     var estadoActual = ViewBag.EstadoCredito as string;
+    var facturasVencidasPorCliente = ViewBag.FacturasVencidasPorCliente as Dictionary<int, List<Proyecto_Final.Models.Admin.OverdueInvoiceViewModel>>
+        ?? new Dictionary<int, List<Proyecto_Final.Models.Admin.OverdueInvoiceViewModel>>();
 }
 
 @section Styles {
@@ -197,6 +199,15 @@
                                             <span class="admin-badge-soft @claseEstado">
                                                 @estadoTexto
                                             </span>
+                                            @if (facturasVencidasPorCliente.TryGetValue(item.UsuarioId, out var vencidasCliente) && vencidasCliente.Count > 0)
+                                            {
+                                                <div class="mt-1">
+                                                    <span class="admin-badge-soft danger"
+                                                          title="Facturas a crédito vencidas: @string.Join(", ", vencidasCliente.Select(v => v.NumeroFactura))">
+                                                        Vencida · @vencidasCliente.Count factura(s)
+                                                    </span>
+                                                </div>
+                                            }
                                         </td>
 
                                         <td>@item.TotalMovimientos</td>

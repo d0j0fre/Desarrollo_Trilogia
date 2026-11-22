@@ -88,6 +88,13 @@ namespace Proyecto_Final.Controllers
                 ModelState.AddModelError(string.Empty, CreditRejectionMessage(((Microsoft.Data.SqlClient.SqlException)ex.InnerException!).Number)!);
                 return View("Index", await BuildCreateModelAsync(model));
             }
+            catch (Exception ex) when (BusinessErrors.IsMissingIdentification(ex))
+            {
+                // POST-qa2-02 (CU-091-03): el pedido se factura al registrarlo y exige la identificación; no se creó nada.
+                ModelState.AddModelError(nameof(model.IdentificacionCliente), BusinessErrors.MissingIdentificationMessage);
+                ModelState.AddModelError(string.Empty, BusinessErrors.MissingIdentificationMessage + " Escríbala en «Identificación del cliente» y registre el pedido de nuevo.");
+                return View("Index", await BuildCreateModelAsync(model));
+            }
             catch (Exception)
             {
                 ModelState.AddModelError(string.Empty, "No fue posible registrar el pedido en este momento. Intente nuevamente.");
@@ -235,6 +242,16 @@ namespace Proyecto_Final.Controllers
                     Estado        = result.Estado,
                     NumeroFactura = result.NumeroFactura,
                     RedirectUrl   = redirectUrl
+                });
+            }
+            catch (Exception ex) when (BusinessErrors.IsMissingIdentification(ex))
+            {
+                // POST-qa2-02: el pedido guardado sin conexión se queda en la cola con el error visible; no se pierde.
+                return Json(new SellerOfflineOrderSyncResponseViewModel
+                {
+                    Success = false,
+                    Message = BusinessErrors.MissingIdentificationMessage + " El pedido sigue guardado en la lista de pendientes de este dispositivo.",
+                    PedidoOfflineGuid = request.PedidoOfflineGuid
                 });
             }
             catch (Exception)

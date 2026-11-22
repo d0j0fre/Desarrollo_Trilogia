@@ -32,6 +32,12 @@ namespace Proyecto_Final.Controllers
                 var cuentas = await _adminDbService
                     .GetClientCreditsAsync(buscar, estadoCredito);
 
+                // POST-qa2-03 (CU-093-04): clientes con facturas vencidas (insignia «Vencida»).
+                var vencidas = await _adminDbService.TryGetOverdueInvoicesAsync(null, _logger);
+                ViewBag.FacturasVencidasPorCliente = vencidas
+                    .GroupBy(v => v.UsuarioId)
+                    .ToDictionary(g => g.Key, g => g.ToList());
+
                 return View(cuentas);
             }
             catch (Exception exception)
@@ -67,6 +73,9 @@ namespace Proyecto_Final.Controllers
 
                     return RedirectToAction(nameof(Index));
                 }
+
+                // POST-qa2-03 (CU-093-04): facturas a crédito vencidas de este cliente.
+                ViewBag.FacturasVencidas = await _adminDbService.TryGetOverdueInvoicesAsync(id, _logger);
 
                 return View(cuenta);
             }

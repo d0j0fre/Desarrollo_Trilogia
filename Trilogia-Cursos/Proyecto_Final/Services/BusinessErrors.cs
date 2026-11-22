@@ -31,6 +31,20 @@ public static class BusinessErrors
     public static string MessageOr(Exception? exception, string genericMessage) =>
         TryGetMessage(exception, out var message) ? message : genericMessage;
 
+    /// <summary>Errores 50906, 50718 y 50737 (0325): se intentó facturar un pedido sin identificación del cliente.</summary>
+    public static readonly int[] MissingIdentificationNumbers = [50906, 50718, 50737];
+
+    public const string MissingIdentificationMessage = "Falta la identificación del cliente para facturar.";
+
+    /// <summary>POST-qa2-02: busca el error de «falta la identificación» también dentro de excepciones que lo envuelven.</summary>
+    public static bool IsMissingIdentification(Exception? exception)
+    {
+        for (var current = exception; current is not null; current = current.InnerException)
+            if (current is SqlException sql && Array.IndexOf(MissingIdentificationNumbers, sql.Number) >= 0)
+                return true;
+        return false;
+    }
+
     /// <summary>
     /// Regla que valida un servicio de este proyecto con InvalidOperationException
     /// («El movimiento deja el stock en negativo.»). Las que lanza SqlClient (pool agotado,

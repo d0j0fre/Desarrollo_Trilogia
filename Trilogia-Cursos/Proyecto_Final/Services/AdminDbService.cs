@@ -6,7 +6,7 @@ using Proyecto_Final.Models.Store;
 
 namespace Proyecto_Final.Services
 {
-    public class AdminDbService
+    public partial class AdminDbService
     {
         private readonly string _connectionString;
 

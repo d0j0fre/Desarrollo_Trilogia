@@ -66,6 +66,10 @@ namespace Proyecto_Final.Controllers
             // BUG-23-05: un mensaje directo se lee y se responde en el chat.
             if (notification.EntidadTipo == "Chat") return RedirectToAction("Index", "Chat");
 
+            // POST-qa2-03: el aviso de factura vencida lleva a la cuenta por cobrar del cliente.
+            if (notification.EntidadTipo == "Cliente" && notification.EntidadId > 0)
+                return RedirectToAction("Detail", "AccountsReceivableAdmin", new { id = notification.EntidadId });
+
             return RedirectToAction(nameof(Index));
         }
 

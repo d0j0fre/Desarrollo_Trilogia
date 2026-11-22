@@ -190,6 +190,7 @@ builder.Services.AddScoped<IDocumentManagementDbService, DocumentManagementDbSer
 builder.Services.AddScoped<IDocumentAlertService, DocumentAlertService>();
 builder.Services.AddScoped<IDocumentAlertEmailSender, SmtpDocumentAlertEmailSender>();
 builder.Services.AddHostedService<DocumentAlertDailyWorker>();
+builder.Services.AddHostedService<InvoiceOverdueDailyWorker>();
 builder.Services.AddScoped<AssistantService>();
 builder.Services.AddScoped<IChatDbService, ChatDbService>();
 builder.Services.AddScoped<IChatAuthorizationService, ChatAuthorizationService>();

@@ -237,6 +237,7 @@
                         <label asp-for="IdentificacionCliente" class="font-weight-bold"></label>
                         <input asp-for="IdentificacionCliente" class="form-control" placeholder="Cédula física o jurídica" />
                         <span asp-validation-for="IdentificacionCliente" class="text-danger"></span>
+                        <small class="form-text text-muted">Obligatoria para facturar: sin ella no se puede registrar un pedido que se factura de inmediato ni aprobar uno retenido.</small>
                     </div>
 
                     <div class="form-group">

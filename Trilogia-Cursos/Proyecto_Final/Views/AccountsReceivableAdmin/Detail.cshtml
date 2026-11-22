@@ -560,6 +560,54 @@ else
 
     </div>
 
+    @if (ViewBag.FacturasVencidas is List<Proyecto_Final.Models.Admin.OverdueInvoiceViewModel> facturasVencidas && facturasVencidas.Count > 0)
+    {
+        @* POST-qa2-03 (CU-093-04): la factura sigue «Generada»; «Vencida» se calcula con el plazo de crédito y los abonos (FIFO). *@
+        <div class="row px-xl-5 pb-4">
+            <div class="col-12">
+                <div class="admin-table-wrapper" id="facturas-vencidas">
+                    <div class="p-4 border-bottom">
+                        <h5 class="mb-1">
+                            <span class="admin-badge-soft danger mr-2">Vencida</span>
+                            Facturas a crédito vencidas
+                        </h5>
+                        <p class="text-muted mb-0">
+                            El plazo de crédito de este cliente es de @Model.PlazoCreditoDias días; los abonos pagan primero los cargos más antiguos.
+                            Se avisó a Administrador, Gerente y Crédito y Cobro.
+                        </p>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Factura</th>
+                                    <th>Pedido</th>
+                                    <th>Cargo</th>
+                                    <th>Pendiente</th>
+                                    <th>Venció</th>
+                                    <th>Días de atraso</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var vencida in facturasVencidas)
+                                {
+                                    <tr>
+                                        <td><a asp-controller="Billing" asp-action="Detail" asp-route-id="@vencida.FacturaId">@vencida.NumeroFactura</a> <span class="admin-badge-soft danger">Vencida</span></td>
+                                        <td>#@vencida.PedidoId</td>
+                                        <td>₡@vencida.MontoCargo.ToString("N2")</td>
+                                        <td class="font-weight-bold">₡@vencida.Pendiente.ToString("N2")</td>
+                                        <td>@vencida.Vencimiento.ToString("dd/MM/yyyy")</td>
+                                        <td>@vencida.DiasAtraso</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
     <div class="row px-xl-5 pb-5">
 
         <div class="col-12">

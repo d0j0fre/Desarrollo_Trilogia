@@ -120,6 +120,11 @@
                             var claseEstado = Model.Estado == "Generada" ? "success" : "dark";
                         }
                         <span class="admin-badge-soft @claseEstado">@Model.Estado</span>
+                        @if (ViewBag.FacturaVencida is Proyecto_Final.Models.Admin.OverdueInvoiceViewModel facturaVencida)
+                        {
+                            <span class="admin-badge-soft danger ml-1" id="factura-vencida">Vencida</span>
+                            <div class="small text-muted mt-1">@facturaVencida.Descripcion</div>
+                        }
                     </div>
 
                     <div class="col-md-6 mb-3">

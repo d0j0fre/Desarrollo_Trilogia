@@ -38,6 +38,11 @@ namespace Proyecto_Final.Controllers
             factura.WhatsAppUrl = WhatsAppReceiptLink.BuildUrl(factura.Telefono, factura.NumeroFactura, factura.FechaFactura, factura.Total);
             ViewBag.FacturaRecienGenerada = Equals(TempData["FacturaRecienGenerada"], id);
 
+            // POST-qa2-03 (CU-093-04): «Vencida» se calcula con el crédito del cliente; Facturas.Estado no cambia.
+            var logger = HttpContext.RequestServices.GetRequiredService<ILogger<BillingController>>();
+            var vencidas = await _adminDbService.TryGetOverdueInvoicesAsync(null, logger);
+            ViewBag.FacturaVencida = vencidas.FirstOrDefault(v => v.FacturaId == id);
+
             return View(factura);
         }
 
@@ -68,6 +73,12 @@ namespace Proyecto_Final.Controllers
                 TempData["FacturaRecienGenerada"] = result.FacturaId;
                 await EnviarComprobantePorCorreoAsync(result.FacturaId);
                 return RedirectToAction(nameof(Detail), new { id = result.FacturaId });
+            }
+            catch (Exception ex) when (BusinessErrors.IsMissingIdentification(ex))
+            {
+                // POST-qa2-02 (CU-091-03): sin identificación del cliente no se factura.
+                TempData["ErrorMessage"] = BusinessErrors.MissingIdentificationMessage;
+                return RedirectToAction("Detail", "OrdersAdmin", new { id = pedidoId });
             }
             catch (Exception)
             {

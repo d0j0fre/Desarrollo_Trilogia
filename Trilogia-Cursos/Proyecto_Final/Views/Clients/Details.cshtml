@@ -115,6 +115,8 @@
     @if (Model.EstadoCuenta != null)
     {
         var cuenta = Model.EstadoCuenta;
+        var facturasVencidas = ViewBag.FacturasVencidas as Dictionary<int, Proyecto_Final.Models.Admin.OverdueInvoiceViewModel>
+            ?? new Dictionary<int, Proyecto_Final.Models.Admin.OverdueInvoiceViewModel>();
         <div class="row px-xl-5 pb-3">
             <div class="col-lg-4 pb-3">
                 <div class="admin-card h-100 text-center">
@@ -163,7 +165,14 @@
                                         <td><a asp-controller="Billing" asp-action="Detail" asp-route-id="@factura.FacturaId">@factura.NumeroFactura</a></td>
                                         <td>#@factura.PedidoId</td>
                                         <td>@factura.FechaFactura.ToString("dd/MM/yyyy")</td>
-                                        <td>@factura.Estado</td>
+                                        <td>
+                                            @factura.Estado
+                                            @if (facturasVencidas.TryGetValue(factura.FacturaId, out var vencida))
+                                            {
+                                                <div><span class="admin-badge-soft danger" title="@vencida.Descripcion">Vencida</span></div>
+                                                <div class="small text-muted">@vencida.DiasAtraso día(s) de atraso · pendiente ₡@vencida.Pendiente.ToString("N2")</div>
+                                            }
+                                        </td>
                                         <td>@(string.IsNullOrWhiteSpace(factura.MetodoPago) ? "No indicado" : factura.MetodoPago)</td>
                                         <td>₡@factura.Total.ToString("N2")</td>
                                     </tr>
