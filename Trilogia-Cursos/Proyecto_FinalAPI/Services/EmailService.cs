@@ -31,15 +31,30 @@ namespace Proyecto_FinalAPI.Services
             if (string.IsNullOrWhiteSpace(contrasenna))
                 throw new InvalidOperationException("La contraseña del correo no está configurada.");
 
-            using var mensaje = new MailMessage(remitente, destinatario, asunto, contenido)
+            if (string.IsNullOrWhiteSpace(destinatario))
+                throw new InvalidOperationException("El destinatario del correo no está indicado.");
+
+            // Nombre visible del remitente (Gmail exige que la cuenta sea la autenticada; el nombre es libre).
+            var nombreRemitente = _configuration.GetValue<string>("ConfiguracionCorreo:NombreRemitente");
+            if (string.IsNullOrWhiteSpace(nombreRemitente)) nombreRemitente = "Licorera La Bodega";
+
+            using var mensaje = new MailMessage
             {
+                From = new MailAddress(remitente, nombreRemitente, System.Text.Encoding.UTF8),
+                Subject = asunto,
+                SubjectEncoding = System.Text.Encoding.UTF8,
+                Body = contenido,
+                BodyEncoding = System.Text.Encoding.UTF8,
                 IsBodyHtml = true
             };
+            mensaje.To.Add(destinatario.Trim());
 
             using var smtp = new SmtpClient(host, puerto)
             {
                 Credentials = new NetworkCredential(remitente, contrasenna),
-                EnableSsl = true
+                EnableSsl = true,
+                // Sin tiempo de espera propio, un servidor de correo caído deja la solicitud colgada 100 s.
+                Timeout = 20000
             };
 
             // Solo para pruebas locales: deja el correo como .eml en una carpeta en lugar de enviarlo.

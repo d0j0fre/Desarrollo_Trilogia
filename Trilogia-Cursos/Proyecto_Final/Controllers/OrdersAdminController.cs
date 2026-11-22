@@ -10,12 +10,14 @@ namespace Proyecto_Final.Controllers
         private readonly AdminDbService _adminDbService;
         private readonly StoreDbService _storeDbService;
         private readonly ILogger<OrdersAdminController> _logger;
+        private readonly EmailService _emailService;
 
-        public OrdersAdminController(AdminDbService adminDbService, StoreDbService storeDbService, ILogger<OrdersAdminController> logger)
+        public OrdersAdminController(AdminDbService adminDbService, StoreDbService storeDbService, ILogger<OrdersAdminController> logger, EmailService emailService)
         {
             _adminDbService = adminDbService;
             _storeDbService = storeDbService;
             _logger = logger;
+            _emailService = emailService;
         }
 
         [HttpGet]
@@ -57,7 +59,7 @@ namespace Proyecto_Final.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [AdminAuthorize("Pedidos", "PEDIDOS_CAMBIAR_ESTADO")]
-        public async Task<IActionResult> UpdateStatus(int pedidoId, string nuevoEstado)
+        public async Task<IActionResult> UpdateStatus(int pedidoId, string nuevoEstado, string? motivo = null)
         {
             if (pedidoId <= 0 || string.IsNullOrWhiteSpace(nuevoEstado))
             {
@@ -67,17 +69,27 @@ namespace Proyecto_Final.Controllers
 
             var usuarioId = HttpContext.Session.GetInt32("UserId") ?? 0;
             var usuarioNombre = HttpContext.Session.GetString("UserFullName") ?? "Administrador";
+            nuevoEstado = nuevoEstado.Trim();
+            motivo = string.IsNullOrWhiteSpace(motivo) ? null : motivo.Trim();
+            if (motivo is { Length: > 500 }) motivo = motivo[..500];
 
             try
             {
-                await _adminDbService.UpdateOrderStatusAsync(pedidoId, nuevoEstado.Trim(), usuarioId, usuarioNombre);
+                // El estado anterior evita avisar dos veces por un pedido que ya estaba en ese estado.
+                var antes = await _adminDbService.GetOrderDetailAsync(pedidoId);
+
+                await _adminDbService.UpdateOrderStatusAsync(pedidoId, nuevoEstado, usuarioId, usuarioNombre);
 
                 await RegistrarAuditoriaAsync(
                     "Cambio de estado",
                     "Pedidos",
-                    $"Se cambió el estado del pedido #{pedidoId} a {nuevoEstado.Trim()}.");
+                    $"Se cambió el estado del pedido #{pedidoId} a {nuevoEstado}." +
+                    (motivo is null ? string.Empty : $" Motivo: {motivo}."));
 
                 TempData["SuccessMessage"] = "Estado del pedido actualizado correctamente.";
+
+                // El estado ya cambió: si el correo falla, el cambio NO se revierte; se registra y se avisa en pantalla.
+                await NotificarClienteAsync(antes, pedidoId, nuevoEstado, motivo);
             }
             catch (Exception ex)
             {
@@ -86,6 +98,37 @@ namespace Proyecto_Final.Controllers
             }
 
             return RedirectToAction(nameof(Detail), new { id = pedidoId });
+        }
+
+        // Correo al cliente al aprobar, rechazar o cancelar su pedido (la decisión del Gerente en Pedidos retenidos va aparte).
+        private async Task NotificarClienteAsync(Models.Admin.OrderDetailViewModel? antes, int pedidoId, string nuevoEstado, string? motivo)
+        {
+            if (antes is null || !EmailService.ShouldNotifyOrderStatus(antes.Estado, nuevoEstado)) return;
+
+            if (string.IsNullOrWhiteSpace(antes.Correo))
+            {
+                TempData.Remove("SuccessMessage");
+                TempData["WarningMessage"] = "El estado del pedido se actualizó, pero el cliente no tiene un correo registrado para notificarle.";
+                return;
+            }
+
+            try
+            {
+                _emailService.SendOrderStatus(antes.Correo, antes.Cliente, pedidoId, nuevoEstado, motivo);
+            }
+            catch (Exception exception)
+            {
+                _logger.LogWarning(exception, "El pedido {PedidoId} pasó a {Estado}, pero no se pudo enviar el correo al cliente.", pedidoId, nuevoEstado);
+                TempData.Remove("SuccessMessage");
+                TempData["WarningMessage"] = "El estado del pedido se actualizó, pero no fue posible enviar el correo de notificación al cliente. El cambio se conservó.";
+                return;
+            }
+
+            TempData["SuccessMessage"] = "Estado del pedido actualizado correctamente. Se notificó al cliente por correo.";
+            await RegistrarAuditoriaAsync(
+                "Notificar pedido por correo",
+                "Pedidos",
+                $"Se envió al correo {antes.Correo} el aviso de que el pedido #{pedidoId} quedó {OrderStatusFlow.Name(nuevoEstado)}.");
         }
 
         private async Task RegistrarAuditoriaAsync(string accion, string modulo, string descripcion)

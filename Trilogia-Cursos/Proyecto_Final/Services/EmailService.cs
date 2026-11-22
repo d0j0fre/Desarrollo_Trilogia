@@ -38,17 +38,32 @@ namespace Proyecto_Final.Services
             if (string.IsNullOrWhiteSpace(contrasenna))
                 throw new InvalidOperationException("La contrasenna del correo no esta configurada.");
 
-            using var mensaje = new MailMessage(remitente, destinatario, asunto, contenido)
+            if (string.IsNullOrWhiteSpace(destinatario))
+                throw new InvalidOperationException("El destinatario del correo no esta indicado.");
+
+            // Nombre visible del remitente (Gmail exige que la cuenta sea la autenticada; el nombre es libre).
+            var nombreRemitente = _configuration.GetValue<string>("ConfiguracionCorreo:NombreRemitente");
+            if (string.IsNullOrWhiteSpace(nombreRemitente)) nombreRemitente = "Licorera La Bodega";
+
+            using var mensaje = new MailMessage
             {
+                From = new MailAddress(remitente, nombreRemitente, Encoding.UTF8),
+                Subject = asunto,
+                SubjectEncoding = Encoding.UTF8,
+                Body = contenido,
+                BodyEncoding = Encoding.UTF8,
                 IsBodyHtml = true
             };
+            mensaje.To.Add(destinatario.Trim());
             if (adjunto is not null)
                 mensaje.Attachments.Add(new Attachment(new MemoryStream(adjunto), nombreAdjunto ?? "documento.pdf", "application/pdf"));
 
             using var smtp = new SmtpClient(host, puerto)
             {
                 Credentials = new NetworkCredential(remitente, contrasenna),
-                EnableSsl = true
+                EnableSsl = true,
+                // Sin tiempo de espera propio, un servidor de correo caído deja la pantalla colgada 100 s.
+                Timeout = 20000
             };
 
             // Solo para pruebas locales: deja el correo como .eml en una carpeta en lugar de enviarlo.
@@ -62,6 +77,28 @@ namespace Proyecto_Final.Services
             }
 
             smtp.Send(mensaje);
+        }
+
+        /// <summary>Estados de pedido que se avisan por correo al cliente (aprobación, rechazo y cancelación).</summary>
+        public static bool ShouldNotifyOrderStatus(string? estadoAnterior, string? estadoNuevo) =>
+            estadoNuevo is "Aprobado" or "Liberado" or "Rechazado" or "Cancelado"
+            && !string.Equals(estadoAnterior?.Trim(), estadoNuevo, StringComparison.Ordinal);
+
+        public static string OrderStatusSubject(string estado, int pedidoId) => estado switch
+        {
+            "Aprobado" or "Liberado" => $"Su pedido #{pedidoId} fue aprobado",
+            "Rechazado" => $"Su pedido #{pedidoId} no pudo ser aprobado",
+            "Cancelado" => $"Su pedido #{pedidoId} fue cancelado",
+            _ => $"Actualización de su pedido #{pedidoId}"
+        };
+
+        /// <summary>Envía al cliente el aviso de aprobación, rechazo o cancelación de su pedido (con el motivo, si lo hay).</summary>
+        public void SendOrderStatus(string destinatario, string cliente, int pedidoId, string estado, string? motivo)
+        {
+            var html = EmailTemplateBuilder.BuildOrderStatusEmail(
+                cliente, pedidoId, estado, motivo,
+                PublicSiteUrl.Build(_configuration, $"ClientPortal/Detail/{pedidoId}"));
+            SendEmail(destinatario, OrderStatusSubject(estado, pedidoId), html);
         }
 
         public void SendOrderReceipt(
@@ -93,7 +130,9 @@ namespace Proyecto_Final.Services
                 items,
                 totalConfirmado,
                 descuentoTotal,
-                DateTime.Now);
+                DateTime.Now,
+                // Enlace al pedido en la URL pública del sitio (nunca localhost); sin URL pública no se muestra el botón.
+                PublicSiteUrl.Build(_configuration, $"ClientPortal/Detail/{pedidoId}"));
 
             SendEmail(
                 destinatario,
@@ -114,7 +153,8 @@ namespace Proyecto_Final.Services
             IEnumerable<CartItemViewModel> items,
             decimal totalConfirmado,
             decimal descuentoTotal,
-            DateTime fecha)
+            DateTime fecha,
+            string? linkPedido = null)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(template);
             ArgumentNullException.ThrowIfNull(checkout);
@@ -156,7 +196,16 @@ namespace Proyecto_Final.Services
                 ? $"<tr><td>Descuentos</td><td align=\"right\">-{FormatCurrency(descuentoTotal)}</td></tr>"
                 : string.Empty;
 
-            return template
+            // Sin URL pública no se deja un botón roto (antes apuntaba a "#").
+            var plantilla = string.IsNullOrWhiteSpace(linkPedido)
+                ? System.Text.RegularExpressions.Regex.Replace(
+                    template,
+                    @"<a href=""\{\{LINK_PEDIDO\}\}""[^>]*>.*?</a>",
+                    string.Empty,
+                    System.Text.RegularExpressions.RegexOptions.Singleline)
+                : template;
+
+            return plantilla
                 .Replace("{{CLIENTE}}", Encode(cliente))
                 .Replace("{{PEDIDO}}", Encode("#" + pedidoId))
                 .Replace("{{FECHA}}", Encode(fecha.ToString("dd/MM/yyyy HH:mm", CostaRicaCulture)))
@@ -168,7 +217,7 @@ namespace Proyecto_Final.Services
                 .Replace("{{DESCUENTO}}", discountSummary)
                 .Replace("{{ENVIO}}", FormatCurrency(0m))
                 .Replace("{{TOTAL}}", FormatCurrency(totalConfirmado))
-                .Replace("{{LINK_PEDIDO}}", "#");
+                .Replace("{{LINK_PEDIDO}}", WebUtility.HtmlEncode(linkPedido ?? string.Empty));
         }
 
         public static string FormatCurrency(decimal value) => $"₡{value.ToString("N2", CostaRicaCulture)}";

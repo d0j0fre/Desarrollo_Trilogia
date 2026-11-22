@@ -14,19 +14,33 @@ namespace Proyecto_Final.Controllers
         private readonly EmailService _emailService;
         private readonly IComboDbService _combos;
         private readonly ILogger<HomeController> _logger;
+        private readonly IConfiguration? _configuration;
 
         public HomeController(
             AdminDbService adminDbService,
             StoreDbService storeDbService,
             EmailService emailService,
             IComboDbService combos,
-            ILogger<HomeController> logger)
+            ILogger<HomeController> logger,
+            IConfiguration? configuration = null)
         {
             _adminDbService = adminDbService;
             _storeDbService = storeDbService;
             _emailService = emailService;
             _combos = combos;
             _logger = logger;
+            _configuration = configuration;
+        }
+
+        // Buzón interno que recibe el aviso de cada consulta del formulario de contacto. Antes era una
+        // dirección personal fija en el código; ahora se configura (ConfiguracionCorreo:DestinatarioConsultas)
+        // y, si falta, se usa la propia cuenta remitente del sistema.
+        private string? InternalInquiryRecipient()
+        {
+            var configurado = _configuration?["ConfiguracionCorreo:DestinatarioConsultas"];
+            if (!string.IsNullOrWhiteSpace(configurado)) return configurado.Trim();
+            var remitente = _configuration?["ConfiguracionCorreo:Remitente"];
+            return string.IsNullOrWhiteSpace(remitente) ? null : remitente.Trim();
         }
 
         [HttpGet]
@@ -153,10 +167,11 @@ namespace Proyecto_Final.Controllers
 
                 try
                 {
-                    _emailService.SendEmail(
-                        "p13972127@gmail.com",
-                        asunto,
-                        contenido);
+                    var interno = InternalInquiryRecipient();
+                    if (interno is not null)
+                    {
+                        _emailService.SendEmail(interno, asunto, contenido);
+                    }
                 }
                 catch (Exception exception)
                 {

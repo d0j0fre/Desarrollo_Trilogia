@@ -57,27 +57,54 @@ public sealed class DocumentAlertService : IDocumentAlertService
 
     public async Task<int> GenerateAsync(int userId, CancellationToken cancellationToken = default)
     {
-        var candidates = await _db.GenerateAlertsAsync(CurrentBusinessDate(), Thresholds(), userId);
-        if (!_configuration.GetValue("DocumentAlerts:EmailEnabled", false) || !SmtpConfigured()) return candidates.Count;
+        var businessDate = CurrentBusinessDate();
+        var candidates = (await _db.GenerateAlertsAsync(businessDate, Thresholds(), userId)).ToList();
 
+        if (!EmailEnabled)
+        {
+            return candidates.Count;
+        }
+
+        if (!SmtpConfigured())
+        {
+            _logger.LogWarning("DocumentAlerts:EmailEnabled está activo pero ConfiguracionCorreo está incompleta (Host, Puerto, Remitente, Contrasenna): no se envían los correos de alertas documentales.");
+            return candidates.Count;
+        }
+
+        // Alertas que ya existían pero nunca se avisaron por correo (por ejemplo, creadas antes de configurar el SMTP).
+        try
+        {
+            var pending = await _db.GetPendingNotificationsAsync() ?? [];
+            var known = candidates.Select(item => item.AlertId).ToHashSet();
+            candidates.AddRange(pending.Where(item => known.Add(item.AlertId)));
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            // Base sin la migración 0335: se siguen enviando las alertas nuevas.
+            _logger.LogWarning(exception, "No se pudieron consultar las alertas documentales pendientes de correo (¿falta la migración 0335?).");
+        }
+
+        var link = PublicSiteUrl.Build(_configuration, "Documents/Alerts");
         foreach (var candidate in candidates.Where(item => !string.IsNullOrWhiteSpace(item.Recipient)))
         {
             try
             {
-                var title = WebUtility.HtmlEncode(candidate.DocumentTitle);
-                var body = $"<p>El documento <strong>{title}</strong> vence el {candidate.ExpirationDate:dd/MM/yyyy}.</p>" +
-                           "<p>Por favor, actualice el documento antes de su vencimiento.</p>";
+                var days = (int)(candidate.ExpirationDate.Date - businessDate.Date).TotalDays;
+                var body = EmailTemplateBuilder.BuildDocumentAlertEmail(candidate.DocumentTitle, candidate.ExpirationDate, days, link);
                 await _email.SendAsync(candidate.Recipient, $"Alerta de vencimiento: {candidate.DocumentTitle}", body, cancellationToken);
                 await _db.RegisterNotificationAsync(candidate, "Enviado", null);
             }
             catch (Exception exception)
             {
                 _logger.LogWarning(exception, "No se pudo enviar la alerta {AlertId} del documento {DocumentId}.", candidate.AlertId, candidate.DocumentId);
-                await _db.RegisterNotificationAsync(candidate, "Fallido", exception.GetType().Name);
+                try { await _db.RegisterNotificationAsync(candidate, "Fallido", exception.GetType().Name); }
+                catch (Exception registerFailure) { _logger.LogWarning(registerFailure, "No se pudo registrar el fallo de la alerta {AlertId}.", candidate.AlertId); }
             }
         }
         return candidates.Count;
     }
+
+    private bool EmailEnabled => _configuration.GetValue("DocumentAlerts:EmailEnabled", false);
 
     private int[] Thresholds()
     {

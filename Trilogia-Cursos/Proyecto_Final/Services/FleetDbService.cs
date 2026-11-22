@@ -151,6 +151,45 @@ namespace Proyecto_Final.Services
         }
 
         // ── CU-154 Alertas y documentos ─────────────────────
+
+        // 0335: documentos de flota por vencer sin aviso por correo + destinatarios (Administración y Logística).
+        public async Task<(List<FleetDocumentNotice> Notices, List<FleetAlertRecipient> Recipients)> GetPendingDocumentNoticesAsync(IEnumerable<int> thresholds)
+        {
+            var notices = new List<FleetDocumentNotice>();
+            var recipients = new List<FleetAlertRecipient>();
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_FlotaDocumentos_AvisosPendientes", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.Add("@Umbrales", SqlDbType.NVarChar, 100).Value = string.Join(',', thresholds.Where(x => x >= 0).Distinct().OrderBy(x => x));
+            await connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                notices.Add(new FleetDocumentNotice(
+                    reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetDateTime(3), reader.GetInt32(4), reader.GetInt32(5)));
+            }
+            if (await reader.NextResultAsync())
+            {
+                while (await reader.ReadAsync())
+                {
+                    recipients.Add(new FleetAlertRecipient(reader.GetInt32(0), reader.GetString(1), reader.GetString(2)));
+                }
+            }
+            return (notices, recipients);
+        }
+
+        public async Task RegisterDocumentNoticeAsync(int documentoId, int umbralDias, string estadoEnvio, int destinatarios, string? errorTecnico)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await using var command = new SqlCommand("dbo.sp_FlotaDocumentos_RegistrarAviso", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.Add("@DocumentoId", SqlDbType.Int).Value = documentoId;
+            command.Parameters.Add("@UmbralDias", SqlDbType.Int).Value = umbralDias;
+            command.Parameters.Add("@EstadoEnvio", SqlDbType.NVarChar, 20).Value = estadoEnvio;
+            command.Parameters.Add("@Destinatarios", SqlDbType.Int).Value = destinatarios;
+            command.Parameters.Add("@ErrorTecnicoResumido", SqlDbType.NVarChar, 100).Value = string.IsNullOrWhiteSpace(errorTecnico) ? DBNull.Value : errorTecnico;
+            await connection.OpenAsync();
+            await command.ExecuteNonQueryAsync();
+        }
+
         public async Task<List<FleetAlertViewModel>> GetAlertsAsync(int diasAviso)
         {
             var lista = new List<FleetAlertViewModel>();

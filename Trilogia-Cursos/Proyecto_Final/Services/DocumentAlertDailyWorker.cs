@@ -79,6 +79,19 @@ public sealed class DocumentAlertDailyWorker : BackgroundService
             var alerts = scope.ServiceProvider.GetRequiredService<IDocumentAlertService>();
             var count = await alerts.GenerateAsync(SystemUserId, cancellationToken);
             _logger.LogInformation("Verificación diaria de vencimientos documentales: {Count} alerta(s) nueva(s) o pendiente(s) de notificación.", count);
+
+            // CU-154-02: la misma verificación avisa por correo de los documentos de flota por vencer.
+            // Un fallo aquí no debe repetir la verificación documental ya hecha.
+            try
+            {
+                var fleet = await scope.ServiceProvider.GetRequiredService<IFleetAlertNotifier>().NotifyAsync(null, cancellationToken);
+                if (fleet.Enabled && fleet.SmtpConfigured)
+                    _logger.LogInformation("Avisos de flota por correo: {Sent} enviado(s), {Failed} fallido(s), {Documents} documento(s) pendiente(s).", fleet.Sent, fleet.Failed, fleet.Documents);
+            }
+            catch (Exception fleetException) when (fleetException is not OperationCanceledException)
+            {
+                _logger.LogWarning(fleetException, "Falló el envío diario de avisos de flota por correo.");
+            }
             return true;
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
