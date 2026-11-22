@@ -250,9 +250,27 @@ namespace Proyecto_Final.Controllers
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "No se pudo liquidar la mercadería de la ruta {RutaId}.", model.RutaId);
-                ModelState.AddModelError(string.Empty, BusinessErrors.MessageOr(ex, "No fue posible liquidar la mercadería."));
+                var mensaje = BusinessErrors.MessageOr(ex, "No fue posible liquidar la mercadería.");
+                if (EsFaltanteDeMercaderia(ex))
+                {
+                    // CU-105-02: además de bloquear el cierre, el faltante queda como alerta en la Auditoría.
+                    var faltante = model.Lineas
+                        .Where(l => l.Contado < l.Cantidad)
+                        .Select(l => $"{l.ProductoNombre} (pedido #{l.PedidoId}: contó {l.Contado} de {l.Cantidad})");
+                    await RegistrarAuditoriaAsync("ALERTA: faltante de mercadería", "Finanzas",
+                        $"Liquidación de mercadería bloqueada en la ruta {prep.RutaCodigo}: falta mercadería devuelta. {string.Join("; ", faltante)}.");
+                }
+                ModelState.AddModelError(string.Empty, mensaje);
                 return View(model);
             }
+        }
+
+        /// <summary>Error 53416 de sp_RutaMercaderia_Registrar: lo contado es menor a lo despachado.</summary>
+        public static bool EsFaltanteDeMercaderia(Exception? exception)
+        {
+            for (var current = exception; current is not null; current = current.InnerException)
+                if (current is Microsoft.Data.SqlClient.SqlException { Number: 53416 }) return true;
+            return false;
         }
 
         private static string? MerchandiseBlockedMessage(RouteMerchandisePrepareViewModel? prep)

@@ -29,11 +29,10 @@ namespace Proyecto_Final.Models.Admin
         // Misma regla que la pantalla Inventario: agotado, bajo (al mínimo o por debajo) o normal.
         public static string Classify(ProductAdminViewModel p)
         {
-            if (p.Stock <= 0 || string.Equals(p.EstadoStock, "Agotado", StringComparison.OrdinalIgnoreCase))
+            // POST-qa2-06: el estado depende del stock mínimo de cada producto; EstadoStock de la base usa un tope fijo de 5.
+            if (p.Stock <= 0)
                 return InventoryReportViewModel.OutStatus;
-            if (p.Stock <= p.StockMinimo
-                || string.Equals(p.EstadoStock, "Bajo", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(p.EstadoStock, "Stock bajo", StringComparison.OrdinalIgnoreCase))
+            if (p.Stock <= p.StockMinimo)
                 return InventoryReportViewModel.LowStatus;
             return InventoryReportViewModel.OkStatus;
         }
