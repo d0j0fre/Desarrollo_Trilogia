@@ -182,14 +182,23 @@ namespace Proyecto_Final.Controllers
                     $"Se despachó la ruta #{rutaId}. {destinatarios.Count} pedido(s) pasaron a En ruta.");
 
                 // CU-082 E3: notificación al cliente (mejor esfuerzo, no bloquea el despacho).
+                // M-16: la pantalla dice cuántos clientes recibieron el correo y avisa (amarillo) si alguno falló o no tiene correo.
+                int enviados = 0, fallidos = 0, sinCorreo = 0;
                 foreach (var (pedidoId, nombre, correo) in destinatarios)
                 {
-                    NotificarClienteSeguro(correo, nombre, pedidoId, "En ruta");
+                    switch (NotificarClienteSeguro(correo, nombre, pedidoId, "En ruta"))
+                    {
+                        case true: enviados++; break;
+                        case false: fallidos++; break;
+                        default: sinCorreo++; break;
+                    }
                 }
+                var resumenCorreo = DispatchNotificationSummary.Describe(enviados, fallidos, sinCorreo);
+                if (resumenCorreo.Warning is not null) TempData["WarningMessage"] = resumenCorreo.Warning;
 
                 if (pedidosSincronizados)
                 {
-                    TempData["SuccessMessage"] = "Ruta despachada. Los pedidos están En ruta.";
+                    TempData["SuccessMessage"] = "Ruta despachada. Los pedidos están En ruta." + resumenCorreo.Success;
                 }
                 else
                 {
@@ -450,9 +459,10 @@ namespace Proyecto_Final.Controllers
             vm.Vehiculos = await _logistics.GetAvailableVehiclesAsync();
         }
 
-        private void NotificarClienteSeguro(string correo, string nombre, int pedidoId, string estado)
+        /// <summary>true = correo enviado; false = falló el envío; null = el cliente no tiene correo.</summary>
+        private bool? NotificarClienteSeguro(string correo, string nombre, int pedidoId, string estado)
         {
-            if (string.IsNullOrWhiteSpace(correo)) return;
+            if (string.IsNullOrWhiteSpace(correo)) return null;
 
             try
             {
@@ -463,11 +473,13 @@ namespace Proyecto_Final.Controllers
                     $"<strong>{System.Net.WebUtility.HtmlEncode(estado)}</strong>.</p>" +
                     "<p>Gracias por su preferencia.<br/>Licorera La Bodega</p>";
                 _emailService.SendEmail(correo, asunto, cuerpo);
+                return true;
             }
             catch (Exception ex)
             {
                 // Mejor esfuerzo: un fallo de correo no debe afectar la operación.
                 _logger.LogWarning(ex, "No se pudo enviar la notificación de entrega al cliente del pedido #{PedidoId}.", pedidoId);
+                return false;
             }
         }
 
