@@ -108,7 +108,7 @@ namespace Proyecto_Final.Services
             command.Parameters.Add("@Nombre", SqlDbType.NVarChar, 150).Value = model.Nombre.Trim();
             command.Parameters.Add("@Descripcion", SqlDbType.NVarChar, 300).Value = string.IsNullOrWhiteSpace(model.Descripcion) ? DBNull.Value : model.Descripcion.Trim();
             command.Parameters.Add("@Tipo", SqlDbType.NVarChar, 25).Value = model.Tipo;
-            command.Parameters.Add("@ProductoId", SqlDbType.Int).Value = model.ProductoId;
+            command.Parameters.Add("@ProductoId", SqlDbType.Int).Value = model.ProductoId ?? 0;
             command.Parameters.Add("@CantidadMinima", SqlDbType.Int).Value = model.CantidadMinima;
             command.Parameters.Add("@PorcentajeDescuento", SqlDbType.Decimal).Value = model.PorcentajeDescuento.HasValue ? model.PorcentajeDescuento.Value : DBNull.Value;
             command.Parameters["@PorcentajeDescuento"].Precision = 5;
