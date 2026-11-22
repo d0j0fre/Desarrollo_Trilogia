@@ -450,4 +450,56 @@ public sealed class MejorasMenoresTests
         Assert.Equal("Solo se pueden editar promociones activas. La promoción «Verano» está inactiva.", PromotionsController.EditInactiveMessage("Verano", "Inactiva"));
         Assert.Contains("Estado = reader.GetString(12)", Read("Proyecto_Final", "Services", "PromotionsDbService.cs"), StringComparison.Ordinal);
     }
+
+    // ---------------------------------------------------------------- M-14
+    [Fact]
+    public void M14_AuditModuleList_HasOneAccentedNamePerModule()
+    {
+        var stored = new[] { "Facturacion", "Facturación", "Garantias", "Movil", "Móvil", "RRHH", "RR. HH.", "Rutas", "Rutas", "Auditoria", "  " };
+
+        var options = AuditModuleNames.Options(stored);
+
+        Assert.Equal(new[] { "Auditoría", "Facturación", "Garantías", "Móvil", "Rutas", "RR. HH." }.OrderBy(x => x, StringComparer.Create(new System.Globalization.CultureInfo("es-CR"), true)), options);
+        Assert.Equal(options.Count, options.Distinct().Count());
+    }
+
+    [Fact]
+    public void M14_UnknownModule_PrefersTheAccentedSpelling_AndOtherwiseKeepsTheName()
+    {
+        Assert.Equal("Cotización", Assert.Single(AuditModuleNames.Options(["Cotizacion", "Cotización"])));
+        Assert.Equal("Bodega", Assert.Single(AuditModuleNames.Options(["Bodega"])));
+    }
+
+    [Fact]
+    public void M14_SelectingAModule_QueriesEveryStoredSpelling()
+    {
+        var stored = new[] { "Facturacion", "Facturación", "Rutas", "RRHH", "RR. HH." };
+
+        Assert.Equal(new[] { "Facturacion", "Facturación" }, AuditModuleNames.StoredVariants("Facturación", stored).OrderBy(x => x, StringComparer.Ordinal));
+        Assert.Equal(new[] { "RR. HH.", "RRHH" }, AuditModuleNames.StoredVariants("RR. HH.", stored).OrderBy(x => x, StringComparer.Ordinal));
+        Assert.Equal(["Rutas"], AuditModuleNames.StoredVariants("Rutas", stored));
+        Assert.Equal(["Inexistente"], AuditModuleNames.StoredVariants("Inexistente", stored));
+        // un enlace viejo con el nombre sin tilde también encuentra todo
+        Assert.Contains("Facturación", AuditModuleNames.StoredVariants("Facturacion", stored));
+    }
+
+    [Theory]
+    [InlineData("Facturacion", "Facturación")]
+    [InlineData("Garantias", "Garantías")]
+    [InlineData("Movil", "Móvil")]
+    [InlineData("RRHH", "RR. HH.")]
+    [InlineData("Rutas", "Rutas")]
+    [InlineData("", "")]
+    public void M14_DisplayName_UsesTheCorrectSpelling(string stored, string expected) =>
+        Assert.Equal(expected, AuditModuleNames.DisplayName(stored));
+
+    [Fact]
+    public void M14_AuditController_UsesTheGroupedModules_WithoutRewritingTheAuditTable()
+    {
+        var controller = Read("Proyecto_Final", "Controllers", "AuditController.cs");
+        Assert.Contains("AuditModuleNames.Options(storedModules)", controller, StringComparison.Ordinal);
+        Assert.Contains("GetUnifiedAuditLogsByModuleAsync", controller, StringComparison.Ordinal);
+        var migrations = Directory.GetFiles(Path.Combine(Root(), "database", "migrations"), "03[3-4]*.sql");
+        Assert.DoesNotContain(migrations, f => File.ReadAllText(f).Contains("UPDATE dbo.AuditoriaSistema", StringComparison.OrdinalIgnoreCase));
+    }
 }
