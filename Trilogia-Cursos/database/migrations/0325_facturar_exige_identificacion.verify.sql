@@ -13,16 +13,21 @@ IF @Cliente IS NULL OR @Vendedor IS NULL OR @Producto IS NULL THROW 58481, N'La 
 SET @Gerente = @Vendedor;
 DECLARE @Items NVARCHAR(MAX) = CONCAT(N'[{"productoId":', @Producto, N',"cantidad":1}]');
 
-/* A. «Generar factura» */
+/* A. «Generar factura»: sin identificacion se rechaza (el procedimiento revierte su transaccion) */
 BEGIN TRANSACTION;
 INSERT dbo.Pedidos (UsuarioId, Estado, TipoEntrega, DireccionEntrega, Total) VALUES (@Cliente, N'Pendiente', N'Retiro en local', N'Direccion de prueba', 1000);
 SET @Ped = SCOPE_IDENTITY();
 INSERT dbo.PedidoDetalle (PedidoId, ProductoId, Cantidad, PrecioUnitario) VALUES (@Ped, @Producto, 1, 1000);
 SET @Err = 0;
 BEGIN TRY EXEC dbo.sp_Admin_GenerateInvoiceFromOrder @PedidoId = @Ped; END TRY BEGIN CATCH SET @Err = ERROR_NUMBER(); END CATCH;
-IF @Err <> 50906 BEGIN IF XACT_STATE() <> 0 ROLLBACK TRANSACTION; THROW 58482, N'Se facturo (o fallo distinto) un pedido sin identificacion en «Generar factura».', 1; END;
-IF EXISTS (SELECT 1 FROM dbo.Facturas WHERE PedidoId = @Ped) BEGIN ROLLBACK TRANSACTION; THROW 58483, N'Quedo una factura de un pedido sin identificacion.', 1; END;
-UPDATE dbo.Pedidos SET IdentificacionCliente = N'1-0234-0567' WHERE PedidoId = @Ped;
+IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;
+IF @Err <> 50906 THROW 58482, N'Se facturo (o fallo distinto) un pedido sin identificacion en «Generar factura».', 1;
+
+/* A2. «Generar factura» con identificacion: se factura */
+BEGIN TRANSACTION;
+INSERT dbo.Pedidos (UsuarioId, Estado, TipoEntrega, DireccionEntrega, Total, IdentificacionCliente) VALUES (@Cliente, N'Pendiente', N'Retiro en local', N'Direccion de prueba', 1000, N'1-0234-0567');
+SET @Ped = SCOPE_IDENTITY();
+INSERT dbo.PedidoDetalle (PedidoId, ProductoId, Cantidad, PrecioUnitario) VALUES (@Ped, @Producto, 1, 1000);
 EXEC dbo.sp_Admin_GenerateInvoiceFromOrder @PedidoId = @Ped;
 IF NOT EXISTS (SELECT 1 FROM dbo.Facturas WHERE PedidoId = @Ped) BEGIN ROLLBACK TRANSACTION; THROW 58484, N'Con identificacion no se genero la factura.', 1; END;
 ROLLBACK TRANSACTION;
