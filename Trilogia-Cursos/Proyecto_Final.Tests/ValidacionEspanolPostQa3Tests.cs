@@ -67,6 +67,15 @@ public class ValidacionEspanolPostQa3Tests
         }
     }
 
+    // POST-qa3-R3-06 (CU-261-05): al pasar el limite de consultas el asistente decia "Sin conexion".
+    [Fact]
+    public void AssistantShowsAWaitMessageWhenTheRateLimitIsReached()
+    {
+        var view = File.ReadAllText(SourcePath("Proyecto_Final", "Views", "Assistant", "Index.cshtml"));
+        Assert.Contains("response.status === 429", view, StringComparison.Ordinal);
+        Assert.Contains("Alcanzó el límite de 20 consultas por minuto", view, StringComparison.Ordinal);
+    }
+
     private static string SourcePath(params string[] parts)
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);

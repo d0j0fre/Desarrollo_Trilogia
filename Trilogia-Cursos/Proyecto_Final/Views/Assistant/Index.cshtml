@@ -802,6 +802,16 @@
                         }
                     );
 
+                    // POST-qa3-R3-06: al pasar el limite de consultas por minuto (429) se avisa que debe esperar, en vez de "Sin conexion".
+                    if (response.status === 429) {
+                        addBotMessage(
+                            'Demasiadas consultas',
+                            'Alcanzó el límite de 20 consultas por minuto. Espere unos segundos e intente de nuevo.',
+                            []
+                        );
+                        return;
+                    }
+
                     if (!response.ok) {
                         throw new Error(
                             `HTTP ${response.status}`
