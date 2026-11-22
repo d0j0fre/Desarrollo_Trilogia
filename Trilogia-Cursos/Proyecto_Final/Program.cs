@@ -11,6 +11,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews(options =>
 {
     // POST-qa3-R3-02: los mensajes de enlace de datos (campo vacío o con formato inválido) salían en inglés ("The value '' is invalid.").
+    // POST-qa3-R3-04: mensajes de validacion por defecto en espanol (los atributos sin ErrorMessage propio).
+    options.ModelMetadataDetailsProviders.Add(new Proyecto_Final.Services.SpanishValidationMetadataProvider());
     var mensajes = options.ModelBindingMessageProvider;
     mensajes.SetValueIsInvalidAccessor(valor => string.IsNullOrWhiteSpace(valor) ? "Seleccione o escriba un valor válido." : $"El valor '{valor}' no es válido.");
     mensajes.SetAttemptedValueIsInvalidAccessor((valor, campo) => $"El valor '{valor}' no es válido para {campo}.");
