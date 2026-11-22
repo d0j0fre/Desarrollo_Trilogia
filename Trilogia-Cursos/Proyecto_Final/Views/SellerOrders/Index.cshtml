@@ -606,9 +606,15 @@
                 return true;
             }
 
+            // Un pedido ya enviado al servidor (Sincronizado o Retenido) no se vuelve a enviar.
+            function isOrderDone(order) {
+                return order.estadoOffline === 'Sincronizado' || order.estadoOffline === 'Retenido';
+            }
+
             function getStatusBadgeClass(status) {
                 switch (status) {
                     case 'Sincronizado': return 'badge-success';
+                    case 'Retenido': return 'badge-warning';
                     case 'Sincronizando': return 'badge-info';
                     case 'Error': return 'badge-danger';
                     default: return 'badge-warning';
@@ -617,7 +623,7 @@
 
             function renderPendingOrders() {
                 const orders = loadOrders();
-                const pendingCount = orders.filter(order => order.estadoOffline !== 'Sincronizado').length;
+                const pendingCount = orders.filter(order => !isOrderDone(order)).length;
                 pendingOrdersCount.textContent = pendingCount;
 
                 if (orders.length === 0) {
@@ -631,6 +637,7 @@
                     const status = order.estadoOffline || 'Pendiente';
                     const badgeClass = getStatusBadgeClass(status);
                     const errorHtml = order.mensajeError ? '<small class="text-danger mt-1">' + escapeHtml(order.mensajeError) + '</small>' : '';
+                    const noticeHtml = order.mensajeServidor ? '<small class="text-warning mt-1">' + escapeHtml(order.mensajeServidor) + '</small>' : '';
                     const detailLink = order.redirectUrl
                         ? '<a class="btn btn-sm btn-ds-view" href="' + escapeHtml(order.redirectUrl) + '">Ver pedido</a>'
                         : '';
@@ -643,6 +650,7 @@
                                 '<small class="text-muted">Productos: ' + productsText + '</small>' +
                                 '<small class="text-muted">Total estimado: ' + formatCurrency(order.total || 0) + '</small>' +
                                 errorHtml +
+                                noticeHtml +
                             '</div>' +
                             '<div class="text-md-right">' +
                                 '<span class="badge ' + badgeClass + ' mb-2">' + escapeHtml(status) + '</span>' +
@@ -668,7 +676,7 @@
 
                 const token = getToken();
                 let orders = loadOrders();
-                const candidates = orders.filter(order => order.estadoOffline !== 'Sincronizado');
+                const candidates = orders.filter(order => !isOrderDone(order));
 
                 if (candidates.length === 0) {
                     showMessage('info', 'No hay pedidos pendientes para sincronizar.');
@@ -678,6 +686,7 @@
                 isSyncing = true;
                 syncPendingOrdersButton.disabled = true;
                 showMessage('info', 'Sincronizando pedidos pendientes...');
+                const retainedMessages = [];
 
                 for (const candidate of candidates) {
                     orders = loadOrders();
@@ -717,6 +726,7 @@
                         const message = data.message || data.Message || 'No fue posible sincronizar el pedido.';
                         const pedidoId = data.pedidoId || data.PedidoId || null;
                         const redirectUrl = data.redirectUrl || data.RedirectUrl || '';
+                        const estadoServidor = data.estado || data.Estado || '';
 
                         orders = loadOrders();
                         const currentIndex = orders.findIndex(order => order.pedidoOfflineGuid === candidate.pedidoOfflineGuid);
@@ -725,7 +735,11 @@
                         }
 
                         if (response.ok && success) {
-                            orders[currentIndex].estadoOffline = 'Sincronizado';
+                            // Un pedido que supera el umbral queda Retenido a la espera del Gerente: no es una venta cerrada.
+                            const retenido = /retenid/i.test(estadoServidor);
+                            orders[currentIndex].estadoOffline = retenido ? 'Retenido' : 'Sincronizado';
+                            orders[currentIndex].mensajeServidor = retenido ? message : '';
+                            if (retenido) { retainedMessages.push(message); }
                             orders[currentIndex].pedidoId = pedidoId;
                             orders[currentIndex].redirectUrl = redirectUrl;
                             orders[currentIndex].mensajeError = '';
@@ -751,8 +765,10 @@
                 isSyncing = false;
                 syncPendingOrdersButton.disabled = false;
 
-                const remaining = loadOrders().filter(order => order.estadoOffline !== 'Sincronizado').length;
-                if (remaining === 0) {
+                const remaining = loadOrders().filter(order => !isOrderDone(order)).length;
+                if (retainedMessages.length > 0 && remaining === 0) {
+                    showMessage('warning', retainedMessages.join(' '));
+                } else if (remaining === 0) {
                     showMessage('success', 'Todos los pedidos offline fueron sincronizados correctamente.');
                 } else {
                     showMessage('warning', 'Algunos pedidos no se pudieron sincronizar. Revise la lista de pendientes.');
@@ -788,7 +804,7 @@
             syncPendingOrdersButton.addEventListener('click', syncPendingOrders);
 
             clearSyncedOrdersButton.addEventListener('click', function () {
-                const orders = loadOrders().filter(order => order.estadoOffline !== 'Sincronizado');
+                const orders = loadOrders().filter(order => !isOrderDone(order));
                 saveOrders(orders);
                 showMessage('success', 'Pedidos sincronizados eliminados de la lista local.');
             });

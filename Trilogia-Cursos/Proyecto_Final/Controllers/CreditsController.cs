@@ -120,9 +120,9 @@ namespace Proyecto_Final.Controllers
 
                 TempData["SuccessMessage"] = "Movimiento de crédito registrado correctamente.";
             }
-            catch (InvalidOperationException)
+            catch (InvalidOperationException ex)
             {
-                TempData["ErrorMessage"] = "No se pudo registrar el movimiento de credito.";
+                TempData["ErrorMessage"] = MensajeMovimientoRechazado(ex);
             }
             catch (Exception)
             {
@@ -130,6 +130,22 @@ namespace Proyecto_Final.Controllers
             }
 
             return RedirectToAction(nameof(Details), new { id = model.UsuarioId });
+        }
+
+        /// <summary>
+        /// Los errores de negocio del procedimiento (52000-52999: por ejemplo «El monto no puede superar la deuda
+        /// actual del cliente.») se muestran tal cual; cualquier otro error SQL conserva el texto genérico.
+        /// </summary>
+        internal static string MensajeMovimientoRechazado(InvalidOperationException ex)
+        {
+            if (ex.InnerException is Microsoft.Data.SqlClient.SqlException sql
+                && sql.Number is >= 52000 and <= 52999
+                && !string.IsNullOrWhiteSpace(sql.Message))
+            {
+                return sql.Message.Trim();
+            }
+
+            return "No se pudo registrar el movimiento de crédito.";
         }
 
         private async Task RegistrarAuditoriaAsync(string accion, string modulo, string descripcion)
