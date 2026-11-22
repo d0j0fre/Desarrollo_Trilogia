@@ -44,10 +44,13 @@ public class JornadasMensajesPostQa3Tests
     [Fact]
     public void ModelBindingMessagesAreInSpanish()
     {
+        // Integración con POST-qa2-09: los textos viven en SpanishModelBindingMessages y Program.cs los registra.
         var program = File.ReadAllText(SourcePath("Proyecto_Final", "Program.cs"));
-        Assert.Contains("SetValueIsInvalidAccessor", program, StringComparison.Ordinal);
-        Assert.Contains("Seleccione o escriba un valor válido.", program, StringComparison.Ordinal);
-        Assert.Contains("SetValueMustBeANumberAccessor", program, StringComparison.Ordinal);
+        Assert.Contains("SpanishModelBindingMessages.Apply(options)", program, StringComparison.Ordinal);
+        var mensajes = File.ReadAllText(SourcePath("Proyecto_Final", "Services", "SpanishModelBindingMessages.cs"));
+        Assert.Contains("SetValueIsInvalidAccessor", mensajes, StringComparison.Ordinal);
+        Assert.Contains("SetValueMustBeANumberAccessor", mensajes, StringComparison.Ordinal);
+        Assert.DoesNotContain("is invalid", Proyecto_Final.Services.SpanishModelBindingMessages.ValueIsInvalid(""), StringComparison.Ordinal);
     }
 
     // POST-qa3-R3-03 (CU-152-06): por la API de la app un km vacio se tomaba como 0 y abria la jornada.
