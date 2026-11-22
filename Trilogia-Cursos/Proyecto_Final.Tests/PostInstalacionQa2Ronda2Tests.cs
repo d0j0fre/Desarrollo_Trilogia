@@ -48,13 +48,42 @@ public sealed class PostInstalacionQa2Ronda3Tests
         Assert.DoesNotContain("The value", provider.AttemptedValueIsInvalidAccessor("", "Producto"), StringComparison.Ordinal);
     }
 
+    // POST-qa2-10 · CU-131-05: el tablero y Inventario cuentan el stock bajo con la misma regla.
+    [Fact]
+    public void Migration0355_DashboardCountsLowStockWithTheProductMinimum()
+    {
+        var sql = Read("database", "migrations", "0355_tablero_stock_minimo.sql");
+
+        foreach (var procedure in new[] { "sp_Reportes_DashboardKpis", "sp_Asistente_Metricas", "sp_Reportes_DashboardDetalle" })
+            Assert.Contains(procedure, sql, StringComparison.Ordinal);
+        Assert.Contains("(Stock > 0 AND Stock <= StockMinimo)", sql, StringComparison.Ordinal);
+        Assert.Contains("Stock <= 0", sql, StringComparison.Ordinal);
+        Assert.DoesNotContain("UPDATE ", sql, StringComparison.Ordinal);
+        Assert.DoesNotContain("ALTER TABLE", sql, StringComparison.Ordinal);
+        Assert.True(File.Exists(Path.Combine(Root(), "database", "migrations", "0355_tablero_stock_minimo.verify.sql")));
+        Assert.True(File.Exists(Path.Combine(Root(), "database", "migrations", "0355_tablero_stock_minimo.rollback.md")));
+    }
+
+    [Fact]
+    public void InventoryAlert_OnlyCountsActiveProducts()
+    {
+        var view = Read("Proyecto_Final", "Views", "Inventory", "Index.cshtml");
+        Assert.Contains("p.Activo && (p.Stock <= 0 || p.Stock <= p.StockMinimo)", view, StringComparison.Ordinal);
+    }
+
     [Fact]
     public void Program_RegistersTheSpanishBindingMessages()
+    {
+        Assert.Contains("SpanishModelBindingMessages.Apply", Read("Proyecto_Final", "Program.cs"), StringComparison.Ordinal);
+    }
+
+    private static string Read(params string[] parts) => File.ReadAllText(Path.Combine([Root(), .. parts]));
+
+    private static string Root()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
         while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "Proyecto_Final.slnx")))
             directory = directory.Parent;
-        var program = File.ReadAllText(Path.Combine(directory!.FullName, "Proyecto_Final", "Program.cs"));
-        Assert.Contains("SpanishModelBindingMessages.Apply", program, StringComparison.Ordinal);
+        return directory?.FullName ?? throw new DirectoryNotFoundException("No se encontró la raíz de la solución.");
     }
 }
