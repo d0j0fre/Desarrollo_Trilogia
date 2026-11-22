@@ -30,3 +30,31 @@ public sealed class PostInstalacionQa2Ronda2Tests
         Assert.DoesNotContain(results, r => r.MemberNames.Contains(nameof(PromotionFormViewModel.ProductoId)));
     }
 }
+
+/// <summary>POST-qa2-09 (ronda 3): los errores de enlace de MVC salen en español.</summary>
+public sealed class PostInstalacionQa2Ronda3Tests
+{
+    [Fact]
+    public void ModelBindingMessages_AreInSpanish()
+    {
+        var options = new Microsoft.AspNetCore.Mvc.MvcOptions();
+        Proyecto_Final.Services.SpanishModelBindingMessages.Apply(options);
+        var provider = options.ModelBindingMessageProvider;
+
+        Assert.Equal("Debe completar o seleccionar «Producto».", provider.AttemptedValueIsInvalidAccessor("", "Producto"));
+        Assert.Equal("El valor «abc» no es válido para «Cantidad».", provider.AttemptedValueIsInvalidAccessor("abc", "Cantidad"));
+        Assert.Equal("Debe completar o seleccionar este campo.", provider.ValueIsInvalidAccessor(""));
+        Assert.Equal("«Cantidad» debe ser un número.", provider.ValueMustBeANumberAccessor("Cantidad"));
+        Assert.DoesNotContain("The value", provider.AttemptedValueIsInvalidAccessor("", "Producto"), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Program_RegistersTheSpanishBindingMessages()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "Proyecto_Final.slnx")))
+            directory = directory.Parent;
+        var program = File.ReadAllText(Path.Combine(directory!.FullName, "Proyecto_Final", "Program.cs"));
+        Assert.Contains("SpanishModelBindingMessages.Apply", program, StringComparison.Ordinal);
+    }
+}
