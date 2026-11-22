@@ -400,4 +400,54 @@ public sealed class MejorasMenoresTests
         Assert.Contains("AdminDbService.IsApproveStockError(ex)", controller, StringComparison.Ordinal);
         Assert.Contains("await DescribirFaltanteDeStockAsync(pedidoId)", controller, StringComparison.Ordinal);
     }
+
+    // ---------------------------------------------------------------- M-11
+    [Fact]
+    public void M11_DeliveryBoard_ServerRendersAmountsWithTheCostaRicaFormat_LikeTheAutoRefresh()
+    {
+        var view = Read("Proyecto_Final", "Views", "DeliveryBoard", "Index.cshtml");
+        Assert.Equal(2, Count(view, "Proyecto_Final.Services.OrderReceiptHtmlBuilder.FormatCurrency(order.Total)"));
+        Assert.DoesNotContain("₡@order.Total.ToString(\"N2\")", view, StringComparison.Ordinal);
+        Assert.Contains("toLocaleString('es-CR'", view, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void M11_FormatCurrency_UsesCostaRicaGroupingAndDecimals_WhateverTheServerCulture()
+    {
+        var previous = System.Globalization.CultureInfo.CurrentCulture;
+        try
+        {
+            System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
+            var text = OrderReceiptHtmlBuilder.FormatCurrency(14577m).Replace(' ', ' ').Replace(' ', ' ');
+            Assert.Equal("₡14 577,00", text);
+        }
+        finally { System.Globalization.CultureInfo.CurrentCulture = previous; }
+    }
+
+    // ---------------------------------------------------------------- M-12
+    [Fact]
+    public void M12_InvalidCapacityMessage_StatesTheAllowedRange()
+    {
+        var range = (System.ComponentModel.DataAnnotations.RangeAttribute)typeof(VehicleFormViewModel).GetProperty("Capacidad")!
+            .GetCustomAttributes(typeof(System.ComponentModel.DataAnnotations.RangeAttribute), false).Single();
+        Assert.Equal(0, range.Minimum);
+        Assert.Equal(100000, range.Maximum);
+        Assert.Equal("La capacidad debe ser un número entero entre 0 y 100000.", range.ErrorMessage);
+        Assert.Contains("max=\"100000\"", Read("Proyecto_Final", "Views", "Vehicles", "Create.cshtml"), StringComparison.Ordinal);
+        Assert.Contains("max=\"100000\"", Read("Proyecto_Final", "Views", "Vehicles", "Edit.cshtml"), StringComparison.Ordinal);
+    }
+
+    // ---------------------------------------------------------------- M-13
+    [Fact]
+    public void M13_EditingAnInactivePromotion_WarnsWhenOpening_NotWhenSaving()
+    {
+        var controller = Read("Proyecto_Final", "Controllers", "PromotionsController.cs");
+        var edit = controller[controller.IndexOf("public async Task<IActionResult> Edit(int id)", StringComparison.Ordinal)..];
+        edit = edit[..edit.IndexOf("[HttpPost]", StringComparison.Ordinal)];
+        Assert.Contains("model.Estado", edit, StringComparison.Ordinal);
+        Assert.Contains("EditInactiveMessage(model.Nombre, model.Estado)", edit, StringComparison.Ordinal);
+        Assert.Contains("RedirectToAction(nameof(Index))", edit, StringComparison.Ordinal);
+        Assert.Equal("Solo se pueden editar promociones activas. La promoción «Verano» está inactiva.", PromotionsController.EditInactiveMessage("Verano", "Inactiva"));
+        Assert.Contains("Estado = reader.GetString(12)", Read("Proyecto_Final", "Services", "PromotionsDbService.cs"), StringComparison.Ordinal);
+    }
 }

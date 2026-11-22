@@ -38,7 +38,7 @@
                     </div>
                     <div class="form-group">
                         <label asp-for="Capacidad" class="font-weight-bold">Capacidad (unidades/cajas)</label>
-                        <input asp-for="Capacidad" class="form-control" type="number" min="0" />
+                        <input asp-for="Capacidad" class="form-control" type="number" min="0" max="100000" step="1" />
                         <span asp-validation-for="Capacidad" class="text-danger"></span>
                     </div>
                     <div class="form-group form-check">

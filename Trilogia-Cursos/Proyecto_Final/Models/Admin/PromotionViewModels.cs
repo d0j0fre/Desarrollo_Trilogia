@@ -27,6 +27,9 @@ namespace Proyecto_Final.Models.Admin
     {
         public int PromocionId { get; set; }
 
+        /// <summary>M-13: estado guardado de la promoción (solo lectura; se usa para avisar al abrir Editar).</summary>
+        public string? Estado { get; set; }
+
         [Required(ErrorMessage = "El nombre es obligatorio.")]
         [StringLength(150)]
         [Display(Name = "Nombre")]

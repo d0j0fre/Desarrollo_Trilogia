@@ -31,7 +31,7 @@ namespace Proyecto_Final.Models.Admin
         [StringLength(150, ErrorMessage = "La descripción no puede exceder 150 caracteres.")]
         public string Descripcion { get; set; } = string.Empty;
 
-        [Range(0, 100000, ErrorMessage = "La capacidad debe ser un número válido.")]
+        [Range(0, 100000, ErrorMessage = "La capacidad debe ser un número entero entre 0 y 100000.")]
         public int Capacidad { get; set; }
 
         public bool Activo { get; set; } = true;
