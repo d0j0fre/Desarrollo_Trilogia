@@ -24,6 +24,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- POST-qa1-04: la plantilla del comprobante del pedido (EmailTemplates/OrderReceipt.html) se lee del
+         disco al comprar. Los .html fuera de wwwroot no viajan en la publicación por defecto, así que en
+         Azure faltaba el archivo y el correo fallaba con «no fue posible enviar el comprobante». -->
+    <Content Include="EmailTemplates\**\*.html" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Almacenamiento de evidencias de entrega, compartido con la API móvil. -->
     <ProjectReference Include="..\Proyecto_Final.Shared\Proyecto_Final.Shared.csproj" />
   </ItemGroup>
