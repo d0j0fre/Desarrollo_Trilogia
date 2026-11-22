@@ -197,7 +197,16 @@
                         {
                             <div>
                                 <strong>₡@item.SalarioNuevo.ToString("N2")</strong>
-                                <span>@item.FechaCambio.ToString("dd/MM/yyyy HH:mm")</span>
+                                @* M-08: primero la fecha desde la que rige el salario; después, cuándo se registró. *@
+                                @if (item.FechaVigencia.HasValue)
+                                {
+                                    <span>@Proyecto_Final.Services.SalaryHistoryDates.Describe(item.FechaVigencia)</span>
+                                    <small>Registrado el @item.FechaCambio.ToString("dd/MM/yyyy HH:mm")</small>
+                                }
+                                else
+                                {
+                                    <span>@item.FechaCambio.ToString("dd/MM/yyyy HH:mm")</span>
+                                }
                                 <small>@(string.IsNullOrWhiteSpace(item.Motivo) ? "Sin motivo indicado" : item.Motivo)</small>
                             </div>
                         }

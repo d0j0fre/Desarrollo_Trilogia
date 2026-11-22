@@ -545,7 +545,36 @@ namespace Proyecto_Final.Services
                 });
             }
 
+            await AttachSalaryEffectiveDatesAsync(history, empleadoId);
             return history;
+        }
+
+        // M-08: la fecha de vigencia vive en EmpleadoSalarioVigencias (0263). Si la consulta falla, el historial
+        // se muestra igual, solo con la fecha de registro.
+        private async Task AttachSalaryEffectiveDatesAsync(List<EmployeeSalaryHistoryViewModel> history, int empleadoId)
+        {
+            if (history.Count == 0) return;
+            try
+            {
+                var vigencias = new List<EmployeeSalaryEffectiveViewModel>();
+                await using var connection = new SqlConnection(_connectionString);
+                await using var command = new SqlCommand(
+                    "SELECT FechaVigencia, Salario, Motivo FROM dbo.EmpleadoSalarioVigencias WHERE EmpleadoId = @id ORDER BY FechaVigencia",
+                    connection);
+                command.Parameters.Add("@id", SqlDbType.Int).Value = empleadoId;
+                await connection.OpenAsync();
+                await using var reader = await command.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    vigencias.Add(new EmployeeSalaryEffectiveViewModel(
+                        reader.GetDateTimeCR(0), reader.GetDecimal(1), GetNullableString(reader, 2)));
+                }
+                SalaryHistoryDates.Attach(history, vigencias);
+            }
+            catch (SqlException)
+            {
+                // sin la tabla de vigencias: solo fecha de registro
+            }
         }
 
         private static void AddEmployeeFormParameters(SqlCommand command, EmployeeFormViewModel model)

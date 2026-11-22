@@ -258,6 +258,6 @@ public sealed class BudgetsController : Controller
     {
         if (exception is SqlException sql && sql.Number >= 50000) _logger.LogWarning(exception, "Regla de negocio al {Operation}.", operation);
         else _logger.LogError(exception, "Error al {Operation}.", operation);
-        TempData["ErrorMessage"] = $"No fue posible {operation}.";
+        TempData["ErrorMessage"] = FinanceApprovalMessages.For(exception, operation);
     }
 }

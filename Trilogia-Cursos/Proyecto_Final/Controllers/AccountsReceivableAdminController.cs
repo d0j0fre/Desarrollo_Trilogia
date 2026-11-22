@@ -167,12 +167,59 @@ namespace Proyecto_Final.Controllers
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "No se pudo registrar el movimiento de crédito del usuario {UserId}.", movementForm.UsuarioId);
-                TempData["ErrorMessage"] = "No fue posible completar la operación solicitada.";
+
+                // M-02: «abono mayor al saldo» (y las demás reglas del procedimiento) se explican en vez del texto genérico.
+                decimal? deuda = null;
+                if (EsRechazoPorSaldo(ex))
+                {
+                    try { deuda = (await _adminDbService.GetClientCreditDetailAsync(movementForm.UsuarioId))?.DeudaActual; }
+                    catch (Exception) { /* sin el saldo se muestra el motivo del procedimiento */ }
+                }
+
+                TempData["ErrorMessage"] = MensajeMovimientoRechazado(ex, movementForm.TipoMovimiento, deuda);
             }
 
             return RedirectToAction(
                 nameof(Detail),
                 new { id = movementForm.UsuarioId });
+        }
+
+        /// <summary>sp_Admin_RegisterClientCreditMovement lanza 52014 cuando el abono o ajuste negativo supera la deuda.</summary>
+        public const int ErrorMontoSuperaSaldo = 52014;
+
+        private static Microsoft.Data.SqlClient.SqlException? ErrorDeNegocio(Exception ex)
+        {
+            for (Exception? actual = ex; actual is not null; actual = actual.InnerException)
+            {
+                if (actual is Microsoft.Data.SqlClient.SqlException sql && sql.Number is >= 52000 and <= 52999)
+                    return sql;
+            }
+            return null;
+        }
+
+        public static bool EsRechazoPorSaldo(Exception ex) => ErrorDeNegocio(ex)?.Number == ErrorMontoSuperaSaldo;
+
+        /// <summary>
+        /// M-02: el abono que supera el saldo dice cuánto se debe (₡X); las demás reglas del procedimiento
+        /// (crédito bloqueado, sin límite…) se muestran tal cual; lo técnico conserva el texto genérico.
+        /// </summary>
+        public static string MensajeMovimientoRechazado(Exception ex, string? tipoMovimiento, decimal? deudaActual)
+        {
+            var sql = ErrorDeNegocio(ex);
+            if (sql is null)
+                return "No fue posible completar la operación solicitada.";
+
+            if (sql.Number == ErrorMontoSuperaSaldo)
+            {
+                var que = string.Equals(tipoMovimiento, "Abono", StringComparison.OrdinalIgnoreCase) ? "El abono" : "El monto";
+                return deudaActual.HasValue
+                    ? $"{que} no puede superar el saldo pendiente del cliente (₡{deudaActual.Value:N2})."
+                    : $"{que} no puede superar el saldo pendiente del cliente.";
+            }
+
+            return string.IsNullOrWhiteSpace(sql.Message)
+                ? "No fue posible completar la operación solicitada."
+                : sql.Message.Trim();
         }
     }
     }

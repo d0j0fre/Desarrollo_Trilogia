@@ -96,8 +96,22 @@ namespace Proyecto_Final.Controllers
                 _logger.LogWarning(exception, "No fue posible cargar el combo {ComboId} en tienda.", id);
             }
 
-            TempData["ErrorMessage"] = "El combo solicitado no está disponible.";
+            TempData["ErrorMessage"] = await ExplicarComboNoDisponibleAsync(id, cancellationToken);
             return RedirectToAction(nameof(Shop));
+        }
+
+        // M-05: dice qué producto del combo no alcanza; si no se puede averiguar, el mensaje genérico.
+        private async Task<string> ExplicarComboNoDisponibleAsync(int comboId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                return ComboAvailability.Explain(await _combos.GetDetailAsync(comboId, cancellationToken));
+            }
+            catch (Exception exception)
+            {
+                _logger.LogWarning(exception, "No fue posible explicar por qué el combo {ComboId} no está disponible.", comboId);
+                return ComboAvailability.GenericMessage;
+            }
         }
 
         [HttpGet]

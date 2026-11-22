@@ -85,6 +85,10 @@ namespace Proyecto_Final.Models.Store
         public decimal Impuesto { get; set; }
         public decimal Total { get; set; }
         public string Estado { get; set; } = string.Empty;
+
+        /// <summary>M-07: solo pantalla. Factura a crédito con saldo ₡0; Estado guardado no cambia.</summary>
+        public bool Pagada { get; set; }
+        public string EstadoVisible => Proyecto_Final.Services.InvoiceDisplayStatus.Visible(Estado, Pagada);
         public List<ClientPortalInvoiceLineViewModel> Lineas { get; set; } = new();
     }
 

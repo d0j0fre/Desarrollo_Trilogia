@@ -59,7 +59,8 @@
     @{
         // POST-qa2-06: la alerta sigue el stock mínimo configurado de cada producto (igual que la columna Estado,
         // el reporte de inventario y el tablero gerencial), no un tope fijo de 5 unidades.
-        var productosConAlerta = Model.Where(p => p.Stock <= 0 || p.Stock <= p.StockMinimo).ToList();
+        // M-01: solo cuentan los productos activos; uno inactivo (fuera del catálogo) no es un faltante.
+        var productosConAlerta = Model.Where(p => p.Activo && (p.Stock <= 0 || p.Stock <= p.StockMinimo)).ToList();
         var productosPorVencer = Model
             .Where(p => ProductExpiration.RequiereAviso(p.FechaVencimiento, CostaRicaClock.Today))
             .OrderBy(p => p.FechaVencimiento)

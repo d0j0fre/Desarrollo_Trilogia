@@ -107,8 +107,24 @@ namespace Proyecto_Final.Controllers
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "No se pudo aprobar el pedido retenido {OrderId}.", pedidoId);
-                TempData["ErrorMessage"] = BusinessErrors.MessageOr(ex, "No fue posible aprobar el pedido en este momento.");
+                TempData["ErrorMessage"] = AdminDbService.IsApproveStockError(ex)
+                    ? await DescribirFaltanteDeStockAsync(pedidoId)
+                    : BusinessErrors.MessageOr(ex, "No fue posible aprobar el pedido en este momento.");
                 return RedirectToAction(nameof(Review), new { id = pedidoId });
+            }
+        }
+
+        // M-10: el procedimiento revierte todo si falta stock (también el de la regalía); aquí se dice cuál producto falta.
+        private async Task<string> DescribirFaltanteDeStockAsync(int pedidoId)
+        {
+            try
+            {
+                return OrderStockShortageMessage.Build(pedidoId, await _adminDbService.GetOrderStockShortagesAsync(pedidoId));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "No se pudo averiguar qué producto del pedido {OrderId} no tiene stock.", pedidoId);
+                return OrderStockShortageMessage.Generic;
             }
         }
 

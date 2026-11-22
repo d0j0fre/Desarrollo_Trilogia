@@ -117,9 +117,9 @@
                     <div class="col-md-6 mb-3">
                         <label class="font-weight-bold d-block">Estado</label>
                         @{
-                            var claseEstado = Model.Estado == "Generada" ? "success" : "dark";
+                            var claseEstado = Proyecto_Final.Services.InvoiceDisplayStatus.CssClass(Model.EstadoVisible);
                         }
-                        <span class="admin-badge-soft @claseEstado">@Model.Estado</span>
+                        <span class="admin-badge-soft @claseEstado">@Model.EstadoVisible</span>
                         @if (ViewBag.FacturaVencida is Proyecto_Final.Models.Admin.OverdueInvoiceViewModel facturaVencida)
                         {
                             <span class="admin-badge-soft danger ml-1" id="factura-vencida">Vencida</span>
