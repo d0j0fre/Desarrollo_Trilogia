@@ -29,13 +29,7 @@ public sealed class MejorasMenoresTests
         return count;
     }
 
-    // ---------------------------------------------------------------- M-01
-    [Fact]
-    public void M01_InventoryAlert_OnlyCountsActiveProducts()
-    {
-        var view = Read("Proyecto_Final", "Views", "Inventory", "Index.cshtml");
-        Assert.Contains("Model.Where(p => p.Activo && (p.Stock <= 0 || p.Stock <= p.StockMinimo))", view, StringComparison.Ordinal);
-    }
+    // M-01 (aviso de inventario con productos inactivos) lo corrige la sesión qa2 (POST-qa2-10): no se toca aquí.
 
     // ---------------------------------------------------------------- M-02
     [Fact]
