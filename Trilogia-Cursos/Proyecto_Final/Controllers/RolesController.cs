@@ -48,6 +48,11 @@ namespace Proyecto_Final.Controllers
                 TempData["SuccessMessage"] = "Rol creado correctamente.";
                 return RedirectToAction(nameof(Index));
             }
+            catch (InvalidOperationException ex) when (ex.InnerException is Microsoft.Data.SqlClient.SqlException { Number: 50002 })
+            {
+                // POST-qa1-06: el nombre repetido se dice con claridad (la regla del procedimiento).
+                ModelState.AddModelError(nameof(RoleFormViewModel.Nombre), "Ya existe un rol con ese nombre.");
+            }
             catch (InvalidOperationException)
             {
                 ModelState.AddModelError(string.Empty, "No se pudo crear el rol. Revise los datos e intente nuevamente.");
@@ -96,6 +101,10 @@ namespace Proyecto_Final.Controllers
             catch (InvalidOperationException ex) when (ex.InnerException is Microsoft.Data.SqlClient.SqlException { Number: 56601 })
             {
                 ModelState.AddModelError(string.Empty, "No se puede inactivar el rol porque tiene usuarios asignados.");
+            }
+            catch (InvalidOperationException ex) when (ex.InnerException is Microsoft.Data.SqlClient.SqlException { Number: 50007 })
+            {
+                ModelState.AddModelError(nameof(RoleFormViewModel.Nombre), "Ya existe otro rol con ese nombre.");
             }
             catch (InvalidOperationException)
             {
