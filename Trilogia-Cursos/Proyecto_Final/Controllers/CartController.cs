@@ -66,6 +66,8 @@ namespace Proyecto_Final.Controllers
 
             var items = GetCartItems();
             var item = items.FirstOrDefault(x => x.ProductoId == productoId);
+            var solicitado = Math.Max(cantidad, 1);
+            if (item is not null) solicitado += item.Cantidad;
             if (item is null)
             {
                 items.Add(new CartItemViewModel
@@ -89,7 +91,15 @@ namespace Proyecto_Final.Controllers
             }
 
             SaveCartItems(items);
-            TempData["LoginSuccess"] = $"{product.Nombre} fue agregado al carrito.";
+            var enCarrito = items.First(x => x.ProductoId == productoId && x.ItemType != CartItemTypes.Combo).Cantidad;
+            if (enCarrito < solicitado || (product.Stock <= 0 && enCarrito > 0))
+            {
+                TempData["WarningMessage"] = MensajeAjusteStock(product.Nombre, product.Stock, enCarrito);
+            }
+            else
+            {
+                TempData["LoginSuccess"] = $"{product.Nombre} fue agregado al carrito.";
+            }
             return RedirectToAction(nameof(Index));
         }
 
@@ -110,6 +120,7 @@ namespace Proyecto_Final.Controllers
             var items = GetCartItems();
             var item = items.FirstOrDefault(candidate =>
                 candidate.ItemType == CartItemTypes.Combo && candidate.ComboId == comboId);
+            var solicitadoCombo = Math.Max(cantidad, 1) + (item?.Cantidad ?? 0);
             if (item is null)
             {
                 items.Add(new CartItemViewModel
@@ -133,7 +144,15 @@ namespace Proyecto_Final.Controllers
             }
 
             SaveCartItems(items);
-            TempData["LoginSuccess"] = $"{combo.Nombre} fue agregado al carrito.";
+            var comboEnCarrito = items.First(x => x.ItemType == CartItemTypes.Combo && x.ComboId == comboId).Cantidad;
+            if (comboEnCarrito < solicitadoCombo)
+            {
+                TempData["WarningMessage"] = MensajeAjusteStock(combo.Nombre, combo.StockDisponible, comboEnCarrito);
+            }
+            else
+            {
+                TempData["LoginSuccess"] = $"{combo.Nombre} fue agregado al carrito.";
+            }
             return RedirectToAction(nameof(Index));
         }
 
@@ -175,6 +194,10 @@ namespace Proyecto_Final.Controllers
                         item.StockDisponible = combo.StockDisponible;
                         item.Precio = combo.Precio;
                         item.Cantidad = Math.Min(cantidad, combo.StockDisponible);
+                        if (item.Cantidad < cantidad)
+                        {
+                            TempData["WarningMessage"] = MensajeAjusteStock(combo.Nombre, combo.StockDisponible, item.Cantidad);
+                        }
                     }
                 }
                 else
@@ -190,12 +213,28 @@ namespace Proyecto_Final.Controllers
                         item.StockDisponible = product.Stock;
                         item.Precio = product.Precio;
                         item.Cantidad = Math.Min(cantidad, Math.Max(product.Stock, 1));
+                        if (item.Cantidad < cantidad || (product.Stock <= 0 && item.Cantidad > 0))
+                        {
+                            TempData["WarningMessage"] = MensajeAjusteStock(product.Nombre, product.Stock, item.Cantidad);
+                        }
                     }
                 }
             }
 
             SaveCartItems(items);
             return RedirectToAction(nameof(Index));
+        }
+
+        /// <summary>Aviso cuando la cantidad pedida se ajusta al stock disponible.</summary>
+        internal static string MensajeAjusteStock(string nombre, int stockDisponible, int cantidadFinal)
+        {
+            if (stockDisponible <= 0)
+            {
+                return $"{nombre} no tiene unidades disponibles por el momento. Revise el carrito antes de continuar.";
+            }
+
+            var unidades = stockDisponible == 1 ? "1 unidad disponible" : $"{stockDisponible} unidades disponibles";
+            return $"Solo hay {unidades} de {nombre}; la cantidad en el carrito se ajustó a {cantidadFinal}.";
         }
 
         [HttpPost]
