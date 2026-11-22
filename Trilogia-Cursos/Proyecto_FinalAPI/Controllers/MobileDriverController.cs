@@ -440,6 +440,7 @@ namespace Proyecto_FinalAPI.Controllers
             54967 => "Esa jornada no le pertenece.",
             54968 => "La jornada ya fue cerrada.",
             54969 => "El kilometraje final no puede ser menor al inicial.",
+            53046 => "El kilometraje inicial no puede ser menor al odómetro actual del vehículo.",
             _ => "No fue posible registrar el kilometraje."
         };
     }
