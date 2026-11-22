@@ -8,7 +8,21 @@ using System.Threading.RateLimiting;
 var builder = WebApplication.CreateBuilder(args);
 
 // MVC
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(options =>
+{
+    // POST-qa3-R3-02: los mensajes de enlace de datos (campo vacío o con formato inválido) salían en inglés ("The value '' is invalid.").
+    var mensajes = options.ModelBindingMessageProvider;
+    mensajes.SetValueIsInvalidAccessor(valor => string.IsNullOrWhiteSpace(valor) ? "Seleccione o escriba un valor válido." : $"El valor '{valor}' no es válido.");
+    mensajes.SetAttemptedValueIsInvalidAccessor((valor, campo) => $"El valor '{valor}' no es válido para {campo}.");
+    mensajes.SetUnknownValueIsInvalidAccessor(campo => $"El valor no es válido para {campo}.");
+    mensajes.SetValueMustBeANumberAccessor(campo => $"El campo {campo} debe ser un número.");
+    mensajes.SetNonPropertyValueMustBeANumberAccessor(() => "El valor debe ser un número.");
+    mensajes.SetValueMustNotBeNullAccessor(valor => $"El valor '{valor}' no es válido.");
+    mensajes.SetMissingBindRequiredValueAccessor(campo => $"Falta un valor para {campo}.");
+    mensajes.SetMissingKeyOrValueAccessor(() => "Falta un valor.");
+    mensajes.SetNonPropertyAttemptedValueIsInvalidAccessor(valor => $"El valor '{valor}' no es válido.");
+    mensajes.SetNonPropertyUnknownValueIsInvalidAccessor(() => "El valor no es válido.");
+});
 // Sube el límite de campos de formulario: la orden de compra envía 8 campos por producto del catálogo
 builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
 {

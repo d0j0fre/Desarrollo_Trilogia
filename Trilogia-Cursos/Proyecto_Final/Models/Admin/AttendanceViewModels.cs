@@ -27,15 +27,15 @@ public sealed class AttendanceFormViewModel : IValidatableObject
     [Display(Name = "Fecha de jornada")]
     public DateTime Fecha { get; set; } = CostaRicaClock.Today;
 
-    [Range(typeof(decimal), "0", "24")]
+    [Range(typeof(decimal), "0", "24", ErrorMessage = "Las horas ordinarias deben estar entre 0 y 24.")]
     [Display(Name = "Horas ordinarias")]
     public decimal HorasOrdinarias { get; set; }
 
-    [Range(typeof(decimal), "0", "24")]
+    [Range(typeof(decimal), "0", "24", ErrorMessage = "Las horas extra deben estar entre 0 y 24.")]
     [Display(Name = "Horas extra")]
     public decimal HorasExtra { get; set; }
 
-    [Range(typeof(decimal), "0", "24")]
+    [Range(typeof(decimal), "0", "24", ErrorMessage = "Las horas de ausencia deben estar entre 0 y 24.")]
     [Display(Name = "Horas de ausencia")]
     public decimal HorasAusencia { get; set; }
 
@@ -81,6 +81,13 @@ public static class AttendanceRules
         if (ordinary + overtime + absence > 24m) errors.Add("La suma de horas no puede superar 24 para una fecha.");
         if (ordinary + overtime + absence == 0m) errors.Add("Debe registrar al menos una hora ordinaria, extra o de ausencia.");
         return errors;
+    }
+
+    /// <summary>POST-qa3-R3-01: junta los mensajes sin repetirlos y nunca deja el aviso vacío (antes, una hora fuera de rango se rechazaba sin decir nada).</summary>
+    public static string ComposeErrorMessage(IEnumerable<string?> messages)
+    {
+        var clean = messages.Where(m => !string.IsNullOrWhiteSpace(m)).Select(m => m!.Trim()).Distinct().ToList();
+        return clean.Count == 0 ? "Revise los datos de la jornada: las horas deben estar entre 0 y 24." : string.Join(" ", clean);
     }
 
     /// <summary>Solo un borrador o una jornada rechazada se pueden completar y volver a enviar (sp_RRHH_GuardarMiJornada).</summary>
