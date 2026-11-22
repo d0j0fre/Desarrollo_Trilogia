@@ -451,10 +451,10 @@ namespace Proyecto_Final.Controllers
                     Items = confirmedItems
                 };
 
-                var destinatario =
-                    model.CorreoElectronico
-                    ?? HttpContext.Session.GetString("UserEmail")
-                    ?? string.Empty;
+                // Un correo vacío del formulario ("") no es null: se cae al correo de la sesión.
+                var destinatario = !string.IsNullOrWhiteSpace(model.CorreoElectronico)
+                    ? model.CorreoElectronico.Trim()
+                    : HttpContext.Session.GetString("UserEmail") ?? string.Empty;
 
                 var cliente =
                     HttpContext.Session.GetString("UserFullName")

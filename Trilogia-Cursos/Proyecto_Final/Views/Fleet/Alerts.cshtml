@@ -27,6 +27,11 @@
                     <span class="mr-2 mb-2">días de anticipación</span>
                     <button type="submit" class="btn btn-ds-edit mb-2"><i class="fa fa-sync mr-2"></i>Actualizar</button>
                 </form>
+                <form asp-action="NotifyByEmail" method="post" class="form-inline mt-1">
+                    <input type="hidden" name="diasAviso" value="@Model.DiasAviso" />
+                    <button type="submit" class="btn btn-ds-edit mb-2"><i class="fa fa-envelope mr-2"></i>Avisar por correo a Administración y Logística</button>
+                    <small class="text-muted ml-2 mb-2">Envía un solo correo por documento y umbral; además se envía solo cada día.</small>
+                </form>
             </div>
 
             <div class="admin-table-wrapper">

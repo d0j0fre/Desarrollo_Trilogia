@@ -198,6 +198,12 @@
                                 }
                             </select>
                         </div>
+                        <div class="form-group">
+                            <label class="font-weight-bold" for="motivo">Motivo (opcional)</label>
+                            <input id="motivo" name="motivo" type="text" maxlength="500" class="form-control" autocomplete="off"
+                                   placeholder="Se incluye en el correo al cliente si el pedido se cancela." />
+                            <small class="form-text text-muted">Al aprobar, rechazar o cancelar, el cliente recibe un correo con el resultado.</small>
+                        </div>
 
                         <button type="submit" class="btn btn-ds-action btn-block mb-2">
                             <i class="fa fa-save mr-2"></i>Guardar estado

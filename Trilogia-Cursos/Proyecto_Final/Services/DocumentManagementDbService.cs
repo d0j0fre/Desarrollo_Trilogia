@@ -21,6 +21,8 @@ public interface IDocumentManagementDbService
     Task SetActiveAsync(int documentId, bool active, int userId, string userName);
     Task<PrivateFileMetadata?> GetAuthorizedFileAsync(int documentId, int? versionId, int userId, bool canManage);
     Task<IReadOnlyList<DocumentAlertNotificationCandidate>> GenerateAlertsAsync(DateTime businessDate, IReadOnlyCollection<int> thresholds, int userId);
+    /// <summary>Alertas activas cuyo correo nunca se intentó (por ejemplo, creadas cuando el correo aún no estaba configurado).</summary>
+    Task<IReadOnlyList<DocumentAlertNotificationCandidate>> GetPendingNotificationsAsync();
     Task<PagedResult<DocumentAlertViewModel>> ListAlertsAsync(DocumentAlertFilterViewModel filter, DateTime businessDate);
     Task<(int Active, int Expired)> GetAlertSummaryAsync(DateTime businessDate);
     Task MarkAlertHandledAsync(int alertId, int userId);
@@ -226,6 +228,22 @@ public sealed class DocumentManagementDbService : IDocumentManagementDbService
             OwnerId = documentId, VersionId = NullableInt(reader, 0), StorageArea = "Documents",
             StorageKey = reader.GetString(1), OriginalName = reader.GetString(2), MimeType = reader.GetString(3)
         } : null;
+    }
+
+    // 0335: alertas activas sin ningún intento de correo (mismas columnas que sp_DocumentAlert_Generate).
+    public async Task<IReadOnlyList<DocumentAlertNotificationCandidate>> GetPendingNotificationsAsync()
+    {
+        var list = new List<DocumentAlertNotificationCandidate>();
+        await using var connection = new SqlConnection(_connectionString);
+        await using var command = Procedure(connection, "dbo.sp_DocumentAlert_PendingNotifications");
+        await connection.OpenAsync();
+        await using var reader = await command.ExecuteReaderAsync();
+        while (await reader.ReadAsync()) list.Add(new()
+        {
+            AlertId = reader.GetInt32(0), DocumentId = reader.GetInt32(1), ThresholdDays = reader.GetInt32(2),
+            DocumentTitle = reader.GetString(3), ExpirationDate = reader.GetDateTime(4), Recipient = reader.GetString(5)
+        });
+        return list;
     }
 
     public async Task<IReadOnlyList<DocumentAlertNotificationCandidate>> GenerateAlertsAsync(DateTime businessDate, IReadOnlyCollection<int> thresholds, int userId)

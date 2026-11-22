@@ -10,11 +10,36 @@ namespace Proyecto_Final.Controllers
     {
         private readonly AdminDbService _adminDbService;
         private readonly ILogger<ManagerOrdersController> _logger;
+        private readonly EmailService? _emailService;
 
-        public ManagerOrdersController(AdminDbService adminDbService, ILogger<ManagerOrdersController> logger)
+        public ManagerOrdersController(AdminDbService adminDbService, ILogger<ManagerOrdersController> logger, EmailService? emailService = null)
         {
             _adminDbService = adminDbService;
             _logger = logger;
+            _emailService = emailService;
+        }
+
+        // Aviso por correo de la decisión del Gerente. Si el correo falla, la decisión NO se revierte:
+        // se registra y se avisa en pantalla.
+        private void NotificarCliente(OrderDetailViewModel? pedido, int pedidoId, string estado, string? motivo)
+        {
+            if (pedido is null || _emailService is null) return;
+
+            if (string.IsNullOrWhiteSpace(pedido.Correo))
+            {
+                TempData["WarningMessage"] = "La decisión quedó registrada, pero el cliente no tiene un correo para notificarle.";
+                return;
+            }
+
+            try
+            {
+                _emailService.SendOrderStatus(pedido.Correo, pedido.Cliente, pedidoId, estado, motivo);
+            }
+            catch (Exception exception)
+            {
+                _logger.LogWarning(exception, "El pedido retenido {OrderId} pasó a {Estado}, pero no se pudo enviar el correo al cliente.", pedidoId, estado);
+                TempData["WarningMessage"] = "La decisión quedó registrada, pero no fue posible enviar el correo de notificación al cliente.";
+            }
         }
 
         [HttpGet]
@@ -66,7 +91,9 @@ namespace Proyecto_Final.Controllers
 
             try
             {
+                var antes = await _adminDbService.GetOrderDetailAsync(pedidoId);
                 var result = await _adminDbService.ApproveRetainedOrderAsync(pedidoId, usuarioId, usuarioNombre);
+                if (antes is { Estado: "Retenido" }) NotificarCliente(antes, pedidoId, "Liberado", null);
 
                 await RegistrarAuditoriaAsync(
                     "Aprobar pedido retenido",
@@ -122,8 +149,10 @@ namespace Proyecto_Final.Controllers
 
             try
             {
+                var antes = await _adminDbService.GetOrderDetailAsync(model.PedidoId);
                 await _adminDbService.RejectRetainedOrderAsync(
                     model.PedidoId, model.MotivoRechazo, usuarioId, usuarioNombre);
+                if (antes is { Estado: "Retenido" }) NotificarCliente(antes, model.PedidoId, "Rechazado", model.MotivoRechazo);
 
                 await RegistrarAuditoriaAsync(
                     "Rechazar pedido retenido",

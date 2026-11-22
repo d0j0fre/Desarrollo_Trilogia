@@ -14,14 +14,63 @@ namespace Proyecto_Final.Controllers
         private readonly AdminDbService _adminDbService;
         private readonly IRolePermissionService _permissionService;
         private readonly ILogger<FleetController> _logger;
+        private readonly IFleetAlertNotifier? _alertNotifier;
 
-        public FleetController(FleetDbService fleet, LogisticsDbService logistics, AdminDbService adminDbService, IRolePermissionService permissionService, ILogger<FleetController> logger)
+        public FleetController(FleetDbService fleet, LogisticsDbService logistics, AdminDbService adminDbService, IRolePermissionService permissionService, ILogger<FleetController> logger, IFleetAlertNotifier? alertNotifier = null)
         {
             _fleet = fleet;
             _logistics = logistics;
             _adminDbService = adminDbService;
             _permissionService = permissionService;
             _logger = logger;
+            _alertNotifier = alertNotifier;
+        }
+
+        // CU-154-02: avisa por correo a Administración y Logística de los documentos por vencer. Idempotente; un fallo de
+        // correo nunca revierte el registro del documento: se registra y se avisa en pantalla.
+        private async Task<(string? Message, bool Ok)> TryNotifyFleetAsync(IEnumerable<int>? extraThresholds)
+        {
+            if (_alertNotifier is null) return (null, true);
+            try
+            {
+                var result = await _alertNotifier.NotifyAsync(extraThresholds, HttpContext.RequestAborted);
+                // Con el correo desactivado no se menciona: la alerta ya se ve en pantalla.
+                if (!result.Enabled || (result.SmtpConfigured && result.Documents == 0)) return (null, true);
+                return (result.Describe(), result.SmtpConfigured && result.Failed == 0 && result.WithoutRecipients == 0);
+            }
+            catch (Exception exception)
+            {
+                _logger.LogWarning(exception, "No se pudieron enviar los avisos de flota por correo.");
+                return ("No fue posible enviar el aviso por correo de los documentos de flota. La alerta sigue visible en pantalla.", false);
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [AdminAuthorize("Flota", "FLOTA_MANTENIMIENTO")]
+        public async Task<IActionResult> NotifyByEmail(int diasAviso = 30)
+        {
+            diasAviso = Math.Clamp(diasAviso, 1, 180);
+            if (_alertNotifier is null)
+            {
+                TempData["ErrorMessage"] = "El envío de avisos por correo no está disponible.";
+                return RedirectToAction(nameof(Alerts), new { diasAviso });
+            }
+
+            try
+            {
+                var result = await _alertNotifier.NotifyAsync([diasAviso], HttpContext.RequestAborted);
+                var sinProblema = result.Enabled && result.SmtpConfigured && result.Failed == 0 && result.WithoutRecipients == 0;
+                TempData[sinProblema ? "SuccessMessage" : "WarningMessage"] = result.Describe();
+                await RegistrarAuditoriaAsync("Avisar alertas de flota por correo", "Flota",
+                    $"Avisos de flota por correo (umbral {diasAviso} días): {result.Sent} enviado(s), {result.Failed} fallido(s).");
+            }
+            catch (Exception exception)
+            {
+                _logger.LogWarning(exception, "No se pudieron enviar los avisos de flota por correo.");
+                TempData["ErrorMessage"] = "No fue posible enviar los avisos por correo en este momento. Intente nuevamente.";
+            }
+            return RedirectToAction(nameof(Alerts), new { diasAviso });
         }
 
         // ── CU-152 Kilometraje (chofer + admin) ─────────────
@@ -232,6 +281,8 @@ namespace Proyecto_Final.Controllers
                 await RegistrarAuditoriaAsync("Registrar documento", "Flota",
                     $"Documento {nuevoDocumento.Tipo} para vehículo #{nuevoDocumento.VehiculoId} (vence {nuevoDocumento.FechaVencimiento:dd/MM/yyyy}).");
                 TempData["SuccessMessage"] = "Documento registrado. Se vigilará su vencimiento y reemplaza como vigente a los anteriores del mismo tipo.";
+                var (aviso, avisoOk) = await TryNotifyFleetAsync(null);
+                if (aviso is not null) { if (avisoOk) TempData["SuccessMessage"] += " " + aviso; else TempData["WarningMessage"] = aviso; }
             }
             catch (Exception ex)
             {
@@ -267,6 +318,8 @@ namespace Proyecto_Final.Controllers
                 await RegistrarAuditoriaAsync("Editar documento", "Flota",
                     $"Documento #{model.DocumentoId} ({model.Tipo}) del vehículo {model.VehiculoPlaca}: vence {model.FechaVencimiento:dd/MM/yyyy}.");
                 TempData["SuccessMessage"] = "Documento actualizado.";
+                var (aviso, avisoOk) = await TryNotifyFleetAsync(null);
+                if (aviso is not null) { if (avisoOk) TempData["SuccessMessage"] += " " + aviso; else TempData["WarningMessage"] = aviso; }
                 return RedirectToAction(nameof(Alerts), new { vehiculoId = model.VehiculoId });
             }
             catch (Exception ex)

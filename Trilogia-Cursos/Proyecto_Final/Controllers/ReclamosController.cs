@@ -13,12 +13,42 @@ namespace Proyecto_Final.Controllers
         private readonly ReclamosDbService _reclamos;
         private readonly AdminDbService _adminDbService;
         private readonly ILogger<ReclamosController> _logger;
+        private readonly EmailService? _emailService;
 
-        public ReclamosController(ReclamosDbService reclamos, AdminDbService adminDbService, ILogger<ReclamosController> logger)
+        public ReclamosController(ReclamosDbService reclamos, AdminDbService adminDbService, ILogger<ReclamosController> logger, EmailService? emailService = null)
         {
             _reclamos = reclamos;
             _adminDbService = adminDbService;
             _logger = logger;
+            _emailService = emailService;
+        }
+
+        // POST-qa3-02: al cerrar el reclamo el cliente recibe también un correo con la resolución (además del aviso
+        // en su bandeja, 0327). Si el correo falla, el cierre NO se revierte: se registra y se avisa en pantalla.
+        private void NotificarCierre(ReclamoDetailViewModel? antes, ReclamoUpdateStatusViewModel model)
+        {
+            if (_emailService is null || antes is null || model.Estado != "Cerrado" || antes.Estado == "Cerrado") return;
+
+            if (string.IsNullOrWhiteSpace(antes.ClienteCorreo))
+            {
+                TempData["WarningMessage"] = "El reclamo se cerró, pero el cliente no tiene un correo registrado para notificarle.";
+                return;
+            }
+
+            try
+            {
+                _emailService.SendEmail(
+                    antes.ClienteCorreo,
+                    $"Su reclamo #{model.ReclamoId} fue resuelto",
+                    EmailTemplateBuilder.BuildClaimClosedEmail(antes.ClienteNombre, model.ReclamoId, antes.Asunto, model.Resolucion ?? string.Empty));
+                TempData["SuccessMessage"] = "Reclamo cerrado y resolución documentada. Se notificó al cliente por correo.";
+            }
+            catch (Exception exception)
+            {
+                _logger.LogWarning(exception, "El reclamo {ReclamoId} se cerró, pero no se pudo notificar al cliente por correo.", model.ReclamoId);
+                TempData.Remove("SuccessMessage");
+                TempData["WarningMessage"] = "El reclamo se cerró y la resolución quedó documentada, pero no fue posible enviar el correo al cliente.";
+            }
         }
 
         [HttpGet]
@@ -120,12 +150,14 @@ namespace Proyecto_Final.Controllers
             var usuarioNombre = HttpContext.Session.GetString("UserFullName") ?? "Agente";
             try
             {
+                var antes = _emailService is not null && model.Estado == "Cerrado" ? await _reclamos.GetReclamoByIdAsync(model.ReclamoId) : null;
                 await _reclamos.ChangeStatusAsync(model.ReclamoId, model.Estado, model.Resolucion, usuarioId, usuarioNombre);
                 await RegistrarAuditoriaAsync("Actualizar reclamo", "Servicio al cliente",
                     $"Reclamo #{model.ReclamoId} cambiado a estado {model.Estado}.");
                 TempData["SuccessMessage"] = model.Estado == "Cerrado"
                     ? "Reclamo cerrado y resolución documentada."
                     : "Estado del reclamo actualizado.";
+                NotificarCierre(antes, model);
             }
             catch (SqlException ex) when (ex.Number >= 50000)
             {

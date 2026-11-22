@@ -71,7 +71,10 @@ namespace Proyecto_Final.Controllers
 
                 TempData["SuccessMessage"] = $"Factura {result.NumeroFactura} generada correctamente.";
                 TempData["FacturaRecienGenerada"] = result.FacturaId;
-                await EnviarComprobantePorCorreoAsync(result.FacturaId);
+                if (await EnviarComprobantePorCorreoAsync(result.FacturaId))
+                {
+                    TempData["SuccessMessage"] = $"Factura {result.NumeroFactura} generada correctamente. Se envió el comprobante al correo del cliente.";
+                }
                 return RedirectToAction(nameof(Detail), new { id = result.FacturaId });
             }
             catch (Exception ex) when (BusinessErrors.IsMissingIdentification(ex))
@@ -109,6 +112,7 @@ namespace Proyecto_Final.Controllers
                 var factura = await _adminDbService.GetInvoiceDetailAsync(facturaId);
                 if (factura == null || string.IsNullOrWhiteSpace(factura.Correo))
                 {
+                    TempData["ErrorMessage"] = "La factura se generó correctamente, pero el cliente no tiene un correo registrado para enviarle el comprobante.";
                     return false;
                 }
 
