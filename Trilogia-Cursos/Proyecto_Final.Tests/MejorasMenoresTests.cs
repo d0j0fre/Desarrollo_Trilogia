@@ -395,27 +395,17 @@ public sealed class MejorasMenoresTests
         Assert.Contains("await DescribirFaltanteDeStockAsync(pedidoId)", controller, StringComparison.Ordinal);
     }
 
-    // ---------------------------------------------------------------- M-11
+    // ---------------------------------------------------------------- M-11 / M-15
     [Fact]
-    public void M11_DeliveryBoard_ServerRendersAmountsWithTheCostaRicaFormat_LikeTheAutoRefresh()
+    public void M15_DeliveryBoard_ShowsAmountsLikeTheRestOfTheSystem_OnLoadAndOnAutoRefresh()
     {
         var view = Read("Proyecto_Final", "Views", "DeliveryBoard", "Index.cshtml");
-        Assert.Equal(2, Count(view, "Proyecto_Final.Services.OrderReceiptHtmlBuilder.FormatCurrency(order.Total)"));
-        Assert.DoesNotContain("₡@order.Total.ToString(\"N2\")", view, StringComparison.Ordinal);
-        Assert.Contains("toLocaleString('es-CR'", view, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void M11_FormatCurrency_UsesCostaRicaGroupingAndDecimals_WhateverTheServerCulture()
-    {
-        var previous = System.Globalization.CultureInfo.CurrentCulture;
-        try
-        {
-            System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
-            var text = OrderReceiptHtmlBuilder.FormatCurrency(14577m).Replace(' ', ' ').Replace(' ', ' ');
-            Assert.Equal("₡14 577,00", text);
-        }
-        finally { System.Globalization.CultureInfo.CurrentCulture = previous; }
+        // Al cargar: ₡14,577.00 con cultura invariante (igual que ₡@x.ToString("N2") en las demás pantallas).
+        Assert.Equal(2, Count(view, "₡@order.Total.ToString(\"N2\", System.Globalization.CultureInfo.InvariantCulture)"));
+        // Al actualizarse solo: el mismo formato.
+        Assert.Contains("toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })", view, StringComparison.Ordinal);
+        Assert.DoesNotContain("es-CR', { minimumFractionDigits", view, StringComparison.Ordinal);
+        Assert.Equal("₡14,577.00", "₡" + 14577m.ToString("N2", System.Globalization.CultureInfo.InvariantCulture));
     }
 
     // ---------------------------------------------------------------- M-12
