@@ -241,7 +241,7 @@ public sealed class DocumentManagementDbService : IDocumentManagementDbService
         while (await reader.ReadAsync()) list.Add(new()
         {
             AlertId = reader.GetInt32(0), DocumentId = reader.GetInt32(1), ThresholdDays = reader.GetInt32(2),
-            DocumentTitle = reader.GetString(3), ExpirationDate = reader.GetDateTime(4), Recipient = reader.GetString(5)
+            DocumentTitle = reader.GetString(3), ExpirationDate = reader.GetDateTimeCR(4), Recipient = reader.GetString(5)
         });
         return list;
     }

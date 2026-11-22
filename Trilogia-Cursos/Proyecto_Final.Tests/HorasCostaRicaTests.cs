@@ -277,6 +277,7 @@ public sealed class HorasCostaRicaTests : IDisposable
     [InlineData("0340_reloj_costa_rica_funciones")]
     [InlineData("0341_reloj_costa_rica_hoy")]
     [InlineData("0342_reloj_costa_rica_reportes")]
+    [InlineData("0343_reloj_costa_rica_objetos_nuevos")]
     public void Migrations_HaveVerifyRollbackAndReadmeRow(string nombre)
     {
         var carpeta = SourcePath("Trilogia-Cursos", "database", "migrations");
@@ -342,6 +343,17 @@ public sealed class HorasCostaRicaTests : IDisposable
         Assert.Contains("MONTH(dbo.fn_FechaHoraCR(", sql, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void Migration0343_FixesTheTodayOfThePromotionFunctionAndTheNewMailAlerts()
+    {
+        var sql = File.ReadAllText(SourcePath("Trilogia-Cursos", "database", "migrations", "0343_reloj_costa_rica_objetos_nuevos.sql"));
+
+        foreach (var objeto in new[] { "fn_Promociones_Aplicar", "sp_DocumentAlert_PendingNotifications", "sp_FlotaDocumentos_AvisosPendientes" })
+            Assert.Contains($"N'{objeto}'", sql, StringComparison.Ordinal);
+        Assert.Contains("0340_reloj_costa_rica_funciones", sql, StringComparison.Ordinal);
+        Assert.Contains("OBJECT_DEFINITION", sql, StringComparison.Ordinal);
+        Assert.DoesNotMatch(new Regex(@"^\s*CREATE (OR ALTER )?(PROCEDURE|FUNCTION)", RegexOptions.Multiline | RegexOptions.IgnoreCase), sql);
+    }
     // ---- Utilidades ----------------------------------------------------------------------------------------
 
     private static IEnumerable<string> ArchivosDeCodigo(params string[] extensiones)

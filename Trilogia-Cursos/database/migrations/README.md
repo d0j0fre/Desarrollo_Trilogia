@@ -138,6 +138,7 @@ Cada migracion debe indicar su estrategia de rollback antes de ejecutarse. Los c
 | 0340 | `0340_reloj_costa_rica_funciones.sql` | POST-qa3-06: `fn_AhoraCR`, `fn_HoyCR`, `fn_FechaHoraCR` y `fn_DiaCRaReloj` (hora de Costa Rica sin depender de la zona del servidor SQL: Azure va en UTC). Aditiva | 0001 |
 | 0341 | `0341_reloj_costa_rica_hoy.sql` | POST-qa3-06: «hoy» de Costa Rica en alertas de flota, promociones (incluida la que se aplica al crear el pedido), resumen del chofer, facturas vencidas, comodatos, mantenimientos y asistente. Reemplazo de texto sobre la definición vigente | 0340 |
 | 0342 | `0342_reloj_costa_rica_reportes.sql` | POST-qa3-06: reportes de ventas, tablero gerencial, ventas del mes, metas y cumplimiento, tendencia estacional y movimientos de inventario filtran y agrupan por día/mes de Costa Rica. Reemplazo de texto sobre la definición vigente | 0340 |
+| 0343 | `0343_reloj_costa_rica_objetos_nuevos.sql` | POST-qa3-06 (integración): «hoy» de Costa Rica en la vigencia de promociones (`fn_Promociones_Aplicar`, 0331) y en los avisos de correo de documentos y de flota (0335). Reemplazo de texto sobre la definición vigente | 0331, 0335, 0340 |
 
 Los scripts no incluyen `USE`: el ejecutor debe seleccionar explícitamente la base antes de iniciar. Los hashes escritos por 0002–0011 son hashes de manifiesto para identificar versión; la evidencia de despliegue debe registrar además el SHA-256 real del archivo y actualizar el ledger si corresponde.
 

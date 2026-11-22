@@ -330,7 +330,8 @@ public sealed class PedidoTotalConIvaPromocionesMovilTests
 
     // ── Auxiliares ──────────────────────────────────────────────────────────────────────────────
 
-    private static string Read(params string[] parts) => File.ReadAllText(Path.Combine([Root(), .. parts]));
+    // Normaliza el salto de línea: en un clon de Windows con autocrlf el archivo trae CRLF.
+    private static string Read(params string[] parts) => File.ReadAllText(Path.Combine([Root(), .. parts])).Replace("\r\n", "\n");
 
     private static string Root()
     {

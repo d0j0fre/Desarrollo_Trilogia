@@ -165,7 +165,7 @@ namespace Proyecto_Final.Services
             while (await reader.ReadAsync())
             {
                 notices.Add(new FleetDocumentNotice(
-                    reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetDateTime(3), reader.GetInt32(4), reader.GetInt32(5)));
+                    reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetDateTimeCR(3), reader.GetInt32(4), reader.GetInt32(5)));
             }
             if (await reader.NextResultAsync())
             {
