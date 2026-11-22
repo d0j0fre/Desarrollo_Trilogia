@@ -22,7 +22,7 @@ namespace Proyecto_Final.Controllers
         [HttpGet]
         public async Task<IActionResult> Index(string? rango, DateTime? desde, DateTime? hasta, string? indicador)
         {
-            var (rangoDesde, rangoHasta, rangoNormalizado, aviso) = ResolveRange(rango, desde, hasta, DateTime.Today);
+            var (rangoDesde, rangoHasta, rangoNormalizado, aviso) = ResolveRange(rango, desde, hasta, CostaRicaClock.Today);
 
             var model = await _reports.GetDashboardAsync(rangoDesde, rangoHasta, rangoNormalizado);
             model.AvisoRango = aviso;

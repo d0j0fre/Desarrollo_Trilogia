@@ -66,12 +66,12 @@ namespace Proyecto_Final.Models.Admin
         [Required(ErrorMessage = "La fecha de inicio es obligatoria.")]
         [DataType(DataType.Date)]
         [Display(Name = "Fecha de inicio")]
-        public DateTime FechaInicio { get; set; } = DateTime.Today;
+        public DateTime FechaInicio { get; set; } = CostaRicaClock.Today;
 
         [Required(ErrorMessage = "La fecha de fin es obligatoria.")]
         [DataType(DataType.Date)]
         [Display(Name = "Fecha de fin")]
-        public DateTime FechaFin { get; set; } = DateTime.Today.AddDays(30);
+        public DateTime FechaFin { get; set; } = CostaRicaClock.Today.AddDays(30);
 
         [Range(0, 1000)]
         [Display(Name = "Prioridad")]

@@ -34,8 +34,8 @@ namespace Proyecto_Final.Services
                 await using var reader = await command.ExecuteReaderAsync();
                 if (await reader.ReadAsync())
                 {
-                    model.Desde = reader.IsDBNull(0) ? desde : reader.GetDateTime(0);
-                    model.Hasta = reader.IsDBNull(1) ? hasta : reader.GetDateTime(1);
+                    model.Desde = reader.IsDBNull(0) ? desde : reader.GetDateTimeCR(0);
+                    model.Hasta = reader.IsDBNull(1) ? hasta : reader.GetDateTimeCR(1);
                     model.VentasPeriodo = reader.IsDBNull(2) ? 0 : reader.GetDecimal(2);
                     model.FacturasPeriodo = reader.IsDBNull(3) ? 0 : reader.GetInt32(3);
                     model.PedidosPeriodo = reader.IsDBNull(4) ? 0 : reader.GetInt32(4);
@@ -57,7 +57,7 @@ namespace Proyecto_Final.Services
                 {
                     model.Serie.Add(new SalesSeriePointViewModel
                     {
-                        Dia = reader.GetDateTime(0),
+                        Dia = reader.GetDateTimeCR(0),
                         Total = reader.IsDBNull(1) ? 0 : reader.GetDecimal(1),
                         Facturas = reader.IsDBNull(2) ? 0 : reader.GetInt32(2)
                     });
@@ -253,7 +253,7 @@ namespace Proyecto_Final.Services
         private static DateTime? NullableDate(SqlDataReader reader, string name)
         {
             var ordinal = reader.GetOrdinal(name);
-            return reader.IsDBNull(ordinal) ? null : reader.GetDateTime(ordinal);
+            return reader.IsDBNull(ordinal) ? null : reader.GetDateTimeCR(ordinal);
         }
 
         private static decimal? NullableDecimal(SqlDataReader reader, string name)

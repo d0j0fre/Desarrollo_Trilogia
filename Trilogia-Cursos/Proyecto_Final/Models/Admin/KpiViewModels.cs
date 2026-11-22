@@ -31,10 +31,10 @@ namespace Proyecto_Final.Models.Admin
         public int VendedorUsuarioId { get; set; }
 
         [Range(2000, 2100, ErrorMessage = "Año inválido.")]
-        public int Anio { get; set; } = DateTime.Now.Year;
+        public int Anio { get; set; } = CostaRicaClock.Now.Year;
 
         [Range(1, 12, ErrorMessage = "Mes inválido.")]
-        public int Mes { get; set; } = DateTime.Now.Month;
+        public int Mes { get; set; } = CostaRicaClock.Now.Month;
 
         [Range(0.01, 999999999, ErrorMessage = "El monto de la meta debe ser mayor que cero.")]
         [Display(Name = "Meta de ingresos (₡)")]
@@ -50,8 +50,8 @@ namespace Proyecto_Final.Models.Admin
     // Modelo de la pantalla de gestión de metas (CU-211): filtro de período + tabla + formulario.
     public class MetasIndexViewModel
     {
-        public int Anio { get; set; } = DateTime.Now.Year;
-        public int Mes { get; set; } = DateTime.Now.Month;
+        public int Anio { get; set; } = CostaRicaClock.Now.Year;
+        public int Mes { get; set; } = CostaRicaClock.Now.Month;
         public List<MetaListItemViewModel> Metas { get; set; } = new();
         public List<VendedorOptionViewModel> Vendedores { get; set; } = new();
         public MetaFormViewModel Nueva { get; set; } = new();
@@ -71,8 +71,8 @@ namespace Proyecto_Final.Models.Admin
     // CU-213 — Reporte de cumplimiento global de KPIs.
     public class KpiReportViewModel
     {
-        public int Anio { get; set; } = DateTime.Now.Year;
-        public int Mes { get; set; } = DateTime.Now.Month;
+        public int Anio { get; set; } = CostaRicaClock.Now.Year;
+        public int Mes { get; set; } = CostaRicaClock.Now.Month;
         public List<KpiReportItemViewModel> Items { get; set; } = new();
         public decimal MetaGlobal { get; set; }
         public decimal VentaGlobal { get; set; }
@@ -87,8 +87,8 @@ namespace Proyecto_Final.Models.Admin
     // CU-212 — Panel de progreso individual del vendedor sobre su meta del mes.
     public class MetaProgresoViewModel
     {
-        public int Anio { get; set; } = DateTime.Now.Year;
-        public int Mes { get; set; } = DateTime.Now.Month;
+        public int Anio { get; set; } = CostaRicaClock.Now.Year;
+        public int Mes { get; set; } = CostaRicaClock.Now.Month;
         public decimal MontoMeta { get; set; }
         public decimal VentasReales { get; set; }
         public decimal PorcentajeCumplimiento { get; set; }

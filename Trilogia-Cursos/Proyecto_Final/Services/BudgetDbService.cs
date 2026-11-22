@@ -89,7 +89,7 @@ public sealed class BudgetDbService
             while (await reader.ReadAsync()) audit.Add(new()
             {
                 Action = NullableString(reader, 0) ?? "Sin acción", UserName = NullableString(reader, 1) ?? "Usuario no disponible",
-                CreatedUtc = reader.GetDateTime(2), Detail = NullableString(reader, 3)
+                CreatedUtc = reader.GetUtcDateTime(2), Detail = NullableString(reader, 3)
             });
         }
         var categories = new List<SelectOptionViewModel>();
@@ -163,7 +163,7 @@ public sealed class BudgetDbService
         DepartmentId = reader.GetInt32(reader.GetOrdinal("DepartamentoId")), DepartmentName = NullableString(reader, reader.GetOrdinal("Departamento")) ?? "Departamento no disponible",
         Currency = NullableString(reader, reader.GetOrdinal("Moneda")) ?? "CRC", Status = NullableString(reader, reader.GetOrdinal("Estado")) ?? "Borrador",
         Notes = NullableString(reader, reader.GetOrdinal("Notas")), AnnualAmount = reader.GetDecimal(reader.GetOrdinal("MontoAnual")),
-        CreatedByName = NullableString(reader, reader.GetOrdinal("CreadoPorNombre")) ?? "Usuario no disponible", CreatedUtc = reader.GetDateTime(reader.GetOrdinal("FechaCreacionUtc")),
+        CreatedByName = NullableString(reader, reader.GetOrdinal("CreadoPorNombre")) ?? "Usuario no disponible", CreatedUtc = reader.GetUtcDateTime(reader.GetOrdinal("FechaCreacionUtc")),
         Active = reader.GetBoolean(reader.GetOrdinal("Activo"))
     };
 

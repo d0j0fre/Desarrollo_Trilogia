@@ -34,8 +34,8 @@ namespace Proyecto_Final.Services
                     Categoria = reader.GetString(2),
                     Prioridad = reader.GetString(3),
                     Estado = reader.GetString(4),
-                    FechaRegistro = reader.GetDateTime(5),
-                    FechaCierre = reader.IsDBNull(6) ? null : reader.GetDateTime(6),
+                    FechaRegistro = reader.GetDateTimeCR(5),
+                    FechaCierre = reader.IsDBNull(6) ? null : reader.GetDateTimeCR(6),
                     UsuarioId = reader.GetInt32(7),
                     ClienteNombre = reader.GetString(8),
                     ClienteCorreo = reader.GetString(9),
@@ -67,17 +67,17 @@ namespace Proyecto_Final.Services
                     Prioridad = reader.GetString(7),
                     Estado = reader.GetString(8),
                     ResolucionDescripcion = reader.GetString(9),
-                    FechaCierre = reader.IsDBNull(10) ? null : reader.GetDateTime(10),
+                    FechaCierre = reader.IsDBNull(10) ? null : reader.GetDateTimeCR(10),
                     CerradoPorNombre = reader.IsDBNull(11) ? null : reader.GetString(11),
                     RegistradoPorNombre = reader.IsDBNull(12) ? null : reader.GetString(12),
-                    FechaRegistro = reader.GetDateTime(13),
-                    FechaActualizacion = reader.IsDBNull(14) ? null : reader.GetDateTime(14),
+                    FechaRegistro = reader.GetDateTimeCR(13),
+                    FechaActualizacion = reader.IsDBNull(14) ? null : reader.GetDateTimeCR(14),
                     ClienteNombre = reader.GetString(15),
                     ClienteCorreo = reader.GetString(16),
                     ClienteTelefono = reader.IsDBNull(17) ? null : reader.GetString(17),
                     NumeroFactura = reader.IsDBNull(18) ? null : reader.GetString(18),
                     FacturaTotal = reader.IsDBNull(19) ? null : reader.GetDecimal(19),
-                    FechaFactura = reader.IsDBNull(20) ? null : reader.GetDateTime(20)
+                    FechaFactura = reader.IsDBNull(20) ? null : reader.GetDateTimeCR(20)
                 };
             }
             return null;
@@ -151,7 +151,7 @@ namespace Proyecto_Final.Services
                 {
                     FacturaId = reader.GetInt32(0),
                     NumeroFactura = reader.GetString(1),
-                    FechaFactura = reader.GetDateTime(2),
+                    FechaFactura = reader.GetDateTimeCR(2),
                     Total = reader.GetDecimal(3)
                 });
             }

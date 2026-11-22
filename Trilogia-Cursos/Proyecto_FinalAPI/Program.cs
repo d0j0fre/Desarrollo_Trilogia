@@ -125,6 +125,9 @@ builder.Services.AddRateLimiter(options =>
 
 var app = builder.Build();
 
+// Reloj de Costa Rica: averigua si el reloj de la base (GETDATE/SYSDATETIME) es UTC (Azure) o local.
+await CostaRicaClock.ConfigureAsync(app.Configuration);
+
 var swaggerEnabled = app.Configuration.GetValue<bool>("Swagger:Enabled");
 
 if (swaggerEnabled)

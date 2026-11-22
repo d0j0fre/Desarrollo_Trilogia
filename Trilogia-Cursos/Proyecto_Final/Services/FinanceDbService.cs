@@ -131,11 +131,11 @@ namespace Proyecto_Final.Services
                     Diferencia = reader.GetDecimal(7),
                     Estado = reader.GetString(8),
                     LiquidadoPorNombre = reader.GetString(9),
-                    FechaLiquidacion = reader.GetDateTime(10),
+                    FechaLiquidacion = reader.GetDateTimeCR(10),
                     ChoferNombre = reader.IsDBNull(11) ? string.Empty : reader.GetString(11),
                     Anulada = !reader.IsDBNull(12) && reader.GetBoolean(12),
                     MotivoAnulacion = reader.IsDBNull(13) ? string.Empty : reader.GetString(13),
-                    FechaAnulacion = reader.IsDBNull(14) ? null : reader.GetDateTime(14),
+                    FechaAnulacion = reader.IsDBNull(14) ? null : reader.GetDateTimeCR(14),
                     AnuladaPorNombre = reader.IsDBNull(15) ? string.Empty : reader.GetString(15)
                 });
             }
@@ -177,7 +177,7 @@ namespace Proyecto_Final.Services
                     LiquidacionCobrosId = reader.GetInt32(5),
                     Monto = reader.GetDecimal(6),
                     Estado = reader.GetString(7),
-                    FechaRegistro = reader.GetDateTime(8)
+                    FechaRegistro = reader.GetDateTimeCR(8)
                 });
             }
             return lista;
@@ -220,7 +220,7 @@ namespace Proyecto_Final.Services
                     Estado = reader.GetString(12),
                     Observaciones = reader.GetString(13),
                     LiquidadoPorNombre = reader.GetString(14),
-                    FechaLiquidacion = reader.GetDateTime(15),
+                    FechaLiquidacion = reader.GetDateTimeCR(15),
                     Anulada = reader.GetBoolean(16),
                     MotivoAnulacion = reader.GetString(17)
                 };
@@ -270,11 +270,11 @@ namespace Proyecto_Final.Services
                     Codigo = reader.GetString(1),
                     Zona = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
                     ChoferNombre = reader.GetString(3),
-                    FechaCierre = reader.IsDBNull(4) ? null : reader.GetDateTime(4),
+                    FechaCierre = reader.IsDBNull(4) ? null : reader.GetDateTimeCR(4),
                     PedidosNoEntregados = reader.GetInt32(5),
                     Unidades = reader.GetInt32(6),
                     Pendiente = reader.GetBoolean(7),
-                    FechaLiquidacion = reader.IsDBNull(8) ? null : reader.GetDateTime(8),
+                    FechaLiquidacion = reader.IsDBNull(8) ? null : reader.GetDateTimeCR(8),
                     LiquidadoPorNombre = reader.GetString(9)
                 });
             }

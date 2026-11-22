@@ -210,12 +210,12 @@ namespace Proyecto_Final.Models.Admin
         [Required(ErrorMessage = "La fecha inicial es obligatoria.")]
         [DataType(DataType.Date)]
         [Display(Name = "Fecha inicial")]
-        public DateTime FechaInicio { get; set; } = DateTime.Today;
+        public DateTime FechaInicio { get; set; } = CostaRicaClock.Today;
 
         [Required(ErrorMessage = "La fecha final es obligatoria.")]
         [DataType(DataType.Date)]
         [Display(Name = "Fecha final")]
-        public DateTime FechaFin { get; set; } = DateTime.Today;
+        public DateTime FechaFin { get; set; } = CostaRicaClock.Today;
 
         [Required(ErrorMessage = "Debe seleccionar el tipo de solicitud.")]
         [Display(Name = "Tipo de solicitud")]

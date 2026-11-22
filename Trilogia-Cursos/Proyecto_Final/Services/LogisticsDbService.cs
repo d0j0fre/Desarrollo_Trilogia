@@ -123,7 +123,7 @@ namespace Proyecto_Final.Services
                     PedidoId = reader.GetInt32(0),
                     Cliente = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
                     Correo = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
-                    FechaPedido = reader.IsDBNull(3) ? DateTime.MinValue : reader.GetDateTime(3),
+                    FechaPedido = reader.IsDBNull(3) ? DateTime.MinValue : reader.GetDateTimeCR(3),
                     Estado = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
                     TipoEntrega = reader.IsDBNull(5) ? string.Empty : reader.GetString(5),
                     DireccionEntrega = reader.IsDBNull(6) ? string.Empty : reader.GetString(6),
@@ -231,8 +231,8 @@ namespace Proyecto_Final.Services
                     Estado = reader.GetString(3),
                     Chofer = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
                     VehiculoPlaca = reader.IsDBNull(5) ? string.Empty : reader.GetString(5),
-                    FechaCreacion = reader.GetDateTime(6),
-                    FechaDespacho = reader.IsDBNull(7) ? null : reader.GetDateTime(7),
+                    FechaCreacion = reader.GetDateTimeCR(6),
+                    FechaDespacho = reader.IsDBNull(7) ? null : reader.GetDateTimeCR(7),
                     TotalPedidos = reader.IsDBNull(8) ? 0 : reader.GetInt32(8),
                     Entregados = reader.IsDBNull(9) ? 0 : reader.GetInt32(9),
                     Fallidos = reader.IsDBNull(10) ? 0 : reader.GetInt32(10),
@@ -259,7 +259,7 @@ namespace Proyecto_Final.Services
                     Cliente = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
                     Direccion = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
                     Total = reader.IsDBNull(4) ? 0 : reader.GetDecimal(4),
-                    FechaPedido = reader.IsDBNull(5) ? DateTime.MinValue : reader.GetDateTime(5),
+                    FechaPedido = reader.IsDBNull(5) ? DateTime.MinValue : reader.GetDateTimeCR(5),
                     RutaId = reader.IsDBNull(6) ? null : reader.GetInt32(6),
                     RutaCodigo = reader.IsDBNull(7) ? string.Empty : reader.GetString(7),
                     RutaEstado = reader.IsDBNull(8) ? string.Empty : reader.GetString(8),
@@ -293,9 +293,9 @@ namespace Proyecto_Final.Services
                     VehiculoDescripcion = reader.IsDBNull(8) ? string.Empty : reader.GetString(8),
                     Observaciones = reader.IsDBNull(9) ? string.Empty : reader.GetString(9),
                     CreadaPorNombre = reader.IsDBNull(10) ? string.Empty : reader.GetString(10),
-                    FechaCreacion = reader.GetDateTime(11),
-                    FechaDespacho = reader.IsDBNull(12) ? null : reader.GetDateTime(12),
-                    FechaCierre = reader.IsDBNull(13) ? null : reader.GetDateTime(13)
+                    FechaCreacion = reader.GetDateTimeCR(11),
+                    FechaDespacho = reader.IsDBNull(12) ? null : reader.GetDateTimeCR(12),
+                    FechaCierre = reader.IsDBNull(13) ? null : reader.GetDateTimeCR(13)
                 };
             }
             return null;
@@ -318,7 +318,7 @@ namespace Proyecto_Final.Services
                     Secuencia = reader.IsDBNull(2) ? 0 : reader.GetInt32(2),
                     EstadoEntrega = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
                     MotivoFallo = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
-                    FechaEntrega = reader.IsDBNull(5) ? null : reader.GetDateTime(5),
+                    FechaEntrega = reader.IsDBNull(5) ? null : reader.GetDateTimeCR(5),
                     Cliente = reader.IsDBNull(6) ? string.Empty : reader.GetString(6),
                     ClienteCorreo = reader.IsDBNull(7) ? string.Empty : reader.GetString(7),
                     DireccionEntrega = reader.IsDBNull(8) ? string.Empty : reader.GetString(8),
@@ -479,7 +479,7 @@ namespace Proyecto_Final.Services
                     Zona = reader.GetString(2),
                     Estado = reader.GetString(3),
                     VehiculoPlaca = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
-                    FechaDespacho = reader.IsDBNull(5) ? null : reader.GetDateTime(5),
+                    FechaDespacho = reader.IsDBNull(5) ? null : reader.GetDateTimeCR(5),
                     TotalPedidos = reader.IsDBNull(6) ? 0 : reader.GetInt32(6),
                     Pendientes = reader.IsDBNull(7) ? 0 : reader.GetInt32(7),
                     Entregados = reader.IsDBNull(8) ? 0 : reader.GetInt32(8)
@@ -507,7 +507,7 @@ namespace Proyecto_Final.Services
                     Zona = reader.GetString(2),
                     Estado = reader.GetString(3),
                     VehiculoPlaca = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
-                    FechaDespacho = reader.IsDBNull(5) ? null : reader.GetDateTime(5)
+                    FechaDespacho = reader.IsDBNull(5) ? null : reader.GetDateTimeCR(5)
                 };
             }
 
@@ -522,7 +522,7 @@ namespace Proyecto_Final.Services
                         Secuencia = reader.IsDBNull(2) ? 0 : reader.GetInt32(2),
                         EstadoEntrega = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
                         MotivoFallo = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
-                        FechaEntrega = reader.IsDBNull(5) ? null : reader.GetDateTime(5),
+                        FechaEntrega = reader.IsDBNull(5) ? null : reader.GetDateTimeCR(5),
                         Cliente = reader.IsDBNull(6) ? string.Empty : reader.GetString(6),
                         Telefono = reader.IsDBNull(7) ? string.Empty : reader.GetString(7),
                         DireccionEntrega = reader.IsDBNull(8) ? string.Empty : reader.GetString(8),
@@ -686,7 +686,7 @@ namespace Proyecto_Final.Services
                         MimeType = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
                         Observaciones = reader.IsDBNull(5) ? string.Empty : reader.GetString(5),
                         RegistradoPorNombre = reader.IsDBNull(6) ? string.Empty : reader.GetString(6),
-                        FechaRegistro = reader.GetDateTime(7)
+                        FechaRegistro = reader.GetDateTimeCR(7)
                     });
                 }
             }
@@ -703,7 +703,7 @@ namespace Proyecto_Final.Services
             MimeType = reader.IsDBNull(5) ? string.Empty : reader.GetString(5),
             Observaciones = reader.IsDBNull(6) ? string.Empty : reader.GetString(6),
             RegistradoPorNombre = reader.IsDBNull(7) ? string.Empty : reader.GetString(7),
-            FechaRegistro = reader.GetDateTime(8)
+            FechaRegistro = reader.GetDateTimeCR(8)
         };
     }
 }

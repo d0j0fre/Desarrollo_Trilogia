@@ -34,12 +34,12 @@ namespace Proyecto_Final.Services
                     VehiculoId = reader.GetInt32(1),
                     VehiculoPlaca = reader.GetString(2),
                     ChoferNombre = reader.GetString(3),
-                    Fecha = reader.GetDateTime(4),
+                    Fecha = reader.GetDateTimeCR(4),
                     KmInicial = reader.GetInt32(5),
                     KmFinal = reader.IsDBNull(6) ? null : reader.GetInt32(6),
                     Recorrido = reader.IsDBNull(7) ? null : reader.GetInt32(7),
                     Observaciones = reader.GetString(8),
-                    FechaRegistro = reader.GetDateTime(9)
+                    FechaRegistro = reader.GetDateTimeCR(9)
                 });
             }
             return lista;
@@ -93,11 +93,11 @@ namespace Proyecto_Final.Services
                     Taller = reader.GetString(5),
                     Costo = reader.GetDecimal(6),
                     Estado = reader.GetString(7),
-                    FechaProgramada = reader.IsDBNull(8) ? null : reader.GetDateTime(8),
-                    FechaRealizada = reader.IsDBNull(9) ? null : reader.GetDateTime(9),
+                    FechaProgramada = reader.IsDBNull(8) ? null : reader.GetDateTimeCR(8),
+                    FechaRealizada = reader.IsDBNull(9) ? null : reader.GetDateTimeCR(9),
                     KilometrajeProximo = reader.IsDBNull(10) ? null : reader.GetInt32(10),
                     RegistradoPorNombre = reader.GetString(11),
-                    FechaRegistro = reader.GetDateTime(12)
+                    FechaRegistro = reader.GetDateTimeCR(12)
                 });
             }
             return lista;
@@ -205,7 +205,7 @@ namespace Proyecto_Final.Services
                     Categoria = reader.GetString(0),
                     VehiculoPlaca = reader.GetString(1),
                     Detalle = reader.GetString(2),
-                    Fecha = reader.IsDBNull(3) ? null : reader.GetDateTime(3),
+                    Fecha = reader.IsDBNull(3) ? null : reader.GetDateTimeCR(3),
                     DiasRestantes = reader.IsDBNull(4) ? null : reader.GetInt32(4),
                     Severidad = reader.GetString(5)
                 });
@@ -242,9 +242,9 @@ namespace Proyecto_Final.Services
                     VehiculoId = reader.GetInt32(1),
                     VehiculoPlaca = reader.GetString(2),
                     Tipo = reader.GetString(3),
-                    FechaVencimiento = reader.GetDateTime(4),
+                    FechaVencimiento = reader.GetDateTimeCR(4),
                     Observaciones = reader.GetString(5),
-                    FechaRegistro = reader.GetDateTime(6),
+                    FechaRegistro = reader.GetDateTimeCR(6),
                     EsVigente = reader.GetBoolean(7),
                     DiasRestantes = reader.GetInt32(8)
                 });
@@ -266,7 +266,7 @@ namespace Proyecto_Final.Services
                 VehiculoId = reader.GetInt32(1),
                 VehiculoPlaca = reader.GetString(2),
                 Tipo = reader.GetString(3),
-                FechaVencimiento = reader.GetDateTime(4),
+                FechaVencimiento = reader.GetDateTimeCR(4),
                 Observaciones = reader.GetString(5)
             };
         }
@@ -316,7 +316,7 @@ namespace Proyecto_Final.Services
                     Estado = reader.GetString(5),
                     ClientePrestamo = reader.GetString(6),
                     Activo = reader.GetBoolean(7),
-                    FechaRegistro = reader.GetDateTime(8)
+                    FechaRegistro = reader.GetDateTimeCR(8)
                 });
             }
             return lista;
@@ -399,8 +399,8 @@ namespace Proyecto_Final.Services
                 {
                     ComodatoId = reader.GetInt32(0),
                     ClienteNombre = reader.GetString(1),
-                    FechaAsignacion = reader.GetDateTime(2),
-                    FechaDevolucion = reader.IsDBNull(3) ? null : reader.GetDateTime(3),
+                    FechaAsignacion = reader.GetDateTimeCR(2),
+                    FechaDevolucion = reader.IsDBNull(3) ? null : reader.GetDateTimeCR(3),
                     Estado = reader.GetString(4),
                     DestinoDevolucion = reader.GetString(5),
                     Observaciones = reader.GetString(6),
@@ -442,8 +442,8 @@ namespace Proyecto_Final.Services
                     ClienteNombre = reader.GetString(5),
                     ClienteIdentificacion = reader.GetString(6),
                     Ubicacion = reader.GetString(7),
-                    FechaAsignacion = reader.GetDateTime(8),
-                    FechaDevolucion = reader.IsDBNull(9) ? null : reader.GetDateTime(9),
+                    FechaAsignacion = reader.GetDateTimeCR(8),
+                    FechaDevolucion = reader.IsDBNull(9) ? null : reader.GetDateTimeCR(9),
                     Estado = reader.GetString(10),
                     DestinoDevolucion = reader.GetString(11),
                     DiasEnComodato = reader.GetInt32(12)
@@ -518,7 +518,7 @@ namespace Proyecto_Final.Services
                 SaldoActual = reader.GetDecimal(3),
                 SaldoVencido = reader.GetDecimal(4),
                 EsMoroso = reader.GetBoolean(5),
-                VencimientoMasAntiguo = reader.IsDBNull(6) ? null : reader.GetDateTime(6),
+                VencimientoMasAntiguo = reader.IsDBNull(6) ? null : reader.GetDateTimeCR(6),
                 DiasAtraso = reader.GetInt32(7)
             };
         }
@@ -573,11 +573,11 @@ namespace Proyecto_Final.Services
                     ActivoTipo = reader.GetString(3),
                     ClienteNombre = reader.GetString(4),
                     ClienteUsuarioId = reader.IsDBNull(5) ? null : reader.GetInt32(5),
-                    FechaAsignacion = reader.GetDateTime(6),
+                    FechaAsignacion = reader.GetDateTimeCR(6),
                     DiasEnComodato = reader.GetInt32(7),
                     NumPedidos = reader.GetInt32(8),
                     TotalComprado = reader.GetDecimal(9),
-                    UltimaCompra = reader.IsDBNull(10) ? null : reader.GetDateTime(10),
+                    UltimaCompra = reader.IsDBNull(10) ? null : reader.GetDateTimeCR(10),
                     // BUG-16-06: columna de 0241; sin la migración queda vacía.
                     Ubicacion = reader.FieldCount > 11 ? reader.GetString(11) : string.Empty,
                     // BUG-16-04: columnas de 0242.
@@ -606,11 +606,11 @@ namespace Proyecto_Final.Services
                 ClienteNombre = reader.GetString(4),
                 ClienteIdentificacion = reader.GetString(5),
                 Ubicacion = reader.GetString(6),
-                FechaAsignacion = reader.GetDateTime(7),
+                FechaAsignacion = reader.GetDateTimeCR(7),
                 CondicionEntrega = reader.GetString(8),
                 Observaciones = reader.GetString(9),
                 RegistradoPorNombre = reader.GetString(10),
-                FechaRegistro = reader.GetDateTime(11),
+                FechaRegistro = reader.GetDateTimeCR(11),
                 Estado = reader.GetString(12)
             };
         }

@@ -61,7 +61,7 @@
         // el reporte de inventario y el tablero gerencial), no un tope fijo de 5 unidades.
         var productosConAlerta = Model.Where(p => p.Stock <= 0 || p.Stock <= p.StockMinimo).ToList();
         var productosPorVencer = Model
-            .Where(p => ProductExpiration.RequiereAviso(p.FechaVencimiento, DateTime.Today))
+            .Where(p => ProductExpiration.RequiereAviso(p.FechaVencimiento, CostaRicaClock.Today))
             .OrderBy(p => p.FechaVencimiento)
             .ToList();
     }
@@ -78,7 +78,7 @@
                         <ul class="mb-0 mt-1">
                             @foreach (var p in productosPorVencer)
                             {
-                                <li><strong>@p.Nombre</strong> — @ProductExpiration.Describir(p.FechaVencimiento, DateTime.Today)</li>
+                                <li><strong>@p.Nombre</strong> — @ProductExpiration.Describir(p.FechaVencimiento, CostaRicaClock.Today)</li>
                             }
                         </ul>
                     </div>
@@ -171,10 +171,10 @@
                                         </td>
                                         <td class="font-weight-bold">
                                             @item.Nombre
-                                            @if (ProductExpiration.RequiereAviso(item.FechaVencimiento, DateTime.Today))
+                                            @if (ProductExpiration.RequiereAviso(item.FechaVencimiento, CostaRicaClock.Today))
                                             {
                                                 <div><span class="badge badge-warning">Próximo a vencer</span></div>
-                                                <div class="small text-muted font-weight-normal">@ProductExpiration.Describir(item.FechaVencimiento, DateTime.Today)</div>
+                                                <div class="small text-muted font-weight-normal">@ProductExpiration.Describir(item.FechaVencimiento, CostaRicaClock.Today)</div>
                                             }
                                         </td>
                                         <td>@item.Categoria</td>

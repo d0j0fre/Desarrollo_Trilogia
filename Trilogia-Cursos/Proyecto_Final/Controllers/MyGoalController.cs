@@ -19,7 +19,7 @@ namespace Proyecto_Final.Controllers
         public async Task<IActionResult> Index()
         {
             var vendedorId = HttpContext.Session.GetInt32("UserId") ?? 0;
-            var hoy = DateTime.Now;
+            var hoy = CostaRicaClock.Now;
 
             var model = await _kpis.GetMiProgresoAsync(vendedorId, hoy.Year, hoy.Month);
             return View(model);

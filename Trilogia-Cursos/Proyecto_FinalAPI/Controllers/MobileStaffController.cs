@@ -36,7 +36,7 @@ namespace Proyecto_FinalAPI.Controllers
             _logger = logger;
         }
 
-        private DateTime Today => _time.GetUtcNow().ToOffset(TimeSpan.FromHours(-6)).Date;
+        private DateTime Today => Proyecto_Final.Services.CostaRicaClock.FromUtc(_time.GetUtcNow()).Date;
 
         [HttpGet("attendance")]
         [EnableRateLimiting("mobile-read")]

@@ -38,9 +38,9 @@ namespace Proyecto_Final.Services
                     Estado = reader.GetString(6),
                     ClienteInfo = reader.GetString(7),
                     RegistradoPorNombre = reader.GetString(8),
-                    FechaRegistro = reader.GetDateTime(9),
+                    FechaRegistro = reader.GetDateTimeCR(9),
                     ResueltoPorNombre = reader.GetString(10),
-                    FechaResolucion = reader.IsDBNull(11) ? null : reader.GetDateTime(11),
+                    FechaResolucion = reader.IsDBNull(11) ? null : reader.GetDateTimeCR(11),
                     ObservacionResolucion = reader.GetString(12)
                 });
             }

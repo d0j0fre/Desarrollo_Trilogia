@@ -35,7 +35,7 @@ namespace Proyecto_Final.Services
                     EntidadTipo = reader.IsDBNull(reader.GetOrdinal("EntidadTipo")) ? string.Empty : reader.GetString(reader.GetOrdinal("EntidadTipo")),
                     EntidadId = reader.IsDBNull(reader.GetOrdinal("EntidadId")) ? null : reader.GetInt32(reader.GetOrdinal("EntidadId")),
                     Leida = reader.GetBoolean(reader.GetOrdinal("Leida")),
-                    FechaCreacion = reader.GetDateTime(reader.GetOrdinal("FechaCreacion"))
+                    FechaCreacion = reader.GetDateTimeCR(reader.GetOrdinal("FechaCreacion"))
                 });
             }
             return lista;

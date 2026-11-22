@@ -55,7 +55,7 @@ namespace Proyecto_FinalAPI.Services.Mobile
                 reader.IsDBNull(6) ? null : reader.GetInt64(6),
                 reader.IsDBNull(7) ? null : reader.GetString(7),
                 reader.IsDBNull(8) ? null : reader.GetString(8),
-                reader.GetDateTime(9));
+                reader.GetDateTimeCRFromUtc(9));
         }
     }
 }

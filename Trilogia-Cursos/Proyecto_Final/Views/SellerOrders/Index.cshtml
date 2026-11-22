@@ -689,7 +689,7 @@
 
                 pendingOrdersList.innerHTML = orders.map(order => {
                     const productsText = order.productos.map(product => escapeHtml(product.nombre) + ' x' + product.cantidad).join(', ');
-                    const createdAt = new Date(order.creadoEn).toLocaleString('es-CR');
+                    const createdAt = new Date(order.creadoEn).toLocaleString('es-CR', { timeZone: 'America/Costa_Rica' });
                     const status = order.estadoOffline || 'Pendiente';
                     const badgeClass = getStatusBadgeClass(status);
                     const errorHtml = order.mensajeError ? '<small class="text-danger mt-1">' + escapeHtml(order.mensajeError) + '</small>' : '';

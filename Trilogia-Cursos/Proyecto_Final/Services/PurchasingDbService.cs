@@ -74,7 +74,7 @@ public sealed class PurchasingDbService : IPurchasingService
                 Telefono = NullableString(reader, "Telefono"),
                 Email = NullableString(reader, "Email"),
                 Activo = reader.GetBoolean(reader.GetOrdinal("Activo")),
-                FechaCreacionUtc = reader.GetDateTime(reader.GetOrdinal("FechaCreacionUtc")),
+                FechaCreacionUtc = reader.GetUtcDateTime(reader.GetOrdinal("FechaCreacionUtc")),
                 FechaActualizacionUtc = NullableDateTime(reader, "FechaActualizacionUtc")
             });
         }
@@ -150,7 +150,7 @@ public sealed class PurchasingDbService : IPurchasingService
                 ProveedorNombre = reader.GetString(reader.GetOrdinal("ProveedorNombre")),
                 Estado = reader.GetString(reader.GetOrdinal("Estado")),
                 Notas = NullableString(reader, "Notas"),
-                FechaCreacionUtc = reader.GetDateTime(reader.GetOrdinal("FechaCreacionUtc")),
+                FechaCreacionUtc = reader.GetUtcDateTime(reader.GetOrdinal("FechaCreacionUtc")),
                 FechaRecepcionUtc = NullableDateTime(reader, "FechaRecepcionUtc"),
                 FechaCierreUtc = NullableDateTime(reader, "FechaCierreUtc"),
                 MontoTotal = reader.GetDecimal(reader.GetOrdinal("MontoTotal")),
@@ -184,7 +184,7 @@ public sealed class PurchasingDbService : IPurchasingService
             Estado = reader.GetString(reader.GetOrdinal("Estado")),
             Notas = NullableString(reader, "Notas"),
             MotivoCierre = NullableString(reader, "MotivoCierre"),
-            FechaCreacionUtc = reader.GetDateTime(reader.GetOrdinal("FechaCreacionUtc")),
+            FechaCreacionUtc = reader.GetUtcDateTime(reader.GetOrdinal("FechaCreacionUtc")),
             FechaRecepcionUtc = NullableDateTime(reader, "FechaRecepcionUtc"),
             FechaCierreUtc = NullableDateTime(reader, "FechaCierreUtc")
         };
@@ -326,7 +326,7 @@ public sealed class PurchasingDbService : IPurchasingService
                 PrecioAnterior = NullableDecimal(reader, "PrecioAnterior"),
                 VariacionPorcentual = NullableDecimal(reader, "VariacionPorcentual"),
                 Estado = reader.GetString(reader.GetOrdinal("Estado")),
-                FechaCreacionUtc = reader.GetDateTime(reader.GetOrdinal("FechaCreacionUtc"))
+                FechaCreacionUtc = reader.GetUtcDateTime(reader.GetOrdinal("FechaCreacionUtc"))
             });
         }
 
@@ -440,7 +440,7 @@ public sealed class PurchasingDbService : IPurchasingService
     private static DateTime? NullableDateTime(SqlDataReader reader, string name)
     {
         var ordinal = reader.GetOrdinal(name);
-        return reader.IsDBNull(ordinal) ? null : reader.GetDateTime(ordinal);
+        return reader.IsDBNull(ordinal) ? null : reader.GetUtcDateTime(ordinal);
     }
 
     private static decimal? NullableDecimal(SqlDataReader reader, string name)

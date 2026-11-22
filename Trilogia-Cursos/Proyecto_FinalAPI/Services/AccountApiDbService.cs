@@ -222,11 +222,11 @@ namespace Proyecto_FinalAPI.Services
                 NombreCompleto = reader.GetString(1),
                 Correo = reader.GetString(2),
                 Token = reader.GetString(3),
-                FechaExpiracion = reader.GetDateTime(4),
+                FechaExpiracion = reader.GetDateTimeCR(4),
                 Usado = reader.GetBoolean(5)
             };
 
-            if (info.Usado || info.FechaExpiracion < DateTime.Now)
+            if (info.Usado || info.FechaExpiracion < CostaRicaClock.Now)
                 return null;
 
             return info;

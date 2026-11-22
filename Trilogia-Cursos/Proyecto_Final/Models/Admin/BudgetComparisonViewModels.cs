@@ -2,7 +2,7 @@ namespace Proyecto_Final.Models.Admin;
 
 public sealed class BudgetComparisonFilterViewModel
 {
-    public int Year { get; set; } = DateTime.Today.Year;
+    public int Year { get; set; } = CostaRicaClock.Today.Year;
     public int? DepartmentId { get; set; }
     public int? Month { get; set; }
     public int? CategoryId { get; set; }

@@ -74,7 +74,7 @@ public sealed class AttendanceDbService : IAttendanceService
             result.Add(new AttendanceEntryViewModel
             {
                 JornadaId = reader.GetInt64(0), EmpleadoId = reader.GetInt32(1), NombreCompleto = reader.GetString(2),
-                Fecha = reader.GetDateTime(3), HorasOrdinarias = reader.GetDecimal(4), HorasExtra = reader.GetDecimal(5),
+                Fecha = reader.GetDateTimeCR(3), HorasOrdinarias = reader.GetDecimal(4), HorasExtra = reader.GetDecimal(5),
                 HorasAusencia = reader.GetDecimal(6), Observaciones = reader.IsDBNull(7) ? null : reader.GetString(7),
                 Estado = reader.GetString(8), RespuestaSupervisor = reader.IsDBNull(9) ? null : reader.GetString(9),
                 RowVersionBase64 = Convert.ToBase64String((byte[])reader.GetValue(10)),

@@ -90,7 +90,7 @@ public sealed class PayrollDbService : IPayrollService
         while (await reader.ReadAsync(cancellationToken)) rules.Add(new PayrollRuleViewModel
         {
             ReglaId=reader.GetInt32(0),Codigo=reader.GetString(1),Nombre=reader.GetString(2),Tipo=reader.GetString(3),TipoCalculo=reader.GetString(4),Valor=reader.GetDecimal(5),
-            Tope=reader.IsDBNull(6)?null:reader.GetDecimal(6),VigenteDesde=reader.GetDateTime(7),VigenteHasta=reader.IsDBNull(8)?null:reader.GetDateTime(8),Fuente=reader.GetString(9)
+            Tope=reader.IsDBNull(6)?null:reader.GetDecimal(6),VigenteDesde=reader.GetDateTimeCR(7),VigenteHasta=reader.IsDBNull(8)?null:reader.GetDateTimeCR(8),Fuente=reader.GetString(9)
         });
         return rules;
     }
@@ -102,7 +102,7 @@ public sealed class PayrollDbService : IPayrollService
         await connection.OpenAsync(cancellationToken); await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         while (await reader.ReadAsync(cancellationToken)) periods.Add(new PayrollPeriodOptionViewModel
         {
-            PeriodoId=reader.GetInt32(0),Tipo=reader.GetString(1),Desde=reader.GetDateTime(2),Hasta=reader.GetDateTime(3),FactorSalario=reader.GetDecimal(4)
+            PeriodoId=reader.GetInt32(0),Tipo=reader.GetString(1),Desde=reader.GetDateTimeCR(2),Hasta=reader.GetDateTimeCR(3),FactorSalario=reader.GetDecimal(4)
         });
         return periods;
     }
@@ -123,8 +123,8 @@ public sealed class PayrollDbService : IPayrollService
     {
         await using var command = Command(connection, "dbo.sp_Payroll_ObtenerEntradaCalculo"); command.Parameters.Add("@PeriodoId", SqlDbType.Int).Value=request.PeriodoId; command.Parameters.Add("@EmpleadoId", SqlDbType.Int).Value=request.EmpleadoId;
         await using var reader=await command.ExecuteReaderAsync(cancellationToken); if(!await reader.ReadAsync(cancellationToken)) throw new InvalidOperationException("No existe entrada de planilla.");
-        var input=new PayrollCalculationInput{PeriodoId=request.PeriodoId,EmpleadoId=request.EmpleadoId,SalarioBase=reader.GetDecimal(0),HorasOrdinarias=reader.GetDecimal(1),HorasExtra=reader.GetDecimal(2),Comisiones=request.Comisiones,FechaCalculo=reader.GetDateTime(3),FactorSalario=reader.GetDecimal(4),FuenteConfiguracionPeriodo=reader.GetString(5)};
-        var rules=new List<PayrollRuleViewModel>(); await reader.NextResultAsync(cancellationToken); while(await reader.ReadAsync(cancellationToken)) rules.Add(new PayrollRuleViewModel{ReglaId=reader.GetInt32(0),Codigo=reader.GetString(1),Nombre=reader.GetString(2),Tipo=reader.GetString(3),TipoCalculo=reader.GetString(4),Valor=reader.GetDecimal(5),Tope=reader.IsDBNull(6)?null:reader.GetDecimal(6),VigenteDesde=reader.GetDateTime(7),VigenteHasta=reader.IsDBNull(8)?null:reader.GetDateTime(8),Fuente=reader.GetString(9)});
+        var input=new PayrollCalculationInput{PeriodoId=request.PeriodoId,EmpleadoId=request.EmpleadoId,SalarioBase=reader.GetDecimal(0),HorasOrdinarias=reader.GetDecimal(1),HorasExtra=reader.GetDecimal(2),Comisiones=request.Comisiones,FechaCalculo=reader.GetDateTimeCR(3),FactorSalario=reader.GetDecimal(4),FuenteConfiguracionPeriodo=reader.GetString(5)};
+        var rules=new List<PayrollRuleViewModel>(); await reader.NextResultAsync(cancellationToken); while(await reader.ReadAsync(cancellationToken)) rules.Add(new PayrollRuleViewModel{ReglaId=reader.GetInt32(0),Codigo=reader.GetString(1),Nombre=reader.GetString(2),Tipo=reader.GetString(3),TipoCalculo=reader.GetString(4),Valor=reader.GetDecimal(5),Tope=reader.IsDBNull(6)?null:reader.GetDecimal(6),VigenteDesde=reader.GetDateTimeCR(7),VigenteHasta=reader.IsDBNull(8)?null:reader.GetDateTimeCR(8),Fuente=reader.GetString(9)});
         await reader.DisposeAsync();
         await using var absenceCommand = new SqlCommand(@"SELECT COALESCE(SUM(j.HorasAusencia),0) FROM dbo.EmpleadoJornadas j JOIN dbo.PlanillaPeriodos p ON p.PeriodoId=@PeriodoId WHERE j.EmpleadoId=@EmpleadoId AND j.Fecha BETWEEN p.Desde AND p.Hasta AND j.Estado=N'Aprobada'", connection);
         absenceCommand.Parameters.Add("@PeriodoId", SqlDbType.Int).Value = request.PeriodoId;

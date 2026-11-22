@@ -41,7 +41,7 @@
                             <td>@order.OrdenCompraId</td><td>@order.ProveedorNombre</td>
                             <td><span class="badge badge-@color">@PurchaseOrderStatus.Label(order.Estado)</span></td>
                             <td>₡@order.MontoTotal.ToString("N2")</td><td>@order.TotalRecibido / @order.TotalOrdenado</td>
-                            <td>@order.FechaCreacionUtc.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                            <td>@order.FechaCreacionUtc.ToCostaRica().ToString("dd/MM/yyyy")</td>
                             <td><a asp-action="Detail" asp-route-id="@order.OrdenCompraId" class="btn btn-sm btn-ds-view">Ver</a></td>
                         </tr>
                     }

@@ -72,7 +72,7 @@ namespace Proyecto_FinalAPI.Services.Mobile
                     Zona = reader.GetString(2),
                     Estado = reader.GetString(3),
                     VehiculoPlaca = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
-                    FechaDespacho = reader.IsDBNull(5) ? null : reader.GetDateTime(5),
+                    FechaDespacho = reader.IsDBNull(5) ? null : reader.GetDateTimeCR(5),
                     TotalPedidos = reader.IsDBNull(6) ? 0 : reader.GetInt32(6),
                     Pendientes = reader.IsDBNull(7) ? 0 : reader.GetInt32(7),
                     Entregados = reader.IsDBNull(8) ? 0 : reader.GetInt32(8)
@@ -108,7 +108,7 @@ namespace Proyecto_FinalAPI.Services.Mobile
                     Zona = reader.GetString(2),
                     Estado = reader.GetString(3),
                     VehiculoPlaca = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
-                    FechaDespacho = reader.IsDBNull(5) ? null : reader.GetDateTime(5)
+                    FechaDespacho = reader.IsDBNull(5) ? null : reader.GetDateTimeCR(5)
                 };
             }
 
@@ -123,7 +123,7 @@ namespace Proyecto_FinalAPI.Services.Mobile
                         Secuencia = reader.IsDBNull(2) ? 0 : reader.GetInt32(2),
                         EstadoEntrega = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
                         MotivoFallo = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
-                        FechaEntrega = reader.IsDBNull(5) ? null : reader.GetDateTime(5),
+                        FechaEntrega = reader.IsDBNull(5) ? null : reader.GetDateTimeCR(5),
                         Cliente = reader.IsDBNull(6) ? string.Empty : reader.GetString(6),
                         Telefono = reader.IsDBNull(7) ? string.Empty : reader.GetString(7),
                         DireccionEntrega = reader.IsDBNull(8) ? string.Empty : reader.GetString(8),
@@ -308,8 +308,8 @@ namespace Proyecto_FinalAPI.Services.Mobile
                 VehiculoId = reader.GetInt32(1),
                 VehiculoPlaca = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
                 KmInicial = reader.IsDBNull(3) ? 0 : reader.GetInt32(3),
-                Fecha = reader.GetDateTime(4),
-                FechaRegistro = reader.GetDateTime(5)
+                Fecha = reader.GetDateTimeCR(4),
+                FechaRegistro = reader.GetDateTimeCR(5)
             };
         }
 

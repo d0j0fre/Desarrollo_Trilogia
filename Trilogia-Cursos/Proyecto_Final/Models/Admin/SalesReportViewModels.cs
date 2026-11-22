@@ -13,10 +13,10 @@ public static class SalesReportGrouping
 public sealed class SalesReportFilterViewModel : IValidatableObject
 {
     [DataType(DataType.Date)]
-    public DateTime Desde { get; set; } = new(DateTime.Today.Year, DateTime.Today.Month, 1);
+    public DateTime Desde { get; set; } = new(CostaRicaClock.Today.Year, CostaRicaClock.Today.Month, 1);
 
     [DataType(DataType.Date)]
-    public DateTime Hasta { get; set; } = DateTime.Today;
+    public DateTime Hasta { get; set; } = CostaRicaClock.Today;
 
     public string Agrupacion { get; set; } = SalesReportGrouping.Daily;
 
@@ -61,8 +61,8 @@ public sealed class DetailedSalesReportViewModel
 
 public sealed class SellerPerformanceFilterViewModel : IValidatableObject
 {
-    [DataType(DataType.Date)] public DateTime Desde { get; set; } = new(DateTime.Today.Year, DateTime.Today.Month, 1);
-    [DataType(DataType.Date)] public DateTime Hasta { get; set; } = DateTime.Today;
+    [DataType(DataType.Date)] public DateTime Desde { get; set; } = new(CostaRicaClock.Today.Year, CostaRicaClock.Today.Month, 1);
+    [DataType(DataType.Date)] public DateTime Hasta { get; set; } = CostaRicaClock.Today;
     public int? VendedorUsuarioId { get; set; }
     public string Orden { get; set; } = "ventas_desc";
 

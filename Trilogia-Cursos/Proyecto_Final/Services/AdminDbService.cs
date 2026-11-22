@@ -71,7 +71,7 @@ namespace Proyecto_Final.Services
                     {
                         PedidoId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
                         Cliente = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
-                        FechaPedido = reader.IsDBNull(2) ? DateTime.MinValue : reader.GetDateTime(2),
+                        FechaPedido = reader.IsDBNull(2) ? DateTime.MinValue : reader.GetDateTimeCR(2),
                         Estado = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
                         Total = reader.IsDBNull(4) ? 0 : reader.GetDecimal(4)
                     });
@@ -102,11 +102,11 @@ namespace Proyecto_Final.Services
                     Stock = reader.IsDBNull(5) ? 0 : reader.GetInt32(5),
                     EstadoStock = reader.IsDBNull(6) ? string.Empty : reader.GetString(6),
                     Activo = !reader.IsDBNull(7) && reader.GetBoolean(7),
-                    FechaCreacion = reader.IsDBNull(8) ? DateTime.MinValue : reader.GetDateTime(8),
+                    FechaCreacion = reader.IsDBNull(8) ? DateTime.MinValue : reader.GetDateTimeCR(8),
                     ImagenUrl = reader.FieldCount > 9 && !reader.IsDBNull(9) ? reader.GetString(9) : string.Empty,
                     EsDestacado = reader.FieldCount > 10 && !reader.IsDBNull(10) && reader.GetBoolean(10),
                     StockMinimo = reader.FieldCount > 11 && !reader.IsDBNull(11) ? reader.GetInt32(11) : 5,
-                    FechaVencimiento = reader.FieldCount > 12 && !reader.IsDBNull(12) ? reader.GetDateTime(12) : null
+                    FechaVencimiento = reader.FieldCount > 12 && !reader.IsDBNull(12) ? reader.GetDateTimeCR(12) : null
                 });
             }
             return products;
@@ -132,7 +132,7 @@ namespace Proyecto_Final.Services
                     Stock = reader.IsDBNull(5) ? 0 : reader.GetInt32(5),
                     EstadoStock = reader.IsDBNull(6) ? string.Empty : reader.GetString(6),
                     Activo = !reader.IsDBNull(7) && reader.GetBoolean(7),
-                    FechaCreacion = reader.IsDBNull(8) ? DateTime.MinValue : reader.GetDateTime(8),
+                    FechaCreacion = reader.IsDBNull(8) ? DateTime.MinValue : reader.GetDateTimeCR(8),
                     ImagenUrl = reader.FieldCount > 9 && !reader.IsDBNull(9) ? reader.GetString(9) : string.Empty,
                     EsDestacado = reader.FieldCount > 10 && !reader.IsDBNull(10) && reader.GetBoolean(10),
                     StockMinimo = reader.FieldCount > 11 && !reader.IsDBNull(11) ? reader.GetInt32(11) : 5
@@ -162,7 +162,7 @@ namespace Proyecto_Final.Services
                 ImagenUrl = reader.FieldCount > 7 && !reader.IsDBNull(7) ? reader.GetString(7) : string.Empty,
                 EsDestacado = reader.FieldCount > 8 && !reader.IsDBNull(8) && reader.GetBoolean(8),
                 StockMinimo = reader.FieldCount > 9 && !reader.IsDBNull(9) ? reader.GetInt32(9) : 5,
-                FechaVencimiento = reader.FieldCount > 10 && !reader.IsDBNull(10) ? reader.GetDateTime(10) : null
+                FechaVencimiento = reader.FieldCount > 10 && !reader.IsDBNull(10) ? reader.GetDateTimeCR(10) : null
             };
         }
 
@@ -345,7 +345,7 @@ namespace Proyecto_Final.Services
                     StockNuevo = reader.IsDBNull(6) ? 0 : reader.GetInt32(6),
                     Motivo = reader.IsDBNull(7) ? null : reader.GetString(7),
                     Usuario = reader.IsDBNull(8) ? string.Empty : reader.GetString(8),
-                    FechaMovimiento = reader.IsDBNull(9) ? DateTime.MinValue : reader.GetDateTime(9)
+                    FechaMovimiento = reader.IsDBNull(9) ? DateTime.MinValue : reader.GetDateTimeCR(9)
                 });
             }
             return movements;
@@ -467,7 +467,7 @@ namespace Proyecto_Final.Services
                     PedidoId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
                     Cliente = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
                     Correo = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
-                    FechaPedido = reader.IsDBNull(3) ? DateTime.MinValue : reader.GetDateTime(3),
+                    FechaPedido = reader.IsDBNull(3) ? DateTime.MinValue : reader.GetDateTimeCR(3),
                     Estado = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
                     TipoEntrega = reader.IsDBNull(5) ? null : reader.GetString(5),
                     DireccionEntrega = reader.IsDBNull(6) ? null : reader.GetString(6),
@@ -619,7 +619,7 @@ namespace Proyecto_Final.Services
                         PedidoId = reader.IsDBNull(1) ? 0 : reader.GetInt32(1),
                         NumeroFactura = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
                         Cliente = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
-                        FechaFactura = reader.IsDBNull(4) ? DateTime.MinValue : reader.GetDateTime(4),
+                        FechaFactura = reader.IsDBNull(4) ? DateTime.MinValue : reader.GetDateTimeCR(4),
                         Subtotal = reader.IsDBNull(5) ? 0 : reader.GetDecimal(5),
                         Impuesto = reader.IsDBNull(6) ? 0 : reader.GetDecimal(6),
                         Total = reader.IsDBNull(7) ? 0 : reader.GetDecimal(7),
@@ -680,7 +680,7 @@ namespace Proyecto_Final.Services
                         NumeroFactura = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
                         Cliente = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
                         Correo = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
-                        FechaFactura = reader.IsDBNull(5) ? DateTime.MinValue : reader.GetDateTime(5),
+                        FechaFactura = reader.IsDBNull(5) ? DateTime.MinValue : reader.GetDateTimeCR(5),
                         Subtotal = reader.IsDBNull(6) ? 0 : reader.GetDecimal(6),
                         Impuesto = reader.IsDBNull(7) ? 0 : reader.GetDecimal(7),
                         Total = reader.IsDBNull(8) ? 0 : reader.GetDecimal(8),
@@ -738,7 +738,7 @@ namespace Proyecto_Final.Services
                     NumeroFactura = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
                     Cliente = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
                     Correo = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
-                    FechaFactura = reader.IsDBNull(5) ? DateTime.MinValue : reader.GetDateTime(5),
+                    FechaFactura = reader.IsDBNull(5) ? DateTime.MinValue : reader.GetDateTimeCR(5),
                     Subtotal = reader.IsDBNull(6) ? 0 : reader.GetDecimal(6),
                     Impuesto = reader.IsDBNull(7) ? 0 : reader.GetDecimal(7),
                     Total = reader.IsDBNull(8) ? 0 : reader.GetDecimal(8),
@@ -795,7 +795,7 @@ namespace Proyecto_Final.Services
                     Nombre = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
                     Descripcion = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
                     Activo = !reader.IsDBNull(3) && reader.GetBoolean(3),
-                    FechaCreacion = reader.IsDBNull(4) ? DateTime.MinValue : reader.GetDateTime(4),
+                    FechaCreacion = reader.IsDBNull(4) ? DateTime.MinValue : reader.GetDateTimeCR(4),
                     TotalUsuarios = reader.IsDBNull(5) ? 0 : reader.GetInt32(5)
                 });
             }
@@ -821,7 +821,7 @@ namespace Proyecto_Final.Services
                 Nombre = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
                 Descripcion = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
                 Activo = !reader.IsDBNull(3) && reader.GetBoolean(3),
-                FechaCreacion = reader.IsDBNull(4) ? DateTime.MinValue : reader.GetDateTime(4),
+                FechaCreacion = reader.IsDBNull(4) ? DateTime.MinValue : reader.GetDateTimeCR(4),
                 TotalUsuarios = reader.IsDBNull(5) ? 0 : reader.GetInt32(5)
             };
         }
@@ -994,7 +994,7 @@ namespace Proyecto_Final.Services
                     Descripcion = reader.IsDBNull(7) ? string.Empty : reader.GetString(7),
                     DireccionIp = reader.IsDBNull(8) ? null : reader.GetString(8),
                     UserAgent = reader.IsDBNull(9) ? null : reader.GetString(9),
-                    FechaRegistro = reader.IsDBNull(10) ? DateTime.MinValue : reader.GetDateTime(10)
+                    FechaRegistro = reader.IsDBNull(10) ? DateTime.MinValue : reader.GetDateTimeCR(10)
                 });
             }
 
@@ -1032,7 +1032,7 @@ namespace Proyecto_Final.Services
                     Descripcion = reader.IsDBNull(8) ? string.Empty : reader.GetString(8),
                     DireccionIp = reader.IsDBNull(9) ? null : reader.GetString(9),
                     UserAgent = reader.IsDBNull(10) ? null : reader.GetString(10),
-                    FechaRegistro = reader.IsDBNull(11) ? DateTime.MinValue : reader.GetDateTime(11)
+                    FechaRegistro = reader.IsDBNull(11) ? DateTime.MinValue : reader.GetDateTimeCR(11)
                 });
             }
 
@@ -1152,7 +1152,7 @@ namespace Proyecto_Final.Services
                         UsuarioId = reader.IsDBNull(1) ? 0 : reader.GetInt32(1),
                         Cliente = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
                         Correo = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
-                        FechaPedido = reader.IsDBNull(4) ? DateTime.MinValue : reader.GetDateTime(4),
+                        FechaPedido = reader.IsDBNull(4) ? DateTime.MinValue : reader.GetDateTimeCR(4),
                         Estado = reader.IsDBNull(5) ? string.Empty : reader.GetString(5),
                         TipoEntrega = reader.IsDBNull(6) ? null : reader.GetString(6),
                         DireccionEntrega = reader.IsDBNull(7) ? null : reader.GetString(7),
@@ -1161,7 +1161,7 @@ namespace Proyecto_Final.Services
                         MetodoPago = reader.FieldCount > 10 && !reader.IsDBNull(10) ? reader.GetString(10) : string.Empty,
                         EstadoPago = reader.FieldCount > 11 && !reader.IsDBNull(11) ? reader.GetString(11) : string.Empty,
                         ReferenciaPago = reader.FieldCount > 12 && !reader.IsDBNull(12) ? reader.GetString(12) : null,
-                        FechaPago = reader.FieldCount > 13 && !reader.IsDBNull(13) ? reader.GetDateTime(13) : null,
+                        FechaPago = reader.FieldCount > 13 && !reader.IsDBNull(13) ? reader.GetDateTimeCR(13) : null,
                         MotivoRechazo = reader.FieldCount > 14 && !reader.IsDBNull(14) ? reader.GetString(14) : null,
                         // 0330: Total ya incluye el IVA; Subtotal e Impuesto vienen al final del procedimiento.
                         Subtotal = reader.FieldCount > 15 && !reader.IsDBNull(15) ? reader.GetDecimal(15) : (reader.IsDBNull(9) ? 0 : reader.GetDecimal(9)),
@@ -1255,12 +1255,12 @@ namespace Proyecto_Final.Services
                     Telefono = reader.IsDBNull(3) ? null : reader.GetString(3),
                     Direccion = reader.IsDBNull(4) ? null : reader.GetString(4),
                     Activo = !reader.IsDBNull(5) && reader.GetBoolean(5),
-                    FechaRegistro = reader.IsDBNull(6) ? DateTime.MinValue : reader.GetDateTime(6),
+                    FechaRegistro = reader.IsDBNull(6) ? DateTime.MinValue : reader.GetDateTimeCR(6),
                     TotalPedidos = reader.IsDBNull(7) ? 0 : reader.GetInt32(7),
                     TotalComprado = reader.IsDBNull(8) ? 0 : reader.GetDecimal(8),
-                    UltimoPedido = reader.IsDBNull(9) ? null : reader.GetDateTime(9),
+                    UltimoPedido = reader.IsDBNull(9) ? null : reader.GetDateTimeCR(9),
                     MotivoInactivacion = reader.IsDBNull(10) ? null : reader.GetString(10),
-                    FechaInactivacion = reader.IsDBNull(11) ? null : reader.GetDateTime(11)
+                    FechaInactivacion = reader.IsDBNull(11) ? null : reader.GetDateTimeCR(11)
                 });
             }
 
@@ -1287,12 +1287,12 @@ namespace Proyecto_Final.Services
                 Telefono = reader.IsDBNull(3) ? null : reader.GetString(3),
                 Direccion = reader.IsDBNull(4) ? null : reader.GetString(4),
                 Activo = !reader.IsDBNull(5) && reader.GetBoolean(5),
-                FechaRegistro = reader.IsDBNull(6) ? DateTime.MinValue : reader.GetDateTime(6),
+                FechaRegistro = reader.IsDBNull(6) ? DateTime.MinValue : reader.GetDateTimeCR(6),
                 TotalPedidos = reader.IsDBNull(7) ? 0 : reader.GetInt32(7),
                 TotalComprado = reader.IsDBNull(8) ? 0 : reader.GetDecimal(8),
-                UltimoPedido = reader.IsDBNull(9) ? null : reader.GetDateTime(9),
+                UltimoPedido = reader.IsDBNull(9) ? null : reader.GetDateTimeCR(9),
                 MotivoInactivacion = reader.IsDBNull(10) ? null : reader.GetString(10),
-                FechaInactivacion = reader.IsDBNull(11) ? null : reader.GetDateTime(11)
+                FechaInactivacion = reader.IsDBNull(11) ? null : reader.GetDateTimeCR(11)
             };
         }
 
@@ -1316,12 +1316,12 @@ namespace Proyecto_Final.Services
                 Telefono = reader.IsDBNull(3) ? null : reader.GetString(3),
                 Direccion = reader.IsDBNull(4) ? null : reader.GetString(4),
                 Activo = !reader.IsDBNull(5) && reader.GetBoolean(5),
-                FechaRegistro = reader.IsDBNull(6) ? DateTime.MinValue : reader.GetDateTime(6),
+                FechaRegistro = reader.IsDBNull(6) ? DateTime.MinValue : reader.GetDateTimeCR(6),
                 TotalPedidos = reader.IsDBNull(7) ? 0 : reader.GetInt32(7),
                 TotalComprado = reader.IsDBNull(8) ? 0 : reader.GetDecimal(8),
-                UltimoPedido = reader.IsDBNull(9) ? null : reader.GetDateTime(9),
+                UltimoPedido = reader.IsDBNull(9) ? null : reader.GetDateTimeCR(9),
                 MotivoInactivacion = reader.IsDBNull(10) ? null : reader.GetString(10),
-                FechaInactivacion = reader.IsDBNull(11) ? null : reader.GetDateTime(11)
+                FechaInactivacion = reader.IsDBNull(11) ? null : reader.GetDateTimeCR(11)
             };
 
             await reader.NextResultAsync();
@@ -1331,7 +1331,7 @@ namespace Proyecto_Final.Services
                 model.Pedidos.Add(new ClientOrderSummaryViewModel
                 {
                     PedidoId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
-                    FechaPedido = reader.IsDBNull(1) ? DateTime.MinValue : reader.GetDateTime(1),
+                    FechaPedido = reader.IsDBNull(1) ? DateTime.MinValue : reader.GetDateTimeCR(1),
                     Estado = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
                     TipoEntrega = reader.IsDBNull(3) ? null : reader.GetString(3),
                     DireccionEntrega = reader.IsDBNull(4) ? null : reader.GetString(4),
@@ -1454,8 +1454,8 @@ namespace Proyecto_Final.Services
                     RespuestaInterna = reader.IsDBNull(6) ? null : reader.GetString(6),
                     AtendidoPorUsuarioId = reader.IsDBNull(7) ? null : reader.GetInt32(7),
                     AtendidoPorNombre = reader.IsDBNull(8) ? null : reader.GetString(8),
-                    FechaAtencion = reader.IsDBNull(9) ? null : reader.GetDateTime(9),
-                    FechaCreacion = reader.IsDBNull(10) ? DateTime.MinValue : reader.GetDateTime(10)
+                    FechaAtencion = reader.IsDBNull(9) ? null : reader.GetDateTimeCR(9),
+                    FechaCreacion = reader.IsDBNull(10) ? DateTime.MinValue : reader.GetDateTimeCR(10)
                 });
             }
 
@@ -1488,8 +1488,8 @@ namespace Proyecto_Final.Services
                 RespuestaInterna = reader.IsDBNull(6) ? null : reader.GetString(6),
                 AtendidoPorUsuarioId = reader.IsDBNull(7) ? null : reader.GetInt32(7),
                 AtendidoPorNombre = reader.IsDBNull(8) ? null : reader.GetString(8),
-                FechaAtencion = reader.IsDBNull(9) ? null : reader.GetDateTime(9),
-                FechaCreacion = reader.IsDBNull(10) ? DateTime.MinValue : reader.GetDateTime(10)
+                FechaAtencion = reader.IsDBNull(9) ? null : reader.GetDateTimeCR(9),
+                FechaCreacion = reader.IsDBNull(10) ? DateTime.MinValue : reader.GetDateTimeCR(10)
             };
         }
 
@@ -1539,8 +1539,8 @@ namespace Proyecto_Final.Services
                     DeudaActual = reader.IsDBNull(9) ? 0 : reader.GetDecimal(9),
                     CreditoDisponible = reader.IsDBNull(10) ? 0 : reader.GetDecimal(10),
                     TotalMovimientos = reader.IsDBNull(11) ? 0 : reader.GetInt32(11),
-                    UltimoMovimiento = reader.IsDBNull(12) ? null : reader.GetDateTime(12),
-                    FechaActualizacion = reader.IsDBNull(13) ? null : reader.GetDateTime(13)
+                    UltimoMovimiento = reader.IsDBNull(12) ? null : reader.GetDateTimeCR(12),
+                    FechaActualizacion = reader.IsDBNull(13) ? null : reader.GetDateTimeCR(13)
                 });
             }
 
@@ -1577,7 +1577,7 @@ namespace Proyecto_Final.Services
                     CreditoDisponible = reader.IsDBNull(11) ? 0 : reader.GetDecimal(11),
                     TotalCargos = reader.IsDBNull(12) ? 0 : reader.GetDecimal(12),
                     TotalAbonos = reader.IsDBNull(13) ? 0 : reader.GetDecimal(13),
-                    FechaActualizacion = reader.IsDBNull(14) ? null : reader.GetDateTime(14)
+                    FechaActualizacion = reader.IsDBNull(14) ? null : reader.GetDateTimeCR(14)
                 };
 
                 // BUG-06-02: columnas agregadas al final por 0230.
@@ -1585,7 +1585,7 @@ namespace Proyecto_Final.Services
                 {
                     model.PlazoCreditoDias = reader.IsDBNull(15) ? 30 : reader.GetInt32(15);
                     model.DeudaVencida = reader.IsDBNull(16) ? 0 : reader.GetDecimal(16);
-                    model.VencimientoMasAntiguo = reader.IsDBNull(17) ? null : reader.GetDateTime(17);
+                    model.VencimientoMasAntiguo = reader.IsDBNull(17) ? null : reader.GetDateTimeCR(17);
                 }
 
                 model.SettingsForm = new ClientCreditSettingsViewModel
@@ -1617,7 +1617,7 @@ namespace Proyecto_Final.Services
                         Referencia = reader.IsDBNull(4) ? null : reader.GetString(4),
                         RegistradoPorUsuarioId = reader.IsDBNull(5) ? null : reader.GetInt32(5),
                         RegistradoPorNombre = reader.IsDBNull(6) ? null : reader.GetString(6),
-                        FechaMovimiento = reader.IsDBNull(7) ? DateTime.MinValue : reader.GetDateTime(7)
+                        FechaMovimiento = reader.IsDBNull(7) ? DateTime.MinValue : reader.GetDateTimeCR(7)
                     });
                 }
 
@@ -1853,7 +1853,7 @@ namespace Proyecto_Final.Services
                     PedidoId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
                     Cliente = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
                     Correo = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
-                    FechaPedido = reader.IsDBNull(3) ? DateTime.MinValue : reader.GetDateTime(3),
+                    FechaPedido = reader.IsDBNull(3) ? DateTime.MinValue : reader.GetDateTimeCR(3),
                     VendedorNombre = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
                     Total = reader.IsDBNull(5) ? 0 : reader.GetDecimal(5),
                     TipoEntrega = reader.IsDBNull(6) ? string.Empty : reader.GetString(6),
@@ -1920,12 +1920,12 @@ namespace Proyecto_Final.Services
                 {
                     PedidoId = reader.IsDBNull(0) ? 0 : reader.GetInt32(0),
                     Cliente = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
-                    FechaPedido = reader.IsDBNull(2) ? DateTime.MinValue : reader.GetDateTime(2),
+                    FechaPedido = reader.IsDBNull(2) ? DateTime.MinValue : reader.GetDateTimeCR(2),
                     Estado = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
                     Total = reader.IsDBNull(4) ? 0 : reader.GetDecimal(4),
                     MotivoRechazo = reader.IsDBNull(5) ? string.Empty : reader.GetString(5),
                     NumeroFactura = reader.IsDBNull(6) ? string.Empty : reader.GetString(6),
-                    FechaActualizacion = reader.IsDBNull(7) ? null : reader.GetDateTime(7)
+                    FechaActualizacion = reader.IsDBNull(7) ? null : reader.GetDateTimeCR(7)
                 });
             }
             return pedidos;
@@ -2191,14 +2191,16 @@ namespace Proyecto_Final.Services
 
             await using (var command = new SqlCommand(ingresosQuery, connection))
             {
+                // FechaFactura la puso la base con su reloj (UTC en Azure): los días que escribió la
+                // persona son días de Costa Rica, así que los límites se pasan en hora de la base.
                 command.Parameters.Add("@FechaInicio", SqlDbType.DateTime2).Value =
                     fechaInicio.HasValue
-                        ? fechaInicio.Value.Date
+                        ? CostaRicaClock.ToDatabase(fechaInicio.Value.Date)
                         : DBNull.Value;
 
                 command.Parameters.Add("@FechaFin", SqlDbType.DateTime2).Value =
                     fechaFin.HasValue
-                        ? fechaFin.Value.Date
+                        ? CostaRicaClock.ToDatabase(fechaFin.Value.Date)
                         : DBNull.Value;
 
                 await using var reader = await command.ExecuteReaderAsync();
@@ -2216,7 +2218,7 @@ namespace Proyecto_Final.Services
                     modelo.Movimientos.Add(new FinancialMovementViewModel
                     {
                         MovimientoId = facturaId,
-                        Fecha = reader.GetDateTime(reader.GetOrdinal("FechaFactura")),
+                        Fecha = reader.GetDateTimeCR(reader.GetOrdinal("FechaFactura")),
                         Tipo = "Ingreso",
                         Descripcion = "Venta facturada",
                         Referencia = string.IsNullOrWhiteSpace(metodoPago)
@@ -2273,7 +2275,7 @@ namespace Proyecto_Final.Services
                     modelo.Movimientos.Add(new FinancialMovementViewModel
                     {
                         MovimientoId = gastoId,
-                        Fecha = reader.GetDateTime(reader.GetOrdinal("Fecha")),
+                        Fecha = reader.GetDateTimeCR(reader.GetOrdinal("Fecha")),
                         Tipo = "Egreso",
                         Descripcion = concepto,
                         Referencia = $"Gasto #{gastoId} - {categoria}",
@@ -2334,7 +2336,7 @@ namespace Proyecto_Final.Services
 
                     FechaSolicitud = reader.IsDBNull(5)
                         ? DateTime.MinValue
-                        : reader.GetDateTime(5),
+                        : reader.GetDateTimeCRFromUtc(5),
 
                     Estado = reader.IsDBNull(6)
                         ? "Pendiente"
@@ -2354,7 +2356,7 @@ namespace Proyecto_Final.Services
 
                     FechaResolucion = reader.IsDBNull(10)
                         ? null
-                        : reader.GetDateTime(10)
+                        : reader.GetDateTimeCR(10)
                 });
             }
 
@@ -2508,7 +2510,7 @@ namespace Proyecto_Final.Services
                     Producto = reader.GetString(
                         reader.GetOrdinal("Producto")),
 
-                    FechaSolicitud = reader.GetDateTime(
+                    FechaSolicitud = reader.GetDateTimeCRFromUtc(
                         reader.GetOrdinal("FechaSolicitud")),
 
                     Motivo = reader.GetString(
@@ -2532,7 +2534,7 @@ namespace Proyecto_Final.Services
                     FechaResolucion = reader.IsDBNull(
                         reader.GetOrdinal("FechaResolucion"))
                             ? null
-                            : reader.GetDateTime(
+                            : reader.GetDateTimeCR(
                                 reader.GetOrdinal("FechaResolucion"))
                 });
             }
@@ -2672,7 +2674,7 @@ namespace Proyecto_Final.Services
                     reader.GetOrdinal("Contenido")
                 ),
 
-                FechaEnvio = reader.GetDateTime(
+                FechaEnvio = reader.GetDateTimeCR(
                     reader.GetOrdinal("FechaEnvio")
                 ),
 
@@ -2731,7 +2733,7 @@ namespace Proyecto_Final.Services
                         reader.GetOrdinal("Contenido")
                     ),
 
-                    FechaEnvio = reader.GetDateTime(
+                    FechaEnvio = reader.GetDateTimeCR(
                         reader.GetOrdinal("FechaEnvio")
                     ),
 
@@ -2834,7 +2836,7 @@ namespace Proyecto_Final.Services
                     reader.GetOrdinal("Contenido")
                 ),
 
-                FechaEnvio = reader.GetDateTime(
+                FechaEnvio = reader.GetDateTimeCR(
                     reader.GetOrdinal("FechaEnvio")
                 ),
 
@@ -2892,7 +2894,7 @@ namespace Proyecto_Final.Services
                             reader.GetOrdinal("Contenido")
                         ),
 
-                        FechaEnvio = reader.GetDateTime(
+                        FechaEnvio = reader.GetDateTimeCR(
                             reader.GetOrdinal("FechaEnvio")
                         ),
 

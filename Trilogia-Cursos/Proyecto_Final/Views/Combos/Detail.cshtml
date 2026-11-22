@@ -31,7 +31,7 @@
         <div class="col-lg-4">
             <section class="card mb-4">
                 <div class="card-header">Trazabilidad</div>
-                <div class="card-body"><p><small class="text-muted d-block">Registrado por</small><strong>@Model.RegistradoPorNombre</strong></p><p class="mb-0"><small class="text-muted d-block">Fecha</small><strong>@Model.FechaCreacionUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</strong></p></div>
+                <div class="card-body"><p><small class="text-muted d-block">Registrado por</small><strong>@Model.RegistradoPorNombre</strong></p><p class="mb-0"><small class="text-muted d-block">Fecha</small><strong>@Model.FechaCreacionUtc.ToCostaRica().ToString("dd/MM/yyyy HH:mm")</strong></p></div>
             </section>
             <div class="alert alert-info"><i class="fa fa-calculator mr-1"></i>La disponibilidad es el mínimo entero de stock dividido entre cantidad requerida. El checkout la recalcula y bloquea inventario.</div>
         </div>

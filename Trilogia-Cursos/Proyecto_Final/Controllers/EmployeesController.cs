@@ -42,7 +42,7 @@ namespace Proyecto_Final.Controllers
             var model = new EmployeeFormViewModel
             {
                 Activo = true,
-                FechaContratacion = DateTime.Today,
+                FechaContratacion = CostaRicaClock.Today,
                 RolesDisponibles = await _employeesDbService.GetEmployeeRoleSelectListAsync(ActorRole)
             };
 

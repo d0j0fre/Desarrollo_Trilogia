@@ -102,7 +102,7 @@ namespace Proyecto_Final.Models.Store
         public ClientPortalSummaryViewModel Cliente { get; set; } = new();
         public ClientPortalCreditSummaryViewModel? Credito { get; set; }
         public List<ClientPortalOrderListItemViewModel> Pedidos { get; set; } = new();
-        public DateTime FechaGeneracion { get; set; } = DateTime.Now;
+        public DateTime FechaGeneracion { get; set; } = CostaRicaClock.Now;
         // BUG-12-01 · CU-123-02: saldo, facturas y pagos (sp_Cliente_EstadoCuenta, el mismo saldo de Créditos).
         public Proyecto_Final.Models.Admin.ClientAccountStatementViewModel? Cuenta { get; set; }
     }

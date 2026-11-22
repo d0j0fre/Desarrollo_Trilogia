@@ -28,7 +28,7 @@ public sealed class ExpensesController : Controller
             Filter = filter, Expenses = result.Page, Departments = options.Departments, Categories = options.Categories,
             RegisteredTotal = result.Registered, ApprovedTotal = result.Approved, PaidTotal = result.Paid,
             PendingTotal = result.Pending, AvailableBudget = result.Available,
-            NewExpense = new() { ExpenseDate = DateTime.Today, OperationToken = Guid.NewGuid() }
+            NewExpense = new() { ExpenseDate = CostaRicaClock.Today, OperationToken = Guid.NewGuid() }
         });
     }
 
@@ -69,7 +69,7 @@ public sealed class ExpensesController : Controller
         await LoadOptionsAsync();
         return View(new OperatingExpenseFormViewModel
         {
-            ExpenseDate = DateTime.Today,
+            ExpenseDate = CostaRicaClock.Today,
             OperationToken = Guid.NewGuid()
         });
     }
@@ -228,7 +228,7 @@ public sealed class ExpensesController : Controller
 
     private void ValidateExpense(OperatingExpenseFormViewModel model)
     {
-        var businessDate = DocumentExpirationPolicy.BusinessDate(DateTimeOffset.UtcNow);
+        var businessDate = CostaRicaClock.Today;
         if (!ExpenseRules.IsValidDate(model.ExpenseDate, businessDate)) ModelState.AddModelError(nameof(model.ExpenseDate), "La fecha no puede ser futura ni tener más de dos años.");
         if (model.OperationToken == Guid.Empty) ModelState.AddModelError(nameof(model.OperationToken), "El token de operación no es válido.");
     }

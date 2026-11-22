@@ -4,7 +4,7 @@
 }
 
 <div class="container-fluid pt-4 backoffice-page" data-snapshot-url="@Url.Action("Snapshot", "DeliveryBoard")">
-    <div class="row px-xl-5"><div class="col-12 d-flex justify-content-between align-items-start"><div><h2>Tablero de entregas</h2><p>Estado operativo actualizado automáticamente cada 15 segundos.</p></div><small id="board-updated" class="text-muted">Actualizado: @Model.GeneradoUtc.ToLocalTime().ToString("HH:mm:ss")</small></div></div>
+    <div class="row px-xl-5"><div class="col-12 d-flex justify-content-between align-items-start"><div><h2>Tablero de entregas</h2><p>Estado operativo actualizado automáticamente cada 15 segundos.</p></div><small id="board-updated" class="text-muted">Actualizado: @Model.GeneradoUtc.ToCostaRica().ToString("HH:mm:ss")</small></div></div>
     <div class="row px-xl-5 mb-4">
         <div class="col-md"><div class="card mb-2"><div class="card-body"><small>Rutas activas</small><h3 id="active-routes">@Model.RutasActivas</h3></div></div></div>
         <div class="col-md"><div class="card mb-2"><div class="card-body"><small>En ruta</small><h3 id="in-route-orders">@Model.PedidosEnRuta</h3></div></div></div>
@@ -73,7 +73,7 @@
                 setText('in-route-orders', data.pedidosEnRuta);
                 setText('completed-deliveries', data.entregasCompletadas); setText('failed-deliveries', data.entregasFallidas);
                 setText('in-route-count', `(${data.pedidosEnRuta})`); setText('pending-count', `(${data.entregasPendientes})`);
-                setText('board-updated', `Actualizado: ${new Date(data.generadoUtc).toLocaleTimeString('es-CR')}`);
+                setText('board-updated', `Actualizado: ${new Date(data.generadoUtc).toLocaleTimeString('es-CR', { timeZone: 'America/Costa_Rica' })}`);
                 inRouteBody.innerHTML = data.enRuta.length ? data.enRuta.map(inRouteRow).join('') : empty('No hay pedidos en ruta.');
                 pendingBody.innerHTML = data.pendientes.length ? data.pendientes.map(pendingRow).join('') : empty('No hay pedidos pendientes de entrega.');
                 body.innerHTML = data.rutas.map(route => `<tr><td><strong>${escapeHtml(route.codigo)}</strong></td><td>${escapeHtml(route.zona)}</td><td>${escapeHtml(route.chofer)}<small class="d-block text-muted">${escapeHtml(route.vehiculoPlaca)}</small></td><td>${escapeHtml(route.estado)}</td><td><span class="text-success">${route.entregados} entregadas</span> · <span class="text-danger">${route.fallidos} fallidas</span> · ${route.pendientes} pendientes</td><td><a class="btn btn-sm btn-ds-view" href="/RoutesAdmin/Detail/${route.rutaId}">Ver ruta</a></td></tr>`).join('');

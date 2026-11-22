@@ -130,7 +130,7 @@ namespace Proyecto_Final.Services
                 items,
                 totalConfirmado,
                 descuentoTotal,
-                DateTime.Now,
+                CostaRicaClock.Now,
                 // Enlace al pedido en la URL pública del sitio (nunca localhost); sin URL pública no se muestra el botón.
                 PublicSiteUrl.Build(_configuration, $"ClientPortal/Detail/{pedidoId}"));
 

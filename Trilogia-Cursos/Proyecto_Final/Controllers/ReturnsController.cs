@@ -137,7 +137,7 @@ namespace Proyecto_Final.Controllers
 
         private async Task<ReturnsReportViewModel> BuildReportAsync(DateTime? desde, DateTime? hasta)
         {
-            var hoy = DateTime.Today;
+            var hoy = CostaRicaClock.Today;
             var inicio = desde?.Date ?? new DateTime(hoy.Year, hoy.Month, 1);
             var fin = hasta?.Date ?? hoy;
             return ReturnsReportViewModel.Build(await _warehouse.GetReturnsAsync(null, null), inicio, fin);

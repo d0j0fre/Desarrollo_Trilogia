@@ -106,8 +106,9 @@ namespace Proyecto_Final.Services
             await using var identificationCommand = new SqlCommand("SELECT Identificacion FROM dbo.Empleados WHERE EmpleadoId=@id", identificationConnection);
             identificationCommand.Parameters.Add("@id", SqlDbType.Int).Value = empleadoId;
             var identification = Convert.ToString(await identificationCommand.ExecuteScalarAsync()) ?? string.Empty;
-            await using var currentSalaryCommand = new SqlCommand("SELECT TOP 1 Salario FROM dbo.EmpleadoSalarioVigencias WHERE EmpleadoId=@id AND FechaVigencia<=CONVERT(date,GETDATE()) ORDER BY FechaVigencia DESC", identificationConnection);
+            await using var currentSalaryCommand = new SqlCommand("SELECT TOP 1 Salario FROM dbo.EmpleadoSalarioVigencias WHERE EmpleadoId=@id AND FechaVigencia<=@Hoy ORDER BY FechaVigencia DESC", identificationConnection);
             currentSalaryCommand.Parameters.Add("@id", SqlDbType.Int).Value = empleadoId;
+            currentSalaryCommand.Parameters.Add("@Hoy", SqlDbType.Date).Value = CostaRicaClock.Today;
             var currentSalaryValue = await currentSalaryCommand.ExecuteScalarAsync();
             return new EmployeeFormViewModel
             {
@@ -144,8 +145,9 @@ namespace Proyecto_Final.Services
                 await using var identificationCommand = new SqlCommand("SELECT Identificacion FROM dbo.Empleados WHERE EmpleadoId=@id", identificationConnection);
                 identificationCommand.Parameters.Add("@id", SqlDbType.Int).Value = empleadoId;
                 detail.Identificacion = Convert.ToString(await identificationCommand.ExecuteScalarAsync());
-                await using var salaryCommand = new SqlCommand("SELECT TOP 1 Salario FROM dbo.EmpleadoSalarioVigencias WHERE EmpleadoId=@id AND FechaVigencia<=CONVERT(date,GETDATE()) ORDER BY FechaVigencia DESC", identificationConnection);
+                await using var salaryCommand = new SqlCommand("SELECT TOP 1 Salario FROM dbo.EmpleadoSalarioVigencias WHERE EmpleadoId=@id AND FechaVigencia<=@Hoy ORDER BY FechaVigencia DESC", identificationConnection);
                 salaryCommand.Parameters.Add("@id", SqlDbType.Int).Value = empleadoId;
+                salaryCommand.Parameters.Add("@Hoy", SqlDbType.Date).Value = CostaRicaClock.Today;
                 var salary = await salaryCommand.ExecuteScalarAsync();
                 if (salary is not null and not DBNull) detail.Salario = Convert.ToDecimal(salary);
             }
@@ -206,8 +208,9 @@ namespace Proyecto_Final.Services
             command.Transaction = transaction;
             // La edición no cambia la contraseña: ningún procedimiento recibe una clave en texto (0269).
             if (!string.IsNullOrWhiteSpace(model.Contrasena)) throw new InvalidOperationException("La contraseña debe cambiarse desde el flujo de recuperación.");
-            await using var salaryQuery = new SqlCommand("SELECT COALESCE((SELECT TOP 1 Salario FROM dbo.EmpleadoSalarioVigencias WHERE EmpleadoId=e.EmpleadoId AND FechaVigencia<=CONVERT(date,GETDATE()) ORDER BY FechaVigencia DESC),e.Salario) FROM dbo.Empleados e WITH (UPDLOCK,HOLDLOCK) WHERE EmpleadoId=@id", connection, transaction);
+            await using var salaryQuery = new SqlCommand("SELECT COALESCE((SELECT TOP 1 Salario FROM dbo.EmpleadoSalarioVigencias WHERE EmpleadoId=e.EmpleadoId AND FechaVigencia<=@Hoy ORDER BY FechaVigencia DESC),e.Salario) FROM dbo.Empleados e WITH (UPDLOCK,HOLDLOCK) WHERE EmpleadoId=@id", connection, transaction);
             salaryQuery.Parameters.Add("@id", SqlDbType.Int).Value = model.EmpleadoId;
+            salaryQuery.Parameters.Add("@Hoy", SqlDbType.Date).Value = CostaRicaClock.Today;
             var currentSalaryValue = await salaryQuery.ExecuteScalarAsync();
             if (currentSalaryValue is null or DBNull) throw new InvalidOperationException("No existe el salario del empleado.");
             var currentSalary = Convert.ToDecimal(currentSalaryValue);
@@ -220,10 +223,11 @@ namespace Proyecto_Final.Services
             {
                 await using var schedule = new SqlCommand(@"INSERT dbo.EmpleadoSalarioVigencias(EmpleadoId,FechaVigencia,Salario,Motivo,ActorUsuarioId,ActorNombre)
                     VALUES(@id,@fecha,@salario,@motivo,@actor,@nombre);
-                    UPDATE dbo.Empleados SET Salario=(SELECT TOP 1 Salario FROM dbo.EmpleadoSalarioVigencias WHERE EmpleadoId=@id AND FechaVigencia<=CONVERT(date,GETDATE()) ORDER BY FechaVigencia DESC) WHERE EmpleadoId=@id;
+                    UPDATE dbo.Empleados SET Salario=(SELECT TOP 1 Salario FROM dbo.EmpleadoSalarioVigencias WHERE EmpleadoId=@id AND FechaVigencia<=@Hoy ORDER BY FechaVigencia DESC) WHERE EmpleadoId=@id;
                     INSERT dbo.EmpleadoHistorialSalarios(EmpleadoId,SalarioAnterior,SalarioNuevo,Motivo,UsuarioCambioId,UsuarioCambioNombre)
                     VALUES(@id,@anterior,@salario,@motivo,@actor,@nombre);", connection, transaction);
                 schedule.Parameters.Add("@id", SqlDbType.Int).Value = model.EmpleadoId;
+                schedule.Parameters.Add("@Hoy", SqlDbType.Date).Value = CostaRicaClock.Today;
                 schedule.Parameters.Add("@fecha", SqlDbType.Date).Value = model.FechaVigenciaSalario!.Value.Date;
                 schedule.Parameters.Add("@salario", SqlDbType.Decimal).Value = model.Salario;
                 schedule.Parameters.Add("@anterior", SqlDbType.Decimal).Value = currentSalary;
@@ -469,7 +473,7 @@ namespace Proyecto_Final.Services
                 ObservacionesInternas = GetNullableString(reader, 13),
                 Activo = reader.GetBoolean(14),
                 UsuarioActivo = reader.GetBoolean(15),
-                FechaRegistro = reader.GetDateTime(16),
+                FechaRegistro = reader.GetDateTimeCR(16),
                 FechaActualizacion = GetNullableDateTime(reader, 17),
                 RowVersionBase64 = reader.FieldCount > 18 && !reader.IsDBNull(18)
                     ? Convert.ToBase64String((byte[])reader.GetValue(18))
@@ -502,7 +506,7 @@ namespace Proyecto_Final.Services
                     Descripcion = GetNullableString(reader, 3),
                     Prioridad = reader.GetString(4),
                     Estado = reader.GetString(5),
-                    FechaAsignacion = reader.GetDateTime(6),
+                    FechaAsignacion = reader.GetDateTimeCR(6),
                     FechaLimite = GetNullableDateTime(reader, 7),
                     UsuarioAsignacionNombre = GetNullableString(reader, 8),
                     FechaActualizacion = GetNullableDateTime(reader, 9)
@@ -537,7 +541,7 @@ namespace Proyecto_Final.Services
                     SalarioNuevo = reader.GetDecimal(3),
                     Motivo = GetNullableString(reader, 4),
                     UsuarioCambioNombre = GetNullableString(reader, 5),
-                    FechaCambio = reader.GetDateTime(6)
+                    FechaCambio = reader.GetDateTimeCR(6)
                 });
             }
 
@@ -594,15 +598,15 @@ namespace Proyecto_Final.Services
                 NombreCompleto = reader.GetString(2),
                 Correo = reader.GetString(3),
                 Puesto = reader.GetString(4),
-                FechaInicio = reader.GetDateTime(5),
-                FechaFin = reader.GetDateTime(6),
+                FechaInicio = reader.GetDateTimeCR(5),
+                FechaFin = reader.GetDateTimeCR(6),
                 CantidadDias = reader.GetInt32(7),
                 TipoSolicitud = reader.GetString(8),
                 Motivo = reader.GetString(9),
                 Estado = reader.GetString(10),
                 RespuestaAdmin = GetNullableString(reader, 11),
                 UsuarioRespuestaNombre = GetNullableString(reader, 12),
-                FechaSolicitud = reader.GetDateTime(13),
+                FechaSolicitud = reader.GetDateTimeCR(13),
                 FechaRespuesta = GetNullableDateTime(reader, 14)
             };
         }
@@ -614,7 +618,7 @@ namespace Proyecto_Final.Services
 
         private static DateTime? GetNullableDateTime(SqlDataReader reader, int ordinal)
         {
-            return reader.IsDBNull(ordinal) ? null : reader.GetDateTime(ordinal);
+            return reader.IsDBNull(ordinal) ? null : reader.GetDateTimeCR(ordinal);
         }
     }
 }

@@ -110,7 +110,7 @@ namespace Proyecto_Final.Services
                 lista.Add(new GastoListItemViewModel
                 {
                     GastoId = reader.GetInt32(0),
-                    Fecha = reader.GetDateTime(1),
+                    Fecha = reader.GetDateTimeCR(1),
                     Monto = reader.GetDecimal(2),
                     Concepto = reader.GetString(3),
                     Proveedor = reader.GetString(4),

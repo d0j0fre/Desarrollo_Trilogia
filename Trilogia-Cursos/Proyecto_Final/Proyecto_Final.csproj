@@ -8,6 +8,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Reloj de Costa Rica (CostaRicaClock): disponible en todo el proyecto, vistas incluidas. -->
+    <Using Include="Proyecto_Final.Services" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Azure.Identity habilita Authentication=Active Directory Default en la cadena de
          conexion, que es como el proyecto se conecta a Azure SQL sin contrasena.
          Llega de forma transitiva con Microsoft.Data.SqlClient, pero se declara explicito

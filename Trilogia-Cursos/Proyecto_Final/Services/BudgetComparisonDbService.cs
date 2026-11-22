@@ -13,7 +13,7 @@ public sealed class BudgetComparisonDbService
 
     public async Task<BudgetComparisonDashboardViewModel> GetDashboardAsync(BudgetComparisonFilterViewModel filter)
     {
-        filter.Year = filter.Year is >= 2000 and <= 2100 ? filter.Year : DateTime.Today.Year;
+        filter.Year = filter.Year is >= 2000 and <= 2100 ? filter.Year : CostaRicaClock.Today.Year;
         filter.Page = Math.Max(filter.Page, 1);
         filter.PageSize = Math.Clamp(filter.PageSize, 1, 100);
         var model = new BudgetComparisonDashboardViewModel { Filter = filter, UpdatedUtc = DateTime.UtcNow };
@@ -22,7 +22,7 @@ public sealed class BudgetComparisonDbService
         AddFilters(command, filter);
         command.Parameters.Add("@Pagina", SqlDbType.Int).Value = filter.Page;
         command.Parameters.Add("@TamanoPagina", SqlDbType.Int).Value = filter.PageSize;
-        command.Parameters.Add("@FechaNegocio", SqlDbType.Date).Value = DateTime.Today;
+        command.Parameters.Add("@FechaNegocio", SqlDbType.Date).Value = CostaRicaClock.Today;
         await connection.OpenAsync();
         await using var reader = await command.ExecuteReaderAsync();
         if (await reader.ReadAsync()) model.Summary = new()
@@ -82,13 +82,13 @@ public sealed class BudgetComparisonDbService
 
     private static OperatingExpenseListItemViewModel ReadExpense(SqlDataReader reader) => new()
     {
-        ExpenseId = reader.GetInt32(reader.GetOrdinal("GastoId")), ExpenseDate = reader.GetDateTime(reader.GetOrdinal("FechaGasto")),
+        ExpenseId = reader.GetInt32(reader.GetOrdinal("GastoId")), ExpenseDate = reader.GetDateTimeCR(reader.GetOrdinal("FechaGasto")),
         DepartmentName = reader.GetString(reader.GetOrdinal("Departamento")), CategoryName = reader.GetString(reader.GetOrdinal("Categoria")),
         SupplierName = NullableString(reader, "Proveedor"), DocumentNumber = reader.GetString(reader.GetOrdinal("NumeroDocumento")),
         Description = reader.GetString(reader.GetOrdinal("Descripcion")), Subtotal = reader.GetDecimal(reader.GetOrdinal("Subtotal")),
         Tax = reader.GetDecimal(reader.GetOrdinal("Impuesto")), Total = reader.GetDecimal(reader.GetOrdinal("Total")),
         Status = reader.GetString(reader.GetOrdinal("Estado")), CreatedByName = reader.GetString(reader.GetOrdinal("CreadoPorNombre")),
-        CreatedUtc = reader.GetDateTime(reader.GetOrdinal("FechaCreacionUtc")), HasReceipt = reader.GetBoolean(reader.GetOrdinal("TieneComprobante")),
+        CreatedUtc = reader.GetUtcDateTime(reader.GetOrdinal("FechaCreacionUtc")), HasReceipt = reader.GetBoolean(reader.GetOrdinal("TieneComprobante")),
         BudgetAmount = reader.GetDecimal(reader.GetOrdinal("MontoPresupuesto")), RealSpent = reader.GetDecimal(reader.GetOrdinal("GastoReal")),
         CommittedSpent = reader.GetDecimal(reader.GetOrdinal("GastoComprometido")), ExecutionPercent = reader.GetDecimal(reader.GetOrdinal("PorcentajeEjecucion")),
         ConsumptionLevel = reader.GetString(reader.GetOrdinal("NivelConsumo"))

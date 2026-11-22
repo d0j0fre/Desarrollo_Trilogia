@@ -14,10 +14,10 @@ public sealed class InventoryIntelligenceFilterViewModel : IValidatableObject
     public const int MaxSeasonalYears = 10;
 
     [Range(2000, 2100, ErrorMessage = "El año inicial debe estar entre 2000 y 2100.")]
-    public int StartYear { get; set; } = DateTime.UtcNow.Year - 2;
+    public int StartYear { get; set; } = CostaRicaClock.Today.Year - 2;
 
     [Range(2000, 2100, ErrorMessage = "El año final debe estar entre 2000 y 2100.")]
-    public int EndYear { get; set; } = DateTime.UtcNow.Year;
+    public int EndYear { get; set; } = CostaRicaClock.Today.Year;
 
     [Range(1, 12, ErrorMessage = "Los meses para el promedio deben estar entre 1 y 12.")]
     public int RecentMonths { get; set; } = DefaultRecentMonths;
