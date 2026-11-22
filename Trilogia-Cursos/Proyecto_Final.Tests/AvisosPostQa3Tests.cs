@@ -70,6 +70,18 @@ public class AvisosPostQa3Tests
         Assert.Contains(nombre + ".sql", Migracion("README.md"), StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void ValidationSummaryWithoutErrors_IsHiddenInsteadOfAnEmptyRedBar()
+    {
+        var css = File.ReadAllText(SourcePath("Proyecto_Final", "wwwroot", "css", "sprint4-frontend-polish.css"));
+        Assert.Contains(".alert.validation-summary-valid", css, StringComparison.Ordinal);
+        Assert.Contains("display: none", css[css.IndexOf(".alert.validation-summary-valid", StringComparison.Ordinal)..], StringComparison.Ordinal);
+
+        // La pantalla de Inteligencia de inventario usa ese resumen de validación.
+        var vista = File.ReadAllText(SourcePath("Proyecto_Final", "Views", "InventoryIntelligence", "Index.cshtml"));
+        Assert.Contains("asp-validation-summary", vista, StringComparison.Ordinal);
+    }
+
     private static string SourcePath(params string[] parts)
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
