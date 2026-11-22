@@ -19,6 +19,7 @@ public sealed class OperatingExpenseFormViewModel
     public int ExpenseId { get; set; }
 
     [DataType(DataType.Date)]
+    [Display(Name = "Fecha")]
     public DateTime ExpenseDate { get; set; } = CostaRicaClock.Today;
 
     [Range(1, int.MaxValue, ErrorMessage = "Seleccione un departamento.")]
@@ -28,28 +29,35 @@ public sealed class OperatingExpenseFormViewModel
     public int CategoryId { get; set; }
 
     [StringLength(180)]
+    [Display(Name = "Proveedor")]
     public string? SupplierName { get; set; }
 
     [Required]
     [StringLength(80)]
+    [Display(Name = "N.º de documento")]
     public string DocumentNumber { get; set; } = string.Empty;
 
     [Required]
     [StringLength(40)]
+    [Display(Name = "Tipo de documento")]
     public string DocumentType { get; set; } = "Factura";
 
     [Required]
     [StringLength(500)]
+    [Display(Name = "Descripción")]
     public string Description { get; set; } = string.Empty;
 
     [Range(typeof(decimal), "0.01", "999999999999.99", ParseLimitsInInvariantCulture = true)]
+    [Display(Name = "Subtotal")]
     public decimal Subtotal { get; set; }
 
     [Range(typeof(decimal), "0", "999999999999.99", ParseLimitsInInvariantCulture = true)]
+    [Display(Name = "Impuesto")]
     public decimal Tax { get; set; }
 
     [Required]
     [StringLength(40)]
+    [Display(Name = "Método de pago")]
     public string PaymentMethod { get; set; } = "Transferencia";
 
     public Guid OperationToken { get; set; } = Guid.NewGuid();

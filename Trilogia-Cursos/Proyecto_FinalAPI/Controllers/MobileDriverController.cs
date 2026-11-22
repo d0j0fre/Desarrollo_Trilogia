@@ -332,6 +332,8 @@ namespace Proyecto_FinalAPI.Controllers
         {
             if (request is null) return InvalidRequest("Falta el cuerpo de la solicitud.");
             if (request.VehiculoId <= 0) return InvalidRequest("Indique el vehículo.");
+            // POST-qa3-R3-03: un km vacio se tomaba como 0 y abria la jornada.
+            if (request.KmInicial is null) return InvalidRequest("Indique el kilometraje inicial.");
             if (request.KmInicial < 0) return InvalidRequest("El kilometraje inicial no puede ser negativo.");
             if (!Guid.TryParse(request.SyncGuid, out var syncGuid) || syncGuid == Guid.Empty)
             {
@@ -343,7 +345,7 @@ namespace Proyecto_FinalAPI.Controllers
                 var result = await _driver.OpenMileageAsync(
                     CurrentUserId,
                     request.VehiculoId,
-                    request.KmInicial,
+                    request.KmInicial.Value,
                     syncGuid,
                     request.Observaciones,
                     cancellationToken);
@@ -384,6 +386,7 @@ namespace Proyecto_FinalAPI.Controllers
         {
             if (request is null) return InvalidRequest("Falta el cuerpo de la solicitud.");
             if (request.KilometrajeId <= 0) return InvalidRequest("Indique la jornada a cerrar.");
+            if (request.KmFinal is null) return InvalidRequest("Indique el kilometraje final.");
             if (request.KmFinal < 0) return InvalidRequest("El kilometraje final no puede ser negativo.");
             if (!Guid.TryParse(request.SyncGuid, out var syncGuid) || syncGuid == Guid.Empty)
             {
@@ -395,7 +398,7 @@ namespace Proyecto_FinalAPI.Controllers
                 var result = await _driver.CloseMileageAsync(
                     CurrentUserId,
                     request.KilometrajeId,
-                    request.KmFinal,
+                    request.KmFinal.Value,
                     syncGuid,
                     cancellationToken);
 
