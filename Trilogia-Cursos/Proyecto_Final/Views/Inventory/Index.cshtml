@@ -57,11 +57,9 @@
     </div>
 
     @{
-        var productosConAlerta = Model.Where(p =>
-            p.EstadoStock == "Agotado" ||
-            p.EstadoStock == "Bajo" ||
-            p.EstadoStock == "Stock bajo" ||
-            p.Stock <= p.StockMinimo).ToList();
+        // POST-qa2-06: la alerta sigue el stock mínimo configurado de cada producto (igual que la columna Estado,
+        // el reporte de inventario y el tablero gerencial), no un tope fijo de 5 unidades.
+        var productosConAlerta = Model.Where(p => p.Stock <= 0 || p.Stock <= p.StockMinimo).ToList();
         var productosPorVencer = Model
             .Where(p => ProductExpiration.RequiereAviso(p.FechaVencimiento, DateTime.Today))
             .OrderBy(p => p.FechaVencimiento)

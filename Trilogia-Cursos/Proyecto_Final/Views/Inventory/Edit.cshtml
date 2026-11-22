@@ -114,6 +114,7 @@
                         <input asp-for="ImagenArchivo" type="file"
                                accept=".jpg,.jpeg,.png,.webp"
                                class="form-control-file" />
+                        <span asp-validation-for="ImagenArchivo" class="text-danger small d-block font-weight-bold"></span>
                         <small class="text-muted">JPG, JPEG, PNG o WEBP; máximo 2 MB. La nueva imagen reemplaza la actual de forma segura.</small>
                     </div>
 
