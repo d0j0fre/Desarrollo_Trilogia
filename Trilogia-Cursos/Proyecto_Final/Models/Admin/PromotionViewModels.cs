@@ -42,7 +42,7 @@ namespace Proyecto_Final.Models.Admin
 
         [Required(ErrorMessage = "Seleccione el producto estratégico.")]
         [Display(Name = "Producto estratégico")]
-        public int ProductoId { get; set; }
+        public int? ProductoId { get; set; }
 
         [Range(1, 100000, ErrorMessage = "La cantidad mínima debe ser al menos 1.")]
         [Display(Name = "Cantidad mínima")]
