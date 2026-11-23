@@ -64,6 +64,22 @@ public sealed class PostInstalacionQa2Ronda3Tests
         Assert.True(File.Exists(Path.Combine(Root(), "database", "migrations", "0355_tablero_stock_minimo.rollback.md")));
     }
 
+    // POST-qa2-11 · CU-093-04 (prueba de horas): los dias de atraso se cuentan con el dia de Costa Rica, no con el UTC del servidor.
+    [Fact]
+    public void Migration0356_OverdueDaysUseTheCostaRicaDay()
+    {
+        var sql = Read("database", "migrations", "0356_dias_atraso_reloj_cr.sql");
+
+        Assert.Contains("fn_Cliente_EstadoDeuda", sql, StringComparison.Ordinal);
+        Assert.Contains("fn_Cliente_FacturasVencidas", sql, StringComparison.Ordinal);
+        Assert.Contains("DATEDIFF(DAY, CAST(dbo.fn_FechaHoraCR(p.Vencimiento) AS DATE), dbo.fn_HoyCR())", sql, StringComparison.Ordinal);
+        Assert.Contains("DATEDIFF(DAY, CAST(dbo.fn_FechaHoraCR(v.VencimientoMasAntiguo) AS DATE), dbo.fn_HoyCR())", sql, StringComparison.Ordinal);
+        Assert.DoesNotContain("UPDATE ", sql, StringComparison.Ordinal);
+        Assert.DoesNotContain("ALTER TABLE", sql, StringComparison.Ordinal);
+        Assert.True(File.Exists(Path.Combine(Root(), "database", "migrations", "0356_dias_atraso_reloj_cr.verify.sql")));
+        Assert.True(File.Exists(Path.Combine(Root(), "database", "migrations", "0356_dias_atraso_reloj_cr.rollback.md")));
+    }
+
     [Fact]
     public void InventoryAlert_OnlyCountsActiveProducts()
     {
