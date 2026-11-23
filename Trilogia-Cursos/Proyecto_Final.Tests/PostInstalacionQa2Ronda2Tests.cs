@@ -72,12 +72,42 @@ public sealed class PostInstalacionQa2Ronda3Tests
 
         Assert.Contains("fn_Cliente_EstadoDeuda", sql, StringComparison.Ordinal);
         Assert.Contains("fn_Cliente_FacturasVencidas", sql, StringComparison.Ordinal);
+        Assert.Contains("sp_Comodato_Asignar", sql, StringComparison.Ordinal);
+        Assert.Contains("sp_Comodato_Devolver", sql, StringComparison.Ordinal);
+        Assert.Contains("sp_Admin_GetSlowMovingProducts", sql, StringComparison.Ordinal);
         Assert.Contains("DATEDIFF(DAY, CAST(dbo.fn_FechaHoraCR(p.Vencimiento) AS DATE), dbo.fn_HoyCR())", sql, StringComparison.Ordinal);
         Assert.Contains("DATEDIFF(DAY, CAST(dbo.fn_FechaHoraCR(v.VencimientoMasAntiguo) AS DATE), dbo.fn_HoyCR())", sql, StringComparison.Ordinal);
         Assert.DoesNotContain("UPDATE ", sql, StringComparison.Ordinal);
         Assert.DoesNotContain("ALTER TABLE", sql, StringComparison.Ordinal);
         Assert.True(File.Exists(Path.Combine(Root(), "database", "migrations", "0356_dias_atraso_reloj_cr.verify.sql")));
         Assert.True(File.Exists(Path.Combine(Root(), "database", "migrations", "0356_dias_atraso_reloj_cr.rollback.md")));
+    }
+
+    // Vigilancia (POST-qa2-11): una migracion nueva no vuelve a contar «hoy» o los dias con el reloj del servidor (UTC en Azure).
+    // Solo se permiten esas expresiones dentro de un texto N'...' (las migraciones de parche que reemplazan texto viejo).
+    [Fact]
+    public void NewMigrations_DoNotCountCalendarDaysWithTheServerClock()
+    {
+        var folder = Path.Combine(Root(), "database", "migrations");
+        var prohibidas = new[] { "CAST(SYSDATETIME() AS DATE)", "CAST(GETDATE() AS DATE)", "CONVERT(DATE, SYSDATETIME())", "CONVERT(DATE, GETDATE())" };
+        var culpables = new List<string>();
+        foreach (var file in Directory.GetFiles(folder, "*.sql"))
+        {
+            var name = Path.GetFileName(file);
+            if (name.EndsWith(".verify.sql", StringComparison.Ordinal) || string.CompareOrdinal(name, "0357") < 0 || !char.IsDigit(name[0]))
+                continue;
+            foreach (var line in File.ReadAllLines(file))
+            {
+                if (line.TrimStart().StartsWith("--", StringComparison.Ordinal) || line.TrimStart().StartsWith("/*", StringComparison.Ordinal))
+                    continue;
+                var sinTextos = System.Text.RegularExpressions.Regex.Replace(line, @"N?'([^']|'')*'", "");
+                var usaDatediff = sinTextos.Contains("DATEDIFF(DAY", StringComparison.OrdinalIgnoreCase)
+                    && (sinTextos.Contains("SYSDATETIME()", StringComparison.Ordinal) || sinTextos.Contains("GETDATE()", StringComparison.Ordinal));
+                if (usaDatediff || prohibidas.Any(p => sinTextos.Contains(p, StringComparison.OrdinalIgnoreCase)))
+                    culpables.Add($"{name}: {line.Trim()}");
+            }
+        }
+        Assert.True(culpables.Count == 0, "Usa el reloj del servidor para contar dias; usa dbo.fn_HoyCR()/fn_FechaHoraCR:\n" + string.Join("\n", culpables));
     }
 
     [Fact]

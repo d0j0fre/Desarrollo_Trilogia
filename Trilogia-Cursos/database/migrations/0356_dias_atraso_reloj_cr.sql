@@ -18,6 +18,11 @@ SET ANSI_NULLS ON;
 
      dbo.fn_Cliente_EstadoDeuda        (0230): DiasAtraso de la deuda vencida mas antigua
      dbo.fn_Cliente_FacturasVencidas   (0326): DiasAtraso de cada factura vencida
+     dbo.sp_Comodato_Asignar / sp_Comodato_Devolver (0245/0242): fecha de entrega y devolucion por omision
+     dbo.sp_Admin_GetSlowMovingProducts (0012): dias sin movimiento y su nivel de riesgo
+
+   Se revisaron con el catalogo (sys.sql_modules) todos los objetos que usan SYSDATETIME/GETDATE/SYSUTCDATETIME:
+   el resto solo guarda marcas de tiempo (FechaCreacion, tokens, codigos con hora) o compara instantes, no dias.
 
    Requiere 0340 (funciones). No cambia tablas ni datos. Rollback en 0356_dias_atraso_reloj_cr.rollback.md. */
 IF OBJECT_ID(N'dbo.SchemaMigrationHistory',N'U') IS NULL THROW 58940,N'Falta el ledger 0001.',1;
@@ -32,7 +37,12 @@ GO
 CREATE TABLE #Parches(Orden INT IDENTITY(1,1) PRIMARY KEY, Objeto SYSNAME NOT NULL, Viejo NVARCHAR(MAX) NOT NULL, Nuevo NVARCHAR(MAX) NOT NULL);
 INSERT #Parches(Objeto,Viejo,Nuevo) VALUES
  (N'fn_Cliente_EstadoDeuda',N'DATEDIFF(DAY, v.VencimientoMasAntiguo, SYSDATETIME())',N'DATEDIFF(DAY, CAST(dbo.fn_FechaHoraCR(v.VencimientoMasAntiguo) AS DATE), dbo.fn_HoyCR())'),
- (N'fn_Cliente_FacturasVencidas',N'DATEDIFF(DAY, p.Vencimiento, SYSDATETIME())',N'DATEDIFF(DAY, CAST(dbo.fn_FechaHoraCR(p.Vencimiento) AS DATE), dbo.fn_HoyCR())');
+ (N'fn_Cliente_FacturasVencidas',N'DATEDIFF(DAY, p.Vencimiento, SYSDATETIME())',N'DATEDIFF(DAY, CAST(dbo.fn_FechaHoraCR(p.Vencimiento) AS DATE), dbo.fn_HoyCR())'),
+ -- Comodatos: la fecha de entrega y de devolucion que se guarda por omision es el dia de Costa Rica.
+ (N'sp_Comodato_Asignar',N'CAST(SYSDATETIME() AS DATE)',N'dbo.fn_HoyCR()'),
+ (N'sp_Comodato_Devolver',N'CAST(SYSDATETIME() AS DATE)',N'dbo.fn_HoyCR()'),
+ -- Productos de lento movimiento: dias sin movimiento por dia de calendario de Costa Rica.
+ (N'sp_Admin_GetSlowMovingProducts',N'DATEDIFF(DAY, COALESCE(rotation.LastSale, product.FechaCreacion), SYSDATETIME())',N'DATEDIFF(DAY, CAST(dbo.fn_FechaHoraCR(COALESCE(rotation.LastSale, product.FechaCreacion)) AS DATE), dbo.fn_HoyCR())');
 GO
 
 DECLARE @Obj SYSNAME, @Def NVARCHAR(MAX), @Viejo NVARCHAR(MAX), @Nuevo NVARCHAR(MAX), @Pos INT, @Msg NVARCHAR(400);
